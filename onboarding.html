@@ -241,6 +241,7 @@ firebase.initializeApp(firebaseConfig);
   <div class="ob-left">
     <div>
       <div class="ob-logo">Ceylonry<span>Labs</span>.io<div class="ob-logo-tag">Account Setup</div></div>
+      <a href="index.html" style="display:inline-block;margin-top:14px;font-size:.72rem;letter-spacing:.04em;color:var(--muted);text-decoration:none">← Back to Home</a>
     </div>
 
     <div class="ob-steps" id="ob-step-nav">
@@ -1026,6 +1027,7 @@ window.launchDashboard = async function launchDashboard(loadDemo){
       trialEnd.setDate(trialEnd.getDate() + 14);
       await firebase.firestore().collection('users').doc(uid).set({
         name: state.fname + ' ' + state.lname,
+        role: 'owner',
         email: state.email,
         phone: state.phone || '',
         bizName: state.bizName || '',
