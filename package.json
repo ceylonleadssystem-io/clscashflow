@@ -1,0 +1,11 @@
+{
+  "name": "cls-cashflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CLS CashFlow site functions (invite email + Stripe webhook)",
+  "dependencies": {
+    "nodemailer": "^6.9.14",
+    "stripe": "^16.12.0",
+    "firebase-admin": "^12.6.0"
+  }
+}
