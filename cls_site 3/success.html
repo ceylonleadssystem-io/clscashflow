@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!-- CLS-V5-WINDOW-ONCLICK -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLS CashFlow — Payment Success</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#c9a84c;--cream:#f5f0e8;--dark:#1a1714;--muted:#6b6258;--line:rgba(201,168,76,.25)}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.box{background:#fff;border:1px solid var(--line);max-width:620px;width:100%;padding:42px;text-align:center;box-shadow:0 26px 70px rgba(26,23,20,.08)}
+.mark{width:72px;height:72px;border-radius:50%;border:2px solid var(--dark);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:30px;color:var(--gold)}
+.ey{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px}
+h1{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;margin-bottom:12px}
+p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:20px}.summary{background:var(--cream);border:1px solid var(--line);padding:18px;margin:22px 0;text-align:left}
+.row{display:flex;justify-content:space-between;gap:16px;font-size:13px;color:var(--muted);padding:7px 0}.row strong{color:var(--dark)}
+.btn{display:block;background:var(--dark);color:#fff;text-decoration:none;padding:14px 18px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}.btn:hover{background:var(--gold)}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="mark">✓</div>
+  <div class="ey">Payment Successful</div>
+  <h1>Your CLS plan is active.</h1>
+  <p id="status">Updating your Firebase profile now. If you used a live Stripe link, the webhook will also confirm payment server-side.</p>
+  <div class="summary" id="summary"></div>
+  <a class="btn" id="dash" href="starter.html">Go to Dashboard →</a>
+</div>
+<script>
+var firebaseConfig={apiKey:"AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",authDomain:"ceylonry-labs.firebaseapp.com",projectId:"ceylonry-labs",storageBucket:"ceylonry-labs.firebasestorage.app",messagingSenderId:"979885533126",appId:"1:979885533126:web:a444d1d0d14867126d34c7"};
+firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();
+var auth=firebase.auth();
+var params=new URLSearchParams(location.search);
+var plan=(params.get('plan')||'starter').toLowerCase();
+var uid=params.get('uid')||'';
+var prices={starter:'LKR 5,500',growth:'LKR 12,500',premium:'LKR 15,500'};
+var files={starter:'starter.html',growth:'growth.html',premium:'premium.html'};
+document.getElementById('dash').href=files[plan]||'starter.html';
+document.getElementById('summary').innerHTML='<div class="row"><span>Plan</span><strong>'+plan.toUpperCase()+'</strong></div><div class="row"><span>Amount</span><strong>'+(prices[plan]||prices.starter)+'</strong></div><div class="row"><span>Status</span><strong id="paid-state">Processing</strong></div>';
+async function markPaid(userId){
+  if(!userId){document.getElementById('status').textContent='Payment received. Sign in to attach this payment to your account.';document.getElementById('paid-state').textContent='Needs sign-in';return;}
+  await db.collection('users').doc(userId).set({paid:true,plan:plan,planPrice:plan==='premium'?15500:plan==='growth'?12500:5500,paidAt:firebase.firestore.FieldValue.serverTimestamp(),lastPaymentSource:params.get('session_id')?'stripe-session':'success-page'}, {merge:true});
+  document.getElementById('status').textContent='Your account has been updated. You can open your dashboard now.';
+  document.getElementById('paid-state').textContent='Active';
+}
+auth.onAuthStateChanged(function(user){markPaid(uid||(user&&user.uid)||'').catch(function(e){document.getElementById('status').textContent='Payment received, but profile update failed: '+e.message;document.getElementById('paid-state').textContent='Manual review';});});
+</script>
+</body>
+</html>

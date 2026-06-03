@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!-- CLS-UPGRADE-V10 -->
+<!-- CLS-V5-WINDOW-ONCLICK -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLS CashFlow — Upgrade</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#c9a84c;--cream:#f5f0e8;--dark:#1a1714;--muted:#6b6258;--line:rgba(201,168,76,.25);--white:#fff}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh}
+.wrap{max-width:1120px;margin:0 auto;padding:42px 22px 64px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:42px;gap:18px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300}.brand span{color:var(--gold)}
+.back{color:var(--dark);text-decoration:none;border:1px solid var(--line);padding:10px 16px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:#fff}
+.hero{margin-bottom:30px}.ey{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px}
+h1{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;line-height:1.05;margin-bottom:14px;max-width:720px}
+.sub{font-size:15px;line-height:1.8;color:var(--muted);max-width:720px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:32px}
+.card{background:#fff;border:1px solid var(--line);padding:26px;position:relative;min-height:520px;display:flex;flex-direction:column}
+.card.hot{border-color:var(--gold);box-shadow:0 18px 46px rgba(26,23,20,.08)}
+.badge{position:absolute;top:-12px;left:26px;background:var(--gold);color:#fff;padding:6px 10px;font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:700}
+.plan{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;margin-bottom:8px}
+.price{font-size:30px;font-weight:700;margin-bottom:4px}.price small{font-size:13px;color:var(--muted);font-weight:400}
+.desc{color:var(--muted);font-size:13px;line-height:1.7;margin:12px 0 20px;min-height:66px}
+ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:22px}
+li{font-size:13px;color:var(--muted);line-height:1.5;display:flex;gap:9px}li:before{content:'✓';color:var(--gold);font-weight:700}
+.btn{margin-top:auto;width:100%;border:none;background:var(--dark);color:#fff;padding:14px 18px;font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
+.btn:hover{background:var(--gold)}.btn.out{background:#fff;color:var(--dark);border:1px solid var(--line)}.btn.out:hover{background:var(--dark);color:#fff}
+.note{margin-top:24px;background:#fff;border:1px solid var(--line);padding:18px;color:var(--muted);font-size:13px;line-height:1.7}
+@media(max-width:860px){.grid{grid-template-columns:1fr}h1{font-size:40px}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">Ceylonry<span>Labs</span>.io</div>
+    <a class="back" href="signin.html">Back to Sign In</a>
+  </div>
+  <div class="hero">
+    <div class="ey">CLS CashFlow Billing</div>
+    <h1>Choose the plan that matches your business stage.</h1>
+    <p class="sub">All plans run in LKR, include a 14-day trial, and connect back to your Firebase profile. Replace the placeholder Payment Links below with your live Stripe URLs.</p>
+  </div>
+  <div class="grid" id="plans"></div>
+  
+</div>
+<script>
+var firebaseConfig={apiKey:"AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",authDomain:"ceylonry-labs.firebaseapp.com",projectId:"ceylonry-labs",storageBucket:"ceylonry-labs.firebasestorage.app",messagingSenderId:"979885533126",appId:"1:979885533126:web:a444d1d0d14867126d34c7"};
+firebase.initializeApp(firebaseConfig);
+var auth=firebase.auth();
+var currentUid='';
+var paymentLinks={starter:'https://buy.stripe.com/28EfZg71n0CD6sK3by43S0d',growth:'https://buy.stripe.com/00w8wOetPgBBbN4fYk43S0e',premium:'https://buy.stripe.com/5kQcN4fxTaddcR87rO43S0f'};
+var plans=[
+  {id:'starter',name:'Starter',price:'LKR 5,500',desc:'For small businesses getting clean cashflow visibility.',features:['Dashboard and cashflow tracker','Expenses and invoice management','Clients and suppliers','3 invoice templates','Up to 2 users']},
+  {id:'growth',name:'Growth',price:'LKR 12,500',hot:true,desc:'For growing teams that need payroll, reports, and stronger controls.',features:['Everything in Starter','Payroll and debt monitor','Team performance view','CSV exports and richer reporting','10 invoice templates']},
+  {id:'premium',name:'Premium',price:'LKR 15,500',desc:'For multi-branch businesses that need executive-level visibility.',features:['Everything in Growth','Multi-branch dashboard','Permissions and departments','Executive intelligence views','Unlimited users and templates']}
+];
+function renderPlans(){
+  document.getElementById('plans').innerHTML=plans.map(function(p){
+    return "<div class='card "+(p.hot?'hot':'')+"'>"+(p.hot?"<div class='badge'>Most Popular</div>":"")+"<div class='plan'>"+p.name+"</div><div class='price'>"+p.price+" <small>/mo</small></div><div class='desc'>"+p.desc+"</div><ul>"+p.features.map(function(f){return "<li>"+f+"</li>";}).join('')+"</ul><button class='btn "+(p.id==='starter'?'out':'')+"' onclick=\"subscribe('"+p.id+"')\">Subscribe Now</button></div>";
+  }).join('');
+}
+window.subscribe=function subscribe(plan){
+  var uid=currentUid||new URLSearchParams(location.search).get('uid')||'';
+  var link=paymentLinks[plan];
+  if(!link||link.indexOf('PAYMENT_LINK_')===0){
+    alert('Payment link not configured. Please contact support.');
+    return;
+  }
+  var join=link.indexOf('?')>-1?'&':'?';
+  location.href=link+join+'client_reference_id='+encodeURIComponent(uid)+'&success_url='+encodeURIComponent(location.origin+location.pathname.replace('upgrade.html','success.html')+'?plan='+plan+'&uid='+uid);
+};
+auth.onAuthStateChanged(function(user){if(user)currentUid=user.uid;renderPlans();});
+renderPlans();
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- CLS-V5-WINDOW-ONCLICK -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLS CashFlow — Access Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#c9a84c;--cream:#f5f0e8;--dark:#1a1714;--muted:#6b6258;--line:rgba(201,168,76,.25);--green:#1a9e5c;--red:#c0392b}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300}.brand span{color:var(--gold)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{border:none;background:var(--dark);color:#fff;padding:11px 14px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer;text-decoration:none}.btn:hover{background:var(--gold)}.btn.out{background:#fff;color:var(--dark);border:1px solid var(--line)}
+.hero{background:#fff;border:1px solid var(--line);padding:24px;margin-bottom:18px}.ey{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:8px}h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-bottom:8px}.sub{color:var(--muted);font-size:14px;line-height:1.7}
+.grid{display:grid;grid-template-columns:1.5fr .8fr;gap:18px}.card{background:#fff;border:1px solid var(--line);padding:20px}.card h2{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:26px;margin-bottom:14px}
+.filters{display:flex;gap:10px;margin-bottom:14px}.input,select{width:100%;border:1px solid var(--line);background:#fff;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark)}
+table{width:100%;border-collapse:collapse}th{background:var(--dark);color:#fff;text-align:left;font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:10px}td{border-bottom:1px solid var(--line);padding:10px;font-size:13px;color:var(--muted);vertical-align:middle}.pill{display:inline-block;padding:4px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;border:1px solid var(--line);color:var(--muted)}.active{color:var(--green)}.suspended{color:var(--red)}
+.modal{position:fixed;inset:0;background:rgba(26,23,20,.55);display:none;align-items:center;justify-content:center;padding:20px}.modal.open{display:flex}.box{background:#fff;max-width:520px;width:100%;padding:24px;border:1px solid var(--line)}
+.log{display:flex;flex-direction:column;gap:10px}.logitem{font-size:12px;color:var(--muted);line-height:1.5;border-bottom:1px solid var(--line);padding-bottom:10px}.logitem strong{color:var(--dark)}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.filters{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">Ceylonry<span>Labs</span>.io</div><div class="actions"><a class="btn out" href="starter.html">Dashboard</a><button class="btn" onclick="window.openInvite()">Add Team Member</button><button class="btn out" onclick="window.exportTeam()">Export CSV</button></div></div>
+  <div class="hero"><div class="ey">User Access Management</div><h1>Team permissions and invite control.</h1><p class="sub">Owners can invite staff, assign roles, suspend access, remove users, and export the team list. Invite links are copied and can be shared by WhatsApp.</p></div>
+  <div class="grid">
+    <div class="card">
+      <h2>Team Members</h2>
+      <div class="filters"><select id="role-filter" onchange="renderTeam()"><option value="">All roles</option><option>owner</option><option>manager</option><option>accountant</option><option>viewer</option><option>staff</option></select><select id="status-filter" onchange="renderTeam()"><option value="">All status</option><option>active</option><option>invited</option><option>suspended</option></select></div>
+      <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead><tbody id="team-body"></tbody></table>
+    </div>
+    <div class="card"><h2>Activity Log</h2><div class="log" id="activity-log"></div></div>
+  </div>
+</div>
+<div class="modal" id="invite-modal">
+  <div class="box">
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;margin-bottom:14px">Invite Team Member</h2>
+    <div style="display:grid;gap:10px">
+      <input class="input" id="inv-name" placeholder="Full name">
+      <input class="input" id="inv-email" type="email" placeholder="email@business.com">
+      <select id="inv-role"><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="viewer">Viewer</option><option value="staff">Staff</option></select>
+      <input class="input" id="invite-link" readonly placeholder="Invite link appears here">
+      <div class="actions"><button class="btn" onclick="window.saveAndEmailInvite()">Create &amp; Email Invite</button><button class="btn out" onclick="window.emailInvite()">Resend Email</button><button class="btn out" onclick="window.copyInvite()">Copy Link</button><button class="btn out" onclick="window.shareInvite()">WhatsApp</button><button class="btn out" onclick="window.closeInvite()">Close</button></div>
+    </div>
+  </div>
+</div>
+<script>
+var firebaseConfig={apiKey:"AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",authDomain:"ceylonry-labs.firebaseapp.com",projectId:"ceylonry-labs",storageBucket:"ceylonry-labs.firebasestorage.app",messagingSenderId:"979885533126",appId:"1:979885533126:web:a444d1d0d14867126d34c7"};
+firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();var auth=firebase.auth();var uid='';var team=[];var logs=[];var ownerBiz='CLS CashFlow';
+function token(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function logAction(text){logs.unshift({text:text,at:new Date().toLocaleString()});logs=logs.slice(0,20);renderLog();}
+function renderLog(){document.getElementById('activity-log').innerHTML=logs.length?logs.map(function(l){return '<div class="logitem"><strong>'+esc(l.at)+'</strong><br>'+esc(l.text)+'</div>';}).join(''):'<div class="logitem">No recent actions.</div>';}
+function renderTeam(){
+  var role=document.getElementById('role-filter').value;var status=document.getElementById('status-filter').value;
+  var rows=team.filter(function(m){return (!role||m.role===role)&&(!status||m.status===status);});
+  document.getElementById('team-body').innerHTML=rows.length?rows.map(function(m){
+    return "<tr><td>"+esc(m.name)+"</td><td>"+esc(m.email)+"</td><td><select onchange=\"changeRole('"+esc(m.id)+"',this.value)\"><option "+sel(m.role,'owner')+">owner</option><option "+sel(m.role,'manager')+">manager</option><option "+sel(m.role,'accountant')+">accountant</option><option "+sel(m.role,'viewer')+">viewer</option><option "+sel(m.role,'staff')+">staff</option></select></td><td><span class='pill "+esc(m.status)+"'>"+esc(m.status)+"</span></td><td>"+esc(m.lastLogin||'—')+"</td><td><button class='btn out' onclick=\"suspendMember('"+esc(m.id)+"')\">Suspend</button> <button class='btn out' onclick=\"removeMember('"+esc(m.id)+"')\">Remove</button></td></tr>";
+  }).join(''):'<tr><td colspan="6" style="text-align:center;padding:28px">No team members found.</td></tr>';
+}
+function sel(a,b){return a===b?'selected':'';}
+async function loadTeam(){
+  var snap=await db.collection('users').doc(uid).collection('team').get();
+  team=snap.docs.map(function(d){var x=d.data();x.id=d.id;return x;});
+  renderTeam();renderLog();
+}
+window.openInvite=function openInvite(){document.getElementById('invite-modal').classList.add('open');};
+window.closeInvite=function closeInvite(){document.getElementById('invite-modal').classList.remove('open');};
+window.saveInvite=async function saveInvite(){
+  var name=document.getElementById('inv-name').value.trim();var email=document.getElementById('inv-email').value.trim();var role=document.getElementById('inv-role').value;if(!name||!email){alert('Enter name and email.');return false;}
+  var t=token();var link=location.origin+'/signin.html?invite='+encodeURIComponent(t)+'&owner='+encodeURIComponent(uid);
+  var doc={name:name,email:email,role:role,status:'invited',inviteToken:t,addedAt:firebase.firestore.FieldValue.serverTimestamp(),lastLogin:null};
+  var ref=await db.collection('users').doc(uid).collection('team').add(doc);doc.id=ref.id;team.push(doc);document.getElementById('invite-link').value=link;logAction('Invited '+name+' as '+role);renderTeam();
+  return true;
+};
+window.emailInvite=function emailInvite(){
+  var link=document.getElementById('invite-link').value;
+  var email=document.getElementById('inv-email').value.trim();
+  var name=document.getElementById('inv-name').value.trim();
+  var role=document.getElementById('inv-role').value;
+  if(!email){alert('Enter the team member email first.');return;}
+  if(!link){alert('Create the invite first, then send the email.');return;}
+  var subject='You are invited to join '+ownerBiz+' on CLS CashFlow';
+  var body='Hi '+(name||'there')+',\n\nYou have been invited to join '+ownerBiz+' as a '+role+' on CLS CashFlow.\n\nTo create your account and accept access, open this link:\n'+link+'\n\nPlease sign up using this email address: '+email+'\n\nSee you inside,\n'+ownerBiz;
+  window.location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+};
+window.saveAndEmailInvite=async function saveAndEmailInvite(){
+  var ok=await window.saveInvite();
+  if(!ok)return;
+  var link=document.getElementById('invite-link').value;
+  var email=document.getElementById('inv-email').value.trim();
+  var name=document.getElementById('inv-name').value.trim();
+  var role=document.getElementById('inv-role').value;
+  try{
+    var res=await fetch('/.netlify/functions/send-invite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:email,name:name,role:role,link:link,biz:ownerBiz})});
+    var out={};try{out=await res.json();}catch(e){}
+    if(res.ok&&out.sent){alert('\u2713 Invite emailed to '+email+' from hello@ceylonrylabs.io');logAction('Emailed invite to '+email);}
+    else{alert('Automatic email failed ('+(out.error||('HTTP '+res.status))+').\nOpening your email app as a backup.');window.emailInvite();}
+  }catch(e){
+    alert('Email service not reachable yet.\nOpening your email app as a backup.');window.emailInvite();
+  }
+};
+window.copyInvite=function copyInvite(){var el=document.getElementById('invite-link');el.select();document.execCommand('copy');alert('Invite link copied.');};
+window.shareInvite=function shareInvite(){var link=document.getElementById('invite-link').value;if(!link){alert('Generate an invite first.');return;}window.open('https://wa.me/?text='+encodeURIComponent('Your CLS CashFlow invite link is '+link),'_blank');};
+window.changeRole=async function changeRole(id,role){await db.collection('users').doc(uid).collection('team').doc(id).set({role:role},{merge:true});team.forEach(function(m){if(m.id===id)m.role=role;});logAction('Changed role for '+id+' to '+role);renderTeam();};
+window.suspendMember=async function suspendMember(id){await db.collection('users').doc(uid).collection('team').doc(id).set({status:'suspended'},{merge:true});team.forEach(function(m){if(m.id===id)m.status='suspended';});logAction('Suspended '+id);renderTeam();};
+window.removeMember=async function removeMember(id){if(!confirm('Remove this team member?'))return;await db.collection('users').doc(uid).collection('team').doc(id).delete();team=team.filter(function(m){return m.id!==id;});logAction('Removed '+id);renderTeam();};
+window.exportTeam=function exportTeam(){var csv='Name,Email,Role,Status,Last Login\n'+team.map(function(m){return [m.name,m.email,m.role,m.status,m.lastLogin||''].map(function(v){return '"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='CLS_team_list.csv';a.click();};
+auth.onAuthStateChanged(async function(user){if(!user){location.href='signin.html';return;}uid=user.uid;var profile=await db.collection('users').doc(uid).get();if(profile.exists){var pd=profile.data();ownerBiz=pd.bizName||pd.invoiceBiz||'CLS CashFlow';if(pd.role&&pd.role!=='owner'){alert('Only owners can manage team access.');location.href='starter.html';return;}}await loadTeam();});
+</script>
+</body>
+</html>

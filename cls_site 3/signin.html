@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<!-- CLS-V5-WINDOW-ONCLICK -->
+<!-- CLS-SIGNIN-V4 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CeylonryLabs.io — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
+  authDomain: "ceylonry-labs.firebaseapp.com",
+  projectId: "ceylonry-labs",
+  storageBucket: "ceylonry-labs.firebasestorage.app",
+  messagingSenderId: "979885533126",
+  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
+};
+firebase.initializeApp(firebaseConfig);
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#B8922A;--gold-l:#D4A840;--gold-d:#7A6010;
+  --bg:#F7F5F0;--white:#FFFFFF;--bg3:#F0EDE6;
+  --text:#1C1814;--muted:#6B6258;--dim:#A8A29A;
+  --border:rgba(184,146,42,.2);--border2:rgba(184,146,42,.35);
+  --green:#1a9e5c;--red:#c0392b;
+  --font-d:'Cormorant Garamond',serif;--font-b:'DM Sans',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.shell{display:grid;grid-template-columns:380px 480px;min-height:600px;background:var(--white);box-shadow:0 32px 80px rgba(0,0,0,.12);max-width:900px;width:100%}
+/* LEFT */
+.left{background:#1a1714;padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.left::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;border:1px solid rgba(184,146,42,.15);pointer-events:none}
+.left::after{content:'';position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;border:1px solid rgba(184,146,42,.1);pointer-events:none}
+.logo{font-family:var(--font-d);font-size:1.5rem;font-weight:300;color:#fff;position:relative;z-index:1}
+.logo span{color:var(--gold)}
+.logo-sub{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:.25rem}
+.left-body{position:relative;z-index:1}
+.left-title{font-family:var(--font-d);font-size:2.4rem;font-weight:300;color:#fff;line-height:1.2;margin-bottom:1rem}
+.left-title em{color:var(--gold);font-style:italic}
+.left-sub{font-size:.82rem;color:rgba(255,255,255,.5);line-height:1.8}
+.left-features{display:flex;flex-direction:column;gap:.65rem;margin-top:1.75rem}
+.lf-item{display:flex;align-items:center;gap:.75rem;font-size:.78rem;color:rgba(255,255,255,.6)}
+.lf-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.left-footer{font-size:.65rem;color:rgba(255,255,255,.25);position:relative;z-index:1}
+/* RIGHT */
+.right{padding:3rem 2.75rem;display:flex;flex-direction:column;justify-content:center}
+.right-eyebrow{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;font-weight:600}
+.right-title{font-family:var(--font-d);font-size:2rem;font-weight:300;color:var(--text);margin-bottom:.35rem}
+.right-sub{font-size:.82rem;color:var(--muted);margin-bottom:2rem;line-height:1.6}
+.rule{width:40px;height:2px;background:linear-gradient(90deg,#1a1714,var(--gold));margin-bottom:1.5rem}
+/* Google button */
+.btn-google{display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;padding:.8rem;border:1.5px solid var(--border2);background:var(--white);color:var(--text);font-family:var(--font-b);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .22s;margin-bottom:1.25rem;letter-spacing:.02em}
+.btn-google:hover{border-color:var(--gold);background:var(--bg3)}
+.btn-google svg{width:18px;height:18px;flex-shrink:0}
+.divider{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.divider-text{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+/* Form */
+.field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.85rem}
+.field label{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.finput{background:var(--bg3);border:1px solid var(--border2);padding:.7rem 1rem;color:var(--text);font-family:var(--font-b);font-size:.85rem;outline:none;transition:all .22s;width:100%}
+.finput:focus{border-color:#1a1714;background:var(--white);box-shadow:0 0 0 3px rgba(26,23,20,.05)}
+.finput::placeholder{color:var(--dim)}
+.forgot{font-size:.72rem;color:var(--gold);text-decoration:none;float:right;margin-top:-.5rem;margin-bottom:.85rem;display:block;text-align:right}
+.forgot:hover{color:var(--gold-l)}
+.btn-sign{width:100%;padding:.85rem;background:#1a1714;color:#fff;font-family:var(--font-b);font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;border:none;cursor:pointer;transition:all .25s;margin-bottom:1.25rem}
+.btn-sign:hover{background:var(--gold)}
+.btn-sign:disabled{opacity:.5;cursor:not-allowed}
+.signup-link{font-size:.78rem;color:var(--muted);text-align:center}
+.signup-link a{color:var(--gold);text-decoration:none;font-weight:500}
+.signup-link a:hover{color:var(--gold-l)}
+.err-msg{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);color:var(--red);font-size:.78rem;padding:.65rem .9rem;margin-bottom:.85rem;display:none}
+.err-msg.show{display:block}
+.invite-banner{display:none;background:rgba(184,146,42,.1);border:1px solid var(--border2);padding:.85rem 1rem;margin-bottom:1rem;color:var(--muted);font-size:.8rem;line-height:1.6}
+.invite-banner.show{display:block}
+.invite-banner strong{color:var(--text)}
+.reset-form{display:none}
+.reset-form.show{display:block}
+.main-form.hide{display:none}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- LEFT -->
+  <div class="left">
+    <div>
+      <div class="logo">Ceylonry<span>Labs</span>.io</div>
+      <div class="logo-sub">CashFlow System</div>
+    </div>
+    <div class="left-body">
+      <div class="left-title">Welcome<br><em>back.</em></div>
+      <div class="left-sub">Your business finances, exactly where you left them.</div>
+      <div class="left-features">
+        <div class="lf-item"><div class="lf-dot"></div>Invoices, expenses & cashflow</div>
+        <div class="lf-item"><div class="lf-dot"></div>Clients & supplier database</div>
+        <div class="lf-item"><div class="lf-dot"></div>Profit overview & reports</div>
+        <div class="lf-item"><div class="lf-dot"></div>Your data, secure in the cloud</div>
+      </div>
+    </div>
+    <div class="left-footer">© 2026 CeylonryLabs.io · All rights reserved</div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="right-eyebrow">CLS CashFlow System</div>
+    <div class="right-title">Sign in to your account</div>
+    <div class="right-sub">Access your dashboard and manage your business finances.</div>
+    <div class="rule"></div>
+
+    <div class="err-msg" id="err-msg"></div>
+    <div class="invite-banner" id="invite-banner"></div>
+
+    <!-- MAIN SIGN IN FORM -->
+    <div class="main-form" id="main-form">
+      <!-- Google -->
+      <button class="btn-google" onclick="window.signInGoogle()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="divider"><span class="divider-text">or sign in with email</span></div>
+
+      <div class="field">
+        <label>Email Address</label>
+        <input class="finput" type="email" id="si-email" placeholder="you@business.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input class="finput" type="password" id="si-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
+      </div>
+      <a class="forgot" href="#" onclick="window.showReset(event)">Forgot your password?</a>
+
+      <button class="btn-sign" id="sign-btn" onclick="window.signIn()">Sign In →</button>
+
+      <div class="signup-link">
+        Don't have an account? <a id="signup-link" href="onboarding.html">Start your free 14-day trial →</a>
+      </div>
+    </div>
+
+    <!-- RESET PASSWORD FORM -->
+    <div class="reset-form" id="reset-form">
+      <div class="field">
+        <label>Your Email Address</label>
+        <input class="finput" type="email" id="reset-email" placeholder="you@business.com">
+      </div>
+      <button class="btn-sign" id="reset-btn" onclick="window.sendReset()">Send Reset Link →</button>
+      <div class="signup-link" style="margin-top:.75rem">
+        <a href="#" onclick="window.showSignIn(event)">← Back to sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var inviteParams = new URLSearchParams(window.location.search);
+var inviteToken = inviteParams.get('invite') || '';
+var inviteOwner = inviteParams.get('owner') || '';
+var inviteRecord = null;
+
+// ── AUTH STATE: redirect if already signed in ──
+firebase.auth().onAuthStateChanged(async function(user) {
+  if (user) {
+    await redirectToDashboard(user);
+  }
+});
+
+async function redirectToDashboard(user) {
+  try {
+    if (inviteToken && inviteOwner) {
+      await acceptInvite(user);
+    }
+    const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+    if (doc.exists) {
+      const data = doc.data();
+      const planFiles = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
+      const dest = data.role === 'staff' ? 'starter.html' : (planFiles[data.plan] || 'starter.html');
+      window.location.href = dest;
+    } else {
+      // Profile not found — send to onboarding
+      window.location.href = 'onboarding.html';
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function loadInvite() {
+  if (!inviteToken || !inviteOwner) return;
+  try {
+    const ownerDoc = await firebase.firestore().collection('users').doc(inviteOwner).get();
+    const owner = ownerDoc.exists ? ownerDoc.data() : {};
+    const snap = await firebase.firestore().collection('users').doc(inviteOwner).collection('team').where('inviteToken','==',inviteToken).limit(1).get();
+    if (snap.empty) { showErr('This invite link was not found or has expired.'); return; }
+    inviteRecord = snap.docs[0].data();
+    inviteRecord.id = snap.docs[0].id;
+    const biz = owner.bizName || owner.invoiceBiz || 'this business';
+    const banner = document.getElementById('invite-banner');
+    banner.innerHTML = 'You have been invited to join <strong>' + biz + '</strong> as <strong>' + (inviteRecord.role || 'team member') + '</strong>. Sign in with the invited email to accept access.';
+    banner.classList.add('show');
+    document.getElementById('sign-btn').textContent = 'Accept Invite →';
+    document.getElementById('signup-link').href = 'onboarding.html?invite=' + encodeURIComponent(inviteToken) + '&owner=' + encodeURIComponent(inviteOwner);
+    document.getElementById('signup-link').textContent = 'Need an account? Create one to accept invite →';
+    if (inviteRecord.email) document.getElementById('si-email').value = inviteRecord.email;
+  } catch(e) {
+    showErr('Could not load invite: ' + e.message);
+  }
+}
+
+async function acceptInvite(user) {
+  if (!inviteRecord) await loadInvite();
+  if (!inviteRecord || inviteRecord.status === 'suspended') return;
+  if (inviteRecord.email && user.email && inviteRecord.email.toLowerCase() !== user.email.toLowerCase()) {
+    throw new Error('This invite is for ' + inviteRecord.email + '. Please sign in with that email.');
+  }
+  const ownerDoc = await firebase.firestore().collection('users').doc(inviteOwner).get();
+  const owner = ownerDoc.exists ? ownerDoc.data() : {};
+  await firebase.firestore().collection('users').doc(user.uid).set({
+    name: user.displayName || inviteRecord.name || '',
+    email: user.email || inviteRecord.email || '',
+    role: inviteRecord.role || 'viewer',
+    ownerUid: inviteOwner,
+    plan: owner.plan || 'starter',
+    paid: owner.paid === true,
+    bizName: owner.bizName || owner.invoiceBiz || '',
+    onboardingComplete: true,
+    acceptedInviteAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  await firebase.firestore().collection('users').doc(inviteOwner).collection('team').doc(inviteRecord.id).set({
+    memberId: user.uid,
+    status: 'active',
+    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+function showErr(msg) {
+  const el = document.getElementById('err-msg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearErr() {
+  document.getElementById('err-msg').classList.remove('show');
+}
+
+// ── EMAIL SIGN IN ──
+window.signIn = async function signIn() {
+  clearErr();
+  const email = document.getElementById('si-email').value.trim();
+  const pass = document.getElementById('si-pass').value;
+  if (!email || !pass) { showErr('Please enter your email and password.'); return; }
+
+  const btn = document.getElementById('sign-btn');
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+
+  try {
+    const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+    await redirectToDashboard(cred.user);
+  } catch(err) {
+    btn.textContent = 'Sign In →'; btn.disabled = false;
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      showErr('Incorrect email or password. Please try again.');
+    } else {
+      showErr(err.message);
+    }
+  }
+}
+
+// ── GOOGLE SIGN IN ──
+window.signInGoogle = async function signInGoogle() {
+  clearErr();
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const result = await firebase.auth().signInWithPopup(provider);
+    const user = result.user;
+    const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+    if (!doc.exists) {
+      // New Google user — create profile with starter plan
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 14);
+      await firebase.firestore().collection('users').doc(user.uid).set({
+        name: user.displayName || '',
+        email: user.email,
+        phone: user.phoneNumber || '',
+        plan: 'starter',
+        planPrice: 5500,
+        trialStart: new Date().toISOString(),
+        trialEnd: trialEnd.toISOString(),
+        paid: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      if (inviteToken && inviteOwner) await acceptInvite(user);
+      // Pre-fill onboarding with Google data
+      const nameParts = (user.displayName || '').split(' ');
+      const prefill = {
+        fname: nameParts[0] || '',
+        lname: nameParts.slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        photo: user.photoURL || '',
+        googleAuth: true
+      };
+      sessionStorage.setItem('cls-prefill', JSON.stringify(prefill));
+      window.location.href = 'onboarding.html?google=1';
+    } else {
+      await redirectToDashboard(user);
+    }
+  } catch(err) {
+    showErr('Google sign-in failed: ' + err.message);
+  }
+}
+
+// ── RESET PASSWORD ──
+window.showReset = function showReset(e) {
+  e.preventDefault();
+  document.getElementById('main-form').classList.add('hide');
+  document.getElementById('reset-form').classList.add('show');
+  clearErr();
+}
+window.showSignIn = function showSignIn(e) {
+  e.preventDefault();
+  document.getElementById('reset-form').classList.remove('show');
+  document.getElementById('main-form').classList.remove('hide');
+  clearErr();
+}
+window.sendReset = async function sendReset() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email) { showErr('Please enter your email.'); return; }
+  const btn = document.getElementById('reset-btn');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  try {
+    await firebase.auth().sendPasswordResetEmail(email);
+    btn.textContent = '✓ Reset link sent!';
+    showErr('');
+    document.getElementById('err-msg').style.background = 'rgba(26,158,92,.08)';
+    document.getElementById('err-msg').style.borderColor = 'rgba(26,158,92,.25)';
+    document.getElementById('err-msg').style.color = '#1a7a48';
+    const el = document.getElementById('err-msg');
+    el.textContent = 'Password reset link sent to ' + email + '. Check your inbox.';
+    el.classList.add('show');
+  } catch(err) {
+    btn.textContent = 'Send Reset Link →'; btn.disabled = false;
+    showErr(err.message);
+  }
+}
+loadInvite();
+</script>
+</body>
+</html>
