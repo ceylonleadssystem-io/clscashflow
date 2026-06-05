@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<!-- CLS-V5-WINDOW-ONCLICK -->
+<!-- CLS-ONBOARDING-V4 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CeylonryLabs.io — Account Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#B8922A;--gold-l:#D4A840;--gold-d:#7A6010;
+  --bg:#FFFFFF;--bg2:#FAF8F3;--bg3:#F4F1E8;--bg4:#EDE9DE;
+  --text:#1C1814;--muted:#6B6258;--dim:#A8A29A;
+  --border:rgba(184,146,42,.2);--border2:rgba(184,146,42,.35);
+  --green:#1a9e5c;--red:#c0392b;--amber:#b7770d;
+  --font-d:'Cormorant Garamond',serif;--font-b:'DM Sans',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);overflow:hidden}
+
+/* ── LAYOUT ── */
+.ob-shell{display:grid;grid-template-columns:320px 1fr;height:100vh}
+
+/* ── LEFT PANEL ── */
+.ob-left{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;padding:2.25rem;position:relative;overflow:hidden}
+.ob-left::before{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(to top,rgba(184,146,42,.06),transparent);pointer-events:none}
+.ob-logo{font-family:var(--font-d);font-size:1.45rem;font-weight:300;color:var(--text);position:relative;z-index:1}
+.ob-logo span{color:var(--gold)}
+.ob-logo-tag{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-top:.2rem}
+
+/* Steps indicator */
+.ob-steps{display:flex;flex-direction:column;gap:0;position:relative;z-index:1;margin:1.75rem 0}
+.ob-step-item{display:flex;align-items:flex-start;gap:.8rem;padding:.7rem 0;border-bottom:1px solid var(--border)}
+.ob-step-item:last-child{border-bottom:none}
+.ob-step-dot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--dim);display:flex;align-items:center;justify-content:center;font-size:.62rem;color:var(--dim);flex-shrink:0;transition:all .35s;font-weight:600;background:#fff}
+.ob-step-item.done .ob-step-dot{background:var(--gold);border-color:var(--gold);color:#fff}
+.ob-step-item.active .ob-step-dot{border-color:#1a1714;color:#1a1714;box-shadow:0 0 0 3px rgba(26,23,20,.08);font-weight:700}
+.ob-step-title{font-size:.78rem;font-weight:500;color:var(--dim);transition:color .3s;line-height:1.2}
+.ob-step-sub{font-size:.68rem;color:var(--dim);opacity:.7;margin-top:.1rem}
+.ob-step-item.done .ob-step-title,.ob-step-item.active .ob-step-title{color:var(--text)}
+.ob-step-item.active .ob-step-title{font-weight:600}
+
+/* Progress */
+.ob-progress-wrap{position:relative;z-index:1}
+.ob-progress-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:.5rem}
+.ob-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-d),var(--gold));border-radius:2px;transition:width .5s ease}
+.ob-progress-text{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+/* ── RIGHT PANEL ── */
+.ob-right{display:flex;align-items:center;justify-content:center;padding:2rem;overflow:hidden;background:var(--bg)}
+.ob-steps-wrap{width:100%;max-width:580px;position:relative}
+
+/* Step cards */
+.ob-card{position:absolute;width:100%;opacity:0;transform:translateX(32px);pointer-events:none;transition:all .4s cubic-bezier(.25,.8,.25,1)}
+.ob-card.active{opacity:1;transform:translateX(0);pointer-events:all;position:relative}
+.ob-card.exiting{opacity:0;transform:translateX(-32px)}
+
+/* Typography */
+.ob-eyebrow{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;font-weight:600}
+.ob-title{font-family:var(--font-d);font-size:2.2rem;font-weight:300;line-height:1.2;margin-bottom:.4rem;color:var(--text)}
+.ob-title em{color:var(--gold);font-style:italic}
+.ob-sub{font-size:.85rem;color:var(--muted);line-height:1.75;margin-bottom:1.75rem}
+.ob-rule{width:44px;height:2px;background:linear-gradient(90deg,#1a1714,var(--gold));margin-bottom:1.25rem}
+
+/* Form elements */
+.ob-field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.85rem}
+.ob-field label{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.ob-input{background:#fff;border:1px solid var(--border2);padding:.7rem 1rem;color:var(--text);font-family:var(--font-b);font-size:.87rem;outline:none;transition:all .25s;width:100%}
+.ob-input:focus{border-color:#1a1714;box-shadow:0 0 0 3px rgba(26,23,20,.06)}
+.ob-input::placeholder{color:var(--dim)}
+.ob-input-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+.ob-input-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+.ob-select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231a1714' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;background-color:#fff}
+
+/* Choice cards */
+.ob-choices{display:grid;gap:.55rem;margin-bottom:1.25rem}
+.ob-choices.cols-2{grid-template-columns:1fr 1fr}
+.ob-choice{border:1.5px solid var(--border);padding:.9rem 1rem;cursor:pointer;transition:all .2s;text-align:left;background:#fff;color:var(--text);font-family:var(--font-b);display:flex;align-items:flex-start;gap:.8rem;width:100%}
+.ob-choice:hover{border-color:var(--border2);background:var(--bg2)}
+.ob-choice.selected{border-color:#1a1714;background:var(--bg3)}
+.ob-choice-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--dim);flex-shrink:0;margin-top:.2rem;transition:all .2s}
+.ob-choice.selected .ob-choice-dot{background:#1a1714;border-color:#1a1714}
+.ob-choice-label{font-size:.83rem;font-weight:500;color:var(--text);margin-bottom:.1rem}
+.ob-choice-desc{font-size:.73rem;color:var(--muted);line-height:1.4}
+.ob-choice-icon{font-size:1.3rem;flex-shrink:0}
+
+/* Tier cards */
+.tier-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:1.25rem}
+.tier-card{border:1.5px solid var(--border);padding:1.1rem .9rem;cursor:pointer;transition:all .2s;text-align:center;position:relative;background:#fff}
+.tier-card:hover{border-color:var(--border2);background:var(--bg2)}
+.tier-card.selected{border-color:#1a1714;background:var(--bg3)}
+.tier-badge{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.2rem .55rem;position:absolute;top:-.6rem;left:50%;transform:translateX(-50%);white-space:nowrap}
+.tier-name{font-family:var(--font-d);font-size:1.2rem;font-weight:400;color:var(--text);margin-bottom:.2rem}
+.tier-price{font-size:.72rem;color:var(--gold);margin-bottom:.5rem;font-weight:600}
+.tier-features{font-size:.68rem;color:var(--muted);line-height:1.7;text-align:left}
+
+/* Template grid */
+.tpl-grid-wrap{max-height:200px;overflow-y:auto;border:1px solid var(--border);padding:.5rem;margin-bottom:.85rem;background:var(--bg3)}
+.tpl-grid{display:grid;gap:.45rem}
+.tpl-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.tpl-grid.cols-5{grid-template-columns:repeat(5,1fr)}
+.tpl-grid.cols-6{grid-template-columns:repeat(6,1fr)}
+.tpl-mini{border:2px solid var(--border);padding:.4rem;cursor:pointer;transition:all .2s;background:#fff}
+.tpl-mini:hover{border-color:var(--gold-d)}
+.tpl-mini.selected{border-color:#1a1714;box-shadow:0 0 0 2px rgba(26,23,20,.1)}
+.tpl-mini-header{height:11px;width:100%;margin-bottom:3px}
+.tpl-mini-lines{display:flex;flex-direction:column;gap:2px;padding:0 1px}
+.tpl-mini-line{height:2px;background:rgba(0,0,0,.1);border-radius:1px}
+.tpl-mini-line.s{width:60%}
+.tpl-mini-name{font-size:.48rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:.25rem;text-align:center;line-height:1.2}
+
+/* Logo upload */
+.logo-upload-area{border:2px dashed var(--border2);padding:1.5rem;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:.85rem;position:relative;background:var(--bg2)}
+.logo-upload-area:hover{border-color:var(--gold);background:var(--bg3)}
+.logo-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.logo-preview{max-height:50px;max-width:160px;object-fit:contain;margin:0 auto .6rem;display:block}
+.logo-upload-label{font-size:.78rem;color:var(--muted)}
+.logo-upload-hint{font-size:.65rem;color:var(--dim);margin-top:.2rem}
+
+/* ── PAYROLL TABLE ── */
+.payroll-table-wrap{border:1px solid var(--border);background:#fff;margin-bottom:.85rem;overflow:auto}
+.payroll-table{width:100%;border-collapse:collapse;min-width:680px}
+.payroll-table th{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:.55rem .65rem;text-align:left;border-bottom:2px solid #1a1714;background:var(--bg3);white-space:nowrap}
+.payroll-table td{padding:.35rem .4rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.payroll-table tr:last-child td{border-bottom:none}
+.payroll-table td input,.payroll-table td select{background:var(--bg2);border:1px solid transparent;padding:.4rem .55rem;color:var(--text);font-family:var(--font-b);font-size:.8rem;width:100%;outline:none;transition:all .2s}
+.payroll-table td input:focus,.payroll-table td select:focus{border-color:var(--gold);background:#fff}
+.payroll-table td input::placeholder{color:var(--dim)}
+.epf-cell{font-size:.72rem;color:var(--muted);text-align:center;min-width:70px}
+.epf-cell strong{display:block;color:var(--text);font-size:.78rem}
+.epf-cell span{font-size:.64rem;color:var(--gold)}
+.btn-add-emp{background:#fff;border:1px dashed var(--border2);color:var(--muted);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem;cursor:pointer;font-family:var(--font-b);width:100%;transition:all .25s}
+.btn-add-emp:hover{border-color:var(--gold);color:var(--gold);background:var(--bg3)}
+.btn-rm-emp{background:none;border:none;color:var(--red);cursor:pointer;font-size:.85rem;padding:.2rem;opacity:.45;display:flex;align-items:center;justify-content:center}
+.btn-rm-emp:hover{opacity:1}
+
+/* EPF legend */
+.epf-legend{background:var(--bg3);border:1px solid var(--border);padding:.85rem 1rem;margin-bottom:.85rem;display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;text-align:center}
+.epf-item-label{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:.15rem}
+.epf-item-val{font-size:.88rem;font-weight:600;color:var(--text)}
+.epf-item-val.gold{color:var(--gold)}
+
+/* ── NOTIFICATIONS ── */
+.notif-section-title{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:#1a1714;font-weight:700;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:2px solid #1a1714}
+.channel-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:1.5rem}
+.channel-card{border:1.5px solid var(--border);padding:1.1rem .9rem;cursor:pointer;transition:all .2s;text-align:center;background:#fff;position:relative}
+.channel-card:hover{border-color:var(--border2);background:var(--bg2)}
+.channel-card.selected{border-color:#1a1714;background:var(--bg3)}
+.channel-card-icon{font-size:1.6rem;margin-bottom:.5rem}
+.channel-card-name{font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.2rem}
+.channel-card-desc{font-size:.68rem;color:var(--muted)}
+.channel-card-check{position:absolute;top:.5rem;right:.5rem;width:18px;height:18px;border:1.5px solid var(--dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;transition:all .2s;background:#fff;color:transparent}
+.channel-card.selected .channel-card-check{background:#1a1714;border-color:#1a1714;color:#fff}
+
+/* Reminder toggles */
+.reminder-list{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.25rem}
+.reminder-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border:1px solid var(--border);background:#fff;gap:1rem}
+.reminder-item-left{display:flex;align-items:center;gap:.75rem}
+.reminder-item-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.reminder-item-text{}
+.reminder-item-label{font-size:.82rem;font-weight:500;color:var(--text)}
+.reminder-item-desc{font-size:.7rem;color:var(--muted);margin-top:.05rem}
+/* Toggle switch */
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:#E5E0D2;border-radius:11px;cursor:pointer;transition:background .25s}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked + .toggle-slider{background:#1a1714}
+.toggle input:checked + .toggle-slider::before{transform:translateX(18px)}
+
+/* Contact fields for notifications */
+.notif-contact-fields{display:none;background:var(--bg3);border:1px solid var(--border);padding:1rem;margin-top:.75rem;margin-bottom:1rem}
+.notif-contact-fields.show{display:block}
+
+/* Navigation */
+.ob-nav{display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.btn-back{background:none;border:1px solid var(--border);color:var(--muted);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-family:var(--font-b);transition:all .2s;padding:.6rem 1.25rem}
+.btn-back:hover{border-color:var(--text);color:var(--text)}
+.btn-next{padding:.8rem 2.25rem;background:#1a1714;color:#fff;font-size:.76rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;border:none;cursor:pointer;font-family:var(--font-b);transition:all .3s}
+.btn-next:hover{background:var(--gold);transform:translateY(-1px)}
+.btn-skip{background:none;border:none;color:var(--dim);font-size:.73rem;letter-spacing:.08em;cursor:pointer;font-family:var(--font-b);text-decoration:underline;padding:.5rem .75rem}
+.btn-skip:hover{color:var(--muted)}
+
+/* Success screen */
+.ob-success{text-align:center;padding:1.5rem 0}
+.ob-success-ring{width:68px;height:68px;border-radius:50%;border:2px solid #1a1714;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;font-size:1.6rem;background:var(--bg3)}
+.ob-feature-list{text-align:left;margin:1.25rem 0;display:flex;flex-direction:column;gap:.5rem}
+.ob-feature-item{display:flex;align-items:center;gap:.65rem;font-size:.82rem;color:var(--muted);padding:.4rem 0}
+.ob-feature-item::before{content:'✓';color:var(--gold);font-weight:700;flex-shrink:0;font-size:.8rem}
+
+/* Summary box */
+.summary-box{background:var(--bg3);border:1px solid var(--border);border-left:3px solid #1a1714;padding:1.1rem 1.25rem;margin:1.25rem 0;text-align:left}
+.summary-box-label{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;font-weight:600}
+.summary-row{font-size:.8rem;color:var(--muted);line-height:1.9;display:flex;gap:.5rem}
+.summary-row strong{color:var(--text);font-weight:500;min-width:120px;flex-shrink:0}
+.tour-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin:1.15rem 0}
+.tour-card{border:1px solid var(--border);background:#fff;padding:.95rem;text-align:left}
+.tour-card-icon{font-size:1.35rem;margin-bottom:.45rem}
+.tour-card-title{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
+.tour-card-text{font-size:.7rem;color:var(--muted);line-height:1.5}
+.launch-choice{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1rem}
+.launch-choice .btn-next,.launch-choice .btn-back{width:100%;padding:.9rem .75rem}
+
+/* Scrollable step content */
+.ob-card-scroll{max-height:calc(100vh - 140px);overflow-y:auto;padding-right:4px}
+
+@media(max-width:860px){
+  .ob-shell{grid-template-columns:1fr}
+  .ob-left{display:none}
+  .ob-right{padding:1.25rem;align-items:flex-start;overflow-y:auto}
+  .ob-title{font-size:1.8rem}
+  .ob-choices.cols-2,.tier-cards,.channel-cards{grid-template-columns:1fr}
+  .ob-input-row,.ob-input-row3{grid-template-columns:1fr}
+  .epf-legend{grid-template-columns:1fr 1fr}
+  .payroll-table-wrap{overflow-x:auto}
+  .tour-card-grid,.launch-choice{grid-template-columns:1fr}
+}
+</style>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
+  authDomain: "ceylonry-labs.firebaseapp.com",
+  projectId: "ceylonry-labs",
+  storageBucket: "ceylonry-labs.firebasestorage.app",
+  messagingSenderId: "979885533126",
+  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
+};
+firebase.initializeApp(firebaseConfig);
+</script>
+</head>
+<body>
+
+<div class="ob-shell">
+
+  <!-- LEFT PANEL -->
+  <div class="ob-left">
+    <div>
+      <div class="ob-logo">Ceylonry<span>Labs</span>.io<div class="ob-logo-tag">Account Setup</div></div>
+      <a href="index.html" style="display:inline-block;margin-top:14px;font-size:.72rem;letter-spacing:.04em;color:var(--muted);text-decoration:none">← Back to Home</a>
+    </div>
+
+    <div class="ob-steps" id="ob-step-nav">
+      <div class="ob-step-item active" data-step="1">
+        <div class="ob-step-dot">1</div>
+        <div><div class="ob-step-title">Create Account</div><div class="ob-step-sub">Login details</div></div>
+      </div>
+      <div class="ob-step-item" data-step="2">
+        <div class="ob-step-dot">2</div>
+        <div><div class="ob-step-title">Your Business</div><div class="ob-step-sub">Type, size & plan</div></div>
+      </div>
+      <div class="ob-step-item" data-step="3">
+        <div class="ob-step-dot">3</div>
+        <div><div class="ob-step-title">Your Experience</div><div class="ob-step-sub">Personalise setup</div></div>
+      </div>
+      <div class="ob-step-item" data-step="4">
+        <div class="ob-step-dot">4</div>
+        <div><div class="ob-step-title">Business Profile</div><div class="ob-step-sub">Logo, address & templates</div></div>
+      </div>
+      <div class="ob-step-item" data-step="5">
+        <div class="ob-step-dot">5</div>
+        <div><div class="ob-step-title">Team & Payroll</div><div class="ob-step-sub">Staff, EPF/ETF & salary dates</div></div>
+      </div>
+      <div class="ob-step-item" data-step="6">
+        <div class="ob-step-dot">6</div>
+        <div><div class="ob-step-title">Notifications</div><div class="ob-step-sub">Email, SMS & WhatsApp</div></div>
+      </div>
+      <div class="ob-step-item" data-step="7">
+        <div class="ob-step-dot">7</div>
+        <div><div class="ob-step-title">All Set</div><div class="ob-step-sub">Ready to launch</div></div>
+      </div>
+    </div>
+
+    <div class="ob-progress-wrap">
+      <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress" style="width:14.3%"></div></div>
+      <div class="ob-progress-text" id="ob-progress-text">Step 1 of 7</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="ob-right">
+    <div class="ob-steps-wrap">
+
+      <!-- ═══ STEP 1: SIGNUP ═══ -->
+      <div class="ob-card active" id="step-1">
+        <p class="ob-eyebrow">Welcome to CeylonryLabs.io</p>
+        <h1 class="ob-title">Let's get you <em>set up</em>.</h1>
+        <div class="ob-rule"></div>
+        <p class="ob-sub">Create your account to access the full Cashflow System. Takes under 3 minutes.</p>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>First Name *</label><input class="ob-input" id="s1-fname" placeholder="Kasun"></div>
+          <div class="ob-field"><label>Last Name *</label><input class="ob-input" id="s1-lname" placeholder="Perera"></div>
+        </div>
+        <div class="ob-field"><label>Email Address *</label><input class="ob-input" type="email" id="s1-email" placeholder="you@yourbusiness.com"></div>
+        <div class="ob-field"><label>Phone Number</label><input class="ob-input" type="tel" id="s1-phone" placeholder="+94 77 000 0000"></div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Password *</label><input class="ob-input" type="password" id="s1-pass" placeholder="Min 8 characters"></div>
+          <div class="ob-field"><label>Confirm Password *</label><input class="ob-input" type="password" id="s1-pass2" placeholder="Repeat password"></div>
+        </div>
+        <div class="ob-nav"><span></span><button class="btn-next" onclick="window.nextStep(1)">Continue →</button></div>
+      </div>
+
+      <!-- ═══ STEP 2: BUSINESS ═══ -->
+      <div class="ob-card" id="step-2">
+        <p class="ob-eyebrow">Step 2 of 7</p>
+        <h1 class="ob-title">Tell us about your <em>business</em>.</h1>
+        <div class="ob-rule"></div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Business Name *</label><input class="ob-input" id="s2-bizname" placeholder="The Spice Garden"></div>
+          <div class="ob-field"><label>Industry *</label>
+            <select class="ob-input ob-select" id="s2-industry">
+              <option value="">Select...</option>
+              <option>Retail</option><option>Services</option><option>Food & Bev</option>
+              <option>Restaurant / Café / F&B</option><option>Hotel / Villa / Hospitality</option>
+              <option>Logistics / Transport</option>
+              <option>Construction / Contractor</option><option>Digital Agency / Freelancer</option>
+              <option>Multi-branch Operation</option><option>Manufacturing</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="ob-field" style="margin-bottom:.6rem"><label>Your Purchased Plan *</label></div>
+        <div class="tier-cards">
+          <div class="tier-card" onclick="window.selectTier('starter',this)">
+            <div class="tier-name">Starter</div><div class="tier-price">LKR 5,500/mo</div>
+            <div class="tier-features">• Dashboard & Cashflow<br>• Invoices (3 templates)<br>• Up to 2 users</div>
+          </div>
+          <div class="tier-card" onclick="window.selectTier('growth',this)">
+            <div class="tier-badge">Most Popular</div>
+            <div class="tier-name">Growth</div><div class="tier-price">LKR 12,500/mo</div>
+            <div class="tier-features">• Everything in Starter<br>• Payroll & Debt (10 templates)<br>• Up to 8 users</div>
+          </div>
+          <div class="tier-card" onclick="window.selectTier('premium',this)">
+            <div class="tier-name">Premium</div><div class="tier-price">LKR 28,500/mo</div>
+            <div class="tier-features">• Everything in Growth<br>• AI & Multi-branch (30 templates)<br>• Unlimited users</div>
+          </div>
+        </div>
+        <div class="ob-field" style="margin-bottom:.5rem"><label>Primary use cases</label></div>
+        <div class="ob-choices cols-2" id="use-cases">
+          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track Cash In & Out</div><div class="ob-choice-desc">Daily cashflow visibility</div></div></button>
+          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Invoice Clients</div><div class="ob-choice-desc">Create & send invoices</div></div></button>
+          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">👥</span><div><div class="ob-choice-label">Manage Payroll</div><div class="ob-choice-desc">Staff salaries & EPF</div></div></button>
+          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Business Reports</div><div class="ob-choice-desc">Analytics & insights</div></div></button>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);padding:1rem;margin-bottom:1rem">
+          <div class="notif-section-title" style="margin-bottom:.8rem">First Client Optional</div>
+          <div class="ob-input-row">
+            <div class="ob-field"><label>Client Name</label><input class="ob-input" id="s2-client-name" placeholder="Nadeem Trading"></div>
+            <div class="ob-field"><label>Client Phone</label><input class="ob-input" id="s2-client-phone" placeholder="+94 77 000 0000"></div>
+          </div>
+          <div class="ob-field" style="margin-bottom:0"><label>Client Email</label><input class="ob-input" type="email" id="s2-client-email" placeholder="accounts@client.lk"></div>
+        </div>
+        <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(2)">← Back</button><button class="btn-next" onclick="window.nextStep(2)">Continue →</button></div>
+      </div>
+
+      <!-- ═══ STEP 3: EXPERIENCE ═══ -->
+      <div class="ob-card" id="step-3">
+        <p class="ob-eyebrow">Step 3 of 7</p>
+        <h1 class="ob-title">How comfortable are you with <em>financial management</em>?</h1>
+        <div class="ob-rule"></div>
+        <p class="ob-sub">We'll personalise your system setup based on your answer. No wrong choice.</p>
+        <div class="ob-choices" id="exp-cards">
+          <button class="ob-choice" onclick="window.selectExp('beginner',this)">
+            <span class="ob-choice-icon">🌱</span>
+            <div><div class="ob-choice-label">Just getting started</div><div class="ob-choice-desc">New to financial tracking — I'd love a guided walkthrough of every module before starting.</div></div>
+          </button>
+          <button class="ob-choice" onclick="window.selectExp('intermediate',this)">
+            <span class="ob-choice-icon">📈</span>
+            <div><div class="ob-choice-label">I know the basics</div><div class="ob-choice-desc">Used spreadsheets or simple tools before. Show me the key features then I'll explore.</div></div>
+          </button>
+          <button class="ob-choice" onclick="window.selectExp('advanced',this)">
+            <span class="ob-choice-icon">🎯</span>
+            <div><div class="ob-choice-label">I'm experienced</div><div class="ob-choice-desc">I've used financial software. Just set up my account and take me to the dashboard.</div></div>
+          </button>
+        </div>
+        <div id="tour-note" style="display:none;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--gold);padding:.9rem 1.1rem;margin-bottom:1rem">
+          <div style="font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.3rem;font-weight:600">What this means for you</div>
+          <div id="tour-note-text" style="font-size:.81rem;color:var(--muted);line-height:1.65"></div>
+        </div>
+        <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(3)">← Back</button><button class="btn-next" onclick="window.nextStep(3)">Continue →</button></div>
+      </div>
+
+      <!-- ═══ STEP 4: BUSINESS PROFILE ═══ -->
+      <div class="ob-card" id="step-4">
+        <div class="ob-card-scroll">
+        <p class="ob-eyebrow">Step 4 of 7</p>
+        <h1 class="ob-title">Your <em>invoice identity</em>.</h1>
+        <div class="ob-rule"></div>
+        <div class="logo-upload-area" onclick="document.getElementById('logo-file').click()">
+          <img class="logo-preview" id="logo-preview-img" style="display:none" src="" alt="Logo">
+          <div id="logo-placeholder"><div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
+            <div class="logo-upload-label">Upload your business logo</div>
+            <div class="logo-upload-hint">PNG or JPG · Max 2MB · Recommended 300×100px</div>
+          </div>
+          <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewLogo(this)">
+        </div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Business Name on Invoices *</label><input class="ob-input" id="s4-bizname" placeholder="The Spice Garden Restaurant"></div>
+          <div class="ob-field"><label>Business Reg. No.</label><input class="ob-input" id="s4-regno" placeholder="PV 00000 (optional)"></div>
+        </div>
+        <div class="ob-field"><label>Business Address *</label><input class="ob-input" id="s4-addr" placeholder="42 Galle Road, Colombo 03, Sri Lanka"></div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Invoice Email</label><input class="ob-input" type="email" id="s4-email" placeholder="invoices@yourbusiness.com"></div>
+          <div class="ob-field"><label>VAT / Tax Number</label><input class="ob-input" id="s4-vat" placeholder="Optional"></div>
+        </div>
+        <div class="ob-field"><label>Invoice Footer Message</label><input class="ob-input" id="s4-footer" placeholder="Thank you for your business. Payment due within 30 days."></div>
+        <div class="ob-field" style="margin-top:.75rem"><label id="tpl-label">Invoice Template</label></div>
+        <div class="tpl-grid-wrap"><div class="tpl-grid" id="tpl-grid"></div></div>
+        </div>
+        <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(4)">← Back</button><button class="btn-next" onclick="window.nextStep(4)">Continue →</button></div>
+      </div>
+
+      <!-- ═══ STEP 5: TEAM & PAYROLL ═══ -->
+      <div class="ob-card" id="step-5">
+        <div class="ob-card-scroll">
+        <p class="ob-eyebrow">Step 5 of 7</p>
+        <h1 class="ob-title">Team & <em>payroll</em> setup.</h1>
+        <div class="ob-rule"></div>
+        <p class="ob-sub">Add your staff for payroll tracking. Sri Lanka EPF & ETF contributions are calculated automatically.</p>
+
+        <!-- EPF/ETF Legend -->
+        <div class="epf-legend">
+          <div><div class="epf-item-label">EPF (Employee)</div><div class="epf-item-val">8%</div></div>
+          <div><div class="epf-item-label">EPF (Employer)</div><div class="epf-item-val gold">12%</div></div>
+          <div><div class="epf-item-label">ETF (Employer)</div><div class="epf-item-val gold">3%</div></div>
+          <div><div class="epf-item-label">Total Employer Cost</div><div class="epf-item-val">+15%</div></div>
+        </div>
+
+        <div class="ob-input-row" style="margin-bottom:.85rem">
+          <div class="ob-field"><label>Number of Employees</label>
+            <input class="ob-input" type="number" id="s5-empcount" placeholder="e.g. 5" min="0" max="200" oninput="updateEmpRows(this.value)">
+          </div>
+          <div class="ob-field"><label>Payroll Frequency</label>
+            <select class="ob-input ob-select" id="s5-payfreq"><option>Monthly</option><option>Bi-weekly</option><option>Weekly</option></select>
+          </div>
+        </div>
+
+        <div id="emp-table-wrap" style="display:none">
+          <div class="payroll-table-wrap">
+            <table class="payroll-table">
+              <thead><tr>
+                <th>Full Name</th><th>Role</th>
+                <th>Gross Salary (LKR)</th>
+                <th>Salary Date</th>
+                <th>EPF Emp (8%)</th>
+                <th>EPF+ETF Employer (15%)</th>
+                <th style="width:28px"></th>
+              </tr></thead>
+              <tbody id="emp-tbody"></tbody>
+            </table>
+          </div>
+          <button class="btn-add-emp" onclick="window.addEmpRow()">+ Add Another Employee</button>
+        </div>
+
+        <div id="no-emp-msg" style="background:var(--bg3);border:1px solid var(--border);padding:1rem;text-align:center;color:var(--dim);font-size:.82rem;margin-bottom:.85rem">
+          Enter the number of employees above to add their payroll details, or enter 0 to skip for now.
+        </div>
+        </div>
+        <div class="ob-nav">
+          <button class="btn-back" onclick="window.prevStep(5)">← Back</button>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <button class="btn-skip" onclick="window.nextStep(5,true)">Skip for now</button>
+            <button class="btn-next" onclick="window.nextStep(5)">Continue →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 6: NOTIFICATIONS ═══ -->
+      <div class="ob-card" id="step-6">
+        <div class="ob-card-scroll">
+        <p class="ob-eyebrow">Step 6 of 7</p>
+        <h1 class="ob-title">Stay <em>notified</em>.</h1>
+        <div class="ob-rule"></div>
+        <p class="ob-sub">Choose how CeylonryLabs alerts you about overdue invoices, payroll, and cash updates. You can change these anytime in settings.</p>
+
+        <div class="notif-section-title">Alert Channels</div>
+        <div class="channel-cards">
+          <div class="channel-card" onclick="window.toggleChannel('email',this)">
+            <div class="channel-card-check">✓</div>
+            <div class="channel-card-icon">📧</div>
+            <div class="channel-card-name">Email</div>
+            <div class="channel-card-desc">Alerts to your registered email address</div>
+          </div>
+          <div class="channel-card" onclick="window.toggleChannel('sms',this)">
+            <div class="channel-card-check">✓</div>
+            <div class="channel-card-icon">📱</div>
+            <div class="channel-card-name">SMS / Phone</div>
+            <div class="channel-card-desc">Text message alerts to your mobile</div>
+          </div>
+          <div class="channel-card" onclick="window.toggleChannel('whatsapp',this)">
+            <div class="channel-card-check">✓</div>
+            <div class="channel-card-icon">💬</div>
+            <div class="channel-card-name">WhatsApp</div>
+            <div class="channel-card-desc">Alerts via WhatsApp to your number</div>
+          </div>
+        </div>
+
+        <!-- Channel contact fields -->
+        <div class="notif-contact-fields" id="notif-email-fields">
+          <div class="ob-field" style="margin:0"><label>Notification Email</label>
+            <input class="ob-input" id="notif-email" placeholder="alerts@yourbusiness.com" type="email">
+          </div>
+        </div>
+        <div class="notif-contact-fields" id="notif-sms-fields">
+          <div class="ob-field" style="margin:0"><label>SMS Phone Number</label>
+            <input class="ob-input" id="notif-sms" placeholder="+94 77 000 0000" type="tel">
+          </div>
+        </div>
+        <div class="notif-contact-fields" id="notif-wa-fields">
+          <div class="ob-field" style="margin:0"><label>WhatsApp Number</label>
+            <input class="ob-input" id="notif-wa" placeholder="+94 77 000 0000" type="tel">
+          </div>
+        </div>
+
+        <div class="notif-section-title" style="margin-top:1.25rem">What to remind me about</div>
+        <div class="reminder-list">
+          <div class="reminder-item">
+            <div class="reminder-item-left">
+              <span class="reminder-item-icon">🧾</span>
+              <div class="reminder-item-text"><div class="reminder-item-label">Invoice Due Reminders</div><div class="reminder-item-desc">Alert 3 days before an invoice is due</div></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="rem-invoice-due" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="reminder-item">
+            <div class="reminder-item-left">
+              <span class="reminder-item-icon">⚠️</span>
+              <div class="reminder-item-text"><div class="reminder-item-label">Overdue Invoice Alerts</div><div class="reminder-item-desc">Alert immediately when an invoice passes its due date</div></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="rem-overdue" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="reminder-item">
+            <div class="reminder-item-left">
+              <span class="reminder-item-icon">👥</span>
+              <div class="reminder-item-text"><div class="reminder-item-label">Payroll Processing Date</div><div class="reminder-item-desc">Remind me 2 days before payroll is due</div></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="rem-payroll" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="reminder-item">
+            <div class="reminder-item-left">
+              <span class="reminder-item-icon">💰</span>
+              <div class="reminder-item-text"><div class="reminder-item-label">Weekly Cash Summary</div><div class="reminder-item-desc">Every Monday — week's cashflow overview</div></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="rem-weekly"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="reminder-item">
+            <div class="reminder-item-left">
+              <span class="reminder-item-icon">📊</span>
+              <div class="reminder-item-text"><div class="reminder-item-label">Monthly Financial Report</div><div class="reminder-item-desc">1st of each month — full business summary</div></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="rem-monthly" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="reminder-item">
+            <div class="reminder-item-left">
+              <span class="reminder-item-icon">💳</span>
+              <div class="reminder-item-text"><div class="reminder-item-label">Large Transaction Alerts</div><div class="reminder-item-desc">Alert for transactions above LKR 100,000</div></div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="rem-large"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        </div>
+        <div class="ob-nav">
+          <button class="btn-back" onclick="window.prevStep(6)">← Back</button>
+          <button class="btn-next" onclick="window.nextStep(6)">Finish Setup →</button>
+        </div>
+      </div>
+
+      <!-- ═══ STEP 7: SUCCESS ═══ -->
+      <div class="ob-card" id="step-7">
+        <div class="ob-success">
+          <div class="ob-success-ring">✓</div>
+          <p class="ob-eyebrow" style="text-align:center">Setup Complete</p>
+          <h1 class="ob-title" style="text-align:center;font-size:2rem">You're <em>ready</em> to go.</h1>
+          <div class="ob-rule" style="margin:1rem auto"></div>
+          <p class="ob-sub" style="text-align:center">Your CeylonryLabs.io account is fully configured. Here's what was set up:</p>
+          <div class="ob-feature-list" id="success-list">
+            <div class="ob-feature-item">Account created & securely saved</div>
+            <div class="ob-feature-item">Business profile & logo configured</div>
+            <div class="ob-feature-item" id="fl-template">Invoice template selected</div>
+            <div class="ob-feature-item" id="fl-payroll" style="display:none">Payroll set up with EPF/ETF calculations</div>
+            <div class="ob-feature-item" id="fl-notif">Notifications configured</div>
+            <div class="ob-feature-item" id="fl-tour" style="display:none">Guided tour queued for first login</div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-box-label">Account Summary</div>
+            <div id="account-summary"></div>
+          </div>
+          <div class="tour-card-grid">
+            <div class="tour-card"><div class="tour-card-icon">💰</div><div class="tour-card-title">Add Income</div><div class="tour-card-text">Start with daily sales, service fees, deposits, and invoice payments.</div></div>
+            <div class="tour-card"><div class="tour-card-icon">🧾</div><div class="tour-card-title">Track Expenses</div><div class="tour-card-text">Capture rent, utilities, salaries, supplies, marketing, and transport costs.</div></div>
+            <div class="tour-card"><div class="tour-card-icon">📨</div><div class="tour-card-title">Send Invoices</div><div class="tour-card-text">Create branded LKR invoices with client details and payment status.</div></div>
+          </div>
+          <div class="launch-choice">
+            <button class="btn-next" id="launch-demo-btn" onclick="window.launchDashboard(true)">Load Demo Data →</button>
+            <button class="btn-back" id="launch-btn" onclick="window.launchDashboard(false)">Start Fresh →</button>
+          </div>
+          <p style="font-size:.7rem;color:var(--dim);margin-top:.75rem;text-align:center">💻 Dashboard is optimised for laptop & desktop. For best experience, use a computer.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 7;
+const state = {
+  fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',
+  bizName:'',industry:'',tier:'',useCases:[],firstClient:null,expLevel:'',
+  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',footer:'',selectedTemplate:0,
+  empCount:0,employees:[],payFreq:'Monthly',
+  channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:'',loadDemoData:false
+};
+
+// ── TEMPLATES ──
+const tplColors = [
+  {name:'Gold',hex:'#B8922A',dark:'#7A6010'},
+  {name:'Navy',hex:'#1B2E5C',dark:'#0F1D3A'},
+  {name:'Forest',hex:'#1F5C3A',dark:'#133D26'},
+  {name:'Slate',hex:'#334155',dark:'#1E2D3D'},
+  {name:'Crimson',hex:'#7C1D2E',dark:'#4F0E1B'},
+  {name:'Teal',hex:'#0F6B6B',dark:'#094545'},
+];
+const tplStyles = ['Classic','Minimal','Executive','Bold','Boxed','Stripe'];
+const allTemplates = [];
+tplColors.forEach(c=>tplStyles.forEach(s=>allTemplates.push({name:c.name+' '+s,hex:c.hex,dark:c.dark,style:s.toLowerCase()})));
+
+function buildTemplateGrid(count){
+  const grid=document.getElementById('tpl-grid');
+  const label=document.getElementById('tpl-label');
+  const templates=allTemplates.slice(0,count);
+  const cols=count<=3?3:count<=10?5:6;
+  grid.className=`tpl-grid cols-${cols}`;
+  label.textContent=`Invoice Template — ${count} available on your plan`;
+  grid.innerHTML=templates.map((t,i)=>`
+    <div class="tpl-mini${i===0?' selected':''}" onclick="window.selectTpl(${i},this)" title="${t.name}">
+      ${t.style==='classic'?`<div class="tpl-mini-header" style="background:${t.hex}"></div>`:
+        t.style==='minimal'?`<div class="tpl-mini-header" style="border-bottom:2px solid ${t.hex}"></div>`:
+        t.style==='executive'?`<div class="tpl-mini-header" style="border-top:3px solid ${t.hex}"></div>`:
+        t.style==='bold'?`<div class="tpl-mini-header" style="background:linear-gradient(90deg,${t.hex} 40%,${t.dark} 40%)"></div>`:
+        t.style==='boxed'?`<div class="tpl-mini-header" style="border:1.5px solid ${t.hex};margin:1px;height:9px"></div>`:
+        `<div class="tpl-mini-header" style="background:${t.hex};position:relative;overflow:hidden"><div style="position:absolute;right:-2px;top:0;width:7px;height:100%;background:${t.dark};transform:skewX(-8deg)"></div></div>`
+      }
+      <div class="tpl-mini-lines"><div class="tpl-mini-line"></div><div class="tpl-mini-line s"></div><div class="tpl-mini-line"></div></div>
+      <div class="tpl-mini-name">${t.name}</div>
+    </div>`).join('');
+}
+window.selectTpl = function selectTpl(idx,el){state.selectedTemplate=idx;document.querySelectorAll('.tpl-mini').forEach(m=>m.classList.remove('selected'));el.classList.add('selected');}
+
+// ── NAVIGATION ──
+window.nextStep = function nextStep(from,skip=false){
+  if(!validateStep(from)) return;
+  if(!skip) saveStepData(from);
+  const next=from+1;
+  if(next>totalSteps) return;
+  goToStep(next);
+  if(next===totalSteps) buildSuccess();
+}
+window.prevStep = function prevStep(from){if(from>1) goToStep(from-1);}
+function goToStep(step){
+  const cur=document.getElementById(`step-${currentStep}`);
+  if(cur){cur.classList.add('exiting');setTimeout(()=>cur.classList.remove('active','exiting'),420);}
+  currentStep=step;
+  setTimeout(()=>{const el=document.getElementById(`step-${step}`);if(el) el.classList.add('active');},60);
+  updateNav();
+}
+function updateNav(){
+  document.querySelectorAll('.ob-step-item').forEach(item=>{
+    const s=parseInt(item.dataset.step);
+    item.classList.remove('active','done');
+    const dot=item.querySelector('.ob-step-dot');
+    if(s===currentStep){item.classList.add('active');if(dot) dot.textContent=s;}
+    else if(s<currentStep){item.classList.add('done');if(dot) dot.textContent='✓';}
+    else{if(dot) dot.textContent=s;}
+  });
+  document.getElementById('ob-progress').style.width=(currentStep/totalSteps*100)+'%';
+  document.getElementById('ob-progress-text').textContent=`Step ${currentStep} of ${totalSteps}`;
+}
+
+// ── VALIDATION ──
+function validateStep(step){
+  if(step===1){
+    if(!document.getElementById('s1-fname').value.trim()||!document.getElementById('s1-email').value.trim()){alert('Please enter your name and email.');return false;}
+    if(!state.googleAuth){
+      const p=document.getElementById('s1-pass').value;
+      if(p.length<8){alert('Password must be at least 8 characters.');return false;}
+      if(p!==document.getElementById('s1-pass2').value){alert('Passwords do not match.');return false;}
+    }
+  }
+  if(step===2){
+    if(!document.getElementById('s2-bizname').value.trim()){alert('Please enter your business name.');return false;}
+    if(!state.tier){alert('Please select your plan.');return false;}
+  }
+  if(step===3){if(!state.expLevel){alert('Please select your experience level.');return false;}}
+  if(step===4){
+    if(!document.getElementById('s4-bizname').value.trim()){alert('Please enter the business name for invoices.');return false;}
+    if(!document.getElementById('s4-addr').value.trim()){alert('Please enter your business address.');return false;}
+  }
+  return true;
+}
+
+// ── SAVE DATA ──
+function saveStepData(step){
+  if(step===1){state.fname=document.getElementById('s1-fname').value.trim();state.lname=document.getElementById('s1-lname').value.trim();state.email=document.getElementById('s1-email').value.trim();state.phone=document.getElementById('s1-phone').value.trim();state.password=document.getElementById('s1-pass').value;}
+  if(step===2){
+    state.bizName=document.getElementById('s2-bizname').value.trim();
+    state.industry=document.getElementById('s2-industry').value;
+    state.useCases=[...document.querySelectorAll('#use-cases .ob-choice.selected')].map(el=>el.querySelector('.ob-choice-label').textContent);
+    var clientName=document.getElementById('s2-client-name').value.trim();
+    state.firstClient=clientName?{
+      id:Date.now(),
+      name:clientName,
+      phone:document.getElementById('s2-client-phone').value.trim(),
+      email:document.getElementById('s2-client-email').value.trim(),
+      biz:clientName,
+      addr:'',
+      notes:'Added during onboarding'
+    }:null;
+    const inv=document.getElementById('s4-bizname');if(inv&&!inv.value) inv.value=state.bizName;
+  }
+  if(step===4){state.invoiceBiz=document.getElementById('s4-bizname').value.trim();state.regno=document.getElementById('s4-regno').value;state.addr=document.getElementById('s4-addr').value.trim();state.invEmail=document.getElementById('s4-email').value;state.vat=document.getElementById('s4-vat').value;state.footer=document.getElementById('s4-footer').value;}
+  if(step===5){
+    state.payFreq=document.getElementById('s5-payfreq').value;
+    state.employees=[];
+    document.querySelectorAll('#emp-tbody tr').forEach(row=>{
+      const cols=row.querySelectorAll('input,select');
+      const name=cols[0]?.value.trim();
+      if(name){
+        const gross=parseFloat((cols[2]?.value||'').replace(/,/g,''))||0;
+        state.employees.push({name,role:cols[1]?.value.trim(),salary:gross,salaryDate:cols[3]?.value});
+      }
+    });
+    state.empCount=state.employees.length;
+  }
+  if(step===6){
+    state.channels=selectedChannels;
+    state.notifEmail=document.getElementById('notif-email').value;
+    state.notifSms=document.getElementById('notif-sms').value;
+    state.notifWa=document.getElementById('notif-wa').value;
+    state.reminders=['invoice-due','overdue','payroll','weekly','monthly','large'].filter(id=>document.getElementById('rem-'+id)?.checked);
+  }
+  localStorage.setItem('cls-onboarding',JSON.stringify(state));
+}
+
+// ── CHOICES ──
+window.toggleChoice = function toggleChoice(el){el.classList.toggle('selected');}
+window.selectTier = function selectTier(tier,el){
+  state.tier=tier;
+  document.querySelectorAll('.tier-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  buildTemplateGrid(tier==='starter'?3:tier==='growth'?10:30);
+}
+window.selectExp = function selectExp(level,el){
+  state.expLevel=level;
+  document.querySelectorAll('#exp-cards .ob-choice').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const note=document.getElementById('tour-note');
+  const msgs={beginner:'We\'ll give you a full guided tour of every module — Dashboard, Cashflow, Invoices, Payroll, and Debt Monitor. Takes about 5 minutes and sets you up for success.',intermediate:'We\'ll show helpful tooltips on each module\'s key features. Dismiss them anytime and explore at your own pace.',advanced:'Straight to your fully configured dashboard. All modules are ready. Explore freely.'};
+  document.getElementById('tour-note-text').textContent=msgs[level]||'';
+  note.style.display='block';
+}
+
+// ── LOGO ──
+function previewLogo(input){
+  if(!input.files||!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=document.getElementById('logo-preview-img');
+    img.src=e.target.result;img.style.display='block';
+    document.getElementById('logo-placeholder').style.display='none';
+    state.logo=e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ── PAYROLL ──
+function formatSalary(input){
+  let val=input.value.replace(/[^0-9]/g,'');
+  if(val) val=parseInt(val).toLocaleString();
+  input.value=val;
+  updateEPF(input.closest('tr'));
+}
+function updateEPF(row){
+  if(!row) return;
+  const salInput=row.querySelector('.sal-input');
+  const epfEmpCell=row.querySelector('.epf-emp-cell');
+  const epfErCell=row.querySelector('.epf-er-cell');
+  if(!salInput||!epfEmpCell||!epfErCell) return;
+  const gross=parseFloat(salInput.value.replace(/,/g,''))||0;
+  const epfEmp=Math.round(gross*0.08);
+  const epfEr=Math.round(gross*0.12);
+  const etf=Math.round(gross*0.03);
+  const totalEr=epfEr+etf;
+  epfEmpCell.innerHTML=`<strong>${epfEmp.toLocaleString()}</strong><br><span>LKR</span>`;
+  epfErCell.innerHTML=`<strong>${totalEr.toLocaleString()}</strong><br><span>EPF ${epfEr.toLocaleString()} + ETF ${etf.toLocaleString()}</span>`;
+}
+window.addEmpRow = function addEmpRow(){
+  const tbody=document.getElementById('emp-tbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" class="ob-input" style="padding:.4rem .55rem" placeholder="Full name"></td>
+    <td><input type="text" class="ob-input" style="padding:.4rem .55rem" placeholder="Role"></td>
+    <td><input type="text" class="ob-input sal-input" style="padding:.4rem .55rem" placeholder="0" oninput="formatSalary(this);updateEPF(this.closest('tr'))"></td>
+    <td><select class="ob-input ob-select" style="padding:.4rem .55rem;font-size:.75rem">
+      ${[1,5,10,15,20,25,28,30].map(d=>`<option value="${d}">${d}${d===1?'st':d===2?'nd':d===3?'rd':'th'} of month</option>`).join('')}
+    </select></td>
+    <td class="epf-cell epf-emp-cell"><strong>0</strong><br><span>LKR</span></td>
+    <td class="epf-cell epf-er-cell"><strong>0</strong><br><span>EPF 0 + ETF 0</span></td>
+    <td><button class="btn-rm-emp" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+function updateEmpRows(count){
+  const n=parseInt(count)||0;
+  const wrap=document.getElementById('emp-table-wrap');
+  const msg=document.getElementById('no-emp-msg');
+  if(n<=0){wrap.style.display='none';msg.style.display='block';return;}
+  wrap.style.display='block';msg.style.display='none';
+  const tbody=document.getElementById('emp-tbody');
+  while(tbody.children.length<Math.min(n,20)) addEmpRow();
+  while(tbody.children.length>n) tbody.removeChild(tbody.lastChild);
+}
+
+// ── NOTIFICATIONS ──
+let selectedChannels=[];
+window.toggleChannel = function toggleChannel(ch,el){
+  el.classList.toggle('selected');
+  const fields={email:'notif-email-fields',sms:'notif-sms-fields',whatsapp:'notif-wa-fields'};
+  const fieldEl=document.getElementById(fields[ch]);
+  if(fieldEl){fieldEl.classList.toggle('show',el.classList.contains('selected'));}
+  if(el.classList.contains('selected')) selectedChannels.push(ch);
+  else selectedChannels=selectedChannels.filter(c=>c!==ch);
+}
+
+// ── SUCCESS ──
+function buildSuccess(){
+  const tierLabels={starter:'Starter — LKR 5,500/mo',growth:'Growth — LKR 12,500/mo',premium:'Premium — LKR 28,500/mo'};
+  const tplName=allTemplates[state.selectedTemplate]?.name||'Classic Gold';
+  const rows=[
+    ['Name',`${state.fname} ${state.lname}`],
+    ['Email',state.email],
+    ['Business',state.invoiceBiz||state.bizName],
+    ['Industry',state.industry||'—'],
+    ['Plan',tierLabels[state.tier]||state.tier],
+    ['Invoice Template',tplName],
+    ['First Client',state.firstClient?state.firstClient.name:'Skipped'],
+    ['Payroll Frequency',state.payFreq],
+    ['Staff',state.employees.length>0?`${state.employees.length} employees configured`:'Not set up'],
+    ['Notifications',selectedChannels.length>0?selectedChannels.join(', ')+' enabled':'None selected'],
+  ];
+  document.getElementById('account-summary').innerHTML=rows.map(r=>`<div class="summary-row"><strong>${r[0]}</strong>${r[1]}</div>`).join('');
+  if(state.employees.length>0) document.getElementById('fl-payroll').style.display='flex';
+  if(state.expLevel==='beginner'||state.expLevel==='intermediate') document.getElementById('fl-tour').style.display='flex';
+}
+
+function daysAgo(days){
+  var d=new Date();
+  d.setDate(d.getDate()-days);
+  return d.toISOString().split('T')[0];
+}
+
+function daysFromNow(days){
+  var d=new Date();
+  d.setDate(d.getDate()+days);
+  return d.toISOString().split('T')[0];
+}
+
+function makeDemoData(){
+  var demoClients=[
+    {id:101,name:'Nadeem Trading',biz:'Nadeem Trading',phone:'+94771234567',email:'accounts@nadeemtrading.lk',addr:'Colombo',notes:'Demo client'},
+    {id:102,name:'Silva Enterprises',biz:'Silva Enterprises',phone:'+94772345678',email:'finance@silvaenterprises.lk',addr:'Kandy',notes:'Demo client'},
+    {id:103,name:'Perera & Sons',biz:'Perera & Sons',phone:'+94773456789',email:'hello@pereraandsons.lk',addr:'Galle',notes:'Demo client'},
+    {id:104,name:'Fatima Boutique',biz:'Fatima Boutique',phone:'+94774567890',email:'fatima@boutique.lk',addr:'Negombo',notes:'Demo client'},
+    {id:105,name:'Lanka Fresh Foods',biz:'Lanka Fresh Foods',phone:'+94775678901',email:'orders@lankafresh.lk',addr:'Colombo',notes:'Demo client'}
+  ];
+  if(state.firstClient && !demoClients.some(function(c){return c.email===state.firstClient.email || c.name===state.firstClient.name;})){
+    demoClients.unshift(state.firstClient);
+  }
+  var incomeAmounts=[45000,78000,125000,32000,98000,180000,67000,54000,143000,88000,25000,112000,76000,135000,59000];
+  var transactions=incomeAmounts.map(function(amount,i){
+    var client=demoClients[i%demoClients.length];
+    var cats=['Sales','Service Fee','Advance Payment'];
+    return {id:Date.now()+i,date:daysAgo(86-(i*5)),desc:client.name+' '+cats[i%cats.length],type:'in',amount:amount,cat:cats[i%cats.length],ref:'DEMO-IN-'+(1001+i)};
+  });
+  var expenseCats=['Rent','Utilities','Salaries','Supplies','Marketing','Transport'];
+  var vendors=['Colombo Properties','CEB','Payroll Run','Pettah Supplies','Digital Ads LK','Courier Lanka'];
+  var expenses=[18000,7500,85000,12000,26000,9000,5500,42000,15000,68000,11000,6000,32000,22500,7900,54000,17000,8350,29500,63000].map(function(amount,i){
+    return {id:Date.now()+100+i,date:daysAgo(88-(i*4)),cat:expenseCats[i%expenseCats.length],vendor:vendors[i%vendors.length],desc:expenseCats[i%expenseCats.length]+' demo expense',amount:amount,receipt:'DEMO-RC-'+(2001+i)};
+  });
+  var invoiceSpecs=[
+    ['INV-0001',demoClients[0],daysAgo(70),daysAgo(55),145000,'paid',145000],
+    ['INV-0002',demoClients[1],daysAgo(52),daysAgo(37),78000,'paid',78000],
+    ['INV-0003',demoClients[2],daysAgo(25),daysFromNow(5),215000,'unpaid',0],
+    ['INV-0004',demoClients[3],daysAgo(16),daysFromNow(14),45000,'unpaid',0],
+    ['INV-0005',demoClients[4],daysAgo(45),daysAgo(15),320000,'unpaid',0],
+    ['INV-0006',demoClients[0],daysAgo(3),daysFromNow(27),98000,'draft',0]
+  ];
+  var invoices=invoiceSpecs.map(function(spec,i){
+    return {
+      id:Date.now()+200+i,
+      num:spec[0],
+      client:spec[1].name,
+      cemail:spec[1].email,
+      caddr:spec[1].addr,
+      cphone:spec[1].phone,
+      date:spec[2],
+      due:spec[3],
+      terms:'Net 30',
+      cur:'LKR',
+      lines:[
+        {desc:'Business service package',qty:1,price:Math.round(spec[4]*0.62),total:Math.round(spec[4]*0.62)},
+        {desc:'Implementation support',qty:1,price:Math.round(spec[4]*0.28),total:Math.round(spec[4]*0.28)},
+        {desc:'Reporting and follow-up',qty:1,price:spec[4]-Math.round(spec[4]*0.62)-Math.round(spec[4]*0.28),total:spec[4]-Math.round(spec[4]*0.62)-Math.round(spec[4]*0.28)}
+      ],
+      amount:spec[4],
+      disc:0,
+      vat:0,
+      paidAmount:spec[6],
+      status:spec[5],
+      tpl:state.selectedTemplate||0,
+      notes:'Demo invoice'
+    };
+  });
+  return {clients:demoClients,transactions:transactions,expenses:expenses,invoices:invoices};
+}
+
+async function writeArrayCollection(uid,col,items){
+  var batch=firebase.firestore().batch();
+  var ref=firebase.firestore().collection('users').doc(uid).collection(col);
+  items.forEach(function(item){
+    var docRef=ref.doc(String(item.id || Date.now()+Math.random()));
+    batch.set(docRef,Object.assign({},item,{_ts:firebase.firestore.FieldValue.serverTimestamp()}));
+  });
+  await batch.commit();
+}
+
+async function seedOnboardingData(uid,includeDemo){
+  var clients=state.firstClient?[state.firstClient]:[];
+  if(includeDemo){
+    var demo=makeDemoData();
+    clients=demo.clients;
+    await Promise.all([
+      writeArrayCollection(uid,'transactions',demo.transactions),
+      writeArrayCollection(uid,'expenses',demo.expenses),
+      writeArrayCollection(uid,'invoices',demo.invoices)
+    ]);
+  }
+  if(clients.length){ await writeArrayCollection(uid,'clients',clients); }
+}
+
+async function acceptOnboardingInvite(uid,email){
+  if(!state.inviteToken||!state.inviteOwner) return;
+  var snap=await firebase.firestore().collection('users').doc(state.inviteOwner).collection('team').where('inviteToken','==',state.inviteToken).limit(1).get();
+  if(snap.empty) return;
+  var invite=snap.docs[0].data();
+  if(invite.email&&email&&invite.email.toLowerCase()!==email.toLowerCase()){
+    throw new Error('This invite is for '+invite.email+'. Please use that email address.');
+  }
+  var ownerDoc=await firebase.firestore().collection('users').doc(state.inviteOwner).get();
+  var owner=ownerDoc.exists?ownerDoc.data():{};
+  await firebase.firestore().collection('users').doc(uid).set({
+    role: invite.role||'viewer',
+    ownerUid: state.inviteOwner,
+    plan: owner.plan||state.tier||'starter',
+    paid: owner.paid===true,
+    acceptedInviteAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true});
+  await firebase.firestore().collection('users').doc(state.inviteOwner).collection('team').doc(snap.docs[0].id).set({
+    memberId:uid,
+    status:'active',
+    lastLogin:firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true});
+}
+// ══════════════════════════════════════
+// FIREBASE AUTH — Account Creation
+// ══════════════════════════════════════
+window.launchDashboard = async function launchDashboard(loadDemo){
+  state.loadDemoData = loadDemo === true;
+  const btn = document.getElementById(loadDemo ? 'launch-demo-btn' : 'launch-btn');
+  if(btn){ btn.textContent = 'Saving your details…'; btn.disabled = true; }
+
+  try {
+    const prices = { starter: 5500, growth: 12500, premium: 28500 };
+    const planFiles = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
+
+    if (state.googleAuth) {
+      // Google user — already authenticated, just update their Firestore profile
+      const user = firebase.auth().currentUser;
+      if (!user) { alert('Session expired. Please sign in again.'); window.location.href='signin.html'; return; }
+      var googleTrialEnd = new Date();
+      googleTrialEnd.setDate(googleTrialEnd.getDate() + 15);
+      await firebase.firestore().collection('users').doc(user.uid).set({
+        name: state.fname + ' ' + state.lname,
+        email: state.email,
+        phone: state.phone || '',
+        bizName: state.bizName || '',
+        invoiceBiz: state.invoiceBiz || state.bizName || '',
+        industry: state.industry || '',
+        addr: state.addr || '',
+        vat: state.vat || '',
+        footer: state.footer || '',
+        plan: state.tier || 'starter',
+        planPrice: prices[state.tier] || 5500,
+        trialStart: new Date().toISOString(),
+        trialEnd: googleTrialEnd.toISOString(),
+        paid: false,
+        selectedTemplate: state.selectedTemplate,
+        payFreq: state.payFreq,
+        employees: state.employees,
+        channels: state.channels,
+        reminders: state.reminders,
+        onboardingComplete: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      await acceptOnboardingInvite(user.uid,state.email);
+      await seedOnboardingData(user.uid,state.loadDemoData);
+      // Send welcome email (best-effort — don't block redirect if it fails)
+      try {
+        await fetch('/.netlify/functions/send-welcome', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            to: state.email,
+            name: state.fname + ' ' + state.lname,
+            plan: state.tier || 'starter',
+            biz: state.bizName || 'your business',
+            trialEnd: googleTrialEnd.toISOString()
+          })
+        });
+      } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
+      window.location.href = planFiles[state.tier] || 'starter.html';
+
+    } else {
+      // Email user — create Firebase account then save profile
+      const cred = await firebase.auth().createUserWithEmailAndPassword(state.email, state.password);
+      const uid = cred.user.uid;
+      await cred.user.updateProfile({ displayName: state.fname + ' ' + state.lname });
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 15);
+      await firebase.firestore().collection('users').doc(uid).set({
+        name: state.fname + ' ' + state.lname,
+        role: 'owner',
+        email: state.email,
+        phone: state.phone || '',
+        bizName: state.bizName || '',
+        invoiceBiz: state.invoiceBiz || state.bizName || '',
+        industry: state.industry || '',
+        addr: state.addr || '',
+        vat: state.vat || '',
+        footer: state.footer || '',
+        plan: state.tier || 'starter',
+        planPrice: prices[state.tier] || 5500,
+        trialStart: new Date().toISOString(),
+        trialEnd: trialEnd.toISOString(),
+        paid: false,
+        selectedTemplate: state.selectedTemplate,
+        payFreq: state.payFreq,
+        employees: state.employees,
+        channels: state.channels,
+        reminders: state.reminders,
+        onboardingComplete: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await acceptOnboardingInvite(uid,state.email);
+      await seedOnboardingData(uid,state.loadDemoData);
+      // Send welcome email (best-effort)
+      try {
+        await fetch('/.netlify/functions/send-welcome', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            to: state.email,
+            name: state.fname + ' ' + state.lname,
+            plan: state.tier || 'starter',
+            biz: state.bizName || 'your business',
+            trialEnd: trialEnd.toISOString()
+          })
+        });
+      } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
+      window.location.href = planFiles[state.tier] || 'starter.html';
+    }
+
+  } catch(err) {
+    console.error(err);
+    if(btn){ btn.textContent = loadDemo ? 'Load Demo Data →' : 'Start Fresh →'; btn.disabled = false; }
+    if(err.code === 'auth/email-already-in-use'){
+      alert('An account with this email already exists. Please sign in instead.');
+    } else {
+      alert('Account creation failed: ' + err.message);
+    }
+  }
+}
+
+// ── INIT ──
+buildTemplateGrid(3);
+// Pick up pre-fill data from landing page free-month form
+(function() {
+  // Pick up pre-fill data from landing page or Google sign-in
+  var prefill = sessionStorage.getItem('cls-prefill');
+  if (prefill) {
+    try {
+      var p = JSON.parse(prefill);
+      if (p.fname) { var el = document.getElementById('s1-fname'); if(el) el.value = p.fname; }
+      if (p.lname) { var el = document.getElementById('s1-lname'); if(el) el.value = p.lname; }
+      if (p.email) { var el = document.getElementById('s1-email'); if(el) el.value = p.email; }
+      if (p.phone) { var el = document.getElementById('s1-phone'); if(el) el.value = p.phone; }
+      if (p.bizName) { var el = document.getElementById('s2-bizname'); if(el) el.value = p.bizName; }
+      // Google auth — hide password fields, lock email, show welcome note
+      if (p.googleAuth) {
+        var passWrap1 = document.getElementById('s1-pass'); if(passWrap1) passWrap1.closest('.ob-field').style.display='none';
+        var passWrap2 = document.getElementById('s1-pass2'); if(passWrap2) passWrap2.closest('.ob-field').style.display='none';
+        var emailEl = document.getElementById('s1-email'); if(emailEl) { emailEl.readOnly=true; emailEl.style.background='var(--bg3)'; emailEl.style.color='var(--muted)'; }
+        // Insert Google welcome banner above step 1 form
+        var step1 = document.getElementById('step-1');
+        if (step1) {
+          var banner = document.createElement('div');
+          banner.style.cssText = 'background:rgba(26,158,92,.07);border:1px solid rgba(26,158,92,.2);padding:.85rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.75rem;font-size:.82rem;color:#1a7a48;';
+          banner.innerHTML = (p.photo ? '<img src="'+p.photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">' : '<span style="font-size:1.2rem">✓</span>') +
+            '<span>Signed in with Google as <strong>' + (p.fname||'') + ' ' + (p.lname||'') + '</strong> — just complete your business details below.</span>';
+          var firstField = step1.querySelector('.ob-field');
+          if (firstField) step1.insertBefore(banner, firstField);
+        }
+        state.googleAuth = true;
+      }
+      sessionStorage.removeItem('cls-prefill');
+    } catch(e) {}
+  }
+  // Auto-select plan from URL param
+  var params = new URLSearchParams(window.location.search);
+  var invite = params.get('invite');
+  var owner = params.get('owner');
+  if (invite && owner) {
+    state.inviteToken = invite;
+    state.inviteOwner = owner;
+    var sub = document.querySelector('#step-1 .ob-sub');
+    if (sub) sub.textContent = 'Create your account to accept your team invite and access the shared business dashboard.';
+  }
+  var plan = params.get('plan');
+  if (plan) {
+    var cards = document.querySelectorAll('.tier-card');
+    cards.forEach(function(card) {
+      var oc = card.getAttribute('onclick') || '';
+      if (oc.indexOf("'" + plan + "'") > -1) { selectTier(plan, card); }
+    });
+  }
+})();
+</script>
+</body>
+</html>

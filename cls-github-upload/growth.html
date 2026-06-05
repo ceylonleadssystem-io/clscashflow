@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<!-- CLS-V6-CLSNAV -->
+<!-- CLS-GROWTH-V4 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLS CashFlow — Growth</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#B8922A;--gold-l:#D4A840;--gold-d:#7A6010;
+  --rose:#C17A6F;--rose-bg:rgba(193,122,111,.08);
+  --bg:#FAF8F4;--white:#FFFFFF;--bg3:#F2EDE5;--bg4:#EAE4D8;
+  --text:#2C1F14;--muted:#7A6655;--dim:#B5A89A;
+  --border:#E4DDD3;--bacc:rgba(184,146,42,.28);
+  --black:#2C1F14;--green:#1D9E62;--red:#C0392B;--amber:#B37010;--blue:#2563A8;
+  --sb:252px;--r:5px;
+  --fd:'Cormorant Garamond',serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);overflow:hidden}
+
+/* SIDEBAR */
+#sb{position:fixed;top:0;left:0;width:var(--sb);height:100vh;background:var(--white);border-right:2px solid var(--black);display:flex;flex-direction:column;z-index:100}
+.sb-top{padding:1.3rem 1.5rem .9rem;border-bottom:1px solid var(--border)}
+.sb-prod{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:.25rem}
+.sb-logo{font-family:var(--fd);font-size:1.3rem;font-weight:400;color:var(--text)}
+.sb-logo b{color:var(--gold);font-weight:400}
+.sb-tag{display:inline-block;font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.2rem .65rem;margin-top:.42rem;border-radius:2px}
+.sb-nav{flex:1;padding:.65rem 0;overflow-y:auto}
+.sb-sec{font-size:.54rem;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);padding:.5rem 1.5rem .22rem;margin-top:.35rem;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:.7rem;padding:.68rem 1.5rem;cursor:pointer;color:var(--muted);font-size:.81rem;transition:all .16s;border-left:3px solid transparent;user-select:none}
+.nav-item:hover{color:var(--text);background:var(--bg)}
+.nav-item.on{color:var(--black);background:var(--bg3);border-left-color:var(--rose);font-weight:600}
+.nav-icon{font-size:.9rem;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.55rem;font-weight:700;padding:.08rem .42rem;border-radius:10px}
+.sb-foot{padding:1.1rem 1.5rem;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:.72rem;margin-bottom:.85rem}
+.sb-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--gold-l));display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uname{font-size:.81rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:144px}
+.sb-urole{font-size:.62rem;color:var(--muted);margin-top:.04rem}
+.btn-up{display:block;width:100%;padding:.55rem;background:var(--black);color:#fff;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer;border:none;font-family:var(--fb);border-radius:var(--r);transition:background .2s}
+.btn-up:hover{background:var(--gold)}
+
+/* MAIN */
+#main{position:absolute;top:0;left:var(--sb);right:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:2px solid var(--black);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pg-title{font-family:var(--fd);font-size:1.35rem;font-weight:400;color:var(--black)}
+.pg-sub{font-size:.67rem;color:var(--muted);margin-top:.04rem}
+.tb-right{display:flex;align-items:center;gap:.7rem}
+.tb-date{font-size:.69rem;color:var(--muted)}
+.tb-badge{font-size:.57rem;letter-spacing:.14em;text-transform:uppercase;background:var(--bg3);border:1px solid var(--bacc);color:var(--gold);padding:.21rem .68rem;border-radius:2px}
+.content{flex:1;overflow-y:auto;padding:1.75rem 2.1rem;background:var(--bg)}
+
+/* VIEWS */
+.view{display:none}.view.active{display:block}
+
+/* GREETING */
+.greeting{background:linear-gradient(135deg,var(--black),#3d2a1a);color:#fff;border-radius:var(--r);padding:1.25rem 1.6rem;margin-bottom:1.4rem;display:flex;align-items:center;justify-content:space-between}
+.greet-h{font-family:var(--fd);font-size:1.5rem;font-weight:300;margin-bottom:.15rem}
+.greet-p{font-size:.73rem;opacity:.55}
+.greet-tag{background:var(--gold);color:#fff;font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .9rem;border-radius:2px;white-space:nowrap}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.4rem}
+.kpi{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:var(--r);padding:1.25rem;transition:box-shadow .2s}
+.kpi:hover{box-shadow:0 4px 16px rgba(44,31,20,.08)}
+.kpi.g{border-top-color:var(--gold)}.kpi.gr{border-top-color:var(--green)}.kpi.rd{border-top-color:var(--red)}.kpi.ro{border-top-color:var(--rose)}.kpi.bl{border-top-color:var(--blue)}.kpi.am{border-top-color:var(--amber)}
+.kpi-lbl{font-size:.57rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.4rem}
+.kpi-val{font-family:var(--fd);font-size:1.7rem;font-weight:300;color:var(--black);line-height:1}
+.kpi-sub{font-size:.66rem;color:var(--muted);margin-top:.32rem}
+.kpi-up{color:var(--green);font-weight:600}.kpi-dn{color:var(--red);font-weight:600}
+
+/* ====== CLEAN DASHBOARD ====== */
+.db-greeting{display:flex;align-items:center;justify-content:space-between;padding:1.05rem 1.4rem;background:var(--white);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:var(--r);margin-bottom:1.35rem}
+.db-greet-h{font-family:var(--fd);font-size:1.4rem;font-weight:300;color:var(--black);margin-bottom:.1rem}
+.db-greet-p{font-size:.71rem;color:var(--muted)}
+.db-date-pill{font-size:.65rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:.25rem .7rem;border-radius:20px}
+.db-plan-pill{font-size:.56rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.27rem .8rem;border-radius:20px}
+.db-section-label{font-size:.53rem;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 .65rem;display:flex;align-items:center;gap:.5rem}
+.db-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.db-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.35rem}
+.db-kpi-row .kpi{padding:1.05rem 1.15rem}
+.db-kpi-row .kpi-val{font-size:1.5rem}
+.db-charts-row{display:grid;grid-template-columns:3fr 2fr;gap:.85rem;margin-bottom:1.35rem}
+.db-chart-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem 1.25rem}
+.db-chart-title{font-family:var(--fd);font-size:.98rem;font-weight:400;color:var(--black);margin-bottom:.18rem}
+.db-chart-sub{font-size:.64rem;color:var(--muted);margin-bottom:.82rem}
+.db-ch-wrap{height:172px;position:relative}
+.db-ch-wrap-sm{height:128px;position:relative}
+.db-growth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.35rem}
+.db-gm{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;display:flex;align-items:center;gap:.85rem;transition:box-shadow .18s;cursor:default}
+.db-gm:hover{box-shadow:0 3px 12px rgba(44,31,20,.07)}
+.db-gm-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.db-gm-lbl{font-size:.53rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.15rem}
+.db-gm-val{font-family:var(--fd);font-size:1.2rem;font-weight:300;color:var(--black);line-height:1}
+.db-gm-sub{font-size:.59rem;color:var(--muted);margin-top:.12rem}
+.db-gm.gr .db-gm-ico{background:rgba(29,158,98,.1);color:var(--green)}
+.db-gm.rd .db-gm-ico{background:rgba(192,57,43,.1);color:var(--red)}
+.db-gm.am .db-gm-ico{background:rgba(179,112,16,.1);color:var(--amber)}
+.db-gm.bl .db-gm-ico{background:rgba(37,99,168,.1);color:var(--blue)}
+.db-gm.ro .db-gm-ico{background:rgba(193,122,111,.1);color:var(--rose)}
+.db-gm.g  .db-gm-ico{background:rgba(184,146,42,.1);color:var(--gold)}
+.db-tables-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem}
+.db-table-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.db-tcard-head{display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.15rem;border-bottom:1px solid var(--border)}
+.db-tcard-title{font-family:var(--fd);font-size:.96rem;font-weight:400;color:var(--black)}
+/* ====== END DASHBOARD ====== */
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.2rem;overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:.88rem 1.3rem;border-bottom:1px solid var(--border);gap:.5rem;flex-wrap:wrap}
+.card-title{font-family:var(--fd);font-size:1.05rem;font-weight:400;color:var(--black)}
+.card-actions{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+
+/* GRID LAYOUTS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-bottom:1.2rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.2rem}
+.g2c{display:grid;grid-template-columns:2fr 1fr;gap:1.1rem;margin-bottom:1.2rem}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse}
+th{font-size:.57rem;letter-spacing:.13em;text-transform:uppercase;color:#fff;padding:.6rem 1.2rem;text-align:left;background:var(--black);white-space:nowrap;font-weight:500}
+td{padding:.7rem 1.2rem;font-size:.81rem;color:var(--muted);border-bottom:1px solid var(--border);vertical-align:middle}
+td:first-child{color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.tr{text-align:right}.tc{text-align:center}
+.mono{font-family:var(--fm);font-weight:500}
+
+/* PILLS */
+.pill{display:inline-block;font-size:.57rem;letter-spacing:.08em;text-transform:uppercase;padding:.17rem .62rem;font-weight:600;border-radius:20px}
+.pi,.pp,.pa{background:rgba(29,158,98,.12);color:#167A4A}
+.po,.pov{background:rgba(192,57,43,.12);color:var(--red)}
+.pse,.ppa{background:rgba(37,99,168,.12);color:var(--blue)}
+.pdr,.pin{background:var(--bg4);color:var(--muted)}
+.psu{background:rgba(107,63,160,.1);color:#6b3fa0}
+
+/* SUM BAR */
+.sumbar{display:grid;gap:1px;background:var(--border);margin-bottom:1.2rem;border-radius:var(--r);overflow:hidden}
+.sumbar.c2{grid-template-columns:1fr 1fr}
+.sumbar.c3{grid-template-columns:1fr 1fr 1fr}
+.sumbar.c4{grid-template-columns:repeat(4,1fr)}
+.sum-i{background:var(--white);padding:1.05rem 1.3rem}
+.sum-lbl{font-size:.56rem;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.28rem}
+.sum-val{font-family:var(--fd);font-size:1.4rem;font-weight:300;color:var(--black)}
+
+/* BUTTONS */
+.btn{padding:.42rem 1rem;font-size:.67rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;border:none;cursor:pointer;font-family:var(--fb);transition:all .18s;white-space:nowrap;border-radius:var(--r)}
+.bd{background:var(--black);color:#fff}.bd:hover{background:var(--gold)}
+.bo{background:transparent;border:1px solid var(--bacc);color:var(--gold)}.bo:hover{background:var(--bg3)}
+.bgr{background:var(--green);color:#fff}.bgr:hover{opacity:.85}
+.bsm{padding:.27rem .62rem;font-size:.59rem;letter-spacing:.07em;text-transform:uppercase;font-family:var(--fb);cursor:pointer;border:none;background:var(--black);color:#fff;transition:all .18s;white-space:nowrap;border-radius:3px}
+.bsm:hover{background:var(--gold)}
+.bsmo{background:transparent;border:1px solid var(--bacc);color:var(--gold)}.bsmo:hover{background:var(--bg3)}
+.bsmgr{background:var(--green);color:#fff}.bsmgr:hover{opacity:.85}
+.bsmwa{background:#25D366;color:#fff}.bsmwa:hover{background:#1eb851}
+
+/* FORM */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
+.fg{display:flex;flex-direction:column;gap:.3rem;margin-bottom:.85rem}
+.fg label{font-size:.57rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fi{background:var(--bg);border:1.5px solid var(--border);padding:.63rem .9rem;color:var(--text);font-family:var(--fb);font-size:.83rem;outline:none;transition:all .18s;width:100%;border-radius:var(--r)}
+.fi:focus{border-color:var(--rose);background:var(--white);box-shadow:0 0 0 3px var(--rose-bg)}
+.fi::placeholder{color:var(--dim)}
+.fsel{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232C1F14' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .9rem center}
+.fsec{font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:1rem 0 .62rem;border-bottom:1px solid var(--border);padding-bottom:.38rem}
+
+/* MODALS */
+.mo{position:fixed;inset:0;background:rgba(44,31,20,.45);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.5rem}
+.mo.open{display:flex}
+.mob{background:var(--white);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.2);border-radius:8px}
+.mo-hd{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.5rem;border-bottom:2px solid var(--black);position:sticky;top:0;background:var(--white);z-index:1;border-radius:8px 8px 0 0}
+.mo-title{font-family:var(--fd);font-size:1.2rem;font-weight:400;color:var(--black)}
+.mo-x{background:none;border:none;font-size:1.4rem;color:var(--muted);cursor:pointer;line-height:1;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .15s}
+.mo-x:hover{background:var(--bg3);color:var(--black)}
+.mo-bd{padding:1.35rem}
+.mo-ft{padding:.88rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.6rem;justify-content:flex-end;position:sticky;bottom:0;background:var(--white);border-radius:0 0 8px 8px}
+
+/* LINE ITEMS */
+.litbl{width:100%;border-collapse:collapse;margin-bottom:.62rem}
+.litbl th{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.4rem .48rem;text-align:left;background:var(--bg3);border:1px solid var(--border);font-weight:600}
+.litbl td{border:1px solid var(--border);padding:.28rem .36rem}
+.litbl td input{background:var(--bg);border:none;padding:.3rem .4rem;color:var(--text);font-family:var(--fb);font-size:.79rem;width:100%;outline:none;border-radius:2px}
+.litbl td input:focus{background:var(--white)}
+.li-tot{color:var(--gold);font-weight:600;font-size:.79rem;padding:.3rem .48rem;text-align:right;font-family:var(--fm)}
+.li-add{width:100%;background:none;border:1.5px dashed var(--bacc);color:var(--muted);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;padding:.46rem;cursor:pointer;font-family:var(--fb);transition:all .18s;margin-bottom:.72rem;border-radius:var(--r)}
+.li-add:hover{border-color:var(--rose);color:var(--rose)}
+.li-rm{background:none;border:none;color:var(--red);cursor:pointer;font-size:.78rem;opacity:.45;padding:.08rem}
+.li-rm:hover{opacity:1}
+.inv-totals{display:flex;flex-direction:column;align-items:flex-end;gap:.28rem}
+.itr{display:flex;gap:2rem;font-size:.8rem}
+.itr .tl{color:var(--muted);min-width:90px;text-align:right}
+.itr .tv{color:var(--text);min-width:100px;text-align:right;font-family:var(--fm)}
+.itr.grand .tl,.itr.grand .tv{color:var(--black);font-family:var(--fd);font-size:1rem;font-weight:500;border-top:1px solid var(--border);padding-top:.25rem;margin-top:.05rem}
+
+/* TEMPLATE PICKER */
+.tpl-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin-bottom:.85rem}
+.tpl-card{border:2px solid var(--border);cursor:pointer;transition:all .16s;text-align:center;background:var(--bg);overflow:hidden;border-radius:var(--r)}
+.tpl-card:hover{border-color:rgba(193,122,111,.5)}
+.tpl-card.sel{border-color:var(--rose);background:var(--white)}
+.tpl-prev{height:50px;width:100%;display:flex;align-items:center;justify-content:center}
+.tpl-name{font-size:.56rem;letter-spacing:.06em;text-transform:uppercase;color:var(--black);font-weight:600;padding:.28rem .2rem;background:var(--white);border-top:1px solid var(--border)}
+
+/* PAYROLL */
+.staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:.9rem;padding:1.25rem}
+.staff-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem;transition:all .18s}
+.staff-card:hover{background:var(--white);box-shadow:0 4px 14px rgba(44,31,20,.07)}
+.st-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;margin-bottom:.6rem}
+.st-name{font-size:.87rem;font-weight:600;color:var(--text)}
+.st-role{font-size:.69rem;color:var(--gold);margin:.08rem 0 .58rem}
+.st-sal{font-family:var(--fd);font-size:1.3rem;font-weight:300;color:var(--black)}
+.st-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.62rem;padding-top:.62rem;border-top:1px solid var(--border)}
+.pay-banner{background:var(--black);color:#fff;border-radius:var(--r);padding:1.1rem 1.5rem;display:flex;gap:2rem;align-items:center;flex-wrap:wrap;margin-bottom:1.2rem}
+.pb-lbl{font-size:.53rem;letter-spacing:.17em;text-transform:uppercase;opacity:.42;margin-bottom:.18rem}
+.pb-val{font-family:var(--fd);font-size:1.4rem;font-weight:300}
+.pb-sep{width:1px;background:rgba(255,255,255,.12);align-self:stretch}
+
+/* CLIENTS */
+.cli-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;padding:1.25rem}
+.cli-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);border-top:3px solid rgba(193,122,111,.4);padding:1.2rem;transition:all .18s}
+.cli-card:hover{box-shadow:0 4px 16px rgba(44,31,20,.08);border-top-color:var(--rose)}
+.cli-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--gold-l));display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;margin-bottom:.68rem}
+.cli-name{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.12rem}
+.cli-biz{font-size:.72rem;color:var(--rose);font-weight:500;margin-bottom:.32rem}
+.cli-det{font-size:.71rem;color:var(--muted);line-height:1.68}
+.cli-acts{display:flex;gap:.35rem;margin-top:.82rem;padding-top:.72rem;border-top:1px solid var(--border)}
+
+/* DEBT */
+.debt-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem}
+.debt-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem}
+.debt-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.82rem}
+.debt-tot{font-family:var(--fd);font-size:1.6rem;font-weight:300}
+.debt-row{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid var(--border)}
+.debt-row:last-child{border-bottom:none}
+.debt-name{font-size:.82rem;font-weight:500;color:var(--text)}
+.debt-days{font-size:.66rem;color:var(--muted);margin-top:.07rem}
+.debt-days.ov{color:var(--red);font-weight:600}
+
+/* AUTOMATIONS */
+.auto-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.auto-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);border-left:3px solid rgba(193,122,111,.4);padding:1.12rem 1.2rem;display:flex;align-items:flex-start;gap:.95rem}
+.auto-ico{width:40px;height:40px;background:var(--rose-bg);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0}
+.auto-name{font-size:.87rem;font-weight:600;color:var(--text)}
+.auto-desc{font-size:.71rem;color:var(--muted);margin-top:.13rem;line-height:1.48}
+.auto-meta{font-size:.63rem;color:var(--dim);margin-top:.42rem;display:flex;gap:.82rem;flex-wrap:wrap}
+.auto-meta b{color:var(--muted)}
+.tog{position:relative;width:38px;height:21px;flex-shrink:0;margin-top:.18rem}
+.tog input{opacity:0;width:0;height:0}
+.tog-sl{position:absolute;inset:0;background:var(--border);cursor:pointer;border-radius:11px;transition:.2s}
+.tog-sl:before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.tog-sl{background:var(--green)}
+input:checked+.tog-sl:before{transform:translateX(17px)}
+
+/* REPORTS & ANALYTICS */
+.rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem}
+.rep-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);border-left:3px solid rgba(193,122,111,.4);padding:1.2rem}
+.rep-lbl{font-size:.56rem;letter-spacing:.17em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.68rem}
+.rep-row{display:flex;justify-content:space-between;font-size:.79rem;padding:.3rem 0;border-bottom:1px solid var(--bg3)}
+.rep-row:last-child{border-bottom:none}
+.rep-row span:last-child{font-family:var(--fm);font-weight:500}
+.rep-row.pos span:last-child{color:var(--green)}.rep-row.neg span:last-child{color:var(--red)}
+.rep-row.tot{border-top:2px solid var(--black);margin-top:.18rem;padding-top:.42rem}
+.chart-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem}
+.ch-title{font-family:var(--fd);font-size:1.05rem;font-weight:400;color:var(--black);margin-bottom:.18rem}
+.ch-sub{font-size:.67rem;color:var(--muted);margin-bottom:.85rem}
+.ch-wrap{height:185px;position:relative}
+.ch-wrap-sm{height:148px;position:relative}
+.cat-list{display:flex;flex-direction:column;gap:.42rem;margin-top:.45rem}
+.cat-row{display:flex;align-items:center;gap:.52rem;font-size:.75rem}
+.cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cat-lbl{flex:1;color:var(--muted)}.cat-pct{color:var(--text);font-weight:500}
+
+/* PAY BAR */
+.pay-bar{height:3px;background:var(--bg4);flex:1;min-width:40px;overflow:hidden;border-radius:2px}
+.pay-fill{height:3px;background:var(--green);border-radius:2px}
+.pay-fill.pt{background:var(--amber)}
+.pay-wrap{display:flex;align-items:center;gap:.43rem}
+.pay-pend{font-size:.63rem;color:var(--red);margin-top:.08rem}
+
+/* SETTINGS */
+.plan-box{background:var(--black);color:#fff;border-radius:var(--r);padding:1.45rem;margin-bottom:1.1rem}
+.plan-name{font-family:var(--fd);font-size:1.8rem;font-weight:300;margin-bottom:.12rem}
+.plan-price{font-size:.76rem;opacity:.45;margin-bottom:.9rem}
+.plan-tagline{font-size:.72rem;color:var(--gold-l);margin-bottom:1rem;font-weight:500}
+.plan-list{display:grid;grid-template-columns:1fr 1fr;gap:.32rem .7rem}
+.plan-item{font-size:.77rem;display:flex;align-items:center;gap:.4rem}
+.plan-item-check{color:var(--gold)}
+
+/* INSIGHTS */
+.insight-bar{height:6px;background:var(--bg4);border-radius:3px;margin-top:.3rem}
+.insight-fill{height:6px;border-radius:3px;transition:width .6s}
+.alert-item{display:flex;align-items:flex-start;gap:.75rem;padding:.72rem 0;border-bottom:1px solid var(--border)}
+.alert-item:last-child{border-bottom:none}
+.month-row{display:flex;align-items:center;gap:.82rem;padding:.62rem 0;border-bottom:1px solid var(--border)}
+.month-row:last-child{border-bottom:none}
+.month-ico{width:32px;height:32px;background:var(--bg3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+
+/* NOTIF */
+.notif-item{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.notif-item:last-child{border-bottom:none}
+.notif-title{font-size:.82rem;font-weight:600;color:var(--text)}
+.notif-desc{font-size:.67rem;color:var(--muted);margin-top:.06rem}
+
+/* HELP */
+.help{font-size:.72rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.62rem .88rem;margin-bottom:.85rem;line-height:1.55}
+.help b{color:var(--text)}
+
+/* MISC */
+.pos{color:var(--green);font-weight:500;font-family:var(--fm)}
+.neg{color:var(--red);font-weight:500;font-family:var(--fm)}
+.gld{color:var(--gold);font-weight:600;font-family:var(--fm)}
+.rank-c{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
+.r1{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff}
+.r2{background:linear-gradient(135deg,#C0C0C0,#888);color:#fff}
+.r3{background:linear-gradient(135deg,#CD7F32,#A0522D);color:#fff}
+.rn{background:var(--bg4);color:var(--muted)}
+.perf-t{flex:1;height:5px;background:var(--bg4);border-radius:3px}
+.perf-f{height:5px;background:var(--rose);border-radius:3px;transition:width .5s}
+.filter-bar{display:flex;gap:.48rem;flex-wrap:wrap;padding:.75rem 1.25rem 0}
+.fpill{padding:.3rem .85rem;border:1.5px solid var(--border);background:var(--white);font-size:.67rem;font-weight:500;color:var(--muted);cursor:pointer;font-family:var(--fb);transition:all .14s;border-radius:20px}
+.fpill.on{background:var(--black);border-color:var(--black);color:#fff}
+.fpill:hover:not(.on){border-color:var(--rose);color:var(--rose)}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--black);color:#fff;padding:.72rem 1.2rem;font-size:.77rem;z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:320px;pointer-events:none;border-radius:var(--r)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:var(--green)}.toast.err{background:var(--red)}
+
+/* GROWTH METRICS STRIP */
+.gm-sec-label{font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:.2rem 0 .65rem;display:flex;align-items:center;gap:.5rem}
+.gm-sec-label::after{content:'';flex:1;height:1px;background:var(--bacc)}
+.gm-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.1rem}
+.gm-row2{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.4rem}
+.kpi-mini{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:var(--r);padding:.95rem 1rem;transition:box-shadow .2s}
+.kpi-mini:hover{box-shadow:0 4px 16px rgba(44,31,20,.08)}
+.kpi-mini.g{border-top-color:var(--gold)}.kpi-mini.gr{border-top-color:var(--green)}.kpi-mini.rd{border-top-color:var(--red)}.kpi-mini.ro{border-top-color:var(--rose)}.kpi-mini.bl{border-top-color:var(--blue)}.kpi-mini.am{border-top-color:var(--amber)}
+.kpi-mini .kpi-lbl{font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.32rem}
+.kpi-mini .kpi-val{font-family:var(--fd);font-size:1.3rem;font-weight:300;color:var(--black);line-height:1}
+.kpi-mini .kpi-sub{font-size:.61rem;color:var(--muted);margin-top:.26rem}
+/* SALES PERF */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.9rem;padding:1.25rem}
+.prod-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem;transition:all .18s}
+.prod-card:hover{background:var(--white);box-shadow:0 4px 14px rgba(44,31,20,.07)}
+.prod-name{font-size:.87rem;font-weight:600;color:var(--text);margin-bottom:.08rem}
+.prod-cat{font-size:.65rem;color:var(--rose);font-weight:500;margin-bottom:.45rem}
+.prod-rev{font-family:var(--fd);font-size:1.35rem;font-weight:300;color:var(--black)}
+.prod-bar-wrap{margin-top:.5rem}
+.prod-bar{height:4px;background:var(--bg4);border-radius:2px}
+.prod-fill{height:4px;background:var(--gold);border-radius:2px;transition:width .6s}
+.prod-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+@media print{body>*:not(#print-inv){display:none!important}#print-inv{display:block!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+#print-inv{display:none}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sb">
+  <div class="sb-top">
+    <div class="sb-prod">Ceylon Leads System</div>
+    <div class="sb-logo">CashFlow <b>Growth</b></div>
+    <div class="sb-tag">Growth Plan</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-sec">My Business</div>
+    <div class="nav-item on" data-view="dashboard"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item" data-view="cashflow"><span class="nav-icon">💸</span>Money In &amp; Out</div>
+    <div class="nav-item" data-view="expenses"><span class="nav-icon">📤</span>Expenses</div>
+    <div class="nav-item" data-view="invoices"><span class="nav-icon">🧾</span>Invoices</div>
+    <div class="nav-item" data-view="clients"><span class="nav-icon">🤝</span>Clients</div>
+    <div class="sb-sec">Growth Tools</div>
+    <div class="nav-item" data-view="payroll"><span class="nav-icon">👥</span>Staff &amp; Payroll</div>
+    <div class="nav-item" data-view="debt"><span class="nav-icon">💰</span>Who Owes Me<span class="nav-badge" id="sb-badge">3</span></div>
+    <div class="nav-item" data-view="suppliers"><span class="nav-icon">🏭</span>Suppliers</div>
+    <div class="nav-item" data-view="team"><span class="nav-icon">🏆</span>My Team</div>
+    <div class="nav-item" data-view="sales"><span class="nav-icon">📦</span>Sales Performance</div>
+    <div class="sb-sec">Reports &amp; Insights</div>
+    <div class="nav-item" data-view="analytics"><span class="nav-icon">📈</span>Analytics</div>
+    <div class="nav-item" data-view="insights"><span class="nav-icon">💡</span>Business Insights</div>
+    <div class="nav-item" data-view="automations"><span class="nav-icon">⚡</span>Auto Reminders</div>
+    <div class="sb-sec">Account</div>
+    <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</div>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-user">
+      <div class="sb-av" id="sb-av">PD</div>
+      <div>
+        <div class="sb-uname" id="sb-uname">Pasan Dissanayake</div>
+        <div class="sb-urole">Admin · Growth Plan</div>
+      </div>
+    </div>
+    <button class="btn-up" onclick="window.location.href='upgrade.html'">✨ Upgrade to Premium</button>
+    <button onclick="window.clsSignOut()" style="width:100%;margin-top:.4rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);padding:.5rem;cursor:pointer;font-family:var(--fb);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;border-radius:var(--r);transition:all .2s;" onmouseover="this.style.color='#ff6b6b'" onmouseout="this.style.color='rgba(255,255,255,.4)'">Sign Out</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div>
+      <div class="pg-title" id="pg-title">Dashboard</div>
+      <div class="pg-sub" id="pg-sub">Here is how your business is doing today</div>
+    </div>
+    <div class="tb-right">
+      <span class="tb-date" id="tb-date"></span>
+      <span class="tb-badge">Growth · 8 Users · LKR 12,500/mo</span>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+
+      <!-- Greeting -->
+      <div class="db-greeting">
+        <div>
+          <div class="db-greet-h" id="greet-h">Good morning!</div>
+          <div class="db-greet-p">Here is your business at a glance today</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.7rem">
+          <span class="db-date-pill" id="tb-date2"></span>
+          <span class="db-plan-pill">Growth Plan</span>
+        </div>
+      </div>
+
+      <!-- This Month — 4 core KPIs -->
+      <div class="db-section-label">This Month</div>
+      <div class="db-kpi-row" id="d-kpis"></div>
+
+      <!-- Charts -->
+      <div class="db-charts-row">
+        <div class="db-chart-card">
+          <div class="db-chart-title">Money Flow — Last 6 Months</div>
+          <div class="db-chart-sub">Revenue vs expenses by month</div>
+          <div class="db-ch-wrap"><canvas id="ch-cf"></canvas></div>
+        </div>
+        <div class="db-chart-card">
+          <div class="db-chart-title">Spending Breakdown</div>
+          <div class="db-chart-sub">Where your money went this month</div>
+          <div class="db-ch-wrap-sm"><canvas id="ch-exp"></canvas></div>
+          <div class="cat-list" id="cat-list"></div>
+        </div>
+      </div>
+
+      <!-- Growth Metrics — 3 col grid -->
+      <div class="db-section-label">Growth Metrics</div>
+      <div class="db-growth-grid" id="d-gm1"></div>
+
+      <!-- Two tables -->
+      <div class="db-tables-row">
+        <div class="db-table-card">
+          <div class="db-tcard-head">
+            <span class="db-tcard-title">Clients Who Owe You</span>
+            <button class="btn bo" onclick="window.clsGoTo('debt')">See All</button>
+          </div>
+          <table><thead><tr><th>Client</th><th>Invoice</th><th>Days</th><th class="tr">Amount</th></tr></thead><tbody id="d-recv"></tbody></table>
+        </div>
+        <div class="db-table-card">
+          <div class="db-tcard-head">
+            <span class="db-tcard-title">Recent Transactions</span>
+            <button class="btn bo" onclick="window.clsGoTo('cashflow')">See All</button>
+          </div>
+          <table><thead><tr><th>Date</th><th>Description</th><th>Type</th><th class="tr">Amount</th></tr></thead><tbody id="d-txn"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CASHFLOW -->
+    <div class="view" id="view-cashflow">
+      <div class="help"><b>Money In &amp; Out</b> — Record every payment you receive and every payment you make.</div>
+      <div class="sumbar c3" id="cf-sum"></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Transactions</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-txn')">+ Add Transaction</button></div></div><table><thead><tr><th>Date</th><th>Reference</th><th>Description</th><th>Category</th><th>Type</th><th class="tr">Amount (LKR)</th></tr></thead><tbody id="cf-body"></tbody></table></div>
+    </div>
+
+    <!-- EXPENSES -->
+    <div class="view" id="view-expenses">
+      <div class="help"><b>Expenses</b> — Everything you spend to run your business. Rent, electricity, packaging, marketing, and more.</div>
+      <div class="sumbar c3" id="exp-sum"></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Expenses</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-exp')">+ Add Expense</button></div></div><table><thead><tr><th>Date</th><th>Description</th><th>Paid To</th><th>Category</th><th class="tr">Amount (LKR)</th></tr></thead><tbody id="exp-body"></tbody></table></div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="view" id="view-invoices">
+      <div class="help"><b>Invoices</b> — Bills you send to clients. Track which are paid, which are waiting, and which are overdue. Includes VAT &amp; tax support.</div>
+      <div class="sumbar c3" id="inv-sum"></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Invoices</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><table><thead><tr><th>Invoice #</th><th>Client</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="view" id="view-clients">
+      <div class="help"><b>Clients</b> — All your client details in one place. Send WhatsApp messages directly from here.</div>
+      <div class="sumbar c3" id="cli-sum"></div>
+      <div class="card"><div class="card-head"><span class="card-title">My Clients</span><button class="btn bd" onclick="window.openCliMo()">+ Add Client</button></div><div class="cli-grid" id="cli-grid"></div></div>
+    </div>
+
+    <!-- PAYROLL -->
+    <div class="view" id="view-payroll">
+      <div class="help"><b>Payroll</b> — Track staff salaries each month. Mark each person paid when you have sent their salary.</div>
+      <div class="pay-banner" id="pay-banner"></div>
+      <div class="card"><div class="card-head"><span class="card-title">Staff Members</span><div class="card-actions"><button class="btn bo" onclick="window.payAll()">✓ Pay Everyone</button><button class="btn bd" onclick="window.openMo('mo-staff')">+ Add Staff</button></div></div><div class="staff-grid" id="staff-grid"></div></div>
+    </div>
+
+    <!-- DEBT -->
+    <div class="view" id="view-debt">
+      <div class="help"><b>Who Owes Me</b> — See all outstanding invoices and money you owe to suppliers. Use the WhatsApp button to send reminders.</div>
+      <div class="sumbar c4" id="debt-sum"></div>
+      <div class="debt-grid">
+        <div class="debt-card"><div class="debt-head"><div><div class="sum-lbl">Money Coming In</div><div class="debt-tot" style="color:var(--green)" id="tot-recv">LKR 0</div></div><span class="pill pi">↑ Owed to You</span></div><div id="recv-list"></div></div>
+        <div class="debt-card"><div class="debt-head"><div><div class="sum-lbl">Money You Owe</div><div class="debt-tot" style="color:var(--red)" id="tot-pay">LKR 0</div></div><span class="pill pov">↓ You Owe</span></div><div id="pay-list"></div></div>
+      </div>
+    </div>
+
+    <!-- SUPPLIERS -->
+    <div class="view" id="view-suppliers">
+      <div class="help"><b>Suppliers</b> — Everyone you buy from. Track your total spend per supplier across the year.</div>
+      <div class="sumbar c3" id="sup-sum"></div>
+      <div class="card"><div class="card-head"><span class="card-title">My Suppliers</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-sup')">+ Add Supplier</button></div></div>
+        <div class="filter-bar" id="sup-filters"><div class="fpill on" onclick="window.filterSup('all',this)">All</div><div class="fpill" onclick="window.filterSup('active',this)">Active</div><div class="fpill" onclick="window.filterSup('inactive',this)">Inactive</div></div>
+        <table style="margin-top:.75rem"><thead><tr><th>Supplier</th><th>Type</th><th>Contact</th><th>Total Spent (YTD)</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="sup-body"></tbody></table>
+      </div>
+    </div>
+
+    <!-- TEAM -->
+    <div class="view" id="view-team">
+      <div class="help"><b>My Team</b> — See which team members are bringing in the most revenue this month.</div>
+      <div class="sumbar c4" id="team-sum"></div>
+      <div class="card"><div class="card-head"><span class="card-title">Team Performance</span><button class="btn bo" onclick="window.exportCSV()">↓ Download</button></div><table><thead><tr><th>Rank</th><th>Team Member</th><th>Role</th><th>Revenue Generated</th><th class="tc">Invoices</th><th>Score</th></tr></thead><tbody id="team-body"></tbody></table></div>
+    </div>
+
+
+    <!-- SALES PERFORMANCE -->
+    <div class="view" id="view-sales">
+      <div class="help"><b>Sales Performance</b> — Track revenue by product/service, monitor repeat customers, and measure customer retention.</div>
+      <div class="sumbar c4" id="sales-sum"></div>
+      <div class="g2" style="margin-bottom:1.2rem">
+        <div class="chart-card"><div class="ch-title">Revenue by Product / Service</div><div class="ch-sub">Which items are driving your income</div><div class="ch-wrap"><canvas id="ch-prod"></canvas></div></div>
+        <div class="chart-card"><div class="ch-title">Customer Retention</div><div class="ch-sub">Returning vs new customers this period</div><div class="ch-wrap-sm"><canvas id="ch-ret"></canvas></div><div class="cat-list" id="ret-list"></div></div>
+      </div>
+      <div class="card"><div class="card-head"><span class="card-title">Revenue per Product / Service</span><button class="btn bo" onclick="window.exportCSV()">↓ Download</button></div><div class="prod-grid" id="prod-grid"></div></div>
+      <div class="card"><div class="card-head"><span class="card-title">Repeat Customer Analysis</span></div><table><thead><tr><th>Client</th><th class="tc">Orders</th><th>Total Revenue</th><th>Avg Order Value</th><th>Type</th><th class="tr">Revenue Share</th></tr></thead><tbody id="repeat-body"></tbody></table></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="view" id="view-analytics">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;flex-wrap:wrap;gap:.5rem">
+        <div><div style="font-family:var(--fd);font-size:1.4rem;color:var(--black)">My Business Reports 📊</div><div style="font-size:.69rem;color:var(--muted);margin-top:.1rem">Revenue trends, profit analysis and client breakdowns</div></div>
+        <div style="display:flex;gap:.5rem"><button class="btn bo" onclick="window.showToast('Excel report ready! Check your downloads.')">📊 Excel</button><button class="btn bd" onclick="window.showToast('PDF report ready! Check your downloads.')">📄 PDF Report</button></div>
+      </div>
+      <div class="sumbar c4" id="an-sum"></div>
+      <div class="g2c" style="margin-bottom:1.2rem">
+        <div class="chart-card"><div class="ch-title">Revenue Trend</div><div class="ch-sub">How much you earned each month</div><div class="ch-wrap"><canvas id="ch-rev"></canvas></div></div>
+        <div class="chart-card"><div class="ch-title">Income vs Expenses</div><div class="ch-sub">Monthly comparison</div><div class="ch-wrap"><canvas id="ch-ie"></canvas></div></div>
+      </div>
+      <div class="rep-grid" id="an-reports"></div>
+      <div class="card"><div class="card-head"><span class="card-title">Revenue by Client</span></div><table><thead><tr><th>Client</th><th class="tc">Invoices</th><th>Total Billed</th><th>Paid</th><th class="tr">Outstanding</th></tr></thead><tbody id="an-cli"></tbody></table></div>
+    </div>
+
+    <!-- BUSINESS INSIGHTS -->
+    <div class="view" id="view-insights">
+      <div class="help"><b>Business Insights</b> — A plain-language summary of how your business is doing. No spreadsheets needed.</div>
+      <div class="kpi-row" id="ins-kpis"></div>
+      <div class="g2">
+        <div class="card"><div class="card-head"><span class="card-title">📊 Financial Health Score</span></div><div style="padding:1.35rem"><div style="text-align:center;padding:.75rem 0 1rem"><div style="font-family:var(--fd);font-size:3.5rem;font-weight:300;line-height:1" id="ins-score">82</div><div style="font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.32rem" id="ins-score-lbl">Out of 100 · Good</div></div><div id="ins-bars"></div></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">📅 This Month at a Glance</span></div><div style="padding:.5rem 1.25rem" id="ins-month"></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-head"><span class="card-title">🏆 Top Clients by Revenue</span></div><div style="padding:1rem 1.25rem" id="ins-top"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">⚠️ Things That Need Attention</span></div><div style="padding:.5rem 1.25rem" id="ins-alerts"></div></div>
+      </div>
+    </div>
+
+    <!-- AUTOMATIONS -->
+    <div class="view" id="view-automations">
+      <div class="help"><b>Auto Reminders</b> — WhatsApp and SMS messages that send automatically. You never have to chase a payment manually again!</div>
+      <div class="sumbar c4" id="aut-sum"></div>
+      <div class="auto-grid" id="aut-grid"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="view" id="view-settings">
+      <div class="g2">
+        <div>
+          <div class="card" style="margin-bottom:1.2rem">
+            <div class="card-head"><span class="card-title">My Business Details</span><button class="btn bd" onclick="window.saveSettings()">Save Changes</button></div>
+            <div style="padding:1.35rem">
+              <div class="fsec">Business Information</div>
+              <div class="frow"><div class="fg"><label>Business Name</label><input class="fi" id="s-biz" type="text" placeholder="e.g. Ceylon Spice Co."></div><div class="fg"><label>Your Name</label><input class="fi" id="s-user" type="text" placeholder="Your full name"></div></div>
+              <div class="fg"><label>Business Address</label><input class="fi" id="s-addr" type="text" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
+              <div class="frow"><div class="fg"><label>Your Email</label><input class="fi" id="s-email" type="email" placeholder="you@yourbusiness.lk"></div><div class="fg"><label>VAT / Tax Number (if any)</label><input class="fi" id="s-vat" type="text" placeholder="Optional"></div></div>
+              <div class="fg"><label>Invoice Footer Message</label><input class="fi" id="s-footer" type="text" placeholder="e.g. Thank you for your business!"></div>
+              <div class="fsec">Your Business Logo</div>
+              <div style="border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)" onclick="document.getElementById('logo-inp').click()">
+                <img id="logo-prev" style="max-height:46px;display:none;margin:0 auto .45rem;object-fit:contain" src="" alt="">
+                <div id="logo-hint"><div style="font-size:1.3rem;margin-bottom:.3rem">🏢</div><div style="font-size:.79rem;color:var(--muted)">Click to upload your logo</div><div style="font-size:.67rem;color:var(--dim);margin-top:.18rem">PNG or JPG · Max 2MB · Shows on all invoices</div></div>
+                <input type="file" id="logo-inp" accept="image/*" style="display:none" onchange="previewLogo(this)">
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Notification Preferences 🔔</span></div>
+            <div style="padding:.5rem 1.3rem">
+              <div class="notif-item"><div><div class="notif-title">WhatsApp Reminder (3 days before due)</div><div class="notif-desc">Automatically remind clients 3 days before their invoice is due</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+              <div class="notif-item"><div><div class="notif-title">SMS Overdue Alert</div><div class="notif-desc">Send an SMS when an invoice is more than 7 days overdue</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+              <div class="notif-item"><div><div class="notif-title">Monthly Email Report</div><div class="notif-desc">Get a summary of your finances emailed on the 1st of each month</div></div><label class="tog"><input type="checkbox"><span class="tog-sl"></span></label></div>
+              <div class="notif-item"><div><div class="notif-title">Low Cash Balance Alert</div><div class="notif-desc">WhatsApp alert when your balance drops below LKR 100,000</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="plan-box">
+            <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
+            <div class="plan-name">Growth Plan ✨</div>
+            <div class="plan-price">LKR 12,500 / month</div>
+            <div class="plan-tagline">Built for Growing SMEs · Up to 8 users</div>
+            <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Starter, plus:</div>
+            <div class="plan-list">
+              <div class="plan-item"><span class="plan-item-check">✓</span>Payroll Management</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Debt Tracking</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Supplier Management</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Advanced Analytics</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Business Insights</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>10 Invoice Templates</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>VAT / Tax Support</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Due Payment Reminders</div>
+            </div>
+            <button onclick="window.showToast('Contact CLS to upgrade — LKR 15,500/mo')" style="margin-top:1.15rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">✨ Upgrade to Premium</button>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Team Access (up to 8)</span></div>
+            <div style="padding:1.3rem">
+              <div style="font-size:.74rem;color:var(--muted);margin-bottom:.85rem;line-height:1.55">Add team members who can log in. Enter their email addresses below.</div>
+              <div class="frow"><div class="fg"><label>User 1 — You</label><input class="fi" id="s-u1" type="email" placeholder="your@email.com"></div><div class="fg"><label>User 2</label><input class="fi" id="s-u2" type="email" placeholder="user2@email.com"></div></div>
+              <div class="frow"><div class="fg"><label>User 3</label><input class="fi" id="s-u3" type="email" placeholder="user3@email.com"></div><div class="fg"><label>User 4</label><input class="fi" id="s-u4" type="email" placeholder="user4@email.com"></div></div>
+              <div class="frow"><div class="fg"><label>User 5</label><input class="fi" id="s-u5" type="email" placeholder="user5@email.com"></div><div class="fg"><label>User 6</label><input class="fi" id="s-u6" type="email" placeholder="user6@email.com"></div></div>
+              <div class="frow" style="margin-bottom:0"><div class="fg" style="margin-bottom:0"><label>User 7</label><input class="fi" id="s-u7" type="email" placeholder="user7@email.com"></div><div class="fg" style="margin-bottom:0"><label>User 8</label><input class="fi" id="s-u8" type="email" placeholder="user8@email.com"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="mo-txn"><div class="mob" style="max-width:500px">
+  <div class="mo-hd"><span class="mo-title">Add a Transaction</span><button class="mo-x" onclick="window.closeMo('mo-txn')">×</button></div>
+  <div class="mo-bd">
+    <div class="frow"><div class="fg"><label>Date</label><input class="fi" type="date" id="t-date"></div><div class="fg"><label>Type</label><select class="fi fsel" id="t-type"><option value="in">Money In (I received)</option><option value="out">Money Out (I spent)</option></select></div></div>
+    <div class="fg"><label>What was this for?</label><input class="fi" id="t-desc" placeholder="e.g. Payment received from client"></div>
+    <div class="frow"><div class="fg"><label>Amount (LKR)</label><input class="fi" type="number" id="t-amt" placeholder="0.00"></div><div class="fg"><label>Category</label><select class="fi fsel" id="t-cat"><option>Sales Revenue</option><option>Service Income</option><option>Invoice Payment</option><option>Supplier Payment</option><option>Utilities</option><option>Payroll</option><option>Marketing</option><option>Operations</option><option>Other</option></select></div></div>
+    <div class="fg" style="margin-bottom:0"><label>Reference (optional)</label><input class="fi" id="t-ref" placeholder="e.g. Invoice #001, Cheque #123"></div>
+  </div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-txn')">Cancel</button><button class="btn bd" onclick="window.addTxn()">Save Transaction</button></div>
+</div></div>
+
+<div class="mo" id="mo-exp"><div class="mob" style="max-width:500px">
+  <div class="mo-hd"><span class="mo-title">Add an Expense</span><button class="mo-x" onclick="window.closeMo('mo-exp')">×</button></div>
+  <div class="mo-bd">
+    <div class="frow"><div class="fg"><label>Date</label><input class="fi" type="date" id="e-date"></div><div class="fg"><label>Category</label><select class="fi fsel" id="e-cat"><option>Operations</option><option>Suppliers</option><option>Utilities</option><option>Marketing</option><option>Fuel &amp; Transport</option><option>Rent</option><option>Payroll</option><option>Other</option></select></div></div>
+    <div class="fg"><label>What did you spend on?</label><input class="fi" id="e-desc" placeholder="e.g. Electricity bill for June"></div>
+    <div class="frow"><div class="fg"><label>Paid to (Company / Person)</label><input class="fi" id="e-vendor" placeholder="e.g. Ceylon Electricity Board"></div><div class="fg"><label>Amount (LKR)</label><input class="fi" type="number" id="e-amt" placeholder="0.00"></div></div>
+  </div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-exp')">Cancel</button><button class="btn bd" onclick="window.addExp()">Save Expense</button></div>
+</div></div>
+
+<div class="mo" id="mo-inv"><div class="mob">
+  <div class="mo-hd"><span class="mo-title">Create New Invoice</span><button class="mo-x" onclick="window.closeMo('mo-inv')">×</button></div>
+  <div class="mo-bd">
+    <div class="fsec">Choose a Design (10 Premium Templates)</div>
+    <div class="tpl-grid" id="tpl-grid"></div>
+    <div class="fsec">Client &amp; Dates</div>
+    <div class="frow"><div class="fg"><label>Client Name</label><input class="fi" id="inv-cli" placeholder="Who is this invoice for?"></div><div class="fg"><label>Client Address</label><input class="fi" id="inv-caddr" placeholder="Their billing address"></div></div>
+    <div class="frow"><div class="fg"><label>Invoice Date</label><input class="fi" type="date" id="inv-date"></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="inv-due"></div></div>
+    <div class="fsec">What Are You Billing For?</div>
+    <table class="litbl"><thead><tr><th style="width:44%">Description</th><th style="width:12%">Qty</th><th style="width:20%">Unit Price (LKR)</th><th style="width:18%">Total</th><th style="width:6%"></th></tr></thead><tbody id="li-body"></tbody></table>
+    <button class="li-add" onclick="window.addLi()">+ Add Another Item</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;align-items:start">
+      <div class="fg" style="margin-bottom:0"><label>Note to Client (optional)</label><input class="fi" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></div>
+      <div class="inv-totals" id="inv-totals"></div>
+    </div>
+    <div class="frow" style="margin-top:.88rem"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="number" id="inv-disc" value="0" oninput="calcTotals()"></div></div>
+  </div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-inv')">Cancel</button><button class="btn bd" onclick="window.saveInv()">Create Invoice ✓</button></div>
+</div></div>
+
+<div class="mo" id="mo-pay"><div class="mob" style="max-width:440px">
+  <div class="mo-hd"><span class="mo-title">Record a Payment 💰</span><button class="mo-x" onclick="window.closeMo('mo-pay')">×</button></div>
+  <div class="mo-bd" id="pay-mo-bd"></div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-pay')">Cancel</button><button class="btn bgr" onclick="window.confirmPay()">Mark as Paid ✓</button></div>
+</div></div>
+
+<div class="mo" id="mo-client"><div class="mob" style="max-width:520px">
+  <div class="mo-hd"><span class="mo-title" id="cli-mo-t">Add a Client</span><button class="mo-x" onclick="window.closeMo('mo-client')">×</button></div>
+  <div class="mo-bd">
+    <input type="hidden" id="cli-id">
+    <div class="frow"><div class="fg"><label>Client Name</label><input class="fi" id="c-name" placeholder="e.g. Kasun Perera"></div><div class="fg"><label>Business Name</label><input class="fi" id="c-biz" placeholder="e.g. Perera Holdings"></div></div>
+    <div class="frow"><div class="fg"><label>Email</label><input class="fi" type="email" id="c-email" placeholder="kasun@business.lk"></div><div class="fg"><label>Phone / WhatsApp</label><input class="fi" type="tel" id="c-phone" placeholder="+94 77 000 0000"></div></div>
+    <div class="fg"><label>Address</label><input class="fi" id="c-addr" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
+    <div class="frow"><div class="fg"><label>Payment Terms</label><select class="fi fsel" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>Pay on Receipt</option></select></div><div class="fg"><label>Notes (optional)</label><input class="fi" id="c-notes" placeholder="VIP client, prefers WhatsApp..."></div></div>
+  </div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-client')">Cancel</button><button class="btn bd" onclick="window.saveClient()">Save Client</button></div>
+</div></div>
+
+<div class="mo" id="mo-staff"><div class="mob" style="max-width:440px">
+  <div class="mo-hd"><span class="mo-title">Add a Staff Member</span><button class="mo-x" onclick="window.closeMo('mo-staff')">×</button></div>
+  <div class="mo-bd">
+    <div class="frow"><div class="fg"><label>Full Name</label><input class="fi" id="sf-name" placeholder="e.g. Nimesha Perera"></div><div class="fg"><label>Role</label><input class="fi" id="sf-role" placeholder="e.g. Sales Manager"></div></div>
+    <div class="frow"><div class="fg"><label>Monthly Salary (LKR)</label><input class="fi" type="number" id="sf-sal" placeholder="e.g. 85000"></div><div class="fg"><label>Colour Tag</label><select class="fi fsel" id="sf-col"><option value="#2C5F8A">Blue</option><option value="#1D9E62">Green</option><option value="#B8922A">Gold</option><option value="#C17A6F">Rose</option><option value="#7A3FA0">Purple</option></select></div></div>
+  </div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-staff')">Cancel</button><button class="btn bd" onclick="window.addStaff()">Add to Team</button></div>
+</div></div>
+
+<div class="mo" id="mo-sup"><div class="mob" style="max-width:460px">
+  <div class="mo-hd"><span class="mo-title">Add a Supplier</span><button class="mo-x" onclick="window.closeMo('mo-sup')">×</button></div>
+  <div class="mo-bd">
+    <div class="frow"><div class="fg"><label>Supplier Name</label><input class="fi" id="sp-name" placeholder="e.g. ABC Packaging Ltd"></div><div class="fg"><label>What do they supply?</label><select class="fi fsel" id="sp-cat"><option>Packaging</option><option>Raw Materials</option><option>Technology</option><option>Stationery</option><option>Logistics</option><option>Maintenance</option><option>Other</option></select></div></div>
+    <div class="frow"><div class="fg"><label>Contact Person</label><input class="fi" id="sp-contact" placeholder="e.g. Nimal Kumara"></div><div class="fg"><label>Phone</label><input class="fi" id="sp-phone" placeholder="+94 71 000 0000"></div></div>
+  </div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-sup')">Cancel</button><button class="btn bd" onclick="window.addSup()">Save Supplier</button></div>
+</div></div>
+
+<div id="print-inv"></div>
+<div class="toast" id="toast-el"></div>
+
+<script>
+// ===================== DATA =====================
+var D = {
+  txns:[
+    {id:'T001',date:'2025-05-01',desc:'Retail Sales — Ceylon Spice Range',type:'in',cat:'Sales Revenue',amount:485000,ref:'SAL-001'},
+    {id:'T002',date:'2025-05-03',desc:'Office Rent — May',type:'out',cat:'Rent',amount:85000,ref:'RENT-05'},
+    {id:'T003',date:'2025-05-05',desc:'Keells Bulk Order Payment',type:'in',cat:'Invoice Payment',amount:720000,ref:'INV-003'},
+    {id:'T004',date:'2025-05-08',desc:'Electricity & Water Bills',type:'out',cat:'Utilities',amount:18500,ref:'UTIL-05'},
+    {id:'T005',date:'2025-05-10',desc:'Packaging Materials',type:'out',cat:'Operations',amount:42000,ref:'PO-021'},
+    {id:'T006',date:'2025-05-12',desc:'Export Order — Singapore',type:'in',cat:'Invoice Payment',amount:1250000,ref:'INV-004'},
+    {id:'T007',date:'2025-05-15',desc:'Staff Salaries — May',type:'out',cat:'Payroll',amount:395000,ref:'PAY-05'},
+    {id:'T008',date:'2025-05-18',desc:'Google & Meta Ads',type:'out',cat:'Marketing',amount:43000,ref:'MKT-012'}
+  ],
+  invoices:[
+    {id:'INV-001',client:'Keells Holdings',caddr:'117 Sir Chittampalam Mawatha, Colombo 02',date:'2025-04-01',due:'2025-04-30',items:[{desc:'Ceylon Cinnamon 500g x 200',qty:200,price:1200}],sub:240000,vat:0,disc:0,total:240000,status:'paid',paid:240000,tpl:0,notes:''},
+    {id:'INV-002',client:'Arpico Supercentre',caddr:'No 12, Stanley Thilakaratne Mawatha, Nugegoda',date:'2025-04-15',due:'2025-05-15',items:[{desc:'Mixed Spice Gift Box x 50',qty:50,price:2800}],sub:140000,vat:0,disc:5000,total:135000,status:'overdue',paid:0,tpl:1,notes:''},
+    {id:'INV-003',client:'Keells Holdings',caddr:'117 Sir Chittampalam Mawatha, Colombo 02',date:'2025-05-05',due:'2025-06-05',items:[{desc:'Bulk Spice Pack A x 100',qty:100,price:7200}],sub:720000,vat:0,disc:0,total:720000,status:'paid',paid:720000,tpl:2,notes:''},
+    {id:'INV-004',client:'Colombo Export Trading',caddr:'32 Vauxhall Street, Colombo 02',date:'2025-05-12',due:'2025-06-12',items:[{desc:'Export Grade Cinnamon 1kg x 500',qty:500,price:2500}],sub:1250000,vat:0,disc:0,total:1250000,status:'sent',paid:0,tpl:6,notes:'Port clearance docs attached.'},
+    {id:'INV-005',client:'Arpico Supercentre',caddr:'No 12, Stanley Thilakaratne Mawatha, Nugegoda',date:'2025-05-18',due:'2025-06-18',items:[{desc:'Pepper Corn Premium 250g x 80',qty:80,price:1800}],sub:144000,vat:18000,disc:0,total:162000,status:'partial',paid:80000,tpl:4,notes:''},
+    {id:'INV-006',client:'Lanka Flavours Ltd',caddr:'88 Nawala Road, Rajagiriya',date:'2025-05-20',due:'2025-06-20',items:[{desc:'Cardamom Premium x 30',qty:30,price:3500}],sub:105000,vat:0,disc:0,total:105000,status:'draft',paid:0,tpl:0,notes:''},
+    {id:'INV-007',client:'Colombo Export Trading',caddr:'32 Vauxhall Street, Colombo 02',date:'2025-05-22',due:'2025-06-22',items:[{desc:'Cloves Grade A 500g x 60',qty:60,price:2200}],sub:132000,vat:0,disc:0,total:132000,status:'sent',paid:0,tpl:3,notes:''},
+    {id:'INV-008',client:'Lanka Flavours Ltd',caddr:'88 Nawala Road, Rajagiriya',date:'2025-05-25',due:'2025-06-25',items:[{desc:'Vanilla Extract Premium x 40',qty:40,price:4200}],sub:168000,vat:21000,disc:0,total:189000,status:'draft',paid:0,tpl:9,notes:''}
+  ],
+  exps:[
+    {id:'E001',date:'2025-05-03',desc:'Office Rent',vendor:'Skyline Properties',cat:'Rent',amount:85000},
+    {id:'E002',date:'2025-05-08',desc:'Electricity & Water',vendor:'CEB / NWS&DB',cat:'Utilities',amount:18500},
+    {id:'E003',date:'2025-05-10',desc:'Packaging Materials',vendor:'Lanka Packaging Co.',cat:'Operations',amount:42000},
+    {id:'E004',date:'2025-05-12',desc:'Google & Meta Ads',vendor:'Google / Meta',cat:'Marketing',amount:43000},
+    {id:'E005',date:'2025-05-15',desc:'Staff Salaries',vendor:'Payroll',cat:'Payroll',amount:395000},
+    {id:'E006',date:'2025-05-22',desc:'Office Stationery',vendor:'Office Depot',cat:'Operations',amount:8700}
+  ],
+  clients:[
+    {id:'C1',name:'Ravi Perera',biz:'Keells Holdings',email:'ravi.perera@keells.lk',phone:'+94 11 230 5000',addr:'117 Sir Chittampalam Mawatha, Colombo 02',terms:'Net 30',notes:'Key retail partner. Monthly bulk orders.'},
+    {id:'C2',name:'Amara Silva',biz:'Arpico Supercentre',email:'amara@arpico.lk',phone:'+94 11 268 0050',addr:'No 12, Stanley Thilakaratne Mawatha, Nugegoda',terms:'Net 15',notes:'Gift box buyer.'},
+    {id:'C3',name:'Dinesh Jayawardena',biz:'Colombo Export Trading',email:'dinesh@colomboexport.lk',phone:'+94 77 345 6789',addr:'32 Vauxhall Street, Colombo 02',terms:'Net 45',notes:'Export orders. Port docs required.'},
+    {id:'C4',name:'Priya Fernando',biz:'Lanka Flavours Ltd',email:'priya@lankaflavours.lk',phone:'+94 71 987 6543',addr:'88 Nawala Road, Rajagiriya',terms:'Net 30',notes:'Specialty ingredients only.'}
+  ],
+  staff:[
+    {id:'S1',name:'Kasun Bandara',role:'Operations Manager',ini:'KB',col:'#2C5F8A',sal:95000,paid:true,rev:720000,invs:3},
+    {id:'S2',name:'Nimesha Perera',role:'Sales Executive',ini:'NP',col:'#1D9E62',sal:72000,paid:false,rev:485000,invs:2},
+    {id:'S3',name:'Tharaka De Silva',role:'Export Coordinator',ini:'TD',col:'#B8922A',sal:78000,paid:false,rev:1250000,invs:1},
+    {id:'S4',name:'Dilrukshi Samaraweera',role:'Accounts Executive',ini:'DS',col:'#C17A6F',sal:68000,paid:true,rev:305000,invs:4},
+    {id:'S5',name:'Rohan Jayasinghe',role:'Warehouse Supervisor',ini:'RJ',col:'#7A3FA0',sal:55000,paid:false,rev:0,invs:0}
+  ],
+  recv:[
+    {client:'Arpico Supercentre',amount:135000,days:14,inv:'INV-002'},
+    {client:'Colombo Export Trading',amount:1250000,days:17,inv:'INV-004'},
+    {client:'Arpico Supercentre',amount:82000,days:11,inv:'INV-005'},
+    {client:'Colombo Export Trading',amount:132000,days:7,inv:'INV-007'},
+    {client:'Lanka Flavours Ltd',amount:189000,days:4,inv:'INV-008'}
+  ],
+  payables:[
+    {supplier:'Lanka Packaging Co.',amount:42000,days:12,ref:'PO-021'},
+    {supplier:'Skyline Properties',amount:85000,days:5,ref:'RENT-06'},
+    {supplier:'Google / Meta',amount:43000,days:8,ref:'MKT-013'}
+  ],
+  suppliers:[
+    {id:'SP1',name:'Lanka Packaging Co.',cat:'Packaging',contact:'Suresh W.',phone:'+94 11 567 8901',ytd:285000,status:'active'},
+    {id:'SP2',name:'Skyline Properties',cat:'Real Estate',contact:'Pradeep N.',phone:'+94 11 234 5678',ytd:510000,status:'active'},
+    {id:'SP3',name:'Metro Logistics',cat:'Logistics',contact:'Ishara K.',phone:'+94 77 234 5678',ytd:168000,status:'active'},
+    {id:'SP4',name:'Office Depot',cat:'Office Supplies',contact:'Amali S.',phone:'+94 11 345 6789',ytd:87500,status:'inactive'},
+    {id:'SP5',name:'Lanka Raw Spice',cat:'Raw Materials',contact:'Bandu R.',phone:'+94 41 222 3456',ytd:850000,status:'active'}
+  ],
+  autos:[
+    {name:'Invoice Due Reminder',desc:'WhatsApp alert 3 days before invoice due date',icon:'💬',trigger:'3 days before due',channel:'WhatsApp',active:true,fired:47},
+    {name:'Overdue Escalation',desc:'SMS when invoice is 7+ days overdue',icon:'⚠️',trigger:'7 days overdue',channel:'SMS',active:true,fired:12},
+    {name:'Payment Thank You',desc:'WhatsApp thank-you message when invoice is fully paid',icon:'✅',trigger:'Invoice paid',channel:'WhatsApp',active:true,fired:89},
+    {name:'Monthly Summary',desc:'Email PDF report on 1st of each month',icon:'📊',trigger:'1st of month',channel:'Email',active:false,fired:3},
+    {name:'Low Cash Alert',desc:'WhatsApp alert when balance drops below LKR 100,000',icon:'💰',trigger:'Balance < 100k',channel:'WhatsApp',active:true,fired:2}
+  ],
+  settings:{biz:'Ceylon Spice Co.',user:'Pasan Dissanayake',addr:'42 Galle Road, Colombo 03',email:'pasan@ceylonspice.lk',vat:'VAT123456789',footer:'Thank you for choosing Ceylon Spice Co. — Quality from the Island.',logo:''}
+};
+
+// ===================== UTILS =====================
+var payInvId = null, selTpl = 0, CH = {};
+
+function fmt(n) {
+  return 'LKR ' + Number(n||0).toLocaleString('en-LK', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtS(n) {
+  if (n >= 1000000) return 'LKR ' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return 'LKR ' + (n/1000).toFixed(0) + 'K';
+  return fmt(n);
+}
+function fmtN(n) {
+  return Number(n||0).toLocaleString('en-LK', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+
+var toastTimer;
+window.showToast = function showToast(msg, type) {
+  var el = document.getElementById('toast-el');
+  el.textContent = msg;
+  el.className = 'toast show' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.className = 'toast'; }, 3200);
+}
+
+window.openMo = function openMo(id) { document.getElementById(id).classList.add('open'); }
+window.closeMo = function closeMo(id) { document.getElementById(id).classList.remove('open'); }
+
+function kpi(lbl, val, sub, accent) {
+  return '<div class="kpi ' + accent + '"><div class="kpi-lbl">' + lbl + '</div><div class="kpi-val">' + val + '</div><div class="kpi-sub">' + sub + '</div></div>';
+}
+
+function sumItem(lbl, val, color) {
+  var style = color ? ' style="color:' + color + '"' : '';
+  return '<div class="sum-i"><div class="sum-lbl">' + lbl + '</div><div class="sum-val"' + style + '>' + val + '</div></div>';
+}
+
+window.exportCSV = function exportCSV() {
+  var rows = [['Date','Description','Type','Category','Amount','Reference']];
+  D.txns.forEach(function(t) { rows.push([t.date, '"' + t.desc + '"', t.type, t.cat, t.amount, t.ref]); });
+  var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'cashflow-export.csv';
+  a.click();
+  showToast('CSV downloaded!', 'ok');
+}
+
+// ===================== NAV =====================
+var PAGE_META = {
+  dashboard: ['Dashboard', 'Here is how your business is doing today'],
+  cashflow: ['Money In & Out', 'Every rupee that enters or leaves your business'],
+  expenses: ['Expenses', 'Everything you spend to run your business'],
+  invoices: ['Invoices', 'Bills you send and payments you track'],
+  clients: ['Clients', 'Your client directory and contact details'],
+  payroll: ['Staff & Payroll', 'Manage your team salaries each month'],
+  debt: ['Who Owes Me', 'Money owed to you and money you owe'],
+  suppliers: ['Suppliers', 'Everyone you buy from'],
+  team: ['My Team', 'See how your team is performing'],
+  sales: ['Sales Performance', 'Revenue by product/service, repeat customers and growth metrics'],
+  analytics: ['My Business Reports', 'Revenue trends, profit and client breakdowns'],
+  insights: ['Business Insights', 'A plain-language summary of how your business is doing'],
+  automations: ['Auto Reminders', 'WhatsApp and SMS reminders that run automatically'],
+  settings: ['Settings', 'Your business details, plan and account management']
+};
+
+var RENDERERS = {
+  dashboard: renderDashboard,
+  cashflow: renderCashflow,
+  expenses: renderExpenses,
+  invoices: renderInvoices,
+  clients: renderClients,
+  payroll: renderPayroll,
+  debt: renderDebt,
+  suppliers: renderSuppliers,
+  team: renderTeam,
+  sales: renderSales,
+  analytics: renderAnalytics,
+  insights: renderInsights,
+  automations: renderAutomations
+};
+
+window.goTo = function clsGoTo(id) {
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  var view = document.getElementById('view-' + id);
+  if (view) view.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.classList.remove('on');
+    if (item.getAttribute('data-view') === id) item.classList.add('on');
+  });
+
+  var meta = PAGE_META[id];
+  if (meta) {
+    document.getElementById('pg-title').textContent = meta[0];
+    document.getElementById('pg-sub').textContent = meta[1];
+  }
+
+  if (RENDERERS[id]) RENDERERS[id]();
+}
+
+// Wire up nav items
+document.querySelectorAll('.nav-item').forEach(function(item) {
+  item.addEventListener('click', function() {
+    goTo(item.getAttribute('data-view'));
+  });
+});
+
+// ===================== CHARTS =====================
+function buildDashCharts() {
+  var months = ['Dec','Jan','Feb','Mar','Apr','May'];
+  var inc = D.txns.filter(function(t) { return t.type === 'in'; }).reduce(function(a,t) { return a + t.amount; }, 0);
+  var out = D.txns.filter(function(t) { return t.type === 'out'; }).reduce(function(a,t) { return a + t.amount; }, 0);
+  var inData = [420000,680000,510000,890000,760000,inc];
+  var outData = [310000,450000,380000,620000,540000,out];
+
+  if (CH.cf) CH.cf.destroy();
+  var c1 = document.getElementById('ch-cf');
+  if (c1) {
+    CH.cf = new Chart(c1, {
+      type: 'bar',
+      data: { labels: months, datasets: [
+        {label:'Money In', data:inData, backgroundColor:'rgba(29,158,98,.7)', borderRadius:3},
+        {label:'Money Out', data:outData, backgroundColor:'rgba(192,57,43,.6)', borderRadius:3}
+      ]},
+      options: {responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9},callback:function(v){return v>=1000000?'M'+(v/1e6).toFixed(1):'K'+Math.round(v/1000);}}}}}
+    });
+  }
+
+  var cats = {};
+  D.exps.forEach(function(e) { cats[e.cat] = (cats[e.cat] || 0) + e.amount; });
+  var ck = Object.keys(cats), cv = Object.values(cats);
+  var colors = ['#B8922A','#1D9E62','#C0392B','#2563A8','#C17A6F','#B37010'];
+  var total = cv.reduce(function(a,v) { return a+v; }, 0);
+
+  if (CH.exp) CH.exp.destroy();
+  var c2 = document.getElementById('ch-exp');
+  if (c2) {
+    CH.exp = new Chart(c2, {
+      type: 'doughnut',
+      data: {labels:ck, datasets:[{data:cv, backgroundColor:colors, borderWidth:2, borderColor:'#fff'}]},
+      options: {responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{display:false}}}
+    });
+  }
+
+  var cl = document.getElementById('cat-list');
+  if (cl) {
+    cl.innerHTML = ck.map(function(k,i) {
+      return '<div class="cat-row"><div class="cat-dot" style="background:' + colors[i] + '"></div><div class="cat-lbl">' + k + '</div><div class="cat-pct">' + (total ? Math.round(cv[i]/total*100) : 0) + '%</div></div>';
+    }).join('');
+  }
+}
+
+// ===================== RENDER FUNCTIONS =====================
+function renderDashboard() {
+  var inc = D.txns.filter(function(t) { return t.type==='in'; }).reduce(function(a,t) { return a+t.amount; }, 0);
+  var out = D.txns.filter(function(t) { return t.type==='out'; }).reduce(function(a,t) { return a+t.amount; }, 0);
+  var outstd = D.recv.reduce(function(a,r) { return a+r.amount; }, 0);
+  var overdue = D.invoices.filter(function(i) { return i.status==='overdue'; }).length;
+
+  document.getElementById('d-kpis').innerHTML =
+    kpi('Revenue This Month', fmtS(inc), '<span class="kpi-up">↑ 18% vs last month</span>', 'g') +
+    kpi('Expenses This Month', fmtS(out), 'Total business spending', 'rd') +
+    kpi('Net Profit', fmtS(inc-out), inc-out >= 0 ? 'You are profitable!' : 'Expenses exceed income', 'gr') +
+    kpi('Outstanding', fmtS(outstd), overdue + ' overdue invoice' + (overdue !== 1 ? 's' : ''), 'am');
+
+  document.getElementById('d-recv').innerHTML = D.recv.slice(0,4).map(function(r) {
+    var color = r.days > 30 ? 'var(--red)' : r.days > 14 ? 'var(--amber)' : 'var(--green)';
+    return '<tr><td>' + r.client + '</td><td style="font-size:.71rem;color:var(--muted)">' + r.inv + '</td><td><span style="color:' + color + ';font-weight:600;font-family:var(--fm)">' + r.days + 'd</span></td><td class="tr mono gld">' + fmt(r.amount) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('d-txn').innerHTML = D.txns.slice(0,5).map(function(t) {
+    return '<tr><td>' + t.date + '</td><td>' + t.desc.substring(0,28) + '…</td><td><span class="pill ' + (t.type==='in' ? 'pi' : 'po') + '">' + (t.type==='in' ? 'In' : 'Out') + '</span></td><td class="tr mono ' + (t.type==='in' ? 'pos' : 'neg') + '">' + (t.type==='in' ? '+' : '−') + fmt(t.amount) + '</td></tr>';
+  }).join('');
+
+  // ---- GROWTH KEY METRICS ----
+  var inc2 = D.txns.filter(function(t){return t.type==='in';}).reduce(function(a,t){return a+t.amount;},0);
+  var prevInc = 1900000;
+  var revGrowth = ((inc2 - prevInc) / prevInc * 100).toFixed(1);
+  var cogsTotal = D.exps.filter(function(e){return e.cat==='Operations'||e.cat==='Suppliers'||e.cat==='Raw Materials';}).reduce(function(a,e){return a+e.amount;},0);
+  var grossProfit = inc2 - cogsTotal;
+  var grossMargin = inc2 > 0 ? (grossProfit / inc2 * 100).toFixed(1) : '0.0';
+  var ar = D.recv.reduce(function(a,r){return a+r.amount;},0);
+  var ap = D.payables.reduce(function(a,p){return a+p.amount;},0);
+  var clientInvCount = {};
+  D.invoices.forEach(function(i){ clientInvCount[i.client] = (clientInvCount[i.client]||0)+1; });
+  var totalClients = Object.keys(clientInvCount).length;
+  var repeatClients = Object.values(clientInvCount).filter(function(c){return c>1;}).length;
+  var repeatRate = totalClients > 0 ? Math.round(repeatClients/totalClients*100) : 0;
+  var retention = 78;
+  var prodNames = D.invoices.reduce(function(arr,i){i.items.forEach(function(it){var k=it.desc.split(' x')[0];if(arr.indexOf(k)<0)arr.push(k);});return arr;},[]);
+  var revPerProd = fmtS(Math.round(inc2 / Math.max(1, prodNames.length)));
+
+  var paidCount = D.invoices.filter(function(i){return i.status==='paid';}).length;
+  var gm1 = document.getElementById('d-gm1');
+  if(gm1) gm1.innerHTML =
+    kpiMini('Revenue Growth', (revGrowth>=0?'↑ ':'')+revGrowth+'%', 'vs prior month', '📈', revGrowth>=0?'gr':'rd') +
+    kpiMini('Gross Profit', fmtS(grossProfit), 'Revenue minus cost of goods', '💵', 'gr') +
+    kpiMini('Gross Margin', grossMargin+'%', 'Profit per rupee earned', '📊', parseFloat(grossMargin)>=50?'gr':'am') +
+    kpiMini('Accounts Receivable', fmtS(ar), D.recv.length+' invoices outstanding', '🔔', 'am') +
+    kpiMini('Accounts Payable', fmtS(ap), D.payables.length+' payments due', '📤', 'rd') +
+    kpiMini('Sales Performance', fmtS(inc2), paidCount+' paid invoices this month', '🛒', 'g') +
+    kpiMini('Customer Retention', retention+'%', 'Returning customers YoY', '🤝', 'bl') +
+    kpiMini('Repeat Customer Rate', repeatRate+'%', repeatClients+' of '+totalClients+' clients repeat', '↩', 'ro') +
+    kpiMini('Revenue / Product', revPerProd, 'Average per product line', '📦', 'bl');
+
+  setTimeout(buildDashCharts, 80);
+}
+
+function kpiMini(lbl, val, sub, ico, accent) {
+  return '<div class="db-gm '+accent+'">' +
+    '<div class="db-gm-ico">'+ico+'</div>' +
+    '<div><div class="db-gm-lbl">'+lbl+'</div><div class="db-gm-val">'+val+'</div><div class="db-gm-sub">'+sub+'</div></div>' +
+    '</div>';
+}
+
+function renderSales() {
+  var prodRevMap = {};
+  D.invoices.forEach(function(i){
+    i.items.forEach(function(it){
+      var key = it.desc.split(' x ')[0].split(' x')[0];
+      prodRevMap[key] = (prodRevMap[key]||0) + (it.qty * it.price);
+    });
+  });
+  var prodList = Object.entries(prodRevMap).sort(function(a,b){return b[1]-a[1];});
+  var totalProdRev = prodList.reduce(function(a,p){return a+p[1];},0);
+
+  var clientInvMap = {};
+  D.invoices.forEach(function(i){
+    if(!clientInvMap[i.client]) clientInvMap[i.client]={count:0,total:0};
+    clientInvMap[i.client].count++;
+    clientInvMap[i.client].total+=i.total;
+  });
+  var clients = Object.entries(clientInvMap).sort(function(a,b){return b[1].total-a[1].total;});
+  var repeatClients2 = clients.filter(function(c){return c[1].count>1;}).length;
+  var retention2 = 78;
+
+  document.getElementById('sales-sum').innerHTML =
+    sumItem('Total Revenue', fmtS(totalProdRev)) +
+    sumItem('Product Lines', prodList.length+'') +
+    sumItem('Repeat Customers', repeatClients2+' / '+clients.length, 'var(--green)') +
+    sumItem('Customer Retention', retention2+'%', 'var(--blue)');
+
+  var prodMax = prodList.length > 0 ? prodList[0][1] : 1;
+  document.getElementById('prod-grid').innerHTML = prodList.map(function(p){
+    var pct = Math.round(p[1]/prodMax*100);
+    var share = totalProdRev > 0 ? Math.round(p[1]/totalProdRev*100) : 0;
+    var invCount = D.invoices.filter(function(i){return i.items.some(function(it){return it.desc.indexOf(p[0])>-1;});}).length;
+    return '<div class="prod-card">'+
+      '<div class="prod-name">'+p[0]+'</div>'+
+      '<div class="prod-cat">Product / Service</div>'+
+      '<div class="prod-rev">'+fmtS(p[1])+'</div>'+
+      '<div class="prod-bar-wrap"><div class="prod-bar"><div class="prod-fill" style="width:'+pct+'%"></div></div></div>'+
+      '<div class="prod-foot"><span style="font-size:.67rem;color:var(--muted)">'+share+'% of revenue</span><span class="pill pi">'+fmtS(Math.round(p[1]/Math.max(1,invCount)))+' avg</span></div>'+
+      '</div>';
+  }).join('');
+
+  document.getElementById('repeat-body').innerHTML = clients.map(function(c){
+    var avg = c[1].count>0 ? Math.round(c[1].total/c[1].count) : 0;
+    var share = totalProdRev>0 ? (c[1].total/totalProdRev*100).toFixed(1) : '0.0';
+    var isRepeat = c[1].count>1;
+    return '<tr>'+
+      '<td style="font-weight:500">'+c[0]+'</td>'+
+      '<td class="tc mono">'+c[1].count+'</td>'+
+      '<td class="mono gld">'+fmt(c[1].total)+'</td>'+
+      '<td class="mono">'+fmt(avg)+'</td>'+
+      '<td><span class="pill '+(isRepeat?'pi':'pse')+'">'+(isRepeat?'↩ Repeat':'New')+'</span></td>'+
+      '<td class="tr mono">'+share+'%</td>'+
+      '</tr>';
+  }).join('');
+
+  setTimeout(function(){
+    if(CH.prod) CH.prod.destroy();
+    var cp = document.getElementById('ch-prod');
+    if(cp && prodList.length){
+      CH.prod = new Chart(cp,{
+        type:'bar',
+        data:{
+          labels:prodList.map(function(p){return p[0].length>22?p[0].substring(0,22)+'…':p[0];}),
+          datasets:[{label:'Revenue (LKR)',data:prodList.map(function(p){return p[1];}),backgroundColor:'rgba(184,146,42,.75)',borderRadius:3}]
+        },
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9},callback:function(v){return v>=1000000?'M'+(v/1e6).toFixed(1):'K'+Math.round(v/1000);}}},y:{grid:{display:false},ticks:{font:{size:9}}}}}
+      });
+    }
+    if(CH.ret) CH.ret.destroy();
+    var cr = document.getElementById('ch-ret');
+    if(cr){
+      CH.ret = new Chart(cr,{
+        type:'doughnut',
+        data:{labels:['Retained','New'],datasets:[{data:[retention2,100-retention2],backgroundColor:['#2563A8','#E4DDD3'],borderWidth:2,borderColor:'#fff'}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}
+      });
+      var rl = document.getElementById('ret-list');
+      if(rl) rl.innerHTML=
+        '<div class="cat-row"><div class="cat-dot" style="background:#2563A8"></div><div class="cat-lbl">Retained Customers</div><div class="cat-pct">'+retention2+'%</div></div>'+
+        '<div class="cat-row"><div class="cat-dot" style="background:#E4DDD3"></div><div class="cat-lbl">New Customers</div><div class="cat-pct">'+(100-retention2)+'%</div></div>'+
+        '<div class="cat-row"><div class="cat-dot" style="background:var(--rose)"></div><div class="cat-lbl">Repeat Rate</div><div class="cat-pct">'+Math.round(repeatClients2/Math.max(1,clients.length)*100)+'%</div></div>';
+    }
+  },80);
+}
+
+function renderCashflow() {
+  var inc = D.txns.filter(function(t) { return t.type==='in'; }).reduce(function(a,t) { return a+t.amount; }, 0);
+  var out = D.txns.filter(function(t) { return t.type==='out'; }).reduce(function(a,t) { return a+t.amount; }, 0);
+
+  document.getElementById('cf-sum').innerHTML =
+    sumItem('Total Money In', fmt(inc), 'var(--green)') +
+    sumItem('Total Money Out', fmt(out), 'var(--red)') +
+    sumItem('Net Balance', fmt(inc-out), inc-out >= 0 ? 'var(--green)' : 'var(--red)');
+
+  document.getElementById('cf-body').innerHTML = D.txns.map(function(t) {
+    return '<tr><td>' + t.date + '</td><td class="mono" style="font-size:.71rem;color:var(--muted)">' + (t.ref||'—') + '</td><td>' + t.desc + '</td><td><span style="background:var(--bg3);padding:.1rem .4rem;font-size:.68rem">' + t.cat + '</span></td><td><span class="pill ' + (t.type==='in' ? 'pi' : 'po') + '">' + (t.type==='in' ? 'In' : 'Out') + '</span></td><td class="tr mono ' + (t.type==='in' ? 'pos' : 'neg') + '">' + (t.type==='in' ? '+' : '−') + fmt(t.amount) + '</td></tr>';
+  }).join('');
+}
+
+function renderExpenses() {
+  var total = D.exps.reduce(function(a,e) { return a+e.amount; }, 0);
+  var cats = {};
+  D.exps.forEach(function(e) { cats[e.cat] = (cats[e.cat]||0) + e.amount; });
+  var top = Object.entries(cats).sort(function(a,b) { return b[1]-a[1]; })[0];
+
+  document.getElementById('exp-sum').innerHTML =
+    sumItem('Total Expenses', fmt(total), 'var(--red)') +
+    sumItem('No. of Transactions', D.exps.length + '') +
+    sumItem('Top Category', top ? top[0] : '—');
+
+  document.getElementById('exp-body').innerHTML = D.exps.map(function(e) {
+    return '<tr><td>' + e.date + '</td><td>' + e.desc + '</td><td>' + e.vendor + '</td><td><span style="background:var(--bg3);padding:.1rem .4rem;font-size:.68rem">' + e.cat + '</span></td><td class="tr mono neg">− ' + fmt(e.amount) + '</td></tr>';
+  }).join('');
+}
+
+function renderInvoices() {
+  var total = D.invoices.reduce(function(a,i) { return a+i.total; }, 0);
+  var paid = D.invoices.filter(function(i) { return i.status==='paid'; }).reduce(function(a,i) { return a+i.total; }, 0);
+  var os = D.invoices.filter(function(i) { return i.status!=='paid'; }).reduce(function(a,i) { return a+(i.total-i.paid); }, 0);
+
+  document.getElementById('inv-sum').innerHTML =
+    sumItem('Total Invoiced', fmt(total)) +
+    sumItem('Collected', fmt(paid), 'var(--green)') +
+    sumItem('Outstanding', fmt(os), 'var(--amber)');
+
+  var statusCls = {paid:'pp',draft:'pdr',sent:'pse',overdue:'pov',partial:'ppa'};
+
+  document.getElementById('inv-body').innerHTML = D.invoices.map(function(i) {
+    var pct = i.total > 0 ? Math.round(i.paid/i.total*100) : 0;
+    var sc = statusCls[i.status] || 'pdr';
+    var payBar = '<div class="pay-wrap"><div class="pay-bar"><div class="pay-fill' + (i.status==='partial' ? ' pt' : '') + '" style="width:' + pct + '%"></div></div><span style="font-size:.67rem;font-family:var(--fm);color:var(--muted)">' + pct + '%</span></div>' + (i.total-i.paid > 0 ? '<div class="pay-pend">' + fmt(i.total-i.paid) + ' pending</div>' : '');
+    var actions = '<button class="bsm" onclick="window.printInv(\'' + i.id + '\')">🖨 Print</button> <button class="bsm bsmwa" onclick="window.waRemind(\'' + i.id + '\')">💬 WA</button>' + (i.status !== 'paid' ? ' <button class="bsm bsmgr" onclick="window.openPayMo(\'' + i.id + '\')">✓ Pay</button>' : '');
+    return '<tr><td class="mono gld" style="font-size:.77rem">' + i.id + '</td><td style="font-weight:500">' + i.client + '</td><td>' + i.date + '</td><td>' + i.due + '</td><td><span class="pill ' + sc + '">' + i.status + '</span></td><td>' + payBar + '</td><td class="tr mono gld">' + fmt(i.total) + '</td><td><div style="display:flex;gap:.3rem;justify-content:flex-end;flex-wrap:wrap">' + actions + '</div></td></tr>';
+  }).join('');
+}
+
+function renderClients() {
+  document.getElementById('cli-sum').innerHTML =
+    sumItem('Total Clients', D.clients.length + '') +
+    sumItem('With Email', D.clients.filter(function(c) { return c.email; }).length + '', 'var(--green)') +
+    sumItem('With WhatsApp', D.clients.filter(function(c) { return c.phone; }).length + '', 'var(--gold)');
+
+  document.getElementById('cli-grid').innerHTML = D.clients.map(function(c) {
+    var invs = D.invoices.filter(function(i) { return i.client === c.biz; });
+    var tot = invs.reduce(function(a,i) { return a+i.total; }, 0);
+    var ini = c.name.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2);
+    return '<div class="cli-card"><div class="cli-av">' + ini + '</div><div class="cli-name">' + c.name + '</div><div class="cli-biz">' + c.biz + '</div><div class="cli-det">' + (c.email ? '✉ ' + c.email + '<br>' : '') + '📱 ' + c.phone + (c.addr ? '<br>📍 ' + c.addr : '') + '</div><div class="sumbar c2" style="margin:.75rem 0"><div class="sum-i"><div class="sum-lbl">Invoices</div><div class="sum-val">' + invs.length + '</div></div><div class="sum-i"><div class="sum-lbl">Total Billed</div><div class="sum-val">' + fmtS(tot) + '</div></div></div><div class="cli-acts"><button class="bsm bsmwa" onclick="window.open(\'https://wa.me/\'+\'' + c.phone.replace(/\D/g,'') + '\')">💬 WA</button><button class="bsm bsmo" onclick="window.editClient(\'' + c.id + '\')">Edit</button></div></div>';
+  }).join('');
+}
+
+function renderPayroll() {
+  var tot = D.staff.reduce(function(a,s) { return a+s.sal; }, 0);
+  var pd = D.staff.filter(function(s) { return s.paid; }).reduce(function(a,s) { return a+s.sal; }, 0);
+  document.getElementById('pay-banner').innerHTML =
+    '<div><div class="pb-lbl">Total Payroll</div><div class="pb-val">' + fmt(tot) + '</div></div>' +
+    '<div class="pb-sep"></div>' +
+    '<div><div class="pb-lbl">Paid Out</div><div class="pb-val" style="color:#4DC886">' + fmt(pd) + '</div></div>' +
+    '<div class="pb-sep"></div>' +
+    '<div><div class="pb-lbl">Still Pending</div><div class="pb-val" style="color:#FFD080">' + fmt(tot-pd) + '</div></div>' +
+    '<div class="pb-sep"></div>' +
+    '<div><div class="pb-lbl">Staff Count</div><div class="pb-val">' + D.staff.length + '</div></div>';
+
+  document.getElementById('staff-grid').innerHTML = D.staff.map(function(s) {
+    var btn = s.paid
+      ? '<button class="bsm bsmo">✓ Paid</button>'
+      : '<button class="bsm bsmgr" onclick="window.paySalary(\'' + s.id + '\')">Mark Paid</button>';
+    return '<div class="staff-card"><div class="st-av" style="background:' + s.col + '">' + s.ini + '</div><div class="st-name">' + s.name + '</div><div class="st-role">' + s.role + '</div><div style="font-size:.67rem;color:var(--dim)">' + (s.paid ? '✓ Paid this cycle' : 'Payment pending') + '</div><div class="st-foot"><div class="st-sal">' + fmt(s.sal) + '</div>' + btn + '</div></div>';
+  }).join('');
+}
+
+function renderDebt() {
+  var tr = D.recv.reduce(function(a,r) { return a+r.amount; }, 0);
+  var tp = D.payables.reduce(function(a,p) { return a+p.amount; }, 0);
+  var ov = D.recv.filter(function(r) { return r.days > 30; }).length;
+
+  document.getElementById('sb-badge').textContent = ov || D.recv.filter(function(r) { return r.days > 14; }).length;
+
+  document.getElementById('debt-sum').innerHTML =
+    sumItem('Money Owed to You', fmt(tr), 'var(--green)') +
+    sumItem('Money You Owe', fmt(tp), 'var(--red)') +
+    sumItem('Net Position', fmt(tr-tp), tr-tp >= 0 ? 'var(--green)' : 'var(--red)') +
+    sumItem('Overdue Items', ov + '', ov > 0 ? 'var(--red)' : 'var(--green)');
+
+  document.getElementById('tot-recv').textContent = fmt(tr);
+  document.getElementById('tot-pay').textContent = fmt(tp);
+
+  document.getElementById('recv-list').innerHTML = D.recv.map(function(r) {
+    var dc = r.days > 30 ? 'ov' : '';
+    return '<div class="debt-row"><div><div class="debt-name">' + r.client + '</div><div class="debt-days ' + dc + '">' + r.days + ' days outstanding · ' + r.inv + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--green)">' + fmt(r.amount) + '</div><button class="bsm bsmwa" style="margin-top:.25rem" onclick="window.showToast(\'WhatsApp reminder sent!\', \'ok\')">💬 Remind</button></div></div>';
+  }).join('');
+
+  document.getElementById('pay-list').innerHTML = D.payables.map(function(p) {
+    return '<div class="debt-row"><div><div class="debt-name">' + p.supplier + '</div><div class="debt-days">Due in ' + p.days + ' days · ' + p.ref + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><button class="bsm bsmgr" style="margin-top:.25rem" onclick="window.showToast(\'Payment scheduled!\', \'ok\')">Schedule</button></div></div>';
+  }).join('');
+}
+
+function renderSuppliers() {
+  var ytd = D.suppliers.reduce(function(a,s) { return a+s.ytd; }, 0);
+  document.getElementById('sup-sum').innerHTML =
+    sumItem('Total Suppliers', D.suppliers.length + '') +
+    sumItem('Active', D.suppliers.filter(function(s) { return s.status==='active'; }).length + '', 'var(--green)') +
+    sumItem('Total Spent (YTD)', fmtS(ytd));
+  renderSupTable('all');
+}
+
+window.filterSup = function filterSup(v, el) {
+  document.querySelectorAll('#sup-filters .fpill').forEach(function(p) { p.classList.remove('on'); });
+  el.classList.add('on');
+  renderSupTable(v);
+}
+
+function renderSupTable(f) {
+  var rows = f === 'all' ? D.suppliers : D.suppliers.filter(function(s) { return s.status === f; });
+  document.getElementById('sup-body').innerHTML = rows.map(function(s) {
+    return '<tr><td style="font-weight:600">' + s.name + '</td><td><span class="pill psu" style="font-size:.55rem">' + s.cat + '</span></td><td style="font-size:.78rem">' + s.contact + ' · ' + s.phone + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + s.status + '</span></td><td class="tr"><button class="bsm bsmwa" onclick="window.showToast(\'WhatsApp opened for ' + s.name + '\', \'ok\')">💬 WA</button></td></tr>';
+  }).join('');
+}
+
+function renderTeam() {
+  var sorted = D.staff.slice().sort(function(a,b) { return b.rev - a.rev; });
+  var maxR = sorted.reduce(function(m,s) { return Math.max(m, s.rev); }, 1);
+  var totRev = sorted.reduce(function(a,s) { return a+s.rev; }, 0);
+
+  document.getElementById('team-sum').innerHTML =
+    sumItem('Top Performer', sorted[0].name.split(' ')[0]) +
+    sumItem('Team Revenue', fmtS(totRev), 'var(--green)') +
+    sumItem('Total Invoices', sorted.reduce(function(a,s) { return a+s.invs; }, 0) + '') +
+    sumItem('Payroll Cost', fmtS(D.staff.reduce(function(a,s) { return a+s.sal; }, 0)));
+
+  var medals = ['r1','r2','r3'];
+  document.getElementById('team-body').innerHTML = sorted.map(function(s, i) {
+    var rc = i < 3 ? medals[i] : 'rn';
+    var score = maxR > 0 ? Math.round(s.rev/maxR*100) : 0;
+    return '<tr><td><div class="rank-c ' + rc + '">' + (i+1) + '</div></td><td><div style="display:flex;align-items:center;gap:.6rem"><div class="st-av" style="width:27px;height:27px;font-size:.62rem;margin:0;background:' + s.col + '">' + s.ini + '</div><span style="font-size:.82rem;font-weight:600">' + s.name + '</span></div></td><td style="font-size:.77rem;color:var(--muted)">' + s.role + '</td><td class="mono pos">' + fmt(s.rev) + '</td><td class="tc mono">' + s.invs + '</td><td><div style="display:flex;align-items:center;gap:.48rem"><div class="perf-t"><div class="perf-f" style="width:' + score + '%"></div></div><span style="font-size:.64rem;font-family:var(--fm);color:var(--muted)">' + score + '%</span></div></td></tr>';
+  }).join('');
+}
+
+function renderAnalytics() {
+  if (CH.rev) CH.rev.destroy();
+  if (CH.ie) CH.ie.destroy();
+
+  var inc = D.txns.filter(function(t) { return t.type==='in'; }).reduce(function(a,t) { return a+t.amount; }, 0);
+  var out = D.exps.reduce(function(a,e) { return a+e.amount; }, 0);
+  var margin = inc > 0 ? ((inc-out)/inc*100) : 0;
+
+  document.getElementById('an-sum').innerHTML =
+    sumItem('Revenue', fmtS(inc)) +
+    sumItem('Expenses', fmtS(out), 'var(--red)') +
+    sumItem('Gross Profit', fmtS(inc-out), 'var(--green)') +
+    sumItem('Profit Margin', margin.toFixed(1) + '%', margin > 50 ? 'var(--green)' : 'var(--amber)');
+
+  var months = ['Dec','Jan','Feb','Mar','Apr','May'];
+  var revD = [1850000,2310000,1780000,3120000,2640000,inc];
+  var expD = [1100000,1580000,1320000,2100000,1820000,out];
+
+  var c3 = document.getElementById('ch-rev');
+  if (c3) CH.rev = new Chart(c3, {type:'line',data:{labels:months,datasets:[{label:'Revenue',data:revD,borderColor:'#B8922A',backgroundColor:'rgba(184,146,42,.08)',tension:.4,fill:true,pointBackgroundColor:'#B8922A'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
+
+  var c4 = document.getElementById('ch-ie');
+  if (c4) CH.ie = new Chart(c4, {type:'bar',data:{labels:months,datasets:[{label:'Income',data:revD,backgroundColor:'rgba(29,158,98,.65)',borderRadius:3},{label:'Expenses',data:expD,backgroundColor:'rgba(192,57,43,.55)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
+
+  document.getElementById('an-reports').innerHTML =
+    '<div class="rep-card"><div class="rep-lbl">Profit &amp; Loss Summary</div>' +
+    '<div class="rep-row pos"><span>Total Revenue</span><span>' + fmt(inc) + '</span></div>' +
+    '<div class="rep-row neg"><span>Total Expenses</span><span>' + fmt(out) + '</span></div>' +
+    '<div class="rep-row"><span>Gross Profit</span><span>' + fmt(inc-out) + '</span></div>' +
+    '<div class="rep-row tot"><span>Profit Margin</span><span>' + margin.toFixed(1) + '%</span></div></div>' +
+    '<div class="rep-card"><div class="rep-lbl">Saved Reports</div>' +
+    '<div class="rep-row"><span>📄 Monthly Summary — May 2025</span><button class="bsm bsmo" onclick="window.showToast(\'Downloading...\', \'ok\')">↓ PDF</button></div>' +
+    '<div class="rep-row"><span>📄 Expense Breakdown — Q2</span><button class="bsm bsmo" onclick="window.showToast(\'Downloading...\', \'ok\')">↓ PDF</button></div>' +
+    '<div class="rep-row"><span>📄 Collection Report — April</span><button class="bsm bsmo" onclick="window.showToast(\'Downloading...\', \'ok\')">↓ PDF</button></div></div>';
+
+  document.getElementById('an-cli').innerHTML = D.clients.map(function(c) {
+    var invs = D.invoices.filter(function(i) { return i.client===c.biz; });
+    var tot = invs.reduce(function(a,i) { return a+i.total; }, 0);
+    var pd = invs.filter(function(i) { return i.status==='paid'; }).reduce(function(a,i) { return a+i.paid; }, 0);
+    return '<tr><td style="font-weight:600">' + c.biz + '</td><td class="tc mono">' + invs.length + '</td><td class="mono">' + fmt(tot) + '</td><td class="mono pos">' + fmt(pd) + '</td><td class="tr mono" style="color:' + (tot-pd>0?'var(--amber)':'var(--muted)') + '">' + fmt(tot-pd) + '</td></tr>';
+  }).join('');
+}
+
+function renderInsights() {
+  var inc = D.txns.filter(function(t) { return t.type==='in'; }).reduce(function(a,t) { return a+t.amount; }, 0);
+  var out = D.exps.reduce(function(a,e) { return a+e.amount; }, 0);
+  var outstd = D.recv.reduce(function(a,r) { return a+r.amount; }, 0);
+  var collRate = D.invoices.length > 0 ? Math.round(D.invoices.filter(function(i) { return i.status==='paid'; }).length / D.invoices.length * 100) : 0;
+  var margin = inc > 0 ? Math.round((inc-out)/inc*100) : 0;
+  var overdue = D.invoices.filter(function(i) { return i.status==='overdue'; }).length;
+
+  document.getElementById('ins-kpis').innerHTML =
+    kpi('Profit Margin', margin + '%', 'Revenue minus expenses', 'gr') +
+    kpi('Collection Rate', collRate + '%', 'Invoices fully paid on time', 'bl') +
+    kpi('Outstanding', fmtS(outstd), 'Waiting to be collected', 'am') +
+    kpi('Net This Month', fmtS(inc-out), inc-out >= 0 ? 'Profitable ✓' : 'Expenses are higher than income', inc-out >= 0 ? 'gr' : 'rd');
+
+  var bars = [
+    {label:'Cash Flow Health', pct:Math.min(100,Math.round(inc/(out||1)*60)), color:'var(--green)'},
+    {label:'Invoice Collection', pct:collRate, color:'var(--blue)'},
+    {label:'Profit Margin', pct:Math.max(0,margin), color:'var(--gold)'},
+    {label:'Payment Speed', pct:75, color:'var(--rose)'}
+  ];
+  var score = Math.round(bars.reduce(function(a,b) { return a+b.pct; }, 0) / bars.length);
+  var scoreEl = document.getElementById('ins-score');
+  var scoreLblEl = document.getElementById('ins-score-lbl');
+  if (scoreEl) { scoreEl.textContent = score; scoreEl.style.color = score > 70 ? 'var(--green)' : score > 50 ? 'var(--amber)' : 'var(--red)'; }
+  if (scoreLblEl) scoreLblEl.textContent = 'Out of 100 · ' + (score > 70 ? 'Good 👍' : score > 50 ? 'Fair — room to improve' : 'Needs Attention');
+
+  document.getElementById('ins-bars').innerHTML = bars.map(function(b) {
+    return '<div style="margin-bottom:.72rem"><div style="display:flex;justify-content:space-between;font-size:.74rem;margin-bottom:.28rem"><span style="color:var(--muted)">' + b.label + '</span><span style="font-family:var(--fm);font-weight:600">' + b.pct + '%</span></div><div class="insight-bar"><div class="insight-fill" style="width:' + b.pct + '%;background:' + b.color + '"></div></div></div>';
+  }).join('');
+
+  var monthItems = [
+    {ico:'💰',lbl:'Money you earned',val:fmt(inc),note:'This month'},
+    {ico:'📤',lbl:'Money you spent',val:fmt(out),note:'On business expenses'},
+    {ico:'📈',lbl:'Your profit',val:fmt(inc-out),note:inc-out>=0 ? 'Keep it up!' : 'Expenses exceed income'},
+    {ico:'🧾',lbl:'Invoices raised',val:D.invoices.length + ' invoices',note:D.invoices.filter(function(i){return i.status==='paid';}).length + ' paid, ' + overdue + ' overdue'},
+    {ico:'⏰',lbl:'Still to collect',val:fmt(outstd),note:'Across ' + D.recv.length + ' outstanding invoices'}
+  ];
+  document.getElementById('ins-month').innerHTML = monthItems.map(function(s) {
+    return '<div class="month-row"><div class="month-ico">' + s.ico + '</div><div style="flex:1"><div style="font-size:.79rem;font-weight:500;color:var(--text)">' + s.lbl + '</div><div style="font-size:.67rem;color:var(--muted)">' + s.note + '</div></div><div style="font-family:var(--fm);font-size:.8rem;font-weight:600;color:var(--black)">' + s.val + '</div></div>';
+  }).join('');
+
+  var clientRevs = D.clients.map(function(c) {
+    var tot = D.invoices.filter(function(i) { return i.client===c.biz; }).reduce(function(a,i) { return a+i.total; }, 0);
+    return {name:c.biz, total:tot};
+  }).sort(function(a,b) { return b.total-a.total; });
+  var maxCR = clientRevs[0] ? clientRevs[0].total : 1;
+  var trophies = ['🥇','🥈','🥉','4️⃣'];
+  document.getElementById('ins-top').innerHTML = clientRevs.map(function(c,i) {
+    return '<div style="margin-bottom:.85rem"><div style="display:flex;justify-content:space-between;font-size:.77rem;margin-bottom:.28rem"><span style="font-weight:500">' + (trophies[i]||'') + ' ' + c.name + '</span><span style="font-family:var(--fm);color:var(--gold)">' + fmtS(c.total) + '</span></div><div class="perf-t"><div class="perf-f" style="width:' + Math.round(c.total/maxCR*100) + '%;background:var(--gold)"></div></div></div>';
+  }).join('');
+
+  var alerts = [];
+  if (overdue > 0) alerts.push({ico:'🔴',msg:overdue + ' overdue invoice' + (overdue>1?'s that need':'that needs') + ' your attention. Send a reminder now.',btn:'View Invoices',go:'invoices'});
+  if (outstd > 500000) alerts.push({ico:'🟡',msg:'Over LKR 500K is outstanding. Consider following up with clients this week.',btn:'Who Owes Me',go:'debt'});
+  if (margin < 20 && inc > 0) alerts.push({ico:'🟠',msg:'Profit margin is below 20%. Review your expenses to find savings.',btn:'View Expenses',go:'expenses'});
+  if (alerts.length === 0) alerts.push({ico:'🟢',msg:'Everything looks great! Your business is on track this month. Well done!',btn:'',go:''});
+
+  document.getElementById('ins-alerts').innerHTML = alerts.map(function(a) {
+    return '<div class="alert-item"><span style="font-size:1.05rem">' + a.ico + '</span><div style="flex:1"><div style="font-size:.78rem;color:var(--text);line-height:1.5">' + a.msg + '</div>' + (a.btn ? '<button class="bsm" style="margin-top:.38rem" onclick="window.clsGoTo(\'' + a.go + '\')">' + a.btn + '</button>' : '') + '</div></div>';
+  }).join('');
+}
+
+function renderAutomations() {
+  var active = D.autos.filter(function(a) { return a.active; }).length;
+  var fired = D.autos.reduce(function(s,a) { return s+a.fired; }, 0);
+  document.getElementById('aut-sum').innerHTML =
+    sumItem('Total Rules', D.autos.length + '') +
+    sumItem('Currently Active', active + '', 'var(--green)') +
+    sumItem('Total Alerts Sent', fired + '') +
+    sumItem('Channels', 'WA · SMS · Email');
+
+  document.getElementById('aut-grid').innerHTML = D.autos.map(function(a, i) {
+    return '<div class="auto-card"><div class="auto-ico">' + a.icon + '</div><div style="flex:1"><div class="auto-name">' + a.name + '</div><div class="auto-desc">' + a.desc + '</div><div class="auto-meta"><span>Trigger: <b>' + a.trigger + '</b></span><span>Channel: <b>' + a.channel + '</b></span><span>Sent: <b>' + a.fired + '×</b></span></div></div><label class="tog" style="margin-top:.18rem"><input type="checkbox" ' + (a.active ? 'checked' : '') + ' onchange="D.autos[' + i + '].active=this.checked;renderAutomations();showToast(\'' + a.name + ' ' + '\' + (this.checked ? \'activated\' : \'paused\'))"><span class="tog-sl"></span></label></div>';
+  }).join('');
+}
+
+// ===================== INVOICE MODAL =====================
+var TPLS = [
+  {name:'Classic', bg:'#1a1714', fg:'#B8922A'},
+  {name:'Prestige', bg:'linear-gradient(135deg,#B8922A,#D4A840)', fg:'#fff'},
+  {name:'Modern', bg:'#F7F5F0', fg:'#1a1714'},
+  {name:'Dark Pro', bg:'#111', fg:'#B8922A'},
+  {name:'Minimal', bg:'#fff', fg:'#1a1714'},
+  {name:'Split Pro', bg:'#1a1714', fg:'#fff'},
+  {name:'Ceylon Gold', bg:'linear-gradient(135deg,#D4A840,#7A6010)', fg:'#fff'},
+  {name:'Corporate', bg:'#1e5b8a', fg:'#fff'},
+  {name:'Bold Block', bg:'#B8922A', fg:'#fff'},
+  {name:'Signature', bg:'#FAFAF8', fg:'#B8922A'}
+];
+
+window.openInvMo = function openInvMo() {
+  selTpl = 0;
+  buildTplPicker();
+  document.getElementById('inv-date').valueAsDate = new Date();
+  var due = new Date(); due.setDate(due.getDate()+30);
+  document.getElementById('inv-due').valueAsDate = due;
+  ['inv-cli','inv-caddr','inv-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('inv-vat').value = 0;
+  document.getElementById('inv-disc').value = 0;
+  document.getElementById('li-body').innerHTML = '';
+  addLi();
+  calcTotals();
+  openMo('mo-inv');
+}
+
+function buildTplPicker() {
+  document.getElementById('tpl-grid').innerHTML = TPLS.map(function(t,i) {
+    return '<div class="tpl-card' + (i===selTpl?' sel':'') + '" onclick="selTpl=' + i + ';buildTplPicker()"><div class="tpl-prev" style="background:' + t.bg + '"><span style="font-size:.55rem;font-weight:700;letter-spacing:.1em;color:' + t.fg + ';text-transform:uppercase">' + t.name + '</span></div><div class="tpl-name">' + t.name + '</div></div>';
+  }).join('');
+}
+
+window.addLi = function addLi() {
+  var tr = document.createElement('tr');
+  tr.innerHTML = '<td><input class="fi" style="padding:.3rem .42rem" placeholder="Description" oninput="calcTotals()"></td><td><input class="fi" style="padding:.3rem .42rem;width:100%" type="number" value="1" min="1" oninput="calcTotals()"></td><td><input class="fi" style="padding:.3rem .42rem;width:100%" type="number" value="0" min="0" oninput="calcTotals()"></td><td class="li-tot">LKR 0.00</td><td><button class="li-rm" onclick="this.closest(\'tr\').remove();calcTotals()">✕</button></td>';
+  document.getElementById('li-body').appendChild(tr);
+}
+
+function calcTotals() {
+  var sub = 0;
+  document.querySelectorAll('#li-body tr').forEach(function(row) {
+    var ins = row.querySelectorAll('input');
+    if (ins.length >= 3) {
+      var v = Number(ins[1].value||1) * Number(ins[2].value||0);
+      sub += v;
+      var td = row.querySelector('.li-tot');
+      if (td) td.textContent = 'LKR ' + fmtN(v);
+    }
+  });
+  var vat = sub * (Number(document.getElementById('inv-vat').value||0)/100);
+  var disc = Number(document.getElementById('inv-disc').value||0);
+  var total = sub + vat - disc;
+  var el = document.getElementById('inv-totals');
+  if (el) el.innerHTML =
+    '<div class="itr"><span class="tl">Subtotal</span><span class="tv">LKR ' + fmtN(sub) + '</span></div>' +
+    (vat > 0 ? '<div class="itr"><span class="tl">VAT</span><span class="tv">LKR ' + fmtN(vat) + '</span></div>' : '') +
+    (disc > 0 ? '<div class="itr"><span class="tl">Discount</span><span class="tv" style="color:var(--green)">− LKR ' + fmtN(disc) + '</span></div>' : '') +
+    '<div class="itr grand"><span class="tl">Total</span><span class="tv">LKR ' + fmtN(total) + '</span></div>';
+  return {sub:sub, vat:vat, disc:disc, total:total};
+}
+
+window.saveInv = function saveInv() {
+  var client = document.getElementById('inv-cli').value.trim();
+  if (!client) { showToast('Please enter a client name', 'err'); return; }
+  var items = [];
+  document.querySelectorAll('#li-body tr').forEach(function(row) {
+    var ins = row.querySelectorAll('input');
+    if (ins.length >= 3) items.push({desc:ins[0].value, qty:Number(ins[1].value), price:Number(ins[2].value)});
+  });
+  if (!items.length) { showToast('Please add at least one item', 'err'); return; }
+  var t = calcTotals();
+  var id = 'INV-' + String(D.invoices.length + 1).padStart(3,'0');
+  D.invoices.unshift({id:id,client:client,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,sub:t.sub,vat:t.vat,disc:t.disc,total:t.total,status:'sent',paid:0,tpl:selTpl,notes:document.getElementById('inv-notes').value});
+  closeMo('mo-inv');
+  renderInvoices();
+  showToast(id + ' created successfully!', 'ok');
+  saveData();
+}
+
+// ===================== PAYMENT MODAL =====================
+window.openPayMo = function openPayMo(id) {
+  payInvId = id;
+  var inv = D.invoices.find(function(i) { return i.id === id; });
+  if (!inv) return;
+  document.getElementById('pay-mo-bd').innerHTML =
+    '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;margin-bottom:1rem;font-size:.81rem"><strong>' + inv.id + '</strong> — ' + inv.client + '<br><span style="color:var(--muted)">Total:</span> <strong>' + fmt(inv.total) + '</strong> &nbsp; <span style="color:var(--muted)">Already Paid:</span> <span style="color:var(--green);font-weight:600">' + fmt(inv.paid) + '</span> &nbsp; <span style="color:var(--muted)">Still Owed:</span> <span style="color:var(--amber);font-weight:600">' + fmt(inv.total-inv.paid) + '</span></div>' +
+    '<div class="frow"><div class="fg"><label>Amount Being Paid (LKR)</label><input class="fi" type="number" id="pm-amt" value="' + (inv.total-inv.paid) + '"></div><div class="fg"><label>Payment Method</label><select class="fi fsel" id="pm-method"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Online</option></select></div></div>' +
+    '<div class="fg" style="margin-bottom:0"><label>Date of Payment</label><input class="fi" type="date" id="pm-date" value="' + today() + '"></div>';
+  openMo('mo-pay');
+}
+
+window.confirmPay = function confirmPay() {
+  var inv = D.invoices.find(function(i) { return i.id === payInvId; });
+  if (!inv) return;
+  var amt = Number(document.getElementById('pm-amt').value||0);
+  if (!amt) { showToast('Please enter an amount', 'err'); return; }
+  inv.paid = Math.min(inv.paid + amt, inv.total);
+  inv.status = inv.paid >= inv.total ? 'paid' : 'partial';
+  D.txns.unshift({id:'T' + Date.now(), date:today(), desc:'Payment received — ' + inv.client, type:'in', cat:'Invoice Payment', amount:amt, ref:inv.id});
+  closeMo('mo-pay');
+  renderInvoices();
+  showToast('Payment of ' + fmt(amt) + ' recorded!', 'ok');
+  saveData();
+}
+
+// ===================== MUTATIONS =====================
+window.addTxn = function addTxn() {
+  var d = document.getElementById('t-date').value;
+  var desc = document.getElementById('t-desc').value.trim();
+  var amt = Number(document.getElementById('t-amt').value);
+  if (!d || !desc || !amt) { showToast('Please fill in all fields', 'err'); return; }
+  D.txns.unshift({id:'T'+Date.now(), date:d, desc:desc, type:document.getElementById('t-type').value, cat:document.getElementById('t-cat').value, amount:amt, ref:document.getElementById('t-ref').value});
+  closeMo('mo-txn');
+  renderCashflow();
+  showToast('Transaction saved!', 'ok');
+  saveData();
+}
+
+window.addExp = function addExp() {
+  var d = document.getElementById('e-date').value;
+  var desc = document.getElementById('e-desc').value.trim();
+  var amt = Number(document.getElementById('e-amt').value);
+  if (!d || !desc || !amt) { showToast('Please fill in all fields', 'err'); return; }
+  D.exps.unshift({id:'E'+Date.now(), date:d, desc:desc, vendor:document.getElementById('e-vendor').value, cat:document.getElementById('e-cat').value, amount:amt});
+  closeMo('mo-exp');
+  renderExpenses();
+  showToast('Expense saved!', 'ok');
+  saveData();
+}
+
+window.openCliMo = function openCliMo(id) {
+  document.getElementById('cli-mo-t').textContent = id ? 'Edit Client' : 'Add a Client';
+  document.getElementById('cli-id').value = id || '';
+  if (id) {
+    var c = D.clients.find(function(x) { return x.id === id; });
+    if (c) { document.getElementById('c-name').value=c.name; document.getElementById('c-biz').value=c.biz; document.getElementById('c-email').value=c.email; document.getElementById('c-phone').value=c.phone; document.getElementById('c-addr').value=c.addr; document.getElementById('c-terms').value=c.terms; document.getElementById('c-notes').value=c.notes; }
+  } else {
+    ['c-name','c-biz','c-email','c-phone','c-addr','c-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
+  }
+  openMo('mo-client');
+}
+
+window.editClient = function editClient(id) { openCliMo(id); }
+
+window.saveClient = function saveClient() {
+  var name = document.getElementById('c-name').value.trim();
+  var phone = document.getElementById('c-phone').value.trim();
+  if (!name || !phone) { showToast('Name and phone number are required', 'err'); return; }
+  var id = document.getElementById('cli-id').value;
+  var obj = {id:id||'C'+Date.now(), name:name, biz:document.getElementById('c-biz').value, email:document.getElementById('c-email').value, phone:phone, addr:document.getElementById('c-addr').value, terms:document.getElementById('c-terms').value, notes:document.getElementById('c-notes').value};
+  if (id) { var idx = D.clients.findIndex(function(c) { return c.id===id; }); if (idx > -1) D.clients[idx] = obj; }
+  else D.clients.push(obj);
+  closeMo('mo-client');
+  renderClients();
+  showToast('Client saved!', 'ok');
+}
+
+window.paySalary = function paySalary(id) {
+  var s = D.staff.find(function(x) { return x.id === id; });
+  if (s && !s.paid) { s.paid = true; renderPayroll(); showToast(s.name + ' marked as paid!', 'ok'); }
+}
+
+window.payAll = function payAll() {
+  D.staff.forEach(function(s) { s.paid = true; });
+  renderPayroll();
+  showToast('All staff marked as paid!', 'ok');
+}
+
+window.addStaff = function addStaff() {
+  var name = document.getElementById('sf-name').value.trim();
+  var sal = Number(document.getElementById('sf-sal').value);
+  if (!name || !sal) { showToast('Name and salary are required', 'err'); return; }
+  var ini = name.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
+  D.staff.push({id:'S'+Date.now(), name:name, role:document.getElementById('sf-role').value, ini:ini, col:document.getElementById('sf-col').value, sal:sal, paid:false, rev:0, invs:0});
+  closeMo('mo-staff');
+  renderPayroll();
+  showToast('Staff member added!', 'ok');
+}
+
+window.addSup = function addSup() {
+  var name = document.getElementById('sp-name').value.trim();
+  if (!name) { showToast('Supplier name is required', 'err'); return; }
+  D.suppliers.push({id:'SP'+Date.now(), name:name, cat:document.getElementById('sp-cat').value, contact:document.getElementById('sp-contact').value, phone:document.getElementById('sp-phone').value, ytd:0, status:'active'});
+  closeMo('mo-sup');
+  renderSuppliers();
+  showToast('Supplier added!', 'ok');
+}
+
+window.waRemind = function waRemind(id) {
+  var inv = D.invoices.find(function(i) { return i.id === id; });
+  if (!inv) return;
+  var c = D.clients.find(function(x) { return x.biz === inv.client; });
+  var phone = (c ? c.phone : '').replace(/\D/g,'');
+  var msg = encodeURIComponent('Dear ' + inv.client + ',\n\nThis is a friendly reminder that Invoice ' + inv.id + ' for ' + fmt(inv.total - inv.paid) + ' is due on ' + inv.due + '.\n\nPlease arrange payment at your earliest convenience.\n\nThank you,\n' + D.settings.biz);
+  window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
+}
+
+window.saveSettings = function saveSettings() {
+  D.settings.biz = document.getElementById('s-biz').value || D.settings.biz;
+  D.settings.user = document.getElementById('s-user').value || D.settings.user;
+  D.settings.addr = document.getElementById('s-addr').value;
+  D.settings.email = document.getElementById('s-email').value;
+  D.settings.vat = document.getElementById('s-vat').value;
+  D.settings.footer = document.getElementById('s-footer').value;
+  var ini = D.settings.user.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
+  document.getElementById('sb-uname').textContent = D.settings.user;
+  document.getElementById('sb-av').textContent = ini;
+  showToast('Settings saved!', 'ok');
+}
+
+function previewLogo(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    D.settings.logo = e.target.result;
+    var prev = document.getElementById('logo-prev');
+    var hint = document.getElementById('logo-hint');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    if (hint) hint.style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ===================== PRINT (10 TEMPLATES) =====================
+window.printInv = function printInv(id) {
+  var inv = D.invoices.find(function(i) { return i.id === id; });
+  if (!inv) return;
+  var s = D.settings;
+  var logo = s.logo ? '<img src="' + s.logo + '" style="max-height:44px;margin-bottom:6px;display:block">' : '';
+  var rows = inv.items.map(function(it) {
+    return '<tr style="border-bottom:1px solid #eee"><td style="padding:9px 12px">' + it.desc + '</td><td style="padding:9px 12px;text-align:center">' + it.qty + '</td><td style="padding:9px 12px;text-align:right;font-family:monospace">LKR ' + fmtN(it.price) + '</td><td style="padding:9px 12px;text-align:right;font-family:monospace;font-weight:600">LKR ' + fmtN(it.qty*it.price) + '</td></tr>';
+  }).join('');
+
+  var tpls = [
+    '<div style="font-family:Arial,sans-serif;max-width:750px;margin:0 auto;padding:40px"><div style="background:#2C1F14;color:#fff;padding:28px 32px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center">' + logo + '<div><div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#B8922A">Invoice</div><div style="font-size:20px;font-weight:300;color:#fff;margin-top:4px">' + s.biz + '</div></div><div style="text-align:right"><div style="font-size:20px;font-weight:700;color:#B8922A">' + inv.id + '</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:6px">Date: ' + inv.date + '<br>Due: ' + inv.due + '</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:28px"><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#aaa;margin-bottom:8px">From</div><strong>' + s.biz + '</strong><div style="font-size:12px;color:#666;margin-top:4px">' + s.addr + '<br>' + s.email + '</div></div><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#aaa;margin-bottom:8px">Bill To</div><strong>' + inv.client + '</strong><div style="font-size:12px;color:#666;margin-top:4px">' + inv.caddr + '</div></div></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#2C1F14;color:#fff"><th style="padding:10px 12px;text-align:left;font-size:11px">Description</th><th style="padding:10px 12px;text-align:center;font-size:11px">Qty</th><th style="padding:10px 12px;text-align:right;font-size:11px">Unit Price</th><th style="padding:10px 12px;text-align:right;font-size:11px">Total</th></tr></thead><tbody>' + rows + '</tbody></table><div style="text-align:right;margin-top:12px"><div style="background:#2C1F14;color:#B8922A;display:inline-block;padding:12px 20px;font-size:15px;font-weight:700;font-family:monospace">TOTAL: LKR ' + fmtN(inv.total) + '</div></div><div style="margin-top:24px;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:14px">' + s.footer + '</div></div>',
+    '<div style="font-family:Georgia,serif;max-width:750px;margin:0 auto;padding:40px"><div style="background:linear-gradient(135deg,#B8922A,#D4A840);padding:28px 32px;margin-bottom:28px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="color:#fff">' + logo + '<div style="font-size:26px;font-weight:300;letter-spacing:4px">INVOICE</div></div><div style="text-align:right;color:#fff"><div style="font-size:20px;font-weight:700">' + inv.id + '</div><div style="font-size:11px;opacity:.8;margin-top:4px">' + inv.date + ' · Due ' + inv.due + '</div></div></div><div style="color:rgba(255,255,255,.8);font-size:12px;margin-top:12px">' + s.biz + ' · ' + s.addr + '</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:28px"><div><div style="font-size:9px;letter-spacing:2px;color:#B8922A;border-bottom:2px solid #B8922A;padding-bottom:5px;margin-bottom:8px">BILL TO</div><strong>' + inv.client + '</strong><div style="font-size:12px;color:#666;margin-top:4px">' + inv.caddr + '</div></div><div><div style="font-size:9px;letter-spacing:2px;color:#B8922A;border-bottom:2px solid #B8922A;padding-bottom:5px;margin-bottom:8px">PAYMENT</div><div style="font-size:12px;color:#555">VAT: ' + s.vat + '<br>Email: ' + s.email + '</div></div></div><table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:10px 12px;text-align:left;font-size:11px;border-bottom:2px solid #B8922A;color:#7A6010">Description</th><th style="padding:10px 12px;text-align:center;font-size:11px;border-bottom:2px solid #B8922A;color:#7A6010">Qty</th><th style="padding:10px 12px;text-align:right;font-size:11px;border-bottom:2px solid #B8922A;color:#7A6010">Unit</th><th style="padding:10px 12px;text-align:right;font-size:11px;border-bottom:2px solid #B8922A;color:#7A6010">Total</th></tr></thead><tbody>' + rows + '</tbody></table><div style="text-align:right;margin-top:16px"><div style="background:linear-gradient(135deg,#B8922A,#D4A840);color:#fff;display:inline-block;padding:12px 24px"><div style="font-size:10px;letter-spacing:2px">TOTAL DUE</div><div style="font-size:20px;font-weight:700;font-family:monospace;margin-top:4px">LKR ' + fmtN(inv.total) + '</div></div></div><div style="margin-top:24px;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:14px">' + s.footer + '</div></div>'
+  ];
+
+  var html = tpls[inv.tpl] || tpls[0];
+  document.getElementById('print-inv').innerHTML = html;
+  window.print();
+}
+
+// ===================== FIREBASE + AUTH =====================
+var _fbConfig = {
+  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
+  authDomain: "ceylonry-labs.firebaseapp.com",
+  projectId: "ceylonry-labs",
+  storageBucket: "ceylonry-labs.firebasestorage.app",
+  messagingSenderId: "979885533126",
+  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
+};
+firebase.initializeApp(_fbConfig);
+var _fdb = firebase.firestore();
+var _fauth = firebase.auth();
+var _uid = null;
+var _profile = null;
+var _signedInUid = null;
+
+// Save all D data to Firestore
+async function saveData() {
+  if (!_uid) return;
+  try {
+    var batch = _fdb.batch();
+    var userRef = _fdb.collection('users').doc(_uid);
+    // Save settings
+    batch.set(userRef, { settings: D.settings, nextInvId: D._nextInvId || 1 }, { merge: true });
+    await batch.commit();
+    // Save collections
+    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers };
+    for (var col in cols) {
+      var arr = cols[col] || [];
+      var colRef = userRef.collection(col);
+      var existSnap = await colRef.get();
+      var b2 = _fdb.batch();
+      existSnap.docs.forEach(function(d) { b2.delete(d.ref); });
+      arr.forEach(function(item) {
+        var docRef = item.id ? colRef.doc(String(item.id)) : colRef.doc();
+        b2.set(docRef, Object.assign({}, item));
+      });
+      await b2.commit();
+    }
+  } catch(e) { console.error('saveData:', e); }
+}
+
+// Load all D data from Firestore
+async function loadData(uid) {
+  try {
+    var userRef = _fdb.collection('users').doc(uid);
+    var profSnap = await userRef.get();
+    if (profSnap.exists && profSnap.data().settings) {
+      Object.assign(D.settings, profSnap.data().settings);
+    }
+    var cols = ['transactions','expenses','invoices','clients','suppliers'];
+    var keys = ['txns','exps','invoices','clients','suppliers'];
+    for (var i = 0; i < cols.length; i++) {
+      var snap = await userRef.collection(cols[i]).get();
+      if (!snap.empty) {
+        D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
+      }
+    }
+  } catch(e) { console.error('loadData:', e); }
+}
+
+window.clsSignOut = function clsSignOut() { _fauth.signOut().then(function() { window.location.href = 'signin.html'; }); }
+
+window.showPaywall = function showPaywall(profile) {
+  var plan = (profile && profile.plan) || 'growth';
+  var prices = { starter: 5500, growth: 12500, premium: 15500 };
+  var price = prices[plan] || 12500;
+  var planName = plan.charAt(0).toUpperCase() + plan.slice(1);
+  var waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month).\n\nName: ' + ((profile && profile.name) || '') + '\nEmail: ' + ((profile && profile.email) || ''));
+  var waNum = '94778815628';
+  if (document.getElementById('cls-paywall')) return;
+  var ov = document.createElement('div');
+  ov.id = 'cls-paywall';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,23,20,.96);backdrop-filter:blur(12px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:\'DM Sans\',sans-serif;';
+  ov.innerHTML = '<div style="background:#fff;max-width:520px;width:100%;padding:3rem;text-align:center;">' +
+    '<div style="font-size:2.5rem;margin-bottom:1rem">🔒</div>' +
+    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2rem;font-weight:300;color:#1a1714;margin-bottom:.5rem">Your free trial has ended</div>' +
+    '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 15-day free trial of <strong>CLS ' + planName + '</strong> has expired.</div>' +
+    '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
+    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
+    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · Billed monthly</div></div>' +
+    '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">💬 Activate via WhatsApp →</a>' +
+    '<button onclick="window.clsSignOut()" style="width:100%;background:transparent;border:1px solid rgba(184,146,42,.3);color:#6B6258;padding:.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +
+    '<div style="font-size:.68rem;color:#A8A29A;margin-top:1.25rem">Your data is safe and will be here when you reactivate.</div></div>';
+  document.body.appendChild(ov);
+}
+
+// ===================== INIT =====================
+_fauth.onAuthStateChanged(async function(user) {
+  if (!user) { window.location.href = 'signin.html'; return; }
+  _signedInUid = user.uid;
+  _uid = user.uid;
+  try {
+    var profDoc = await _fdb.collection('users').doc(_signedInUid).get();
+    if (!profDoc.exists) { window.location.href = 'signin.html'; return; }
+    _profile = profDoc.data();
+    if (_profile.ownerUid) _uid = _profile.ownerUid;
+
+    var now = new Date();
+    var trialEnd = new Date(_profile.trialEnd || now);
+    var isPaid = _profile.paid === true;
+    if (now > trialEnd && !isPaid) { showPaywall(_profile); return; }
+
+    // Merge profile into D.settings
+    if (_profile.bizName) D.settings.biz = _profile.bizName;
+    if (_profile.addr) D.settings.addr = _profile.addr;
+    if (_profile.email) D.settings.email = _profile.email;
+    if (_profile.vat) D.settings.vat = _profile.vat;
+    if (_profile.footer) D.settings.footer = _profile.footer;
+    if (_profile.name) D.settings.user = _profile.name;
+
+    await loadData(_uid);
+
+    // ── Run original init logic ──
+    var _ds = new Date().toLocaleDateString('en-LK', {weekday:'short', day:'numeric', month:'long', year:'numeric'});
+    document.getElementById('tb-date').textContent = _ds;
+    var _d2 = document.getElementById('tb-date2'); if(_d2) _d2.textContent = _ds;
+    var hr = new Date().getHours();
+    var greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+    var fn = (D.settings.user || 'there').split(' ')[0];
+    document.getElementById('greet-h').textContent = greet + ', ' + fn + '! 🌿';
+    document.getElementById('sb-uname').textContent = D.settings.user || '';
+    var ini = (D.settings.user || 'U').split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
+    document.getElementById('sb-av').textContent = ini;
+    var s = D.settings;
+    [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
+    ['t-date','e-date'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = today(); });
+    renderDashboard();
+    enforcePermissions();
+
+    // Trial banner
+    if (!isPaid) {
+      var daysLeft = Math.max(0, Math.ceil((trialEnd - now) / 86400000));
+      var banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:\'DM Sans\',sans-serif;font-size:.78rem;';
+      banner.innerHTML = '<span>⏳ <strong>' + daysLeft + ' day' + (daysLeft!==1?'s':'') + ' left</strong> on your free trial</span><button onclick="window.showPaywall(_profile)" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">Activate Plan →</button>';
+      document.body.appendChild(banner);
+    }
+  } catch(e) { console.error('Growth auth guard:', e); }
+});
+
+function enforcePermissions(){
+  if(!_profile) return;
+  if(_profile.role==='viewer'){
+    document.querySelectorAll('button[onclick*="add"],button[onclick*="save"],button[onclick*="del"],button[onclick*="openMo"],button[onclick*="openInvMo"],button[onclick*="pay"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
+  }
+  if(_profile.role==='accountant'){
+    document.querySelectorAll('[data-view="clients"],[data-view="suppliers"],[data-view="team"],[data-view="settings"]').forEach(function(el){el.style.display='none';});
+  }
+  if(_profile.role==='staff'){
+    document.querySelectorAll('[data-view]').forEach(function(el){if(el.getAttribute('data-view')!=='payroll')el.style.display='none';});
+    var payroll=document.querySelector('[data-view="payroll"]'); if(payroll) payroll.click();
+  }
+}
+</script>
+</body>
+</html>

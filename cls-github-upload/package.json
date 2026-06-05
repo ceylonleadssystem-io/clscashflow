@@ -1,0 +1,9 @@
+{
+  "name": "cls-cashflow",
+  "version": "1.0.0",
+  "description": "CeylonryLabs.io CashFlow — Starter/Growth/Premium SaaS",
+  "private": true,
+  "dependencies": {
+    "nodemailer": "^6.9.14"
+  }
+}
