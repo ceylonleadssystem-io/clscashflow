@@ -144,7 +144,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <button class="btn-sign" id="sign-btn" onclick="window.signIn()">Sign In →</button>
 
       <div class="signup-link">
-        Don't have an account? <a id="signup-link" href="onboarding.html">Start your free 14-day trial →</a>
+        Don't have an account? <a id="signup-link" href="onboarding.html">Start your free 15-day trial →</a>
       </div>
     </div>
 
@@ -286,7 +286,7 @@ window.signInGoogle = async function signInGoogle() {
     if (!doc.exists) {
       // New Google user — create profile with starter plan
       const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 14);
+      trialEnd.setDate(trialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(user.uid).set({
         name: user.displayName || '',
         email: user.email,

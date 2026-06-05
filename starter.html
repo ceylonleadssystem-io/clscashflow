@@ -170,9 +170,9 @@ tr:hover td{background:var(--bg3)}
 
 /* Logo alignment buttons */
 .align-btns{display:flex;gap:.55rem;margin-bottom:.85rem}
-.align-btn{flex:1;padding:.6rem;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font-b);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;transition:all .2s;color:var(--muted)}
-.align-btn.active{border-color:var(--black);background:var(--black);color:#fff}
-.align-btn:hover:not(.active){border-color:var(--border-acc);color:var(--gold)}
+.align-btn,.size-btn{flex:1;padding:.6rem;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font-b);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;transition:all .2s;color:var(--muted)}
+.align-btn.active,.size-btn.active{border-color:var(--black);background:var(--black);color:#fff}
+.align-btn:hover:not(.active),.size-btn:hover:not(.active){border-color:var(--border-acc);color:var(--gold)}
 
 /* Invoice action buttons in table */
 .inv-action-row{display:flex;gap:.3rem;flex-wrap:wrap}
@@ -505,6 +505,12 @@ document.addEventListener('click',function(e){
             <button class="align-btn" data-align="center" data-cls-fn="setLogoAlign" data-cls-arg="center" data-cls-this="1">◫ Center</button>
             <button class="align-btn" data-align="right" data-cls-fn="setLogoAlign" data-cls-arg="right" data-cls-this="1">◨ Right</button>
           </div>
+          <div class="f-section" style="margin-top:1rem">Logo Size on Invoice</div>
+          <div class="align-btns" id="size-btns">
+            <button class="size-btn" data-size="S" data-cls-fn="setLogoSize" data-cls-arg="S" data-cls-this="1">Small</button>
+            <button class="size-btn active" data-size="M" data-cls-fn="setLogoSize" data-cls-arg="M" data-cls-this="1">Medium</button>
+            <button class="size-btn" data-size="L" data-cls-fn="setLogoSize" data-cls-arg="L" data-cls-this="1">Large</button>
+          </div>
           <div class="f-section">Business Details</div>
           <div class="f-row">
             <div class="f-group"><label>Business Name *</label><input class="f-input" id="set-bizname" placeholder="Your Business Name"></div>
@@ -678,15 +684,15 @@ document.addEventListener('click',function(e){
       <div class="tpl-picker">
         <div class="tpl-pick-card selected" onclick="selectInvTpl(0,this)">
           <div class="tpl-pick-preview"><div style="background:#B8922A;height:14px;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Classic Gold</div>
+          <div class="tpl-pick-name">Brand Gold</div>
         </div>
         <div class="tpl-pick-card" onclick="selectInvTpl(1,this)">
-          <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #1B2E5C;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Navy Minimal</div>
+          <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #4F46E5;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
+          <div class="tpl-pick-name">Indigo Modern</div>
         </div>
         <div class="tpl-pick-card" onclick="selectInvTpl(2,this)">
-          <div class="tpl-pick-preview"><div style="border-top:3px solid #1F5C3A;padding-top:2px;width:100%"></div><div style="padding:2px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Forest Executive</div>
+          <div class="tpl-pick-preview"><div style="border-top:3px solid #1F2937;padding-top:2px;width:100%"></div><div style="padding:2px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
+          <div class="tpl-pick-name">Charcoal Mono</div>
         </div>
       </div>
       <div class="f-section">Client Details</div>
@@ -788,7 +794,7 @@ let _profile = null;
 let _signedInUid = null;
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left'},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M'},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -1200,7 +1206,7 @@ function loadSettings(){
   document.getElementById('set-username').value=s.username||'';
   if(s.logo){const img=document.getElementById('settings-logo-preview');img.src=s.logo;img.style.display='block';document.getElementById('logo-upload-placeholder').style.display='none';}
   loadLogoAlign();
-  loadLogoAlign();
+  loadLogoSize();
 }
 window.saveSettings = function saveSettings(){
   DB.settings.bizName=document.getElementById('set-bizname').value.trim()||'My Business';
@@ -1212,6 +1218,7 @@ window.saveSettings = function saveSettings(){
   DB.settings.u1=document.getElementById('set-u1').value.trim();
   DB.settings.u2=document.getElementById('set-u2').value.trim();
   DB.settings.logoAlign=(document.querySelector('.align-btn.active')?document.querySelector('.align-btn.active').dataset.align:null)||'left';
+  DB.settings.logoSize=(document.querySelector('.size-btn.active')?document.querySelector('.size-btn.active').dataset.size:null)||'M';
   saveDB();applySettings();alert('✓ Settings saved successfully.');
 }
 function applySettings(){
@@ -1232,26 +1239,104 @@ window.previewSettingsLogo = function previewSettingsLogo(input){
 // INVOICE PDF PRINTING
 // ════════════════════════════════
 const tplDefs=[
-  {name:'Classic Gold',accent:'#B8922A',dark:'#7A6010',style:'classic'},
-  {name:'Navy Minimal',accent:'#1B2E5C',dark:'#0F1D3A',style:'minimal'},
-  {name:'Forest Executive',accent:'#1F5C3A',dark:'#133D26',style:'executive'},
+  {name:'Brand Gold',accent:'#B8922A',style:'classic'},
+  {name:'Indigo Modern',accent:'#4F46E5',style:'minimal'},
+  {name:'Charcoal Mono',accent:'#1F2937',style:'executive'},
 ];
 function buildInvPrintHTML(inv,tplIdx){
-  const t=tplDefs[tplIdx]||tplDefs[0];const s=DB.settings;
-  // Resolve logo alignment upfront
+  const t=tplDefs[tplIdx]||tplDefs[0];const s=DB.settings;const ac=t.accent;
+  // Logo alignment + size (S / M / L)
   const align=s.logoAlign||'left';
-  const hdrWrapStyle=align==='center'?'text-align:center':align==='right'?'text-align:right':'text-align:left';
-  const imgStyle=align==='center'?'display:block;margin:0 auto 8px':'display:block;margin-bottom:8px'+(align==='right'?';margin-left:auto':'');
-  const linesHTML=(inv.lines||[{desc:'Professional Services',qty:1,price:inv.amount}]).map(l=>`<tr><td>${l.desc||'—'}</td><td style="text-align:center">${l.qty||1}</td><td style="text-align:right">${inv.cur||'LKR'} ${parseFloat(l.price||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right">${inv.cur||'LKR'} ${parseFloat(l.total||inv.amount||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`).join('');
+  const sizeMap={S:60,M:96,L:140};
+  const logoH=sizeMap[s.logoSize||'M']||96;
+  const brandAlign=align==='center'?'center':align==='right'?'flex-end':'flex-start';
+  const textAlign=align==='center'?'center':align==='right'?'right':'left';
+  // Line items
+  const fmtP=n=>parseFloat(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cur=inv.cur||'LKR';
+  const linesHTML=(inv.lines||[{desc:'Professional Services',qty:1,price:inv.amount,total:inv.amount}]).map((l,i)=>`<tr><td class="d"><span class="ln">${l.desc||'—'}</span></td><td class="c">${l.qty||1}</td><td class="r">${cur} ${fmtP(l.price)}</td><td class="r b">${cur} ${fmtP(l.total!=null?l.total:inv.amount)}</td></tr>`).join('');
   const sub=(inv.lines||[]).reduce((a,l)=>a+(l.total||0),0)||inv.amount;
   const disc=inv.disc||0;const afterDisc=sub*(1-disc/100);const vat=inv.vat||0;const grand=inv.amount||sub;
-  const fmtP=n=>parseFloat(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
-  // logoHTML replaced by inline logo handling above
-  const headerCSS=t.style==='classic'?`background:${t.accent};color:#fff;padding:2rem 3rem;margin:-3rem -3rem 2.5rem`:t.style==='minimal'?`border-bottom:3px solid ${t.accent};padding-bottom:1.5rem;margin-bottom:2rem`:t.style==='executive'?`border-top:4px solid ${t.accent};border-bottom:1px solid ${t.accent};padding:1.5rem 0;margin-bottom:2rem`:'';
-  const logoColor=t.style==='classic'?'#fff':'#1a1714';const numColor=t.style==='classic'?'#fff':t.accent;const dateColor=t.style==='classic'?'rgba(255,255,255,.8)':'#555';
-  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',Arial,sans-serif;background:#fff;color:#1a1714;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.page{padding:3rem;min-height:100vh}.hdr{display:flex;justify-content:space-between;align-items:flex-start;${headerCSS}}.biz-logo{max-height:72px;max-width:220px;object-fit:contain;display:block;margin-bottom:.5rem}
-.biz-name{font-family:Georgia,serif;font-size:1.7rem;font-weight:300;color:${logoColor}}
-.biz-addr{font-size:.75rem;color:${t.style==='classic'?'rgba(255,255,255,.6)':'#888'};margin-top:.2rem;line-height:1.5}.inv-num{font-size:2rem;font-weight:300;color:${numColor};text-align:right}.inv-dates{font-size:.8rem;color:${dateColor};text-align:right;margin-top:.4rem;line-height:1.9}.inv-dates strong{color:${t.style==='classic'?'#fff':'#1a1714'}}.parties{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2.5rem}.party-label{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:${t.accent};margin-bottom:.4rem}.party-name{font-size:1rem;font-weight:600;margin-bottom:.2rem}.party-detail{font-size:.8rem;color:#555;line-height:1.7}table{width:100%;border-collapse:collapse;margin-bottom:2rem}th{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;padding:.65rem 1rem;text-align:left;background:${t.accent};color:#fff}td{padding:.6rem 1rem;border-bottom:1px solid #eee;font-size:.85rem}td:last-child,th:last-child{text-align:right}.totals{display:flex;justify-content:flex-end;margin-bottom:2rem}.totals-box{width:300px}.trow{display:flex;justify-content:space-between;padding:.4rem 0;font-size:.83rem;color:#555;border-bottom:1px solid #eee}.grand{font-weight:700;color:#1a1714;border-top:2px solid ${t.accent};border-bottom:2px solid ${t.accent};padding:.55rem 0;margin-top:.3rem;font-size:1rem}.footer{border-top:2px solid #eee;padding-top:1.5rem;display:flex;justify-content:space-between;align-items:flex-end;font-size:.75rem;color:#888}.powered{margin-top:1.5rem;padding-top:.75rem;border-top:1px solid #f0f0f0;text-align:center;font-size:.65rem;color:#bbb;letter-spacing:.06em}</style><title>${inv.num}</title></head><body><div class="page"><div class="hdr"><div id="inv-hdr-left" style="${hdrWrapStyle}">${s.logo?`<img class="biz-logo" src="${s.logo}" style="${imgStyle}">`:''}<div class="biz-name" style="${align==='center'?'text-align:center':align==='right'?'text-align:right':''}">${s.bizName||'Your Business'}</div><div class="biz-addr" style="${align==='center'?'text-align:center':align==='right'?'text-align:right':''}">${s.addr||''}</div></div><div><div class="inv-num">${inv.num}</div><div class="inv-dates"><strong>Date:</strong> ${fmtD(inv.date)}<br><strong>Due:</strong> ${fmtD(inv.due)}<br><strong>Terms:</strong> ${inv.terms||'Net 30'}</div></div></div><div class="parties"><div><div class="party-label">Bill From</div><div class="party-name">${s.bizName||'Your Business'}</div><div class="party-detail">${s.addr||''}<br>${s.email||''}</div></div><div><div class="party-label">Bill To</div><div class="party-name">${inv.client}</div><div class="party-detail">${inv.caddr||''}<br>${inv.cemail||''}</div></div></div><table><thead><tr><th>Description</th><th style="text-align:center">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th></tr></thead><tbody>${linesHTML}</tbody></table><div class="totals"><div class="totals-box"><div class="trow"><span>Subtotal</span><span>${inv.cur||'LKR'} ${fmtP(sub)}</span></div>${disc>0?`<div class="trow"><span>Discount (${disc}%)</span><span>− ${inv.cur||'LKR'} ${fmtP(sub-afterDisc)}</span></div>`:''}${vat>0?`<div class="trow"><span>VAT (15%)</span><span>${inv.cur||'LKR'} ${fmtP(vat)}</span></div>`:''}<div class="trow grand"><span>Grand Total</span><span>${inv.cur||'LKR'} ${fmtP(grand)}</span></div></div></div><div class="footer"><div><strong style="color:#1a1714">${s.bizName||'Your Business'}</strong><br>${s.addr||''}</div><div style="text-align:right;max-width:280px">${s.footer||'Thank you for your business.'}</div></div><div class="powered">Invoice generated by <strong style="color:#B8922A">CeylonryLabs.io</strong> &nbsp;·&nbsp; Intelligent Systems. Better Businesses. &nbsp;·&nbsp; ceylonrylabs.io</div></div></body></html>`;
+  // Per-template treatment
+  const isClassic=t.style==='classic';const isMinimal=t.style==='minimal';const isExec=t.style==='executive';
+  const topStyle=isClassic
+    ?`background:${ac};color:#fff;padding:2.6rem 3rem;margin:-3rem -3rem 2.6rem`
+    :isExec
+    ?`border-top:5px solid ${ac};padding:2rem 0 1.7rem;margin-bottom:2.4rem;border-bottom:1px solid #ededed`
+    :`padding-bottom:1.9rem;margin-bottom:2.4rem;border-bottom:1px solid #ededed`;
+  const invColor=isClassic?'#fff':isMinimal?'#15110d':ac;
+  const nameColor=isClassic?'#fff':'#15110d';
+  const addrColor=isClassic?'rgba(255,255,255,.72)':'#8a8378';
+  const metaLabel=isClassic?'rgba(255,255,255,.7)':'#a39b8e';
+  const metaVal=isClassic?'#fff':'#15110d';
+  const numColor=isClassic?'#fff':ac;
+  const thStyle=isClassic
+    ?`background:${ac};color:#fff`
+    :isMinimal
+    ?`background:#f6f5f2;color:${ac};border-bottom:2px solid ${ac}`
+    :`background:transparent;color:#15110d;border-bottom:2px solid ${ac}`;
+  const grandBg=isMinimal?'#15110d':ac;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet"><title>${inv.num}</title><style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+body{font-family:'DM Sans',Arial,sans-serif;background:#fff;color:#15110d}
+.page{max-width:820px;margin:0 auto;padding:3rem;min-height:100vh}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;${topStyle}}
+.brand{display:flex;flex-direction:column;align-items:${brandAlign};text-align:${textAlign};flex:1}
+.brand img{max-height:${logoH}px;max-width:${Math.round(logoH*3.4)}px;object-fit:contain;margin-bottom:.7rem;display:block}
+.biz-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.7rem;font-weight:600;line-height:1.1;color:${nameColor}}
+.biz-addr{font-size:.76rem;color:${addrColor};margin-top:.35rem;line-height:1.6;max-width:260px}
+.title-block{text-align:right;flex-shrink:0}
+.big-invoice{font-size:2.6rem;font-weight:700;letter-spacing:.16em;color:${invColor};line-height:1}
+.inv-meta{margin-top:1rem;font-size:.74rem;line-height:1.9}
+.inv-meta .lbl{color:${metaLabel};letter-spacing:.06em}
+.inv-meta .val{color:${metaVal};font-weight:600;margin-left:.4rem}
+.inv-num-big{font-size:.95rem;font-weight:700;color:${numColor};margin-top:.3rem}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2.4rem}
+.party-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:${ac};font-weight:700;margin-bottom:.5rem}
+.party-name{font-size:1.02rem;font-weight:600;margin-bottom:.25rem;color:#15110d}
+.party-detail{font-size:.8rem;color:#6f685e;line-height:1.7}
+table{width:100%;border-collapse:collapse;margin-bottom:1.8rem}
+th{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;padding:.8rem 1rem;text-align:left;font-weight:600;${thStyle}}
+th.c,td.c{text-align:center}th.r,td.r{text-align:right}
+td{padding:.85rem 1rem;border-bottom:1px solid #f0eee9;font-size:.86rem;color:#3d3a34;vertical-align:top}
+td.b{font-weight:600;color:#15110d}
+td .ln{font-weight:600;color:#15110d}
+.bottom{display:flex;justify-content:space-between;gap:2rem;align-items:flex-start;margin-bottom:2.2rem}
+.notes{flex:1;max-width:300px}
+.notes-h{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:${ac};font-weight:700;margin-bottom:.5rem}
+.notes-b{font-size:.78rem;color:#6f685e;line-height:1.7}
+.totals{width:300px;flex-shrink:0}
+.trow{display:flex;justify-content:space-between;padding:.5rem 0;font-size:.84rem;color:#6f685e;border-bottom:1px solid #f0eee9}
+.trow span:last-child{color:#15110d;font-weight:500}
+.grand{margin-top:.8rem;background:${grandBg};color:#fff;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center}
+.grand .g-l{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.grand .g-v{font-size:1.4rem;font-weight:700}
+.footer{border-top:1px solid #ededed;padding-top:1.5rem;display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;font-size:.76rem;color:#8a8378}
+.footer strong{color:#15110d;font-weight:600}
+.powered{margin-top:1.4rem;padding-top:.85rem;border-top:1px solid #f3f1ec;text-align:center;font-size:.68rem;color:#b3ada3;letter-spacing:.05em}
+.powered b{color:${ac};font-weight:600}
+</style></head><body><div class="page">
+<div class="top">
+  <div class="brand">${s.logo?`<img src="${s.logo}">`:''}<div class="biz-name">${s.bizName||'Your Business'}</div><div class="biz-addr">${s.addr||''}</div></div>
+  <div class="title-block"><div class="big-invoice">INVOICE</div><div class="inv-num-big">${inv.num||''}</div><div class="inv-meta"><div><span class="lbl">Date:</span><span class="val">${fmtD(inv.date)}</span></div><div><span class="lbl">Due:</span><span class="val">${fmtD(inv.due)}</span></div><div><span class="lbl">Terms:</span><span class="val">${inv.terms||'Net 30'}</span></div></div></div>
+</div>
+<div class="parties">
+  <div><div class="party-label">From</div><div class="party-name">${s.bizName||'Your Business'}</div><div class="party-detail">${s.addr||''}<br>${s.email||''}${s.vat?`<br>VAT: ${s.vat}`:''}</div></div>
+  <div><div class="party-label">Bill To</div><div class="party-name">${inv.client||'Client'}</div><div class="party-detail">${inv.caddr||''}<br>${inv.cemail||''}</div></div>
+</div>
+<table><thead><tr><th class="d">Description</th><th class="c">Qty</th><th class="r">Unit Price</th><th class="r">Amount</th></tr></thead><tbody>${linesHTML}</tbody></table>
+<div class="bottom">
+  <div class="notes"><div class="notes-h">Notes</div><div class="notes-b">${inv.notes||s.footer||'Thank you for your business.'}</div></div>
+  <div class="totals">
+    <div class="trow"><span>Subtotal</span><span>${cur} ${fmtP(sub)}</span></div>
+    ${disc>0?`<div class="trow"><span>Discount (${disc}%)</span><span>− ${cur} ${fmtP(sub-afterDisc)}</span></div>`:''}
+    ${vat>0?`<div class="trow"><span>VAT (15%)</span><span>${cur} ${fmtP(vat)}</span></div>`:''}
+    <div class="grand"><span class="g-l">Total Due</span><span class="g-v">${cur} ${fmtP(grand)}</span></div>
+  </div>
+</div>
+<div class="footer"><div><strong>${s.bizName||'Your Business'}</strong><br>${s.addr||''}</div><div style="text-align:right;max-width:280px">${s.footer||'Thank you for your business.'}</div></div>
+<div class="powered">Invoice generated by Cashflow System - <b>CeylonryLabs.io</b></div>
+</div></body></html>`;
 }
 window.viewPrintInvoice = function viewPrintInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
@@ -1415,6 +1500,18 @@ function loadLogoAlign(){
   const align=DB.settings.logoAlign||'left';
   document.querySelectorAll('.align-btn').forEach(b=>{
     b.classList.toggle('active',b.dataset&&b.dataset.align===align);
+  });
+}
+window.setLogoSize = function setLogoSize(size,btn){
+  DB.settings.logoSize=size;
+  document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  saveDB();
+}
+function loadLogoSize(){
+  const size=DB.settings.logoSize||'M';
+  document.querySelectorAll('.size-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset&&b.dataset.size===size);
   });
 }
 
@@ -1586,7 +1683,7 @@ window.showPaywall = function showPaywall(profile) {
   ov.innerHTML = '<div style="background:#fff;max-width:520px;width:100%;padding:3rem;text-align:center;">' +
     '<div style="font-size:2.5rem;margin-bottom:1rem">🔒</div>' +
     '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2rem;font-weight:300;color:#1a1714;margin-bottom:.5rem">Your free trial has ended</div>' +
-    '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 14-day free trial of <strong>CLS ' + planName + '</strong> has expired.<br>Activate your plan to keep your dashboard and data.</div>' +
+    '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 15-day free trial of <strong>CLS ' + planName + '</strong> has expired.<br>Activate your plan to keep your dashboard and data.</div>' +
     '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
       '<div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:.35rem">Your Plan</div>' +
       '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +

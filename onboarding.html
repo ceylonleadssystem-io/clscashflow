@@ -990,7 +990,7 @@ window.launchDashboard = async function launchDashboard(loadDemo){
       const user = firebase.auth().currentUser;
       if (!user) { alert('Session expired. Please sign in again.'); window.location.href='signin.html'; return; }
       var googleTrialEnd = new Date();
-      googleTrialEnd.setDate(googleTrialEnd.getDate() + 14);
+      googleTrialEnd.setDate(googleTrialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(user.uid).set({
         name: state.fname + ' ' + state.lname,
         email: state.email,
@@ -1016,6 +1016,20 @@ window.launchDashboard = async function launchDashboard(loadDemo){
       }, { merge: true });
       await acceptOnboardingInvite(user.uid,state.email);
       await seedOnboardingData(user.uid,state.loadDemoData);
+      // Send welcome email (best-effort — don't block redirect if it fails)
+      try {
+        await fetch('/.netlify/functions/send-welcome', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            to: state.email,
+            name: state.fname + ' ' + state.lname,
+            plan: state.tier || 'starter',
+            biz: state.bizName || 'your business',
+            trialEnd: googleTrialEnd.toISOString()
+          })
+        });
+      } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
       window.location.href = planFiles[state.tier] || 'starter.html';
 
     } else {
@@ -1024,7 +1038,7 @@ window.launchDashboard = async function launchDashboard(loadDemo){
       const uid = cred.user.uid;
       await cred.user.updateProfile({ displayName: state.fname + ' ' + state.lname });
       const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 14);
+      trialEnd.setDate(trialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(uid).set({
         name: state.fname + ' ' + state.lname,
         role: 'owner',
@@ -1051,6 +1065,20 @@ window.launchDashboard = async function launchDashboard(loadDemo){
       });
       await acceptOnboardingInvite(uid,state.email);
       await seedOnboardingData(uid,state.loadDemoData);
+      // Send welcome email (best-effort)
+      try {
+        await fetch('/.netlify/functions/send-welcome', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            to: state.email,
+            name: state.fname + ' ' + state.lname,
+            plan: state.tier || 'starter',
+            biz: state.bizName || 'your business',
+            trialEnd: trialEnd.toISOString()
+          })
+        });
+      } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
       window.location.href = planFiles[state.tier] || 'starter.html';
     }
 

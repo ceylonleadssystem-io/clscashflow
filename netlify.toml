@@ -1,100 +1,11 @@
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
+[build]
+  publish = "."
+  functions = "netlify/functions"
 
-[[redirects]]
-  from = "/app"
-  to = "/signin.html"
-  status = 302
-
-[[redirects]]
-  from = "/login"
-  to = "/signin.html"
-  status = 302
-
-[[redirects]]
-  from = "/signup"
-  to = "/onboarding.html"
-  status = 302
-
-[[redirects]]
-  from = "/start"
-  to = "/onboarding.html"
-  status = 302
-
-[[redirects]]
-  from = "/starter"
-  to = "/starter.html"
-  status = 302
-
-[[redirects]]
-  from = "/growth"
-  to = "/growth.html"
-  status = 302
-
-[[redirects]]
-  from = "/premium"
-  to = "/premium.html"
-  status = 302
-
-[[redirects]]
-  from = "/upgrade"
-  to = "/upgrade.html"
-  status = 302
-
-[[redirects]]
-  from = "/success"
-  to = "/success.html"
-  status = 302
-
-[[redirects]]
-  from = "/access-admin"
-  to = "/access-admin.html"
-  status = 302
-
+# Standard security headers (no restrictive CSP, so inline scripts keep working)
 [[headers]]
   for = "/*"
   [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
-
-[[headers]]
-  for = "/signin.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/starter.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/growth.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/premium.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/upgrade.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/success.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/access-admin.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/onboarding.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
