@@ -29,7 +29,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
 /* ── SIDEBAR ── */
 #sidebar{position:fixed;top:0;left:0;width:var(--sb);height:100vh;background:var(--white);border-right:2px solid var(--black);display:flex;flex-direction:column;z-index:100}
-.sb-logo-wrap{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border)}
+.sb-logo-wrap{padding:1.35rem 1.5rem 1.1rem;border-bottom:1px solid var(--border)}
 .sb-logo{font-family:var(--font-d);font-size:1.35rem;font-weight:400;color:var(--text)}
 .sb-logo span{color:var(--gold)}
 .sb-plan-tag{display:inline-block;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;background:var(--black);color:#fff;padding:.2rem .65rem;margin-top:.4rem}
@@ -42,7 +42,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .sb-footer{padding:1.25rem 1.5rem;border-top:1px solid var(--border)}
 .sb-biz{font-size:.78rem;color:var(--muted);margin-bottom:.75rem}
 .sb-biz strong{display:block;color:var(--text);font-weight:500;font-size:.82rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-logo-img{max-height:28px;max-width:100px;object-fit:contain;margin-bottom:.5rem;display:block}
+.sb-logo-img{max-height:72px;max-width:170px;object-fit:contain;margin-bottom:.75rem;display:block}
 .btn-upgrade{display:block;text-align:center;padding:.6rem;background:var(--gold);color:#fff;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;text-decoration:none;cursor:pointer;border:none;width:100%;font-family:var(--font-b);transition:all .25s}
 .btn-upgrade:hover{background:var(--gold-l)}
 
@@ -216,7 +216,7 @@ tr:hover td{background:var(--bg3)}
 .logo-area{border:2px dashed var(--border-acc);padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg)}
 .logo-area:hover{border-color:var(--gold);background:var(--bg3)}
 .logo-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.logo-area-preview{max-height:50px;max-width:150px;margin:0 auto .5rem;display:block;object-fit:contain}
+.logo-area-preview{max-height:92px;max-width:240px;margin:0 auto .5rem;display:block;object-fit:contain}
 .logo-area-label{font-size:.78rem;color:var(--muted)}
 .logo-area-hint{font-size:.65rem;color:var(--dim);margin-top:.2rem}
 
@@ -264,8 +264,25 @@ tr:hover td{background:var(--bg3)}
 .pay-sum-label{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
 .pay-sum-val{font-family:var(--font-d);font-size:1.1rem;font-weight:300;color:var(--black)}
 .pay-remain-alert{display:none;background:rgba(183,119,13,.07);border:1px solid rgba(183,119,13,.3);padding:.8rem 1rem;margin-top:.5rem;font-size:.8rem;color:var(--amber)}
+.trial-card{background:var(--white);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1rem 1.2rem;margin-bottom:1rem;max-width:640px}
+.trial-card-title{font-family:var(--font-d);font-size:1.1rem;color:var(--black);margin-bottom:.35rem}
+.trial-card-body{font-size:.78rem;color:var(--muted);line-height:1.6}
+.trial-card-body strong{color:var(--gold);font-weight:700}
+.settings-helper{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;background:var(--white);border:1px solid var(--border);border-left:3px solid var(--black);padding:1rem 1.2rem;margin-bottom:1rem;max-width:640px}
+.settings-helper-title{font-family:var(--font-d);font-size:1.05rem;color:var(--black);margin-bottom:.25rem}
+.settings-helper-text{font-size:.76rem;color:var(--muted);line-height:1.6}
+.tour-ov{position:fixed;inset:0;background:rgba(26,23,20,.62);backdrop-filter:blur(6px);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.tour-box{background:#fff;width:100%;max-width:520px;box-shadow:0 24px 70px rgba(0,0,0,.2)}
+.tour-head{padding:1.3rem 1.5rem;border-bottom:2px solid var(--black);display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.tour-kicker{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.2rem}
+.tour-title{font-family:var(--font-d);font-size:1.45rem;color:var(--black)}
+.tour-body{padding:1.35rem 1.5rem;font-size:.84rem;color:var(--muted);line-height:1.75}
+.tour-progress{display:flex;gap:.35rem;margin-top:1rem}
+.tour-dot{height:4px;flex:1;background:var(--border)}
+.tour-dot.active{background:var(--gold)}
+.tour-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.75rem}
 
-@media print{body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+@media print{@page{size:A4;margin:0}html,body{margin:0!important;padding:0!important}body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 #print-invoice{display:none}
 </style>
 </head>
@@ -274,7 +291,7 @@ tr:hover td{background:var(--bg3)}
 window.CLS_RUN=function(fn,arg){if(typeof window[fn]==='function')window[fn](arg);};
 window.openWhatsAppSupport=function(){window.open('https://wa.me/94778815628?text='+encodeURIComponent('Hi CeylonryLabs! I need help with my CLS CashFlow billing.'),'_blank');};
 window.closeAndOpenClient=function(){if(window.closeModal)window.closeModal('inv-modal');if(window.openClientModal)window.openClientModal();};
-window.showPaywallBtn=function(){if(window.showPaywall&&window._profile)window.showPaywall(window._profile);};
+window.showPaywallBtn=function(){if(window.openGrowthUpgrade)window.openGrowthUpgrade();};
 window.triggerLogoUpload=function(){var el=document.getElementById('settings-logo');if(el)el.click();};
 
 document.addEventListener('click',function(e){
@@ -337,7 +354,7 @@ document.addEventListener('click',function(e){
   </div>
   <div class="sb-footer">
     <div class="sb-biz"><strong id="sb-biz-name">My Business</strong><span id="sb-user-email">user@email.com</span></div>
-    <a class="btn-upgrade" href="upgrade.html">Upgrade to Growth →</a>
+    <button class="btn-upgrade" data-cls-fn="openGrowthUpgrade">Upgrade to Growth →</button>
     <button data-cls-fn="clsSignOut" style="display:block;width:100%;text-align:center;padding:.5rem;background:transparent;border:1px solid rgba(184,146,42,.2);color:var(--muted);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-b);cursor:pointer;margin-top:.5rem;transition:all .2s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Sign Out</button>
   </div>
 </nav>
@@ -497,6 +514,17 @@ document.addEventListener('click',function(e){
 
     <!-- ═ SETTINGS ═ -->
     <div class="view" id="view-settings">
+      <div class="trial-card" id="settings-trial-card">
+        <div class="trial-card-title">Free Trial</div>
+        <div class="trial-card-body" id="settings-trial-status">Your trial status will appear here.</div>
+      </div>
+      <div class="settings-helper">
+        <div>
+          <div class="settings-helper-title">Quick System Tour</div>
+          <div class="settings-helper-text">A short walkthrough for first-time clients: dashboard, cashflow, invoices, suppliers, reports, and billing.</div>
+        </div>
+        <button class="btn-act-outline" data-cls-fn="startSystemTour">Start Tour</button>
+      </div>
       <div class="table-card" style="max-width:640px">
         <div class="table-header"><div class="table-title">Business Profile</div><button class="btn-act" data-cls-fn="saveSettings">Save Changes</button></div>
         <div style="padding:1.35rem">
@@ -533,13 +561,6 @@ document.addEventListener('click',function(e){
             <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
           </div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15" style="max-width:200px"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the default on new invoices. You can still change it per invoice (B2B rates can differ).</div></div>
-          <div class="f-section" style="margin-top:1.5rem">Email Sending (EmailJS)</div>
-          <div style="font-size:.68rem;color:var(--dim);margin-bottom:.75rem;line-height:1.6">Connect EmailJS to send invoices straight from the dashboard (e.g. from noreply@ceylonrylabs.io). Create a free account at emailjs.com, add an email service + template, then paste the three keys below. Leave blank to use the built-in email instead.</div>
-          <div class="f-group" style="margin-bottom:.85rem"><label>EmailJS Public Key</label><input class="f-input" id="set-ejskey" placeholder="e.g. AbC123xyz..."></div>
-          <div class="f-row">
-            <div class="f-group"><label>Service ID</label><input class="f-input" id="set-ejsservice" placeholder="service_xxxxxxx"></div>
-            <div class="f-group"><label>Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_xxxxxxx"></div>
-          </div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Invoice Footer Message</label><input class="f-input" id="set-footer" placeholder="Thank you for your business. Payment due within 30 days."></div>
           <div class="f-section" style="margin-top:.75rem">Users (Up to 2)</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
@@ -554,8 +575,12 @@ document.addEventListener('click',function(e){
         <div style="padding:1rem;font-size:.85rem;color:var(--muted);line-height:1.8">Invite team members, assign roles, and control access. <a href="access-admin.html" style="color:var(--gold);font-weight:600">Open Access Admin</a></div>
       </div>
       <div style="margin-top:1rem;max-width:640px">
-        <div class="table-header"><div class="table-title">Billing</div><a class="btn-act" href="upgrade.html">Upgrade</a></div>
-        <div style="padding:1rem"><strong>Starter Plan</strong> — LKR 5,500/mo &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span><br><br><a class="btn-act" href="upgrade.html" style="background:var(--gold);color:#fff">Upgrade to Growth</a></div>
+        <div class="table-header"><div class="table-title">Billing</div><button class="btn-act" data-cls-fn="openGrowthUpgrade">Upgrade</button></div>
+        <div style="padding:1rem">
+          <strong>Starter Plan</strong> — LKR 5,500/mo &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
+          <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
+          <br><button class="btn-act" data-cls-fn="openGrowthUpgrade" style="background:var(--gold);color:#fff">Upgrade to Growth</button>
+        </div>
       </div>
     </div>
 
@@ -816,6 +841,8 @@ const _auth = firebase.auth();
 let _uid = null;
 let _profile = null;
 let _signedInUid = null;
+let _trialEnd = null;
+let _isPaid = false;
 
 var DB = {
   settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
@@ -897,6 +924,8 @@ _auth.onAuthStateChanged(async function(user) {
     const now = new Date();
     const trialEnd = new Date(_profile.trialEnd || now);
     const isPaid = _profile.paid === true;
+    _trialEnd = trialEnd;
+    _isPaid = isPaid;
     if (now > trialEnd && !isPaid) { showPaywall(_profile); return; }
 
     // Apply profile to settings
@@ -912,13 +941,15 @@ _auth.onAuthStateChanged(async function(user) {
     await loadDB();
     init();
     enforcePermissions();
+    renderTrialStatus();
+    maybeStartFirstTour();
 
     // Trial banner
     if (!isPaid) {
       const daysLeft = Math.max(0, Math.ceil((trialEnd - now) / 86400000));
       const banner = document.createElement('div');
       banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:\'DM Sans\',sans-serif;font-size:.78rem;';
-      banner.innerHTML = `<span>⏳ <strong>${daysLeft} day${daysLeft!==1?'s':''} left</strong> on your free trial</span><button data-cls-fn="showPaywallBtn" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">Activate Plan →</button>`;
+      banner.innerHTML = `<span>⏳ <strong>${daysLeft} day${daysLeft!==1?'s':''} left</strong> on your free trial</span><button data-cls-fn="openGrowthUpgrade" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">Upgrade to Growth →</button>`;
       document.body.appendChild(banner);
     }
   } catch(e) { console.error('Auth guard error:', e); }
@@ -941,6 +972,91 @@ const fmtAmtFull = n => 'LKR '+parseFloat(n).toLocaleString('en',{minimumFractio
 window.fmtInput = function fmtInput(el){const v=el.value.replace(/[^0-9.]/g,'');const parts=v.split('.');let int=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');el.value=parts.length>1?int+'.'+parts[1]:int;}
 function parseAmt(s){return parseFloat((s||'0').replace(/,/g,''))||0;}
 function todayStr(){return today.toISOString().split('T')[0];}
+function formatLongDate(d){
+  if(!d||isNaN(d.getTime()))return '';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+}
+function getTrialStatus(){
+  const now=new Date();
+  const end=_trialEnd||(_profile&&_profile.trialEnd?new Date(_profile.trialEnd):now);
+  const valid=end&&!isNaN(end.getTime());
+  const paid=_isPaid||(_profile&&_profile.paid===true);
+  const daysLeft=valid?Math.max(0,Math.ceil((end-now)/86400000)):0;
+  return {paid:paid,end:valid?end:null,daysLeft:daysLeft,ended:valid&&now>end&&!paid};
+}
+function renderTrialStatus(){
+  const st=getTrialStatus();
+  const settingsEl=document.getElementById('settings-trial-status');
+  const billingEl=document.getElementById('billing-trial-status');
+  let msg='';
+  if(st.paid){
+    msg='Your paid plan is active. You can still request Growth features any time.';
+  }else if(st.ended){
+    msg='Your free trial ended'+(st.end?' on '+formatLongDate(st.end):'')+'. Upgrade to keep using the system without interruption.';
+  }else{
+    msg='You have <strong>'+st.daysLeft+' day'+(st.daysLeft!==1?'s':'')+' left</strong> on your free trial'+(st.end?' until '+formatLongDate(st.end):'')+'. You can upgrade to Growth now without waiting for the trial to finish.';
+  }
+  if(settingsEl)settingsEl.innerHTML=msg;
+  if(billingEl)billingEl.innerHTML=msg;
+}
+window.openGrowthUpgrade = function openGrowthUpgrade(){
+  const st=getTrialStatus();
+  const p=_profile||{};
+  const trialLine=st.paid?'Paid plan active':st.ended?('Trial ended'+(st.end?' on '+formatLongDate(st.end):'')):('Trial active: '+st.daysLeft+' day'+(st.daysLeft!==1?'s':'')+' left'+(st.end?' until '+formatLongDate(st.end):''));
+  const msg=encodeURIComponent(
+    'Hi CeylonryLabs! I would like to upgrade to the Growth Plan.\n\n'+
+    'Plan: CLS Growth\n'+
+    'Price: LKR 12,500/month\n'+
+    'Trial status: '+trialLine+'\n\n'+
+    'Name: '+(p.name||DB.settings.username||'')+'\n'+
+    'Business: '+(DB.settings.bizName||p.bizName||'')+'\n'+
+    'Email: '+(p.email||(_auth.currentUser&&_auth.currentUser.email)||'')
+  );
+  const url='https://wa.me/94778815628?text='+msg;
+  const opened=window.open(url,'_blank');
+  if(!opened)window.location.href=url;
+};
+const tourSteps=[
+  {view:'dashboard',title:'Dashboard',body:'Start here to see revenue, expenses, profit, cash position, recent transactions, and outstanding invoices in one place.'},
+  {view:'cashflow',title:'Cashflow',body:'Record money coming in and going out. Supplier payments can be linked to your supplier list so reports stay clean.'},
+  {view:'expenses',title:'Expenses',body:'Log business costs separately from cashflow when you need clearer expense tracking by vendor, supplier, and category.'},
+  {view:'invoices',title:'Invoices',body:'Create invoices, email them to clients, record full or partial payments, and keep outstanding balances visible.'},
+  {view:'suppliers',title:'Clients & Suppliers',body:'Keep client and supplier contacts ready for invoices, expenses, WhatsApp follow-ups, and transaction records.'},
+  {view:'reports',title:'Reports',body:'Use Profit & Loss reports to review income, costs, categories, and export a clean page for print or PDF.'},
+  {view:'settings',title:'Settings & Billing',body:'Add your logo, business details, invoice preferences, team access, billing status, and trial countdown here.'}
+];
+let tourIndex=0;
+function tourStorageKey(){return 'cls-starter-tour-seen-'+(_signedInUid||_uid||'local');}
+function openTourView(view){
+  const nav=document.querySelector('.sb-item[data-nav="'+view+'"]')||document.querySelector('[data-nav="'+view+'"]');
+  if(nav)nav.click();
+}
+function renderTourStep(){
+  const step=tourSteps[tourIndex]||tourSteps[0];
+  openTourView(step.view);
+  let ov=document.getElementById('system-tour');
+  if(!ov){ov=document.createElement('div');ov.id='system-tour';ov.className='tour-ov';document.body.appendChild(ov);}
+  const dots=tourSteps.map((_,i)=>'<span class="tour-dot '+(i===tourIndex?'active':'')+'"></span>').join('');
+  const isLast=tourIndex===tourSteps.length-1;
+  ov.innerHTML=
+    '<div class="tour-box">'+
+      '<div class="tour-head"><div><div class="tour-kicker">Quick Tour</div><div class="tour-title">'+step.title+'</div></div><button class="modal-close" data-cls-fn="skipSystemTour">×</button></div>'+
+      '<div class="tour-body">'+step.body+'<div class="tour-progress">'+dots+'</div></div>'+
+      '<div class="tour-foot"><button class="btn-act-outline" data-cls-fn="skipSystemTour">Skip</button><button class="btn-act" data-cls-fn="'+(isLast?'finishSystemTour':'nextSystemTour')+'">'+(isLast?'Finish':'Next')+'</button></div>'+
+    '</div>';
+}
+window.startSystemTour=function startSystemTour(){tourIndex=0;renderTourStep();};
+window.nextSystemTour=function nextSystemTour(){tourIndex=Math.min(tourIndex+1,tourSteps.length-1);renderTourStep();};
+window.skipSystemTour=function skipSystemTour(){localStorage.setItem(tourStorageKey(),'1');const ov=document.getElementById('system-tour');if(ov)ov.remove();};
+window.finishSystemTour=function finishSystemTour(){localStorage.setItem(tourStorageKey(),'1');const ov=document.getElementById('system-tour');if(ov)ov.remove();};
+function maybeStartFirstTour(){
+  try{
+    if(localStorage.getItem(tourStorageKey()))return;
+    const start=_profile&&_profile.trialStart?new Date(_profile.trialStart):null;
+    const isFresh=!start||isNaN(start.getTime())||((Date.now()-start.getTime())/86400000)<=2;
+    if(isFresh)setTimeout(function(){if(!document.getElementById('system-tour'))window.startSystemTour();},900);
+  }catch(e){}
+}
 
 // ════════════════════════════════
 // NAVIGATION
@@ -1335,6 +1451,7 @@ function loadSettings(){
   ['ejskey','ejsservice','ejstemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('ejskey','ejsKey').replace('ejsservice','ejsService').replace('ejstemplate','ejsTemplate')]||'';});
   loadLogoAlign();
   loadLogoSize();
+  renderTrialStatus();
 }
 window.saveSettings = function saveSettings(){
   DB.settings.bizName=document.getElementById('set-bizname').value.trim()||'My Business';
@@ -1343,9 +1460,10 @@ window.saveSettings = function saveSettings(){
   DB.settings.email=document.getElementById('set-email').value.trim();
   DB.settings.vat=document.getElementById('set-vat').value.trim();
   var vrIn=document.getElementById('set-vatrate');DB.settings.vatRate=vrIn?(parseFloat(vrIn.value)):15;if(isNaN(DB.settings.vatRate))DB.settings.vatRate=15;
-  DB.settings.ejsKey=(document.getElementById('set-ejskey').value||'').trim();
-  DB.settings.ejsService=(document.getElementById('set-ejsservice').value||'').trim();
-  DB.settings.ejsTemplate=(document.getElementById('set-ejstemplate').value||'').trim();
+  var ejsKeyEl=document.getElementById('set-ejskey'),ejsServiceEl=document.getElementById('set-ejsservice'),ejsTemplateEl=document.getElementById('set-ejstemplate');
+  DB.settings.ejsKey=ejsKeyEl?(ejsKeyEl.value||'').trim():(DB.settings.ejsKey||'');
+  DB.settings.ejsService=ejsServiceEl?(ejsServiceEl.value||'').trim():(DB.settings.ejsService||'');
+  DB.settings.ejsTemplate=ejsTemplateEl?(ejsTemplateEl.value||'').trim():(DB.settings.ejsTemplate||'');
   DB.settings.footer=document.getElementById('set-footer').value.trim();
   DB.settings.u1=document.getElementById('set-u1').value.trim();
   DB.settings.u2=document.getElementById('set-u2').value.trim();
@@ -1362,7 +1480,7 @@ function applySettings(){
   document.getElementById('sb-biz-name').textContent=signedInName;
   document.getElementById('sb-user-email').textContent=signedInEmail;
   const logoWrap=document.getElementById('sb-logo-img-wrap');
-  if(DB.settings.logo){logoWrap.innerHTML=`<img src="${DB.settings.logo}" style="max-height:28px;max-width:100px;object-fit:contain;display:block;margin-bottom:.4rem">`;}
+  if(DB.settings.logo){logoWrap.innerHTML=`<img src="${DB.settings.logo}" class="sb-logo-img" alt="">`;}
   else{logoWrap.innerHTML='';}
 }
 window.previewSettingsLogo = function previewSettingsLogo(input){
@@ -1514,15 +1632,16 @@ function buildInvPrintHTML(inv,tplIdx){
     ?`background:#f6f5f2;color:${ac};border-bottom:2px solid ${ac}`
     :`background:transparent;color:#15110d;border-bottom:2px solid ${ac}`;
   const grandBg=isMinimal?'#15110d':ac;
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet"><title>${(s.bizName||'Invoice')}${inv.num&&inv.num!=='PREVIEW'?' '+inv.num:''}</title><style>
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${(s.bizName||'Invoice')}${inv.num&&inv.num!=='PREVIEW'?' '+inv.num:''}</title><style>
 @page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-body{font-family:'DM Sans',Arial,sans-serif;background:#fff;color:#15110d}
+html,body{margin:0!important;padding:0!important}
+body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#15110d}
 .page{max-width:820px;margin:0 auto;padding:3rem;min-height:100vh}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;${topStyle}}
 .brand{display:flex;flex-direction:column;align-items:${brandAlign};text-align:${textAlign};flex:1}
 .brand img{max-height:${logoH}px;max-width:${Math.round(logoH*3.4)}px;object-fit:contain;margin-bottom:.7rem;display:block}
-.biz-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.7rem;font-weight:600;line-height:1.1;color:${nameColor}}
+.biz-name{font-family:Georgia,'Times New Roman',serif;font-size:1.7rem;font-weight:600;line-height:1.1;color:${nameColor}}
 .biz-addr{font-size:.76rem;color:${addrColor};margin-top:.35rem;line-height:1.6;max-width:260px}
 .title-block{text-align:right;flex-shrink:0}
 .big-invoice{font-size:2.6rem;font-weight:700;letter-spacing:.16em;color:${invColor};line-height:1}
@@ -1582,7 +1701,7 @@ window.viewPrintInvoice = function viewPrintInvoice(num){
   const w=window.open('','_blank','width=900,height=750');
   const printHTML=buildInvPrintHTML(inv,inv.tpl||0);
   // Add a download helper bar at the top of the print window
-  const downloadBar=`<style>@media print{#dlbar{display:none!important}}</style><div id="dlbar" style="position:fixed;top:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:9999;font-family:DM Sans,sans-serif;font-size:.82rem">
+  const downloadBar=`<style>@media print{#dlbar{display:none!important}}</style><div id="dlbar" style="position:fixed;top:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:9999;font-family:Arial,Helvetica,sans-serif;font-size:.82rem">
     <span>📄 ${inv.num} — ${inv.client} — LKR ${inv.amount.toLocaleString()}</span>
     <div style="display:flex;gap:.75rem">
       <button onclick="window.print()" style="background:#B8922A;color:#fff;border:none;padding:.45rem 1.25rem;cursor:pointer;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase">⬇ Download PDF</button>
@@ -1767,7 +1886,7 @@ window.emailInvoice = async function emailInvoice(num){
   const fmtM=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
   const sub=(inv.lines||[]).reduce((a,l)=>a+(l.total||0),0)||inv.amount;
 
-  // ── Path 1: EmailJS (if configured in Settings) ──
+  // ── Path 1: custom browser email service, if configured behind the scenes ──
   if(s.ejsKey&&s.ejsService&&s.ejsTemplate&&window.emailjs){
     if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
     const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1813,9 +1932,9 @@ window.emailInvoice = async function emailInvoice(num){
       await emailjs.send(s.ejsService, s.ejsTemplate, params, {publicKey:s.ejsKey});
       alert('✓ Invoice '+inv.num+' emailed to '+inv.cemail+'.');
     }catch(e){
-      console.error('EmailJS error:',e);
-      const reason=(e&&(e.text||e.message))||'Please re-check your EmailJS keys & template in Settings.';
-      alert('Could not send via EmailJS:\n\n'+reason);
+      console.error('Email service error:',e);
+      const reason=(e&&(e.text||e.message))||'Please contact support if this keeps happening.';
+      alert('Could not send the email:\n\n'+reason);
     }
     return;
   }
@@ -1838,8 +1957,8 @@ window.emailInvoice = async function emailInvoice(num){
     });
     const out=await res.json().catch(()=>({}));
     if(res.ok&&out.ok){alert('✓ Invoice '+inv.num+' emailed to '+inv.cemail+'.');}
-    else{alert('Could not send the email.\n\nTip: set up EmailJS in Settings for the easiest path, or set SMTP_USER / SMTP_PASS in Netlify.\n\n'+(out.error||''));}
-  }catch(e){console.error('emailInvoice error:',e);alert('Could not reach the email service. Set up EmailJS in Settings, or try again.');}
+    else{alert('Could not send the email. Please try again or contact support.\n\n'+(out.error||''));}
+  }catch(e){console.error('emailInvoice error:',e);alert('Could not reach the email service. Please try again or contact support.');}
 }
 
 window.waInvoice = function waInvoice(num){
@@ -1972,6 +2091,7 @@ window.emailSupplier = function emailSupplier(id){
 // ════════════════════════════════
 function init(){
   applySettings();
+  renderTrialStatus();
   // Date
   document.getElementById('top-date').textContent=today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   // Set today on modal date fields
@@ -2019,14 +2139,15 @@ window.exportReportPDF=function(){
   var cf=(document.getElementById('cf-report')||{}).innerHTML||'';
   var cat=(document.getElementById('cat-report-table')||{}).innerHTML||'';
   var biz=s.bizName||'Your Business';
-  var logo=s.logo?'<img src="'+s.logo+'" style="max-height:54px;max-width:180px;object-fit:contain;display:block;margin-bottom:.5rem">':'';
+  var logo=s.logo?'<img src="'+s.logo+'" style="max-height:88px;max-width:260px;object-fit:contain;display:block;margin-bottom:.65rem">':'';
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+biz+' P&L</title>'
-   +'<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">'
-   +'<style>*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}'
-   +'body{font-family:\'DM Sans\',Arial,sans-serif;color:#15110d;background:#fff}'
-   +'.page{max-width:820px;margin:0 auto;padding:3rem}'
+   +'<style>@page{size:A4;margin:0}'
+   +'*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}'
+   +'html,body{margin:0!important;padding:0!important}'
+   +'body{font-family:Arial,Helvetica,sans-serif;color:#15110d;background:#fff}'
+   +'.page{max-width:820px;margin:0 auto;padding:3rem;min-height:100vh}'
    +'.rhead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #B8922A;padding-bottom:1.4rem;margin-bottom:2rem}'
-   +'.rhead .biz{font-family:\'Cormorant Garamond\',Georgia,serif;font-size:1.8rem;font-weight:600}'
+   +'.rhead .biz{font-family:Georgia,\'Times New Roman\',serif;font-size:1.8rem;font-weight:600}'
    +'.rhead .sub{font-size:.78rem;color:#8a8378;margin-top:.2rem}'
    +'.rhead .ttl{text-align:right}.rhead .ttl h1{font-size:1.6rem;font-weight:700;letter-spacing:.04em}.rhead .ttl .per{font-size:.8rem;color:#B8922A;font-weight:600;margin-top:.2rem}'
    +'.cards{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.8rem}'
@@ -2037,12 +2158,12 @@ window.exportReportPDF=function(){
    +'table{width:100%;border-collapse:collapse;margin-top:.5rem}'
    +'th{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;text-align:left;padding:.7rem .8rem;background:#15110d;color:#fff}'
    +'th:nth-child(n+2),td:nth-child(n+2){text-align:right}td{padding:.65rem .8rem;border-bottom:1px solid #f0eee9;font-size:.85rem}'
-   +'.amount-neg{color:#c0392b}.sec-title{font-family:\'Cormorant Garamond\',serif;font-size:1.3rem;margin:1.6rem 0 .4rem}'
+   +'.amount-neg{color:#c0392b}.sec-title{font-family:Georgia,\'Times New Roman\',serif;font-size:1.3rem;margin:1.6rem 0 .4rem}'
    +'.powered{margin-top:2rem;padding-top:.85rem;border-top:1px solid #f3f1ec;text-align:center;font-size:.7rem;color:#b3ada3}'
    +'.powered b{color:#B8922A}'
-   +'@media print{#dlbar{display:none!important}}'
+   +'@media print{@page{size:A4;margin:0}#dlbar{display:none!important}html,body{margin:0!important;padding:0!important}}'
    +'</style></head><body>'
-   +'<div id="dlbar" style="position:sticky;top:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;font-size:.82rem">'
+   +'<div id="dlbar" style="position:sticky;top:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;font-family:Arial,Helvetica,sans-serif;font-size:.82rem">'
    +'<span>Profit &amp; Loss — '+pt+'</span><div style="display:flex;gap:.6rem">'
    +'<button onclick="window.print()" style="background:#B8922A;color:#fff;border:none;padding:.45rem 1.25rem;cursor:pointer;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase">Download PDF</button>'
    +'<button onclick="window.close()" style="background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.25);padding:.45rem 1rem;cursor:pointer;font-size:.78rem">Close</button></div></div>'
