@@ -1676,11 +1676,44 @@ window.emailInvoice = async function emailInvoice(num){
   // ── Path 1: EmailJS (if configured in Settings) ──
   if(s.ejsKey&&s.ejsService&&s.ejsTemplate&&window.emailjs){
     if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
+    const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const itemRows=(inv.lines&&inv.lines.length?inv.lines:[{desc:'Invoice total',qty:1,price:inv.amount,total:inv.amount}]).map(l=>
+      '<tr>'
+        +'<td style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;">'+esc(l.desc||'Invoice item')+'</td>'
+        +'<td align="right" style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;">'+cur+' '+fmtM(l.price||0)+'</td>'
+        +'<td align="center" style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;">'+(l.qty||1)+'</td>'
+        +'<td align="right" style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;font-weight:700;">'+cur+' '+fmtM(l.total!=null?l.total:((l.qty||1)*(l.price||0)))+'</td>'
+      +'</tr>'
+    ).join('');
+    const businessName=s.bizName||'Your Business';
+    const businessEmail=s.email||inv.cemail;
+    const businessPhone=s.phone||s.bizPhone||s.businessPhone||'';
+    const businessWebsite=s.website||s.businessWebsite||'';
+    const paymentBank=s.paymentBank||s.bankAccount||s.bank||'';
+    const terms=inv.terms||'Net 30';
+    const taxAmount=inv.vat||0;
     const params={
       to_email:inv.cemail, to_name:inv.client||'Customer',
-      from_name:s.bizName||'Your Business', reply_to:s.email||inv.cemail,
-      subject:'Invoice '+inv.num+' from '+(s.bizName||'Your Business')+' — '+cur+' '+fmtM(inv.amount),
-      message_html: buildInvoiceEmailHTML(inv)
+      from_name:businessName, reply_to:businessEmail,
+      subject:'Invoice '+inv.num+' from '+businessName+' — '+cur+' '+fmtM(inv.amount),
+      message_html: buildInvoiceEmailHTML(inv),
+      business_name:businessName,
+      business_address:s.addr||'',
+      business_phone:businessPhone,
+      business_website:businessWebsite,
+      client_name:inv.client||'Customer',
+      client_address:inv.caddr||'',
+      client_phone:inv.cphone||'',
+      invoice_no:inv.num||'',
+      invoice_date:fmtD(inv.date),
+      total_due:cur+' '+fmtM(inv.amount),
+      items_html:itemRows,
+      payment_bank:paymentBank,
+      terms:terms,
+      subtotal:cur+' '+fmtM(sub),
+      tax_amount:cur+' '+fmtM(taxAmount),
+      grand_total:cur+' '+fmtM(inv.amount),
+      signature_name:s.username||businessName
     };
     try{
       await emailjs.send(s.ejsService, s.ejsTemplate, params, {publicKey:s.ejsKey});
