@@ -17,13 +17,13 @@
   --green:#1a9e5c;--red:#c0392b;--amber:#b7770d;
   --font-d:'Cormorant Garamond',serif;--font-b:'DM Sans',sans-serif;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);overflow:hidden}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);overflow:auto}
 
 /* ── LAYOUT ── */
-.ob-shell{display:grid;grid-template-columns:320px 1fr;height:100vh}
+.ob-shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
 
 /* ── LEFT PANEL ── */
-.ob-left{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;padding:2.25rem;position:relative;overflow:hidden}
+.ob-left{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;padding:1.6rem;position:sticky;top:0;height:100vh;overflow:hidden}
 .ob-left::before{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(to top,rgba(184,146,42,.06),transparent);pointer-events:none}
 .ob-logo{font-family:var(--font-d);font-size:1.45rem;font-weight:300;color:var(--text);position:relative;z-index:1}
 .ob-logo span{color:var(--gold)}
@@ -48,8 +48,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .ob-progress-text{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 
 /* ── RIGHT PANEL ── */
-.ob-right{display:flex;align-items:center;justify-content:center;padding:2rem;overflow:hidden;background:var(--bg)}
-.ob-steps-wrap{width:100%;max-width:580px;position:relative}
+.ob-right{display:flex;align-items:flex-start;justify-content:center;padding:1.75rem 1.5rem;overflow:visible;background:var(--bg)}
+.ob-steps-wrap{width:100%;max-width:640px;position:relative}
 
 /* Step cards */
 .ob-card{position:absolute;width:100%;opacity:0;transform:translateX(32px);pointer-events:none;transition:all .4s cubic-bezier(.25,.8,.25,1)}
@@ -58,9 +58,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
 /* Typography */
 .ob-eyebrow{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;font-weight:600}
-.ob-title{font-family:var(--font-d);font-size:2.2rem;font-weight:300;line-height:1.2;margin-bottom:.4rem;color:var(--text)}
+.ob-title{font-family:var(--font-d);font-size:1.9rem;font-weight:300;line-height:1.18;margin-bottom:.35rem;color:var(--text)}
 .ob-title em{color:var(--gold);font-style:italic}
-.ob-sub{font-size:.85rem;color:var(--muted);line-height:1.75;margin-bottom:1.75rem}
+.ob-sub{font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:1.25rem}
 .ob-rule{width:44px;height:2px;background:linear-gradient(90deg,#1a1714,var(--gold));margin-bottom:1.25rem}
 
 /* Form elements */
@@ -68,6 +68,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .ob-field label{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:500}
 .ob-input{background:#fff;border:1px solid var(--border2);padding:.7rem 1rem;color:var(--text);font-family:var(--font-b);font-size:.87rem;outline:none;transition:all .25s;width:100%}
 .ob-input:focus{border-color:#1a1714;box-shadow:0 0 0 3px rgba(26,23,20,.06)}
+.ob-input.has-error{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.08)}
 .ob-input::placeholder{color:var(--dim)}
 .ob-input-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
 .ob-input-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
@@ -84,6 +85,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .ob-choice-label{font-size:.83rem;font-weight:500;color:var(--text);margin-bottom:.1rem}
 .ob-choice-desc{font-size:.73rem;color:var(--muted);line-height:1.4}
 .ob-choice-icon{font-size:1.3rem;flex-shrink:0}
+
+/* Setup checklist */
+.setup-checklist{display:grid;gap:.7rem;margin:1rem 0 1.25rem}
+.setup-task{display:grid;grid-template-columns:auto 1fr;gap:.75rem;align-items:flex-start;border:1px solid var(--border);background:#fff;padding:.9rem 1rem;cursor:pointer;transition:all .2s}
+.setup-task:hover{background:var(--bg2);border-color:var(--border2)}
+.setup-task input{width:18px;height:18px;margin-top:.15rem;accent-color:#1a1714}
+.setup-task-title{font-size:.86rem;font-weight:600;color:var(--text);margin-bottom:.12rem}
+.setup-task-copy{font-size:.74rem;color:var(--muted);line-height:1.5}
+.setup-task-chip{display:inline-block;margin-top:.45rem;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border2);padding:.18rem .5rem}
+.ob-app-error{border:1px solid rgba(192,57,43,.28);border-left:3px solid var(--red);background:rgba(192,57,43,.06);color:#8a251d;padding:.75rem .9rem;margin:0 0 1rem;font-size:.78rem;line-height:1.5}
+.ob-app-ok{border:1px solid rgba(26,158,92,.25);border-left:3px solid var(--green);background:rgba(26,158,92,.06);color:#11643b;padding:.75rem .9rem;margin:0 0 1rem;font-size:.78rem;line-height:1.5}
 
 /* Tier cards */
 .tier-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:1.25rem}
@@ -203,7 +215,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .launch-choice .btn-next,.launch-choice .btn-back{width:100%;padding:.9rem .75rem}
 
 /* Scrollable step content */
-.ob-card-scroll{max-height:calc(100vh - 140px);overflow-y:auto;padding-right:4px}
+.ob-card-scroll{max-height:none;overflow:visible;padding-right:0}
 
 @media(max-width:860px){
   .ob-shell{grid-template-columns:1fr}
@@ -255,19 +267,19 @@ firebase.initializeApp(firebaseConfig);
       </div>
       <div class="ob-step-item" data-step="3">
         <div class="ob-step-dot">3</div>
-        <div><div class="ob-step-title">Your Experience</div><div class="ob-step-sub">Personalise setup</div></div>
+        <div><div class="ob-step-title">Setup Checklist</div><div class="ob-step-sub">Choose optional add-ons</div></div>
       </div>
       <div class="ob-step-item" data-step="4">
         <div class="ob-step-dot">4</div>
-        <div><div class="ob-step-title">Business Profile</div><div class="ob-step-sub">Logo, address & templates</div></div>
+        <div><div class="ob-step-title">Business Profile</div><div class="ob-step-sub">Optional invoice details</div></div>
       </div>
       <div class="ob-step-item" data-step="5">
         <div class="ob-step-dot">5</div>
-        <div><div class="ob-step-title">Team & Payroll</div><div class="ob-step-sub">Staff, EPF/ETF & salary dates</div></div>
+        <div><div class="ob-step-title">Team & Payroll</div><div class="ob-step-sub">Optional staff setup</div></div>
       </div>
       <div class="ob-step-item" data-step="6">
         <div class="ob-step-dot">6</div>
-        <div><div class="ob-step-title">Notifications</div><div class="ob-step-sub">Email, SMS & WhatsApp</div></div>
+        <div><div class="ob-step-title">Notifications</div><div class="ob-step-sub">Optional reminders</div></div>
       </div>
       <div class="ob-step-item" data-step="7">
         <div class="ob-step-dot">7</div>
@@ -287,13 +299,13 @@ firebase.initializeApp(firebaseConfig);
 
       <!-- ═══ STEP 1: SIGNUP ═══ -->
       <div class="ob-card active" id="step-1">
-        <p class="ob-eyebrow">Welcome to CeylonryLabs.io</p>
-        <h1 class="ob-title">Let's get you <em>set up</em>.</h1>
+        <p class="ob-eyebrow">15-day free trial</p>
+        <h1 class="ob-title">Create your <em>account</em>.</h1>
         <div class="ob-rule"></div>
-        <p class="ob-sub">Create your account to access the full Cashflow System. Takes under 3 minutes.</p>
+        <p class="ob-sub">Only the basics are required. You can add business profile, payroll, and notification details now or skip them.</p>
         <div class="ob-input-row">
-          <div class="ob-field"><label>First Name *</label><input class="ob-input" id="s1-fname" placeholder="Kasun"></div>
-          <div class="ob-field"><label>Last Name *</label><input class="ob-input" id="s1-lname" placeholder="Perera"></div>
+          <div class="ob-field"><label>First Name *</label><input class="ob-input" id="s1-fname" placeholder="Your first name"></div>
+          <div class="ob-field"><label>Last Name *</label><input class="ob-input" id="s1-lname" placeholder="Your last name"></div>
         </div>
         <div class="ob-field"><label>Email Address *</label><input class="ob-input" type="email" id="s1-email" placeholder="you@yourbusiness.com"></div>
         <div class="ob-field"><label>Phone Number</label><input class="ob-input" type="tel" id="s1-phone" placeholder="+94 77 000 0000"></div>
@@ -306,11 +318,11 @@ firebase.initializeApp(firebaseConfig);
 
       <!-- ═══ STEP 2: BUSINESS ═══ -->
       <div class="ob-card" id="step-2">
-        <p class="ob-eyebrow">Step 2 of 7</p>
+        <p class="ob-eyebrow">Business basics</p>
         <h1 class="ob-title">Tell us about your <em>business</em>.</h1>
         <div class="ob-rule"></div>
         <div class="ob-input-row">
-          <div class="ob-field"><label>Business Name *</label><input class="ob-input" id="s2-bizname" placeholder="The Spice Garden"></div>
+          <div class="ob-field"><label>Business Name *</label><input class="ob-input" id="s2-bizname" placeholder="Your business name"></div>
           <div class="ob-field"><label>Industry *</label>
             <select class="ob-input ob-select" id="s2-industry">
               <option value="">Select...</option>
@@ -322,19 +334,19 @@ firebase.initializeApp(firebaseConfig);
             </select>
           </div>
         </div>
-        <div class="ob-field" style="margin-bottom:.6rem"><label>Your Purchased Plan *</label></div>
+        <div class="ob-field" style="margin-bottom:.6rem"><label>Free Trial Plan *</label></div>
         <div class="tier-cards">
           <div class="tier-card" onclick="window.selectTier('starter',this)">
-            <div class="tier-name">Starter</div><div class="tier-price">LKR 5,500/mo</div>
+            <div class="tier-name">Starter</div><div class="tier-price">15-day trial</div>
             <div class="tier-features">• Dashboard & Cashflow<br>• Invoices (3 templates)<br>• Up to 2 users</div>
           </div>
           <div class="tier-card" onclick="window.selectTier('growth',this)">
             <div class="tier-badge">Most Popular</div>
-            <div class="tier-name">Growth</div><div class="tier-price">LKR 12,500/mo</div>
+            <div class="tier-name">Growth</div><div class="tier-price">15-day trial</div>
             <div class="tier-features">• Everything in Starter<br>• Payroll & Debt (10 templates)<br>• Up to 8 users</div>
           </div>
           <div class="tier-card" onclick="window.selectTier('premium',this)">
-            <div class="tier-name">Premium</div><div class="tier-price">LKR 28,500/mo</div>
+            <div class="tier-name">Premium</div><div class="tier-price">15-day trial</div>
             <div class="tier-features">• Everything in Growth<br>• AI & Multi-branch (30 templates)<br>• Unlimited users</div>
           </div>
         </div>
@@ -348,7 +360,7 @@ firebase.initializeApp(firebaseConfig);
         <div style="background:var(--bg3);border:1px solid var(--border);padding:1rem;margin-bottom:1rem">
           <div class="notif-section-title" style="margin-bottom:.8rem">First Client Optional</div>
           <div class="ob-input-row">
-            <div class="ob-field"><label>Client Name</label><input class="ob-input" id="s2-client-name" placeholder="Nadeem Trading"></div>
+            <div class="ob-field"><label>Client Name</label><input class="ob-input" id="s2-client-name" placeholder="Client name"></div>
             <div class="ob-field"><label>Client Phone</label><input class="ob-input" id="s2-client-phone" placeholder="+94 77 000 0000"></div>
           </div>
           <div class="ob-field" style="margin-bottom:0"><label>Client Email</label><input class="ob-input" type="email" id="s2-client-email" placeholder="accounts@client.lk"></div>
@@ -356,39 +368,37 @@ firebase.initializeApp(firebaseConfig);
         <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(2)">← Back</button><button class="btn-next" onclick="window.nextStep(2)">Continue →</button></div>
       </div>
 
-      <!-- ═══ STEP 3: EXPERIENCE ═══ -->
+      <!-- ═══ STEP 3: SETUP CHECKLIST ═══ -->
       <div class="ob-card" id="step-3">
-        <p class="ob-eyebrow">Step 3 of 7</p>
-        <h1 class="ob-title">How comfortable are you with <em>financial management</em>?</h1>
+        <p class="ob-eyebrow">Optional setup</p>
+        <h1 class="ob-title">Choose what to add <em>now</em>.</h1>
         <div class="ob-rule"></div>
-        <p class="ob-sub">We'll personalise your system setup based on your answer. No wrong choice.</p>
-        <div class="ob-choices" id="exp-cards">
-          <button class="ob-choice" onclick="window.selectExp('beginner',this)">
-            <span class="ob-choice-icon">🌱</span>
-            <div><div class="ob-choice-label">Just getting started</div><div class="ob-choice-desc">New to financial tracking — I'd love a guided walkthrough of every module before starting.</div></div>
-          </button>
-          <button class="ob-choice" onclick="window.selectExp('intermediate',this)">
-            <span class="ob-choice-icon">📈</span>
-            <div><div class="ob-choice-label">I know the basics</div><div class="ob-choice-desc">Used spreadsheets or simple tools before. Show me the key features then I'll explore.</div></div>
-          </button>
-          <button class="ob-choice" onclick="window.selectExp('advanced',this)">
-            <span class="ob-choice-icon">🎯</span>
-            <div><div class="ob-choice-label">I'm experienced</div><div class="ob-choice-desc">I've used financial software. Just set up my account and take me to the dashboard.</div></div>
-          </button>
+        <p class="ob-sub">The trial can start with only account and business basics. Tick the sections you want to complete now.</p>
+        <div class="setup-checklist">
+          <label class="setup-task">
+            <input type="checkbox" id="task-profile" checked onchange="window.syncSetupTasks()">
+            <div><div class="setup-task-title">Business Profile</div><div class="setup-task-copy">Logo, invoice name, email, address, VAT/tax number, and invoice template.</div><span class="setup-task-chip">Recommended</span></div>
+          </label>
+          <label class="setup-task">
+            <input type="checkbox" id="task-payroll" onchange="window.syncSetupTasks()">
+            <div><div class="setup-task-title">Team & Payroll</div><div class="setup-task-copy">Staff names, roles, salary dates, and Sri Lanka EPF/ETF payroll calculations.</div><span class="setup-task-chip">Optional</span></div>
+          </label>
+          <label class="setup-task">
+            <input type="checkbox" id="task-notifications" onchange="window.syncSetupTasks()">
+            <div><div class="setup-task-title">Notifications</div><div class="setup-task-copy">Choose email, SMS, or WhatsApp reminders for invoices, payroll, and reports.</div><span class="setup-task-chip">Optional</span></div>
+          </label>
         </div>
-        <div id="tour-note" style="display:none;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--gold);padding:.9rem 1.1rem;margin-bottom:1rem">
-          <div style="font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.3rem;font-weight:600">What this means for you</div>
-          <div id="tour-note-text" style="font-size:.81rem;color:var(--muted);line-height:1.65"></div>
-        </div>
+        <div class="ob-app-ok">You can skip every optional section and still start the free trial immediately.</div>
         <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(3)">← Back</button><button class="btn-next" onclick="window.nextStep(3)">Continue →</button></div>
       </div>
 
       <!-- ═══ STEP 4: BUSINESS PROFILE ═══ -->
       <div class="ob-card" id="step-4">
         <div class="ob-card-scroll">
-        <p class="ob-eyebrow">Step 4 of 7</p>
-        <h1 class="ob-title">Your <em>invoice identity</em>.</h1>
+        <p class="ob-eyebrow">Optional · Business profile</p>
+        <h1 class="ob-title">Invoice identity.</h1>
         <div class="ob-rule"></div>
+        <p class="ob-sub">Add only what you have ready. Missing details can be completed later in Settings.</p>
         <div class="logo-upload-area" onclick="document.getElementById('logo-file').click()">
           <img class="logo-preview" id="logo-preview-img" style="display:none" src="" alt="Logo">
           <div id="logo-placeholder"><div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
@@ -398,10 +408,10 @@ firebase.initializeApp(firebaseConfig);
           <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewLogo(this)">
         </div>
         <div class="ob-input-row">
-          <div class="ob-field"><label>Business Name on Invoices *</label><input class="ob-input" id="s4-bizname" placeholder="The Spice Garden Restaurant"></div>
+          <div class="ob-field"><label>Business Name on Invoices</label><input class="ob-input" id="s4-bizname" placeholder="Your business name"></div>
           <div class="ob-field"><label>Business Reg. No.</label><input class="ob-input" id="s4-regno" placeholder="PV 00000 (optional)"></div>
         </div>
-        <div class="ob-field"><label>Business Address *</label><input class="ob-input" id="s4-addr" placeholder="42 Galle Road, Colombo 03, Sri Lanka"></div>
+        <div class="ob-field"><label>Business Address</label><input class="ob-input" id="s4-addr" placeholder="Business address"></div>
         <div class="ob-input-row">
           <div class="ob-field"><label>Invoice Email</label><input class="ob-input" type="email" id="s4-email" placeholder="invoices@yourbusiness.com"></div>
           <div class="ob-field"><label>VAT / Tax Number</label><input class="ob-input" id="s4-vat" placeholder="Optional"></div>
@@ -410,16 +420,22 @@ firebase.initializeApp(firebaseConfig);
         <div class="ob-field" style="margin-top:.75rem"><label id="tpl-label">Invoice Template</label></div>
         <div class="tpl-grid-wrap"><div class="tpl-grid" id="tpl-grid"></div></div>
         </div>
-        <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(4)">← Back</button><button class="btn-next" onclick="window.nextStep(4)">Continue →</button></div>
+        <div class="ob-nav">
+          <button class="btn-back" onclick="window.prevStep(4)">← Back</button>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <button class="btn-skip" onclick="window.skipOptional(4)">Skip</button>
+            <button class="btn-next" onclick="window.nextStep(4)">Continue →</button>
+          </div>
+        </div>
       </div>
 
       <!-- ═══ STEP 5: TEAM & PAYROLL ═══ -->
       <div class="ob-card" id="step-5">
         <div class="ob-card-scroll">
-        <p class="ob-eyebrow">Step 5 of 7</p>
-        <h1 class="ob-title">Team & <em>payroll</em> setup.</h1>
+        <p class="ob-eyebrow">Optional · Team & payroll</p>
+        <h1 class="ob-title">Team & payroll.</h1>
         <div class="ob-rule"></div>
-        <p class="ob-sub">Add your staff for payroll tracking. Sri Lanka EPF & ETF contributions are calculated automatically.</p>
+        <p class="ob-sub">Add staff only if you want payroll ready from day one. Sri Lanka EPF & ETF contributions are calculated automatically.</p>
 
         <!-- EPF/ETF Legend -->
         <div class="epf-legend">
@@ -431,7 +447,7 @@ firebase.initializeApp(firebaseConfig);
 
         <div class="ob-input-row" style="margin-bottom:.85rem">
           <div class="ob-field"><label>Number of Employees</label>
-            <input class="ob-input" type="number" id="s5-empcount" placeholder="e.g. 5" min="0" max="200" oninput="updateEmpRows(this.value)">
+            <input class="ob-input" type="number" id="s5-empcount" placeholder="0" min="0" max="20" oninput="updateEmpRows(this.value)">
           </div>
           <div class="ob-field"><label>Payroll Frequency</label>
             <select class="ob-input ob-select" id="s5-payfreq"><option>Monthly</option><option>Bi-weekly</option><option>Weekly</option></select>
@@ -462,7 +478,7 @@ firebase.initializeApp(firebaseConfig);
         <div class="ob-nav">
           <button class="btn-back" onclick="window.prevStep(5)">← Back</button>
           <div style="display:flex;gap:.6rem;align-items:center">
-            <button class="btn-skip" onclick="window.nextStep(5,true)">Skip for now</button>
+            <button class="btn-skip" onclick="window.skipOptional(5)">Skip</button>
             <button class="btn-next" onclick="window.nextStep(5)">Continue →</button>
           </div>
         </div>
@@ -471,10 +487,10 @@ firebase.initializeApp(firebaseConfig);
       <!-- ═══ STEP 6: NOTIFICATIONS ═══ -->
       <div class="ob-card" id="step-6">
         <div class="ob-card-scroll">
-        <p class="ob-eyebrow">Step 6 of 7</p>
-        <h1 class="ob-title">Stay <em>notified</em>.</h1>
+        <p class="ob-eyebrow">Optional · Notifications</p>
+        <h1 class="ob-title">Notifications.</h1>
         <div class="ob-rule"></div>
-        <p class="ob-sub">Choose how CeylonryLabs alerts you about overdue invoices, payroll, and cash updates. You can change these anytime in settings.</p>
+        <p class="ob-sub">Choose alert channels only if you want reminders active immediately. You can change these anytime in Settings.</p>
 
         <div class="notif-section-title">Alert Channels</div>
         <div class="channel-cards">
@@ -563,7 +579,10 @@ firebase.initializeApp(firebaseConfig);
         </div>
         <div class="ob-nav">
           <button class="btn-back" onclick="window.prevStep(6)">← Back</button>
-          <button class="btn-next" onclick="window.nextStep(6)">Finish Setup →</button>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <button class="btn-skip" onclick="window.skipOptional(6)">Skip</button>
+            <button class="btn-next" onclick="window.nextStep(6)">Finish Setup →</button>
+          </div>
         </div>
       </div>
 
@@ -574,14 +593,13 @@ firebase.initializeApp(firebaseConfig);
           <p class="ob-eyebrow" style="text-align:center">Setup Complete</p>
           <h1 class="ob-title" style="text-align:center;font-size:2rem">You're <em>ready</em> to go.</h1>
           <div class="ob-rule" style="margin:1rem auto"></div>
-          <p class="ob-sub" style="text-align:center">Your CeylonryLabs.io account is fully configured. Here's what was set up:</p>
+          <p class="ob-sub" style="text-align:center">Your free trial is ready. Here is what will be saved:</p>
           <div class="ob-feature-list" id="success-list">
             <div class="ob-feature-item">Account created & securely saved</div>
-            <div class="ob-feature-item">Business profile & logo configured</div>
+            <div class="ob-feature-item" id="fl-profile">Business basics saved</div>
             <div class="ob-feature-item" id="fl-template">Invoice template selected</div>
             <div class="ob-feature-item" id="fl-payroll" style="display:none">Payroll set up with EPF/ETF calculations</div>
-            <div class="ob-feature-item" id="fl-notif">Notifications configured</div>
-            <div class="ob-feature-item" id="fl-tour" style="display:none">Guided tour queued for first login</div>
+            <div class="ob-feature-item" id="fl-notif" style="display:none">Notifications configured</div>
           </div>
           <div class="summary-box">
             <div class="summary-box-label">Account Summary</div>
@@ -592,11 +610,10 @@ firebase.initializeApp(firebaseConfig);
             <div class="tour-card"><div class="tour-card-icon">🧾</div><div class="tour-card-title">Track Expenses</div><div class="tour-card-text">Capture rent, utilities, salaries, supplies, marketing, and transport costs.</div></div>
             <div class="tour-card"><div class="tour-card-icon">📨</div><div class="tour-card-title">Send Invoices</div><div class="tour-card-text">Create branded LKR invoices with client details and payment status.</div></div>
           </div>
-          <div class="launch-choice">
-            <button class="btn-next" id="launch-demo-btn" onclick="window.launchDashboard(true)">Load Demo Data →</button>
-            <button class="btn-back" id="launch-btn" onclick="window.launchDashboard(false)">Start Fresh →</button>
+          <div class="launch-choice" style="grid-template-columns:1fr">
+            <button class="btn-next" id="launch-btn" onclick="window.launchDashboard()">Start Free Trial →</button>
           </div>
-          <p style="font-size:.7rem;color:var(--dim);margin-top:.75rem;text-align:center">💻 Dashboard is optimised for laptop & desktop. For best experience, use a computer.</p>
+          <p style="font-size:.7rem;color:var(--dim);margin-top:.75rem;text-align:center">Works best on laptop or desktop at normal browser zoom.</p>
         </div>
       </div>
 
@@ -610,9 +627,10 @@ const totalSteps = 7;
 const state = {
   fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',
   bizName:'',industry:'',tier:'',useCases:[],firstClient:null,expLevel:'',
+  setupTasks:{profile:true,payroll:false,notifications:false},
   logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',footer:'',selectedTemplate:0,
   empCount:0,employees:[],payFreq:'Monthly',
-  channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:'',loadDemoData:false
+  channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:''
 };
 
 // ── TEMPLATES ──
@@ -652,14 +670,47 @@ window.selectTpl = function selectTpl(idx,el){state.selectedTemplate=idx;documen
 
 // ── NAVIGATION ──
 window.nextStep = function nextStep(from,skip=false){
-  if(!validateStep(from)) return;
+  clearStepErrors();
+  if(!skip && !validateStep(from)) return;
   if(!skip) saveStepData(from);
-  const next=from+1;
+  const next=getNextStep(from);
   if(next>totalSteps) return;
   goToStep(next);
   if(next===totalSteps) buildSuccess();
 }
-window.prevStep = function prevStep(from){if(from>1) goToStep(from-1);}
+window.prevStep = function prevStep(from){
+  clearStepErrors();
+  const prev=getPrevStep(from);
+  if(prev>=1) goToStep(prev);
+}
+window.skipOptional = function skipOptional(step){
+  const key=stepTaskKey(step);
+  if(key) {
+    state.setupTasks[key]=false;
+    const box=document.getElementById('task-'+key);
+    if(box) box.checked=false;
+  }
+  window.nextStep(step,true);
+}
+function stepTaskKey(step){
+  return step===4?'profile':step===5?'payroll':step===6?'notifications':'';
+}
+function isStepEnabled(step){
+  const key=stepTaskKey(step);
+  return key ? state.setupTasks[key] !== false : true;
+}
+function getNextStep(from){
+  for(let s=from+1;s<=totalSteps;s++){
+    if(isStepEnabled(s)) return s;
+  }
+  return totalSteps;
+}
+function getPrevStep(from){
+  for(let s=from-1;s>=1;s--){
+    if(isStepEnabled(s)) return s;
+  }
+  return 1;
+}
 function goToStep(step){
   const cur=document.getElementById(`step-${currentStep}`);
   if(cur){cur.classList.add('exiting');setTimeout(()=>cur.classList.remove('active','exiting'),420);}
@@ -680,24 +731,81 @@ function updateNav(){
   document.getElementById('ob-progress-text').textContent=`Step ${currentStep} of ${totalSteps}`;
 }
 
+function clearStepErrors(){
+  document.querySelectorAll('.ob-app-error').forEach(el=>el.remove());
+  document.querySelectorAll('.has-error').forEach(el=>el.classList.remove('has-error'));
+}
+function showStepError(step,message,fieldIds){
+  clearStepErrors();
+  (fieldIds||[]).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.add('has-error');
+  });
+  const card=document.getElementById('step-'+step);
+  if(!card) return false;
+  const err=document.createElement('div');
+  err.className='ob-app-error';
+  err.textContent=message;
+  const scroll=card.querySelector('.ob-card-scroll');
+  const anchor=(scroll||card).querySelector('.ob-rule');
+  if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(err,anchor.nextSibling);
+  else (scroll||card).insertBefore(err,(scroll||card).firstChild);
+  err.scrollIntoView({block:'center',behavior:'smooth'});
+  return false;
+}
+function isEmail(v){return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
+function isPhone(v){return !v || /^[+0-9 ()-]{7,20}$/.test(v);}
+
 // ── VALIDATION ──
 function validateStep(step){
   if(step===1){
-    if(!document.getElementById('s1-fname').value.trim()||!document.getElementById('s1-email').value.trim()){alert('Please enter your name and email.');return false;}
+    if(!document.getElementById('s1-fname').value.trim()) return showStepError(1,'Please enter your first name.',['s1-fname']);
+    if(!document.getElementById('s1-email').value.trim()) return showStepError(1,'Please enter your email address.',['s1-email']);
+    if(!isEmail(document.getElementById('s1-email').value.trim())) return showStepError(1,'Please enter a valid email address.',['s1-email']);
+    if(!isPhone(document.getElementById('s1-phone').value.trim())) return showStepError(1,'Please enter a valid phone number or leave it blank.',['s1-phone']);
     if(!state.googleAuth){
       const p=document.getElementById('s1-pass').value;
-      if(p.length<8){alert('Password must be at least 8 characters.');return false;}
-      if(p!==document.getElementById('s1-pass2').value){alert('Passwords do not match.');return false;}
+      if(p.length<8) return showStepError(1,'Password must be at least 8 characters.',['s1-pass']);
+      if(p!==document.getElementById('s1-pass2').value) return showStepError(1,'Passwords do not match.',['s1-pass','s1-pass2']);
     }
   }
   if(step===2){
-    if(!document.getElementById('s2-bizname').value.trim()){alert('Please enter your business name.');return false;}
-    if(!state.tier){alert('Please select your plan.');return false;}
+    if(!document.getElementById('s2-bizname').value.trim()) return showStepError(2,'Please enter your business name.',['s2-bizname']);
+    if(!state.tier) return showStepError(2,'Please select the plan you want to trial.');
+    if(!isEmail(document.getElementById('s2-client-email').value.trim())) return showStepError(2,'Please enter a valid first client email, or leave it blank.',['s2-client-email']);
+    if(!isPhone(document.getElementById('s2-client-phone').value.trim())) return showStepError(2,'Please enter a valid first client phone number, or leave it blank.',['s2-client-phone']);
   }
-  if(step===3){if(!state.expLevel){alert('Please select your experience level.');return false;}}
   if(step===4){
-    if(!document.getElementById('s4-bizname').value.trim()){alert('Please enter the business name for invoices.');return false;}
-    if(!document.getElementById('s4-addr').value.trim()){alert('Please enter your business address.');return false;}
+    const biz=document.getElementById('s4-bizname').value.trim();
+    const invEmail=document.getElementById('s4-email').value.trim();
+    const footer=document.getElementById('s4-footer').value.trim();
+    if(state.setupTasks.profile && !biz) return showStepError(4,'Please enter the invoice business name, or use Skip if you want to complete this later.',['s4-bizname']);
+    if(!isEmail(invEmail)) return showStepError(4,'Please enter a valid invoice email, or leave it blank.',['s4-email']);
+    if(footer.length>180) return showStepError(4,'Please keep the invoice footer under 180 characters.',['s4-footer']);
+  }
+  if(step===5){
+    if(!state.setupTasks.payroll) return true;
+    const count=parseInt(document.getElementById('s5-empcount').value||'0',10);
+    if(count<1) return showStepError(5,'Enter at least one employee, or use Skip if payroll should be completed later.',['s5-empcount']);
+    if(count>20) return showStepError(5,'Please add up to 20 employees during onboarding. You can add more later in the app.',['s5-empcount']);
+    const rows=[...document.querySelectorAll('#emp-tbody tr')];
+    for(let i=0;i<rows.length;i++){
+      const cols=rows[i].querySelectorAll('input,select');
+      const name=(cols[0]?.value||'').trim();
+      const salary=parseFloat((cols[2]?.value||'').replace(/,/g,''))||0;
+      if(!name) return showStepError(5,'Please enter a full name for every payroll row, or remove empty rows.');
+      if(salary<=0) return showStepError(5,'Please enter a gross salary above 0 for every staff member.');
+    }
+  }
+  if(step===6){
+    if(!state.setupTasks.notifications) return true;
+    if(selectedChannels.length===0) return showStepError(6,'Choose at least one notification channel, or use Skip if reminders should be completed later.');
+    if(selectedChannels.includes('email')&&!document.getElementById('notif-email').value.trim()) return showStepError(6,'Please enter the notification email address.',['notif-email']);
+    if(!isEmail(document.getElementById('notif-email').value.trim())) return showStepError(6,'Please enter a valid notification email address.',['notif-email']);
+    if(selectedChannels.includes('sms')&&!document.getElementById('notif-sms').value.trim()) return showStepError(6,'Please enter the SMS phone number.',['notif-sms']);
+    if(!isPhone(document.getElementById('notif-sms').value.trim())) return showStepError(6,'Please enter a valid SMS phone number.',['notif-sms']);
+    if(selectedChannels.includes('whatsapp')&&!document.getElementById('notif-wa').value.trim()) return showStepError(6,'Please enter the WhatsApp phone number.',['notif-wa']);
+    if(!isPhone(document.getElementById('notif-wa').value.trim())) return showStepError(6,'Please enter a valid WhatsApp phone number.',['notif-wa']);
   }
   return true;
 }
@@ -721,6 +829,7 @@ function saveStepData(step){
     }:null;
     const inv=document.getElementById('s4-bizname');if(inv&&!inv.value) inv.value=state.bizName;
   }
+  if(step===3){window.syncSetupTasks();}
   if(step===4){state.invoiceBiz=document.getElementById('s4-bizname').value.trim();state.regno=document.getElementById('s4-regno').value;state.addr=document.getElementById('s4-addr').value.trim();state.invEmail=document.getElementById('s4-email').value;state.vat=document.getElementById('s4-vat').value;state.footer=document.getElementById('s4-footer').value;}
   if(step===5){
     state.payFreq=document.getElementById('s5-payfreq').value;
@@ -747,6 +856,13 @@ function saveStepData(step){
 
 // ── CHOICES ──
 window.toggleChoice = function toggleChoice(el){el.classList.toggle('selected');}
+window.syncSetupTasks = function syncSetupTasks(){
+  state.setupTasks = {
+    profile: !!document.getElementById('task-profile')?.checked,
+    payroll: !!document.getElementById('task-payroll')?.checked,
+    notifications: !!document.getElementById('task-notifications')?.checked
+  };
+}
 window.selectTier = function selectTier(tier,el){
   state.tier=tier;
   document.querySelectorAll('.tier-card').forEach(c=>c.classList.remove('selected'));
@@ -766,6 +882,11 @@ window.selectExp = function selectExp(level,el){
 // ── LOGO ──
 function previewLogo(input){
   if(!input.files||!input.files[0]) return;
+  if(input.files[0].size > 2 * 1024 * 1024){
+    input.value='';
+    showStepError(4,'Logo file is too large. Please upload a PNG or JPG under 2MB.',['logo-file']);
+    return;
+  }
   const reader=new FileReader();
   reader.onload=e=>{
     const img=document.getElementById('logo-preview-img');
@@ -817,10 +938,15 @@ function updateEmpRows(count){
   const wrap=document.getElementById('emp-table-wrap');
   const msg=document.getElementById('no-emp-msg');
   if(n<=0){wrap.style.display='none';msg.style.display='block';return;}
+  if(n>20){
+    document.getElementById('s5-empcount').value=20;
+    showStepError(5,'You can add up to 20 employees during onboarding. More can be added later in the app.',['s5-empcount']);
+  }
   wrap.style.display='block';msg.style.display='none';
   const tbody=document.getElementById('emp-tbody');
-  while(tbody.children.length<Math.min(n,20)) addEmpRow();
-  while(tbody.children.length>n) tbody.removeChild(tbody.lastChild);
+  const target=Math.min(n,20);
+  while(tbody.children.length<target) addEmpRow();
+  while(tbody.children.length>target) tbody.removeChild(tbody.lastChild);
 }
 
 // ── NOTIFICATIONS ──
@@ -846,84 +972,13 @@ function buildSuccess(){
     ['Plan',tierLabels[state.tier]||state.tier],
     ['Invoice Template',tplName],
     ['First Client',state.firstClient?state.firstClient.name:'Skipped'],
-    ['Payroll Frequency',state.payFreq],
+    ['Payroll Frequency',state.employees.length>0?state.payFreq:'Not set up'],
     ['Staff',state.employees.length>0?`${state.employees.length} employees configured`:'Not set up'],
     ['Notifications',selectedChannels.length>0?selectedChannels.join(', ')+' enabled':'None selected'],
   ];
   document.getElementById('account-summary').innerHTML=rows.map(r=>`<div class="summary-row"><strong>${r[0]}</strong>${r[1]}</div>`).join('');
   if(state.employees.length>0) document.getElementById('fl-payroll').style.display='flex';
-  if(state.expLevel==='beginner'||state.expLevel==='intermediate') document.getElementById('fl-tour').style.display='flex';
-}
-
-function daysAgo(days){
-  var d=new Date();
-  d.setDate(d.getDate()-days);
-  return d.toISOString().split('T')[0];
-}
-
-function daysFromNow(days){
-  var d=new Date();
-  d.setDate(d.getDate()+days);
-  return d.toISOString().split('T')[0];
-}
-
-function makeDemoData(){
-  var demoClients=[
-    {id:101,name:'Nadeem Trading',biz:'Nadeem Trading',phone:'+94771234567',email:'accounts@nadeemtrading.lk',addr:'Colombo',notes:'Demo client'},
-    {id:102,name:'Silva Enterprises',biz:'Silva Enterprises',phone:'+94772345678',email:'finance@silvaenterprises.lk',addr:'Kandy',notes:'Demo client'},
-    {id:103,name:'Perera & Sons',biz:'Perera & Sons',phone:'+94773456789',email:'hello@pereraandsons.lk',addr:'Galle',notes:'Demo client'},
-    {id:104,name:'Fatima Boutique',biz:'Fatima Boutique',phone:'+94774567890',email:'fatima@boutique.lk',addr:'Negombo',notes:'Demo client'},
-    {id:105,name:'Lanka Fresh Foods',biz:'Lanka Fresh Foods',phone:'+94775678901',email:'orders@lankafresh.lk',addr:'Colombo',notes:'Demo client'}
-  ];
-  if(state.firstClient && !demoClients.some(function(c){return c.email===state.firstClient.email || c.name===state.firstClient.name;})){
-    demoClients.unshift(state.firstClient);
-  }
-  var incomeAmounts=[45000,78000,125000,32000,98000,180000,67000,54000,143000,88000,25000,112000,76000,135000,59000];
-  var transactions=incomeAmounts.map(function(amount,i){
-    var client=demoClients[i%demoClients.length];
-    var cats=['Sales','Service Fee','Advance Payment'];
-    return {id:Date.now()+i,date:daysAgo(86-(i*5)),desc:client.name+' '+cats[i%cats.length],type:'in',amount:amount,cat:cats[i%cats.length],ref:'DEMO-IN-'+(1001+i)};
-  });
-  var expenseCats=['Rent','Utilities','Salaries','Supplies','Marketing','Transport'];
-  var vendors=['Colombo Properties','CEB','Payroll Run','Pettah Supplies','Digital Ads LK','Courier Lanka'];
-  var expenses=[18000,7500,85000,12000,26000,9000,5500,42000,15000,68000,11000,6000,32000,22500,7900,54000,17000,8350,29500,63000].map(function(amount,i){
-    return {id:Date.now()+100+i,date:daysAgo(88-(i*4)),cat:expenseCats[i%expenseCats.length],vendor:vendors[i%vendors.length],desc:expenseCats[i%expenseCats.length]+' demo expense',amount:amount,receipt:'DEMO-RC-'+(2001+i)};
-  });
-  var invoiceSpecs=[
-    ['INV-0001',demoClients[0],daysAgo(70),daysAgo(55),145000,'paid',145000],
-    ['INV-0002',demoClients[1],daysAgo(52),daysAgo(37),78000,'paid',78000],
-    ['INV-0003',demoClients[2],daysAgo(25),daysFromNow(5),215000,'unpaid',0],
-    ['INV-0004',demoClients[3],daysAgo(16),daysFromNow(14),45000,'unpaid',0],
-    ['INV-0005',demoClients[4],daysAgo(45),daysAgo(15),320000,'unpaid',0],
-    ['INV-0006',demoClients[0],daysAgo(3),daysFromNow(27),98000,'draft',0]
-  ];
-  var invoices=invoiceSpecs.map(function(spec,i){
-    return {
-      id:Date.now()+200+i,
-      num:spec[0],
-      client:spec[1].name,
-      cemail:spec[1].email,
-      caddr:spec[1].addr,
-      cphone:spec[1].phone,
-      date:spec[2],
-      due:spec[3],
-      terms:'Net 30',
-      cur:'LKR',
-      lines:[
-        {desc:'Business service package',qty:1,price:Math.round(spec[4]*0.62),total:Math.round(spec[4]*0.62)},
-        {desc:'Implementation support',qty:1,price:Math.round(spec[4]*0.28),total:Math.round(spec[4]*0.28)},
-        {desc:'Reporting and follow-up',qty:1,price:spec[4]-Math.round(spec[4]*0.62)-Math.round(spec[4]*0.28),total:spec[4]-Math.round(spec[4]*0.62)-Math.round(spec[4]*0.28)}
-      ],
-      amount:spec[4],
-      disc:0,
-      vat:0,
-      paidAmount:spec[6],
-      status:spec[5],
-      tpl:state.selectedTemplate||0,
-      notes:'Demo invoice'
-    };
-  });
-  return {clients:demoClients,transactions:transactions,expenses:expenses,invoices:invoices};
+  if(selectedChannels.length>0) document.getElementById('fl-notif').style.display='flex';
 }
 
 async function writeArrayCollection(uid,col,items){
@@ -936,17 +991,8 @@ async function writeArrayCollection(uid,col,items){
   await batch.commit();
 }
 
-async function seedOnboardingData(uid,includeDemo){
+async function seedOnboardingData(uid){
   var clients=state.firstClient?[state.firstClient]:[];
-  if(includeDemo){
-    var demo=makeDemoData();
-    clients=demo.clients;
-    await Promise.all([
-      writeArrayCollection(uid,'transactions',demo.transactions),
-      writeArrayCollection(uid,'expenses',demo.expenses),
-      writeArrayCollection(uid,'invoices',demo.invoices)
-    ]);
-  }
   if(clients.length){ await writeArrayCollection(uid,'clients',clients); }
 }
 
@@ -976,9 +1022,8 @@ async function acceptOnboardingInvite(uid,email){
 // ══════════════════════════════════════
 // FIREBASE AUTH — Account Creation
 // ══════════════════════════════════════
-window.launchDashboard = async function launchDashboard(loadDemo){
-  state.loadDemoData = loadDemo === true;
-  const btn = document.getElementById(loadDemo ? 'launch-demo-btn' : 'launch-btn');
+window.launchDashboard = async function launchDashboard(){
+  const btn = document.getElementById('launch-btn');
   if(btn){ btn.textContent = 'Saving your details…'; btn.disabled = true; }
 
   try {
@@ -988,7 +1033,7 @@ window.launchDashboard = async function launchDashboard(loadDemo){
     if (state.googleAuth) {
       // Google user — already authenticated, just update their Firestore profile
       const user = firebase.auth().currentUser;
-      if (!user) { alert('Session expired. Please sign in again.'); window.location.href='signin.html'; return; }
+      if (!user) { showStepError(7,'Session expired. Please sign in again to continue.'); setTimeout(function(){window.location.href='signin.html';},1200); return; }
       var googleTrialEnd = new Date();
       googleTrialEnd.setDate(googleTrialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(user.uid).set({
@@ -1011,11 +1056,12 @@ window.launchDashboard = async function launchDashboard(loadDemo){
         employees: state.employees,
         channels: state.channels,
         reminders: state.reminders,
+        setupTasks: state.setupTasks,
         onboardingComplete: true,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       await acceptOnboardingInvite(user.uid,state.email);
-      await seedOnboardingData(user.uid,state.loadDemoData);
+      await seedOnboardingData(user.uid);
       // Send welcome email (best-effort — don't block redirect if it fails)
       try {
         await fetch('/.netlify/functions/send-welcome', {
@@ -1060,11 +1106,12 @@ window.launchDashboard = async function launchDashboard(loadDemo){
         employees: state.employees,
         channels: state.channels,
         reminders: state.reminders,
+        setupTasks: state.setupTasks,
         onboardingComplete: true,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       await acceptOnboardingInvite(uid,state.email);
-      await seedOnboardingData(uid,state.loadDemoData);
+      await seedOnboardingData(uid);
       // Send welcome email (best-effort)
       try {
         await fetch('/.netlify/functions/send-welcome', {
@@ -1084,11 +1131,11 @@ window.launchDashboard = async function launchDashboard(loadDemo){
 
   } catch(err) {
     console.error(err);
-    if(btn){ btn.textContent = loadDemo ? 'Load Demo Data →' : 'Start Fresh →'; btn.disabled = false; }
+    if(btn){ btn.textContent = 'Start Free Trial →'; btn.disabled = false; }
     if(err.code === 'auth/email-already-in-use'){
-      alert('An account with this email already exists. Please sign in instead.');
+      showStepError(7,'An account with this email already exists. Please sign in instead.');
     } else {
-      alert('Account creation failed: ' + err.message);
+      showStepError(7,'Account creation failed: ' + err.message);
     }
   }
 }
