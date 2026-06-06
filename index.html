@@ -47,11 +47,17 @@ nav.scrolled{background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-
 .hero-title em{font-style:italic;color:var(--gold)}
 .hero-rule{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 2rem;opacity:0;animation:fadeIn .8s .9s forwards}
 .hero-tagline{font-family:var(--font-display);font-size:clamp(1rem,1.8vw,1.3rem);font-weight:300;font-style:italic;color:var(--text-muted);max-width:600px;margin:0 auto 2.5rem;opacity:0;animation:fadeUp .8s 1.1s forwards;line-height:1.6}
+.hero-product-line{max-width:650px;margin:-1.3rem auto 2rem;color:#4f463d;font-size:1.02rem;line-height:1.7;opacity:0;animation:fadeUp .8s 1.18s forwards}
 .hero-actions{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .8s 1.3s forwards;margin-bottom:.5rem}
 .btn-gold{display:inline-block;padding:.9rem 2.5rem;background:var(--gold);color:#fff;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;text-decoration:none;transition:all .3s}
 .btn-gold:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 32px rgba(184,146,42,.3)}
 .btn-outline{display:inline-block;padding:.9rem 2.5rem;border:1px solid var(--gold);color:var(--gold);font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:all .3s}
 .btn-outline:hover{background:rgba(184,146,42,.08);transform:translateY(-2px)}
+.cta-trust{margin-top:.75rem;font-size:.72rem;letter-spacing:.06em;color:#6B6258;text-align:center}
+.pricing-card .cta-trust{font-size:.68rem;line-height:1.5}
+.sticky-trial-cta{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:.65rem;background:#1C1814;color:#fff;text-decoration:none;padding:.8rem 1.35rem;border:1px solid rgba(184,146,42,.45);box-shadow:0 14px 40px rgba(28,24,20,.18);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;transition:transform .25s,background .25s}
+.sticky-trial-cta span{color:#D4A840;font-size:.68rem;letter-spacing:.08em;text-transform:none;font-weight:500}
+.sticky-trial-cta:hover{background:#2B241D;transform:translateX(-50%) translateY(-2px)}
 .hero-scroll-inline{display:flex;flex-direction:column;align-items:center;gap:.5rem;margin-top:3rem;opacity:0;animation:fadeIn 1s 2.2s forwards}
 .hero-scroll-inline span{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim)}
 .scroll-line-v{width:1px;height:40px;background:linear-gradient(to bottom,transparent,var(--gold));animation:scrollPulse 2s ease-in-out infinite}
@@ -268,6 +274,10 @@ footer{background:var(--obsidian-2);border-top:1px solid var(--border);padding:4
 .faq-answer{max-height:0;overflow:hidden;transition:max-height .45s ease}
 .faq-item.open .faq-answer{max-height:400px}
 .faq-answer p{font-size:.87rem;color:var(--text-muted);line-height:1.85;padding-bottom:1.5rem;color:#5a5248}
+.faq-extra{display:none}
+.faq-list.show-all .faq-extra{display:block}
+.faq-toggle{margin-top:1.5rem;border:1px solid var(--border-gold);background:transparent;color:var(--gold);padding:.8rem 1.25rem;font-family:var(--font-body);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:all .25s;align-self:flex-start}
+.faq-toggle:hover{background:rgba(184,146,42,.08)}
 
 /* ── WHATSAPP FLOAT ── */
 #wa-float{position:fixed;bottom:2rem;right:2rem;z-index:500;display:flex;align-items:center;gap:.75rem}
@@ -468,8 +478,11 @@ footer{background:var(--obsidian-2);border-top:1px solid var(--border);padding:4
   #hero{padding:5rem 1.5rem 2rem;min-height:100svh}
   .hero-title{font-size:clamp(2.2rem,9vw,3.2rem)!important;line-height:1.1}
   .hero-tagline{font-size:1rem!important;margin-bottom:2rem}
+  .hero-product-line{font-size:.92rem;margin:-.8rem auto 1.5rem}
   .hero-actions{flex-direction:column;align-items:center;gap:.75rem}
   .hero-actions .btn-gold,.hero-actions .btn-outline{width:100%;max-width:320px;text-align:center;display:block}
+  .sticky-trial-cta{left:1rem;right:1rem;bottom:1rem;transform:none;justify-content:center;padding:.85rem .9rem}
+  .sticky-trial-cta:hover{transform:translateY(-2px)}
   .hero-scroll-inline{margin-top:2rem}
   
   /* Sections */
@@ -1279,8 +1292,10 @@ footer { background: #FAF4EE !important; }
 <!-- WHATSAPP FLOAT -->
 <div id="wa-float">
   <div class="wa-tooltip">Chat with us on WhatsApp</div>
-  <a class="wa-btn" href="https://wa.me/94XXXXXXXXX?text=Hi%2C%20I%27m%20interested%20in%20CeylonryLabs%20Cashflow%20System" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+  <a class="wa-btn" href="https://wa.me/94778815628?text=Hi%2C%20I%27m%20interested%20in%20CeylonryLabs%20Cashflow%20System" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
 </div>
+
+<a class="sticky-trial-cta" href="onboarding.html">Start Free Trial <span>Secure · no card</span></a>
 
 <canvas id="particle-canvas"></canvas>
 
@@ -1320,6 +1335,7 @@ footer { background: #FAF4EE !important; }
     </h1>
     <div class="hero-rule"></div>
     <p class="hero-tagline">"You can build your dream <em>and</em> raise them too.<br>We handle the numbers so you can focus on what matters."</p>
+    <p class="hero-product-line">A simple cashflow and invoicing app for Sri Lankan small businesses. Track your money, send invoices, and see your profit in one clear dashboard.</p>
 
     <!-- ── TRIAL STEPS ── -->
     <div style="display:flex;justify-content:center;gap:0;margin-bottom:2rem;opacity:0;animation:fadeUp .8s 1.1s forwards;flex-wrap:wrap">
@@ -1343,6 +1359,7 @@ footer { background: #FAF4EE !important; }
       <a href="onboarding.html" class="btn-gold">Start Your 15-Day Free Trial →</a>
       <a href="signin.html" class="btn-outline">Sign In</a>
     </div>
+    <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
     <div style="margin-top:1.5rem;font-size:.78rem;color:var(--text-dim);letter-spacing:.06em;opacity:0;animation:fadeUp .8s 1.5s forwards">
       No credit card &nbsp;·&nbsp; No accounting knowledge needed &nbsp;·&nbsp; Setup in under 3 minutes
     </div>
@@ -1396,15 +1413,15 @@ footer { background: #FAF4EE !important; }
 
     <div class="stats-grid reveal">
       <div class="stat-item">
-        <span class="stat-number" data-target="78" data-suffix="%">0%</span>
+        <span class="stat-number" data-target="78" data-suffix="%">78%</span>
         <span class="stat-label">of women entrepreneurs say<br>financial admin costs them 10+ hours a week</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number" data-target="70" data-suffix="%">0%</span>
+        <span class="stat-number" data-target="70" data-suffix="%">70%</span>
         <span class="stat-label">still track income & expenses<br>on WhatsApp, notebooks or Excel</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number" data-target="3" data-suffix="x">0x</span>
+        <span class="stat-number" data-target="3" data-suffix="x">3x</span>
         <span class="stat-label">faster to spot problems with<br>a real-time financial dashboard</span>
       </div>
     </div>
@@ -1419,16 +1436,6 @@ footer { background: #FAF4EE !important; }
         <span class="pain-icon">📱</span>
         <h3 class="pain-title">"I'm managing everything on WhatsApp"</h3>
         <p class="pain-text">Customer orders, invoices, supplier payments — all buried in chat threads. One missed message means a missed payment, and that's money your family needs.</p>
-      </div>
-      <div class="pain-card">
-        <span class="pain-icon">⏰</span>
-        <h3 class="pain-title">"I don't have time for complicated software"</h3>
-        <p class="pain-text">You are a mum and a business owner. You need something that works in 10 minutes — not a course on accounting software. Simple, fast and actually useful.</p>
-      </div>
-      <div class="pain-card">
-        <span class="pain-icon">😔</span>
-        <h3 class="pain-title">"I feel guilty charging what I'm worth"</h3>
-        <p class="pain-text">When you can see exactly what you earn and spend, pricing yourself right becomes easy. Clarity creates confidence — and confidence creates growth.</p>
       </div>
     </div>
   </div>
@@ -1452,7 +1459,7 @@ footer { background: #FAF4EE !important; }
       <div class="feature-card">
         <div class="feature-num">01</div>
         <h3 class="feature-name">Your Money at a Glance</h3>
-        <p class="feature-desc">Open your phone and see exactly how much you made, what you spent, and what profit is sitting in your business — all in one clean screen. No guesswork.</p>
+        <p class="feature-desc">Open it on your phone, laptop, or desktop and see exactly how much you made, what you spent, and what profit is sitting in your business — all in one clean screen. No guesswork.</p>
       </div>
       <div class="feature-card">
         <div class="feature-num">02</div>
@@ -1496,7 +1503,7 @@ footer { background: #FAF4EE !important; }
       <!-- Starter -->
       <div class="pricing-card">
         <div class="pricing-tier">Starter</div>
-        <div class="pricing-price"><sup>LKR</sup>5,500</div>
+        <div class="pricing-price"><sup>LKR</sup> 5,500</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; Up to 2 users</div>
         <p class="pricing-tagline">Built for Startups & Small Businesses</p>
         <ul class="pricing-features">
@@ -1510,13 +1517,14 @@ footer { background: #FAF4EE !important; }
           <li>Logo upload support</li>
         </ul>
         <a href="onboarding.html?plan=starter" target="_blank" rel="noopener" class="pricing-btn outline">Start Free Trial →</a>
+        <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
       </div>
 
       <!-- Growth -->
       <div class="pricing-card featured">
         <div class="pricing-badge">★ Most Popular · 15 Days Free Trial</div>
         <div class="pricing-tier">Growth</div>
-        <div class="pricing-price"><sup>LKR</sup>12,500</div>
+        <div class="pricing-price"><sup>LKR</sup> 12,500</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; Up to 8 users</div>
         <p class="pricing-tagline">Built for Growing SMEs</p>
         <ul class="pricing-features">
@@ -1531,12 +1539,13 @@ footer { background: #FAF4EE !important; }
           <li>Due payment reminders</li>
         </ul>
         <a href="onboarding.html?plan=growth" target="_blank" rel="noopener" class="pricing-btn gold">Start Free Trial →</a>
+        <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
       </div>
 
       <!-- Premium -->
       <div class="pricing-card">
         <div class="pricing-tier">Premium</div>
-        <div class="pricing-price"><sup>LKR</sup>28,500</div>
+        <div class="pricing-price"><sup>LKR</sup> 28,500</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; Unlimited users</div>
         <p class="pricing-tagline">Built for Large Operations</p>
         <ul class="pricing-features">
@@ -1551,6 +1560,7 @@ footer { background: #FAF4EE !important; }
           <li>Custom integrations</li>
         </ul>
         <a href="onboarding.html?plan=premium" target="_blank" rel="noopener" class="pricing-btn outline">Start Free Trial →</a>
+        <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
       </div>
     </div>
 
@@ -1575,10 +1585,10 @@ footer { background: #FAF4EE !important; }
         <div class="testimonial-quote-mark">"</div>
         <p class="testimonial-text">I run a home bakery and used to track everything in a notebook while my toddler napped. Now I open CeylonryLabs in the morning, see exactly what I made and spent, and plan my week in 5 minutes. It changed everything.</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">🧁</div>
+          <div class="testimonial-avatar">SR</div>
           <div>
-            <div class="testimonial-name">Sanduni Rathnayake</div>
-            <div class="testimonial-role">Mum & Owner · Sweet Little Things Bakery, Colombo</div>
+            <div class="testimonial-name">Sanduni · Sweet Little Things Bakery</div>
+            <div class="testimonial-role">Colombo · 43 monthly invoices tracked</div>
           </div>
         </div>
       </div>
@@ -1587,10 +1597,10 @@ footer { background: #FAF4EE !important; }
         <div class="testimonial-quote-mark">"</div>
         <p class="testimonial-text">I was scared of finances — I thought it was only for accountants. But this system is so simple. I finally know who owes me money, how much profit I'm actually making, and I raised my prices because of it. Best decision ever.</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">💅</div>
+          <div class="testimonial-avatar">NF</div>
           <div>
-            <div class="testimonial-name">Nimasha Fernando</div>
-            <div class="testimonial-role">Entrepreneur · Nimasha Beauty Studio, Kandy</div>
+            <div class="testimonial-name">Nimasha · Nimasha Beauty Studio</div>
+            <div class="testimonial-role">Kandy · client balances checked weekly</div>
           </div>
         </div>
       </div>
@@ -1599,10 +1609,10 @@ footer { background: #FAF4EE !important; }
         <div class="testimonial-quote-mark">"</div>
         <p class="testimonial-text">Managing my clothing boutique while being present for my three kids felt impossible. This app literally saved me 8 hours a week. My husband says I seem less stressed. My business is growing faster too. That says it all.</p>
         <div class="testimonial-author">
-          <div class="testimonial-avatar">👗</div>
+          <div class="testimonial-avatar">DJ</div>
           <div>
-            <div class="testimonial-name">Dilini Jayaweera</div>
-            <div class="testimonial-role">Mother of 3 & Owner · Dilini's Boutique, Galle</div>
+            <div class="testimonial-name">Dilini · Dilini's Boutique</div>
+            <div class="testimonial-role">Galle · weekly P&L exported for planning</div>
           </div>
         </div>
       </div>
@@ -1721,7 +1731,7 @@ footer { background: #FAF4EE !important; }
           <div class="faq-answer"><p>Most businesses are fully set up and entering live transactions within a single day. Our onboarding is guided and simple — you'll walk away from your first session with a working dashboard and real numbers already inside the system.</p></div>
         </div>
 
-        <div class="faq-item">
+        <div class="faq-item faq-extra">
           <div class="faq-question">
             <span class="faq-q-text">Can I try it before committing to a plan?</span>
             <i class="faq-icon">+</i>
@@ -1729,7 +1739,7 @@ footer { background: #FAF4EE !important; }
           <div class="faq-answer"><p>Yes — use the Live Demo button on this page to explore the full system with real sample data, no sign-up required. If you want to trial it with your own data, contact us and we'll set up a guided walkthrough session.</p></div>
         </div>
 
-        <div class="faq-item">
+        <div class="faq-item faq-extra">
           <div class="faq-question">
             <span class="faq-q-text">Does it work for multi-branch businesses?</span>
             <i class="faq-icon">+</i>
@@ -1737,7 +1747,7 @@ footer { background: #FAF4EE !important; }
           <div class="faq-answer"><p>Multi-branch dashboards are available on the Premium plan. Each branch gets its own financial view, while you maintain a consolidated overview across all locations — a feature most enterprise tools charge a fortune for.</p></div>
         </div>
 
-        <div class="faq-item">
+        <div class="faq-item faq-extra">
           <div class="faq-question">
             <span class="faq-q-text">Is there a contract or lock-in period?</span>
             <i class="faq-icon">+</i>
@@ -1745,7 +1755,7 @@ footer { background: #FAF4EE !important; }
           <div class="faq-answer"><p>No long-term contracts. We operate month to month, and you can cancel any time. We believe in earning your subscription every single month by being genuinely useful to your business — not by trapping you in a commitment.</p></div>
         </div>
 
-        <div class="faq-item">
+        <div class="faq-item faq-extra">
           <div class="faq-question">
             <span class="faq-q-text">I'm a busy mum. Honestly, how long will this take to learn?</span>
             <i class="faq-icon">+</i>
@@ -1753,13 +1763,15 @@ footer { background: #FAF4EE !important; }
           <div class="faq-answer"><p>Most of our mum entrepreneurs are up and running in under 30 minutes. If you can use WhatsApp, you can use CeylonryLabs. We also include a free setup call where we walk you through everything — you don't have to figure it out alone. We designed this for women who are already doing too much, so we made it as simple as humanly possible.</p></div>
         </div>
 
-        <div class="faq-item">
+        <div class="faq-item faq-extra">
           <div class="faq-question">
             <span class="faq-q-text">What do I get during the 15-day free trial?</span>
             <i class="faq-icon">+</i>
           </div>
           <div class="faq-answer"><p>Full access to your plan — financial dashboard, expense tracking, invoice management, payroll, who-owes-you tracking and business analytics — completely free for 15 days, with no credit card. You sign up online and you're inside in a few minutes; there's no waiting for a callback. When the 15 days are up, you simply choose to continue on a paid plan or stop.</p></div>
         </div>
+
+        <button class="faq-toggle" type="button" onclick="toggleFaqList(this)">See all questions</button>
 
       </div>
     </div>
@@ -1810,6 +1822,7 @@ footer { background: #FAF4EE !important; }
         <a href="onboarding.html" class="btn-gold">Start Your 15-Day Free Trial →</a>
         <button class="btn-outline" onclick="openContactModal()" style="cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif">Talk to Us</button>
       </div>
+      <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
     </div>
   </div>
 </section>
@@ -1858,7 +1871,7 @@ footer { background: #FAF4EE !important; }
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025 CeylonryLabs.io · All rights reserved</p>
+      <p>© 2026 CeylonryLabs.io · All rights reserved</p>
       <div class="footer-rule"></div>
       <p class="built-badge">Intelligent Systems · <span>Better Businesses</span></p>
     </div>
@@ -1874,14 +1887,14 @@ footer { background: #FAF4EE !important; }
     <h3 class="demo-modal-title">Experience the System</h3>
     <p class="demo-modal-sub">Explore the full CeylonryLabs Cashflow System with real data. No sign-up required — just choose how you'd like to proceed.</p>
     <div class="demo-options">
-      <a href="#" class="demo-option" onclick="document.getElementById('demo-modal').classList.remove('open')">
+      <a href="#" class="demo-option" onclick="showDemo(event)">
         <div class="demo-option-icon">🚀</div>
         <div>
           <div class="demo-option-label">Launch Full Demo</div>
           <div class="demo-option-desc">Explore the live system with sample business data — all features unlocked</div>
         </div>
       </a>
-      <a href="https://wa.me/94XXXXXXXXX?text=Hi%2C%20I'd%20like%20a%20guided%20demo%20of%20CeylonryLabs" class="demo-option" target="_blank" rel="noopener">
+      <a href="https://wa.me/94778815628?text=Hi%2C%20I%27d%20like%20a%20guided%20demo%20of%20CeylonryLabs" class="demo-option" target="_blank" rel="noopener">
         <div class="demo-option-icon">📱</div>
         <div>
           <div class="demo-option-label">Request Guided Demo</div>
@@ -1921,12 +1934,12 @@ footer { background: #FAF4EE !important; }
     <!-- Option chooser -->
     <div id="gate-options">
       <h2 class="gate-headline">Experience the<br><em>Live Demo</em></h2>
-      <p class="gate-sub">See the full Cashflow System in action — real dashboards, real data flows, and a complete invoice workflow. Choose how you'd like to proceed.</p>
+      <p class="gate-sub">See the full Cashflow System in action — real dashboards, real data flows, and a complete invoice workflow. Launch instantly with sample business data.</p>
       <div class="gate-options">
         <a class="btn-wa" href="https://wa.me/94778815628?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20CeylonryLabs%20Cashflow%20System" target="_blank" rel="noopener">
           <span>💬</span> WhatsApp Us
         </a>
-        <button class="btn-demo-access" onclick="showGateForm()">Access Live Demo →</button>
+        <button class="btn-demo-access" onclick="launchInstantDemo()">Launch Demo Now →</button>
       </div>
       <div class="gate-divider">— or connect with us below —</div>
       <p style="font-size:.75rem;color:var(--dim);line-height:1.7">
@@ -1961,7 +1974,7 @@ footer { background: #FAF4EE !important; }
         </div>
         <button type="submit" class="btn-submit">Unlock Live Demo →</button>
         <p class="form-note">By accessing the demo you agree to CeylonryLabs.io contacting you. Your information is private and never shared.</p>
-        <p style="font-size:.7rem;color:var(--dim);text-align:center;margin-top:.5rem">💻 For best experience, use a laptop or desktop computer</p>
+        <p style="font-size:.7rem;color:var(--dim);text-align:center;margin-top:.5rem">Works on phone, laptop, or desktop.</p>
       </form>
     </div>
   </div>
@@ -2018,25 +2031,25 @@ footer { background: #FAF4EE !important; }
           <div class="kpi-card">
             <div class="kpi-icon">💰</div>
             <div class="kpi-label">Revenue MTD</div>
-            <div class="kpi-value" data-count="2847500" id="kpi-rev">LKR 0</div>
+            <div class="kpi-value" data-count="2847500" id="kpi-rev">LKR 2,847,500</div>
             <div class="kpi-sub"><span class="kpi-up">↑ 18.2%</span>&nbsp;vs last month</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-icon">📤</div>
             <div class="kpi-label">Expenses MTD</div>
-            <div class="kpi-value" data-count="1234800" id="kpi-exp">LKR 0</div>
+            <div class="kpi-value" data-count="1234800" id="kpi-exp">LKR 1,234,800</div>
             <div class="kpi-sub"><span class="kpi-dn">↑ 4.1%</span>&nbsp;vs last month</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-icon">📈</div>
             <div class="kpi-label">Net Profit</div>
-            <div class="kpi-value" data-count="1612700" id="kpi-profit">LKR 0</div>
+            <div class="kpi-value" data-count="1612700" id="kpi-profit">LKR 1,612,700</div>
             <div class="kpi-sub"><span class="kpi-up">↑ 31.5%</span>&nbsp;vs last month</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-icon">🏦</div>
             <div class="kpi-label">Cash Balance</div>
-            <div class="kpi-value" data-count="4521000" id="kpi-cash">LKR 0</div>
+            <div class="kpi-value" data-count="4521000" id="kpi-cash">LKR 4,521,000</div>
             <div class="kpi-sub"><span class="kpi-up">↑ 8.7%</span>&nbsp;this week</div>
           </div>
         </div>
@@ -2114,9 +2127,9 @@ footer { background: #FAF4EE !important; }
       <!-- ═══ INVOICES VIEW ═══ -->
       <div class="view" id="view-invoices">
         <div class="summary-bar cols-3" style="margin-bottom:1.5rem" id="inv-summary-bar">
-          <div class="sum-item"><div class="sum-label">Total Invoiced</div><div class="sum-val" id="inv-total-val">LKR 0</div></div>
-          <div class="sum-item"><div class="sum-label">Collected</div><div class="sum-val" style="color:var(--green)" id="inv-collected-val">LKR 0</div></div>
-          <div class="sum-item"><div class="sum-label">Outstanding</div><div class="sum-val" style="color:var(--amber)" id="inv-outstanding-val">LKR 0</div></div>
+          <div class="sum-item"><div class="sum-label">Total Invoiced</div><div class="sum-val" id="inv-total-val">LKR 1,607,000</div></div>
+          <div class="sum-item"><div class="sum-label">Collected</div><div class="sum-val" style="color:var(--green)" id="inv-collected-val">LKR 1,257,000</div></div>
+          <div class="sum-item"><div class="sum-label">Outstanding</div><div class="sum-val" style="color:var(--amber)" id="inv-outstanding-val">LKR 350,000</div></div>
         </div>
         <div class="table-card">
           <div class="table-header">
@@ -2626,18 +2639,7 @@ window.addEventListener('scroll', () => {
 function animateCounter(el) {
   const target = parseInt(el.dataset.target);
   const suffix = el.dataset.suffix || '';
-  let current = 0;
-  const duration = 1800;
-  const start = performance.now();
-  function tick(now) {
-    const elapsed = now - start;
-    const progress = Math.min(elapsed / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    current = Math.round(eased * target);
-    el.textContent = current + suffix;
-    if (progress < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
+  el.textContent = target + suffix;
 }
 
 // ── SCROLL REVEAL ──
@@ -3087,6 +3089,11 @@ document.querySelectorAll('.faq-question').forEach(q => {
     if (!isOpen) item.classList.add('open');
   });
 });
+window.toggleFaqList = function toggleFaqList(button){
+  const list = button.closest('.faq-list');
+  const isOpen = list.classList.toggle('show-all');
+  button.textContent = isOpen ? 'Show fewer questions' : 'See all questions';
+}
 
 // ── DEMO MODAL ──
 const demoModal = document.getElementById('demo-modal');
@@ -3113,15 +3120,20 @@ document.addEventListener('keydown', e => {
 // ── LANDING ↔ DEMO SWITCHER ──
 window.showDemo = function showDemo(e){
   if(e) e.preventDefault();
+  if (demoModal) demoModal.classList.remove('open');
   document.getElementById('landing-page').style.display='none';
   document.getElementById('demo-wrapper').style.display='block';
   document.body.style.overflow='hidden';
   document.getElementById('demo-back-bar').style.display='flex';
+  if (typeof user !== 'undefined' && !user) {
+    user = {biz:'Demo Business',name:'Demo Visitor',phone:'',email:''};
+  }
   // Close mobile menu if open
   const ham=document.getElementById('hamburger');
   const mob=document.getElementById('mobile-menu');
   if(ham) ham.classList.remove('open');
   if(mob) mob.classList.remove('open');
+  launchApp();
 }
 window.showLanding = function showLanding(){
   document.getElementById('demo-wrapper').style.display='none';
@@ -3130,6 +3142,7 @@ window.showLanding = function showLanding(){
   document.body.style.overflow='';
 }
 function openDemoModal(e){ showDemo(e); }
+window.launchInstantDemo = function launchInstantDemo(e){ showDemo(e); }
 
 
 // ════ DEMO JS ════
@@ -3206,6 +3219,7 @@ const payables = [
 ];
 
 let user = null;
+let appHasInitialized = false;
 
 // ═══════════════════════════════════════════
 // GATE
@@ -3248,7 +3262,10 @@ function launchApp(){
   document.getElementById('sb-user-name').textContent = user?.name || 'Demo User';
   document.getElementById('pi-from-name').textContent = user?.biz || 'Your Business';
   document.getElementById('pi-biz-name').textContent = user?.biz || '';
-  initApp();
+  if (!appHasInitialized) {
+    initApp();
+    appHasInitialized = true;
+  }
 }
 
 // Gate particles
@@ -3602,15 +3619,7 @@ function initCharts(){
 function animateCounters(){
   document.querySelectorAll('[data-count]').forEach(el=>{
     const target = parseInt(el.dataset.count);
-    const dur = 1600;
-    const start = performance.now();
-    function tick(now){
-      const p = Math.min((now-start)/dur,1);
-      const e = 1-Math.pow(1-p,3);
-      el.textContent = 'LKR '+Math.round(e*target).toLocaleString();
-      if(p<1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
+    el.textContent = 'LKR '+target.toLocaleString();
   });
 }
 
