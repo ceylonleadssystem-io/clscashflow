@@ -152,7 +152,7 @@ a{color:inherit;text-decoration:none}
       <div style="margin-top:1.25rem">
         <button class="btn" id="btn-invite" data-cls-fn="createInvite">Create Invite Link &rarr;</button>
       </div>
-      <p class="field hint" style="margin-top:.85rem">We'll generate a private link. Share it with them on WhatsApp or email — they set their own password and join instantly. No card needed for them.</p>
+  <p class="field hint" style="margin-top:.85rem">We'll generate a private link and email it to them. They set their own password and join instantly. No card needed for them.</p>
     </div>
   </div>
 
@@ -212,6 +212,9 @@ function clearMsg(){ el('msg').className = 'msg'; }
 function inviteBaseUrl(){
   var path = location.pathname.replace(/[^/]*$/, '');
   return location.origin + path + 'accept-invite.html';
+}
+function buildInviteLink(id){
+  return inviteBaseUrl() + '?i=' + encodeURIComponent(id);
 }
 function initials(name, email){
   var src = (name || email || '?').trim();
@@ -342,7 +345,7 @@ function renderPending(pending){
   if(!pending.length){ box.innerHTML = '<div class="empty">No pending invites.</div>'; return; }
   var html = '';
   pending.forEach(function(p){
-    var link = inviteBaseUrl() + '?i=' + p.id;
+    var link = buildInviteLink(p.id);
     html += '<div class="list-row" style="flex-direction:column;align-items:stretch;gap:.7rem">'
       + '<div style="display:flex;align-items:center;gap:1rem">'
         + '<div class="avatar">'+initials('', p.email)+'</div>'
@@ -375,26 +378,33 @@ window.createInvite = async function createInvite(){
   var role = el('inv-role').value;
   if(!email || email.indexOf('@') < 1){ showMsg('Please enter a valid email address.'); return; }
 
-  // re-check seats live
-  var memSnap, invSnap;
+  // Re-check seats live when Firestore rules allow the count queries.
+  // Some production rules allow invite creation but block collection scans;
+  // in that case, continue and let the create write/rules decide.
+  var memSnap = null;
+  var invSnap = null;
   try {
     memSnap = await _db.collection('users').where('ownerUid','==',_ownerUid).get();
     invSnap = await _db.collection('invites').where('ownerUid','==',_ownerUid).where('status','==','pending').get();
-  } catch(e){ showMsg('Could not check available seats. Please try again.'); return; }
-  var activeCount = 0;
-  memSnap.forEach(function(d){ if(d.data().role !== 'removed') activeCount++; });
-  var s = seatsState(activeCount, invSnap.size);
-  if(s.full){ showMsg('You have used all seats on your plan. Upgrade or remove someone first.'); return; }
+  } catch(e){
+    console.warn('Seat re-check skipped:', e && e.message ? e.message : e);
+  }
+  if(memSnap && invSnap){
+    var activeCount = 0;
+    memSnap.forEach(function(d){ if(d.data().role !== 'removed') activeCount++; });
+    var s = seatsState(activeCount, invSnap.size);
+    if(s.full){ showMsg('You have used all seats on your plan. Upgrade or remove someone first.'); return; }
 
-  // duplicate check
-  var dup = false;
-  invSnap.forEach(function(d){ if((d.data().email||'') === email) dup = true; });
-  memSnap.forEach(function(d){ if((d.data().email||'').toLowerCase() === email && d.data().role !== 'removed') dup = true; });
-  if(dup){ showMsg('That email already has an invite or account.'); return; }
+    // duplicate check
+    var dup = false;
+    invSnap.forEach(function(d){ if((d.data().email||'') === email) dup = true; });
+    memSnap.forEach(function(d){ if((d.data().email||'').toLowerCase() === email && d.data().role !== 'removed') dup = true; });
+    if(dup){ showMsg('That email already has an invite or account.'); return; }
+  }
 
   el('btn-invite').disabled = true;
   try {
-    await _db.collection('invites').add({
+    var inviteRef = await _db.collection('invites').add({
       ownerUid: _ownerUid,
       ownerName: _profile.name || '',
       bizName: _profile.bizName || _profile.name || 'CeylonryLabs',
@@ -404,12 +414,35 @@ window.createInvite = async function createInvite(){
       status: 'pending',
       createdAt: new Date().toISOString()
     });
+    var link = buildInviteLink(inviteRef.id);
+    var emailSent = false;
+    try {
+      var res = await fetch('/.netlify/functions/send-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          role: role,
+          plan: _plan,
+          bizName: _profile.bizName || _profile.name || 'CeylonryLabs',
+          ownerName: _profile.name || '',
+          inviteLink: link
+        })
+      });
+      emailSent = res.ok;
+      if(!res.ok) console.warn('Invite email failed:', await res.text());
+    } catch(mailErr) {
+      console.warn('Invite email failed:', mailErr);
+    }
     el('inv-email').value = '';
-    showMsg('Invite created — copy the link below and send it to ' + email + '.', true);
+    showMsg(emailSent
+      ? 'Invite created and emailed to ' + email + '.'
+      : 'Invite created, but email could not be sent yet. Copy this link and send it manually: ' + link,
+      true);
     await loadTeam();
   } catch(e){
     console.error('createInvite error:', e);
-    showMsg('Could not create the invite. Please try again.');
+    showMsg((e && e.message) ? 'Could not create the invite: ' + e.message : 'Could not create the invite. Please try again.');
   }
   el('btn-invite').disabled = false;
 };
