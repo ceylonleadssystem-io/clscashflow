@@ -129,7 +129,9 @@ var PLAN_FILES = { starter:'starter.html', growth:'growth.html', premium:'premiu
 var ROLE_LABELS = { admin:'Admin', staff:'Staff', accountant:'Accountant', viewer:'Viewer' };
 
 var _inviteId = null;
+var _ownerUid = null;
 var _invite = null;
+var _inviteRef = null;
 
 function el(id){ return document.getElementById(id); }
 function show(id){ ['loading','invalid','form','success'].forEach(function(s){ el(s).classList.add('hidden'); }); el(id).classList.remove('hidden'); }
@@ -139,12 +141,16 @@ function getParam(name){ return new URLSearchParams(location.search).get(name); 
 
 // ── Load the invite ──
 (async function init(){
-  _inviteId = getParam('i');
-  if(!_inviteId){ show('invalid'); return; }
+  _inviteId = getParam('i') || getParam('invite');
+  _ownerUid = getParam('owner') || getParam('o');
+  if(!_inviteId || !_ownerUid){ show('invalid'); return; }
   try {
-    var doc = await _db.collection('invites').doc(_inviteId).get();
+    _inviteRef = _db.collection('users').doc(_ownerUid).collection('team').doc(_inviteId);
+    var doc = await _inviteRef.get();
     if(!doc.exists){ show('invalid'); return; }
     _invite = doc.data();
+    _invite.ownerUid = _invite.ownerUid || _ownerUid;
+    _invite.inviteToken = _invite.inviteToken || _inviteId;
     if(_invite.status === 'accepted'){
       el('invalid-title').textContent = 'Already accepted';
       el('invalid-msg').textContent = 'This invitation has already been used. If that account is yours, just sign in.';
@@ -180,7 +186,7 @@ async function attachAndFinish(user, name){
     joinedAt: new Date().toISOString()
   };
   await _db.collection('users').doc(user.uid).set(profile, { merge: true });
-  await _db.collection('invites').doc(_inviteId).update({
+  await _inviteRef.update({
     status: 'accepted',
     memberUid: user.uid,
     acceptedAt: new Date().toISOString()

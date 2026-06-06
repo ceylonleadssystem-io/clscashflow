@@ -47,14 +47,28 @@ service cloud.firestore {
         );
       allow delete: if false;
 
+      match /team/{memberOrInviteId} {
+        allow get: if isOwnerOrTeam(uid) || resource.data.status == 'pending';
+        allow list: if isOwner(uid);
+        allow create: if isOwner(uid);
+        allow update: if isOwner(uid)
+          || (
+            resource.data.status == 'pending'
+            && signedIn()
+            && request.auth.token.email != null
+            && request.auth.token.email == resource.data.email
+          );
+        allow delete: if isOwner(uid);
+      }
+
       match /{subcollection}/{docId} {
-        allow read, write: if isOwnerOrTeam(uid);
+        allow read, write: if subcollection != 'team' && isOwnerOrTeam(uid);
       }
     }
 
     match /invites/{inviteId} {
       allow get: if resource.data.status == 'pending' || isOwner(resource.data.ownerUid);
-      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow list: if false;
       allow create: if signedIn()
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.status == 'pending';

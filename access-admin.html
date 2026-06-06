@@ -214,7 +214,7 @@ function inviteBaseUrl(){
   return location.origin + path + 'accept-invite.html';
 }
 function buildInviteLink(id){
-  return inviteBaseUrl() + '?i=' + encodeURIComponent(id);
+  return inviteBaseUrl() + '?owner=' + encodeURIComponent(_ownerUid) + '&i=' + encodeURIComponent(id);
 }
 function initials(name, email){
   var src = (name || email || '?').trim();
@@ -274,8 +274,7 @@ async function loadTeam(){
   } catch(e){ console.error('load members error:', e); }
 
   try {
-    var invSnap = await _db.collection('invites')
-      .where('ownerUid','==',_ownerUid)
+    var invSnap = await _db.collection('users').doc(_ownerUid).collection('team')
       .where('status','==','pending').get();
     invSnap.forEach(function(d){
       var data = d.data();
@@ -385,7 +384,7 @@ window.createInvite = async function createInvite(){
   var invSnap = null;
   try {
     memSnap = await _db.collection('users').where('ownerUid','==',_ownerUid).get();
-    invSnap = await _db.collection('invites').where('ownerUid','==',_ownerUid).where('status','==','pending').get();
+    invSnap = await _db.collection('users').doc(_ownerUid).collection('team').where('status','==','pending').get();
   } catch(e){
     console.warn('Seat re-check skipped:', e && e.message ? e.message : e);
   }
@@ -404,7 +403,9 @@ window.createInvite = async function createInvite(){
 
   el('btn-invite').disabled = true;
   try {
-    var inviteRef = await _db.collection('invites').add({
+    var inviteRef = _db.collection('users').doc(_ownerUid).collection('team').doc();
+    await inviteRef.set({
+      inviteToken: inviteRef.id,
       ownerUid: _ownerUid,
       ownerName: _profile.name || '',
       bizName: _profile.bizName || _profile.name || 'CeylonryLabs',
@@ -477,7 +478,7 @@ window.shareWhatsApp = function shareWhatsApp(id){
 window.revokeInvite = async function revokeInvite(id){
   if(!confirm('Revoke this invite? The link will stop working.')) return;
   try {
-    await _db.collection('invites').doc(id).update({ status: 'revoked' });
+    await _db.collection('users').doc(_ownerUid).collection('team').doc(id).update({ status: 'revoked' });
     showMsg('Invite revoked.', true);
     await loadTeam();
   } catch(e){ console.error(e); showMsg('Could not revoke the invite.'); }

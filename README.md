@@ -53,9 +53,9 @@ For Hostinger, the common values are:
 
 ## Team Invites
 
-`access-admin.html` now creates the invite link and calls `/.netlify/functions/send-invite` to email the person automatically.
+`access-admin.html` now creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
 
-If invite creation still shows a permission error after uploading, publish the included `firestore.rules` in Firebase:
+If invite creation shows `Missing or insufficient permissions`, publish the included `firestore.rules` in Firebase:
 
 Firebase Console -> Firestore Database -> Rules -> paste the contents of `firestore.rules` -> Publish.
 
