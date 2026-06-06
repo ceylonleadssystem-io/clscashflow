@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Firebase SDKs -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -532,6 +533,13 @@ document.addEventListener('click',function(e){
             <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
           </div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15" style="max-width:200px"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the default on new invoices. You can still change it per invoice (B2B rates can differ).</div></div>
+          <div class="f-section" style="margin-top:1.5rem">Email Sending (EmailJS)</div>
+          <div style="font-size:.68rem;color:var(--dim);margin-bottom:.75rem;line-height:1.6">Connect EmailJS to send invoices straight from the dashboard (e.g. from noreply@ceylonrylabs.io). Create a free account at emailjs.com, add an email service + template, then paste the three keys below. Leave blank to use the built-in email instead.</div>
+          <div class="f-group" style="margin-bottom:.85rem"><label>EmailJS Public Key</label><input class="f-input" id="set-ejskey" placeholder="e.g. AbC123xyz..."></div>
+          <div class="f-row">
+            <div class="f-group"><label>Service ID</label><input class="f-input" id="set-ejsservice" placeholder="service_xxxxxxx"></div>
+            <div class="f-group"><label>Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_xxxxxxx"></div>
+          </div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Invoice Footer Message</label><input class="f-input" id="set-footer" placeholder="Thank you for your business. Payment due within 30 days."></div>
           <div class="f-section" style="margin-top:.75rem">Users (Up to 2)</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
@@ -728,7 +736,7 @@ document.addEventListener('click',function(e){
       <table class="li-table">
         <thead><tr><th style="width:45%">Description</th><th style="width:11%">Qty</th><th style="width:18%">Unit Price</th><th style="width:18%">Total</th><th style="width:8%"></th></tr></thead>
         <tbody id="li-body">
-          <tr><td><input type="text" placeholder="Service or product description" oninput="calcInv()"></td><td><input type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>
+          <tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>
         </tbody>
       </table>
       <button class="btn-add-li" data-cls-fn="addLi">+ Add Line Item</button>
@@ -805,7 +813,7 @@ let _profile = null;
 let _signedInUid = null;
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',vatRate:15},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -1104,17 +1112,18 @@ function resetInvoiceModal(){
   document.getElementById('inv-vat').checked=false;
   var vr=document.getElementById('inv-vatrate');if(vr)vr.value=(DB.settings.vatRate!=null?DB.settings.vatRate:15);
   const cs=document.getElementById('i-client-sel');if(cs)cs.value='';
-  document.getElementById('li-body').innerHTML=`<tr><td><input type="text" placeholder="Service or product description" oninput="calcInv()"></td><td><input type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>`;
+  document.getElementById('li-body').innerHTML=`<tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>`;
   calcInv();
 }
 window.selectInvTpl = function selectInvTpl(idx,el){selectedTpl=idx;document.querySelectorAll('.tpl-pick-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');}
-window.addLi = function addLi(){const tbody=document.getElementById('li-body');const tr=document.createElement('tr');tr.innerHTML=`<td><input type="text" placeholder="Service or product description" oninput="calcInv()"></td><td><input type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;tbody.appendChild(tr);}
+window.addLi = function addLi(){const tbody=document.getElementById('li-body');const tr=document.createElement('tr');tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;tbody.appendChild(tr);}
+window.autoGrowLi = function autoGrowLi(el){el.style.height='auto';el.style.height=(el.scrollHeight+2)+'px';}
 window.rmLi = function rmLi(btn){if(document.querySelectorAll('#li-body tr').length>1){btn.closest('tr').remove();calcInv();}}
 function fmtNum(n){return n.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function calcInv(){let sub=0;document.querySelectorAll('#li-body tr').forEach(row=>{const inp=row.querySelectorAll('input');const qty=parseFloat((inp[1]&&inp[1].value))||0;const price=parseAmt((inp[2]&&inp[2].value));const t=qty*price;row.querySelector('.li-total-cell').textContent=fmtNum(t);sub+=t;});const disc=(parseFloat(document.getElementById('inv-disc').value)||0)/100;const afterDisc=sub*(1-disc);const vrate=(parseFloat(document.getElementById('inv-vatrate').value)||0)/100;const vat=document.getElementById('inv-vat').checked?afterDisc*vrate:0;const grand=afterDisc+vat;const cur=document.getElementById('i-cur').value;document.getElementById('inv-sub').textContent=cur+' '+fmtNum(sub);document.getElementById('inv-grand').textContent=cur+' '+fmtNum(grand);}
+function calcInv(){let sub=0;document.querySelectorAll('#li-body tr').forEach(row=>{const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');const t=qty*price;const cell=row.querySelector('.li-total-cell');if(cell)cell.textContent=fmtNum(t);sub+=t;});const disc=(parseFloat(document.getElementById('inv-disc').value)||0)/100;const afterDisc=sub*(1-disc);const vrate=(parseFloat(document.getElementById('inv-vatrate').value)||0)/100;const vat=document.getElementById('inv-vat').checked?afterDisc*vrate:0;const grand=afterDisc+vat;const cur=document.getElementById('i-cur').value;document.getElementById('inv-sub').textContent=cur+' '+fmtNum(sub);document.getElementById('inv-grand').textContent=cur+' '+fmtNum(grand);}
 function getInvData(){
   const cur=document.getElementById('i-cur').value;let sub=0;const lines=[];
-  document.querySelectorAll('#li-body tr').forEach(row=>{const inp=row.querySelectorAll('input');const desc=(inp[0]&&inp[0].value)||'';const qty=parseFloat((inp[1]&&inp[1].value))||0;const price=parseAmt((inp[2]&&inp[2].value));if(desc||price>0){lines.push({desc,qty,price,total:qty*price});sub+=qty*price;}});
+  document.querySelectorAll('#li-body tr').forEach(row=>{const dEl=row.querySelector('.li-desc');const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const desc=(dEl&&dEl.value)||'';const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');if(desc||price>0){lines.push({desc,qty,price,total:qty*price});sub+=qty*price;}});
   const disc=(parseFloat(document.getElementById('inv-disc').value)||0);const afterDisc=sub*(1-disc/100);const vrate=parseFloat(document.getElementById('inv-vatrate').value)||0;const vatApplied=document.getElementById('inv-vat').checked;const vat=vatApplied?afterDisc*vrate/100:0;
   return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vatApplied?vrate:0,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:selectedTpl};
 }
@@ -1234,6 +1243,7 @@ function loadSettings(){
   document.getElementById('set-username').value=s.username||'';
   if(s.logo){const img=document.getElementById('settings-logo-preview');img.src=s.logo;img.style.display='block';document.getElementById('logo-upload-placeholder').style.display='none';}
   var vr=document.getElementById('set-vatrate');if(vr)vr.value=(s.vatRate!=null?s.vatRate:15);
+  ['ejskey','ejsservice','ejstemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('ejskey','ejsKey').replace('ejsservice','ejsService').replace('ejstemplate','ejsTemplate')]||'';});
   loadLogoAlign();
   loadLogoSize();
 }
@@ -1244,6 +1254,9 @@ window.saveSettings = function saveSettings(){
   DB.settings.email=document.getElementById('set-email').value.trim();
   DB.settings.vat=document.getElementById('set-vat').value.trim();
   var vrIn=document.getElementById('set-vatrate');DB.settings.vatRate=vrIn?(parseFloat(vrIn.value)):15;if(isNaN(DB.settings.vatRate))DB.settings.vatRate=15;
+  DB.settings.ejsKey=(document.getElementById('set-ejskey').value||'').trim();
+  DB.settings.ejsService=(document.getElementById('set-ejsservice').value||'').trim();
+  DB.settings.ejsTemplate=(document.getElementById('set-ejstemplate').value||'').trim();
   DB.settings.footer=document.getElementById('set-footer').value.trim();
   DB.settings.u1=document.getElementById('set-u1').value.trim();
   DB.settings.u2=document.getElementById('set-u2').value.trim();
@@ -1273,6 +1286,107 @@ const tplDefs=[
   {name:'Indigo Modern',accent:'#4F46E5',style:'minimal'},
   {name:'Charcoal Mono',accent:'#1F2937',style:'executive'},
 ];
+function buildInvoiceEmailHTML(inv){
+  const s=DB.settings;
+  const cur=inv.cur||'LKR';
+  const ac=(tplDefs[inv.tpl||0]||tplDefs[0]).accent||'#B8922A';
+  const m=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const escBr=t=>esc(t).replace(/\n/g,'<br>');
+  const lines=inv.lines||[];
+  const sub=lines.reduce((a,l)=>a+(l.total||0),0)||inv.amount;
+  const disc=inv.disc||0; const discAmt=disc>0?(sub-sub*(1-disc/100)):0;
+  const vat=inv.vat||0; const vatRate=inv.vatRate||0;
+  const rows=lines.map(l=>{
+    const parts=String(l.desc||'').split('\n');
+    const title=esc(parts[0]||'—');
+    const subt=parts.slice(1).join('\n');
+    return '<tr>'
+      +'<td style="padding:15px 0;border-bottom:1px solid #ededed;font-size:13px;color:#111;vertical-align:top">'
+        +'<div style="font-weight:700;color:#111">'+title+'</div>'
+        +(subt?'<div style="color:#9a9a9a;font-size:12px;margin-top:3px;line-height:1.5">'+escBr(subt)+'</div>':'')
+      +'</td>'
+      +'<td style="padding:15px 0;border-bottom:1px solid #ededed;font-size:13px;color:#444;text-align:center;vertical-align:top">'+cur+' '+m(l.price)+'</td>'
+      +'<td style="padding:15px 0;border-bottom:1px solid #ededed;font-size:13px;color:#444;text-align:center;vertical-align:top">'+(l.qty||1)+'</td>'
+      +'<td style="padding:15px 0;border-bottom:1px solid #ededed;font-size:13px;color:#111;text-align:right;font-weight:600;vertical-align:top">'+cur+' '+m(l.total!=null?l.total:0)+'</td>'
+    +'</tr>';
+  }).join('');
+  let totals='<tr><td style="padding:7px 0;font-size:13px;color:#777">Sub Total</td><td style="padding:7px 0;font-size:13px;color:#111;text-align:right">'+cur+' '+m(sub)+'</td></tr>';
+  if(vat>0) totals+='<tr><td style="padding:7px 0;font-size:13px;color:#777">Tax / VAT '+vatRate+'%</td><td style="padding:7px 0;font-size:13px;color:#111;text-align:right">'+cur+' '+m(vat)+'</td></tr>';
+  if(disc>0) totals+='<tr><td style="padding:7px 0;font-size:13px;color:#777">Discount '+disc+'%</td><td style="padding:7px 0;font-size:13px;color:#111;text-align:right">- '+cur+' '+m(discAmt)+'</td></tr>';
+
+  return ''
+  +'<div style="font-family:Arial,Helvetica,sans-serif;background:#eceae6;padding:28px 12px">'
+  +'<div style="max-width:660px;margin:0 auto;background:#ffffff;padding:44px 48px;border:1px solid #e6e4df">'
+
+  // Header
+  +'<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+  +'<td style="vertical-align:top">'
+    +(s.logo?'<img src="'+s.logo+'" style="max-height:46px;max-width:170px;object-fit:contain;display:block;margin-bottom:8px">':'')
+    +'<div style="font-size:20px;font-weight:700;color:#111;letter-spacing:.3px">'+esc(s.bizName||'Your Business')+'</div>'
+    +(s.addr?'<div style="font-size:11px;color:#9a9a9a;margin-top:2px">'+escBr(s.addr)+'</div>':'')
+  +'</td>'
+  +'<td style="vertical-align:top;text-align:right">'
+    +'<div style="font-size:34px;font-weight:300;color:#111;letter-spacing:1px;line-height:1">Invoice</div>'
+    +'<div style="font-size:12px;color:#555;margin-top:10px"><span style="color:#999">Invoice#</span>&nbsp;&nbsp;<strong style="color:#111">'+esc(inv.num||'')+'</strong></div>'
+    +'<div style="font-size:12px;color:#555;margin-top:3px"><span style="color:#999">Date</span>&nbsp;&nbsp;<strong style="color:#111">'+esc(fmtD(inv.date))+'</strong></div>'
+  +'</td>'
+  +'</tr></table>'
+
+  // Bill to + total due
+  +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:34px"><tr>'
+  +'<td style="vertical-align:top;width:60%">'
+    +'<div style="font-size:11px;letter-spacing:.5px;color:#999;margin-bottom:6px">BILL TO</div>'
+    +'<div style="font-size:15px;font-weight:700;color:#111">'+esc(inv.client||'Client')+'</div>'
+    +(inv.caddr?'<div style="font-size:12px;color:#777;margin-top:3px;line-height:1.6">'+escBr(inv.caddr)+'</div>':'')
+    +(inv.cphone?'<div style="font-size:12px;color:#777">'+esc(inv.cphone)+'</div>':'')
+    +(inv.cemail?'<div style="font-size:12px;color:#777">'+esc(inv.cemail)+'</div>':'')
+  +'</td>'
+  +'<td style="vertical-align:top;text-align:right">'
+    +'<div style="font-size:12px;color:#999;margin-bottom:4px">Total Due</div>'
+    +'<div style="font-size:22px;font-weight:700;color:'+ac+'">'+cur+' '+m(inv.amount)+'</div>'
+  +'</td>'
+  +'</tr></table>'
+
+  // Items
+  +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px;border-collapse:collapse">'
+  +'<thead><tr style="border-bottom:2px solid #111">'
+    +'<th style="text-align:left;font-size:11px;letter-spacing:.5px;color:#111;padding-bottom:10px;font-weight:700">ITEM DESCRIPTION</th>'
+    +'<th style="text-align:center;font-size:11px;letter-spacing:.5px;color:#111;padding-bottom:10px;font-weight:700">PRICE</th>'
+    +'<th style="text-align:center;font-size:11px;letter-spacing:.5px;color:#111;padding-bottom:10px;font-weight:700">QTY</th>'
+    +'<th style="text-align:right;font-size:11px;letter-spacing:.5px;color:#111;padding-bottom:10px;font-weight:700">TOTAL</th>'
+  +'</tr></thead><tbody>'+rows+'</tbody></table>'
+
+  // Totals (right)
+  +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px"><tr>'
+  +'<td style="width:55%"></td>'
+  +'<td style="vertical-align:top">'
+    +'<table width="100%" cellpadding="0" cellspacing="0">'+totals+'</table>'
+    +'<table width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #111;margin-top:6px"><tr>'
+      +'<td style="padding-top:12px;font-size:15px;font-weight:700;color:#111">Grand Total</td>'
+      +'<td style="padding-top:12px;font-size:17px;font-weight:700;color:'+ac+';text-align:right">'+cur+' '+m(inv.amount)+'</td>'
+    +'</tr></table>'
+  +'</td></tr></table>'
+
+  // Payment / contact
+  +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px"><tr>'
+  +'<td style="vertical-align:top;width:55%">'
+    +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">Notes</div>'
+    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr(inv.notes||s.footer||'Thank you for your business.')+'</div>'
+  +'</td>'
+  +'<td style="vertical-align:top;text-align:right">'
+    +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">'+esc(s.bizName||'Your Business')+'</div>'
+    +(s.addr?'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr(s.addr)+'</div>':'')
+    +(s.email?'<div style="font-size:12px;color:#888">'+esc(s.email)+'</div>':'')
+  +'</td>'
+  +'</tr></table>'
+
+  // Footer
+  +'<div style="margin-top:34px;padding-top:16px;border-top:1px solid #ededed;text-align:center;font-size:11px;color:#bdbab4;letter-spacing:.3px">'
+  +'Invoice generated by Cashflow System - <strong style="color:'+ac+'">CeylonryLabs.io</strong></div>'
+
+  +'</div></div>';
+}
 function buildInvPrintHTML(inv,tplIdx){
   const t=tplDefs[tplIdx]||tplDefs[0];const s=DB.settings;const ac=t.accent;
   // Logo alignment + size (S / M / L)
@@ -1284,7 +1398,7 @@ function buildInvPrintHTML(inv,tplIdx){
   // Line items
   const fmtP=n=>parseFloat(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
   const cur=inv.cur||'LKR';
-  const linesHTML=(inv.lines||[{desc:'Professional Services',qty:1,price:inv.amount,total:inv.amount}]).map((l,i)=>`<tr><td class="d"><span class="ln">${l.desc||'—'}</span></td><td class="c">${l.qty||1}</td><td class="r">${cur} ${fmtP(l.price)}</td><td class="r b">${cur} ${fmtP(l.total!=null?l.total:inv.amount)}</td></tr>`).join('');
+  const linesHTML=(inv.lines||[{desc:'Professional Services',qty:1,price:inv.amount,total:inv.amount}]).map((l,i)=>`<tr><td class="d"><span class="ln">${(l.desc||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span></td><td class="c">${l.qty||1}</td><td class="r">${cur} ${fmtP(l.price)}</td><td class="r b">${cur} ${fmtP(l.total!=null?l.total:inv.amount)}</td></tr>`).join('');
   const sub=(inv.lines||[]).reduce((a,l)=>a+(l.total||0),0)||inv.amount;
   const disc=inv.disc||0;const afterDisc=sub*(1-disc/100);const vat=inv.vat||0;const grand=inv.amount||sub;
   // Per-template treatment
@@ -1306,7 +1420,8 @@ function buildInvPrintHTML(inv,tplIdx){
     ?`background:#f6f5f2;color:${ac};border-bottom:2px solid ${ac}`
     :`background:transparent;color:#15110d;border-bottom:2px solid ${ac}`;
   const grandBg=isMinimal?'#15110d':ac;
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet"><title>${inv.num}</title><style>
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet"><title>${(s.bizName||'Invoice')}${inv.num&&inv.num!=='PREVIEW'?' '+inv.num:''}</title><style>
+@page{size:A4;margin:0}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 body{font-family:'DM Sans',Arial,sans-serif;background:#fff;color:#15110d}
 .page{max-width:820px;margin:0 auto;padding:3rem;min-height:100vh}
@@ -1330,7 +1445,7 @@ th{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;padding:.8rem 
 th.c,td.c{text-align:center}th.r,td.r{text-align:right}
 td{padding:.85rem 1rem;border-bottom:1px solid #f0eee9;font-size:.86rem;color:#3d3a34;vertical-align:top}
 td.b{font-weight:600;color:#15110d}
-td .ln{font-weight:600;color:#15110d}
+td .ln{font-weight:600;color:#15110d;white-space:pre-line}
 .bottom{display:flex;justify-content:space-between;gap:2rem;align-items:flex-start;margin-bottom:2.2rem}
 .notes{flex:1;max-width:300px}
 .notes-h{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:${ac};font-weight:700;margin-bottom:.5rem}
@@ -1348,7 +1463,7 @@ td .ln{font-weight:600;color:#15110d}
 </style></head><body><div class="page">
 <div class="top">
   <div class="brand">${s.logo?`<img src="${s.logo}">`:''}<div class="biz-name">${s.bizName||'Your Business'}</div><div class="biz-addr">${s.addr||''}</div></div>
-  <div class="title-block"><div class="big-invoice">INVOICE</div><div class="inv-num-big">${inv.num||''}</div><div class="inv-meta"><div><span class="lbl">Date:</span><span class="val">${fmtD(inv.date)}</span></div><div><span class="lbl">Due:</span><span class="val">${fmtD(inv.due)}</span></div><div><span class="lbl">Terms:</span><span class="val">${inv.terms||'Net 30'}</span></div></div></div>
+  <div class="title-block"><div class="big-invoice">INVOICE</div>${inv.num&&inv.num!=='PREVIEW'?`<div class="inv-num-big">${inv.num}</div>`:''}<div class="inv-meta"><div><span class="lbl">Date:</span><span class="val">${fmtD(inv.date)}</span></div><div><span class="lbl">Due:</span><span class="val">${fmtD(inv.due)}</span></div><div><span class="lbl">Terms:</span><span class="val">${inv.terms||'Net 30'}</span></div></div></div>
 </div>
 <div class="parties">
   <div><div class="party-label">From</div><div class="party-name">${s.bizName||'Your Business'}</div><div class="party-detail">${s.addr||''}<br>${s.email||''}${s.vat?`<br>VAT: ${s.vat}`:''}</div></div>
@@ -1554,8 +1669,32 @@ window.emailInvoice = async function emailInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
   if(!inv.cemail){alert('This client has no email address. Open the invoice and add the client email first.');return;}
   const s=DB.settings;
-  if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
+  const cur=inv.cur||'LKR';
+  const fmtM=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
   const sub=(inv.lines||[]).reduce((a,l)=>a+(l.total||0),0)||inv.amount;
+
+  // ── Path 1: EmailJS (if configured in Settings) ──
+  if(s.ejsKey&&s.ejsService&&s.ejsTemplate&&window.emailjs){
+    if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
+    const params={
+      to_email:inv.cemail, to_name:inv.client||'Customer',
+      from_name:s.bizName||'Your Business', reply_to:s.email||inv.cemail,
+      subject:'Invoice '+inv.num+' from '+(s.bizName||'Your Business')+' — '+cur+' '+fmtM(inv.amount),
+      message_html: buildInvoiceEmailHTML(inv)
+    };
+    try{
+      await emailjs.send(s.ejsService, s.ejsTemplate, params, {publicKey:s.ejsKey});
+      alert('✓ Invoice '+inv.num+' emailed to '+inv.cemail+'.');
+    }catch(e){
+      console.error('EmailJS error:',e);
+      const reason=(e&&(e.text||e.message))||'Please re-check your EmailJS keys & template in Settings.';
+      alert('Could not send via EmailJS:\n\n'+reason);
+    }
+    return;
+  }
+
+  // ── Path 2: built-in Netlify SMTP function (fallback) ──
+  if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
   const accent=(tplDefs[inv.tpl||0]||tplDefs[0]).accent;
   try{
     const res=await fetch('/.netlify/functions/send-invoice',{
@@ -1564,7 +1703,7 @@ window.emailInvoice = async function emailInvoice(num){
         to:inv.cemail, clientName:inv.client||'', bizName:s.bizName||'Your Business',
         bizEmail:s.email||'', bizAddr:s.addr||'', accent:accent,
         invNum:inv.num, date:fmtD(inv.date), due:fmtD(inv.due), terms:inv.terms||'Net 30',
-        cur:inv.cur||'LKR', amount:inv.amount, sub:sub,
+        cur:cur, amount:inv.amount, sub:sub,
         disc:inv.disc||0, vat:inv.vat||0, vatRate:inv.vatRate||0,
         lines:(inv.lines||[]).map(l=>({desc:l.desc||'',qty:l.qty||1,price:l.price||0,total:(l.total!=null?l.total:inv.amount)})),
         notes:inv.notes||s.footer||'Thank you for your business.'
@@ -1572,8 +1711,8 @@ window.emailInvoice = async function emailInvoice(num){
     });
     const out=await res.json().catch(()=>({}));
     if(res.ok&&out.ok){alert('✓ Invoice '+inv.num+' emailed to '+inv.cemail+'.');}
-    else{alert('Could not send the email.\n\n'+(out.error||'Check that SMTP_USER and SMTP_PASS are set in Netlify → Environment variables.'));}
-  }catch(e){console.error('emailInvoice error:',e);alert('Could not reach the email service. Please try again.');}
+    else{alert('Could not send the email.\n\nTip: set up EmailJS in Settings for the easiest path, or set SMTP_USER / SMTP_PASS in Netlify.\n\n'+(out.error||''));}
+  }catch(e){console.error('emailInvoice error:',e);alert('Could not reach the email service. Set up EmailJS in Settings, or try again.');}
 }
 
 window.waInvoice = function waInvoice(num){
@@ -1829,7 +1968,7 @@ window.waInvoiceWithPDF=function(num){
       var ry=ty+9;
       (inv.lines||[]).forEach(function(ln){
         doc.setTextColor(40,38,34);doc.setFont('helvetica','bold');doc.setFontSize(8.5);
-        doc.text(String(ln.desc||'').slice(0,48),m+3,ry+6);
+        doc.text(String(ln.desc||'').replace(/\s*\n\s*/g,' ').slice(0,48),m+3,ry+6);
         doc.setFont('helvetica','normal');
         doc.text(String(ln.qty||1),118,ry+6,{align:'right'});
         doc.text(cur+' '+money(ln.price),156,ry+6,{align:'right'});

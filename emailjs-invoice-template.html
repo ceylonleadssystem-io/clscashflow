@@ -1,0 +1,23 @@
+<!-- =========================================================
+  CeylonryLabs.io — EmailJS Invoice Template (SIMPLE)
+  The whole invoice design is built inside your app and sent as
+  one variable, so your EmailJS template just needs the line below.
+
+  HOW TO SET UP (one time):
+  1. In EmailJS, create a template.
+  2. Switch the content editor to the  </>  Code / HTML view.
+  3. DELETE everything in the content box and paste ONLY this line:
+
+        {{{message_html}}}
+
+     (Three curly braces — this tells EmailJS to render the HTML.)
+
+  4. In the template's fields set:
+        To Email  : {{to_email}}
+        From Name : {{from_name}}
+        Reply To  : {{reply_to}}
+        Subject   : {{subject}}
+  5. Save, copy the Template ID, and paste it (with your Service ID
+     and Public Key) into your app: Settings → Email Sending (EmailJS).
+  ========================================================= -->
+{{{message_html}}}
