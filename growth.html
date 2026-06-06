@@ -47,6 +47,24 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .sb-urole{font-size:.62rem;color:var(--muted);margin-top:.04rem}
 .btn-up{display:block;width:100%;padding:.55rem;background:var(--black);color:#fff;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;cursor:pointer;border:none;font-family:var(--fb);border-radius:var(--r);transition:background .2s}
 .btn-up:hover{background:var(--gold)}
+.growth-trial-pill{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;background:rgba(29,158,98,.1);border:1px solid rgba(29,158,98,.22);color:var(--green);padding:.23rem .7rem;border-radius:2px;font-weight:700}
+.growth-trial-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-left:3px solid var(--gold);border-radius:var(--r);padding:.8rem .9rem;margin:.85rem 0;color:rgba(255,255,255,.78);font-size:.72rem;line-height:1.55}
+.growth-trial-box strong{color:#fff}
+.g-tour-ov{position:fixed;inset:0;background:rgba(44,31,20,.1);z-index:9998;display:block;pointer-events:none}
+.g-tour-box{background:#fff;width:100%;max-width:490px;box-shadow:0 18px 55px rgba(44,31,20,.2);margin:5.5rem 2rem 0 auto;pointer-events:auto;border:1px solid var(--border);border-radius:var(--r)}
+.g-tour-head{padding:1.25rem 1.45rem;border-bottom:2px solid var(--black);display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}
+.g-tour-k{font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.24rem}
+.g-tour-t{font-family:var(--fd);font-size:1.42rem;color:var(--black)}
+.g-tour-x{background:none;border:none;color:var(--muted);font-size:1.4rem;line-height:1;cursor:pointer}
+.g-tour-b{padding:1.3rem 1.45rem;font-size:.82rem;color:var(--muted);line-height:1.65}
+.g-tour-b p{margin-bottom:.7rem}
+.g-tour-list{display:grid;gap:.42rem;margin-top:.65rem}
+.g-tour-list div{background:var(--bg);border-left:2px solid var(--gold);padding:.55rem .7rem;color:var(--text)}
+.g-tour-list strong{color:var(--black)}
+.g-tour-progress{display:flex;gap:.35rem;margin-top:1rem}
+.g-tour-dot{height:4px;flex:1;background:var(--border)}
+.g-tour-dot.on{background:var(--gold)}
+.g-tour-foot{padding:1rem 1.45rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.75rem}
 
 /* MAIN */
 #main{position:absolute;top:0;left:var(--sb);right:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
@@ -408,6 +426,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     </div>
     <div class="tb-right">
       <span class="tb-date" id="tb-date"></span>
+      <span class="growth-trial-pill" id="growth-trial-pill" style="display:none"></span>
       <span class="tb-badge">Growth · 8 Users · LKR 12,500/mo</span>
     </div>
   </div>
@@ -618,6 +637,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
             <div class="plan-name">Growth Plan ✨</div>
             <div class="plan-price">LKR 12,500 / month</div>
             <div class="plan-tagline">Built for Growing SMEs · Up to 8 users</div>
+            <div class="growth-trial-box" id="growth-trial-status">Your Growth trial status will appear here.</div>
             <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Starter, plus:</div>
             <div class="plan-list">
               <div class="plan-item"><span class="plan-item-check">✓</span>Payroll Management</div>
@@ -629,7 +649,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="plan-item"><span class="plan-item-check">✓</span>VAT / Tax Support</div>
               <div class="plan-item"><span class="plan-item-check">✓</span>Due Payment Reminders</div>
             </div>
-            <button onclick="window.showToast('Contact CLS to upgrade — LKR 15,500/mo')" style="margin-top:1.15rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">✨ Upgrade to Premium</button>
+            <button onclick="window.startGrowthTour()" style="margin-top:1.15rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Growth Tour</button>
+            <button onclick="window.showToast('Premium upgrade will be available from your account team.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">✨ Upgrade to Premium</button>
           </div>
           <div class="card">
             <div class="card-head"><span class="card-title">Team Access (up to 8)</span></div>
@@ -818,6 +839,76 @@ function fmtN(n) {
 }
 function today() {
   return new Date().toISOString().slice(0,10);
+}
+function formatLongDate(d) {
+  if (!d || isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+}
+function getGrowthTrialStatus() {
+  var now = new Date();
+  var end = _trialEnd || (_profile && _profile.trialEnd ? new Date(_profile.trialEnd) : now);
+  var valid = end && !isNaN(end.getTime());
+  var paid = _isPaid || (_profile && _profile.paid === true);
+  var daysLeft = valid ? Math.max(0, Math.ceil((end - now) / 86400000)) : 0;
+  return {paid:paid, end:valid ? end : null, daysLeft:daysLeft, ended:valid && now > end && !paid};
+}
+function renderGrowthTrialStatus() {
+  var st = getGrowthTrialStatus();
+  var pill = document.getElementById('growth-trial-pill');
+  var box = document.getElementById('growth-trial-status');
+  var txt = '';
+  if (st.paid) {
+    txt = 'Growth plan active';
+  } else if (st.ended) {
+    txt = 'Growth trial ended' + (st.end ? ' on ' + formatLongDate(st.end) : '') + '.';
+  } else {
+    txt = '<strong>' + st.daysLeft + ' day' + (st.daysLeft !== 1 ? 's' : '') + ' left</strong> on your Growth trial' + (st.end ? ' until ' + formatLongDate(st.end) : '') + '.';
+  }
+  if (pill) {
+    pill.style.display = 'inline-flex';
+    pill.innerHTML = st.paid ? 'Growth Active' : (st.ended ? 'Trial Ended' : st.daysLeft + ' Trial Days Left');
+  }
+  if (box) box.innerHTML = txt + (st.paid ? '' : '<br>Your Growth tools stay open while the trial continues.');
+}
+
+var growthTourSteps = [
+  {view:'dashboard',title:'Welcome to Growth',body:'<p>Growth is the upgraded operating view for teams that need more than Starter.</p><div class="g-tour-list"><div><strong>What changed:</strong> you still keep dashboard, invoices, clients, suppliers and reports.</div><div><strong>New layer:</strong> payroll, debt tracking, sales performance, automations and deeper analytics.</div></div>'},
+  {view:'payroll',title:'Staff & Payroll',body:'<p>Use this to manage the people side of the business.</p><div class="g-tour-list"><div><strong>Add staff:</strong> name, role, salary and colour tag.</div><div><strong>Pay cycle:</strong> mark salaries paid and see monthly payroll totals.</div><div><strong>Owner view:</strong> understand salary cost beside revenue.</div></div>'},
+  {view:'debt',title:'Who Owes Me',body:'<p>Growth separates collections and payables so nothing sits forgotten.</p><div class="g-tour-list"><div><strong>Receivables:</strong> invoices clients still need to pay.</div><div><strong>Payables:</strong> supplier or operating amounts you still owe.</div><div><strong>Follow-up:</strong> use reminders before cash becomes a problem.</div></div>'},
+  {view:'sales',title:'Sales Performance',body:'<p>Growth helps you see what is selling and who is performing.</p><div class="g-tour-list"><div><strong>Products/services:</strong> compare revenue lines.</div><div><strong>Repeat customers:</strong> spot your best clients.</div><div><strong>Team sales:</strong> review staff contribution when sales data is recorded.</div></div>'},
+  {view:'analytics',title:'Analytics',body:'<p>This is the owner report view for decisions.</p><div class="g-tour-list"><div><strong>Trends:</strong> revenue, profit, expenses and collections over time.</div><div><strong>Breakdowns:</strong> clients, categories and invoice performance.</div><div><strong>Next action:</strong> use the numbers to decide what to collect, cut, or grow.</div></div>'},
+  {view:'automations',title:'Auto Reminders',body:'<p>Growth includes reminder workflows so follow-ups do not depend on memory.</p><div class="g-tour-list"><div><strong>Invoice due:</strong> remind clients before payment dates.</div><div><strong>Overdue:</strong> follow up after the due date.</div><div><strong>Reports:</strong> keep monthly finance summaries moving.</div></div>'},
+  {view:'settings',title:'Trial & Plan',body:'<p>Your trial did not reset or disappear. It continues inside Growth.</p><div class="g-tour-list"><div><strong>Trial countdown:</strong> shown in the top bar and billing area.</div><div><strong>Team access:</strong> Growth supports up to 8 users.</div><div><strong>Next:</strong> add business details, logo and team emails from Settings.</div></div>'}
+];
+var growthTourIndex = 0;
+function renderGrowthTourStep() {
+  var step = growthTourSteps[growthTourIndex] || growthTourSteps[0];
+  if (typeof goTo === 'function') goTo(step.view);
+  var ov = document.getElementById('growth-tour');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'growth-tour';
+    ov.className = 'g-tour-ov';
+    document.body.appendChild(ov);
+  }
+  var dots = growthTourSteps.map(function(_, i) { return '<span class="g-tour-dot ' + (i === growthTourIndex ? 'on' : '') + '"></span>'; }).join('');
+  var isLast = growthTourIndex === growthTourSteps.length - 1;
+  ov.innerHTML =
+    '<div class="g-tour-box">' +
+      '<div class="g-tour-head"><div><div class="g-tour-k">Growth Tour</div><div class="g-tour-t">' + step.title + '</div></div><button class="g-tour-x" onclick="window.skipGrowthTour()">×</button></div>' +
+      '<div class="g-tour-b">' + step.body + '<div class="g-tour-progress">' + dots + '</div></div>' +
+      '<div class="g-tour-foot"><button class="btn bo" onclick="window.skipGrowthTour()">Skip</button><button class="btn bd" onclick="' + (isLast ? 'window.finishGrowthTour()' : 'window.nextGrowthTour()') + '">' + (isLast ? 'Finish' : 'Next') + '</button></div>' +
+    '</div>';
+}
+window.startGrowthTour = function startGrowthTour() { growthTourIndex = 0; renderGrowthTourStep(); };
+window.nextGrowthTour = function nextGrowthTour() { growthTourIndex = Math.min(growthTourIndex + 1, growthTourSteps.length - 1); renderGrowthTourStep(); };
+window.skipGrowthTour = function skipGrowthTour() { localStorage.removeItem('cls-growth-tour-pending'); var ov = document.getElementById('growth-tour'); if (ov) ov.remove(); };
+window.finishGrowthTour = function finishGrowthTour() { localStorage.removeItem('cls-growth-tour-pending'); var ov = document.getElementById('growth-tour'); if (ov) ov.remove(); };
+function maybeStartGrowthTour() {
+  var params = new URLSearchParams(window.location.search);
+  if (localStorage.getItem('cls-growth-tour-pending') || params.get('upgraded') === 'growth') {
+    setTimeout(function() { window.startGrowthTour(); }, 900);
+  }
 }
 
 var toastTimer;
@@ -1642,6 +1733,8 @@ var _fauth = firebase.auth();
 var _uid = null;
 var _profile = null;
 var _signedInUid = null;
+var _trialEnd = null;
+var _isPaid = false;
 
 // Save all D data to Firestore
 async function saveData() {
@@ -1728,6 +1821,8 @@ _fauth.onAuthStateChanged(async function(user) {
     var now = new Date();
     var trialEnd = new Date(_profile.trialEnd || now);
     var isPaid = _profile.paid === true;
+    _trialEnd = trialEnd;
+    _isPaid = isPaid;
     if (now > trialEnd && !isPaid) { showPaywall(_profile); return; }
 
     // Merge profile into D.settings
@@ -1760,14 +1855,19 @@ _fauth.onAuthStateChanged(async function(user) {
     [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
     ['t-date','e-date'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = today(); });
     renderDashboard();
+    renderGrowthTrialStatus();
     enforcePermissions();
+    if (new URLSearchParams(window.location.search).get('upgraded') === 'growth') {
+      showToast('Growth unlocked. Your trial time continues here.', 'ok');
+    }
+    maybeStartGrowthTour();
 
     // Trial banner
     if (!isPaid) {
       var daysLeft = Math.max(0, Math.ceil((trialEnd - now) / 86400000));
       var banner = document.createElement('div');
       banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:\'DM Sans\',sans-serif;font-size:.78rem;';
-      banner.innerHTML = '<span>⏳ <strong>' + daysLeft + ' day' + (daysLeft!==1?'s':'') + ' left</strong> on your free trial</span><button onclick="window.showPaywall(_profile)" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">Activate Plan →</button>';
+      banner.innerHTML = '<span>⏳ <strong>' + daysLeft + ' day' + (daysLeft!==1?'s':'') + ' left</strong> on your Growth free trial</span><button onclick="window.goTo(\'settings\')" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">View Billing →</button>';
       document.body.appendChild(banner);
     }
   } catch(e) { console.error('Growth auth guard:', e); }
