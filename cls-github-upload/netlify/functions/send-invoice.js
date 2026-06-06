@@ -26,8 +26,9 @@ exports.handler = async function handler(event) {
   if (!user || !pass) {
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Email not configured. Set SMTP_USER and SMTP_PASS in Netlify.' }) };
   }
-  // Send "from" the noreply alias; authenticate with the real mailbox (SMTP_USER).
-  const fromAddr = process.env.SMTP_FROM || 'noreply@ceylonrylabs.io';
+  // Send "from" the authenticated mailbox by default (most reliable).
+  // Optionally override with SMTP_FROM (e.g. a noreply alias) if your host allows alias sending.
+  const fromAddr = process.env.SMTP_FROM || user;
 
   const accent   = /^#[0-9a-fA-F]{6}$/.test(d.accent || '') ? d.accent : '#B8922A';
   const biz      = esc(d.bizName || 'Your Business');
