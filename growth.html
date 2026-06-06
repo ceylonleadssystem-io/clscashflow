@@ -1746,10 +1746,15 @@ _fauth.onAuthStateChanged(async function(user) {
     var _d2 = document.getElementById('tb-date2'); if(_d2) _d2.textContent = _ds;
     var hr = new Date().getHours();
     var greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-    var fn = (D.settings.user || 'there').split(' ')[0];
+    var accountEmail = (_profile.email || (user && user.email) || '');
+    var accountName = (_profile.name || (user && user.displayName) || D.settings.user || 'there');
+    if(_profile.ownerUid && D.settings.user && accountName === D.settings.user && accountEmail){
+      accountName = accountEmail.split('@')[0];
+    }
+    var fn = accountName.split(' ')[0];
     document.getElementById('greet-h').textContent = greet + ', ' + fn + '! 🌿';
-    document.getElementById('sb-uname').textContent = D.settings.user || '';
-    var ini = (D.settings.user || 'U').split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
+    document.getElementById('sb-uname').textContent = accountName || '';
+    var ini = (accountName || 'U').split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
     document.getElementById('sb-av').textContent = ini;
     var s = D.settings;
     [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });

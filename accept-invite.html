@@ -233,6 +233,7 @@ window.joinWithPassword = async function joinWithPassword(){
 window.joinWithGoogle = async function joinWithGoogle(){
   clearMsg();
   var name = el('f-name').value.trim();
+  if(!name){ showMsg('Please enter your name before continuing with Google.'); return; }
   var provider = new firebase.auth.GoogleAuthProvider();
   el('btn-google').disabled = true;
   try {
@@ -244,7 +245,7 @@ window.joinWithGoogle = async function joinWithGoogle(){
       el('btn-google').disabled = false;
       return;
     }
-    await attachAndFinish(user, name || user.displayName);
+    await attachAndFinish(user, name);
   } catch(e){
     console.error('google join error:', e);
     showMsg('Google sign-in did not complete. Please try again.');

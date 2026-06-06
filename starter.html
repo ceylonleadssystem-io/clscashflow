@@ -580,6 +580,10 @@ document.addEventListener('click',function(e){
           <option>Marketing</option><option>Operations</option><option>Other</option>
         </select></div>
       </div>
+      <div class="f-row">
+        <div class="f-group"><label>Supplier</label><select class="f-input f-select" id="t-supplier" onchange="onSupplierPick('t')"></select></div>
+        <div class="f-group" id="t-supplier-new-wrap" style="display:none"><label>New Supplier Name</label><input class="f-input" id="t-supplier-new" placeholder="e.g. Studio Nova"></div>
+      </div>
       <div class="f-group" style="margin-bottom:0"><label>Reference / Note</label><input class="f-input" id="t-ref" placeholder="e.g. Receipt #001, INV-001"></div>
     </div>
     <div class="modal-foot">
@@ -604,9 +608,10 @@ document.addEventListener('click',function(e){
       </div>
       <div class="f-group full" style="margin-bottom:.85rem"><label>Description *</label><input class="f-input" id="e-desc" placeholder="e.g. Electricity bill — May"></div>
       <div class="f-row">
-        <div class="f-group"><label>Vendor / Supplier</label><input class="f-input" id="e-vendor" placeholder="e.g. Ceylon Electricity Board"></div>
+        <div class="f-group"><label>Vendor / Supplier</label><select class="f-input f-select" id="e-supplier" onchange="onSupplierPick('e')"></select></div>
         <div class="f-group"><label>Amount (LKR) *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
+      <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:0"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
     </div>
     <div class="modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="exp-modal">Cancel</button>
@@ -962,10 +967,86 @@ window.nav = window.nav = function nav(view){
 // ════════════════════════════════
 // MODALS
 // ════════════════════════════════
-window.openModal = function openModal(id){document.getElementById(id).classList.add('open');}
+window.openModal = function openModal(id){
+  if(id==='txn-modal'||id==='exp-modal') refreshSupplierSelects();
+  document.getElementById(id).classList.add('open');
+}
 window.closeModal = function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
 document.addEventListener('keydown',e=>{if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+
+// ════════════════════════════════
+// SUPPLIER PICKERS
+// ════════════════════════════════
+function ensureSupplierStore(){
+  if(!DB.suppliers) DB.suppliers={list:[],nextId:1};
+  if(!Array.isArray(DB.suppliers.list)) DB.suppliers.list=[];
+  var maxId=DB.suppliers.list.reduce(function(max,s){return Math.max(max, Number(s.id)||0);},0);
+  if(!DB.suppliers.nextId||DB.suppliers.nextId<=maxId) DB.suppliers.nextId=maxId+1;
+}
+function supplierOptionsHTML(selectedId){
+  ensureSupplierStore();
+  var list=[...DB.suppliers.list].sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
+  var html='<option value="">No supplier selected</option>';
+  html+=list.map(function(s){
+    var id=String(s.id);
+    return '<option value="'+id+'"'+(String(selectedId||'')===id?' selected':'')+'>'+String(s.name||'Unnamed Supplier').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];})+'</option>';
+  }).join('');
+  html+='<option value="__new__">+ Add new supplier...</option>';
+  return html;
+}
+function refreshSupplierSelects(){
+  ['t','e'].forEach(function(prefix){
+    var sel=document.getElementById(prefix+'-supplier');
+    if(!sel) return;
+    var current=sel.value;
+    sel.innerHTML=supplierOptionsHTML(current);
+    if(current && Array.from(sel.options).some(function(o){return o.value===current;})) sel.value=current;
+    onSupplierPick(prefix);
+  });
+}
+window.onSupplierPick = function onSupplierPick(prefix){
+  var sel=document.getElementById(prefix+'-supplier');
+  var wrap=document.getElementById(prefix+'-supplier-new-wrap');
+  if(!sel||!wrap) return;
+  var isNew=sel.value==='__new__';
+  wrap.style.display=isNew?'block':'none';
+  if(isNew){
+    var input=document.getElementById(prefix+'-supplier-new');
+    if(input) setTimeout(function(){input.focus();},0);
+  }
+}
+function findSupplierByName(name){
+  ensureSupplierStore();
+  var key=String(name||'').trim().toLowerCase();
+  return DB.suppliers.list.find(function(s){return String(s.name||'').trim().toLowerCase()===key;})||null;
+}
+function createSupplierQuick(name, source){
+  ensureSupplierStore();
+  var clean=String(name||'').trim();
+  if(!clean) throw new Error('Please enter the new supplier name.');
+  var existing=findSupplierByName(clean);
+  if(existing) return existing;
+  var data={id:DB.suppliers.nextId++,name:clean,cat:'General',contact:'',phone:'',email:'',terms:'',addr:'',notes:'Added from '+source};
+  DB.suppliers.list.push(data);
+  return data;
+}
+function resolveSupplierFromPicker(prefix, source){
+  ensureSupplierStore();
+  var sel=document.getElementById(prefix+'-supplier');
+  if(!sel||!sel.value) return null;
+  if(sel.value==='__new__'){
+    return createSupplierQuick(document.getElementById(prefix+'-supplier-new').value, source);
+  }
+  return DB.suppliers.list.find(function(s){return String(s.id)===String(sel.value);})||null;
+}
+function clearSupplierPicker(prefix){
+  var sel=document.getElementById(prefix+'-supplier');
+  var input=document.getElementById(prefix+'-supplier-new');
+  if(sel) sel.value='';
+  if(input) input.value='';
+  onSupplierPick(prefix);
+}
 
 // ════════════════════════════════
 // DASHBOARD
@@ -1046,7 +1127,7 @@ function buildCharts(){
 }
 function renderRecentTable(){
   const all=[...DB.transactions.map(t=>({...t,src:'txn'})),...DB.expenses.map(e=>({...e,type:'out',src:'exp',desc:e.desc,cat:e.cat}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
-  document.getElementById('recent-table').innerHTML=all.length?all.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${t.desc}</td><td>${t.cat}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No transactions yet — add your first cash in or out</td></tr>';
+  document.getElementById('recent-table').innerHTML=all.length?all.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${t.desc}${(t.supplierName||t.vendor)?`<div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">${t.supplierName||t.vendor}</div>`:''}</td><td>${t.cat}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No transactions yet — add your first cash in or out</td></tr>';
 }
 
 // ════════════════════════════════
@@ -1057,7 +1138,7 @@ function renderCashflow(){
   const allOut=DB.transactions.filter(t=>t.type==='out').reduce((a,t)=>a+t.amount,0);
   document.getElementById('cf-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Cash In</div><div class="sum-val" style="color:var(--green)">${fmtAmt(allIn)}</div></div><div class="sum-item"><div class="sum-label">Total Cash Out</div><div class="sum-val" style="color:var(--red)">${fmtAmt(allOut)}</div></div><div class="sum-item"><div class="sum-label">Net Cashflow</div><div class="sum-val" style="color:var(--gold)">${fmtAmt(allIn-allOut)}</div></div>`;
   const sorted=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${t.desc}</td><td>${t.cat}</td><td style="color:var(--dim)">${t.ref||'—'}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No transactions yet. Add your first cash in or out.</td></tr>';
+  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${t.desc}</td><td>${t.cat}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${t.supplierName}${t.ref?' · '+t.ref:''}`:(t.ref||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No transactions yet. Add your first cash in or out.</td></tr>';
 }
 window.addTransaction = function addTransaction(){
   const date=document.getElementById('t-date').value;
@@ -1067,9 +1148,13 @@ window.addTransaction = function addTransaction(){
   const cat=document.getElementById('t-cat').value;
   const ref=document.getElementById('t-ref').value.trim();
   if(!date||!desc||!amount){alert('Please fill in date, description and amount.');return;}
-  DB.transactions.unshift({date,desc,type,amount,cat,ref,id:Date.now()});
+  var supplier=null;
+  try{supplier=resolveSupplierFromPicker('t','transaction');}
+  catch(e){alert(e.message);return;}
+  DB.transactions.unshift({date,desc,type,amount,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',id:Date.now()});
   saveDB();renderCashflow();renderRecentTable();closeModal('txn-modal');
-  document.getElementById('t-desc').value='';document.getElementById('t-amount').value='';document.getElementById('t-ref').value='';
+  refreshSupplierSelects();renderSuppliers();
+  document.getElementById('t-desc').value='';document.getElementById('t-amount').value='';document.getElementById('t-ref').value='';clearSupplierPicker('t');
 }
 
 // ════════════════════════════════
@@ -1088,12 +1173,16 @@ window.addExpense = function addExpense(){
   const date=document.getElementById('e-date').value;
   const desc=document.getElementById('e-desc').value.trim();
   const cat=document.getElementById('e-cat').value;
-  const vendor=document.getElementById('e-vendor').value.trim();
   const amount=parseAmt(document.getElementById('e-amount').value);
   if(!date||!desc||!amount){alert('Please fill in date, description and amount.');return;}
-  DB.expenses.unshift({date,desc,cat,vendor,amount,id:Date.now()});
+  var supplier=null;
+  try{supplier=resolveSupplierFromPicker('e','expense');}
+  catch(e){alert(e.message);return;}
+  const vendor=supplier?supplier.name:'';
+  DB.expenses.unshift({date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,id:Date.now()});
   saveDB();renderExpenses();closeModal('exp-modal');
-  document.getElementById('e-desc').value='';document.getElementById('e-vendor').value='';document.getElementById('e-amount').value='';
+  renderRecentTable();refreshSupplierSelects();renderSuppliers();
+  document.getElementById('e-desc').value='';document.getElementById('e-amount').value='';clearSupplierPicker('e');
 }
 
 // ════════════════════════════════
@@ -1265,8 +1354,13 @@ window.saveSettings = function saveSettings(){
   saveDB();applySettings();alert('✓ Settings saved successfully.');
 }
 function applySettings(){
-  document.getElementById('sb-biz-name').textContent=DB.settings.bizName;
-  document.getElementById('sb-user-email').textContent=DB.settings.email||DB.settings.username||'';
+  const signedInEmail=(_profile&&_profile.email)||(_auth.currentUser&&_auth.currentUser.email)||'';
+  let signedInName=(_profile&&_profile.name)||(_auth.currentUser&&_auth.currentUser.displayName)||DB.settings.username||DB.settings.bizName||'User';
+  if(_profile&&_profile.ownerUid&&DB.settings.username&&signedInName===DB.settings.username&&signedInEmail){
+    signedInName=signedInEmail.split('@')[0];
+  }
+  document.getElementById('sb-biz-name').textContent=signedInName;
+  document.getElementById('sb-user-email').textContent=signedInEmail;
   const logoWrap=document.getElementById('sb-logo-img-wrap');
   if(DB.settings.logo){logoWrap.innerHTML=`<img src="${DB.settings.logo}" style="max-height:28px;max-width:100px;object-fit:contain;display:block;margin-bottom:.4rem">`;}
   else{logoWrap.innerHTML='';}
@@ -1846,15 +1940,22 @@ window.saveSupplier = function saveSupplier(){
     terms:document.getElementById('s-terms').value,
     notes:document.getElementById('s-notes').value.trim()
   };
-  if(editId){const i=DB.suppliers.list.findIndex(s=>s.id===editId);if(i>-1)DB.suppliers.list[i]=data;}
+  if(editId){
+    const i=DB.suppliers.list.findIndex(s=>s.id===editId);
+    if(i>-1)DB.suppliers.list[i]=data;
+    DB.expenses.forEach(function(e){if(String(e.supplierId||'')===String(editId)){e.vendor=data.name;e.supplierName=data.name;}});
+    DB.transactions.forEach(function(t){if(String(t.supplierId||'')===String(editId)){t.supplierName=data.name;}});
+  }
   else DB.suppliers.list.push(data);
-  saveDB();renderSuppliers();closeModal('supplier-modal');
+  saveDB();renderSuppliers();refreshSupplierSelects();renderExpenses();renderCashflow();renderRecentTable();closeModal('supplier-modal');
 }
 window.deleteSupplier = function deleteSupplier(id){
   if(!confirm('Remove this supplier?'))return;
   if(!DB.suppliers)return;
   DB.suppliers.list=DB.suppliers.list.filter(s=>s.id!==id);
-  saveDB();renderSuppliers();
+  DB.expenses.forEach(function(e){if(String(e.supplierId||'')===String(id)){e.supplierId=null;}});
+  DB.transactions.forEach(function(t){if(String(t.supplierId||'')===String(id)){t.supplierId=null;}});
+  saveDB();renderSuppliers();refreshSupplierSelects();
 }
 window.waSupplier = function waSupplier(id){
   const s=DB.suppliers&&DB.suppliers.list.find(x=>x.id===id);if(!s||!s.phone)return;
@@ -1875,6 +1976,7 @@ function init(){
   document.getElementById('top-date').textContent=today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   // Set today on modal date fields
   ['t-date','e-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr();});
+  refreshSupplierSelects();
   renderDashboard();
 }
 // Sign out
