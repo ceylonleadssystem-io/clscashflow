@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
 <style>
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -41,23 +42,29 @@ nav.scrolled{background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-
 
 /* ── HERO ── */
 #hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:5rem 2rem 3rem;z-index:1}
-.hero-inner{max-width:860px;width:100%;padding:0 1rem}
+.hero-inner{max-width:920px;width:100%;padding:0 1rem;position:relative;z-index:2}
 .hero-eyebrow{font-size:.72rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:2rem;opacity:0;animation:fadeUp .8s .3s forwards}
 .hero-title{font-family:var(--font-display);font-size:clamp(2.8rem,5vw,4.8rem);font-weight:300;line-height:1.15;margin-bottom:1.5rem;opacity:0;animation:fadeUp .9s .5s forwards}
 .hero-title em{font-style:italic;color:var(--gold)}
+.hero-mobile-break{display:none}
 .hero-rule{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 2rem;opacity:0;animation:fadeIn .8s .9s forwards}
 .hero-tagline{font-family:var(--font-display);font-size:clamp(1rem,1.8vw,1.3rem);font-weight:300;font-style:italic;color:var(--text-muted);max-width:600px;margin:0 auto 2.5rem;opacity:0;animation:fadeUp .8s 1.1s forwards;line-height:1.6}
 .hero-product-line{max-width:650px;margin:-1.3rem auto 2rem;color:#4f463d;font-size:1.02rem;line-height:1.7;opacity:0;animation:fadeUp .8s 1.18s forwards}
 .hero-actions{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .8s 1.3s forwards;margin-bottom:.5rem}
+.hero-eyebrow,.hero-title,.hero-rule,.hero-tagline,.hero-product-line,.hero-actions{opacity:1;animation:none}
 .btn-gold{display:inline-block;padding:.9rem 2.5rem;background:var(--gold);color:#fff;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;text-decoration:none;transition:all .3s}
 .btn-gold:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 32px rgba(184,146,42,.3)}
 .btn-outline{display:inline-block;padding:.9rem 2.5rem;border:1px solid var(--gold);color:var(--gold);font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:all .3s}
 .btn-outline:hover{background:rgba(184,146,42,.08);transform:translateY(-2px)}
 .cta-trust{margin-top:.75rem;font-size:.72rem;letter-spacing:.06em;color:#6B6258;text-align:center}
 .pricing-card .cta-trust{font-size:.68rem;line-height:1.5}
-.sticky-trial-cta{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:480;display:flex;align-items:center;gap:.65rem;background:#1C1814;color:#fff;text-decoration:none;padding:.8rem 1.35rem;border:1px solid rgba(184,146,42,.45);box-shadow:0 14px 40px rgba(28,24,20,.18);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;transition:transform .25s,background .25s}
-.sticky-trial-cta span{color:#D4A840;font-size:.68rem;letter-spacing:.08em;text-transform:none;font-weight:500}
-.sticky-trial-cta:hover{background:#2B241D;transform:translateX(-50%) translateY(-2px)}
+.hero-3d-stage{width:min(100%,980px);height:320px;margin:-.35rem auto 1.7rem;position:relative;opacity:1;touch-action:none;cursor:grab}
+.hero-3d-stage:active{cursor:grabbing}
+.hero-3d-stage canvas{display:block;width:100%;height:100%}
+.hero-3d-caption{position:absolute;left:50%;bottom:.25rem;transform:translateX(-50%);display:flex;align-items:center;gap:.75rem;color:#6B6258;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;pointer-events:none}
+.hero-3d-caption strong{font-size:.72rem;color:#B8922A;letter-spacing:.16em}
+.hero-3d-caption span{width:42px;height:1px;background:linear-gradient(90deg,transparent,#B8922A)}
+.hero-trial-steps{display:flex;justify-content:center;gap:0;margin-bottom:2rem;flex-wrap:wrap}
 .hero-scroll-inline{display:flex;flex-direction:column;align-items:center;gap:.5rem;margin-top:3rem;opacity:0;animation:fadeIn 1s 2.2s forwards}
 .hero-scroll-inline span{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim)}
 .scroll-line-v{width:1px;height:40px;background:linear-gradient(to bottom,transparent,var(--gold));animation:scrollPulse 2s ease-in-out infinite}
@@ -476,13 +483,19 @@ footer{background:var(--obsidian-2);border-top:1px solid var(--border);padding:4
   
   /* Hero */
   #hero{padding:5rem 1.5rem 2rem;min-height:100svh}
-  .hero-title{font-size:clamp(2.2rem,9vw,3.2rem)!important;line-height:1.1}
-  .hero-tagline{font-size:1rem!important;margin-bottom:2rem}
-  .hero-product-line{font-size:.92rem;margin:-.8rem auto 1.5rem}
+  .hero-eyebrow{max-width:310px;margin-left:auto;margin-right:auto;letter-spacing:.16em;line-height:1.75}
+  .hero-title{font-size:clamp(1.9rem,8.2vw,2.45rem)!important;line-height:1.12;max-width:340px;margin-left:auto;margin-right:auto}
+  .hero-tagline{display:none}
+  .hero-mobile-break{display:inline}
+  .hero-product-line{width:min(100%,260px);max-width:260px;font-size:.82rem;margin:-.35rem auto 1.25rem;padding:0 .35rem;line-height:1.58}
   .hero-actions{flex-direction:column;align-items:center;gap:.75rem}
   .hero-actions .btn-gold,.hero-actions .btn-outline{width:100%;max-width:320px;text-align:center;display:block}
-  .sticky-trial-cta{left:1rem;right:1rem;bottom:1rem;transform:none;justify-content:center;padding:.85rem .9rem}
-  .sticky-trial-cta:hover{transform:translateY(-2px)}
+  .hero-3d-stage{height:230px;margin:-.25rem auto 1.3rem}
+  .hero-3d-caption{bottom:.05rem;font-size:.58rem;gap:.5rem}
+  .hero-3d-caption strong{font-size:.6rem}
+  .hero-trial-steps{flex-direction:column;align-items:center;gap:.35rem!important;margin-bottom:1.25rem!important}
+  .hero-trial-step{width:min(100%,280px);justify-content:flex-start!important}
+  .hero-step-arrow{padding:.1rem!important;transform:rotate(90deg)}
   .hero-scroll-inline{margin-top:2rem}
   
   /* Sections */
@@ -538,7 +551,10 @@ footer{background:var(--obsidian-2);border-top:1px solid var(--border);padding:4
 }
 
 @media(max-width:480px){
-  .hero-title{font-size:clamp(2rem,10vw,2.8rem)!important}
+  .hero-title{font-size:clamp(1.72rem,7.7vw,2.15rem)!important;max-width:300px}
+  .hero-eyebrow{font-size:.56rem;letter-spacing:.12em;max-width:235px}
+  .hero-tagline{display:none}
+  .hero-product-line{width:min(100%,230px);max-width:230px;font-size:.78rem;line-height:1.58}
   .pricing-badge{font-size:.5rem}
   .section-eyebrow{font-size:.58rem}
 }
@@ -1075,10 +1091,19 @@ footer{background:var(--obsidian-2);border-top:1px solid var(--border);padding:4
   
   /* Hero */
   #hero{padding:5rem 1.5rem 2rem;min-height:100svh}
-  .hero-title{font-size:clamp(2.2rem,9vw,3.2rem)!important;line-height:1.1}
-  .hero-tagline{font-size:1rem!important;margin-bottom:2rem}
+  .hero-eyebrow{max-width:310px;margin-left:auto;margin-right:auto;letter-spacing:.16em;line-height:1.75}
+  .hero-title{font-size:clamp(1.9rem,8.2vw,2.45rem)!important;line-height:1.12;max-width:340px;margin-left:auto;margin-right:auto}
+  .hero-tagline{display:none}
+  .hero-mobile-break{display:inline}
+  .hero-product-line{width:min(100%,260px);max-width:260px;font-size:.82rem;margin:-.35rem auto 1.25rem;padding:0 .35rem;line-height:1.58}
   .hero-actions{flex-direction:column;align-items:center;gap:.75rem}
   .hero-actions .btn-gold,.hero-actions .btn-outline{width:100%;max-width:320px;text-align:center;display:block}
+  .hero-3d-stage{height:230px;margin:-.25rem auto 1.3rem}
+  .hero-3d-caption{bottom:.05rem;font-size:.58rem;gap:.5rem}
+  .hero-3d-caption strong{font-size:.6rem}
+  .hero-trial-steps{flex-direction:column;align-items:center;gap:.35rem!important;margin-bottom:1.25rem!important}
+  .hero-trial-step{width:min(100%,280px);justify-content:flex-start!important}
+  .hero-step-arrow{padding:.1rem!important;transform:rotate(90deg)}
   .hero-scroll-inline{margin-top:2rem}
   
   /* Sections */
@@ -1134,7 +1159,10 @@ footer{background:var(--obsidian-2);border-top:1px solid var(--border);padding:4
 }
 
 @media(max-width:480px){
-  .hero-title{font-size:clamp(2rem,10vw,2.8rem)!important}
+  .hero-title{font-size:clamp(1.72rem,7.7vw,2.15rem)!important;max-width:300px}
+  .hero-eyebrow{font-size:.56rem;letter-spacing:.12em;max-width:235px}
+  .hero-tagline{display:none}
+  .hero-product-line{width:min(100%,230px);max-width:230px;font-size:.78rem;line-height:1.58}
   .pricing-badge{font-size:.5rem}
   .section-eyebrow{font-size:.58rem}
 }
@@ -1196,28 +1224,6 @@ footer { background: #FAF4EE !important; }
 }
 .pricing-badge {
   background: linear-gradient(135deg,#C8847A,#E8B4AA) !important;
-}
-
-/* Hero warm glow */
-#hero::before {
-  content: '';
-  position: absolute;
-  top: -10%;
-  left: -10%;
-  width: 60%;
-  height: 70%;
-  background: radial-gradient(ellipse, rgba(200,132,122,.08) 0%, transparent 65%);
-  pointer-events: none;
-}
-#hero::after {
-  content: '';
-  position: absolute;
-  bottom: -5%;
-  right: -5%;
-  width: 45%;
-  height: 55%;
-  background: radial-gradient(ellipse, rgba(184,146,42,.06) 0%, transparent 65%);
-  pointer-events: none;
 }
 
 /* FAQ section */
@@ -1295,8 +1301,6 @@ footer { background: #FAF4EE !important; }
   <a class="wa-btn" href="https://wa.me/94778815628?text=Hi%2C%20I%27m%20interested%20in%20CeylonryLabs%20Cashflow%20System" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
 </div>
 
-<a class="sticky-trial-cta" href="onboarding.html">Start Free Trial <span>Secure · no card</span></a>
-
 <canvas id="particle-canvas"></canvas>
 
 <!-- NAV -->
@@ -1329,27 +1333,32 @@ footer { background: #FAF4EE !important; }
 <!-- HERO -->
 <section id="hero">
   <div class="hero-inner">
-    <p class="hero-eyebrow">CeylonryLabs.io &nbsp;·&nbsp; For Women & Mom Entrepreneurs</p>
+    <p class="hero-eyebrow">CeylonryLabs.io &nbsp;·&nbsp; Cashflow &amp; Invoicing</p>
     <h1 class="hero-title">
-      You are both —<br>a <em>present mama</em><br>and a powerful CEO.
+      You are both —<br>a <em>present mama</em><br>and a powerful <span class="hero-mobile-break"><br></span>CEO.
     </h1>
     <div class="hero-rule"></div>
     <p class="hero-tagline">"You can build your dream <em>and</em> raise them too.<br>We handle the numbers so you can focus on what matters."</p>
     <p class="hero-product-line">A simple cashflow and invoicing app for Sri Lankan small businesses. Track your money, send invoices, and see your profit in one clear dashboard.</p>
 
+    <div class="hero-3d-stage" id="hero-3d-stage" aria-label="Interactive 3D cashflow dashboard preview">
+      <canvas id="hero-3d-canvas"></canvas>
+      <div class="hero-3d-caption"><span></span><strong>Drag to explore</strong><span></span></div>
+    </div>
+
     <!-- ── TRIAL STEPS ── -->
-    <div style="display:flex;justify-content:center;gap:0;margin-bottom:2rem;opacity:0;animation:fadeUp .8s 1.1s forwards;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
+    <div class="hero-trial-steps" style="display:flex;justify-content:center;gap:0;margin-bottom:2rem;opacity:0;animation:fadeUp .8s 1.1s forwards;flex-wrap:wrap">
+      <div class="hero-trial-step" style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
         <span style="width:22px;height:22px;background:var(--gold);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">1</span>
         Sign up free &mdash; takes 3 min
       </div>
-      <div style="display:flex;align-items:center;padding:.6rem .4rem;font-size:.8rem;color:var(--gold)">→</div>
-      <div style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
+      <div class="hero-step-arrow" style="display:flex;align-items:center;padding:.6rem .4rem;font-size:.8rem;color:var(--gold)">→</div>
+      <div class="hero-trial-step" style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
         <span style="width:22px;height:22px;background:var(--gold);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">2</span>
         15 days full access &mdash; no card needed
       </div>
-      <div style="display:flex;align-items:center;padding:.6rem .4rem;font-size:.8rem;color:var(--gold)">→</div>
-      <div style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
+      <div class="hero-step-arrow" style="display:flex;align-items:center;padding:.6rem .4rem;font-size:.8rem;color:var(--gold)">→</div>
+      <div class="hero-trial-step" style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
         <span style="width:22px;height:22px;background:var(--gold);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">3</span>
         Choose your plan &amp; subscribe
       </div>
@@ -2628,6 +2637,241 @@ resize();
 createParticles();
 drawParticles();
 window.addEventListener('resize', () => { resize(); createParticles(); });
+
+// ── HERO 3D CASHFLOW PREVIEW ──
+function initHero3D(){
+  const stage = document.getElementById('hero-3d-stage');
+  const canvas3d = document.getElementById('hero-3d-canvas');
+  if(!stage || !canvas3d) return;
+
+  const pointer = { x: 0, y: 0 };
+  let dragging = false;
+  const updatePointer = (e) => {
+    const rect = stage.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / Math.max(rect.width, 1)) * 2 - 1;
+    pointer.y = ((e.clientY - rect.top) / Math.max(rect.height, 1)) * 2 - 1;
+  };
+  stage.addEventListener('pointermove', updatePointer);
+  stage.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    updatePointer(e);
+    stage.setPointerCapture?.(e.pointerId);
+  });
+  stage.addEventListener('pointerup', () => { dragging = false; });
+  stage.addEventListener('pointerleave', () => { dragging = false; });
+
+  if(!window.THREE){
+    drawHeroCanvasFallback(canvas3d, stage, pointer);
+    return;
+  }
+
+  canvas3d.dataset.renderer = 'three';
+  const THREE = window.THREE;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+  camera.position.set(0, 1.25, 8.2);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, alpha: true, antialias: true });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  scene.add(new THREE.AmbientLight(0xfff4e6, 1.4));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+  keyLight.position.set(3, 4, 5);
+  scene.add(keyLight);
+  const warmLight = new THREE.PointLight(0xd4a840, 1.4, 12);
+  warmLight.position.set(-3, -1.5, 4);
+  scene.add(warmLight);
+
+  const rig = new THREE.Group();
+  rig.rotation.x = -0.18;
+  rig.scale.set(1.55, 1.55, 1.55);
+  scene.add(rig);
+
+  const mat = (color, metalness = 0.08, roughness = 0.52) => new THREE.MeshStandardMaterial({
+    color, metalness, roughness
+  });
+  const cream = mat(0xfffbf4, 0.02, 0.38);
+  const ink = mat(0x1c1814, 0.12, 0.5);
+  const gold = mat(0xb8922a, 0.18, 0.38);
+  const softGold = mat(0xd4a840, 0.12, 0.4);
+  const green = mat(0x159f5b, 0.08, 0.46);
+  const red = mat(0xc8847a, 0.06, 0.48);
+  const muted = mat(0xe8dfd0, 0.02, 0.62);
+
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(4.8, 2.65, 0.14), cream);
+  panel.position.set(0, 0, -0.05);
+  rig.add(panel);
+
+  const topStrip = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.2, 0.17), ink);
+  topStrip.position.set(0, 1.22, 0.05);
+  rig.add(topStrip);
+
+  const edge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(4.82, 2.67, 0.16)),
+    new THREE.LineBasicMaterial({ color: 0xb8922a, transparent: true, opacity: 0.35 })
+  );
+  edge.position.set(0, 0, -0.05);
+  rig.add(edge);
+
+  const bars = [];
+  const barValues = [0.56, 1.04, 0.78, 1.28, 0.94];
+  barValues.forEach((height, i) => {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1, 0.28), i === 3 ? green : (i === 2 ? red : gold));
+    bar.scale.y = height;
+    bar.position.set(-1.7 + i * 0.42, -0.96 + height / 2, 0.24);
+    rig.add(bar);
+    bars.push({ mesh: bar, base: height });
+  });
+
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-1.85, 0.28, 0.29),
+    new THREE.Vector3(-1.25, 0.45, 0.29),
+    new THREE.Vector3(-0.65, 0.18, 0.29),
+    new THREE.Vector3(-0.05, 0.62, 0.29),
+    new THREE.Vector3(0.45, 0.38, 0.29),
+    new THREE.Vector3(0.92, 0.82, 0.29)
+  ]);
+  const line = new THREE.Mesh(new THREE.TubeGeometry(curve, 36, 0.025, 8, false), softGold);
+  rig.add(line);
+
+  const tileData = [
+    { y: 0.62, w: 1.22, color: green },
+    { y: 0.2, w: 0.96, color: gold },
+    { y: -0.22, w: 1.08, color: red }
+  ];
+  tileData.forEach((tile, i) => {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.28, 0.12), muted);
+    base.position.set(1.35, tile.y, 0.22);
+    rig.add(base);
+    const fill = new THREE.Mesh(new THREE.BoxGeometry(tile.w, 0.05, 0.14), tile.color);
+    fill.position.set(1.35 - (1.35 - tile.w) / 2, tile.y - 0.045, 0.32);
+    rig.add(fill);
+  });
+
+  const coins = [];
+  for(let i = 0; i < 7; i++){
+    const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.045, 32), i % 2 ? softGold : gold);
+    coin.rotation.x = Math.PI / 2;
+    coin.position.set(-2.25 + i * 0.72, 1.58 + Math.sin(i) * 0.12, -0.15 + Math.cos(i) * 0.12);
+    rig.add(coin);
+    coins.push(coin);
+  }
+
+  const resize3d = () => {
+    const w = Math.max(stage.clientWidth, 320);
+    const h = Math.max(stage.clientHeight, 180);
+    const sceneScale = w < 560 ? 1.18 : 1.55;
+    rig.scale.set(sceneScale, sceneScale, sceneScale);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  };
+  resize3d();
+  new ResizeObserver(resize3d).observe(stage);
+
+  const animate = (now) => {
+    const t = now * 0.001;
+    const idleTurn = dragging ? 0 : Math.sin(t * 0.42) * 0.08;
+    rig.rotation.y += ((pointer.x * 0.42 + idleTurn) - rig.rotation.y) * 0.055;
+    rig.rotation.x += ((-0.18 + pointer.y * 0.16) - rig.rotation.x) * 0.055;
+    rig.position.y = Math.sin(t * 1.15) * 0.055;
+    bars.forEach((bar, i) => {
+      const nextScale = bar.base * (1 + Math.sin(t * 1.7 + i * 0.7) * 0.045);
+      bar.mesh.scale.y = nextScale;
+      bar.mesh.position.y = -0.96 + nextScale / 2;
+    });
+    coins.forEach((coin, i) => {
+      coin.rotation.z = t * (0.5 + i * 0.04);
+      coin.position.y += Math.sin(t + i) * 0.0008;
+    });
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  };
+  requestAnimationFrame(animate);
+}
+
+function drawHeroCanvasFallback(canvas3d, stage, pointer){
+  canvas3d.dataset.renderer = 'fallback';
+  const ctx = canvas3d.getContext('2d');
+  const resizeFallback = () => {
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(stage.clientWidth, 320);
+    const h = Math.max(stage.clientHeight, 180);
+    canvas3d.width = Math.round(w * ratio);
+    canvas3d.height = Math.round(h * ratio);
+    canvas3d.style.width = w + 'px';
+    canvas3d.style.height = h + 'px';
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  };
+  resizeFallback();
+  new ResizeObserver(resizeFallback).observe(stage);
+
+  const draw = (now) => {
+    const t = now * 0.001;
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(w / 2 + pointer.x * 22, h / 2 + 2 + pointer.y * 8);
+    ctx.rotate(pointer.x * 0.055 + Math.sin(t * 0.4) * 0.025);
+    ctx.transform(1, 0.08, -0.16, 1, 0, 0);
+
+    const panelW = Math.min(w * 0.74, 560);
+    const panelH = Math.min(h * 0.72, 180);
+    ctx.fillStyle = '#fffaf2';
+    ctx.strokeStyle = 'rgba(184,146,42,.34)';
+    ctx.lineWidth = 1;
+    ctx.shadowColor = 'rgba(28,24,20,.16)';
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 12;
+    ctx.fillRect(-panelW / 2, -panelH / 2, panelW, panelH);
+    ctx.shadowBlur = 0;
+    ctx.strokeRect(-panelW / 2, -panelH / 2, panelW, panelH);
+
+    ctx.fillStyle = '#1c1814';
+    ctx.fillRect(-panelW / 2, -panelH / 2, panelW, 14);
+
+    const bars = [0.46, 0.82, 0.62, 1, 0.74];
+    bars.forEach((v, i) => {
+      const bh = v * panelH * 0.42 * (1 + Math.sin(t * 1.6 + i) * 0.04);
+      ctx.fillStyle = i === 3 ? '#159f5b' : (i === 2 ? '#c8847a' : '#b8922a');
+      ctx.fillRect(-panelW * 0.36 + i * 34, panelH * 0.29 - bh, 18, bh);
+    });
+
+    ctx.strokeStyle = '#d4a840';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for(let i = 0; i < 6; i++){
+      const x = -panelW * 0.38 + i * 44;
+      const y = -panelH * 0.12 + Math.sin(t + i * 0.9) * 18 - i * 4;
+      if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    const tileX = panelW * 0.1;
+    ['#159f5b', '#b8922a', '#c8847a'].forEach((color, i) => {
+      const y = -panelH * 0.18 + i * 38;
+      ctx.fillStyle = '#eee6d8';
+      ctx.fillRect(tileX, y, panelW * 0.28, 24);
+      ctx.fillStyle = color;
+      ctx.fillRect(tileX + 8, y + 15, panelW * (0.13 + i * 0.025), 4);
+    });
+
+    for(let i = 0; i < 6; i++){
+      ctx.fillStyle = i % 2 ? '#d4a840' : '#b8922a';
+      ctx.beginPath();
+      ctx.ellipse(-panelW * 0.42 + i * 64, -panelH * 0.66 + Math.sin(t + i) * 6, 13, 5, t + i, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    requestAnimationFrame(draw);
+  };
+  requestAnimationFrame(draw);
+}
+
+initHero3D();
 
 // ── NAV SCROLL ──
 const nav = document.getElementById('main-nav');
