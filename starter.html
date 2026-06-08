@@ -188,6 +188,17 @@ tr:hover td{background:var(--bg3)}
 .btn-sm-wa:hover{background:#1db954}
 .btn-sm-pay{background:var(--black);color:#fff}
 
+.table-tools{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr)) auto;gap:.65rem;align-items:end;padding:.85rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg)}
+.table-tools .f-group{gap:.25rem}
+.table-tools label{font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.table-tools .f-input{padding:.5rem .7rem;font-size:.78rem;background:var(--white)}
+.row-actions{display:flex;justify-content:flex-end;gap:.35rem;flex-wrap:wrap}
+.audit-row-main{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;color:var(--text);font-weight:600}
+.audit-meta{font-size:.7rem;color:var(--muted);margin-top:.18rem;line-height:1.45}
+.audit-reason{font-size:.78rem;color:var(--text);line-height:1.55}
+.audit-chip{display:inline-block;background:var(--bg3);border:1px solid var(--border);padding:.12rem .45rem;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.admin-only{display:none}
+body.is-admin .admin-only{display:flex}
 
 /* ── CLIENTS ── */
 .client-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
@@ -286,6 +297,14 @@ tr:hover td{background:var(--bg3)}
 .tour-dot.active{background:var(--gold)}
 .tour-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.75rem}
 
+@media(max-width:980px){
+  .table-tools{grid-template-columns:1fr 1fr}
+  .table-tools .btn-act-outline{width:100%}
+}
+@media(max-width:620px){
+  .table-tools{grid-template-columns:1fr}
+}
+
 @media print{@page{size:A4;margin:0}html,body{margin:0!important;padding:0!important}body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 #print-invoice{display:none}
 </style>
@@ -302,13 +321,14 @@ document.addEventListener('click',function(e){
   var navEl=e.target.closest('[data-nav]');
   if(navEl){
     var view=navEl.getAttribute('data-nav');
+    if(view==='backlog'&&!(document.body&&document.body.classList.contains('is-admin')))return;
     document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
     document.querySelectorAll('[data-nav]').forEach(function(i){i.classList.remove('active');});
     var viewEl=document.getElementById('view-'+view);
     if(viewEl)viewEl.classList.add('active');
     navEl.classList.add('active');
     document.querySelectorAll('[data-nav="'+view+'"]').forEach(function(i){i.classList.add('active');});
-    var titles={dashboard:'Financial Dashboard',cashflow:'Cash Flow',expenses:'Expenses',invoices:'Invoices',clients:'Clients',suppliers:'Suppliers',reports:'Reports',settings:'Settings'};
+    var titles={dashboard:'Financial Dashboard',cashflow:'Cash Flow',expenses:'Expenses',invoices:'Invoices',clients:'Clients',suppliers:'Suppliers',reports:'Reports',backlog:'Edit Backlog',settings:'Settings'};
     var titleEl=document.getElementById('page-title');
     if(titleEl&&titles[view])titleEl.textContent=titles[view];
     if(view==='dashboard'&&typeof window.renderDashboard==='function')window.renderDashboard();
@@ -318,6 +338,7 @@ document.addEventListener('click',function(e){
     if(view==='clients'&&typeof window.renderClients==='function')window.renderClients();
     if(view==='suppliers'&&typeof window.renderSuppliers==='function')window.renderSuppliers();
     if(view==='reports'&&typeof window.renderReports==='function')window.renderReports();
+    if(view==='backlog'&&typeof window.renderBacklog==='function')window.renderBacklog();
     if(view==='settings'&&typeof window.loadSettings==='function')window.loadSettings();
     return;
   }
@@ -353,6 +374,7 @@ document.addEventListener('click',function(e){
     <a class="sb-item" data-nav="suppliers"><span class="sb-icon">🏭</span> Suppliers</a>
     <div class="sb-section">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
+    <a class="sb-item admin-only" data-nav="backlog"><span class="sb-icon">🗂️</span> Edit Backlog</a>
     <div class="sb-section">Account</div>
     <a class="sb-item" data-nav="settings"><span class="sb-icon">⚙️</span> Settings</a>
   </div>
@@ -414,7 +436,14 @@ document.addEventListener('click',function(e){
       <div class="sum-bar c3" id="cf-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Transaction Register</div><button class="btn-act" data-cls-fn="openModal" data-cls-arg="txn-modal">+ Add Transaction</button></div>
-        <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Reference</th><th>Type</th><th>Amount (LKR)</th></tr></thead><tbody id="cf-table"></tbody></table>
+        <div class="table-tools">
+          <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="cf-from" onchange="renderCashflow()"></div>
+          <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="cf-to" onchange="renderCashflow()"></div>
+          <div class="f-group"><label>Sort</label><select class="f-input f-select" id="cf-sort" onchange="renderCashflow()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div>
+          <div class="f-group"><label>Type</label><select class="f-input f-select" id="cf-type-filter" onchange="renderCashflow()"><option value="">All</option><option value="in">Cash In</option><option value="out">Cash Out</option></select></div>
+          <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="cf">Clear</button>
+        </div>
+        <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Reference</th><th>Type</th><th>Amount (LKR)</th><th>Actions</th></tr></thead><tbody id="cf-table"></tbody></table>
       </div>
     </div>
 
@@ -423,7 +452,14 @@ document.addEventListener('click',function(e){
       <div class="sum-bar c3" id="exp-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Expense Log</div><button class="btn-act" data-cls-fn="openModal" data-cls-arg="exp-modal">+ Add Expense</button></div>
-        <table><thead><tr><th>Date</th><th>Description</th><th>Vendor / Supplier</th><th>Category</th><th>Amount (LKR)</th></tr></thead><tbody id="exp-table"></tbody></table>
+        <div class="table-tools">
+          <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="exp-from" onchange="renderExpenses()"></div>
+          <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="exp-to" onchange="renderExpenses()"></div>
+          <div class="f-group"><label>Sort</label><select class="f-input f-select" id="exp-sort" onchange="renderExpenses()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div>
+          <div class="f-group"><label>Category</label><select class="f-input f-select" id="exp-cat-filter" onchange="renderExpenses()"><option value="">All Categories</option></select></div>
+          <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="exp">Clear</button>
+        </div>
+        <table><thead><tr><th>Date</th><th>Description</th><th>Vendor / Supplier</th><th>Category</th><th>Amount (LKR)</th><th>Actions</th></tr></thead><tbody id="exp-table"></tbody></table>
       </div>
     </div>
 
@@ -432,7 +468,23 @@ document.addEventListener('click',function(e){
       <div class="sum-bar c3" id="inv-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Invoice Register</div><button class="btn-act" data-cls-fn="openInvoiceModal">+ Raise Invoice</button></div>
+        <div class="table-tools">
+          <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="inv-from" onchange="renderInvoices()"></div>
+          <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="inv-to" onchange="renderInvoices()"></div>
+          <div class="f-group"><label>Sort</label><select class="f-input f-select" id="inv-sort" onchange="renderInvoices()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div>
+          <div class="f-group"><label>Status</label><select class="f-input f-select" id="inv-status-filter" onchange="renderInvoices()"><option value="">All</option><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select></div>
+          <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="inv">Clear</button>
+        </div>
         <table><thead><tr><th>Invoice #</th><th>Client</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ═ EDIT BACKLOG ═ -->
+    <div class="view" id="view-backlog">
+      <div class="sum-bar c3" id="backlog-summary"></div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Admin Edit Backlog</div><button class="btn-act-outline" data-cls-fn="renderBacklog">Refresh</button></div>
+        <table><thead><tr><th>Date</th><th>Edited Item</th><th>Reason</th><th>Admin</th></tr></thead><tbody id="backlog-table"></tbody></table>
       </div>
     </div>
 
@@ -650,6 +702,40 @@ document.addEventListener('click',function(e){
 </div>
 
 
+<!-- ════ EDIT RECORD MODAL ════ -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-head"><div class="modal-title" id="edit-modal-title">Edit Record</div><button class="modal-close" data-cls-fn="closeModal" data-cls-arg="edit-modal">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-kind">
+      <input type="hidden" id="edit-id">
+      <div class="f-row" id="edit-common-row">
+        <div class="f-group"><label>Date *</label><input class="f-input" type="date" id="edit-date"></div>
+        <div class="f-group"><label>Amount (LKR) *</label><input class="f-input" type="text" id="edit-amount" oninput="fmtInput(this)"></div>
+      </div>
+      <div class="f-group full" style="margin-bottom:.85rem"><label>Description / Client *</label><input class="f-input" id="edit-desc" placeholder="Record description"></div>
+      <div class="f-row" id="edit-txn-row">
+        <div class="f-group"><label>Type</label><select class="f-input f-select" id="edit-type"><option value="in">Cash In</option><option value="out">Cash Out</option></select></div>
+        <div class="f-group"><label>Category</label><input class="f-input" id="edit-cat" placeholder="Category"></div>
+      </div>
+      <div class="f-row" id="edit-exp-row">
+        <div class="f-group"><label>Vendor / Supplier</label><input class="f-input" id="edit-vendor" placeholder="Vendor or supplier"></div>
+        <div class="f-group"><label>Category</label><input class="f-input" id="edit-exp-cat" placeholder="Category"></div>
+      </div>
+      <div class="f-row" id="edit-inv-row">
+        <div class="f-group"><label>Due Date</label><input class="f-input" type="date" id="edit-due"></div>
+        <div class="f-group"><label>Status</label><select class="f-input f-select" id="edit-status"><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select></div>
+      </div>
+      <div class="f-group full" style="margin-bottom:.85rem"><label>Reference / Note</label><input class="f-input" id="edit-ref" placeholder="Optional reference"></div>
+      <div class="f-group full"><label>Reason for Edit *</label><textarea class="f-input" id="edit-reason" rows="3" placeholder="Example: Corrected wrong amount entered by staff." style="resize:vertical"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="edit-modal">Cancel</button>
+      <button class="btn-act" data-cls-fn="saveRecordEdit">Save Edit</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ CLIENT MODAL ════ -->
 <div class="modal-overlay" id="client-modal">
   <div class="modal-box" style="max-width:520px">
@@ -853,6 +939,7 @@ var DB = {
   transactions:[],
   expenses:[],
   invoices:[],
+  editBacklog:[],
   clients:{list:[],nextId:1},
   suppliers:{list:[],nextId:1},
   nextInvNum:1
@@ -881,6 +968,7 @@ async function saveDB() {
       saveCollection('transactions', DB.transactions),
       saveCollection('expenses', DB.expenses),
       saveCollection('invoices', DB.invoices),
+      saveCollection('editBacklog', DB.editBacklog || []),
       saveCollection('clients', DB.clients.list || []),
       saveCollection('suppliers', DB.suppliers.list || [])
     ]);
@@ -895,21 +983,23 @@ async function saveDB() {
 async function loadDB() {
   if (!_uid) return;
   try {
-    const collections = ['transactions','expenses','invoices','clients','suppliers'];
+    const collections = ['transactions','expenses','invoices','editBacklog','clients','suppliers'];
     const results = await Promise.all(
       collections.map(c => _db.collection('users').doc(_uid).collection(c).get())
     );
     DB.transactions = results[0].docs.map(d => d.data());
     DB.expenses = results[1].docs.map(d => d.data());
     DB.invoices = results[2].docs.map(d => d.data());
-    DB.clients.list = results[3].docs.map(d => d.data());
+    DB.editBacklog = results[3].docs.map(d => d.data());
+    DB.clients.list = results[4].docs.map(d => d.data());
     // Repair missing/duplicate client ids (older data could share ids)
     (function(){var seen={};DB.clients.list.forEach(function(c,i){if(c.id==null||seen[c.id]){c.id=Date.now()+i;}seen[c.id]=true;});})();
-    DB.suppliers.list = results[4].docs.map(d => d.data());
+    DB.suppliers.list = results[5].docs.map(d => d.data());
     // Sort invoices newest first
     DB.invoices.sort((a,b) => (b.id||0) - (a.id||0));
     DB.transactions.sort((a,b) => (b.id||0) - (a.id||0));
     DB.expenses.sort((a,b) => (b.id||0) - (a.id||0));
+    DB.editBacklog.sort((a,b) => new Date(b.editedAt||0) - new Date(a.editedAt||0));
   } catch(e) { console.error('loadDB error:', e); }
 }
 
@@ -961,12 +1051,25 @@ _auth.onAuthStateChanged(async function(user) {
 
 function enforcePermissions(){
   if(!_profile) return;
+  document.body.classList.toggle('is-admin', isAdminUser());
+  if(!isAdminUser()){
+    document.querySelectorAll('[data-nav="backlog"]').forEach(function(el){el.style.display='none';});
+    var backlogView=document.getElementById('view-backlog');
+    if(backlogView&&backlogView.classList.contains('active')) nav('dashboard');
+  }
   if(_profile.role==='viewer'){
     document.querySelectorAll('button[onclick*="add"],button[onclick*="save"],button[onclick*="delete"],button[onclick*="record"],button[onclick*="openModal"],button[onclick*="openClientModal"],button[onclick*="openSupplierModal"],button[onclick*="openInvoiceModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
+    document.querySelectorAll('button[data-cls-fn^="add"],button[data-cls-fn^="save"],button[data-cls-fn^="openEdit"],button[data-cls-fn^="record"],button[data-cls-fn="openModal"],button[data-cls-fn="openInvoiceModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
   }
   if(_profile.role==='accountant'){
     document.querySelectorAll('[data-nav="clients"],[data-nav="suppliers"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
   }
+}
+
+function isAdminUser(){
+  if(!_profile) return false;
+  if(_profile.role==='admin'||_profile.role==='owner') return true;
+  return _signedInUid&&_uid&&_signedInUid===_uid&&!_profile.ownerUid;
 }
 
 const today = new Date();
@@ -1072,8 +1175,9 @@ function maybeStartFirstTour(){
 // ════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════
-const pageTitles={dashboard:['Financial Dashboard','Overview of your business finances'],cashflow:['Cashflow Tracker','Track every cash in and cash out'],expenses:['Expense Manager','Monitor every business expense'],invoices:['Invoice Management','Create, send and track invoices'],clients:['Client Directory','Manage your clients and contacts'],suppliers:['Supplier Directory','Manage your suppliers and vendors'],reports:['Financial Reports','Profit & Loss and business insights'],settings:['Business Settings','Manage your profile and preferences']};
+const pageTitles={dashboard:['Financial Dashboard','Overview of your business finances'],cashflow:['Cashflow Tracker','Track every cash in and cash out'],expenses:['Expense Manager','Monitor every business expense'],invoices:['Invoice Management','Create, send and track invoices'],clients:['Client Directory','Manage your clients and contacts'],suppliers:['Supplier Directory','Manage your suppliers and vendors'],reports:['Financial Reports','Profit & Loss and business insights'],backlog:['Edit Backlog','Admin-only register of record changes and reasons'],settings:['Business Settings','Manage your profile and preferences']};
 window.nav = window.nav = function nav(view){
+  if(view==='backlog'&&!isAdminUser()) view='dashboard';
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   var _vel=document.getElementById('view-'+view);if(_vel)_vel.classList.add('active');
@@ -1088,6 +1192,7 @@ window.nav = window.nav = function nav(view){
   if(view==='clients') renderClients();
   if(view==='suppliers') renderSuppliers();
   if(view==='reports') renderReports();
+  if(view==='backlog') renderBacklog();
   if(view==='settings') loadSettings();
 }
 
@@ -1257,6 +1362,68 @@ function renderRecentTable(){
   document.getElementById('recent-table').innerHTML=all.length?all.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${t.desc}${(t.supplierName||t.vendor)?`<div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">${t.supplierName||t.vendor}</div>`:''}</td><td>${t.cat}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No transactions yet — add your first cash in or out</td></tr>';
 }
 
+function escHTML(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function getFilterRange(prefix){
+  const fromEl=document.getElementById(prefix+'-from');
+  const toEl=document.getElementById(prefix+'-to');
+  const from=fromEl&&fromEl.value?new Date(fromEl.value+'T00:00:00'):null;
+  const to=toEl&&toEl.value?new Date(toEl.value+'T23:59:59'):null;
+  return function(item){
+    const d=new Date(item.date+'T00:00:00');
+    if(from&&d<from) return false;
+    if(to&&d>to) return false;
+    return true;
+  };
+}
+function sortRecords(list,prefix){
+  const el=document.getElementById(prefix+'-sort');
+  const mode=el?el.value:'date-desc';
+  return [...list].sort(function(a,b){
+    if(mode==='date-asc') return new Date(a.date)-new Date(b.date);
+    if(mode==='amount-desc') return Number(b.amount||0)-Number(a.amount||0);
+    if(mode==='amount-asc') return Number(a.amount||0)-Number(b.amount||0);
+    return new Date(b.date)-new Date(a.date);
+  });
+}
+function populateExpenseCategoryFilter(){
+  const sel=document.getElementById('exp-cat-filter');
+  if(!sel) return;
+  const current=sel.value;
+  const cats=[...new Set(DB.expenses.map(function(e){return e.cat;}).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">All Categories</option>'+cats.map(function(c){return '<option value="'+escHTML(c)+'">'+escHTML(c)+'</option>';}).join('');
+  if(cats.includes(current)) sel.value=current;
+}
+window.clearTableFilters=function clearTableFilters(prefix){
+  [prefix+'-from',prefix+'-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var sort=document.getElementById(prefix+'-sort');if(sort)sort.value='date-desc';
+  var extra=document.getElementById(prefix+'-type-filter')||document.getElementById(prefix+'-cat-filter')||document.getElementById(prefix+'-status-filter');
+  if(extra)extra.value='';
+  if(prefix==='cf')renderCashflow();
+  if(prefix==='exp')renderExpenses();
+  if(prefix==='inv')renderInvoices();
+};
+function getEditorName(){
+  return (_profile&&(_profile.name||_profile.email))||(_auth.currentUser&&(_auth.currentUser.email||_auth.currentUser.displayName))||'Admin';
+}
+function snapshotForLog(item){
+  return JSON.parse(JSON.stringify(item||{}));
+}
+function addEditBacklog(kind,itemId,label,reason,before,after){
+  if(!DB.editBacklog) DB.editBacklog=[];
+  DB.editBacklog.unshift({
+    id:Date.now()+Math.floor(Math.random()*1000),
+    kind:kind,
+    itemId:itemId,
+    label:label,
+    reason:reason,
+    before:before,
+    after:after,
+    editedAt:new Date().toISOString(),
+    editedBy:getEditorName(),
+    editorUid:_signedInUid||_uid||''
+  });
+}
+
 // ════════════════════════════════
 // CASHFLOW
 // ════════════════════════════════
@@ -1264,8 +1431,10 @@ function renderCashflow(){
   const allIn=DB.transactions.filter(t=>t.type==='in').reduce((a,t)=>a+t.amount,0);
   const allOut=DB.transactions.filter(t=>t.type==='out').reduce((a,t)=>a+t.amount,0);
   document.getElementById('cf-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Cash In</div><div class="sum-val" style="color:var(--green)">${fmtAmt(allIn)}</div></div><div class="sum-item"><div class="sum-label">Total Cash Out</div><div class="sum-val" style="color:var(--red)">${fmtAmt(allOut)}</div></div><div class="sum-item"><div class="sum-label">Net Cashflow</div><div class="sum-val" style="color:var(--gold)">${fmtAmt(allIn-allOut)}</div></div>`;
-  const sorted=[...DB.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${t.desc}</td><td>${t.cat}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${t.supplierName}${t.ref?' · '+t.ref:''}`:(t.ref||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No transactions yet. Add your first cash in or out.</td></tr>';
+  const typeFilter=(document.getElementById('cf-type-filter')||{}).value||'';
+  const filtered=DB.transactions.filter(getFilterRange('cf')).filter(function(t){return !typeFilter||t.type===typeFilter;});
+  const sorted=sortRecords(filtered,'cf');
+  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${escHTML(t.desc)}</td><td>${escHTML(t.cat)}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${escHTML(t.supplierName)}${t.ref?' · '+escHTML(t.ref):''}`:(escHTML(t.ref)||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="transaction:${t.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No transactions match the selected filters.</td></tr>';
 }
 window.addTransaction = function addTransaction(){
   const date=document.getElementById('t-date').value;
@@ -1288,13 +1457,16 @@ window.addTransaction = function addTransaction(){
 // EXPENSES
 // ════════════════════════════════
 function renderExpenses(){
+  populateExpenseCategoryFilter();
   const total=DB.expenses.reduce((a,e)=>a+e.amount,0);
   const mo=new Date().getMonth();const mtd=DB.expenses.filter(e=>new Date(e.date).getMonth()===mo).reduce((a,e)=>a+e.amount,0);
   const cats={};DB.expenses.forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+1;});
   const topCat=(Object.entries(cats).sort((a,b)=>b[1]-a[1])[0]||[])[0]||'—';
   document.getElementById('exp-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Expenses</div><div class="sum-val">${fmtAmt(total)}</div></div><div class="sum-item"><div class="sum-label">This Month</div><div class="sum-val" style="color:var(--red)">${fmtAmt(mtd)}</div></div><div class="sum-item"><div class="sum-label">Top Category</div><div class="sum-val" style="color:var(--gold)">${topCat}</div></div>`;
-  const sorted=[...DB.expenses].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(e=>`<tr><td>${fmtD(e.date)}</td><td>${e.desc}</td><td style="color:var(--muted)">${e.vendor||'—'}</td><td>${e.cat}</td><td style="text-align:right" class="amount-neg">${fmtAmt(e.amount)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No expenses yet. Add your first expense.</td></tr>';
+  const catFilter=(document.getElementById('exp-cat-filter')||{}).value||'';
+  const filtered=DB.expenses.filter(getFilterRange('exp')).filter(function(e){return !catFilter||e.cat===catFilter;});
+  const sorted=sortRecords(filtered,'exp');
+  document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(e=>`<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(e.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No expenses match the selected filters.</td></tr>';
 }
 window.addExpense = function addExpense(){
   const date=document.getElementById('e-date').value;
@@ -1353,7 +1525,10 @@ function renderInvoices(){
   const total=DB.invoices.reduce((a,i)=>a+i.amount,0);
   const collected=DB.invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
   document.getElementById('inv-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Invoiced</div><div class="sum-val">${fmtAmt(total)}</div></div><div class="sum-item"><div class="sum-label">Collected</div><div class="sum-val" style="color:var(--green)">${fmtAmt(collected)}</div></div><div class="sum-item"><div class="sum-label">Outstanding</div><div class="sum-val" style="color:var(--amber)">${fmtAmt(total-collected)}</div></div>`;
-  document.getElementById('inv-table').innerHTML=DB.invoices.length?DB.invoices.map(inv=>{
+  const statusFilter=(document.getElementById('inv-status-filter')||{}).value||'';
+  const filtered=DB.invoices.filter(getFilterRange('inv')).filter(function(inv){return !statusFilter||inv.status===statusFilter;});
+  const sorted=sortRecords(filtered,'inv');
+  document.getElementById('inv-table').innerHTML=sorted.length?sorted.map(inv=>{
     const paid=inv.paidAmount||0;const bal=inv.amount-paid;const pct=inv.amount>0?Math.round(paid/inv.amount*100):0;
     const sc=inv.status==='paid'?'pill-paid':inv.status==='overdue'?'pill-overdue':inv.status==='partial'?'pill-partial':'pill-unpaid';
     return`<tr>
@@ -1365,9 +1540,99 @@ function renderInvoices(){
         <button class="btn-sm btn-sm-dark" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Download PDF">⬇ PDF</button>
         <button class="btn-sm btn-sm-green" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send via Email">✉ Email</button>
         <button class="btn-sm btn-sm-wa" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send via WhatsApp">💬 WA</button>
+        <button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="invoice:${inv.num}">Edit</button>
         ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">💳 Pay</button>`:'<span style="font-size:.65rem;color:var(--green)">✓ Settled</span>'}
       </div></td>
-    </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices yet. Raise your first invoice.</td></tr>';
+    </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
+}
+
+// ════════════════════════════════
+// EDITS + ADMIN BACKLOG
+// ════════════════════════════════
+function findEditableRecord(kind,id){
+  if(kind==='transaction') return DB.transactions.find(function(t){return String(t.id)===String(id);});
+  if(kind==='expense') return DB.expenses.find(function(e){return String(e.id)===String(id);});
+  if(kind==='invoice') return DB.invoices.find(function(i){return String(i.num)===String(id);});
+  return null;
+}
+window.openEditRecord=function openEditRecord(arg){
+  const parts=String(arg||'').split(':');
+  const kind=parts[0], id=parts.slice(1).join(':');
+  const item=findEditableRecord(kind,id);
+  if(!item){alert('Could not find this record to edit.');return;}
+  document.getElementById('edit-kind').value=kind;
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-date').value=item.date||'';
+  document.getElementById('edit-amount').value=Number(item.amount||0).toLocaleString();
+  document.getElementById('edit-desc').value=kind==='invoice'?(item.client||''):(item.desc||'');
+  document.getElementById('edit-type').value=item.type||'in';
+  document.getElementById('edit-cat').value=item.cat||'';
+  document.getElementById('edit-vendor').value=item.vendor||item.supplierName||'';
+  document.getElementById('edit-exp-cat').value=item.cat||'';
+  document.getElementById('edit-due').value=item.due||'';
+  document.getElementById('edit-status').value=item.status||'unpaid';
+  document.getElementById('edit-ref').value=item.ref||'';
+  document.getElementById('edit-reason').value='';
+  document.getElementById('edit-modal-title').textContent='Edit '+(kind==='transaction'?'Transaction':kind==='expense'?'Expense':'Invoice');
+  document.getElementById('edit-txn-row').style.display=kind==='transaction'?'grid':'none';
+  document.getElementById('edit-exp-row').style.display=kind==='expense'?'grid':'none';
+  document.getElementById('edit-inv-row').style.display=kind==='invoice'?'grid':'none';
+  document.getElementById('edit-ref').closest('.f-group').style.display=kind==='transaction'?'flex':'none';
+  openModal('edit-modal');
+};
+window.saveRecordEdit=function saveRecordEdit(){
+  const kind=document.getElementById('edit-kind').value;
+  const id=document.getElementById('edit-id').value;
+  const item=findEditableRecord(kind,id);
+  if(!item){alert('Could not find this record to save.');return;}
+  const reason=document.getElementById('edit-reason').value.trim();
+  const date=document.getElementById('edit-date').value;
+  const amount=parseAmt(document.getElementById('edit-amount').value);
+  const desc=document.getElementById('edit-desc').value.trim();
+  if(!reason){alert('Please mention the reason for this edit.');return;}
+  if(!date||!desc||!amount){alert('Please fill in date, description/client, and amount.');return;}
+  const before=snapshotForLog(item);
+  if(kind==='transaction'){
+    item.date=date;item.amount=amount;item.desc=desc;
+    item.type=document.getElementById('edit-type').value;
+    item.cat=document.getElementById('edit-cat').value.trim()||'Other';
+    item.ref=document.getElementById('edit-ref').value.trim();
+  }else if(kind==='expense'){
+    item.date=date;item.amount=amount;item.desc=desc;
+    item.vendor=document.getElementById('edit-vendor').value.trim();
+    item.supplierName=item.vendor;
+    item.cat=document.getElementById('edit-exp-cat').value.trim()||'Other';
+  }else if(kind==='invoice'){
+    item.date=date;item.amount=amount;item.client=desc;
+    item.due=document.getElementById('edit-due').value||item.due;
+    item.status=document.getElementById('edit-status').value;
+    if(item.status==='paid') item.paidAmount=amount;
+    if(item.status==='unpaid') item.paidAmount=0;
+    if((item.paidAmount||0)>amount) item.paidAmount=amount;
+  }
+  const label=kind==='invoice'?(item.num+' · '+item.client):(item.desc||item.num||String(id));
+  addEditBacklog(kind,id,label,reason,before,snapshotForLog(item));
+  saveDB();
+  closeModal('edit-modal');
+  renderCashflow();renderExpenses();renderInvoices();renderRecentTable();renderDashboard();renderBacklog();
+  alert('Edit saved and added to the admin backlog.');
+};
+function renderBacklog(){
+  const summary=document.getElementById('backlog-summary');
+  const table=document.getElementById('backlog-table');
+  if(!summary||!table) return;
+  if(!isAdminUser()){
+    summary.innerHTML='<div class="sum-item"><div class="sum-label">Access</div><div class="sum-val" style="color:var(--red)">Admin Only</div></div><div class="sum-item"></div><div class="sum-item"></div>';
+    table.innerHTML='<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--dim)">Only admin users can view the edit backlog.</td></tr>';
+    return;
+  }
+  const logs=[...(DB.editBacklog||[])].sort(function(a,b){return new Date(b.editedAt)-new Date(a.editedAt);});
+  const thisMonth=logs.filter(function(l){const d=new Date(l.editedAt);const n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();}).length;
+  summary.innerHTML=`<div class="sum-item"><div class="sum-label">Total Edits</div><div class="sum-val">${logs.length}</div></div><div class="sum-item"><div class="sum-label">This Month</div><div class="sum-val" style="color:var(--gold)">${thisMonth}</div></div><div class="sum-item"><div class="sum-label">Latest Edit</div><div class="sum-val" style="font-size:1.05rem">${logs[0]?fmtD(logs[0].editedAt.slice(0,10)):'—'}</div></div>`;
+  table.innerHTML=logs.length?logs.map(function(l){
+    const when=l.editedAt?new Date(l.editedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    return `<tr><td>${when}</td><td><div class="audit-row-main"><span class="audit-chip">${escHTML(l.kind)}</span>${escHTML(l.label)}</div><div class="audit-meta">Record ID: ${escHTML(l.itemId)}</div></td><td><div class="audit-reason">${escHTML(l.reason)}</div></td><td>${escHTML(l.editedBy||'Admin')}</td></tr>`;
+  }).join(''):'<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--dim)">No edits have been logged yet.</td></tr>';
 }
 
 // ════════════════════════════════
