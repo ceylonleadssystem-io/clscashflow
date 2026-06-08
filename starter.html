@@ -2615,7 +2615,12 @@ window.waInvoiceWithPDF=function(num){
       var doc=new jsPDFLib({orientation:'p',unit:'mm',format:'a4'});
       var pw=210,m=16,black=[26,23,20],muted=[111,104,94],line=[240,238,233];
       var isClassic=tpl.style==='classic',isMinimal=tpl.style==='minimal',isExec=tpl.style==='executive';
-      var topH=isClassic?48:40;
+      var align=s.logoAlign||'left';
+      var logoH={S:9,M:12,L:15}[s.logoSize||'M']||12;
+      var logoY=isClassic?10:11;
+      var brandNameY=s.logo?(logoY+logoH+8):22;
+      var brandDetailY=brandNameY+7;
+      var topH=Math.max(isClassic?48:40,brandDetailY+10);
       doc.setFillColor(255,255,255);doc.rect(0,0,pw,297,'F');
       if(isClassic){
         doc.setFillColor(ac[0],ac[1],ac[2]);doc.rect(0,0,pw,topH,'F');
@@ -2625,21 +2630,20 @@ window.waInvoiceWithPDF=function(num){
       }
       var headerText=isClassic?[255,255,255]:black;
       var headerMuted=isClassic?[245,241,232]:muted;
-      var align=s.logoAlign||'left';
-      var logoH={S:12,M:18,L:25}[s.logoSize||'M']||18;
       var brandX=align==='center'?pw/2:align==='right'?86:m;
       var brandOpt=align==='center'?{align:'center'}:align==='right'?{align:'right'}:undefined;
       if(s.logo){
         try{
-          var imgX=align==='center'?pw/2-logoH*1.4:align==='right'?brandX-logoH*2.8:m;
-          doc.addImage(s.logo,'PNG',imgX,12,logoH*2.8,logoH);
+          var logoW=logoH*3.2;
+          var imgX=align==='center'?pw/2-logoW/2:align==='right'?brandX-logoW:m;
+          doc.addImage(s.logo,'PNG',imgX,logoY,logoW,logoH);
         }catch(imgErr){}
       }
       doc.setTextColor(headerText[0],headerText[1],headerText[2]);
-      doc.setFont('times','normal');doc.setFontSize(20);doc.text(String(biz),brandX,s.logo?32:22,brandOpt);
+      doc.setFont('times','normal');doc.setFontSize(18);doc.text(String(biz),brandX,brandNameY,brandOpt);
       doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(headerMuted[0],headerMuted[1],headerMuted[2]);
-      if(s.addr)doc.text(doc.splitTextToSize(cleanText(s.addr),70),brandX,s.logo?38:29,brandOpt);
-      else if(s.email)doc.text(cleanText(s.email),brandX,s.logo?38:29,brandOpt);
+      if(s.addr)doc.text(doc.splitTextToSize(cleanText(s.addr),70),brandX,brandDetailY,brandOpt);
+      else if(s.email)doc.text(cleanText(s.email),brandX,brandDetailY,brandOpt);
       doc.setFont('helvetica','bold');doc.setFontSize(26);doc.setTextColor(headerText[0],headerText[1],headerText[2]);doc.text('INVOICE',pw-m,20,{align:'right'});
       doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(isClassic?255:ac[0],isClassic?255:ac[1],isClassic?255:ac[2]);doc.text(String(inv.num||''),pw-m,29,{align:'right'});
 
