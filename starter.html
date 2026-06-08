@@ -2607,64 +2607,104 @@ window.waInvoiceWithPDF=function(num){
   var tpl=(tplDefs[inv.tpl||0]||tplDefs[0]);
   function hexToRgb(h){h=String(h||'#B8922A').replace('#','');return [parseInt(h.substr(0,2),16)||184,parseInt(h.substr(2,2),16)||146,parseInt(h.substr(4,2),16)||42];}
   function money(n){return Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function cleanText(t){return String(t==null?'':t).replace(/\s*\n\s*/g,' ').trim();}
   var ac=hexToRgb(tpl.accent);
-  var isMini=tpl.style==='minimal';
   var jsPDFLib=window.jspdf&&window.jspdf.jsPDF;
   if(jsPDFLib){
     try{
       var doc=new jsPDFLib({orientation:'p',unit:'mm',format:'a4'});
-      var pw=210,m=16;
-      // ── Header band (template accent) ──
-      doc.setFillColor(ac[0],ac[1],ac[2]);doc.rect(0,0,pw,48,'F');
-      doc.setTextColor(255,255,255);
-      doc.setFont('times','normal');doc.setFontSize(20);doc.text(String(biz),m,24);
-      doc.setFont('helvetica','normal');doc.setFontSize(8);
-      var hy=31;if(s.addr){doc.text(String(s.addr),m,hy);hy+=5;}if(s.email){doc.text(String(s.email),m,hy);}
-      doc.setFont('helvetica','bold');doc.setFontSize(26);doc.text('INVOICE',pw-m,24,{align:'right'});
-      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text(String(inv.num||''),pw-m,32,{align:'right'});
-      // ── From / Bill To / meta ──
-      var y=62;
+      var pw=210,m=16,black=[26,23,20],muted=[111,104,94],line=[240,238,233];
+      var isClassic=tpl.style==='classic',isMinimal=tpl.style==='minimal',isExec=tpl.style==='executive';
+      var topH=isClassic?48:40;
+      doc.setFillColor(255,255,255);doc.rect(0,0,pw,297,'F');
+      if(isClassic){
+        doc.setFillColor(ac[0],ac[1],ac[2]);doc.rect(0,0,pw,topH,'F');
+      }else{
+        if(isExec){doc.setFillColor(ac[0],ac[1],ac[2]);doc.rect(0,0,pw,4,'F');}
+        doc.setDrawColor(isMinimal?ac[0]:237,isMinimal?ac[1]:237,isMinimal?ac[2]:237);doc.setLineWidth(isMinimal?0.8:0.25);doc.line(m,topH,pw-m,topH);
+      }
+      var headerText=isClassic?[255,255,255]:black;
+      var headerMuted=isClassic?[245,241,232]:muted;
+      var align=s.logoAlign||'left';
+      var logoH={S:12,M:18,L:25}[s.logoSize||'M']||18;
+      var brandX=align==='center'?pw/2:align==='right'?86:m;
+      var brandOpt=align==='center'?{align:'center'}:align==='right'?{align:'right'}:undefined;
+      if(s.logo){
+        try{
+          var imgX=align==='center'?pw/2-logoH*1.4:align==='right'?brandX-logoH*2.8:m;
+          doc.addImage(s.logo,'PNG',imgX,12,logoH*2.8,logoH);
+        }catch(imgErr){}
+      }
+      doc.setTextColor(headerText[0],headerText[1],headerText[2]);
+      doc.setFont('times','normal');doc.setFontSize(20);doc.text(String(biz),brandX,s.logo?32:22,brandOpt);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(headerMuted[0],headerMuted[1],headerMuted[2]);
+      if(s.addr)doc.text(doc.splitTextToSize(cleanText(s.addr),70),brandX,s.logo?38:29,brandOpt);
+      else if(s.email)doc.text(cleanText(s.email),brandX,s.logo?38:29,brandOpt);
+      doc.setFont('helvetica','bold');doc.setFontSize(26);doc.setTextColor(headerText[0],headerText[1],headerText[2]);doc.text('INVOICE',pw-m,20,{align:'right'});
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(isClassic?255:ac[0],isClassic?255:ac[1],isClassic?255:ac[2]);doc.text(String(inv.num||''),pw-m,29,{align:'right'});
+
+      var y=topH+18;
       doc.setTextColor(ac[0],ac[1],ac[2]);doc.setFont('helvetica','bold');doc.setFontSize(7);
-      doc.text('FROM',m,y);doc.text('BILL TO',104,y);
-      doc.setTextColor(26,23,20);doc.setFont('helvetica','bold');doc.setFontSize(10);
-      doc.text(String(biz),m,y+6);doc.text(String(inv.client||''),104,y+6);
-      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(95,90,82);
-      if(inv.cemail)doc.text(String(inv.cemail),104,y+12);
+      doc.text('FROM',m,y);doc.text('BILL TO',92,y);
+      doc.setTextColor(black[0],black[1],black[2]);doc.setFontSize(10);
+      doc.text(String(biz),m,y+7);doc.text(String(inv.client||''),92,y+7);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(muted[0],muted[1],muted[2]);
+      if(s.addr)doc.text(doc.splitTextToSize(cleanText(s.addr),56),m,y+13);
+      if(s.email)doc.text(cleanText(s.email),m,y+(s.addr?24:13));
+      if(inv.caddr)doc.text(doc.splitTextToSize(cleanText(inv.caddr),56),92,y+13);
+      if(inv.cemail)doc.text(cleanText(inv.cemail),92,y+(inv.caddr?24:13));
+      if(inv.cphone)doc.text(cleanText(inv.cphone),92,y+(inv.caddr||inv.cemail?30:13));
       var my=y;
-      var meta=function(l,v){doc.setFont('helvetica','normal');doc.setTextColor(155,145,135);doc.setFontSize(7);doc.text(l,pw-m-38,my,{align:'left'});doc.setFont('helvetica','bold');doc.setTextColor(26,23,20);doc.setFontSize(8);doc.text(String(v||''),pw-m,my,{align:'right'});my+=6;};
-      meta('Date',String(inv.date||''));meta('Due',String(inv.due||''));meta('Terms',String(inv.terms||'Net 30'));
-      // ── Table ──
-      var ty=y+24;
-      doc.setFillColor(ac[0],ac[1],ac[2]);doc.rect(m,ty,pw-2*m,9,'F');
-      doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7);
-      doc.text('DESCRIPTION',m+3,ty+6);doc.text('QTY',118,ty+6,{align:'right'});doc.text('UNIT PRICE',156,ty+6,{align:'right'});doc.text('AMOUNT',pw-m-3,ty+6,{align:'right'});
+      var meta=function(l,v){doc.setFont('helvetica','normal');doc.setTextColor(155,145,135);doc.setFontSize(8);doc.text(l,150,my);doc.setFont('helvetica','bold');doc.setTextColor(black[0],black[1],black[2]);doc.text(String(v||''),pw-m,my,{align:'right'});my+=7;};
+      meta('Date',fmtD(inv.date));meta('Due',fmtD(inv.due));meta('Terms',String(inv.terms||'Net 30'));
+
+      var ty=y+38;
+      if(isClassic){
+        doc.setFillColor(ac[0],ac[1],ac[2]);doc.rect(m,ty,pw-2*m,9,'F');
+        doc.setTextColor(255,255,255);
+      }else if(isMinimal){
+        doc.setFillColor(246,245,242);doc.rect(m,ty,pw-2*m,9,'F');
+        doc.setDrawColor(ac[0],ac[1],ac[2]);doc.setLineWidth(0.8);doc.line(m,ty+9,pw-m,ty+9);
+        doc.setTextColor(ac[0],ac[1],ac[2]);
+      }else{
+        doc.setFillColor(255,255,255);doc.rect(m,ty,pw-2*m,9,'F');
+        doc.setDrawColor(ac[0],ac[1],ac[2]);doc.setLineWidth(0.8);doc.line(m,ty+9,pw-m,ty+9);
+        doc.setTextColor(black[0],black[1],black[2]);
+      }
+      doc.setFont('helvetica','bold');doc.setFontSize(7);
+      doc.text('DESCRIPTION',m+3,ty+6);doc.text('QTY',122,ty+6,{align:'right'});doc.text('UNIT PRICE',160,ty+6,{align:'right'});doc.text('AMOUNT',pw-m-3,ty+6,{align:'right'});
       var ry=ty+9;
-      (inv.lines||[]).forEach(function(ln){
+      (inv.lines&&inv.lines.length?inv.lines:[{desc:'Invoice total',qty:1,price:inv.amount,total:inv.amount}]).forEach(function(ln){
+        var desc=doc.splitTextToSize(cleanText(ln.desc||'Invoice item'),82);
+        var rowH=Math.max(10,desc.length*4.2+4);
         doc.setTextColor(40,38,34);doc.setFont('helvetica','bold');doc.setFontSize(8.5);
-        doc.text(String(ln.desc||'').replace(/\s*\n\s*/g,' ').slice(0,48),m+3,ry+6);
+        doc.text(desc,m+3,ry+6);
         doc.setFont('helvetica','normal');
-        doc.text(String(ln.qty||1),118,ry+6,{align:'right'});
-        doc.text(cur+' '+money(ln.price),156,ry+6,{align:'right'});
+        doc.text(String(ln.qty||1),122,ry+6,{align:'right'});
+        doc.text(cur+' '+money(ln.price),160,ry+6,{align:'right'});
         doc.setFont('helvetica','bold');
         doc.text(cur+' '+money(ln.total!=null?ln.total:inv.amount),pw-m-3,ry+6,{align:'right'});
-        doc.setDrawColor(238,235,229);doc.setLineWidth(0.2);doc.line(m,ry+9,pw-m,ry+9);
-        ry+=9;
+        doc.setDrawColor(line[0],line[1],line[2]);doc.setLineWidth(0.2);doc.line(m,ry+rowH,pw-m,ry+rowH);
+        ry+=rowH;
       });
-      // ── Totals ──
       var sub=(inv.lines||[]).reduce(function(a,l){return a+(l.total||0);},0)||inv.amount;
-      var t2=ry+9;
-      var trow=function(l,v){doc.setFont('helvetica','normal');doc.setTextColor(110,104,94);doc.setFontSize(8.5);doc.text(l,128,t2);doc.setTextColor(26,23,20);doc.text(v,pw-m,t2,{align:'right'});t2+=7;};
+      var t2=ry+10;
+      var trow=function(l,v){doc.setFont('helvetica','normal');doc.setTextColor(muted[0],muted[1],muted[2]);doc.setFontSize(8.5);doc.text(l,128,t2);doc.setTextColor(black[0],black[1],black[2]);doc.text(v,pw-m,t2,{align:'right'});t2+=7;};
       trow('Subtotal',cur+' '+money(sub));
       if(inv.disc>0)trow('Discount ('+inv.disc+'%)','- '+cur+' '+money(sub-sub*(1-inv.disc/100)));
       if(inv.vat>0)trow('VAT ('+(inv.vatRate||15)+'%)',cur+' '+money(inv.vat));
-      t2+=1;
-      var gb=isMini?[21,20,17]:ac;
-      doc.setFillColor(gb[0],gb[1],gb[2]);doc.rect(108,t2,pw-m-108,13,'F');
+      t2+=2;
+      var gb=isMinimal?black:ac;
+      doc.setFillColor(gb[0],gb[1],gb[2]);doc.rect(108,t2,pw-m-108,14,'F');
       doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7.5);
-      doc.text('TOTAL DUE',112,t2+8);
-      doc.setFontSize(12);doc.text(cur+' '+money(inv.amount||sub),pw-m-3,t2+8.5,{align:'right'});
-      // ── Footer ──
-      doc.setDrawColor(238,235,229);doc.setLineWidth(0.2);doc.line(m,279,pw-m,279);
+      doc.text('TOTAL DUE',112,t2+8.5);
+      doc.setFontSize(13);doc.text(cur+' '+money(inv.amount||sub),pw-m-3,t2+9,{align:'right'});
+      if(inv.notes||s.footer){
+        doc.setTextColor(ac[0],ac[1],ac[2]);doc.setFontSize(7);doc.text('NOTES',m,t2+25);
+        doc.setTextColor(muted[0],muted[1],muted[2]);doc.setFont('helvetica','normal');doc.setFontSize(8);
+        doc.text(doc.splitTextToSize(cleanText(inv.notes||s.footer),78),m,t2+31);
+      }
+      doc.setDrawColor(line[0],line[1],line[2]);doc.setLineWidth(0.2);doc.line(m,279,pw-m,279);
       doc.setTextColor(155,148,138);doc.setFont('helvetica','normal');doc.setFontSize(7.5);
       doc.text('Invoice generated by Cashflow System - CeylonryLabs.io',pw/2,285,{align:'center'});
       var fname=(biz+'_Invoice_'+inv.num+'.pdf').replace(/[^a-zA-Z0-9_.-]/g,'_');
