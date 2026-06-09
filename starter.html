@@ -1614,27 +1614,28 @@ window.saveInvoice = function saveInvoice(){
   saveDB();renderInvoices();closeModal('inv-modal');
 }
 function renderInvoices(){
-  const total=DB.invoices.reduce((a,i)=>a+i.amount,0);
-  const collected=DB.invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
+  const total=DB.invoices.reduce((a,i)=>a+(Number(i.amount)||0),0);
+  const collected=DB.invoices.reduce((a,i)=>a+(Number(i.paidAmount)||0),0);
   document.getElementById('inv-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Invoiced</div><div class="sum-val">${fmtAmt(total)}</div></div><div class="sum-item"><div class="sum-label">Collected</div><div class="sum-val" style="color:var(--green)">${fmtAmt(collected)}</div></div><div class="sum-item"><div class="sum-label">Outstanding</div><div class="sum-val" style="color:var(--amber)">${fmtAmt(total-collected)}</div></div>`;
   const statusFilter=(document.getElementById('inv-status-filter')||{}).value||'';
   const filtered=DB.invoices.filter(getFilterRange('inv')).filter(function(inv){return !statusFilter||inv.status===statusFilter;});
   const sorted=sortRecords(filtered,'inv');
   document.getElementById('inv-table').innerHTML=sorted.length?sorted.map(inv=>{
-    const paid=inv.paidAmount||0;const bal=inv.amount-paid;const pct=inv.amount>0?Math.round(paid/inv.amount*100):0;
-    const sc=inv.status==='paid'?'pill-paid':inv.status==='overdue'?'pill-overdue':inv.status==='partial'?'pill-partial':'pill-unpaid';
+    const st=inv.status||'unpaid';const amt=Number(inv.amount)||0;
+    const paid=Number(inv.paidAmount)||0;const bal=amt-paid;const pct=amt>0?Math.round(paid/amt*100):0;
+    const sc=st==='paid'?'pill-paid':st==='overdue'?'pill-overdue':st==='partial'?'pill-partial':'pill-unpaid';
     return`<tr>
-      <td><strong>${inv.num}</strong></td><td>${inv.client}</td><td>${fmtD(inv.date)}</td><td>${fmtD(inv.due)}</td>
-      <td><span class="pill ${sc}">${inv.status.charAt(0).toUpperCase()+inv.status.slice(1)}</span></td>
-      <td><div class="pay-info-wrap"><div class="pay-bar"><div class="pay-bar-fill${inv.status==='partial'?' partial':''}" style="width:${pct}%"></div></div><span style="font-size:.7rem;color:var(--muted)">${pct}%</span></div>${inv.status==='partial'?`<div class="pay-pending">↻ ${fmtAmt(bal)} pending</div>`:''}</td>
-      <td style="text-align:right" class="amount-gold"><strong>${fmtAmt(inv.amount)}</strong></td>
+      <td><strong>${inv.num||''}</strong></td><td>${inv.client||''}</td><td>${fmtD(inv.date)}</td><td>${fmtD(inv.due)}</td>
+      <td><span class="pill ${sc}">${st.charAt(0).toUpperCase()+st.slice(1)}</span></td>
+      <td><div class="pay-info-wrap"><div class="pay-bar"><div class="pay-bar-fill${st==='partial'?' partial':''}" style="width:${pct}%"></div></div><span style="font-size:.7rem;color:var(--muted)">${pct}%</span></div>${st==='partial'?`<div class="pay-pending">↻ ${fmtAmt(bal)} pending</div>`:''}</td>
+      <td style="text-align:right" class="amount-gold"><strong>${fmtAmt(amt)}</strong></td>
       <td><div class="inv-action-row">
         <button class="btn-sm btn-sm-dark" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Download PDF">⬇ PDF</button>
         <button class="btn-sm btn-sm-green" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send via Email">✉ Email</button>
         <button class="btn-sm btn-sm-wa" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send via WhatsApp">💬 WA</button>
         <button class="btn-sm btn-sm-out" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit</button>
         <button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button>
-        ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">💳 Pay</button>`:'<span style="font-size:.65rem;color:var(--green)">✓ Settled</span>'}
+        ${st!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">💳 Pay</button>`:'<span style="font-size:.65rem;color:var(--green)">✓ Settled</span>'}
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
 }
@@ -2253,16 +2254,18 @@ window.deleteClient = function deleteClient(id){
 window.invoiceFromClient = function invoiceFromClient(id){
   if(!DB.clients)return;
   const c=DB.clients.list.find(x=>x.id===id);if(!c)return;
-  nav('invoices');
+  try{ nav('invoices'); }catch(e){ console.error('nav(invoices) failed:',e); }
   setTimeout(()=>{
-    openInvoiceModal();
-    document.getElementById('i-client').value=c.name;
-    document.getElementById('i-cemail').value=c.email||'';
-    document.getElementById('i-caddr').value=c.addr||'';
-    document.getElementById('i-cphone').value=c.phone||'';
-    if(c.terms) document.getElementById('i-terms').value=c.terms;
-    const sel=document.getElementById('i-client-sel');
-    if(sel){var idx=DB.clients.list.indexOf(c);if(idx>-1)sel.value=String(idx);}
+    try{
+      openInvoiceModal();
+      document.getElementById('i-client').value=c.name;
+      document.getElementById('i-cemail').value=c.email||'';
+      document.getElementById('i-caddr').value=c.addr||'';
+      document.getElementById('i-cphone').value=c.phone||'';
+      if(c.terms) document.getElementById('i-terms').value=c.terms;
+      const sel=document.getElementById('i-client-sel');
+      if(sel){var idx=DB.clients.list.indexOf(c);if(idx>-1)sel.value=String(idx);}
+    }catch(e){ console.error('invoiceFromClient fill failed:',e); }
   },150);
 }
 
