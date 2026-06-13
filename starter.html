@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CeylonryLabs.io — Starter</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Firebase SDKs -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -16,14 +16,14 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --gold:#B8922A;--gold-l:#D4A840;--gold-d:#7A6010;
-  --bg:#F7F5F0;--white:#FFFFFF;--bg3:#F0EDE6;--bg4:#E8E4DA;
-  --text:#1C1814;--muted:#6B6258;--dim:#A8A29A;
-  --border:#E2DDD4;--border-acc:rgba(184,146,42,.3);
-  --black:#1a1714;
+  --gold:#B8923E;--gold-l:#C8A253;--gold-d:#8B6D24;
+  --bg:#F7F1E8;--white:#FDFAF4;--bg3:#F1E9DC;--bg4:#E8DCCB;
+  --text:#4A3B2A;--muted:#6F6353;--dim:#9B907F;
+  --border:#E8DCCB;--border-acc:rgba(184,146,62,.34);
+  --black:#4A3B2A;
   --green:#1a9e5c;--red:#c0392b;--amber:#b7770d;
   --sb:240px;
-  --font-d:'Cormorant Garamond',serif;--font-b:'DM Sans',sans-serif;
+  --font-d:'Fraunces',serif;--font-b:'Inter',sans-serif;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);overflow:hidden}
 
@@ -334,6 +334,32 @@ body.is-admin .admin-only{display:flex}
   .aging-row{grid-template-columns:1fr auto}
   .aging-count{grid-column:1/-1}
 }
+
+/* Quiet premium system layer */
+#sidebar{border-right:1px solid var(--border);box-shadow:18px 0 50px rgba(74,59,42,.04)}
+.sb-logo{font-weight:400;letter-spacing:-.03em}
+.sb-plan-tag,.top-badge{border-radius:999px}
+.sb-plan-tag{background:var(--black);color:var(--bg)}
+.sb-item{border-radius:0 999px 999px 0;margin:.08rem .75rem .08rem 0}
+.sb-item.active{border-left-color:var(--gold);background:rgba(184,146,62,.12);color:var(--text)}
+.top-bar{border-bottom:1px solid var(--border);box-shadow:0 16px 50px rgba(74,59,42,.05);background:rgba(253,250,244,.9);backdrop-filter:blur(14px)}
+.page-title{font-weight:400;letter-spacing:-.035em}
+.content{background:radial-gradient(circle at top right,rgba(199,203,168,.22),transparent 30%),var(--bg)}
+.kpi-card,.chart-card,.table-card,.sum-item,.report-card,.trial-card,.settings-helper,.client-card,.team-panel,.modal-box{border-radius:20px;border:1px solid var(--border);box-shadow:0 18px 55px rgba(74,59,42,.055)}
+.kpi-card,.table-card{border-left:1px solid var(--border)}
+.kpi-card{border-top:3px solid var(--black)}
+.kpi-card.gold-top{border-top-color:var(--gold)}
+.chart-card-title,.table-title,.modal-title,.settings-helper-title{letter-spacing:-.025em}
+.btn-act,.btn-upgrade,.btn-sm-pay{border-radius:999px;background:var(--black)}
+.btn-act:hover,.btn-upgrade:hover,.btn-sm-pay:hover{background:var(--gold);transform:translateY(-1px)}
+.btn-act-outline,.btn-sm-out{border-radius:999px;background:transparent}
+.modal-box{overflow:hidden;background:var(--white)}
+.modal-head{border-bottom:1px solid var(--border)}
+th{background:var(--black)}
+td{background:rgba(253,250,244,.45)}
+tr:hover td{background:rgba(199,203,168,.16)}
+.pill{border-radius:999px}
+.tpl-pick-card,.logo-upload-box,.f-input,.f-select{border-radius:14px}
 
 @media print{@page{size:A4;margin:0}html,body{margin:0!important;padding:0!important}body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 #print-invoice{display:none}
@@ -1102,12 +1128,19 @@ _auth.onAuthStateChanged(async function(user) {
     _isPaid = isPaid;
     if (now > trialEnd && !isPaid) { showPaywall(_profile); return; }
 
-    // Apply profile to settings
-    if (_profile.bizName) DB.settings.bizName = _profile.bizName;
+    // Apply onboarding invoice profile, then preserve later Settings changes.
+    if (_profile.bizName) DB.settings.bizName = _profile.invoiceBiz || _profile.bizName;
     if (_profile.addr) DB.settings.addr = _profile.addr;
-    if (_profile.email) DB.settings.email = _profile.email;
+    if (_profile.invEmail) DB.settings.email = _profile.invEmail;
+    if (!_profile.invEmail && _profile.email) DB.settings.email = _profile.email;
     if (_profile.vat) DB.settings.vat = _profile.vat;
     if (_profile.footer) DB.settings.footer = _profile.footer;
+    if (_profile.logo) DB.settings.logo = _profile.logo;
+    if (_profile.defaultTaxRate !== undefined && _profile.defaultTaxRate !== '') {
+      const rate = parseFloat(_profile.defaultTaxRate);
+      if (!isNaN(rate)) DB.settings.vatRate = rate;
+    }
+    if (_profile.selectedTemplate !== undefined && _profile.selectedTemplate !== null) DB.settings.defaultTpl = normalizeTemplateIdx(_profile.selectedTemplate);
     if (_profile.nextInvNum) DB.nextInvNum = _profile.nextInvNum;
     if (_profile.settings) Object.assign(DB.settings, _profile.settings);
 
@@ -1122,8 +1155,8 @@ _auth.onAuthStateChanged(async function(user) {
     if (!isPaid) {
       const daysLeft = Math.max(0, Math.ceil((trialEnd - now) / 86400000));
       const banner = document.createElement('div');
-      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:\'DM Sans\',sans-serif;font-size:.78rem;';
-      banner.innerHTML = `<span>⏳ <strong>${daysLeft} day${daysLeft!==1?'s':''} left</strong> on your free trial</span><button data-cls-fn="openGrowthUpgrade" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">Upgrade to Growth →</button>`;
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#4A3B2A;color:#F7F1E8;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:\'Inter\',sans-serif;font-size:.78rem;';
+      banner.innerHTML = `<span><strong>${daysLeft} day${daysLeft!==1?'s':''} left</strong> on your free trial</span><button data-cls-fn="openGrowthUpgrade" style="background:#B8923E;color:#fff;border:none;border-radius:999px;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'Inter\',sans-serif">Upgrade to Growth →</button>`;
       document.body.appendChild(banner);
     }
   } catch(e) { console.error('Auth guard error:', e); }
@@ -2767,18 +2800,18 @@ window.showPaywall = function showPaywall(profile) {
   if (document.getElementById('cls-paywall')) return;
   var ov = document.createElement('div');
   ov.id = 'cls-paywall';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,23,20,.96);backdrop-filter:blur(12px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:\'DM Sans\',sans-serif;';
-  ov.innerHTML = '<div style="background:#fff;max-width:520px;width:100%;padding:3rem;text-align:center;">' +
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(74,59,42,.96);backdrop-filter:blur(12px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:\'Inter\',sans-serif;';
+  ov.innerHTML = '<div style="background:#FDFAF4;max-width:520px;width:100%;padding:3rem;text-align:center;border-radius:24px;">' +
     '<div style="font-size:2.5rem;margin-bottom:1rem">🔒</div>' +
-    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2rem;font-weight:300;color:#1a1714;margin-bottom:.5rem">Your free trial has ended</div>' +
+    '<div style="font-family:\'Fraunces\',serif;font-size:2rem;font-weight:400;color:#4A3B2A;margin-bottom:.5rem;letter-spacing:-.03em">Your free trial has ended</div>' +
     '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 15-day free trial of <strong>CLS ' + planName + '</strong> has expired.<br>Activate your plan to keep your dashboard and data.</div>' +
-    '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
-      '<div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:.35rem">Your Plan</div>' +
-      '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
+    '<div style="background:#F7F1E8;border:1px solid rgba(184,146,62,.24);padding:1.5rem;margin-bottom:1.75rem;border-radius:18px;">' +
+      '<div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#B8923E;font-weight:600;margin-bottom:.35rem">Your Plan</div>' +
+      '<div style="font-family:\'Fraunces\',serif;font-size:2.2rem;font-weight:400;color:#4A3B2A;letter-spacing:-.03em">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
       '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · Billed monthly</div>' +
     '</div>' +
-    '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">💬 Activate via WhatsApp →</a>' +
-    '<button data-cls-fn="clsSignOut" style="width:100%;background:transparent;border:1px solid rgba(184,146,42,.3);color:#6B6258;padding:.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +
+    '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#4A3B2A;color:#F7F1E8;border-radius:999px;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">Activate via WhatsApp →</a>' +
+    '<button data-cls-fn="clsSignOut" style="width:100%;background:transparent;border:1px solid rgba(184,146,62,.3);color:#6B6258;border-radius:999px;padding:.75rem;cursor:pointer;font-family:\'Inter\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +
     '<div style="font-size:.68rem;color:#A8A29A;margin-top:1.25rem">Your data is safe and will be here when you reactivate.</div>' +
   '</div>';
   document.body.appendChild(ov);
