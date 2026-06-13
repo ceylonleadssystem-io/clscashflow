@@ -312,7 +312,7 @@ body.is-admin .admin-only{display:flex}
 <body>
 <script>
 window.CLS_RUN=function(fn,arg){if(typeof window[fn]==='function')window[fn](arg);};
-window.openWhatsAppSupport=function(){window.open('https://wa.me/94778815628?text='+encodeURIComponent('Hi CeylonryLabs! I need help with my CLS CashFlow billing.'),'_blank');};
+window.openWhatsAppSupport=function(){window.open('https://wa.me/94778815628?text='+encodeURIComponent('Hi CeylonryLabs! I need help with my Starter Invoice Control System billing.'),'_blank');};
 window.closeAndOpenClient=function(){if(window.closeModal)window.closeModal('inv-modal');if(window.openClientModal)window.openClientModal();};
 window.showPaywallBtn=function(){if(window.openGrowthUpgrade)window.openGrowthUpgrade();};
 window.triggerLogoUpload=function(){var el=document.getElementById('settings-logo');if(el)el.click();};
@@ -328,16 +328,14 @@ document.addEventListener('click',function(e){
     if(viewEl)viewEl.classList.add('active');
     navEl.classList.add('active');
     document.querySelectorAll('[data-nav="'+view+'"]').forEach(function(i){i.classList.add('active');});
-    var titles={dashboard:'Financial Dashboard',cashflow:'Cash Flow',expenses:'Expenses',invoices:'Invoices',clients:'Clients',suppliers:'Suppliers',reports:'Reports',backlog:'Edit Backlog',settings:'Settings'};
+    var titles={dashboard:'Starter Invoice Control System',invoices:'Invoices',clients:'Customers',reports:'Reports',team:'Team Access',backlog:'Edit Backlog',settings:'Settings'};
     var titleEl=document.getElementById('page-title');
     if(titleEl&&titles[view])titleEl.textContent=titles[view];
     if(view==='dashboard'&&typeof window.renderDashboard==='function')window.renderDashboard();
-    if(view==='cashflow'&&typeof window.renderCashflow==='function')window.renderCashflow();
-    if(view==='expenses'&&typeof window.renderExpenses==='function')window.renderExpenses();
     if(view==='invoices'){if(typeof window.renderInvoices==='function')window.renderInvoices();if(typeof window.populateClientSelect==='function')window.populateClientSelect();}
     if(view==='clients'&&typeof window.renderClients==='function')window.renderClients();
-    if(view==='suppliers'&&typeof window.renderSuppliers==='function')window.renderSuppliers();
     if(view==='reports'&&typeof window.renderReports==='function')window.renderReports();
+    if(view==='team'&&typeof window.renderTeamAccess==='function')window.renderTeamAccess();
     if(view==='backlog'&&typeof window.renderBacklog==='function')window.renderBacklog();
     if(view==='settings'&&typeof window.loadSettings==='function')window.loadSettings();
     return;
@@ -367,14 +365,12 @@ document.addEventListener('click',function(e){
   <div class="sb-nav">
     <div class="sb-section">Main</div>
     <a class="sb-item active" data-nav="dashboard"><span class="sb-icon">📊</span> Dashboard</a>
-    <a class="sb-item" data-nav="cashflow"><span class="sb-icon">💸</span> Cashflow</a>
-    <a class="sb-item" data-nav="expenses"><span class="sb-icon">📤</span> Expenses</a>
     <a class="sb-item" data-nav="invoices"><span class="sb-icon">🧾</span> Invoices</a>
-    <a class="sb-item" data-nav="clients"><span class="sb-icon">👥</span> Clients</a>
-    <a class="sb-item" data-nav="suppliers"><span class="sb-icon">🏭</span> Suppliers</a>
+    <a class="sb-item" data-nav="clients"><span class="sb-icon">👥</span> Customers</a>
     <div class="sb-section">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
-    <a class="sb-item admin-only" data-nav="backlog"><span class="sb-icon">🗂️</span> Edit Backlog</a>
+    <a class="sb-item" data-nav="team"><span class="sb-icon">🔐</span> Team Access</a>
+    <a class="sb-item" data-nav="backlog"><span class="sb-icon">🗂️</span> Edit Backlog</a>
     <div class="sb-section">Account</div>
     <a class="sb-item" data-nav="settings"><span class="sb-icon">⚙️</span> Settings</a>
   </div>
@@ -389,8 +385,8 @@ document.addEventListener('click',function(e){
 <div id="main">
   <div class="top-bar">
     <div class="top-bar-left">
-      <div class="page-title" id="page-title">Financial Dashboard</div>
-      <div class="page-sub" id="page-sub">Overview of your business finances</div>
+      <div class="page-title" id="page-title">Starter Invoice Control System</div>
+      <div class="page-sub" id="page-sub">Create invoices, manage customers, track payments, export reports, and control staff edits.</div>
     </div>
     <div class="top-bar-right">
       <div class="top-date" id="top-date"></div>
@@ -402,37 +398,24 @@ document.addEventListener('click',function(e){
     <!-- ═ DASHBOARD ═ -->
     <div class="view active" id="view-dashboard">
       <div class="kpi-grid">
-        <div class="kpi-card gold-top"><div class="kpi-icon">💰</div><div class="kpi-label">Revenue MTD</div><div class="kpi-val" id="kpi-rev">LKR 0</div><div class="kpi-sub"><span class="kpi-up" id="kpi-rev-chg">—</span></div></div>
-        <div class="kpi-card"><div class="kpi-icon">📤</div><div class="kpi-label">Expenses MTD</div><div class="kpi-val" id="kpi-exp">LKR 0</div><div class="kpi-sub" id="kpi-exp-sub">This month</div></div>
-        <div class="kpi-card gold-top"><div class="kpi-icon">📈</div><div class="kpi-label">Net Profit</div><div class="kpi-val" id="kpi-profit">LKR 0</div><div class="kpi-sub" id="kpi-profit-sub">Revenue − Expenses</div></div>
-        <div class="kpi-card"><div class="kpi-icon">⏳</div><div class="kpi-label">Outstanding Invoices</div><div class="kpi-val" id="kpi-outstanding">LKR 0</div><div class="kpi-sub" id="kpi-outstanding-sub">Awaiting payment</div></div>
-        <div class="kpi-card"><div class="kpi-icon">🏦</div><div class="kpi-label">Cash Position</div><div class="kpi-val" id="kpi-balance">LKR 0</div><div class="kpi-sub" id="kpi-bal-sub">All time</div></div>
-      </div>
-      <div class="charts-row">
-        <div class="chart-card"><div class="chart-card-title">Cashflow Overview</div><div class="chart-card-sub">Last 6 months — Cash In vs Cash Out</div><div class="chart-area"><canvas id="cashflow-chart"></canvas></div></div>
-        <div class="chart-card"><div class="chart-card-title">Expense Breakdown</div><div class="chart-card-sub">By category this month</div><div class="chart-area" style="height:160px"><canvas id="exp-chart"></canvas></div><div class="cat-list" id="cat-list"></div></div>
-      </div>
-      <div class="profit-overview-card">
-        <div class="profit-overview-title">Profit Overview</div>
-        <div class="profit-overview-grid">
-          <div class="profit-overview-item"><div class="profit-overview-label">Gross Revenue</div><div class="profit-overview-val" id="po-revenue" style="color:var(--green)">LKR 0</div></div>
-          <div class="profit-overview-item"><div class="profit-overview-label">Total Expenses</div><div class="profit-overview-val" id="po-expenses" style="color:var(--red)">LKR 0</div></div>
-          <div class="profit-overview-item"><div class="profit-overview-label">Net Profit</div><div class="profit-overview-val" id="po-profit">LKR 0</div></div>
-          <div class="profit-overview-item"><div class="profit-overview-label">Profit Margin</div><div class="profit-overview-val" id="po-margin">0%</div></div>
-        </div>
+        <div class="kpi-card gold-top"><div class="kpi-icon">🧾</div><div class="kpi-label">Total Invoiced</div><div class="kpi-val" id="kpi-total-invoiced">LKR 0</div><div class="kpi-sub">All invoices</div></div>
+        <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-label">Paid Amount</div><div class="kpi-val" id="kpi-paid-amount">LKR 0</div><div class="kpi-sub">Collected payments</div></div>
+        <div class="kpi-card gold-top"><div class="kpi-icon">⏳</div><div class="kpi-label">Outstanding Amount</div><div class="kpi-val" id="kpi-outstanding">LKR 0</div><div class="kpi-sub" id="kpi-outstanding-sub">Awaiting payment</div></div>
+        <div class="kpi-card"><div class="kpi-icon">⚠</div><div class="kpi-label">Overdue Invoices</div><div class="kpi-val" id="kpi-overdue-count">0</div><div class="kpi-sub" id="kpi-overdue-sub">Past due</div></div>
+        <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-label">This Month Invoice Value</div><div class="kpi-val" id="kpi-month-invoiced">LKR 0</div><div class="kpi-sub">Issued this month</div></div>
       </div>
       <div class="outstanding-panel">
         <div class="table-header"><div class="table-title" style="color:var(--amber)">⏳ Outstanding Invoices</div><button class="btn-act-outline" data-nav="invoices">View All</button></div>
         <div id="outstanding-list"><div style="padding:1.5rem;text-align:center;color:var(--dim);font-size:.85rem">No outstanding invoices — all paid up! ✓</div></div>
       </div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title">Recent Transactions</div><button class="btn-act-outline" data-nav="cashflow">View All</button></div>
-        <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount (LKR)</th></tr></thead><tbody id="recent-table"></tbody></table>
-        </div>
+        <div class="table-header"><div class="table-title">Recent Invoices</div><button class="btn-act-outline" data-nav="invoices">View All</button></div>
+        <table><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Status</th><th>Amount (LKR)</th></tr></thead><tbody id="recent-table"></tbody></table>
+      </div>
     </div>
 
     <!-- ═ CASHFLOW ═ -->
-    <div class="view" id="view-cashflow">
+    <div class="view" id="view-cashflow" style="display:none!important">
       <div class="sum-bar c3" id="cf-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Transaction Register</div><button class="btn-act" data-cls-fn="openModal" data-cls-arg="txn-modal">+ Add Transaction</button></div>
@@ -448,7 +431,7 @@ document.addEventListener('click',function(e){
     </div>
 
     <!-- ═ EXPENSES ═ -->
-    <div class="view" id="view-expenses">
+    <div class="view" id="view-expenses" style="display:none!important">
       <div class="sum-bar c3" id="exp-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Expense Log</div><button class="btn-act" data-cls-fn="openModal" data-cls-arg="exp-modal">+ Add Expense</button></div>
@@ -475,7 +458,7 @@ document.addEventListener('click',function(e){
           <div class="f-group"><label>Status</label><select class="f-input f-select" id="inv-status-filter" onchange="renderInvoices()"><option value="">All</option><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select></div>
           <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="inv">Clear</button>
         </div>
-        <table><thead><tr><th>Invoice #</th><th>Client</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
+        <table><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
       </div>
     </div>
 
@@ -484,7 +467,7 @@ document.addEventListener('click',function(e){
       <div class="sum-bar c3" id="backlog-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Admin Edit Backlog</div><button class="btn-act-outline" data-cls-fn="renderBacklog">Refresh</button></div>
-        <table><thead><tr><th>Date</th><th>Edited Item</th><th>Reason</th><th>Admin</th></tr></thead><tbody id="backlog-table"></tbody></table>
+        <table><thead><tr><th>Date Edited</th><th>Edited Item</th><th>Previous Value</th><th>New Value</th><th>Edited By</th><th>Reason</th></tr></thead><tbody id="backlog-table"></tbody></table>
       </div>
     </div>
 
@@ -492,14 +475,14 @@ document.addEventListener('click',function(e){
     <!-- ═ CLIENTS ═ -->
     <div class="view" id="view-clients">
       <div class="sum-bar c3" id="client-summary-bar" style="margin-bottom:1.25rem">
-        <div class="sum-item"><div class="sum-label">Total Clients</div><div class="sum-val" id="client-count-val">0</div></div>
+        <div class="sum-item"><div class="sum-label">Total Customers</div><div class="sum-val" id="client-count-val">0</div></div>
         <div class="sum-item"><div class="sum-label">With Email</div><div class="sum-val" id="client-email-count" style="color:var(--green)">0</div></div>
         <div class="sum-item"><div class="sum-label">With WhatsApp</div><div class="sum-val" id="client-wa-count" style="color:var(--gold)">0</div></div>
       </div>
       <div class="table-card">
         <div class="table-header">
-          <div class="table-title">Client Directory</div>
-          <button class="btn-act" data-cls-fn="openClientModal">+ Add Client</button>
+          <div class="table-title">Customer Directory</div>
+          <button class="btn-act" data-cls-fn="openClientModal">+ Add Customer</button>
         </div>
         <div style="padding:1.25rem" id="client-grid-wrap">
           <div class="client-grid" id="client-grid"></div>
@@ -508,7 +491,7 @@ document.addEventListener('click',function(e){
     </div>
 
     <!-- ═ SUPPLIERS ═ -->
-    <div class="view" id="view-suppliers">
+    <div class="view" id="view-suppliers" style="display:none!important">
       <div class="sum-bar c3" id="supplier-summary-bar" style="margin-bottom:1.25rem">
         <div class="sum-item"><div class="sum-label">Total Suppliers</div><div class="sum-val" id="supplier-count-val">0</div></div>
         <div class="sum-item"><div class="sum-label">With Email</div><div class="sum-val" id="supplier-email-count" style="color:var(--green)">0</div></div>
@@ -529,8 +512,8 @@ document.addEventListener('click',function(e){
     <div class="view" id="view-reports">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
         <div>
-          <div style="font-family:var(--font-d);font-size:1.5rem;color:var(--black)">Profit & Loss</div>
-          <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Basic financial overview for your business</div>
+          <div style="font-family:var(--font-d);font-size:1.5rem;color:var(--black)">Invoice Reports</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Invoice summary, paid vs unpaid, overdue invoices, and customer-wise reports</div>
         </div>
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
         <select class="f-input f-select" id="report-period" style="width:auto;padding:.5rem 2rem .5rem .85rem" onchange="onReportPeriodChange()">
@@ -554,17 +537,38 @@ document.addEventListener('click',function(e){
       </div>
       <div class="report-grid">
         <div class="report-card">
-          <div class="report-card-title">Income Statement</div>
+          <div class="report-card-title">Invoice Summary</div>
           <div id="pl-report"></div>
         </div>
         <div class="report-card">
-          <div class="report-card-title">Cashflow Summary</div>
+          <div class="report-card-title">Paid vs Unpaid</div>
           <div id="cf-report"></div>
         </div>
       </div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title">Expense by Category</div></div>
-        <table><thead><tr><th>Category</th><th>Transactions</th><th>Amount (LKR)</th><th>% of Total</th></tr></thead><tbody id="cat-report-table"></tbody></table>
+        <div class="table-header"><div class="table-title">Customer-wise Invoice Report</div></div>
+        <table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ═ TEAM ACCESS ═ -->
+    <div class="view" id="view-team">
+      <div class="sum-bar c3" id="team-summary-bar" style="margin-bottom:1.25rem">
+        <div class="sum-item"><div class="sum-label">Starter Users</div><div class="sum-val" id="team-user-count">2 Max</div></div>
+        <div class="sum-item"><div class="sum-label">Roles</div><div class="sum-val" style="font-size:1.05rem">Owner / Staff / View Only</div></div>
+        <div class="sum-item"><div class="sum-label">Access</div><div class="sum-val" style="color:var(--gold);font-size:1.05rem">Invoice Control</div></div>
+      </div>
+      <div class="table-card" style="max-width:860px">
+        <div class="table-header"><div class="table-title">Team Access</div><a class="btn-act" href="access-admin.html">Manage Team</a></div>
+        <table>
+          <thead><tr><th>Role</th><th>Permissions</th><th>User Limit</th></tr></thead>
+          <tbody id="team-access-table">
+            <tr><td><strong>Owner/Admin</strong></td><td>Full access to invoices, customers, reports, payments, settings, and edit backlog.</td><td style="text-align:right">Included</td></tr>
+            <tr><td><strong>Staff</strong></td><td>Create invoices, manage customers, record payments, and share invoices.</td><td style="text-align:right">Up to 2 users total</td></tr>
+            <tr><td><strong>View Only</strong></td><td>View dashboard and reports only. No editing or payment actions.</td><td style="text-align:right">Up to 2 users total</td></tr>
+          </tbody>
+        </table>
+        <div style="padding:1rem;font-size:.82rem;color:var(--muted);line-height:1.7">Starter keeps team access simple. For more users, advanced roles, and approvals, upgrade to Growth.</div>
       </div>
     </div>
 
@@ -577,7 +581,7 @@ document.addEventListener('click',function(e){
       <div class="settings-helper">
         <div>
           <div class="settings-helper-title">Quick System Tour</div>
-          <div class="settings-helper-text">A short walkthrough for first-time clients: dashboard, cashflow, invoices, suppliers, reports, and billing.</div>
+          <div class="settings-helper-text">A short walkthrough for the Starter Invoice Control System: dashboard, invoices, customers, reports, team access, edit backlog, and billing.</div>
         </div>
         <button class="btn-act-outline" data-cls-fn="startSystemTour">Start Tour</button>
       </div>
@@ -713,7 +717,7 @@ document.addEventListener('click',function(e){
         <div class="f-group"><label>Date *</label><input class="f-input" type="date" id="edit-date"></div>
         <div class="f-group"><label>Amount (LKR) *</label><input class="f-input" type="text" id="edit-amount" oninput="fmtInput(this)"></div>
       </div>
-      <div class="f-group full" style="margin-bottom:.85rem"><label>Description / Client *</label><input class="f-input" id="edit-desc" placeholder="Record description"></div>
+      <div class="f-group full" style="margin-bottom:.85rem"><label>Description / Customer *</label><input class="f-input" id="edit-desc" placeholder="Record description"></div>
       <div class="f-row" id="edit-txn-row">
         <div class="f-group"><label>Type</label><select class="f-input f-select" id="edit-type"><option value="in">Cash In</option><option value="out">Cash Out</option></select></div>
         <div class="f-group"><label>Category</label><input class="f-input" id="edit-cat" placeholder="Category"></div>
@@ -740,7 +744,7 @@ document.addEventListener('click',function(e){
 <div class="modal-overlay" id="client-modal">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-head">
-      <div class="modal-title" id="client-modal-title">Add Client</div>
+      <div class="modal-title" id="client-modal-title">Add Customer</div>
       <button class="modal-close" data-cls-fn="closeModal" data-cls-arg="client-modal">×</button>
     </div>
     <div class="modal-body">
@@ -760,10 +764,11 @@ document.addEventListener('click',function(e){
         </div>
         <div class="f-group"><label>Notes</label><input class="f-input" id="c-notes" placeholder="VIP, preferred currency..."></div>
       </div>
+      <div class="f-group" id="c-edit-reason-wrap" style="display:none;margin-bottom:.85rem"><label>Reason for Edit *</label><textarea class="f-input" id="c-edit-reason" rows="2" placeholder="Why is this customer being edited?" style="resize:vertical"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="client-modal">Cancel</button>
-      <button class="btn-act" data-cls-fn="saveClient">Save Client</button>
+      <button class="btn-act" data-cls-fn="saveClient">Save Customer</button>
     </div>
   </div>
 </div>
@@ -813,12 +818,12 @@ document.addEventListener('click',function(e){
       <input type="hidden" id="i-edit-num">
       <div class="client-select-bar">
         <div class="f-group">
-          <label>Select Saved Client</label>
+          <label>Select Saved Customer</label>
           <select class="f-input f-select" id="i-client-sel" onchange="fillClientFromSel()">
-            <option value="">— Choose a saved client or fill in below —</option>
+            <option value="">— Choose a saved customer or fill in below —</option>
           </select>
         </div>
-        <button class="btn-act-outline" style="flex-shrink:0;padding:.65rem 1rem;height:42px" data-cls-fn="closeAndOpenClient">+ New Client</button>
+        <button class="btn-act-outline" style="flex-shrink:0;padding:.65rem 1rem;height:42px" data-cls-fn="closeAndOpenClient">+ New Customer</button>
       </div>
       <div class="f-section" style="margin-top:0">Invoice Template (3 available on Starter)</div>
       <div class="tpl-picker">
@@ -835,14 +840,14 @@ document.addEventListener('click',function(e){
           <div class="tpl-pick-name">Charcoal Mono</div>
         </div>
       </div>
-      <div class="f-section">Client Details</div>
+      <div class="f-section">Customer Details</div>
       <div class="f-row">
-        <div class="f-group"><label>Client Name *</label><input class="f-input" id="i-client" placeholder="Client or business name"></div>
-        <div class="f-group"><label>Client Email</label><input class="f-input" type="email" id="i-cemail" placeholder="client@email.com"></div>
+        <div class="f-group"><label>Customer Name *</label><input class="f-input" id="i-client" placeholder="Customer or business name"></div>
+        <div class="f-group"><label>Customer Email</label><input class="f-input" type="email" id="i-cemail" placeholder="customer@email.com"></div>
       </div>
       <div class="f-row">
-        <div class="f-group"><label>Client Address</label><input class="f-input" id="i-caddr" placeholder="Client address"></div>
-        <div class="f-group"><label>Client Phone</label><input class="f-input" id="i-cphone" placeholder="+94 77 000 0000"></div>
+        <div class="f-group"><label>Customer Address</label><input class="f-input" id="i-caddr" placeholder="Customer address"></div>
+        <div class="f-group"><label>Customer Phone</label><input class="f-input" id="i-cphone" placeholder="+94 77 000 0000"></div>
       </div>
       <div class="f-section">Invoice Details</div>
       <div class="f-row">
@@ -906,7 +911,7 @@ document.addEventListener('click',function(e){
         <div class="pay-sum-item"><div class="pay-sum-label">Total</div><div class="pay-sum-val" id="pm-total">—</div></div>
         <div class="pay-sum-item"><div class="pay-sum-label">Balance Due</div><div class="pay-sum-val" id="pm-balance" style="color:var(--red)">—</div></div>
       </div>
-      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Client: <strong id="pm-client" style="color:var(--text)">—</strong> &nbsp;·&nbsp; Already paid: <strong id="pm-paid" style="color:var(--green)">LKR 0</strong></div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Customer: <strong id="pm-client" style="color:var(--text)">—</strong> &nbsp;·&nbsp; Already paid: <strong id="pm-paid" style="color:var(--green)">LKR 0</strong></div>
       <div class="pay-type-grid">
         <button class="pay-type-btn active" id="pbt-full" data-cls-fn="setPayType" data-cls-arg="full">✓ Full Payment</button>
         <button class="pay-type-btn" id="pbt-part" data-cls-fn="setPayType" data-cls-arg="partial">Partial Payment</button>
@@ -1077,11 +1082,12 @@ function enforcePermissions(){
     if(backlogView&&backlogView.classList.contains('active')) nav('dashboard');
   }
   if(_profile.role==='viewer'){
+    document.querySelectorAll('[data-nav="invoices"],[data-nav="clients"],[data-nav="team"],[data-nav="backlog"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('button[onclick*="add"],button[onclick*="save"],button[onclick*="delete"],button[onclick*="record"],button[onclick*="openModal"],button[onclick*="openClientModal"],button[onclick*="openSupplierModal"],button[onclick*="openInvoiceModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
     document.querySelectorAll('button[data-cls-fn^="add"],button[data-cls-fn^="save"],button[data-cls-fn^="openEdit"],button[data-cls-fn^="openDelete"],button[data-cls-fn^="confirmDelete"],button[data-cls-fn^="record"],button[data-cls-fn="openModal"],button[data-cls-fn="openInvoiceModal"],button[data-cls-fn="openInvoiceEditModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
   }
   if(_profile.role==='accountant'){
-    document.querySelectorAll('[data-nav="clients"],[data-nav="suppliers"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
+    document.querySelectorAll('[data-nav="team"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
   }
 }
 
@@ -1150,13 +1156,13 @@ window.openGrowthUpgrade = async function openGrowthUpgrade(){
   }
 };
 const tourSteps=[
-  {view:'dashboard',title:'Dashboard',body:'<p>This is the daily control room. It pulls your invoices, cashflow, expenses, and profit into one view.</p><div class="tour-list"><div><strong>Check health:</strong> revenue, expenses, net profit, cash position.</div><div><strong>Act fast:</strong> open outstanding invoices or recent transactions from here.</div></div>'},
-  {view:'cashflow',title:'Money In & Out',body:'<p>Use Cashflow for every movement of money through the business.</p><div class="tour-list"><div><strong>Cash In:</strong> sales, client payments, other income.</div><div><strong>Cash Out:</strong> supplier payments, rent, utilities, payroll, operations.</div><div><strong>Supplier link:</strong> choose an existing supplier or create a new one while recording.</div></div>'},
-  {view:'expenses',title:'Expenses',body:'<p>Expenses keeps costs organized so reports are useful later.</p><div class="tour-list"><div><strong>Add expense:</strong> date, category, supplier/vendor, amount.</div><div><strong>Use categories:</strong> fuel, rent, payroll, marketing, utilities and more.</div><div><strong>Review:</strong> totals feed into profit and loss automatically.</div></div>'},
-  {view:'invoices',title:'Invoices',body:'<p>Create, send, and collect invoices from one register.</p><div class="tour-list"><div><strong>Raise invoice:</strong> choose client, items, VAT, terms, and template.</div><div><strong>Email or WhatsApp:</strong> send the invoice directly to the client.</div><div><strong>Record payment:</strong> full or partial payments update outstanding balances.</div></div>'},
-  {view:'suppliers',title:'Clients & Suppliers',body:'<p>Contacts become reusable business records instead of typing names again and again.</p><div class="tour-list"><div><strong>Clients:</strong> invoice names, emails, phone numbers, terms.</div><div><strong>Suppliers:</strong> vendors used in expenses and supplier payments.</div><div><strong>Cleaner reports:</strong> linked records make your dashboard easier to trust.</div></div>'},
-  {view:'reports',title:'Reports',body:'<p>Reports turn your daily entries into owner-friendly summaries.</p><div class="tour-list"><div><strong>Profit & Loss:</strong> revenue minus cost of operations and expenses.</div><div><strong>Filter:</strong> today, month, year, or custom dates.</div><div><strong>Export:</strong> print or download a clean PDF-style report.</div></div>'},
-  {view:'settings',title:'Settings, Trial & Growth',body:'<p>Settings controls the business profile and billing state.</p><div class="tour-list"><div><strong>Logo and details:</strong> appear on invoices and reports.</div><div><strong>Trial countdown:</strong> shows how many days remain.</div><div><strong>Growth upgrade:</strong> opens the Growth system with payroll, debt tracking, analytics, reminders, team tools, and more templates.</div></div>'}
+  {view:'dashboard',title:'Dashboard',body:'<p>This is the invoice control room for the Starter plan.</p><div class="tour-list"><div><strong>Check health:</strong> total invoiced, paid amount, outstanding amount, overdue invoices, and this month invoice value.</div><div><strong>Act fast:</strong> open outstanding invoices from here.</div></div>'},
+  {view:'invoices',title:'Invoices',body:'<p>Create, send, and collect invoices from one register.</p><div class="tour-list"><div><strong>Raise invoice:</strong> choose customer, items, VAT, terms, and template.</div><div><strong>Email or WhatsApp:</strong> share the invoice directly with the customer.</div><div><strong>Record payment:</strong> full or partial payments update outstanding balances.</div></div>'},
+  {view:'clients',title:'Customers',body:'<p>Customers are reusable billing records for invoices.</p><div class="tour-list"><div><strong>Save details:</strong> name, business, email, WhatsApp, billing address, notes, and terms.</div><div><strong>Create faster:</strong> start a new invoice from a customer card.</div></div>'},
+  {view:'reports',title:'Reports',body:'<p>Reports are based only on invoices and payments.</p><div class="tour-list"><div><strong>Review:</strong> invoice summary, paid vs unpaid, outstanding, overdue, and customer-wise totals.</div><div><strong>Export:</strong> download a clean invoice report PDF.</div></div>'},
+  {view:'team',title:'Team Access',body:'<p>Starter team access is simple and limited to two users.</p><div class="tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> create invoices, manage customers, and mark payments.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
+  {view:'backlog',title:'Edit Backlog',body:'<p>Admins can review invoice, customer, and payment changes.</p><div class="tour-list"><div><strong>Audit fields:</strong> date, edited item, previous value, new value, edited by, and reason.</div></div>'},
+  {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, footer message, logo alignment, and logo size.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
 ];
 let tourIndex=0;
 function tourStorageKey(){return 'cls-starter-tour-seen-'+(_signedInUid||_uid||'local');}
@@ -1194,23 +1200,21 @@ function maybeStartFirstTour(){
 // ════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════
-const pageTitles={dashboard:['Financial Dashboard','Overview of your business finances'],cashflow:['Cashflow Tracker','Track every cash in and cash out'],expenses:['Expense Manager','Monitor every business expense'],invoices:['Invoice Management','Create, send and track invoices'],clients:['Client Directory','Manage your clients and contacts'],suppliers:['Supplier Directory','Manage your suppliers and vendors'],reports:['Financial Reports','Profit & Loss and business insights'],backlog:['Edit Backlog','Admin-only register of record changes and reasons'],settings:['Business Settings','Manage your profile and preferences']};
+const pageTitles={dashboard:['Starter Invoice Control System','Create invoices, manage customers, track payments, export reports, and control staff edits.'],invoices:['Invoice Management','Create, send, and track invoices'],clients:['Customer Directory','Manage your customers and billing contacts'],reports:['Invoice Reports','Invoice summary, paid vs unpaid, overdue invoices, and customer-wise reports'],team:['Team Access','Control Starter roles for up to 2 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],settings:['Business Settings','Manage your invoice profile and preferences']};
 window.nav = window.nav = function nav(view){
   if(view==='backlog'&&!isAdminUser()) view='dashboard';
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   var _vel=document.getElementById('view-'+view);if(_vel)_vel.classList.add('active');
-  document.querySelectorAll('.sb-item').forEach(i=>{if((i.getAttribute('onclick')||'').includes("'"+view+"'"))i.classList.add('active');});
+  document.querySelectorAll('.sb-item').forEach(i=>{if(i.getAttribute('data-nav')===view)i.classList.add('active');});
   const t=pageTitles[view]||['',''];
   document.getElementById('page-title').textContent=t[0];
   document.getElementById('page-sub').textContent=t[1];
   if(view==='dashboard') renderDashboard();
-  if(view==='cashflow') renderCashflow();
-  if(view==='expenses') renderExpenses();
   if(view==='invoices'){renderInvoices();populateClientSelect();}
   if(view==='clients') renderClients();
-  if(view==='suppliers') renderSuppliers();
   if(view==='reports') renderReports();
+  if(view==='team') renderTeamAccess();
   if(view==='backlog') renderBacklog();
   if(view==='settings') loadSettings();
 }
@@ -1306,42 +1310,25 @@ let cfChart=null, expChart=null;
 function renderDashboard(){
   const now=new Date();
   const mo=now.getMonth(), yr=now.getFullYear();
-  const inMTD=DB.transactions.filter(t=>t.type==='in'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0);
-  const expMTD=DB.expenses.filter(e=>new Date(e.date).getMonth()===mo&&new Date(e.date).getFullYear()===yr).reduce((a,e)=>a+e.amount,0);
-  const outMTD=DB.transactions.filter(t=>t.type==='out'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0);
-  const allIn=DB.transactions.filter(t=>t.type==='in').reduce((a,t)=>a+t.amount,0);
-  const allOut=DB.transactions.filter(t=>t.type==='out').reduce((a,t)=>a+t.amount,0);
-  const allExp=DB.expenses.reduce((a,e)=>a+e.amount,0);
-  const profit=inMTD-(expMTD+outMTD);
-  const balance=allIn-allOut-allExp;
-  animCount('kpi-rev',inMTD);animCount('kpi-exp',expMTD+outMTD);animCount('kpi-profit',profit);animCount('kpi-balance',balance);
-  // Outstanding invoices KPI
-  const outstanding=DB.invoices.filter(i=>i.status!=='paid').reduce((a,i)=>a+(i.amount-(i.paidAmount||0)),0);
+  const todayMs=new Date().setHours(0,0,0,0);
+  const totalInvoiced=DB.invoices.reduce((a,i)=>a+(i.amount||0),0);
+  const paidAmount=DB.invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
+  const outstanding=DB.invoices.reduce((a,i)=>a+Math.max(0,(i.amount||0)-(i.paidAmount||0)),0);
+  const overdue=DB.invoices.filter(i=>i.status!=='paid'&&new Date(i.due)<todayMs);
+  const monthValue=DB.invoices.filter(i=>new Date(i.date).getMonth()===mo&&new Date(i.date).getFullYear()===yr).reduce((a,i)=>a+(i.amount||0),0);
+  animCount('kpi-total-invoiced',totalInvoiced);
+  animCount('kpi-paid-amount',paidAmount);
   animCount('kpi-outstanding',outstanding);
+  animCount('kpi-month-invoiced',monthValue);
+  const overdueEl=document.getElementById('kpi-overdue-count');if(overdueEl)overdueEl.textContent=String(overdue.length);
   const outCount=DB.invoices.filter(i=>i.status!=='paid').length;
   document.getElementById('kpi-outstanding-sub').textContent=outCount+' invoice'+(outCount!==1?'s':'')+' pending';
   document.getElementById('kpi-outstanding-sub').style.color=outstanding>0?'var(--amber)':'var(--green)';
-  // Profit overview
-  const allInTotal=DB.transactions.filter(t=>t.type==='in').reduce((a,t)=>a+t.amount,0);
-  const allExpTotal=DB.expenses.reduce((a,e)=>a+e.amount,0);
-  const allOutTotal=DB.transactions.filter(t=>t.type==='out').reduce((a,t)=>a+t.amount,0);
-  const netProfitAll=allInTotal-allExpTotal-allOutTotal;
-  const margin=allInTotal>0?Math.round(netProfitAll/allInTotal*100):0;
-  document.getElementById('po-revenue').textContent=fmtAmt(allInTotal);
-  document.getElementById('po-expenses').textContent=fmtAmt(allExpTotal+allOutTotal);
-  const profitEl=document.getElementById('po-profit');profitEl.textContent=fmtAmt(netProfitAll);profitEl.style.color=netProfitAll>=0?'var(--green)':'var(--red)';
-  const marginEl=document.getElementById('po-margin');marginEl.textContent=margin+'%';marginEl.style.color=margin>=0?'var(--green)':'var(--red)';
-  // Outstanding invoices list
+  const overdueSub=document.getElementById('kpi-overdue-sub');if(overdueSub){overdueSub.textContent=overdue.length?'Needs follow-up':'None overdue';overdueSub.style.color=overdue.length?'var(--red)':'var(--green)';}
   const unpaid=DB.invoices.filter(i=>i.status!=='paid').sort((a,b)=>new Date(a.due)-new Date(b.due));
-  const todayMs=new Date().setHours(0,0,0,0);
   const outHtml=unpaid.length?unpaid.slice(0,6).map(inv=>{const bal=inv.amount-(inv.paidAmount||0);const isOverdue=new Date(inv.due)<todayMs;return`<div class="outstanding-row"><span class="outstanding-client">${inv.client}</span><span class="outstanding-inv">${inv.num}</span><span class="outstanding-due ${isOverdue?'outstanding-overdue':''}">${isOverdue?'⚠ Overdue':'Due '+fmtD(inv.due)}</span><span class="outstanding-amt">${fmtAmt(bal)}</span></div>`;}).join(''):'<div style="padding:1.5rem;text-align:center;color:var(--green);font-size:.85rem">✓ No outstanding invoices — all paid up!</div>';
   document.getElementById('outstanding-list').innerHTML=outHtml;
-  document.getElementById('kpi-rev-chg').textContent=`Revenue this month`;
-  document.getElementById('kpi-profit-sub').textContent=profit>=0?'Profitable month':'Loss this month';
-  document.getElementById('kpi-profit-sub').style.color=profit>=0?'var(--green)':'var(--red)';
-  document.getElementById('kpi-bal-sub').textContent='Running total';
   renderRecentTable();
-  buildCharts();
 }
 function animCount(id,target){
   const el=document.getElementById(id);if(!el)return;
@@ -1377,8 +1364,8 @@ function buildCharts(){
   }
 }
 function renderRecentTable(){
-  const all=[...DB.transactions.map(t=>({...t,src:'txn'})),...DB.expenses.map(e=>({...e,type:'out',src:'exp',desc:e.desc,cat:e.cat}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
-  document.getElementById('recent-table').innerHTML=all.length?all.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${t.desc}${(t.supplierName||t.vendor)?`<div style="font-size:.68rem;color:var(--muted);margin-top:.15rem">${t.supplierName||t.vendor}</div>`:''}</td><td>${t.cat}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No transactions yet — add your first cash in or out</td></tr>';
+  const all=[...DB.invoices].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+  document.getElementById('recent-table').innerHTML=all.length?all.map(inv=>`<tr><td><strong>${escHTML(inv.num)}</strong></td><td>${escHTML(inv.client||'—')}</td><td>${fmtD(inv.date)}</td><td><span class="pill ${inv.status==='paid'?'pill-paid':inv.status==='partial'?'pill-partial':inv.status==='overdue'?'pill-overdue':'pill-unpaid'}">${escHTML((inv.status||'unpaid').charAt(0).toUpperCase()+(inv.status||'unpaid').slice(1))}</span></td><td style="text-align:right" class="amount-gold">${fmtAmt(inv.amount||0)}</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No invoices yet. Raise your first invoice.</td></tr>';
 }
 
 function escHTML(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -1426,6 +1413,22 @@ function getEditorName(){
 }
 function snapshotForLog(item){
   return JSON.parse(JSON.stringify(item||{}));
+}
+function summarizeBacklogValue(value){
+  if(!value) return '—';
+  if(typeof value!=='object') return escHTML(value);
+  const parts=[];
+  if(value.num) parts.push('Invoice: '+value.num);
+  if(value.client) parts.push('Customer: '+value.client);
+  if(value.name) parts.push('Customer: '+value.name);
+  if(value.status) parts.push('Status: '+value.status);
+  if(value.amount!=null) parts.push('Amount: '+fmtAmt(value.amount));
+  if(value.paidAmount!=null) parts.push('Paid: '+fmtAmt(value.paidAmount));
+  if(value.date) parts.push('Date: '+fmtD(String(value.date).slice(0,10)));
+  if(value.email) parts.push('Email: '+value.email);
+  if(value.phone) parts.push('Phone: '+value.phone);
+  if(value.addr) parts.push('Address: '+value.addr);
+  return escHTML(parts.slice(0,6).join(' · ')||JSON.stringify(value).slice(0,140));
 }
 function addEditBacklog(kind,itemId,label,reason,before,after){
   if(!DB.editBacklog) DB.editBacklog=[];
@@ -1583,7 +1586,7 @@ function getInvData(){
   return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vatApplied?vrate:0,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:selectedTpl};
 }
 window.saveInvoice = function saveInvoice(){
-  const d=getInvData();if(!d.client){alert('Please enter a client name.');return;}
+  const d=getInvData();if(!d.client){alert('Please enter a customer name.');return;}
   const editNum=(document.getElementById('i-edit-num')||{}).value||'';
   if(editNum){
     const idx=DB.invoices.findIndex(function(i){return i.num===editNum;});
@@ -1730,7 +1733,7 @@ window.saveRecordEdit=function saveRecordEdit(){
   const amount=parseAmt(document.getElementById('edit-amount').value);
   const desc=document.getElementById('edit-desc').value.trim();
   if(!reason){alert('Please mention the reason for this edit.');return;}
-  if(!date||!desc||!amount){alert('Please fill in date, description/client, and amount.');return;}
+  if(!date||!desc||!amount){alert('Please fill in date, description/customer, and amount.');return;}
   const before=snapshotForLog(item);
   if(kind==='transaction'){
     item.date=date;item.amount=amount;item.desc=desc;
@@ -1763,7 +1766,7 @@ function renderBacklog(){
   if(!summary||!table) return;
   if(!isAdminUser()){
     summary.innerHTML='<div class="sum-item"><div class="sum-label">Access</div><div class="sum-val" style="color:var(--red)">Admin Only</div></div><div class="sum-item"></div><div class="sum-item"></div>';
-    table.innerHTML='<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--dim)">Only admin users can view the edit backlog.</td></tr>';
+    table.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">Only admin users can view the edit backlog.</td></tr>';
     return;
   }
   const logs=[...(DB.editBacklog||[])].sort(function(a,b){return new Date(b.editedAt)-new Date(a.editedAt);});
@@ -1772,8 +1775,8 @@ function renderBacklog(){
   table.innerHTML=logs.length?logs.map(function(l){
     const when=l.editedAt?new Date(l.editedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     const action=l.action==='delete'?'Deleted':'Edited';
-    return `<tr><td>${when}</td><td><div class="audit-row-main"><span class="audit-chip">${escHTML(action)}</span><span class="audit-chip">${escHTML(l.kind)}</span>${escHTML(l.label)}</div><div class="audit-meta">Record ID: ${escHTML(l.itemId)}</div></td><td><div class="audit-reason">${escHTML(l.reason)}</div></td><td>${escHTML(l.editedBy||'Admin')}</td></tr>`;
-  }).join(''):'<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--dim)">No edits have been logged yet.</td></tr>';
+    return `<tr><td>${when}</td><td><div class="audit-row-main"><span class="audit-chip">${escHTML(action)}</span><span class="audit-chip">${escHTML(l.kind)}</span>${escHTML(l.label)}</div><div class="audit-meta">Record ID: ${escHTML(l.itemId)}</div></td><td>${summarizeBacklogValue(l.before)}</td><td>${summarizeBacklogValue(l.after)}</td><td>${escHTML(l.editedBy||'Admin')}</td><td><div class="audit-reason">${escHTML(l.reason)}</div></td></tr>`;
+  }).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No invoice, customer, or payment edits have been logged yet.</td></tr>';
 }
 
 // ════════════════════════════════
@@ -1800,9 +1803,11 @@ window.recordPayment = function recordPayment(){
   const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);
   if(amount>bal+0.01){alert('Amount exceeds the remaining balance of '+fmtAmt(bal)+'.');return;}
   const idx=DB.invoices.findIndex(i=>i.num===currentPayInv.num);
+  const before=idx>-1?snapshotForLog(DB.invoices[idx]):snapshotForLog(currentPayInv);
   if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;const newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';}
   DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),id:Date.now()});
-  saveDB();renderInvoices();closeModal('pay-modal');
+  if(idx>-1)addEditBacklog('payment',currentPayInv.num,currentPayInv.num+' · '+currentPayInv.client,'Payment recorded'+(ref?' · '+ref:''),before,snapshotForLog(DB.invoices[idx]));
+  saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('pay-modal');
 }
 
 // ════════════════════════════════
@@ -1832,27 +1837,40 @@ function renderReports(){
     to=tv?new Date(tv+'T23:59:59'):new Date();
   }
   const inRange=d=>new Date(d)>=from&&new Date(d)<=to;
-  const totalIn=DB.transactions.filter(t=>t.type==='in'&&inRange(t.date)).reduce((a,t)=>a+t.amount,0);
-  const totalOut=DB.transactions.filter(t=>t.type==='out'&&inRange(t.date)).reduce((a,t)=>a+t.amount,0);
-  const totalExp=DB.expenses.filter(e=>inRange(e.date)).reduce((a,e)=>a+e.amount,0);
-  const gross=totalIn;const cogs=totalOut;const opExp=totalExp;const netProfit=gross-cogs-opExp;
+  const invoices=DB.invoices.filter(i=>inRange(i.date));
+  const totalIssued=invoices.reduce((a,i)=>a+(i.amount||0),0);
+  const totalPaid=invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
+  const outstanding=invoices.reduce((a,i)=>a+Math.max(0,(i.amount||0)-(i.paidAmount||0)),0);
+  const unpaid=invoices.filter(i=>i.status==='unpaid').length;
+  const partial=invoices.filter(i=>i.status==='partial').length;
+  const paid=invoices.filter(i=>i.status==='paid').length;
+  const todayMs=new Date().setHours(0,0,0,0);
+  const overdue=invoices.filter(i=>i.status!=='paid'&&new Date(i.due)<todayMs);
   document.getElementById('pl-report').innerHTML=`
-    <div class="report-row pos"><span>Total Revenue</span><span>${fmtAmt(gross)}</span></div>
-    <div class="report-row neg"><span>Cost of Operations</span><span>(${fmtAmt(cogs)})</span></div>
-    <div class="report-row neg"><span>Operating Expenses</span><span>(${fmtAmt(opExp)})</span></div>
-    <div class="report-row total ${netProfit>=0?'pos':'neg'}"><span><strong>Net Profit</strong></span><span>${fmtAmt(netProfit)}</span></div>`;
-  const invIssued=DB.invoices.filter(i=>inRange(i.date)).reduce((a,i)=>a+i.amount,0);
-  const invCollected=DB.invoices.filter(i=>inRange(i.date)).reduce((a,i)=>a+(i.paidAmount||0),0);
-  const invOutstanding=invIssued-invCollected;
+    <div class="report-row"><span>Total Invoices</span><span>${invoices.length}</span></div>
+    <div class="report-row pos"><span>Total Invoice Value</span><span>${fmtAmt(totalIssued)}</span></div>
+    <div class="report-row pos"><span>Paid Amount</span><span>${fmtAmt(totalPaid)}</span></div>
+    <div class="report-row total ${outstanding>0?'neg':'pos'}"><span><strong>Outstanding Amount</strong></span><span>${fmtAmt(outstanding)}</span></div>`;
   document.getElementById('cf-report').innerHTML=`
-    <div class="report-row pos"><span>Cash In</span><span>${fmtAmt(totalIn)}</span></div>
-    <div class="report-row neg"><span>Cash Out + Expenses</span><span>(${fmtAmt(totalOut+totalExp)})</span></div>
-    <div class="report-row"><span>Invoices Issued</span><span>${fmtAmt(invIssued)}</span></div>
-    <div class="report-row"><span>Invoices Collected</span><span>${fmtAmt(invCollected)}</span></div>
-    <div class="report-row ${invOutstanding>0?'neg':'pos'} total"><span><strong>Outstanding</strong></span><span>${fmtAmt(invOutstanding)}</span></div>`;
-  const cats={};DB.expenses.filter(e=>inRange(e.date)).forEach(e=>{if(!cats[e.cat])cats[e.cat]={count:0,total:0};cats[e.cat].count++;cats[e.cat].total+=e.amount;});
-  const total=Object.values(cats).reduce((a,c)=>a+c.total,0)||1;
-  document.getElementById('cat-report-table').innerHTML=Object.entries(cats).sort((a,b)=>b[1].total-a[1].total).map(([cat,data])=>`<tr><td>${cat}</td><td>${data.count}</td><td style="text-align:right" class="amount-neg">${fmtAmt(data.total)}</td><td style="text-align:right">${Math.round(data.total/total*100)}%</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--dim)">No expenses in this period</td></tr>';
+    <div class="report-row pos"><span>Paid Invoices</span><span>${paid}</span></div>
+    <div class="report-row"><span>Partial Invoices</span><span>${partial}</span></div>
+    <div class="report-row neg"><span>Unpaid Invoices</span><span>${unpaid}</span></div>
+    <div class="report-row total ${overdue.length?'neg':'pos'}"><span><strong>Overdue Invoices</strong></span><span>${overdue.length}</span></div>`;
+  const byCustomer={};
+  invoices.forEach(function(inv){
+    const key=inv.client||'Unknown Customer';
+    if(!byCustomer[key])byCustomer[key]={count:0,total:0,paid:0,outstanding:0};
+    byCustomer[key].count++;
+    byCustomer[key].total+=inv.amount||0;
+    byCustomer[key].paid+=inv.paidAmount||0;
+    byCustomer[key].outstanding+=Math.max(0,(inv.amount||0)-(inv.paidAmount||0));
+  });
+  document.getElementById('cat-report-table').innerHTML=Object.entries(byCustomer).sort((a,b)=>b[1].total-a[1].total).map(([customer,data])=>`<tr><td>${escHTML(customer)}</td><td>${data.count}</td><td style="text-align:right" class="amount-pos">${fmtAmt(data.paid)}</td><td style="text-align:right" class="${data.outstanding>0?'amount-neg':'amount-pos'}">${fmtAmt(data.outstanding)}</td><td style="text-align:right" class="amount-gold">${fmtAmt(data.total)}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No invoices in this period</td></tr>';
+}
+
+function renderTeamAccess(){
+  const countEl=document.getElementById('team-user-count');
+  if(countEl) countEl.textContent='2 Max';
 }
 
 // ════════════════════════════════
@@ -1966,7 +1984,7 @@ function buildInvoiceEmailHTML(inv){
   +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:34px"><tr>'
   +'<td style="vertical-align:top;width:60%">'
     +'<div style="font-size:11px;letter-spacing:.5px;color:#999;margin-bottom:6px">BILL TO</div>'
-    +'<div style="font-size:15px;font-weight:700;color:#111">'+esc(inv.client||'Client')+'</div>'
+    +'<div style="font-size:15px;font-weight:700;color:#111">'+esc(inv.client||'Customer')+'</div>'
     +(inv.caddr?'<div style="font-size:12px;color:#777;margin-top:3px;line-height:1.6">'+escBr(inv.caddr)+'</div>':'')
     +(inv.cphone?'<div style="font-size:12px;color:#777">'+esc(inv.cphone)+'</div>':'')
     +(inv.cemail?'<div style="font-size:12px;color:#777">'+esc(inv.cemail)+'</div>':'')
@@ -2012,7 +2030,7 @@ function buildInvoiceEmailHTML(inv){
 
   // Footer
   +'<div style="margin-top:34px;padding-top:16px;border-top:1px solid #ededed;text-align:center;font-size:11px;color:#bdbab4;letter-spacing:.3px">'
-  +'Invoice generated by Cashflow System - <strong style="color:'+ac+'">CeylonryLabs.io</strong></div>'
+  +'Invoice generated by Starter Invoice Control System - <strong style="color:'+ac+'">CeylonryLabs.io</strong></div>'
 
   +'</div></div>';
 }
@@ -2097,7 +2115,7 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
 </div>
 <div class="parties">
   <div><div class="party-label">From</div><div class="party-name">${s.bizName||'Your Business'}</div><div class="party-detail">${s.addr||''}<br>${s.email||''}${s.vat?`<br>VAT: ${s.vat}`:''}</div></div>
-  <div><div class="party-label">Bill To</div><div class="party-name">${inv.client||'Client'}</div><div class="party-detail">${inv.caddr||''}<br>${inv.cemail||''}</div></div>
+  <div><div class="party-label">Bill To</div><div class="party-name">${inv.client||'Customer'}</div><div class="party-detail">${inv.caddr||''}<br>${inv.cemail||''}</div></div>
 </div>
 <table><thead><tr><th class="d">Description</th><th class="c">Qty</th><th class="r">Unit Price</th><th class="r">Amount</th></tr></thead><tbody>${linesHTML}</tbody></table>
 <div class="bottom">
@@ -2110,7 +2128,7 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
   </div>
 </div>
 <div class="footer"><div><strong>${s.bizName||'Your Business'}</strong><br>${s.addr||''}</div><div style="text-align:right;max-width:280px">${s.footer||'Thank you for your business.'}</div></div>
-<div class="powered">Invoice generated by Cashflow System - <b>CeylonryLabs.io</b></div>
+<div class="powered">Invoice generated by Starter Invoice Control System - <b>CeylonryLabs.io</b></div>
 </div></body></html>`;
 }
 window.viewPrintInvoice = function viewPrintInvoice(num){
@@ -2129,7 +2147,7 @@ window.viewPrintInvoice = function viewPrintInvoice(num){
   const finalHTML=printHTML.slice(0,bodyPos+6)+downloadBar+printHTML.slice(bodyPos+6);
   w.document.write(finalHTML);w.document.close();
 }
-window.printInvoiceFromModal = function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a client name first.');return;}const fakeInv={num:'PREVIEW',client:d.client,cemail:d.cemail,caddr:d.caddr,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,selectedTpl));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
+window.printInvoiceFromModal = function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a customer name first.');return;}const fakeInv={num:'PREVIEW',client:d.client,cemail:d.cemail,caddr:d.caddr,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,selectedTpl));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
 
 
 // ════════════════════════════════
@@ -2147,7 +2165,7 @@ function renderClients(){
   const grid=document.getElementById('client-grid');
   if(!grid) return;
   if(!list.length){
-    grid.innerHTML=`<div class="client-empty" style="grid-column:1/-1"><div class="client-empty-icon">👥</div><div class="client-empty-text">No clients yet. Add your first client to get started.</div><button class="btn-act" data-cls-fn="openClientModal">+ Add First Client</button></div>`;
+    grid.innerHTML=`<div class="client-empty" style="grid-column:1/-1"><div class="client-empty-icon">👥</div><div class="client-empty-text">No customers yet. Add your first customer to get started.</div><button class="btn-act" data-cls-fn="openClientModal">+ Add First Customer</button></div>`;
     return;
   }
   grid.innerHTML=list.map(c=>`
@@ -2178,7 +2196,9 @@ window.openClientModal = function openClientModal(){
   document.getElementById('c-addr').value='';
   document.getElementById('c-notes').value='';
   document.getElementById('c-terms').value='Net 30';
-  document.getElementById('client-modal-title').textContent='Add Client';
+  document.getElementById('c-edit-reason').value='';
+  document.getElementById('c-edit-reason-wrap').style.display='none';
+  document.getElementById('client-modal-title').textContent='Add Customer';
   openModal('client-modal');
 }
 
@@ -2193,15 +2213,19 @@ window.editClient = function editClient(id){
   document.getElementById('c-addr').value=c.addr||'';
   document.getElementById('c-notes').value=c.notes||'';
   document.getElementById('c-terms').value=c.terms||'Net 30';
-  document.getElementById('client-modal-title').textContent='Edit Client';
+  document.getElementById('c-edit-reason').value='';
+  document.getElementById('c-edit-reason-wrap').style.display='block';
+  document.getElementById('client-modal-title').textContent='Edit Customer';
   openModal('client-modal');
 }
 
 window.saveClient = function saveClient(){
   const name=document.getElementById('c-name').value.trim();
-  if(!name){alert('Please enter the client name.');return;}
+  if(!name){alert('Please enter the customer name.');return;}
   if(!DB.clients) DB.clients={list:[],nextId:1};
   const editId=parseInt(document.getElementById('c-edit-id').value)||0;
+  const reason=document.getElementById('c-edit-reason').value.trim();
+  if(editId&&!reason){alert('Please mention the reason for editing this customer.');return;}
   const data={
     id:editId||(Date.now()+Math.floor(Math.random()*1000)),
     name,
@@ -2212,13 +2236,13 @@ window.saveClient = function saveClient(){
     terms:document.getElementById('c-terms').value,
     notes:document.getElementById('c-notes').value.trim()
   };
-  if(editId){const i=DB.clients.list.findIndex(c=>c.id===editId);if(i>-1)DB.clients.list[i]=data;}
+  if(editId){const i=DB.clients.list.findIndex(c=>c.id===editId);if(i>-1){const before=snapshotForLog(DB.clients.list[i]);DB.clients.list[i]=data;addEditBacklog('customer',editId,data.name,reason,before,snapshotForLog(data));}}
   else DB.clients.list.push(data);
-  saveDB();renderClients();populateClientSelect();closeModal('client-modal');
+  saveDB();renderClients();populateClientSelect();renderBacklog();closeModal('client-modal');
 }
 
 window.deleteClient = function deleteClient(id){
-  if(!confirm('Remove this client?'))return;
+  if(!confirm('Remove this customer?'))return;
   if(!DB.clients)return;
   DB.clients.list=DB.clients.list.filter(c=>c.id!==id);
   saveDB();renderClients();populateClientSelect();
@@ -2244,10 +2268,15 @@ function populateClientSelect(){
   const sel=document.getElementById('i-client-sel');
   if(!sel)return;
   if(!DB.clients) DB.clients={list:[],nextId:1};
-  const list=DB.clients.list||[];
+  const list=Array.isArray(DB.clients.list)?DB.clients.list:[];
   const cur=sel.value;
-  sel.innerHTML='<option value="">— Choose a saved client or fill in below —</option>'+
-    list.map((c,i)=>`<option value="${i}">${(c.name||'').replace(/</g,'&lt;')}${c.biz?' — '+(c.biz||'').replace(/</g,'&lt;'):''}</option>`).join('');
+  const esc=function(v){return String(v==null?'':v).replace(/</g,'&lt;');};
+  sel.innerHTML='<option value="">— Choose a saved customer or fill in below —</option>'+
+    list.map(function(c,i){
+      if(!c) return '';
+      var bz=c.biz?(' — '+esc(c.biz)):'';
+      return '<option value="'+i+'">'+esc(c.name)+bz+'</option>';
+    }).join('');
   if(cur) sel.value=cur;
 }
 
@@ -2297,7 +2326,7 @@ function loadLogoSize(){
 // ════════════════════════════════
 window.emailInvoice = async function emailInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
-  if(!inv.cemail){alert('This client has no email address. Open the invoice and add the client email first.');return;}
+  if(!inv.cemail){alert('This customer has no email address. Open the invoice and add the customer email first.');return;}
   const s=DB.settings;
   const cur=inv.cur||'LKR';
   const fmtM=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2557,7 +2586,7 @@ window.exportReportPDF=function(){
   var cat=(document.getElementById('cat-report-table')||{}).innerHTML||'';
   var biz=s.bizName||'Your Business';
   var logo=s.logo?'<img src="'+s.logo+'" style="max-height:88px;max-width:260px;object-fit:contain;display:block;margin-bottom:.65rem">':'';
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+biz+' P&L</title>'
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+biz+' Invoice Report</title>'
    +'<style>@page{size:A4;margin:0}'
    +'*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}'
    +'html,body{margin:0!important;padding:0!important}'
@@ -2581,17 +2610,17 @@ window.exportReportPDF=function(){
    +'@media print{@page{size:A4;margin:0}#dlbar{display:none!important}html,body{margin:0!important;padding:0!important}}'
    +'</style></head><body>'
    +'<div id="dlbar" style="position:sticky;top:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;font-family:Arial,Helvetica,sans-serif;font-size:.82rem">'
-   +'<span>Profit &amp; Loss — '+pt+'</span><div style="display:flex;gap:.6rem">'
+   +'<span>Invoice Report — '+pt+'</span><div style="display:flex;gap:.6rem">'
    +'<button onclick="window.print()" style="background:#B8922A;color:#fff;border:none;padding:.45rem 1.25rem;cursor:pointer;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase">Download PDF</button>'
    +'<button onclick="window.close()" style="background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.25);padding:.45rem 1rem;cursor:pointer;font-size:.78rem">Close</button></div></div>'
    +'<div class="page">'
    +'<div class="rhead"><div>'+logo+'<div class="biz">'+biz+'</div><div class="sub">'+(s.addr||'')+'</div></div>'
-   +'<div class="ttl"><h1>PROFIT &amp; LOSS</h1><div class="per">'+pt+'</div></div></div>'
-   +'<div class="cards"><div class="card"><h3>Income Statement</h3>'+pl+'</div>'
-   +'<div class="card"><h3>Cashflow Summary</h3>'+cf+'</div></div>'
-   +'<div class="sec-title">Expense by Category</div>'
-   +'<table><thead><tr><th>Category</th><th>Transactions</th><th>Amount (LKR)</th><th>% of Total</th></tr></thead><tbody>'+cat+'</tbody></table>'
-   +'<div class="powered">Report generated by Cashflow System - <b>CeylonryLabs.io</b></div>'
+   +'<div class="ttl"><h1>INVOICE REPORT</h1><div class="per">'+pt+'</div></div></div>'
+   +'<div class="cards"><div class="card"><h3>Invoice Summary</h3>'+pl+'</div>'
+   +'<div class="card"><h3>Paid vs Unpaid</h3>'+cf+'</div></div>'
+   +'<div class="sec-title">Customer-wise Invoice Report</div>'
+   +'<table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody>'+cat+'</tbody></table>'
+   +'<div class="powered">Report generated by Starter Invoice Control System - <b>CeylonryLabs.io</b></div>'
    +'</div></body></html>';
   var w=window.open('','_blank','width=880,height=760');
   if(!w){alert('Please allow pop-ups to export the report.');return;}
@@ -2625,7 +2654,7 @@ window.waInvoiceWithPDF=function(num){
   }
   var phone=String(inv.cphone||'').replace(/[^0-9]/g,'');
   if(phone&&!phone.startsWith('94'))phone='94'+phone.replace(/^0/,'');
-  var msg=encodeURIComponent('Hi '+inv.client+',\n\nPlease find your invoice from '+biz+'.\n\nInvoice: '+inv.num+'\nAmount: '+cur+' '+Number(inv.amount||0).toLocaleString()+'\nDue: '+fmtD(inv.due)+'\n\nPDF invoice attached.\n\nInvoice generated by Cashflow System - CeylonryLabs.io');
+  var msg=encodeURIComponent('Hi '+inv.client+',\n\nPlease find your invoice from '+biz+'.\n\nInvoice: '+inv.num+'\nAmount: '+cur+' '+Number(inv.amount||0).toLocaleString()+'\nDue: '+fmtD(inv.due)+'\n\nPDF invoice attached.\n\nInvoice generated by Starter Invoice Control System - CeylonryLabs.io');
   setTimeout(function(){window.open('https://wa.me/'+(phone||'')+'?text='+msg,'_blank');},1200);
 };
 window.toggleExpenseLog=function(type){var t=document.getElementById('expense-log-toggle');if(t)t.style.display=type==='out'?'block':'none';};
