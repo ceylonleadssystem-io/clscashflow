@@ -256,6 +256,26 @@ body.is-admin .admin-only{display:flex}
 .outstanding-due{font-size:.72rem;color:var(--muted);min-width:80px}
 .outstanding-amt{color:var(--amber);font-weight:600;font-family:var(--font-d);font-size:.95rem;text-align:right;min-width:110px}
 .outstanding-overdue{color:var(--red)}
+.dashboard-followup-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:1.25rem;margin-bottom:1.5rem}
+.aging-panel,.reminder-panel{background:var(--white);border:1px solid var(--border);border-left:3px solid var(--gold)}
+.reminder-panel{border-left-color:var(--amber)}
+.aging-list,.reminder-list{padding:.25rem 1.25rem 1rem}
+.aging-row{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border);font-size:.82rem}
+.aging-row:last-child{border-bottom:none}
+.aging-label{font-weight:600;color:var(--text)}
+.aging-count{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.aging-amount{font-family:var(--font-d);font-size:1.05rem;color:var(--gold);text-align:right;min-width:110px}
+.aging-overdue .aging-label,.aging-overdue .aging-amount{color:var(--red)}
+.reminder-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.8rem;align-items:center;padding:.8rem 0;border-bottom:1px solid var(--border)}
+.reminder-row:last-child{border-bottom:none}
+.reminder-main{min-width:0}
+.reminder-title{font-size:.86rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reminder-meta{font-size:.72rem;color:var(--muted);margin-top:.2rem;display:flex;gap:.55rem;flex-wrap:wrap}
+.reminder-badge{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--amber)}
+.reminder-badge.overdue{color:var(--red)}
+.reminder-actions{display:flex;gap:.35rem;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.reminder-actions .btn-sm{padding:.35rem .55rem;font-size:.62rem}
+.dashboard-empty{padding:1.5rem;text-align:center;color:var(--green);font-size:.85rem}
 .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
 .report-card{background:var(--white);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.25rem}
 .report-card-title{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.75rem}
@@ -300,9 +320,14 @@ body.is-admin .admin-only{display:flex}
 @media(max-width:980px){
   .table-tools{grid-template-columns:1fr 1fr}
   .table-tools .btn-act-outline{width:100%}
+  .dashboard-followup-grid{grid-template-columns:1fr}
 }
 @media(max-width:620px){
   .table-tools{grid-template-columns:1fr}
+  .reminder-row{grid-template-columns:1fr}
+  .reminder-actions{justify-content:flex-start}
+  .aging-row{grid-template-columns:1fr auto}
+  .aging-count{grid-column:1/-1}
 }
 
 @media print{@page{size:A4;margin:0}html,body{margin:0!important;padding:0!important}body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
@@ -363,15 +388,15 @@ document.addEventListener('click',function(e){
     <span class="sb-plan-tag">Starter</span>
   </div>
   <div class="sb-nav">
-    <div class="sb-section">Main</div>
+    <div class="sb-section" data-sidebar-section="main">Main</div>
     <a class="sb-item active" data-nav="dashboard"><span class="sb-icon">📊</span> Dashboard</a>
     <a class="sb-item" data-nav="invoices"><span class="sb-icon">🧾</span> Invoices</a>
     <a class="sb-item" data-nav="clients"><span class="sb-icon">👥</span> Customers</a>
-    <div class="sb-section">Insights</div>
+    <div class="sb-section" data-sidebar-section="insights">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
     <a class="sb-item" data-nav="team"><span class="sb-icon">🔐</span> Team Access</a>
     <a class="sb-item" data-nav="backlog"><span class="sb-icon">🗂️</span> Edit Backlog</a>
-    <div class="sb-section">Account</div>
+    <div class="sb-section" data-sidebar-section="account">Account</div>
     <a class="sb-item" data-nav="settings"><span class="sb-icon">⚙️</span> Settings</a>
   </div>
   <div class="sb-footer">
@@ -404,9 +429,15 @@ document.addEventListener('click',function(e){
         <div class="kpi-card"><div class="kpi-icon">⚠</div><div class="kpi-label">Overdue Invoices</div><div class="kpi-val" id="kpi-overdue-count">0</div><div class="kpi-sub" id="kpi-overdue-sub">Past due</div></div>
         <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-label">This Month Invoice Value</div><div class="kpi-val" id="kpi-month-invoiced">LKR 0</div><div class="kpi-sub">Issued this month</div></div>
       </div>
-      <div class="outstanding-panel">
-        <div class="table-header"><div class="table-title" style="color:var(--amber)">⏳ Outstanding Invoices</div><button class="btn-act-outline" data-nav="invoices">View All</button></div>
-        <div id="outstanding-list"><div style="padding:1.5rem;text-align:center;color:var(--dim);font-size:.85rem">No outstanding invoices — all paid up! ✓</div></div>
+      <div class="dashboard-followup-grid">
+        <div class="reminder-panel">
+          <div class="table-header"><div class="table-title" style="color:var(--amber)">Due Invoice Reminders</div><button class="btn-act-outline" data-nav="invoices">View All</button></div>
+          <div class="reminder-list" id="due-reminder-list"><div class="dashboard-empty">No invoice reminders due right now.</div></div>
+        </div>
+        <div class="aging-panel">
+          <div class="table-header"><div class="table-title">Invoice Aging</div><button class="btn-act-outline" data-nav="reports">Reports</button></div>
+          <div class="aging-list" id="invoice-aging-list"></div>
+        </div>
       </div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Recent Invoices</div><button class="btn-act-outline" data-nav="invoices">View All</button></div>
@@ -555,7 +586,7 @@ document.addEventListener('click',function(e){
     <div class="view" id="view-team">
       <div class="sum-bar c3" id="team-summary-bar" style="margin-bottom:1.25rem">
         <div class="sum-item"><div class="sum-label">Starter Users</div><div class="sum-val" id="team-user-count">2 Max</div></div>
-        <div class="sum-item"><div class="sum-label">Roles</div><div class="sum-val" style="font-size:1.05rem">Owner / Staff / View Only</div></div>
+        <div class="sum-item"><div class="sum-label">Roles</div><div class="sum-val" style="font-size:1.05rem">Owner / Staff / Accountant / View Only</div></div>
         <div class="sum-item"><div class="sum-label">Access</div><div class="sum-val" style="color:var(--gold);font-size:1.05rem">Invoice Control</div></div>
       </div>
       <div class="table-card" style="max-width:860px">
@@ -565,6 +596,7 @@ document.addEventListener('click',function(e){
           <tbody id="team-access-table">
             <tr><td><strong>Owner/Admin</strong></td><td>Full access to invoices, customers, reports, payments, settings, and edit backlog.</td><td style="text-align:right">Included</td></tr>
             <tr><td><strong>Staff</strong></td><td>Create invoices, manage customers, record payments, and share invoices.</td><td style="text-align:right">Up to 2 users total</td></tr>
+            <tr><td><strong>Accountant</strong></td><td>Access dashboard, invoices, customers, and reports only. No team access, settings, or edit backlog.</td><td style="text-align:right">Up to 2 users total</td></tr>
             <tr><td><strong>View Only</strong></td><td>View dashboard and reports only. No editing or payment actions.</td><td style="text-align:right">Up to 2 users total</td></tr>
           </tbody>
         </table>
@@ -1084,11 +1116,24 @@ function enforcePermissions(){
   if(_profile.role==='viewer'){
     document.querySelectorAll('[data-nav="invoices"],[data-nav="clients"],[data-nav="team"],[data-nav="backlog"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('button[onclick*="add"],button[onclick*="save"],button[onclick*="delete"],button[onclick*="record"],button[onclick*="openModal"],button[onclick*="openClientModal"],button[onclick*="openSupplierModal"],button[onclick*="openInvoiceModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
-    document.querySelectorAll('button[data-cls-fn^="add"],button[data-cls-fn^="save"],button[data-cls-fn^="openEdit"],button[data-cls-fn^="openDelete"],button[data-cls-fn^="confirmDelete"],button[data-cls-fn^="record"],button[data-cls-fn="openModal"],button[data-cls-fn="openInvoiceModal"],button[data-cls-fn="openInvoiceEditModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
+    document.querySelectorAll('button[data-cls-fn^="add"],button[data-cls-fn^="save"],button[data-cls-fn^="openEdit"],button[data-cls-fn^="openDelete"],button[data-cls-fn^="confirmDelete"],button[data-cls-fn^="record"],button[data-cls-fn^="wa"],button[data-cls-fn="emailInvoice"],button[data-cls-fn="openPayModal"],button[data-cls-fn="openModal"],button[data-cls-fn="openInvoiceModal"],button[data-cls-fn="openInvoiceEditModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
   }
   if(_profile.role==='accountant'){
     document.querySelectorAll('[data-nav="team"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
   }
+  refreshSidebarSections();
+}
+
+function refreshSidebarSections(){
+  document.querySelectorAll('.sb-nav .sb-section').forEach(function(section){
+    var node=section.nextElementSibling;
+    var hasVisibleItem=false;
+    while(node&&!node.classList.contains('sb-section')){
+      if(node.classList.contains('sb-item')&&node.style.display!=='none') hasVisibleItem=true;
+      node=node.nextElementSibling;
+    }
+    section.style.display=hasVisibleItem?'':'none';
+  });
 }
 
 function isAdminUser(){
@@ -1156,11 +1201,11 @@ window.openGrowthUpgrade = async function openGrowthUpgrade(){
   }
 };
 const tourSteps=[
-  {view:'dashboard',title:'Dashboard',body:'<p>This is the invoice control room for the Starter plan.</p><div class="tour-list"><div><strong>Check health:</strong> total invoiced, paid amount, outstanding amount, overdue invoices, and this month invoice value.</div><div><strong>Act fast:</strong> open outstanding invoices from here.</div></div>'},
+  {view:'dashboard',title:'Dashboard',body:'<p>This is the invoice control room for the Starter plan.</p><div class="tour-list"><div><strong>Check health:</strong> total invoiced, paid amount, outstanding amount, overdue invoices, and this month invoice value.</div><div><strong>Follow up:</strong> use due reminders and aging buckets to see which invoices need attention first.</div></div>'},
   {view:'invoices',title:'Invoices',body:'<p>Create, send, and collect invoices from one register.</p><div class="tour-list"><div><strong>Raise invoice:</strong> choose customer, items, VAT, terms, and template.</div><div><strong>Email or WhatsApp:</strong> share the invoice directly with the customer.</div><div><strong>Record payment:</strong> full or partial payments update outstanding balances.</div></div>'},
   {view:'clients',title:'Customers',body:'<p>Customers are reusable billing records for invoices.</p><div class="tour-list"><div><strong>Save details:</strong> name, business, email, WhatsApp, billing address, notes, and terms.</div><div><strong>Create faster:</strong> start a new invoice from a customer card.</div></div>'},
   {view:'reports',title:'Reports',body:'<p>Reports are based only on invoices and payments.</p><div class="tour-list"><div><strong>Review:</strong> invoice summary, paid vs unpaid, outstanding, overdue, and customer-wise totals.</div><div><strong>Export:</strong> download a clean invoice report PDF.</div></div>'},
-  {view:'team',title:'Team Access',body:'<p>Starter team access is simple and limited to two users.</p><div class="tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> create invoices, manage customers, and mark payments.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
+  {view:'team',title:'Team Access',body:'<p>Starter team access is simple and limited to two users.</p><div class="tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> create invoices, manage customers, and mark payments.</div><div><strong>Accountant:</strong> dashboard, invoices, customers, and reports only.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
   {view:'backlog',title:'Edit Backlog',body:'<p>Admins can review invoice, customer, and payment changes.</p><div class="tour-list"><div><strong>Audit fields:</strong> date, edited item, previous value, new value, edited by, and reason.</div></div>'},
   {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, footer message, logo alignment, and logo size.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
 ];
@@ -1307,6 +1352,13 @@ function clearSupplierPicker(prefix){
 // DASHBOARD
 // ════════════════════════════════
 let cfChart=null, expChart=null;
+const MS_DAY=86400000;
+function invoiceBalance(inv){
+  return Math.max(0,(Number(inv.amount)||0)-(Number(inv.paidAmount)||0));
+}
+function invoiceDueMs(inv){
+  return new Date(String(inv.due||todayStr()).slice(0,10)+'T00:00:00').getTime();
+}
 function renderDashboard(){
   const now=new Date();
   const mo=now.getMonth(), yr=now.getFullYear();
@@ -1326,9 +1378,58 @@ function renderDashboard(){
   document.getElementById('kpi-outstanding-sub').style.color=outstanding>0?'var(--amber)':'var(--green)';
   const overdueSub=document.getElementById('kpi-overdue-sub');if(overdueSub){overdueSub.textContent=overdue.length?'Needs follow-up':'None overdue';overdueSub.style.color=overdue.length?'var(--red)':'var(--green)';}
   const unpaid=DB.invoices.filter(i=>i.status!=='paid').sort((a,b)=>new Date(a.due)-new Date(b.due));
-  const outHtml=unpaid.length?unpaid.slice(0,6).map(inv=>{const bal=inv.amount-(inv.paidAmount||0);const isOverdue=new Date(inv.due)<todayMs;return`<div class="outstanding-row"><span class="outstanding-client">${inv.client}</span><span class="outstanding-inv">${inv.num}</span><span class="outstanding-due ${isOverdue?'outstanding-overdue':''}">${isOverdue?'⚠ Overdue':'Due '+fmtD(inv.due)}</span><span class="outstanding-amt">${fmtAmt(bal)}</span></div>`;}).join(''):'<div style="padding:1.5rem;text-align:center;color:var(--green);font-size:.85rem">✓ No outstanding invoices — all paid up!</div>';
-  document.getElementById('outstanding-list').innerHTML=outHtml;
+  renderDashboardReminders(unpaid,todayMs);
+  renderInvoiceAging(unpaid,todayMs);
   renderRecentTable();
+}
+function renderDashboardReminders(unpaid,todayMs){
+  const el=document.getElementById('due-reminder-list');if(!el)return;
+  const soonLimit=todayMs+(7*MS_DAY);
+  const reminders=unpaid.filter(function(inv){return invoiceBalance(inv)>0&&invoiceDueMs(inv)<=soonLimit;}).sort(function(a,b){return invoiceDueMs(a)-invoiceDueMs(b);});
+  if(!reminders.length){
+    el.innerHTML='<div class="dashboard-empty">No overdue or due-soon invoices right now.</div>';
+    return;
+  }
+  el.innerHTML=reminders.slice(0,6).map(function(inv){
+    const dueMs=invoiceDueMs(inv);
+    const diff=Math.floor((dueMs-todayMs)/MS_DAY);
+    const overdue=diff<0;
+    const badge=overdue?'Overdue '+Math.abs(diff)+' day'+(Math.abs(diff)!==1?'s':''):diff===0?'Due Today':'Due in '+diff+' day'+(diff!==1?'s':'');
+    return `<div class="reminder-row">
+      <div class="reminder-main">
+        <div class="reminder-title">${escHTML(inv.client||'Customer')} · ${escHTML(inv.num)}</div>
+        <div class="reminder-meta"><span class="reminder-badge ${overdue?'overdue':''}">${badge}</span><span>${fmtD(inv.due)}</span><span>${fmtAmt(invoiceBalance(inv))}</span></div>
+      </div>
+      <div class="reminder-actions">
+        <button class="btn-sm btn-sm-wa" data-cls-fn="waDueReminder" data-cls-arg="${escHTML(inv.num)}">WA</button>
+        ${inv.cemail?`<button class="btn-sm btn-sm-green" data-cls-fn="emailInvoice" data-cls-arg="${escHTML(inv.num)}">Email</button>`:''}
+        <button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${escHTML(inv.num)}">Pay</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderInvoiceAging(unpaid,todayMs){
+  const el=document.getElementById('invoice-aging-list');if(!el)return;
+  const buckets=[
+    {label:'Not Yet Due',count:0,amount:0,overdue:false},
+    {label:'1-30 Days Overdue',count:0,amount:0,overdue:true},
+    {label:'31-60 Days Overdue',count:0,amount:0,overdue:true},
+    {label:'61+ Days Overdue',count:0,amount:0,overdue:true}
+  ];
+  unpaid.forEach(function(inv){
+    const bal=invoiceBalance(inv);if(!bal)return;
+    const days=Math.floor((todayMs-invoiceDueMs(inv))/MS_DAY);
+    const idx=days<=0?0:days<=30?1:days<=60?2:3;
+    buckets[idx].count++;
+    buckets[idx].amount+=bal;
+  });
+  el.innerHTML=buckets.map(function(b){
+    return `<div class="aging-row ${b.overdue&&b.amount?'aging-overdue':''}">
+      <div class="aging-label">${b.label}</div>
+      <div class="aging-count">${b.count} invoice${b.count!==1?'s':''}</div>
+      <div class="aging-amount">${fmtAmt(b.amount)}</div>
+    </div>`;
+  }).join('');
 }
 function animCount(id,target){
   const el=document.getElementById(id);if(!el)return;
@@ -2422,6 +2523,25 @@ window.waInvoice = function waInvoice(num){
   );
   const phone=inv.cphone?inv.cphone.replace(/[^0-9]/g,''):'';
   window.open(phone?'https://wa.me/'+phone+'?text='+msg:'https://wa.me/?text='+msg,'_blank');
+}
+
+window.waDueReminder = function waDueReminder(num){
+  const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
+  const phone=inv.cphone?inv.cphone.replace(/[^0-9]/g,''):'';
+  if(!phone){alert('This customer has no WhatsApp number. Open the invoice and add the customer phone first.');return;}
+  const s=DB.settings;
+  const bal=invoiceBalance(inv);
+  const todayMs=new Date().setHours(0,0,0,0);
+  const days=Math.floor((invoiceDueMs(inv)-todayMs)/MS_DAY);
+  const dueText=days<0?'overdue by '+Math.abs(days)+' day'+(Math.abs(days)!==1?'s':''):days===0?'due today':'due on '+fmtD(inv.due);
+  const msg=encodeURIComponent(
+    'Hi '+(inv.client||'there')+',\n\n'+
+    'A gentle reminder that invoice '+inv.num+' from '+(s.bizName||'Your Business')+' is '+dueText+'.\n\n'+
+    'Outstanding amount: '+(inv.cur||'LKR')+' '+Math.round(bal).toLocaleString()+'\n'+
+    'Due date: '+fmtD(inv.due)+'\n\n'+
+    'Please let us know once payment is arranged. Thank you.'
+  );
+  window.open('https://wa.me/'+phone+'?text='+msg,'_blank');
 }
 
 

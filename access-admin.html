@@ -136,18 +136,18 @@ a{color:inherit;text-decoration:none}
         <div class="field">
           <label>Their Role</label>
           <select id="inv-role">
-            <option value="staff">Staff — full day-to-day access</option>
-            <option value="accountant">Accountant — finances only</option>
+            <option value="staff">Staff — invoices and customers</option>
+            <option value="accountant">Accountant — invoice reports access</option>
             <option value="viewer">Viewer — read-only</option>
             <option value="admin">Admin — full access + manage team</option>
           </select>
         </div>
       </div>
       <div class="role-legend">
-        <b>Staff:</b> add &amp; edit transactions, invoices and expenses.&nbsp;
-        <b>Accountant:</b> finances only — clients, suppliers &amp; settings hidden.&nbsp;
-        <b>Viewer:</b> can look but not change anything.&nbsp;
-        <b>Admin:</b> everything, including team management.
+        <b>Staff:</b> create invoices, manage customers and mark payments.&nbsp;
+        <b>Accountant:</b> invoice dashboard, invoices, customers and reports only; no team access, edit backlog or settings.&nbsp;
+        <b>Viewer:</b> dashboard and reports only, with no editing.&nbsp;
+        <b>Admin:</b> full access, including team management.
       </div>
       <div style="margin-top:1.25rem">
         <button class="btn" id="btn-invite" data-cls-fn="createInvite">Create Invite Link &rarr;</button>
