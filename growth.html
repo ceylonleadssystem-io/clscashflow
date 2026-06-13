@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CLS CashFlow — Growth</title>
+<title>Ceylonry Labs Growth — Cashflow & Operations Control</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Firebase SDKs -->
@@ -105,7 +105,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .db-plan-pill{font-size:.56rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.27rem .8rem;border-radius:20px}
 .db-section-label{font-size:.53rem;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 .65rem;display:flex;align-items:center;gap:.5rem}
 .db-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.db-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.35rem}
+.db-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.85rem;margin-bottom:1.35rem}
 .db-kpi-row .kpi{padding:1.05rem 1.15rem}
 .db-kpi-row .kpi-val{font-size:1.5rem}
 .db-charts-row{display:grid;grid-template-columns:3fr 2fr;gap:.85rem;margin-bottom:1.35rem}
@@ -393,8 +393,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 <!-- SIDEBAR -->
 <nav id="sb">
   <div class="sb-top">
-    <div class="sb-prod">Ceylon Leads System</div>
-    <div class="sb-logo">CashFlow <b>Growth</b></div>
+    <div class="sb-prod">Ceylonry Labs</div>
+    <div class="sb-logo">Cashflow <b>Growth</b></div>
     <div class="sb-tag">Growth Plan</div>
   </div>
   <div class="sb-nav">
@@ -403,17 +403,14 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="nav-item" data-view="cashflow"><span class="nav-icon">💸</span>Money In &amp; Out</div>
     <div class="nav-item" data-view="expenses"><span class="nav-icon">📤</span>Expenses</div>
     <div class="nav-item" data-view="invoices"><span class="nav-icon">🧾</span>Invoices</div>
-    <div class="nav-item" data-view="clients"><span class="nav-icon">🤝</span>Clients</div>
+    <div class="nav-item" data-view="clients"><span class="nav-icon">🤝</span>Customers</div>
     <div class="sb-sec">Growth Tools</div>
-    <div class="nav-item" data-view="payroll"><span class="nav-icon">👥</span>Staff &amp; Payroll</div>
     <div class="nav-item" data-view="debt"><span class="nav-icon">💰</span>Who Owes Me<span class="nav-badge" id="sb-badge">0</span></div>
     <div class="nav-item" data-view="suppliers"><span class="nav-icon">🏭</span>Suppliers</div>
-    <div class="nav-item" data-view="team"><span class="nav-icon">🏆</span>My Team</div>
-    <div class="nav-item" data-view="sales"><span class="nav-icon">📦</span>Sales Performance</div>
     <div class="sb-sec">Reports &amp; Insights</div>
-    <div class="nav-item" data-view="analytics"><span class="nav-icon">📈</span>Analytics</div>
+    <div class="nav-item" data-view="reports"><span class="nav-icon">📈</span>Reports</div>
     <div class="nav-item" data-view="insights"><span class="nav-icon">💡</span>Business Insights</div>
-    <div class="nav-item" data-view="automations"><span class="nav-icon">⚡</span>Auto Reminders</div>
+    <div class="nav-item" data-view="team"><span class="nav-icon">🔐</span>Team Access</div>
     <div class="sb-sec">Account</div>
     <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</div>
   </div>
@@ -468,7 +465,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <!-- Charts -->
       <div class="db-charts-row">
         <div class="db-chart-card">
-          <div class="db-chart-title">Money Flow — Last 6 Months</div>
+          <div class="db-chart-title">Simple Money Flow — Last 6 Months</div>
           <div class="db-chart-sub">Revenue vs expenses by month</div>
           <div class="db-ch-wrap"><canvas id="ch-cf"></canvas></div>
         </div>
@@ -480,18 +477,18 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
         </div>
       </div>
 
-      <!-- Growth Metrics — 3 col grid -->
-      <div class="db-section-label">Growth Metrics</div>
+      <!-- Operations alerts — 3 col grid -->
+      <div class="db-section-label">Basic Alerts</div>
       <div class="db-growth-grid" id="d-gm1"></div>
 
       <!-- Two tables -->
       <div class="db-tables-row">
         <div class="db-table-card">
           <div class="db-tcard-head">
-            <span class="db-tcard-title">Clients Who Owe You</span>
+            <span class="db-tcard-title">Customers Who Owe You</span>
             <button class="btn bo" onclick="window.clsGoTo('debt')">See All</button>
           </div>
-          <table><thead><tr><th>Client</th><th>Invoice</th><th>Days</th><th class="tr">Amount</th></tr></thead><tbody id="d-recv"></tbody></table>
+          <table><thead><tr><th>Customer</th><th>Invoice</th><th>Days</th><th class="tr">Amount</th></tr></thead><tbody id="d-recv"></tbody></table>
         </div>
         <div class="db-table-card">
           <div class="db-tcard-head">
@@ -520,23 +517,16 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 
     <!-- INVOICES -->
     <div class="view" id="view-invoices">
-      <div class="help"><b>Invoices</b> — Bills you send to clients. Track which are paid, which are waiting, and which are overdue. Includes VAT &amp; tax support.</div>
+      <div class="help"><b>Invoices</b> — Bills you send to customers. Track which are paid, waiting, partial, or overdue. Includes VAT &amp; tax support and manual reminders.</div>
       <div class="sumbar c3" id="inv-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">All Invoices</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><table><thead><tr><th>Invoice #</th><th>Client</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Invoices</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><table><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div>
     </div>
 
-    <!-- CLIENTS -->
+    <!-- CUSTOMERS -->
     <div class="view" id="view-clients">
-      <div class="help"><b>Clients</b> — All your client details in one place. Send WhatsApp messages directly from here.</div>
+      <div class="help"><b>Customers</b> — Customer details, billing addresses, invoice history, and quick WhatsApp/email contact links.</div>
       <div class="sumbar c3" id="cli-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">My Clients</span><button class="btn bd" onclick="window.openCliMo()">+ Add Client</button></div><div class="cli-grid" id="cli-grid"></div></div>
-    </div>
-
-    <!-- PAYROLL -->
-    <div class="view" id="view-payroll">
-      <div class="help"><b>Payroll</b> — Track staff salaries each month. Mark each person paid when you have sent their salary.</div>
-      <div class="pay-banner" id="pay-banner"></div>
-      <div class="card"><div class="card-head"><span class="card-title">Staff Members</span><div class="card-actions"><button class="btn bo" onclick="window.payAll()">✓ Pay Everyone</button><button class="btn bd" onclick="window.openMo('mo-staff')">+ Add Staff</button></div></div><div class="staff-grid" id="staff-grid"></div></div>
+      <div class="card"><div class="card-head"><span class="card-title">My Customers</span><button class="btn bd" onclick="window.openCliMo()">+ Add Customer</button></div><div class="cli-grid" id="cli-grid"></div></div>
     </div>
 
     <!-- DEBT -->
@@ -561,37 +551,27 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 
     <!-- TEAM -->
     <div class="view" id="view-team">
-      <div class="help"><b>My Team</b> — See which team members are bringing in the most revenue this month.</div>
-      <div class="sumbar c4" id="team-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">Team Performance</span><button class="btn bo" onclick="window.exportCSV()">↓ Download</button></div><table><thead><tr><th>Rank</th><th>Team Member</th><th>Role</th><th>Revenue Generated</th><th class="tc">Invoices</th><th>Score</th></tr></thead><tbody id="team-body"></tbody></table></div>
-    </div>
-
-
-    <!-- SALES PERFORMANCE -->
-    <div class="view" id="view-sales">
-      <div class="help"><b>Sales Performance</b> — Track revenue by product/service, monitor repeat customers, and measure customer retention.</div>
-      <div class="sumbar c4" id="sales-sum"></div>
-      <div class="g2" style="margin-bottom:1.2rem">
-        <div class="chart-card"><div class="ch-title">Revenue by Product / Service</div><div class="ch-sub">Which items are driving your income</div><div class="ch-wrap"><canvas id="ch-prod"></canvas></div></div>
-        <div class="chart-card"><div class="ch-title">Customer Retention</div><div class="ch-sub">Returning vs new customers this period</div><div class="ch-wrap-sm"><canvas id="ch-ret"></canvas></div><div class="cat-list" id="ret-list"></div></div>
+      <div class="help"><b>Team Access</b> — Growth supports up to 8 users with simple roles. Advanced permissions stay in Premium.</div>
+      <div class="sumbar c3" id="team-sum"></div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Growth Team Roles</span><a class="btn bd" href="access-admin.html">Manage Team</a></div>
+        <table><thead><tr><th>Role</th><th>Permissions</th><th class="tr">User Limit</th></tr></thead><tbody id="team-body"></tbody></table>
       </div>
-      <div class="card"><div class="card-head"><span class="card-title">Revenue per Product / Service</span><button class="btn bo" onclick="window.exportCSV()">↓ Download</button></div><div class="prod-grid" id="prod-grid"></div></div>
-      <div class="card"><div class="card-head"><span class="card-title">Repeat Customer Analysis</span></div><table><thead><tr><th>Client</th><th class="tc">Orders</th><th>Total Revenue</th><th>Avg Order Value</th><th>Type</th><th class="tr">Revenue Share</th></tr></thead><tbody id="repeat-body"></tbody></table></div>
     </div>
 
-    <!-- ANALYTICS -->
-    <div class="view" id="view-analytics">
+    <!-- REPORTS -->
+    <div class="view" id="view-reports">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;flex-wrap:wrap;gap:.5rem">
-        <div><div style="font-family:var(--fd);font-size:1.4rem;color:var(--black)">My Business Reports 📊</div><div style="font-size:.69rem;color:var(--muted);margin-top:.1rem">Revenue trends, profit analysis and client breakdowns</div></div>
-        <div style="display:flex;gap:.5rem"><button class="btn bo" onclick="window.showToast('Excel report ready! Check your downloads.')">📊 Excel</button><button class="btn bd" onclick="window.showToast('PDF report ready! Check your downloads.')">📄 PDF Report</button></div>
+        <div><div style="font-family:var(--fd);font-size:1.4rem;color:var(--black)">Business Reports 📊</div><div style="font-size:.69rem;color:var(--muted);margin-top:.1rem">Income vs expenses, profit, outstanding invoices, customer revenue, and supplier spend</div></div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn bo" onclick="window.exportCSV('reports')">📊 CSV / Excel</button><button class="btn bd" onclick="window.exportReportPDF()">📄 PDF Report</button><button class="btn bo" onclick="window.emailMonthlyReport()">✉ Monthly Email</button></div>
       </div>
       <div class="sumbar c4" id="an-sum"></div>
       <div class="g2c" style="margin-bottom:1.2rem">
-        <div class="chart-card"><div class="ch-title">Revenue Trend</div><div class="ch-sub">How much you earned each month</div><div class="ch-wrap"><canvas id="ch-rev"></canvas></div></div>
+        <div class="chart-card"><div class="ch-title">Monthly Income Trend</div><div class="ch-sub">How much you earned each month</div><div class="ch-wrap"><canvas id="ch-rev"></canvas></div></div>
         <div class="chart-card"><div class="ch-title">Income vs Expenses</div><div class="ch-sub">Monthly comparison</div><div class="ch-wrap"><canvas id="ch-ie"></canvas></div></div>
       </div>
       <div class="rep-grid" id="an-reports"></div>
-      <div class="card"><div class="card-head"><span class="card-title">Revenue by Client</span></div><table><thead><tr><th>Client</th><th class="tc">Invoices</th><th>Total Billed</th><th>Paid</th><th class="tr">Outstanding</th></tr></thead><tbody id="an-cli"></tbody></table></div>
+      <div class="card"><div class="card-head"><span class="card-title">Customer Revenue Report</span></div><table><thead><tr><th>Customer</th><th class="tc">Invoices</th><th>Total Billed</th><th>Paid</th><th class="tr">Outstanding</th></tr></thead><tbody id="an-cli"></tbody></table></div>
     </div>
 
     <!-- BUSINESS INSIGHTS -->
@@ -599,20 +579,13 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="help"><b>Business Insights</b> — A plain-language summary of how your business is doing. No spreadsheets needed.</div>
       <div class="kpi-row" id="ins-kpis"></div>
       <div class="g2">
-        <div class="card"><div class="card-head"><span class="card-title">📊 Financial Health Score</span></div><div style="padding:1.35rem"><div style="text-align:center;padding:.75rem 0 1rem"><div style="font-family:var(--fd);font-size:3.5rem;font-weight:300;line-height:1" id="ins-score">0</div><div style="font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.32rem" id="ins-score-lbl">Add data to calculate your score</div></div><div id="ins-bars"></div></div></div>
-        <div class="card"><div class="card-head"><span class="card-title">📅 This Month at a Glance</span></div><div style="padding:.5rem 1.25rem" id="ins-month"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">📅 This Month Summary</span></div><div style="padding:.5rem 1.25rem" id="ins-month"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">💬 Income vs Expense Comment</span></div><div style="padding:.5rem 1.25rem" id="ins-bars"></div></div>
       </div>
       <div class="g2">
-        <div class="card"><div class="card-head"><span class="card-title">🏆 Top Clients by Revenue</span></div><div style="padding:1rem 1.25rem" id="ins-top"></div></div>
-        <div class="card"><div class="card-head"><span class="card-title">⚠️ Things That Need Attention</span></div><div style="padding:.5rem 1.25rem" id="ins-alerts"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">✅ Things to Check</span></div><div style="padding:1rem 1.25rem" id="ins-top"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">⚠️ Payment & Expense Warnings</span></div><div style="padding:.5rem 1.25rem" id="ins-alerts"></div></div>
       </div>
-    </div>
-
-    <!-- AUTOMATIONS -->
-    <div class="view" id="view-automations">
-      <div class="help"><b>Auto Reminders</b> — WhatsApp and SMS messages that send automatically. You never have to chase a payment manually again!</div>
-      <div class="sumbar c4" id="aut-sum"></div>
-      <div class="auto-grid" id="aut-grid"></div>
     </div>
 
     <!-- SETTINGS -->
@@ -638,10 +611,9 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
           <div class="card">
             <div class="card-head"><span class="card-title">Notification Preferences 🔔</span></div>
             <div style="padding:.5rem 1.3rem">
-              <div class="notif-item"><div><div class="notif-title">WhatsApp Reminder (3 days before due)</div><div class="notif-desc">Automatically remind clients 3 days before their invoice is due</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
-              <div class="notif-item"><div><div class="notif-title">SMS Overdue Alert</div><div class="notif-desc">Send an SMS when an invoice is more than 7 days overdue</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
-              <div class="notif-item"><div><div class="notif-title">Monthly Email Report</div><div class="notif-desc">Get a summary of your finances emailed on the 1st of each month</div></div><label class="tog"><input type="checkbox"><span class="tog-sl"></span></label></div>
-              <div class="notif-item"><div><div class="notif-title">Low Cash Balance Alert</div><div class="notif-desc">WhatsApp alert when your balance drops below LKR 100,000</div></div><label class="tog"><input type="checkbox" checked><span class="tog-sl"></span></label></div>
+              <div class="notif-item"><div><div class="notif-title">Monthly Email Report</div><div class="notif-desc">Prepare a basic monthly business summary for email.</div></div><label class="tog"><input type="checkbox" id="s-monthly-report"><span class="tog-sl"></span></label></div>
+              <div class="notif-item"><div><div class="notif-title">Manual Payment Reminders</div><div class="notif-desc">Use the reminder buttons in Invoices and Who Owes Me. Automatic reminders are Premium.</div></div><span class="pill pse">Manual</span></div>
+              <div class="notif-item"><div><div class="notif-title">Automatic WhatsApp / SMS Follow-ups</div><div class="notif-desc">Premium feature. Growth keeps reminders manual so you stay in control.</div></div><span class="pill pdr">Premium</span></div>
             </div>
           </div>
         </div>
@@ -654,14 +626,18 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
             <div class="growth-trial-box" id="growth-trial-status">Your Growth trial status will appear here.</div>
             <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Starter, plus:</div>
             <div class="plan-list">
-              <div class="plan-item"><span class="plan-item-check">✓</span>Payroll Management</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Debt Tracking</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Money In &amp; Out</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Expense Tracking</div>
               <div class="plan-item"><span class="plan-item-check">✓</span>Supplier Management</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Advanced Analytics</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Business Insights</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>10 Invoice Templates</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Who Owes Me</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Business Reports</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Basic Business Insights</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Monthly Email Reports</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Priority Support</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Up to 8 Users</div>
               <div class="plan-item"><span class="plan-item-check">✓</span>VAT / Tax Support</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Due Payment Reminders</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>More Invoice Templates</div>
+              <div class="plan-item"><span class="plan-item-check">✓</span>Manual Payment Reminders</div>
             </div>
             <button onclick="window.startGrowthTour()" style="margin-top:1.15rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Growth Tour</button>
             <button onclick="window.goBackToStarter(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Starter</button>
@@ -689,8 +665,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   <div class="mo-hd"><span class="mo-title">Add a Transaction</span><button class="mo-x" onclick="window.closeMo('mo-txn')">×</button></div>
   <div class="mo-bd">
     <div class="frow"><div class="fg"><label>Date</label><input class="fi" type="date" id="t-date"></div><div class="fg"><label>Type</label><select class="fi fsel" id="t-type"><option value="in">Money In (I received)</option><option value="out">Money Out (I spent)</option></select></div></div>
-    <div class="fg"><label>What was this for?</label><input class="fi" id="t-desc" placeholder="e.g. Payment received from client"></div>
-    <div class="frow"><div class="fg"><label>Amount (LKR)</label><input class="fi" type="number" id="t-amt" placeholder="0.00"></div><div class="fg"><label>Category</label><select class="fi fsel" id="t-cat"><option>Sales Revenue</option><option>Service Income</option><option>Invoice Payment</option><option>Supplier Payment</option><option>Utilities</option><option>Payroll</option><option>Marketing</option><option>Operations</option><option>Other</option></select></div></div>
+    <div class="fg"><label>What was this for?</label><input class="fi" id="t-desc" placeholder="e.g. Payment received from customer"></div>
+    <div class="frow"><div class="fg"><label>Amount (LKR)</label><input class="fi" type="number" id="t-amt" placeholder="0.00"></div><div class="fg"><label>Category</label><select class="fi fsel" id="t-cat"><option>Sales Revenue</option><option>Service Income</option><option>Invoice Payment</option><option>Supplier Payment</option><option>Utilities</option><option>Marketing</option><option>Operations</option><option>Other</option></select></div></div>
     <div class="fg" style="margin-bottom:0"><label>Reference (optional)</label><input class="fi" id="t-ref" placeholder="e.g. Invoice #001, Cheque #123"></div>
   </div>
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-txn')">Cancel</button><button class="btn bd" onclick="window.addTxn()">Save Transaction</button></div>
@@ -699,7 +675,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 <div class="mo" id="mo-exp"><div class="mob" style="max-width:500px">
   <div class="mo-hd"><span class="mo-title">Add an Expense</span><button class="mo-x" onclick="window.closeMo('mo-exp')">×</button></div>
   <div class="mo-bd">
-    <div class="frow"><div class="fg"><label>Date</label><input class="fi" type="date" id="e-date"></div><div class="fg"><label>Category</label><select class="fi fsel" id="e-cat"><option>Operations</option><option>Suppliers</option><option>Utilities</option><option>Marketing</option><option>Fuel &amp; Transport</option><option>Rent</option><option>Payroll</option><option>Other</option></select></div></div>
+    <div class="frow"><div class="fg"><label>Date</label><input class="fi" type="date" id="e-date"></div><div class="fg"><label>Category</label><select class="fi fsel" id="e-cat"><option>Operations</option><option>Suppliers</option><option>Utilities</option><option>Marketing</option><option>Fuel &amp; Transport</option><option>Rent</option><option>Other</option></select></div></div>
     <div class="fg"><label>What did you spend on?</label><input class="fi" id="e-desc" placeholder="e.g. Electricity bill for June"></div>
     <div class="frow"><div class="fg"><label>Paid to (Supplier / Person)</label><input class="fi" id="e-vendor" list="supplier-options" placeholder="Choose or type a new supplier"><datalist id="supplier-options"></datalist></div><div class="fg"><label>Amount (LKR)</label><input class="fi" type="number" id="e-amt" placeholder="0.00"></div></div>
   </div>
@@ -709,16 +685,16 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 <div class="mo" id="mo-inv"><div class="mob">
   <div class="mo-hd"><span class="mo-title">Create New Invoice</span><button class="mo-x" onclick="window.closeMo('mo-inv')">×</button></div>
   <div class="mo-bd">
-    <div class="fsec">Choose a Design (10 Premium Templates)</div>
+    <div class="fsec">Choose an Invoice Template</div>
     <div class="tpl-grid" id="tpl-grid"></div>
-    <div class="fsec">Client &amp; Dates</div>
-    <div class="frow"><div class="fg"><label>Client Name</label><input class="fi" id="inv-cli" placeholder="Who is this invoice for?"></div><div class="fg"><label>Client Address</label><input class="fi" id="inv-caddr" placeholder="Their billing address"></div></div>
+    <div class="fsec">Customer &amp; Dates</div>
+    <div class="frow"><div class="fg"><label>Customer Name</label><input class="fi" id="inv-cli" placeholder="Who is this invoice for?"></div><div class="fg"><label>Customer Address</label><input class="fi" id="inv-caddr" placeholder="Their billing address"></div></div>
     <div class="frow"><div class="fg"><label>Invoice Date</label><input class="fi" type="date" id="inv-date"></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="inv-due"></div></div>
     <div class="fsec">What Are You Billing For?</div>
     <table class="litbl"><thead><tr><th style="width:44%">Description</th><th style="width:12%">Qty</th><th style="width:20%">Unit Price (LKR)</th><th style="width:18%">Total</th><th style="width:6%"></th></tr></thead><tbody id="li-body"></tbody></table>
     <button class="li-add" onclick="window.addLi()">+ Add Another Item</button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;align-items:start">
-      <div class="fg" style="margin-bottom:0"><label>Note to Client (optional)</label><input class="fi" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></div>
+      <div class="fg" style="margin-bottom:0"><label>Note to Customer (optional)</label><input class="fi" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></div>
       <div class="inv-totals" id="inv-totals"></div>
     </div>
     <div class="frow" style="margin-top:.88rem"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="number" id="inv-disc" value="0" oninput="calcTotals()"></div></div>
@@ -733,24 +709,15 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 </div></div>
 
 <div class="mo" id="mo-client"><div class="mob" style="max-width:520px">
-  <div class="mo-hd"><span class="mo-title" id="cli-mo-t">Add a Client</span><button class="mo-x" onclick="window.closeMo('mo-client')">×</button></div>
+  <div class="mo-hd"><span class="mo-title" id="cli-mo-t">Add a Customer</span><button class="mo-x" onclick="window.closeMo('mo-client')">×</button></div>
   <div class="mo-bd">
     <input type="hidden" id="cli-id">
-    <div class="frow"><div class="fg"><label>Client Name</label><input class="fi" id="c-name" placeholder="Client full name"></div><div class="fg"><label>Business Name</label><input class="fi" id="c-biz" placeholder="Client business name"></div></div>
-    <div class="frow"><div class="fg"><label>Email</label><input class="fi" type="email" id="c-email" placeholder="client@business.lk"></div><div class="fg"><label>Phone / WhatsApp</label><input class="fi" type="tel" id="c-phone" placeholder="+94 77 000 0000"></div></div>
+    <div class="frow"><div class="fg"><label>Customer Name</label><input class="fi" id="c-name" placeholder="Customer full name"></div><div class="fg"><label>Business Name</label><input class="fi" id="c-biz" placeholder="Customer business name"></div></div>
+    <div class="frow"><div class="fg"><label>Email</label><input class="fi" type="email" id="c-email" placeholder="customer@business.lk"></div><div class="fg"><label>Phone / WhatsApp</label><input class="fi" type="tel" id="c-phone" placeholder="+94 77 000 0000"></div></div>
     <div class="fg"><label>Address</label><input class="fi" id="c-addr" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
-    <div class="frow"><div class="fg"><label>Payment Terms</label><select class="fi fsel" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>Pay on Receipt</option></select></div><div class="fg"><label>Notes (optional)</label><input class="fi" id="c-notes" placeholder="VIP client, prefers WhatsApp..."></div></div>
+    <div class="frow"><div class="fg"><label>Payment Terms</label><select class="fi fsel" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>Pay on Receipt</option></select></div><div class="fg"><label>Notes (optional)</label><input class="fi" id="c-notes" placeholder="VIP customer, prefers WhatsApp..."></div></div>
   </div>
-  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-client')">Cancel</button><button class="btn bd" onclick="window.saveClient()">Save Client</button></div>
-</div></div>
-
-<div class="mo" id="mo-staff"><div class="mob" style="max-width:440px">
-  <div class="mo-hd"><span class="mo-title">Add a Staff Member</span><button class="mo-x" onclick="window.closeMo('mo-staff')">×</button></div>
-  <div class="mo-bd">
-    <div class="frow"><div class="fg"><label>Full Name</label><input class="fi" id="sf-name" placeholder="Team member name"></div><div class="fg"><label>Role</label><input class="fi" id="sf-role" placeholder="Role or title"></div></div>
-    <div class="frow"><div class="fg"><label>Monthly Salary (LKR)</label><input class="fi" type="number" id="sf-sal" placeholder="e.g. 85000"></div><div class="fg"><label>Colour Tag</label><select class="fi fsel" id="sf-col"><option value="#2C5F8A">Blue</option><option value="#1D9E62">Green</option><option value="#B8922A">Gold</option><option value="#C17A6F">Rose</option><option value="#7A3FA0">Purple</option></select></div></div>
-  </div>
-  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-staff')">Cancel</button><button class="btn bd" onclick="window.addStaff()">Add to Team</button></div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-client')">Cancel</button><button class="btn bd" onclick="window.saveClient()">Save Customer</button></div>
 </div></div>
 
 <div class="mo" id="mo-sup"><div class="mob" style="max-width:460px">
@@ -776,14 +743,8 @@ var D = {
   recv:[],
   payables:[],
   suppliers:[],
-  autos:[
-    {name:'Invoice Due Reminder',desc:'Remind clients before an invoice is due.',icon:'💬',trigger:'3 days before due',channel:'WhatsApp',active:false,fired:0},
-    {name:'Overdue Escalation',desc:'Flag overdue invoices for follow-up.',icon:'⚠️',trigger:'7 days overdue',channel:'SMS',active:false,fired:0},
-    {name:'Payment Thank You',desc:'Send a thank-you after an invoice is fully paid.',icon:'✅',trigger:'Invoice paid',channel:'WhatsApp',active:false,fired:0},
-    {name:'Monthly Summary',desc:'Prepare a monthly finance summary for the owner.',icon:'📊',trigger:'1st of month',channel:'Email',active:false,fired:0},
-    {name:'Low Cash Alert',desc:'Warn the owner when cash balance falls below the chosen level.',icon:'💰',trigger:'Low balance',channel:'WhatsApp',active:false,fired:0}
-  ],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:''},
+  autos:[],
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false},
   _nextInvId:1
 };
 
@@ -836,13 +797,14 @@ function renderGrowthTrialStatus() {
 }
 
 var growthTourSteps = [
-  {view:'dashboard',title:'Welcome to Growth',body:'<p>Growth is the upgraded operating view for teams that need more than Starter.</p><div class="g-tour-list"><div><strong>What changed:</strong> you still keep dashboard, invoices, clients, suppliers and reports.</div><div><strong>New layer:</strong> payroll, debt tracking, sales performance, automations and deeper analytics.</div></div>'},
-  {view:'payroll',title:'Staff & Payroll',body:'<p>Use this to manage the people side of the business.</p><div class="g-tour-list"><div><strong>Add staff:</strong> name, role, salary and colour tag.</div><div><strong>Pay cycle:</strong> mark salaries paid and see monthly payroll totals.</div><div><strong>Owner view:</strong> understand salary cost beside revenue.</div></div>'},
-  {view:'debt',title:'Who Owes Me',body:'<p>Growth separates collections and payables so nothing sits forgotten.</p><div class="g-tour-list"><div><strong>Receivables:</strong> invoices clients still need to pay.</div><div><strong>Payables:</strong> supplier or operating amounts you still owe.</div><div><strong>Follow-up:</strong> use reminders before cash becomes a problem.</div></div>'},
-  {view:'sales',title:'Sales Performance',body:'<p>Growth helps you see what is selling and who is performing.</p><div class="g-tour-list"><div><strong>Products/services:</strong> compare revenue lines.</div><div><strong>Repeat customers:</strong> spot your best clients.</div><div><strong>Team sales:</strong> review staff contribution when sales data is recorded.</div></div>'},
-  {view:'analytics',title:'Analytics',body:'<p>This is the owner report view for decisions.</p><div class="g-tour-list"><div><strong>Trends:</strong> revenue, profit, expenses and collections over time.</div><div><strong>Breakdowns:</strong> clients, categories and invoice performance.</div><div><strong>Next action:</strong> use the numbers to decide what to collect, cut, or grow.</div></div>'},
-  {view:'automations',title:'Auto Reminders',body:'<p>Growth includes reminder workflows so follow-ups do not depend on memory.</p><div class="g-tour-list"><div><strong>Invoice due:</strong> remind clients before payment dates.</div><div><strong>Overdue:</strong> follow up after the due date.</div><div><strong>Reports:</strong> keep monthly finance summaries moving.</div></div>'},
-  {view:'settings',title:'Trial & Plan',body:'<p>Your trial did not reset or disappear. It continues inside Growth.</p><div class="g-tour-list"><div><strong>Trial countdown:</strong> shown in the top bar and billing area.</div><div><strong>Team access:</strong> Growth supports up to 8 users.</div><div><strong>Next:</strong> add business details, logo and team emails from Settings.</div></div>'}
+  {view:'dashboard',title:'Welcome to Growth',body:'<p>Growth is Cashflow & Operations Control for businesses that need more than invoicing.</p><div class="g-tour-list"><div><strong>Control cash:</strong> revenue, expenses, net profit, outstanding invoices, and cash position.</div><div><strong>Stay practical:</strong> simple charts, expense breakdowns, and basic alerts only.</div></div>'},
+  {view:'cashflow',title:'Money In & Out',body:'<p>Record every cash movement in one place.</p><div class="g-tour-list"><div><strong>Money in:</strong> income, invoice payments, and other receipts.</div><div><strong>Money out:</strong> outgoing payments, supplier payments, utilities, marketing, and operations.</div><div><strong>Export:</strong> download CSV records when needed.</div></div>'},
+  {view:'invoices',title:'Invoices & Customers',body:'<p>Create invoices, manage customers, record payments, and send manual reminders.</p><div class="g-tour-list"><div><strong>Invoices:</strong> line items, due date, VAT/tax, PDF export, WhatsApp/email sharing.</div><div><strong>Customers:</strong> billing address, phone, email, notes, and invoice history.</div></div>'},
+  {view:'debt',title:'Who Owes Me',body:'<p>Growth keeps collections visible without automatic reminder scheduling.</p><div class="g-tour-list"><div><strong>Receivables:</strong> outstanding and overdue invoices by customer.</div><div><strong>Payables:</strong> supplier or operating amounts you still owe when connected.</div><div><strong>Follow-up:</strong> use manual reminder buttons.</div></div>'},
+  {view:'suppliers',title:'Suppliers',body:'<p>Track supplier contacts, status, categories, and total spend.</p><div class="g-tour-list"><div><strong>Suppliers:</strong> name, contact, category, active/inactive status.</div><div><strong>Reports:</strong> supplier spend can be exported from reports.</div></div>'},
+  {view:'reports',title:'Reports',body:'<p>Growth reports are business reports, not advanced analytics.</p><div class="g-tour-list"><div><strong>Included:</strong> income vs expenses, profit, customer revenue, supplier spend, outstanding and overdue invoices.</div><div><strong>Export:</strong> PDF and CSV/Excel style downloads.</div></div>'},
+  {view:'team',title:'Team Access',body:'<p>Growth supports up to 8 users with simple roles.</p><div class="g-tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> invoices, customers, money in/out, and expenses.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
+  {view:'settings',title:'Settings & Billing',body:'<p>Manage your business profile and Growth plan basics.</p><div class="g-tour-list"><div><strong>Business:</strong> logo, address, invoice email, VAT/tax number and invoice footer.</div><div><strong>Notifications:</strong> monthly email report preference; automatic reminders stay in Premium.</div></div>'}
 ];
 var growthTourIndex = 0;
 function renderGrowthTourStep() {
@@ -990,7 +952,7 @@ function normalizeGrowthData() {
     if (!paid && status === 'paid') paid = total;
     if (total > 0 && paid >= total) status = 'paid';
     else if (paid > 0) status = 'partial';
-    return {id:String(id), num:String(id), client:inv.client || inv.clientName || 'Client', caddr:inv.caddr || inv.clientAddress || '', date:inv.date || today(), due:inv.due || inv.dueDate || inv.date || today(), items:items, lines:items, sub:sub, vat:toNum(inv.vat), disc:toNum(inv.disc), total:total, amount:total, status:status, paid:paid, paidAmount:paid, tpl:toNum(inv.tpl), notes:inv.notes || ''};
+    return {id:String(id), num:String(id), client:inv.client || inv.clientName || 'Customer', caddr:inv.caddr || inv.clientAddress || '', date:inv.date || today(), due:inv.due || inv.dueDate || inv.date || today(), items:items, lines:items, sub:sub, vat:toNum(inv.vat), disc:toNum(inv.disc), total:total, amount:total, status:status, paid:paid, paidAmount:paid, tpl:toNum(inv.tpl), notes:inv.notes || ''};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   var maxInvNo = D.invoices.reduce(function(max, inv) {
     var m = String(inv.id || '').match(/(\d+)$/);
@@ -998,7 +960,7 @@ function normalizeGrowthData() {
   }, 0);
   D._nextInvId = Math.max(toNum(D._nextInvId) || 1, maxInvNo + 1);
   D.clients = (D.clients || []).map(function(c, i) {
-    return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Client', biz:c.biz || c.business || c.name || 'Client', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
+    return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || c.name || 'Customer', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
   });
   D.staff = (D.staff || []).map(function(s, i) {
     var name = s.name || 'Team member';
@@ -1038,32 +1000,95 @@ function syncGrowthComputedData() {
   });
 }
 
-window.exportCSV = function exportCSV() {
-  var rows = [['Date','Description','Type','Category','Amount','Reference']];
-  D.txns.forEach(function(t) { rows.push([t.date, '"' + t.desc + '"', t.type, t.cat, t.amount, t.ref]); });
-  var csv = rows.map(function(r) { return r.join(','); }).join('\n');
+function csvCell(v) {
+  return '"' + String(v == null ? '' : v).replace(/"/g,'""') + '"';
+}
+window.exportCSV = function exportCSV(type) {
+  syncGrowthComputedData();
+  if (!type) {
+    var active = document.querySelector('.view.active');
+    type = active ? active.id.replace('view-','') : 'cashflow';
+  }
+  var rows = [];
+  var name = type + '-export.csv';
+  if (type === 'expenses') {
+    rows = [['Date','Description','Paid To','Category','Amount']];
+    D.exps.forEach(function(e) { rows.push([e.date,e.desc,e.vendor,e.cat,e.amount]); });
+    name = 'growth-expenses.csv';
+  } else if (type === 'invoices') {
+    rows = [['Invoice','Customer','Date','Due','Status','Total','Paid','Outstanding']];
+    D.invoices.forEach(function(i) { rows.push([i.id,i.client,i.date,i.due,i.status,i.total,i.paid,toNum(i.total)-toNum(i.paid)]); });
+    name = 'growth-invoices.csv';
+  } else if (type === 'suppliers') {
+    rows = [['Supplier','Type','Contact','Phone','Total Spend','Status']];
+    D.suppliers.forEach(function(s) { rows.push([s.name,s.cat,s.contact,s.phone,s.ytd,s.status]); });
+    name = 'growth-suppliers.csv';
+  } else if (type === 'reports') {
+    rows = [['Report','Name','Value']];
+    var inc = D.txns.filter(function(t){return t.type==='in';}).reduce(function(a,t){return a+t.amount;},0);
+    var out = D.exps.reduce(function(a,e){return a+e.amount;},0);
+    rows.push(['Summary','Income',inc],['Summary','Expenses',out],['Summary','Profit',inc-out]);
+    D.recv.forEach(function(r){rows.push(['Outstanding Invoice',r.client+' · '+r.inv,r.amount]);});
+    D.suppliers.forEach(function(s){rows.push(['Supplier Spend',s.name,s.ytd]);});
+    name = 'growth-business-reports.csv';
+  } else {
+    rows = [['Date','Description','Type','Category','Amount','Reference']];
+    D.txns.forEach(function(t) { rows.push([t.date,t.desc,t.type,t.cat,t.amount,t.ref]); });
+    name = 'growth-money-in-out.csv';
+  }
+  var csv = rows.map(function(r) { return r.map(csvCell).join(','); }).join('\n');
   var a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'cashflow-export.csv';
+  a.download = name;
   a.click();
   showToast('CSV downloaded!', 'ok');
 }
 
+window.exportReportPDF = function exportReportPDF() {
+  syncGrowthComputedData();
+  var inc = D.txns.filter(function(t){return t.type==='in';}).reduce(function(a,t){return a+t.amount;},0);
+  var out = D.exps.reduce(function(a,e){return a+e.amount;},0);
+  var outstanding = D.recv.reduce(function(a,r){return a+r.amount;},0);
+  var overdue = D.recv.filter(function(r){return r.days>0;}).reduce(function(a,r){return a+r.amount;},0);
+  var suppliers = D.suppliers.slice().sort(function(a,b){return toNum(b.ytd)-toNum(a.ytd);}).slice(0,8);
+  var customers = D.clients.map(function(c){
+    var invs = D.invoices.filter(function(i){return i.client===c.biz;});
+    return {name:c.biz||c.name,total:invs.reduce(function(a,i){return a+toNum(i.total);},0),paid:invs.reduce(function(a,i){return a+toNum(i.paid);},0),count:invs.length};
+  }).filter(function(c){return c.count;}).sort(function(a,b){return b.total-a.total;}).slice(0,8);
+  var html = '<!doctype html><html><head><title>Growth Business Report</title><style>@page{size:A4;margin:16mm}body{font-family:Arial,sans-serif;color:#1a1714}.top{border-bottom:3px solid #1a1714;padding-bottom:18px;margin-bottom:24px;display:flex;justify-content:space-between}.brand{font-family:Georgia,serif;font-size:28px}.gold{color:#B8922A}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}.card{border:1px solid #ddd;padding:12px}.lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#777}.val{font-size:18px;font-weight:700;margin-top:5px}h2{font-family:Georgia,serif;font-size:20px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:18px}th{background:#1a1714;color:#fff;text-align:left;font-size:11px;padding:8px}td{border-bottom:1px solid #eee;padding:8px;font-size:12px}.tr{text-align:right}.foot{margin-top:28px;border-top:1px solid #eee;padding-top:12px;text-align:center;font-size:11px;color:#999}</style></head><body>' +
+    '<div class="top"><div><div class="brand">'+(D.settings.biz||'Your Business')+'</div><div style="font-size:12px;color:#777">'+(D.settings.addr||'')+'</div></div><div style="text-align:right"><div class="lbl">Growth Report</div><div>'+new Date().toLocaleDateString('en-GB')+'</div></div></div>' +
+    '<div class="grid"><div class="card"><div class="lbl">Income</div><div class="val gold">'+fmt(inc)+'</div></div><div class="card"><div class="lbl">Expenses</div><div class="val">'+fmt(out)+'</div></div><div class="card"><div class="lbl">Profit</div><div class="val">'+fmt(inc-out)+'</div></div><div class="card"><div class="lbl">Outstanding</div><div class="val">'+fmt(outstanding)+'</div></div></div>' +
+    '<h2>Outstanding Invoice Report</h2><table><thead><tr><th>Customer</th><th>Invoice</th><th>Days</th><th class="tr">Amount</th></tr></thead><tbody>' + (D.recv.map(function(r){return '<tr><td>'+r.client+'</td><td>'+r.inv+'</td><td>'+r.days+'</td><td class="tr">'+fmt(r.amount)+'</td></tr>';}).join('') || '<tr><td colspan="4">No outstanding invoices.</td></tr>') + '</tbody></table>' +
+    '<h2>Overdue Invoice Report</h2><div style="font-size:14px;margin-bottom:16px">Overdue amount: <strong>'+fmt(overdue)+'</strong></div>' +
+    '<h2>Customer Revenue Report</h2><table><thead><tr><th>Customer</th><th>Invoices</th><th class="tr">Total</th><th class="tr">Paid</th></tr></thead><tbody>' + (customers.map(function(c){return '<tr><td>'+c.name+'</td><td>'+c.count+'</td><td class="tr">'+fmt(c.total)+'</td><td class="tr">'+fmt(c.paid)+'</td></tr>';}).join('') || '<tr><td colspan="4">No customer revenue yet.</td></tr>') + '</tbody></table>' +
+    '<h2>Supplier Spend Report</h2><table><thead><tr><th>Supplier</th><th>Type</th><th class="tr">Spend</th></tr></thead><tbody>' + (suppliers.map(function(s){return '<tr><td>'+s.name+'</td><td>'+s.cat+'</td><td class="tr">'+fmt(s.ytd)+'</td></tr>';}).join('') || '<tr><td colspan="3">No supplier spend yet.</td></tr>') + '</tbody></table>' +
+    '<div class="foot">Report generated by Growth — Cashflow & Operations Control · CeylonryLabs.io</div></body></html>';
+  var w = window.open('', '_blank', 'width=900,height=760');
+  if (!w) { alert('Please allow pop-ups to export the report.'); return; }
+  w.document.write(html); w.document.close(); w.onload = function(){ setTimeout(function(){ w.print(); }, 500); };
+}
+
+window.emailMonthlyReport = function emailMonthlyReport() {
+  var inc = D.txns.filter(function(t){return t.type==='in';}).reduce(function(a,t){return a+t.amount;},0);
+  var out = D.exps.reduce(function(a,e){return a+e.amount;},0);
+  var outstanding = D.recv.reduce(function(a,r){return a+r.amount;},0);
+  var subject = encodeURIComponent('Monthly Growth business summary - ' + (D.settings.biz || 'Your Business'));
+  var body = encodeURIComponent('Monthly business summary\\n\\nIncome: ' + fmt(inc) + '\\nExpenses: ' + fmt(out) + '\\nNet profit: ' + fmt(inc-out) + '\\nOutstanding invoices: ' + fmt(outstanding) + '\\n\\nGenerated by Growth - Cashflow & Operations Control.');
+  window.location.href = 'mailto:' + encodeURIComponent(D.settings.email || '') + '?subject=' + subject + '&body=' + body;
+}
+
 // ===================== NAV =====================
 var PAGE_META = {
-  dashboard: ['Dashboard', 'Here is how your business is doing today'],
+  dashboard: ['Dashboard', 'Growth — Cashflow & Operations Control'],
   cashflow: ['Money In & Out', 'Every rupee that enters or leaves your business'],
   expenses: ['Expenses', 'Everything you spend to run your business'],
   invoices: ['Invoices', 'Bills you send and payments you track'],
-  clients: ['Clients', 'Your client directory and contact details'],
-  payroll: ['Staff & Payroll', 'Manage your team salaries each month'],
+  clients: ['Customers', 'Your customer directory and billing contacts'],
   debt: ['Who Owes Me', 'Money owed to you and money you owe'],
   suppliers: ['Suppliers', 'Everyone you buy from'],
-  team: ['My Team', 'See how your team is performing'],
-  sales: ['Sales Performance', 'Revenue by product/service, repeat customers and growth metrics'],
-  analytics: ['My Business Reports', 'Revenue trends, profit and client breakdowns'],
-  insights: ['Business Insights', 'A plain-language summary of how your business is doing'],
-  automations: ['Auto Reminders', 'WhatsApp and SMS reminders that run automatically'],
+  reports: ['Reports', 'Business reports, exports, and monthly report support'],
+  insights: ['Business Insights', 'Basic cashflow and operations checks'],
+  team: ['Team Access', 'Simple Growth roles for up to 8 users'],
   settings: ['Settings', 'Your business details, plan and account management']
 };
 
@@ -1073,14 +1098,11 @@ var RENDERERS = {
   expenses: renderExpenses,
   invoices: renderInvoices,
   clients: renderClients,
-  payroll: renderPayroll,
   debt: renderDebt,
   suppliers: renderSuppliers,
-  team: renderTeam,
-  sales: renderSales,
-  analytics: renderAnalytics,
+  reports: renderReports,
   insights: renderInsights,
-  automations: renderAutomations
+  team: renderTeamAccess
 };
 
 window.goTo = function clsGoTo(id) {
@@ -1162,14 +1184,15 @@ function renderDashboard() {
   var inc = D.txns.filter(function(t) { return t.type==='in'; }).reduce(function(a,t) { return a+t.amount; }, 0);
   var out = D.exps.reduce(function(a,e) { return a+e.amount; }, 0);
   var outstd = D.recv.reduce(function(a,r) { return a+r.amount; }, 0);
-  var overdue = D.invoices.filter(function(i) { return i.status==='overdue'; }).length;
+  var overdue = D.recv.filter(function(r) { return r.days > 0; }).length;
   var hasData = D.txns.length || D.invoices.length || D.exps.length || D.clients.length;
 
   document.getElementById('d-kpis').innerHTML =
     kpi('Revenue This Month', fmtS(inc), hasData ? 'Recorded money in' : 'Add income or invoice payments', 'g') +
     kpi('Expenses This Month', fmtS(out), 'Total business spending', 'rd') +
     kpi('Net Profit', fmtS(inc-out), inc-out >= 0 ? 'You are profitable!' : 'Expenses exceed income', 'gr') +
-    kpi('Outstanding', fmtS(outstd), overdue + ' overdue invoice' + (overdue !== 1 ? 's' : ''), 'am');
+    kpi('Outstanding', fmtS(outstd), overdue + ' overdue invoice' + (overdue !== 1 ? 's' : ''), 'am') +
+    kpi('Cash Position', fmtS(inc-out), inc-out >= 0 ? 'Money in is ahead' : 'Expenses are ahead', inc-out >= 0 ? 'gr' : 'rd');
 
   document.getElementById('d-recv').innerHTML = D.recv.length ? D.recv.slice(0,4).map(function(r) {
     var color = r.days > 30 ? 'var(--red)' : r.days > 14 ? 'var(--amber)' : 'var(--green)';
@@ -1180,40 +1203,25 @@ function renderDashboard() {
     return '<tr><td>' + t.date + '</td><td>' + t.desc.substring(0,28) + '…</td><td><span class="pill ' + (t.type==='in' ? 'pi' : 'po') + '">' + (t.type==='in' ? 'In' : 'Out') + '</span></td><td class="tr mono ' + (t.type==='in' ? 'pos' : 'neg') + '">' + (t.type==='in' ? '+' : '−') + fmt(t.amount) + '</td></tr>';
   }).join('') : emptyRow(4, 'No transactions yet', 'Record money in and out to activate your Growth dashboard.', 'Add Transaction', "window.openMo('mo-txn')");
 
-  // ---- GROWTH KEY METRICS ----
+  // ---- BASIC OPERATIONS ALERTS ----
   var inc2 = D.txns.filter(function(t){return t.type==='in';}).reduce(function(a,t){return a+t.amount;},0);
-  var monthInfo = monthWindow(2);
-  var monthIncome = sumByMonth(monthInfo, D.txns, function(t){return t.type==='in';});
-  var prevInc = monthIncome[0] || 0;
-  var revGrowth = prevInc > 0 ? ((monthIncome[1] - prevInc) / prevInc * 100).toFixed(1) : '0.0';
-  var cogsTotal = D.exps.filter(function(e){return e.cat==='Operations'||e.cat==='Suppliers'||e.cat==='Raw Materials';}).reduce(function(a,e){return a+e.amount;},0);
-  var grossProfit = inc2 - cogsTotal;
-  var grossMargin = inc2 > 0 ? (grossProfit / inc2 * 100).toFixed(1) : '0.0';
   var ar = D.recv.reduce(function(a,r){return a+r.amount;},0);
   var ap = D.payables.reduce(function(a,p){return a+p.amount;},0);
-  var clientInvCount = {};
-  D.invoices.forEach(function(i){ clientInvCount[i.client] = (clientInvCount[i.client]||0)+1; });
-  var totalClients = Object.keys(clientInvCount).length;
-  var repeatClients = Object.values(clientInvCount).filter(function(c){return c>1;}).length;
-  var repeatRate = totalClients > 0 ? Math.round(repeatClients/totalClients*100) : 0;
-  var retention = totalClients > 0 ? repeatRate : 0;
-  var prodNames = D.invoices.reduce(function(arr,i){i.items.forEach(function(it){var k=it.desc.split(' x')[0];if(arr.indexOf(k)<0)arr.push(k);});return arr;},[]);
-  var revPerProd = fmtS(Math.round(inc2 / Math.max(1, prodNames.length)));
-
-  var paidCount = D.invoices.filter(function(i){return i.status==='paid';}).length;
+  var cashPosition = inc2 - out;
+  var pendingInvoices = D.recv.length;
+  var overdueCount = D.recv.filter(function(r){return r.days>0;}).length;
+  var topExpense = Object.entries(D.exps.reduce(function(o,e){o[e.cat]=(o[e.cat]||0)+e.amount;return o;},{})).sort(function(a,b){return b[1]-a[1];})[0];
+  var expenseShare = inc2>0 ? Math.round(out/inc2*100) : 0;
   var gm1 = document.getElementById('d-gm1');
   if(gm1 && !hasData) {
-    gm1.innerHTML = '<div class="empty-wide">' + emptyState('Growth is ready for your real data', 'Create invoices, record expenses, add staff, and Growth will calculate payroll, debt, sales performance, analytics, and reminders automatically.', 'Start Tour', 'window.startGrowthTour()') + '</div>';
+    gm1.innerHTML = '<div class="empty-wide">' + emptyState('Growth is ready for your real data', 'Create invoices, record money in/out, add expenses, customers, and suppliers. Growth will show cashflow, operations, reports, and basic insights from real data.', 'Start Tour', 'window.startGrowthTour()') + '</div>';
   } else if(gm1) gm1.innerHTML =
-    kpiMini('Revenue Growth', (revGrowth>=0?'↑ ':'')+revGrowth+'%', 'vs prior month', '📈', revGrowth>=0?'gr':'rd') +
-    kpiMini('Gross Profit', fmtS(grossProfit), 'Revenue minus cost of goods', '💵', 'gr') +
-    kpiMini('Gross Margin', grossMargin+'%', 'Profit per rupee earned', '📊', parseFloat(grossMargin)>=50?'gr':'am') +
-    kpiMini('Accounts Receivable', fmtS(ar), D.recv.length+' invoices outstanding', '🔔', 'am') +
-    kpiMini('Accounts Payable', fmtS(ap), D.payables.length+' payments due', '📤', 'rd') +
-    kpiMini('Sales Performance', fmtS(inc2), paidCount+' paid invoices this month', '🛒', 'g') +
-    kpiMini('Customer Retention', retention+'%', 'Returning customers YoY', '🤝', 'bl') +
-    kpiMini('Repeat Customer Rate', repeatRate+'%', repeatClients+' of '+totalClients+' clients repeat', '↩', 'ro') +
-    kpiMini('Revenue / Product', revPerProd, 'Average per product line', '📦', 'bl');
+    kpiMini('Cash Position', fmtS(cashPosition), cashPosition>=0?'Money in is ahead':'Expenses are ahead', '💵', cashPosition>=0?'gr':'rd') +
+    kpiMini('Outstanding Invoices', fmtS(ar), pendingInvoices+' invoice'+(pendingInvoices!==1?'s':'')+' pending', '🔔', ar>0?'am':'gr') +
+    kpiMini('Overdue Invoices', overdueCount+'', overdueCount?'Needs manual follow-up':'Nothing overdue', '⏰', overdueCount?'rd':'gr') +
+    kpiMini('Supplier Payables', fmtS(ap), D.payables.length+' payment'+(D.payables.length!==1?'s':'')+' due', '📤', ap>0?'am':'gr') +
+    kpiMini('Expense Load', expenseShare+'%', 'Expenses as share of income', '📊', expenseShare>70?'rd':expenseShare>45?'am':'gr') +
+    kpiMini('Top Expense Category', topExpense?topExpense[0]:'—', topExpense?fmtS(topExpense[1]):'Add expenses to track', '📌', 'bl');
 
   setTimeout(buildDashCharts, 80);
 }
@@ -1223,95 +1231,6 @@ function kpiMini(lbl, val, sub, ico, accent) {
     '<div class="db-gm-ico">'+ico+'</div>' +
     '<div><div class="db-gm-lbl">'+lbl+'</div><div class="db-gm-val">'+val+'</div><div class="db-gm-sub">'+sub+'</div></div>' +
     '</div>';
-}
-
-function renderSales() {
-  var prodRevMap = {};
-  D.invoices.forEach(function(i){
-    i.items.forEach(function(it){
-      var key = it.desc.split(' x ')[0].split(' x')[0];
-      prodRevMap[key] = (prodRevMap[key]||0) + (it.qty * it.price);
-    });
-  });
-  var prodList = Object.entries(prodRevMap).sort(function(a,b){return b[1]-a[1];});
-  var totalProdRev = prodList.reduce(function(a,p){return a+p[1];},0);
-
-  var clientInvMap = {};
-  D.invoices.forEach(function(i){
-    if(!clientInvMap[i.client]) clientInvMap[i.client]={count:0,total:0};
-    clientInvMap[i.client].count++;
-    clientInvMap[i.client].total+=i.total;
-  });
-  var clients = Object.entries(clientInvMap).sort(function(a,b){return b[1].total-a[1].total;});
-  var repeatClients2 = clients.filter(function(c){return c[1].count>1;}).length;
-  var retention2 = clients.length ? Math.round(repeatClients2 / clients.length * 100) : 0;
-
-  document.getElementById('sales-sum').innerHTML =
-    sumItem('Total Revenue', fmtS(totalProdRev)) +
-    sumItem('Product Lines', prodList.length+'') +
-    sumItem('Repeat Customers', repeatClients2+' / '+clients.length, 'var(--green)') +
-    sumItem('Customer Retention', retention2+'%', 'var(--blue)');
-
-  var prodMax = prodList.length > 0 ? prodList[0][1] : 1;
-  document.getElementById('prod-grid').innerHTML = prodList.map(function(p){
-    var pct = Math.round(p[1]/prodMax*100);
-    var share = totalProdRev > 0 ? Math.round(p[1]/totalProdRev*100) : 0;
-    var invCount = D.invoices.filter(function(i){return i.items.some(function(it){return it.desc.indexOf(p[0])>-1;});}).length;
-    return '<div class="prod-card">'+
-      '<div class="prod-name">'+p[0]+'</div>'+
-      '<div class="prod-cat">Product / Service</div>'+
-      '<div class="prod-rev">'+fmtS(p[1])+'</div>'+
-      '<div class="prod-bar-wrap"><div class="prod-bar"><div class="prod-fill" style="width:'+pct+'%"></div></div></div>'+
-      '<div class="prod-foot"><span style="font-size:.67rem;color:var(--muted)">'+share+'% of revenue</span><span class="pill pi">'+fmtS(Math.round(p[1]/Math.max(1,invCount)))+' avg</span></div>'+
-      '</div>';
-  }).join('') || '<div class="empty-wide">' + emptyState('No product or service revenue yet', 'Create invoices with line items and Growth will show revenue by product, average value, and repeat customers.', 'Create Invoice', 'window.openInvMo()') + '</div>';
-
-  document.getElementById('repeat-body').innerHTML = clients.map(function(c){
-    var avg = c[1].count>0 ? Math.round(c[1].total/c[1].count) : 0;
-    var share = totalProdRev>0 ? (c[1].total/totalProdRev*100).toFixed(1) : '0.0';
-    var isRepeat = c[1].count>1;
-    return '<tr>'+
-      '<td style="font-weight:500">'+c[0]+'</td>'+
-      '<td class="tc mono">'+c[1].count+'</td>'+
-      '<td class="mono gld">'+fmt(c[1].total)+'</td>'+
-      '<td class="mono">'+fmt(avg)+'</td>'+
-      '<td><span class="pill '+(isRepeat?'pi':'pse')+'">'+(isRepeat?'↩ Repeat':'New')+'</span></td>'+
-      '<td class="tr mono">'+share+'%</td>'+
-      '</tr>';
-  }).join('') || emptyRow(6, 'No customer sales yet', 'Repeat customer analysis appears after invoices are created for your clients.', 'Create Invoice', 'window.openInvMo()');
-
-  setTimeout(function(){
-    if(CH.prod) CH.prod.destroy();
-    var cp = document.getElementById('ch-prod');
-    if(cp && prodList.length){
-      CH.prod = new Chart(cp,{
-        type:'bar',
-        data:{
-          labels:prodList.map(function(p){return p[0].length>22?p[0].substring(0,22)+'…':p[0];}),
-          datasets:[{label:'Revenue (LKR)',data:prodList.map(function(p){return p[1];}),backgroundColor:'rgba(184,146,42,.75)',borderRadius:3}]
-        },
-        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-          plugins:{legend:{display:false}},
-          scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9},callback:function(v){return v>=1000000?'M'+(v/1e6).toFixed(1):'K'+Math.round(v/1000);}}},y:{grid:{display:false},ticks:{font:{size:9}}}}}
-      });
-    }
-    if(CH.ret) CH.ret.destroy();
-    var cr = document.getElementById('ch-ret');
-    if(cr){
-      CH.ret = new Chart(cr,{
-        type:'doughnut',
-        data:{labels:['Retained','New'],datasets:[{data:[retention2,100-retention2],backgroundColor:['#2563A8','#E4DDD3'],borderWidth:2,borderColor:'#fff'}]},
-        options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}
-      });
-      var rl = document.getElementById('ret-list');
-      if(rl && !clients.length) {
-        rl.innerHTML = '<div class="empty-state" style="padding:.9rem .4rem"><div class="empty-state-title" style="font-size:1rem">No customer history yet</div><div class="empty-state-copy">Repeat customer metrics appear after invoices are created.</div></div>';
-      } else if(rl) rl.innerHTML=
-        '<div class="cat-row"><div class="cat-dot" style="background:#2563A8"></div><div class="cat-lbl">Retained Customers</div><div class="cat-pct">'+retention2+'%</div></div>'+
-        '<div class="cat-row"><div class="cat-dot" style="background:#E4DDD3"></div><div class="cat-lbl">New Customers</div><div class="cat-pct">'+(100-retention2)+'%</div></div>'+
-        '<div class="cat-row"><div class="cat-dot" style="background:var(--rose)"></div><div class="cat-lbl">Repeat Rate</div><div class="cat-pct">'+Math.round(repeatClients2/Math.max(1,clients.length)*100)+'%</div></div>';
-    }
-  },80);
 }
 
 function renderCashflow() {
@@ -1341,7 +1260,18 @@ function renderExpenses() {
 
   document.getElementById('exp-body').innerHTML = D.exps.map(function(e) {
     return '<tr><td>' + e.date + '</td><td>' + e.desc + '</td><td>' + e.vendor + '</td><td><span style="background:var(--bg3);padding:.1rem .4rem;font-size:.68rem">' + e.cat + '</span></td><td class="tr mono neg">− ' + fmt(e.amount) + '</td></tr>';
-  }).join('') || emptyRow(5, 'No expenses recorded', 'Add operating costs, supplier bills, payroll, rent, marketing, or utilities here.', 'Add Expense', "window.openMo('mo-exp')");
+  }).join('') || emptyRow(5, 'No expenses recorded', 'Add operating costs, supplier bills, rent, marketing, utilities, and other operations costs here.', 'Add Expense', "window.openMo('mo-exp')");
+}
+
+function invoiceStatus(i) {
+  var balance = toNum(i.total) - toNum(i.paid);
+  if (balance <= 0.01 || i.status === 'paid') return 'paid';
+  if (toNum(i.paid) > 0 || i.status === 'partial') return 'partial';
+  var due = new Date((i.due || i.date || today()) + 'T00:00:00');
+  var now = new Date();
+  if (!isNaN(due.getTime()) && due < new Date(now.getFullYear(), now.getMonth(), now.getDate())) return 'overdue';
+  if (i.status === 'draft') return 'draft';
+  return 'unpaid';
 }
 
 function renderInvoices() {
@@ -1354,20 +1284,21 @@ function renderInvoices() {
     sumItem('Collected', fmt(paid), 'var(--green)') +
     sumItem('Outstanding', fmt(os), 'var(--amber)');
 
-  var statusCls = {paid:'pp',draft:'pdr',sent:'pse',overdue:'pov',partial:'ppa'};
+  var statusCls = {paid:'pp',draft:'pdr',sent:'pse',unpaid:'pse',overdue:'pov',partial:'ppa'};
 
   document.getElementById('inv-body').innerHTML = D.invoices.map(function(i) {
     var pct = i.total > 0 ? Math.round(i.paid/i.total*100) : 0;
-    var sc = statusCls[i.status] || 'pdr';
+    var displayStatus = invoiceStatus(i);
+    var sc = statusCls[displayStatus] || 'pdr';
     var payBar = '<div class="pay-wrap"><div class="pay-bar"><div class="pay-fill' + (i.status==='partial' ? ' pt' : '') + '" style="width:' + pct + '%"></div></div><span style="font-size:.67rem;font-family:var(--fm);color:var(--muted)">' + pct + '%</span></div>' + (i.total-i.paid > 0 ? '<div class="pay-pend">' + fmt(i.total-i.paid) + ' pending</div>' : '');
     var actions = '<button class="bsm" onclick="window.printInv(\'' + i.id + '\')">🖨 Print</button> <button class="bsm bsmwa" onclick="window.waRemind(\'' + i.id + '\')">💬 WA</button>' + (i.status !== 'paid' ? ' <button class="bsm bsmgr" onclick="window.openPayMo(\'' + i.id + '\')">✓ Pay</button>' : '');
-    return '<tr><td class="mono gld" style="font-size:.77rem">' + i.id + '</td><td style="font-weight:500">' + i.client + '</td><td>' + i.date + '</td><td>' + i.due + '</td><td><span class="pill ' + sc + '">' + i.status + '</span></td><td>' + payBar + '</td><td class="tr mono gld">' + fmt(i.total) + '</td><td><div style="display:flex;gap:.3rem;justify-content:flex-end;flex-wrap:wrap">' + actions + '</div></td></tr>';
+    return '<tr><td class="mono gld" style="font-size:.77rem">' + i.id + '</td><td style="font-weight:500">' + i.client + '</td><td>' + i.date + '</td><td>' + i.due + '</td><td><span class="pill ' + sc + '">' + displayStatus + '</span></td><td>' + payBar + '</td><td class="tr mono gld">' + fmt(i.total) + '</td><td><div style="display:flex;gap:.3rem;justify-content:flex-end;flex-wrap:wrap">' + actions + '</div></td></tr>';
   }).join('') || emptyRow(8, 'No invoices yet', 'Create a Growth invoice with VAT support, payment tracking, and reminder tools.', 'Create Invoice', 'window.openInvMo()');
 }
 
 function renderClients() {
   document.getElementById('cli-sum').innerHTML =
-    sumItem('Total Clients', D.clients.length + '') +
+    sumItem('Total Customers', D.clients.length + '') +
     sumItem('With Email', D.clients.filter(function(c) { return c.email; }).length + '', 'var(--green)') +
     sumItem('With WhatsApp', D.clients.filter(function(c) { return c.phone; }).length + '', 'var(--gold)');
 
@@ -1376,27 +1307,7 @@ function renderClients() {
     var tot = invs.reduce(function(a,i) { return a+i.total; }, 0);
     var ini = c.name.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2);
     return '<div class="cli-card"><div class="cli-av">' + ini + '</div><div class="cli-name">' + c.name + '</div><div class="cli-biz">' + c.biz + '</div><div class="cli-det">' + (c.email ? '✉ ' + c.email + '<br>' : '') + '📱 ' + c.phone + (c.addr ? '<br>📍 ' + c.addr : '') + '</div><div class="sumbar c2" style="margin:.75rem 0"><div class="sum-i"><div class="sum-lbl">Invoices</div><div class="sum-val">' + invs.length + '</div></div><div class="sum-i"><div class="sum-lbl">Total Billed</div><div class="sum-val">' + fmtS(tot) + '</div></div></div><div class="cli-acts"><button class="bsm bsmwa" onclick="window.open(\'https://wa.me/\'+\'' + c.phone.replace(/\D/g,'') + '\')">💬 WA</button><button class="bsm bsmo" onclick="window.editClient(\'' + c.id + '\')">Edit</button></div></div>';
-  }).join('') || '<div class="empty-wide">' + emptyState('No clients yet', 'Add clients once, then use them for invoices, WhatsApp follow-ups, and revenue reporting.', 'Add Client', 'window.openCliMo()') + '</div>';
-}
-
-function renderPayroll() {
-  var tot = D.staff.reduce(function(a,s) { return a+s.sal; }, 0);
-  var pd = D.staff.filter(function(s) { return s.paid; }).reduce(function(a,s) { return a+s.sal; }, 0);
-  document.getElementById('pay-banner').innerHTML =
-    '<div><div class="pb-lbl">Total Payroll</div><div class="pb-val">' + fmt(tot) + '</div></div>' +
-    '<div class="pb-sep"></div>' +
-    '<div><div class="pb-lbl">Paid Out</div><div class="pb-val" style="color:#4DC886">' + fmt(pd) + '</div></div>' +
-    '<div class="pb-sep"></div>' +
-    '<div><div class="pb-lbl">Still Pending</div><div class="pb-val" style="color:#FFD080">' + fmt(tot-pd) + '</div></div>' +
-    '<div class="pb-sep"></div>' +
-    '<div><div class="pb-lbl">Staff Count</div><div class="pb-val">' + D.staff.length + '</div></div>';
-
-  document.getElementById('staff-grid').innerHTML = D.staff.map(function(s) {
-    var btn = s.paid
-      ? '<button class="bsm bsmo">✓ Paid</button>'
-      : '<button class="bsm bsmgr" onclick="window.paySalary(\'' + s.id + '\')">Mark Paid</button>';
-    return '<div class="staff-card"><div class="st-av" style="background:' + s.col + '">' + s.ini + '</div><div class="st-name">' + s.name + '</div><div class="st-role">' + s.role + '</div><div style="font-size:.67rem;color:var(--dim)">' + (s.paid ? '✓ Paid this cycle' : 'Payment pending') + '</div><div class="st-foot"><div class="st-sal">' + fmt(s.sal) + '</div>' + btn + '</div></div>';
-  }).join('') || '<div class="empty-wide">' + emptyState('No staff added yet', 'Add team members to track salaries, payroll status, and team performance.', 'Add Staff', "window.openMo('mo-staff')") + '</div>';
+  }).join('') || '<div class="empty-wide">' + emptyState('No customers yet', 'Add customers once, then use them for invoices, WhatsApp follow-ups, and revenue reporting.', 'Add Customer', 'window.openCliMo()') + '</div>';
 }
 
 function renderDebt() {
@@ -1418,7 +1329,7 @@ function renderDebt() {
   document.getElementById('recv-list').innerHTML = D.recv.map(function(r) {
     var dc = r.days > 30 ? 'ov' : '';
     return '<div class="debt-row"><div><div class="debt-name">' + r.client + '</div><div class="debt-days ' + dc + '">' + r.days + ' days outstanding · ' + r.inv + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--green)">' + fmt(r.amount) + '</div><button class="bsm bsmwa" style="margin-top:.25rem" onclick="window.showToast(\'WhatsApp reminder sent!\', \'ok\')">💬 Remind</button></div></div>';
-  }).join('') || emptyState('No money outstanding', 'Unpaid invoices will appear here when clients still owe you.', 'Create Invoice', 'window.openInvMo()');
+  }).join('') || emptyState('No money outstanding', 'Unpaid invoices will appear here when customers still owe you.', 'Create Invoice', 'window.openInvMo()');
 
   document.getElementById('pay-list').innerHTML = D.payables.map(function(p) {
     return '<div class="debt-row"><div><div class="debt-name">' + p.supplier + '</div><div class="debt-days">Due in ' + p.days + ' days · ' + p.ref + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><button class="bsm bsmgr" style="margin-top:.25rem" onclick="window.showToast(\'Payment scheduled!\', \'ok\')">Schedule</button></div></div>';
@@ -1447,26 +1358,19 @@ function renderSupTable(f) {
   }).join('') || emptyRow(6, 'No suppliers yet', 'Add suppliers to link expenses and supplier payments to real vendors.', 'Add Supplier', "window.openMo('mo-sup')");
 }
 
-function renderTeam() {
-  var sorted = D.staff.slice().sort(function(a,b) { return b.rev - a.rev; });
-  var maxR = sorted.reduce(function(m,s) { return Math.max(m, s.rev); }, 1);
-  var totRev = sorted.reduce(function(a,s) { return a+s.rev; }, 0);
-
+function renderTeamAccess() {
   document.getElementById('team-sum').innerHTML =
-    sumItem('Top Performer', sorted[0] ? sorted[0].name.split(' ')[0] : '—') +
-    sumItem('Team Revenue', fmtS(totRev), 'var(--green)') +
-    sumItem('Total Invoices', sorted.reduce(function(a,s) { return a+s.invs; }, 0) + '') +
-    sumItem('Payroll Cost', fmtS(D.staff.reduce(function(a,s) { return a+s.sal; }, 0)));
+    sumItem('Growth Users', 'Up to 8') +
+    sumItem('Roles', 'Owner / Staff / View Only', 'var(--gold)') +
+    sumItem('Permissions', 'Basic', 'var(--green)');
 
-  var medals = ['r1','r2','r3'];
-  document.getElementById('team-body').innerHTML = sorted.map(function(s, i) {
-    var rc = i < 3 ? medals[i] : 'rn';
-    var score = maxR > 0 ? Math.round(s.rev/maxR*100) : 0;
-    return '<tr><td><div class="rank-c ' + rc + '">' + (i+1) + '</div></td><td><div style="display:flex;align-items:center;gap:.6rem"><div class="st-av" style="width:27px;height:27px;font-size:.62rem;margin:0;background:' + s.col + '">' + s.ini + '</div><span style="font-size:.82rem;font-weight:600">' + s.name + '</span></div></td><td style="font-size:.77rem;color:var(--muted)">' + s.role + '</td><td class="mono pos">' + fmt(s.rev) + '</td><td class="tc mono">' + s.invs + '</td><td><div style="display:flex;align-items:center;gap:.48rem"><div class="perf-t"><div class="perf-f" style="width:' + score + '%"></div></div><span style="font-size:.64rem;font-family:var(--fm);color:var(--muted)">' + score + '%</span></div></td></tr>';
-  }).join('') || emptyRow(6, 'No team performance yet', 'Add staff members and record sales activity to see performance by person.', 'Add Staff', "window.openMo('mo-staff')");
+  document.getElementById('team-body').innerHTML =
+    '<tr><td><strong>Owner/Admin</strong></td><td>Full access to dashboard, money in/out, expenses, invoices, customers, who owes me, suppliers, reports, insights, team access, and settings.</td><td class="tr">Up to 8 users</td></tr>' +
+    '<tr><td><strong>Staff</strong></td><td>Invoices, customers, money in/out, and expenses. No settings or team management.</td><td class="tr">Up to 8 users</td></tr>' +
+    '<tr><td><strong>View Only</strong></td><td>Dashboard and reports only. No editing, payment recording, exports, or reminders.</td><td class="tr">Up to 8 users</td></tr>';
 }
 
-function renderAnalytics() {
+function renderReports() {
   if (CH.rev) CH.rev.destroy();
   if (CH.ie) CH.ie.destroy();
 
@@ -1475,9 +1379,9 @@ function renderAnalytics() {
   var margin = inc > 0 ? ((inc-out)/inc*100) : 0;
 
   document.getElementById('an-sum').innerHTML =
-    sumItem('Revenue', fmtS(inc)) +
+    sumItem('Income', fmtS(inc)) +
     sumItem('Expenses', fmtS(out), 'var(--red)') +
-    sumItem('Gross Profit', fmtS(inc-out), 'var(--green)') +
+    sumItem('Net Profit', fmtS(inc-out), 'var(--green)') +
     sumItem('Profit Margin', margin.toFixed(1) + '%', margin > 50 ? 'var(--green)' : 'var(--amber)');
 
   var monthInfo = monthWindow(6);
@@ -1486,67 +1390,57 @@ function renderAnalytics() {
   var expD = sumByMonth(monthInfo, D.exps);
 
   var c3 = document.getElementById('ch-rev');
-  if (c3) CH.rev = new Chart(c3, {type:'line',data:{labels:months,datasets:[{label:'Revenue',data:revD,borderColor:'#B8922A',backgroundColor:'rgba(184,146,42,.08)',tension:.4,fill:true,pointBackgroundColor:'#B8922A'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
+  if (c3) CH.rev = new Chart(c3, {type:'line',data:{labels:months,datasets:[{label:'Income',data:revD,borderColor:'#B8922A',backgroundColor:'rgba(184,146,42,.08)',tension:.4,fill:true,pointBackgroundColor:'#B8922A'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
 
   var c4 = document.getElementById('ch-ie');
   if (c4) CH.ie = new Chart(c4, {type:'bar',data:{labels:months,datasets:[{label:'Income',data:revD,backgroundColor:'rgba(29,158,98,.65)',borderRadius:3},{label:'Expenses',data:expD,backgroundColor:'rgba(192,57,43,.55)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
 
+  var byCat = {};
+  D.exps.forEach(function(e){byCat[e.cat]=(byCat[e.cat]||0)+e.amount;});
+  var catRows = Object.entries(byCat).sort(function(a,b){return b[1]-a[1];}).slice(0,5).map(function(c){
+    return '<div class="rep-row neg"><span>'+c[0]+'</span><span>'+fmt(c[1])+'</span></div>';
+  }).join('') || '<div class="rep-row"><span>No expenses yet</span><span>—</span></div>';
+  var supplierTotal = D.suppliers.reduce(function(a,s){return a+toNum(s.ytd);},0);
+  var outstandingTotal = D.recv.reduce(function(a,r){return a+r.amount;},0);
+  var overdueTotal = D.recv.filter(function(r){return r.days>0;}).reduce(function(a,r){return a+r.amount;},0);
   document.getElementById('an-reports').innerHTML =
-    '<div class="rep-card"><div class="rep-lbl">Profit &amp; Loss Summary</div>' +
-    '<div class="rep-row pos"><span>Total Revenue</span><span>' + fmt(inc) + '</span></div>' +
+    '<div class="rep-card"><div class="rep-lbl">Profit Summary</div>' +
+    '<div class="rep-row pos"><span>Total Income</span><span>' + fmt(inc) + '</span></div>' +
     '<div class="rep-row neg"><span>Total Expenses</span><span>' + fmt(out) + '</span></div>' +
-    '<div class="rep-row"><span>Gross Profit</span><span>' + fmt(inc-out) + '</span></div>' +
+    '<div class="rep-row"><span>Net Profit</span><span>' + fmt(inc-out) + '</span></div>' +
     '<div class="rep-row tot"><span>Profit Margin</span><span>' + margin.toFixed(1) + '%</span></div></div>' +
-    '<div class="rep-card"><div class="rep-lbl">Saved Reports</div>' +
-    '<div class="empty-state" style="padding:1.15rem .5rem"><div class="empty-state-title" style="font-size:1rem">No saved reports yet</div><div class="empty-state-copy">Run a PDF or Excel report after adding transactions, invoices, and expenses.</div></div></div>';
+    '<div class="rep-card"><div class="rep-lbl">Expense by Category</div>' + catRows + '</div>' +
+    '<div class="rep-card"><div class="rep-lbl">Supplier Spend Report</div><div class="rep-row"><span>Suppliers</span><span>'+D.suppliers.length+'</span></div><div class="rep-row tot"><span>Total Spend</span><span>'+fmt(supplierTotal)+'</span></div></div>' +
+    '<div class="rep-card"><div class="rep-lbl">Outstanding &amp; Overdue</div><div class="rep-row neg"><span>Outstanding Invoices</span><span>'+fmt(outstandingTotal)+'</span></div><div class="rep-row tot"><span>Overdue Invoices</span><span>'+fmt(overdueTotal)+'</span></div></div>';
 
   document.getElementById('an-cli').innerHTML = D.clients.map(function(c) {
     var invs = D.invoices.filter(function(i) { return i.client===c.biz; });
     var tot = invs.reduce(function(a,i) { return a+i.total; }, 0);
     var pd = invs.filter(function(i) { return i.status==='paid'; }).reduce(function(a,i) { return a+i.paid; }, 0);
     return '<tr><td style="font-weight:600">' + c.biz + '</td><td class="tc mono">' + invs.length + '</td><td class="mono">' + fmt(tot) + '</td><td class="mono pos">' + fmt(pd) + '</td><td class="tr mono" style="color:' + (tot-pd>0?'var(--amber)':'var(--muted)') + '">' + fmt(tot-pd) + '</td></tr>';
-  }).join('') || emptyRow(5, 'No client revenue yet', 'Client revenue appears here once invoices are created and payments are recorded.', 'Create Invoice', 'window.openInvMo()');
+  }).join('') || emptyRow(5, 'No customer revenue yet', 'Customer revenue appears here once invoices are created and payments are recorded.', 'Create Invoice', 'window.openInvMo()');
 }
 
 function renderInsights() {
   var inc = D.txns.filter(function(t) { return t.type==='in'; }).reduce(function(a,t) { return a+t.amount; }, 0);
   var out = D.exps.reduce(function(a,e) { return a+e.amount; }, 0);
   var outstd = D.recv.reduce(function(a,r) { return a+r.amount; }, 0);
-  var collRate = D.invoices.length > 0 ? Math.round(D.invoices.filter(function(i) { return i.status==='paid'; }).length / D.invoices.length * 100) : 0;
-  var margin = inc > 0 ? Math.round((inc-out)/inc*100) : 0;
   var overdue = D.invoices.filter(function(i) { return i.status==='overdue'; }).length;
   var hasActivity = D.txns.length || D.invoices.length || D.exps.length;
-  var cashHealth = 0;
-  if (inc || out) {
-    cashHealth = out === 0 ? 100 : Math.max(0, Math.min(100, Math.round((inc - out) / Math.max(inc, out) * 50 + 50)));
-  }
+  var net = inc - out;
+  var expShare = inc > 0 ? Math.round(out / inc * 100) : 0;
+  var topExpense = Object.entries(D.exps.reduce(function(o,e){o[e.cat]=(o[e.cat]||0)+e.amount;return o;},{})).sort(function(a,b){return b[1]-a[1];})[0];
 
   document.getElementById('ins-kpis').innerHTML =
-    kpi('Profit Margin', margin + '%', 'Revenue minus expenses', 'gr') +
-    kpi('Collection Rate', collRate + '%', 'Invoices fully paid on time', 'bl') +
+    kpi('Income This Month', fmtS(inc), 'Money received and recorded', 'gr') +
+    kpi('Expenses This Month', fmtS(out), 'Business spending recorded', 'rd') +
     kpi('Outstanding', fmtS(outstd), 'Waiting to be collected', 'am') +
-    kpi('Net This Month', fmtS(inc-out), inc-out >= 0 ? 'Profitable ✓' : 'Expenses are higher than income', inc-out >= 0 ? 'gr' : 'rd');
-
-  var bars = [
-    {label:'Cash Flow Health', pct:cashHealth, color:'var(--green)'},
-    {label:'Invoice Collection', pct:collRate, color:'var(--blue)'},
-    {label:'Profit Margin', pct:Math.max(0,margin), color:'var(--gold)'},
-    {label:'Payment Speed', pct:collRate, color:'var(--rose)'}
-  ];
-  var score = Math.round(bars.reduce(function(a,b) { return a+b.pct; }, 0) / bars.length);
-  var scoreEl = document.getElementById('ins-score');
-  var scoreLblEl = document.getElementById('ins-score-lbl');
-  if (scoreEl) { scoreEl.textContent = score; scoreEl.style.color = score > 70 ? 'var(--green)' : score > 50 ? 'var(--amber)' : 'var(--red)'; }
-  if (scoreLblEl) scoreLblEl.textContent = hasActivity ? ('Out of 100 · ' + (score > 70 ? 'Good' : score > 50 ? 'Fair — room to improve' : 'Needs Attention')) : 'Add data to calculate your score';
-
-  document.getElementById('ins-bars').innerHTML = bars.map(function(b) {
-    return '<div style="margin-bottom:.72rem"><div style="display:flex;justify-content:space-between;font-size:.74rem;margin-bottom:.28rem"><span style="color:var(--muted)">' + b.label + '</span><span style="font-family:var(--fm);font-weight:600">' + b.pct + '%</span></div><div class="insight-bar"><div class="insight-fill" style="width:' + b.pct + '%;background:' + b.color + '"></div></div></div>';
-  }).join('');
+    kpi('Net This Month', fmtS(net), net >= 0 ? 'Income is ahead of expenses' : 'Expenses are higher than income', net >= 0 ? 'gr' : 'rd');
 
   var monthItems = [
     {ico:'💰',lbl:'Money you earned',val:fmt(inc),note:'This month'},
     {ico:'📤',lbl:'Money you spent',val:fmt(out),note:'On business expenses'},
-    {ico:'📈',lbl:'Your profit',val:fmt(inc-out),note:inc-out>=0 ? 'Keep it up!' : 'Expenses exceed income'},
+    {ico:'📈',lbl:'Net result',val:fmt(net),note:net>=0 ? 'Income is ahead' : 'Expenses exceed income'},
     {ico:'🧾',lbl:'Invoices raised',val:D.invoices.length + ' invoices',note:D.invoices.length ? D.invoices.filter(function(i){return i.status==='paid';}).length + ' paid, ' + overdue + ' overdue' : 'No invoices yet'},
     {ico:'⏰',lbl:'Still to collect',val:fmt(outstd),note:'Across ' + D.recv.length + ' outstanding invoices'}
   ];
@@ -1554,41 +1448,34 @@ function renderInsights() {
     return '<div class="month-row"><div class="month-ico">' + s.ico + '</div><div style="flex:1"><div style="font-size:.79rem;font-weight:500;color:var(--text)">' + s.lbl + '</div><div style="font-size:.67rem;color:var(--muted)">' + s.note + '</div></div><div style="font-family:var(--fm);font-size:.8rem;font-weight:600;color:var(--black)">' + s.val + '</div></div>';
   }).join('');
 
-  var clientRevs = D.clients.map(function(c) {
-    var tot = D.invoices.filter(function(i) { return i.client===c.biz; }).reduce(function(a,i) { return a+i.total; }, 0);
-    return {name:c.biz, total:tot};
-  }).filter(function(c) { return c.total > 0; }).sort(function(a,b) { return b.total-a.total; });
-  var maxCR = clientRevs[0] ? clientRevs[0].total : 1;
-  var trophies = ['🥇','🥈','🥉','4️⃣'];
-  document.getElementById('ins-top').innerHTML = clientRevs.map(function(c,i) {
-    return '<div style="margin-bottom:.85rem"><div style="display:flex;justify-content:space-between;font-size:.77rem;margin-bottom:.28rem"><span style="font-weight:500">' + (trophies[i]||'') + ' ' + c.name + '</span><span style="font-family:var(--fm);color:var(--gold)">' + fmtS(c.total) + '</span></div><div class="perf-t"><div class="perf-f" style="width:' + Math.round(c.total/maxCR*100) + '%;background:var(--gold)"></div></div></div>';
-  }).join('') || emptyState('No client revenue yet', 'Create invoices and Growth will rank your best clients here.', 'Create Invoice', 'window.openInvMo()');
+  document.getElementById('ins-bars').innerHTML =
+    '<div class="month-row"><div class="month-ico">💬</div><div><div style="font-size:.79rem;font-weight:500;color:var(--text)">Income vs Expense</div><div style="font-size:.72rem;color:var(--muted);line-height:1.6">' +
+    (hasActivity ? (net>=0 ? 'Income is currently ahead of expenses. Keep checking unpaid invoices so cash stays moving.' : 'Expenses are above income. Review outgoing payments and chase outstanding invoices before adding new commitments.') : 'Add income, expense, and invoice data to generate a monthly comment.') +
+    '</div></div></div>' +
+    '<div class="month-row"><div class="month-ico">📌</div><div><div style="font-size:.79rem;font-weight:500;color:var(--text)">Expense Check</div><div style="font-size:.72rem;color:var(--muted);line-height:1.6">' +
+    (topExpense ? ('Your largest expense category is ' + topExpense[0] + ' at ' + fmt(topExpense[1]) + '. Expenses are ' + expShare + '% of recorded income.') : 'Add expenses to see which category needs review.') +
+    '</div></div></div>';
+
+  var checks = [
+    {ico:'🧾',msg:'Review invoices that are unpaid or partial before month end.',go:'invoices',btn:'Open Invoices'},
+    {ico:'💬',msg:'Send manual reminders from Who Owes Me for overdue customers.',go:'debt',btn:'Who Owes Me'},
+    {ico:'🏭',msg:'Check supplier spend before adding new operating expenses.',go:'suppliers',btn:'Suppliers'},
+    {ico:'📊',msg:'Export reports before monthly review or email summary.',go:'reports',btn:'Reports'}
+  ];
+  document.getElementById('ins-top').innerHTML = checks.map(function(c) {
+    return '<div class="alert-item"><span style="font-size:1.05rem">' + c.ico + '</span><div style="flex:1"><div style="font-size:.78rem;color:var(--text);line-height:1.5">' + c.msg + '</div><button class="bsm" style="margin-top:.38rem" onclick="window.clsGoTo(\'' + c.go + '\')">' + c.btn + '</button></div></div>';
+  }).join('');
 
   var alerts = [];
-  if (!hasActivity) alerts.push({ico:'🟡',msg:'Start by creating your first invoice or recording your first transaction. Growth will then calculate profit, debt, sales, and alerts from real data.',btn:'Create Invoice',go:'invoices'});
+  if (!hasActivity) alerts.push({ico:'🟡',msg:'Start by creating your first invoice or recording your first transaction. Growth will then calculate cashflow, reports, and alerts from real data.',btn:'Create Invoice',go:'invoices'});
   if (overdue > 0) alerts.push({ico:'🔴',msg:overdue + ' overdue invoice' + (overdue>1?'s that need':'that needs') + ' your attention. Send a reminder now.',btn:'View Invoices',go:'invoices'});
-  if (outstd > 500000) alerts.push({ico:'🟡',msg:'Over LKR 500K is outstanding. Consider following up with clients this week.',btn:'Who Owes Me',go:'debt'});
+  if (outstd > 500000) alerts.push({ico:'🟡',msg:'Over LKR 500K is outstanding. Consider following up with customers this week.',btn:'Who Owes Me',go:'debt'});
   if (margin < 20 && inc > 0) alerts.push({ico:'🟠',msg:'Profit margin is below 20%. Review your expenses to find savings.',btn:'View Expenses',go:'expenses'});
   if (alerts.length === 0) alerts.push({ico:'🟢',msg:'Everything looks steady. Keep recording activity and Growth will flag anything that needs attention.',btn:'',go:''});
 
   document.getElementById('ins-alerts').innerHTML = alerts.map(function(a) {
     return '<div class="alert-item"><span style="font-size:1.05rem">' + a.ico + '</span><div style="flex:1"><div style="font-size:.78rem;color:var(--text);line-height:1.5">' + a.msg + '</div>' + (a.btn ? '<button class="bsm" style="margin-top:.38rem" onclick="window.clsGoTo(\'' + a.go + '\')">' + a.btn + '</button>' : '') + '</div></div>';
   }).join('');
-}
-
-function renderAutomations() {
-  var active = D.autos.filter(function(a) { return a.active; }).length;
-  var fired = D.autos.reduce(function(s,a) { return s+a.fired; }, 0);
-  var channels = D.autos.map(function(a) { return a.channel; }).filter(function(v, i, arr) { return arr.indexOf(v) === i; }).join(' · ') || '—';
-  document.getElementById('aut-sum').innerHTML =
-    sumItem('Total Rules', D.autos.length + '') +
-    sumItem('Currently Active', active + '', 'var(--green)') +
-    sumItem('Total Alerts Sent', fired + '') +
-    sumItem('Channels', channels);
-
-  document.getElementById('aut-grid').innerHTML = D.autos.map(function(a, i) {
-    return '<div class="auto-card"><div class="auto-ico">' + a.icon + '</div><div style="flex:1"><div class="auto-name">' + a.name + '</div><div class="auto-desc">' + a.desc + '</div><div class="auto-meta"><span>Trigger: <b>' + a.trigger + '</b></span><span>Channel: <b>' + a.channel + '</b></span><span>Sent: <b>' + a.fired + '×</b></span></div></div><label class="tog" style="margin-top:.18rem"><input type="checkbox" ' + (a.active ? 'checked' : '') + ' onchange="D.autos[' + i + '].active=this.checked;renderAutomations();saveData();showToast(\'' + a.name + ' ' + '\' + (this.checked ? \'activated\' : \'paused\'))"><span class="tog-sl"></span></label></div>';
-  }).join('') || '<div class="empty-wide">' + emptyState('No automation rules yet', 'Default reminder rules will appear here once Growth is initialized.', '', '') + '</div>';
 }
 
 // ===================== INVOICE MODAL =====================
@@ -1657,7 +1544,7 @@ function calcTotals() {
 
 window.saveInv = function saveInv() {
   var client = document.getElementById('inv-cli').value.trim();
-  if (!client) { showToast('Please enter a client name', 'err'); return; }
+  if (!client) { showToast('Please enter a customer name', 'err'); return; }
   var items = [];
   document.querySelectorAll('#li-body tr').forEach(function(row) {
     var ins = row.querySelectorAll('input');
@@ -1667,7 +1554,7 @@ window.saveInv = function saveInv() {
   var t = calcTotals();
   var id = 'INV-' + String(D._nextInvId || (D.invoices.length + 1)).padStart(3,'0');
   D._nextInvId = (D._nextInvId || (D.invoices.length + 1)) + 1;
-  D.invoices.unshift({id:id,num:id,client:client,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,lines:items,sub:t.sub,vat:t.vat,disc:t.disc,total:t.total,amount:t.total,status:'sent',paid:0,paidAmount:0,tpl:selTpl,notes:document.getElementById('inv-notes').value});
+  D.invoices.unshift({id:id,num:id,client:client,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,lines:items,sub:t.sub,vat:t.vat,disc:t.disc,total:t.total,amount:t.total,status:'unpaid',paid:0,paidAmount:0,tpl:selTpl,notes:document.getElementById('inv-notes').value});
   closeMo('mo-inv');
   syncGrowthComputedData();
   renderInvoices();
@@ -1740,7 +1627,7 @@ window.addExp = function addExp() {
 }
 
 window.openCliMo = function openCliMo(id) {
-  document.getElementById('cli-mo-t').textContent = id ? 'Edit Client' : 'Add a Client';
+  document.getElementById('cli-mo-t').textContent = id ? 'Edit Customer' : 'Add a Customer';
   document.getElementById('cli-id').value = id || '';
   if (id) {
     var c = D.clients.find(function(x) { return x.id === id; });
@@ -1763,50 +1650,7 @@ window.saveClient = function saveClient() {
   else D.clients.push(obj);
   closeMo('mo-client');
   renderClients();
-  showToast('Client saved!', 'ok');
-  saveData();
-}
-
-function recordSalaryPayment(s) {
-  var ref = 'PAY-' + s.id + '-' + monthKey(today());
-  if (!D.txns.some(function(t) { return t.ref === ref; })) {
-    D.txns.unshift({id:'T'+Date.now()+s.id, date:today(), desc:'Salary paid — ' + s.name, type:'out', cat:'Payroll', amount:s.sal, ref:ref});
-    D.exps.unshift({id:'E'+Date.now()+s.id, date:today(), desc:'Salary paid — ' + s.name, vendor:s.name, cat:'Payroll', amount:s.sal, supplierId:''});
-  }
-}
-
-window.paySalary = function paySalary(id) {
-  var s = D.staff.find(function(x) { return x.id === id; });
-  if (s && !s.paid) {
-    s.paid = true;
-    recordSalaryPayment(s);
-    syncGrowthComputedData();
-    renderPayroll();
-    showToast(s.name + ' marked as paid!', 'ok');
-    saveData();
-  }
-}
-
-window.payAll = function payAll() {
-  D.staff.forEach(function(s) {
-    if (!s.paid) recordSalaryPayment(s);
-    s.paid = true;
-  });
-  syncGrowthComputedData();
-  renderPayroll();
-  showToast('All staff marked as paid!', 'ok');
-  saveData();
-}
-
-window.addStaff = function addStaff() {
-  var name = document.getElementById('sf-name').value.trim();
-  var sal = Number(document.getElementById('sf-sal').value);
-  if (!name || !sal) { showToast('Name and salary are required', 'err'); return; }
-  var ini = name.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
-  D.staff.push({id:'S'+Date.now(), name:name, role:document.getElementById('sf-role').value, ini:ini, col:document.getElementById('sf-col').value, sal:sal, paid:false, rev:0, invs:0});
-  closeMo('mo-staff');
-  renderPayroll();
-  showToast('Staff member added!', 'ok');
+  showToast('Customer saved!', 'ok');
   saveData();
 }
 
@@ -1836,6 +1680,8 @@ window.saveSettings = function saveSettings() {
   D.settings.email = document.getElementById('s-email').value;
   D.settings.vat = document.getElementById('s-vat').value;
   D.settings.footer = document.getElementById('s-footer').value;
+  var monthlyReport = document.getElementById('s-monthly-report');
+  if (monthlyReport) D.settings.monthlyReport = monthlyReport.checked;
   var userName = D.settings.user || 'User';
   var ini = userName.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
   document.getElementById('sb-uname').textContent = userName;
@@ -1908,7 +1754,7 @@ async function saveData() {
     batch.set(userRef, { settings: D.settings, nextInvId: D._nextInvId || 1 }, { merge: true });
     await batch.commit();
     // Save collections
-    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, staff: D.staff, automations: D.autos, payables: D.payables };
+    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, payables: D.payables };
     for (var col in cols) {
       var arr = cols[col] || [];
       var colRef = userRef.collection(col);
@@ -1934,8 +1780,8 @@ async function loadData(uid) {
       if (profileData.settings) Object.assign(D.settings, profileData.settings);
       if (profileData.nextInvId) D._nextInvId = profileData.nextInvId;
     }
-    var cols = ['transactions','expenses','invoices','clients','suppliers','staff','automations','payables'];
-    var keys = ['txns','exps','invoices','clients','suppliers','staff','autos','payables'];
+    var cols = ['transactions','expenses','invoices','clients','suppliers','payables'];
+    var keys = ['txns','exps','invoices','clients','suppliers','payables'];
     for (var i = 0; i < cols.length; i++) {
       var snap = await userRef.collection(cols[i]).get();
       if (!snap.empty) {
@@ -1947,6 +1793,12 @@ async function loadData(uid) {
 }
 
 window.clsSignOut = function clsSignOut() { _fauth.signOut().then(function() { window.location.href = 'signin.html'; }); }
+
+window.openGrowthBilling = function openGrowthBilling() {
+  var settingsItem = document.querySelector('.nav-item[data-view="settings"]');
+  if (settingsItem && settingsItem.style.display !== 'none') goTo('settings');
+  else showToast('Billing is available to the owner/admin only.', 'err');
+}
 
 window.showPaywall = function showPaywall(profile) {
   var plan = (profile && profile.plan) || 'growth';
@@ -2018,6 +1870,8 @@ _fauth.onAuthStateChanged(async function(user) {
     document.getElementById('sb-av').textContent = ini;
     var s = D.settings;
     [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
+    var monthlyReport = document.getElementById('s-monthly-report');
+    if (monthlyReport) monthlyReport.checked = !!s.monthlyReport;
     ['t-date','e-date'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = today(); });
     renderDashboard();
     renderGrowthTrialStatus();
@@ -2032,24 +1886,66 @@ _fauth.onAuthStateChanged(async function(user) {
       var daysLeft = Math.max(0, Math.ceil((trialEnd - now) / 86400000));
       var banner = document.createElement('div');
       banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:\'DM Sans\',sans-serif;font-size:.78rem;';
-      banner.innerHTML = '<span>⏳ <strong>' + daysLeft + ' day' + (daysLeft!==1?'s':'') + ' left</strong> on your Growth free trial</span><button onclick="window.goTo(\'settings\')" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">View Billing →</button>';
+      banner.innerHTML = '<span>⏳ <strong>' + daysLeft + ' day' + (daysLeft!==1?'s':'') + ' left</strong> on your Growth free trial</span><button onclick="window.openGrowthBilling()" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">View Billing →</button>';
       document.body.appendChild(banner);
     }
   } catch(e) { console.error('Growth auth guard:', e); }
 });
 
+function currentGrowthView() {
+  var active = document.querySelector('.view.active');
+  return active ? active.id.replace('view-','') : 'dashboard';
+}
+function refreshGrowthSidebarSections() {
+  document.querySelectorAll('.sb-nav .sb-sec').forEach(function(sec) {
+    var node = sec.nextElementSibling;
+    var hasVisibleItem = false;
+    while (node && !node.classList.contains('sb-sec')) {
+      if (node.classList.contains('nav-item') && node.style.display !== 'none') hasVisibleItem = true;
+      node = node.nextElementSibling;
+    }
+    sec.style.display = hasVisibleItem ? '' : 'none';
+  });
+}
+function setGrowthAllowedViews(allowed, fallback) {
+  var set = {};
+  allowed.forEach(function(view) { set[view] = true; });
+  document.querySelectorAll('.nav-item[data-view]').forEach(function(item) {
+    var view = item.getAttribute('data-view');
+    item.style.display = set[view] ? '' : 'none';
+  });
+  refreshGrowthSidebarSections();
+  if (!set[currentGrowthView()]) goTo(fallback || allowed[0] || 'dashboard');
+}
+function disableGrowthEditing(title) {
+  document.querySelectorAll('button[onclick*="add"],button[onclick*="save"],button[onclick*="del"],button[onclick*="openMo"],button[onclick*="openInvMo"],button[onclick*="openPayMo"],button[onclick*="pay"],button[onclick*="export"],button[onclick*="emailMonthlyReport"],button[onclick*="waRemind"]').forEach(function(btn) {
+    btn.disabled = true;
+    btn.style.opacity = '.45';
+    btn.title = title || 'This role is read-only';
+  });
+}
 function enforcePermissions(){
   if(!_profile) return;
-  if(_profile.role==='viewer'){
-    document.querySelectorAll('button[onclick*="add"],button[onclick*="save"],button[onclick*="del"],button[onclick*="openMo"],button[onclick*="openInvMo"],button[onclick*="pay"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
+  var role = String(_profile.role || _profile.accessRole || 'owner').toLowerCase().replace(/\s+/g,'-');
+  document.querySelectorAll('.nav-item[data-view]').forEach(function(item) { item.style.display = ''; });
+
+  if (role === 'viewer' || role === 'view-only' || role === 'readonly' || role === 'read-only') {
+    setGrowthAllowedViews(['dashboard','reports'], 'dashboard');
+    disableGrowthEditing('View Only role: dashboard and reports only');
+    return;
   }
-  if(_profile.role==='accountant'){
-    document.querySelectorAll('[data-view="clients"],[data-view="suppliers"],[data-view="team"],[data-view="settings"]').forEach(function(el){el.style.display='none';});
+
+  if (role === 'staff') {
+    setGrowthAllowedViews(['dashboard','cashflow','expenses','invoices','clients'], 'dashboard');
+    return;
   }
-  if(_profile.role==='staff'){
-    document.querySelectorAll('[data-view]').forEach(function(el){if(el.getAttribute('data-view')!=='payroll')el.style.display='none';});
-    var payroll=document.querySelector('[data-view="payroll"]'); if(payroll) payroll.click();
+
+  if (role === 'accountant') {
+    setGrowthAllowedViews(['dashboard','cashflow','expenses','invoices','clients','debt','suppliers','reports','insights'], 'dashboard');
+    return;
   }
+
+  refreshGrowthSidebarSections();
 }
 </script>
 </body>

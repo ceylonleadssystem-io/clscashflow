@@ -165,8 +165,13 @@ tr:hover td{background:var(--bg3)}
 .tpl-pick-card{border:2px solid var(--border);padding:.75rem .65rem;cursor:pointer;transition:all .2s;text-align:center;background:var(--bg)}
 .tpl-pick-card:hover{border-color:var(--border-acc)}
 .tpl-pick-card.selected{border-color:var(--black);background:var(--white)}
+.tpl-picker.locked .tpl-pick-card{cursor:default;opacity:.45}
+.tpl-picker.locked .tpl-pick-card:hover{border-color:var(--border)}
+.tpl-picker.locked .tpl-pick-card.selected{opacity:1;border-color:var(--black);background:var(--white)}
 .tpl-pick-preview{height:48px;width:100%;margin-bottom:.4rem;overflow:hidden;border:1px solid rgba(0,0,0,.07)}
 .tpl-pick-name{font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--black);font-weight:600}
+.template-helper{font-size:.72rem;color:var(--muted);line-height:1.6;margin:.35rem 0 .75rem}
+.template-helper strong{color:var(--black)}
 
 
 /* Logo alignment buttons */
@@ -642,6 +647,23 @@ document.addEventListener('click',function(e){
             <button class="size-btn active" data-size="M" data-cls-fn="setLogoSize" data-cls-arg="M" data-cls-this="1">Medium</button>
             <button class="size-btn" data-size="L" data-cls-fn="setLogoSize" data-cls-arg="L" data-cls-this="1">Large</button>
           </div>
+          <div class="f-section" style="margin-top:1rem">Default Invoice Template</div>
+          <input type="hidden" id="set-default-tpl" value="0">
+          <div class="template-helper">All invoice PDFs, email previews, WhatsApp PDF previews, and newly saved invoices use this one template.</div>
+          <div class="tpl-picker" id="settings-template-picker">
+            <div class="tpl-pick-card" data-tpl-card="settings" data-tpl="0" data-cls-fn="selectDefaultInvoiceTemplate" data-cls-arg="0" data-cls-this="1">
+              <div class="tpl-pick-preview"><div style="background:#B8922A;height:14px;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
+              <div class="tpl-pick-name">Brand Gold</div>
+            </div>
+            <div class="tpl-pick-card" data-tpl-card="settings" data-tpl="1" data-cls-fn="selectDefaultInvoiceTemplate" data-cls-arg="1" data-cls-this="1">
+              <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #4F46E5;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
+              <div class="tpl-pick-name">Indigo Modern</div>
+            </div>
+            <div class="tpl-pick-card" data-tpl-card="settings" data-tpl="2" data-cls-fn="selectDefaultInvoiceTemplate" data-cls-arg="2" data-cls-this="1">
+              <div class="tpl-pick-preview"><div style="border-top:3px solid #1F2937;padding-top:2px;width:100%"></div><div style="padding:2px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
+              <div class="tpl-pick-name">Charcoal Mono</div>
+            </div>
+          </div>
           <div class="f-section">Business Details</div>
           <div class="f-row">
             <div class="f-group"><label>Business Name *</label><input class="f-input" id="set-bizname" placeholder="Your Business Name"></div>
@@ -857,17 +879,18 @@ document.addEventListener('click',function(e){
         </div>
         <button class="btn-act-outline" style="flex-shrink:0;padding:.65rem 1rem;height:42px" data-cls-fn="closeAndOpenClient">+ New Customer</button>
       </div>
-      <div class="f-section" style="margin-top:0">Invoice Template (3 available on Starter)</div>
-      <div class="tpl-picker">
-        <div class="tpl-pick-card selected" onclick="selectInvTpl(0,this)">
+      <div class="f-section" style="margin-top:0">Invoice Template</div>
+      <div class="template-helper">Using Settings default: <strong id="inv-default-tpl-name">Brand Gold</strong>. Change it in Settings to apply one template to all invoices.</div>
+      <div class="tpl-picker locked" id="invoice-template-preview">
+        <div class="tpl-pick-card selected" data-tpl-card="invoice" data-tpl="0">
           <div class="tpl-pick-preview"><div style="background:#B8922A;height:14px;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
           <div class="tpl-pick-name">Brand Gold</div>
         </div>
-        <div class="tpl-pick-card" onclick="selectInvTpl(1,this)">
+        <div class="tpl-pick-card" data-tpl-card="invoice" data-tpl="1">
           <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #4F46E5;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
           <div class="tpl-pick-name">Indigo Modern</div>
         </div>
-        <div class="tpl-pick-card" onclick="selectInvTpl(2,this)">
+        <div class="tpl-pick-card" data-tpl-card="invoice" data-tpl="2">
           <div class="tpl-pick-preview"><div style="border-top:3px solid #1F2937;padding-top:2px;width:100%"></div><div style="padding:2px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
           <div class="tpl-pick-name">Charcoal Mono</div>
         </div>
@@ -991,7 +1014,7 @@ let _trialEnd = null;
 let _isPaid = false;
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',defaultTpl:0,vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -1207,7 +1230,7 @@ const tourSteps=[
   {view:'reports',title:'Reports',body:'<p>Reports are based only on invoices and payments.</p><div class="tour-list"><div><strong>Review:</strong> invoice summary, paid vs unpaid, outstanding, overdue, and customer-wise totals.</div><div><strong>Export:</strong> download a clean invoice report PDF.</div></div>'},
   {view:'team',title:'Team Access',body:'<p>Starter team access is simple and limited to two users.</p><div class="tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> create invoices, manage customers, and mark payments.</div><div><strong>Accountant:</strong> dashboard, invoices, customers, and reports only.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
   {view:'backlog',title:'Edit Backlog',body:'<p>Admins can review invoice, customer, and payment changes.</p><div class="tour-list"><div><strong>Audit fields:</strong> date, edited item, previous value, new value, edited by, and reason.</div></div>'},
-  {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, footer message, logo alignment, and logo size.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
+  {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, default invoice template, footer message, logo alignment, and logo size.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
 ];
 let tourIndex=0;
 function tourStorageKey(){return 'cls-starter-tour-seen-'+(_signedInUid||_uid||'local');}
@@ -1647,15 +1670,39 @@ function resetInvoiceModal(){
   document.getElementById('inv-vat').checked=false;
   var vr=document.getElementById('inv-vatrate');if(vr)vr.value=(DB.settings.vatRate!=null?DB.settings.vatRate:15);
   const cs=document.getElementById('i-client-sel');if(cs)cs.value='';
-  setInvoiceTemplate(0);
+  setInvoiceTemplate(getDefaultInvoiceTemplate());
   document.getElementById('li-body').innerHTML=`<tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>`;
   calcInv();
 }
-function setInvoiceTemplate(idx){
-  selectedTpl=Number(idx)||0;
-  document.querySelectorAll('.tpl-pick-card').forEach(function(c,i){c.classList.toggle('selected',i===selectedTpl);});
+function normalizeTemplateIdx(idx){
+  const n=parseInt(idx,10);
+  return Number.isFinite(n)&&n>=0&&n<3?n:0;
 }
-window.selectInvTpl = function selectInvTpl(idx,el){setInvoiceTemplate(idx);if(el){document.querySelectorAll('.tpl-pick-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');}}
+function getDefaultInvoiceTemplate(){
+  return normalizeTemplateIdx(DB.settings&&DB.settings.defaultTpl);
+}
+function templateName(idx){
+  return (tplDefs[normalizeTemplateIdx(idx)]||tplDefs[0]).name;
+}
+function syncTemplatePickers(idx){
+  const tpl=normalizeTemplateIdx(idx);
+  selectedTpl=tpl;
+  document.querySelectorAll('[data-tpl-card]').forEach(function(card){
+    card.classList.toggle('selected',normalizeTemplateIdx(card.getAttribute('data-tpl'))===tpl);
+  });
+  const modalName=document.getElementById('inv-default-tpl-name');
+  if(modalName)modalName.textContent=templateName(tpl);
+}
+function setInvoiceTemplate(idx){
+  syncTemplatePickers(idx);
+}
+window.selectInvTpl = function selectInvTpl(){setInvoiceTemplate(getDefaultInvoiceTemplate());}
+window.selectDefaultInvoiceTemplate = function selectDefaultInvoiceTemplate(idx){
+  const tpl=normalizeTemplateIdx(idx);
+  const input=document.getElementById('set-default-tpl');
+  if(input)input.value=String(tpl);
+  syncTemplatePickers(tpl);
+}
 window.addLi = function addLi(){const tbody=document.getElementById('li-body');const tr=document.createElement('tr');tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;tbody.appendChild(tr);}
 window.autoGrowLi = function autoGrowLi(el){el.style.height='auto';el.style.height=(el.scrollHeight+2)+'px';}
 window.rmLi = function rmLi(btn){if(document.querySelectorAll('#li-body tr').length>1){btn.closest('tr').remove();calcInv();}}
@@ -1684,7 +1731,7 @@ function getInvData(){
   const cur=document.getElementById('i-cur').value;let sub=0;const lines=[];
   document.querySelectorAll('#li-body tr').forEach(row=>{const dEl=row.querySelector('.li-desc');const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const desc=(dEl&&dEl.value)||'';const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');if(desc||price>0){lines.push({desc,qty,price,total:qty*price});sub+=qty*price;}});
   const disc=(parseFloat(document.getElementById('inv-disc').value)||0);const afterDisc=sub*(1-disc/100);const vrate=parseFloat(document.getElementById('inv-vatrate').value)||0;const vatApplied=document.getElementById('inv-vat').checked;const vat=vatApplied?afterDisc*vrate/100:0;
-  return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vatApplied?vrate:0,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:selectedTpl};
+  return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vatApplied?vrate:0,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:getDefaultInvoiceTemplate()};
 }
 window.saveInvoice = function saveInvoice(){
   const d=getInvData();if(!d.client){alert('Please enter a customer name.');return;}
@@ -1764,7 +1811,7 @@ window.openInvoiceEditModal=function openInvoiceEditModal(num){
   document.getElementById('inv-vat').checked=Number(inv.vat||0)>0;
   document.getElementById('inv-vatrate').value=inv.vatRate||DB.settings.vatRate||15;
   document.getElementById('i-notes').value=inv.notes||'';
-  setInvoiceTemplate(inv.tpl||0);
+  setInvoiceTemplate(getDefaultInvoiceTemplate());
   setInvoiceLines(inv.lines&&inv.lines.length?inv.lines:[{desc:'Invoice total',qty:1,price:inv.amount||0,total:inv.amount||0}]);
   openModal('inv-modal');
 };
@@ -1985,6 +2032,9 @@ function loadSettings(){
   if(s.logo){const img=document.getElementById('settings-logo-preview');img.src=s.logo;img.style.display='block';document.getElementById('logo-upload-placeholder').style.display='none';}
   var vr=document.getElementById('set-vatrate');if(vr)vr.value=(s.vatRate!=null?s.vatRate:15);
   ['ejskey','ejsservice','ejstemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('ejskey','ejsKey').replace('ejsservice','ejsService').replace('ejstemplate','ejsTemplate')]||'';});
+  var tpl=normalizeTemplateIdx(s.defaultTpl);
+  var tplInput=document.getElementById('set-default-tpl');if(tplInput)tplInput.value=String(tpl);
+  syncTemplatePickers(tpl);
   loadLogoAlign();
   loadLogoSize();
   renderTrialStatus();
@@ -2005,7 +2055,10 @@ window.saveSettings = function saveSettings(){
   DB.settings.u2=document.getElementById('set-u2').value.trim();
   DB.settings.logoAlign=(document.querySelector('.align-btn.active')?document.querySelector('.align-btn.active').dataset.align:null)||'left';
   DB.settings.logoSize=(document.querySelector('.size-btn.active')?document.querySelector('.size-btn.active').dataset.size:null)||'M';
-  saveDB();applySettings();alert('✓ Settings saved successfully.');
+  var tplInput=document.getElementById('set-default-tpl');DB.settings.defaultTpl=normalizeTemplateIdx(tplInput?tplInput.value:DB.settings.defaultTpl);
+  setInvoiceTemplate(DB.settings.defaultTpl);
+  DB.invoices.forEach(function(inv){inv.tpl=DB.settings.defaultTpl;});
+  saveDB();applySettings();alert('✓ Settings saved successfully. All invoices will use the '+templateName(DB.settings.defaultTpl)+' template.');
 }
 function applySettings(){
   const signedInEmail=(_profile&&_profile.email)||(_auth.currentUser&&_auth.currentUser.email)||'';
@@ -2037,7 +2090,7 @@ const tplDefs=[
 function buildInvoiceEmailHTML(inv){
   const s=DB.settings;
   const cur=inv.cur||'LKR';
-  const ac=(tplDefs[inv.tpl||0]||tplDefs[0]).accent||'#B8922A';
+  const ac=(tplDefs[getDefaultInvoiceTemplate()]||tplDefs[0]).accent||'#B8922A';
   const m=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const escBr=t=>esc(t).replace(/\n/g,'<br>');
@@ -2136,6 +2189,7 @@ function buildInvoiceEmailHTML(inv){
   +'</div></div>';
 }
 function buildInvPrintHTML(inv,tplIdx){
+  tplIdx=getDefaultInvoiceTemplate();
   const t=tplDefs[tplIdx]||tplDefs[0];const s=DB.settings;const ac=t.accent;
   // Logo alignment + size (S / M / L)
   const align=s.logoAlign||'left';
@@ -2235,7 +2289,7 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
 window.viewPrintInvoice = function viewPrintInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
   const w=window.open('','_blank','width=900,height=750');
-  const printHTML=buildInvPrintHTML(inv,inv.tpl||0);
+  const printHTML=buildInvPrintHTML(inv,getDefaultInvoiceTemplate());
   // Add a download helper bar at the top of the print window
   const downloadBar=`<style>@media print{#dlbar{display:none!important}}</style><div id="dlbar" style="position:fixed;top:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:9999;font-family:Arial,Helvetica,sans-serif;font-size:.82rem">
     <span>📄 ${inv.num} — ${inv.client} — LKR ${inv.amount.toLocaleString()}</span>
@@ -2248,7 +2302,7 @@ window.viewPrintInvoice = function viewPrintInvoice(num){
   const finalHTML=printHTML.slice(0,bodyPos+6)+downloadBar+printHTML.slice(bodyPos+6);
   w.document.write(finalHTML);w.document.close();
 }
-window.printInvoiceFromModal = function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a customer name first.');return;}const fakeInv={num:'PREVIEW',client:d.client,cemail:d.cemail,caddr:d.caddr,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,selectedTpl));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
+window.printInvoiceFromModal = function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a customer name first.');return;}const fakeInv={num:'PREVIEW',client:d.client,cemail:d.cemail,caddr:d.caddr,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,getDefaultInvoiceTemplate()));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
 
 
 // ════════════════════════════════
@@ -2488,7 +2542,7 @@ window.emailInvoice = async function emailInvoice(num){
 
   // ── Path 2: built-in Netlify SMTP function (fallback) ──
   if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
-  const accent=(tplDefs[inv.tpl||0]||tplDefs[0]).accent;
+  const accent=(tplDefs[getDefaultInvoiceTemplate()]||tplDefs[0]).accent;
   try{
     const res=await fetch('/.netlify/functions/send-invoice',{
       method:'POST',headers:{'Content-Type':'application/json'},
@@ -2753,7 +2807,7 @@ window.waInvoiceWithPDF=function(num){
   var s=DB.settings;
   var biz=s.bizName||'My Business';
   var cur=inv.cur||'LKR';
-  var printHTML=buildInvPrintHTML(inv,inv.tpl||0);
+  var printHTML=buildInvPrintHTML(inv,getDefaultInvoiceTemplate());
   var w=window.open('','_blank','width=900,height=760');
   if(w){
     var bar=`<style>@media print{#dlbar{display:none!important}}</style><div id="dlbar" style="position:fixed;top:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;z-index:9999;font-family:Arial,Helvetica,sans-serif;font-size:.82rem">
