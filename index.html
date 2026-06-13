@@ -40,7 +40,8 @@ a{color:inherit}
 .nav-links{display:flex;align-items:center;gap:30px}
 .nav-links a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s ease}
 .nav-links a:hover{color:var(--brown)}
-.nav-cta{justify-self:end}
+.nav-cta{justify-self:end;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap}
+.nav-cta .pill{padding:10px 16px;font-size:13px}
 
 /* Hero */
 .hero{padding:96px 0 74px}
@@ -100,6 +101,10 @@ a{color:inherit}
 .featured p{color:var(--cream)}
 .price-card ul{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:10px;color:var(--muted);font-size:14px}
 .featured ul{color:var(--cream)}
+.price-actions{margin-top:28px;display:flex}
+.price-actions .pill{width:100%;padding:12px 18px;font-size:13px}
+.featured .pill.secondary{border-color:var(--gold);color:var(--card)}
+.featured .pill.secondary:hover{background:color-mix(in srgb,var(--cream) 10%,transparent)}
 
 /* Benefits */
 .benefits{padding:96px 0}
@@ -153,7 +158,8 @@ a{color:inherit}
   .site-nav{position:relative}
   .nav-inner{height:auto;padding:18px 0;gap:14px;display:flex;justify-content:space-between;align-items:center}
   .wordmark{font-size:26px}
-  .nav-cta{display:none}
+  .nav-cta{display:flex;justify-content:flex-start;width:100%}
+  .nav-cta .pill{padding:9px 13px;font-size:12px}
   .hero h1{font-size:clamp(52px,18vw,76px)}
   .hero-copy{min-width:0}
   .hero-sub{font-size:17px;max-width:320px;overflow-wrap:break-word}
@@ -184,9 +190,14 @@ a{color:inherit}
         <a href="#benefits">Benefits</a>
         <a href="#pricing">Pricing</a>
         <a href="#how-it-works">How it works</a>
+        <a href="starter.html">Demo</a>
         <a href="#contact">Contact</a>
       </div>
-      <div class="nav-cta"><a class="pill" href="starter.html">Try the demo ↗</a></div>
+      <div class="nav-cta">
+        <a class="pill secondary" href="signin.html">Sign in</a>
+        <a class="pill secondary" href="onboarding.html">Sign up</a>
+        <a class="pill" href="onboarding.html">Start free trial ↗</a>
+      </div>
     </div>
   </nav>
 
@@ -290,6 +301,7 @@ a{color:inherit}
               <li>Payment tracking</li>
               <li>Reports and edit backlog</li>
             </ul>
+            <div class="price-actions"><a class="pill secondary" href="onboarding.html?plan=starter">Start free trial ↗</a></div>
           </article>
           <article class="price-card featured">
             <h3>Growth</h3>
@@ -300,6 +312,7 @@ a{color:inherit}
               <li>Expenses and suppliers</li>
               <li>Basic business insights</li>
             </ul>
+            <div class="price-actions"><a class="pill" href="onboarding.html?plan=growth">Start free trial ↗</a></div>
           </article>
           <article class="price-card">
             <h3>Premium</h3>
@@ -310,6 +323,7 @@ a{color:inherit}
               <li>Advanced analytics</li>
               <li>Premium onboarding support</li>
             </ul>
+            <div class="price-actions"><a class="pill secondary" href="onboarding.html?plan=premium">Start free trial ↗</a></div>
           </article>
         </div>
       </div>
