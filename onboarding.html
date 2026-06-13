@@ -106,6 +106,14 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .tier-name{font-family:var(--font-d);font-size:1.2rem;font-weight:400;color:var(--text);margin-bottom:.2rem}
 .tier-price{font-size:.72rem;color:var(--gold);margin-bottom:.5rem;font-weight:600}
 .tier-features{font-size:.68rem;color:var(--muted);line-height:1.7;text-align:left}
+.tier-card.recommended{box-shadow:0 0 0 2px rgba(184,146,42,.18)}
+.tier-card.recommended::after{content:'Suggested';position:absolute;right:.65rem;top:.65rem;font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.plan-reco{background:var(--bg3);border:1px solid var(--border2);border-left:3px solid var(--gold);padding:1rem 1.1rem;margin:.25rem 0 1rem}
+.plan-reco-label{font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.35rem}
+.plan-reco-title{font-family:var(--font-d);font-size:1.35rem;color:var(--text);line-height:1.2}
+.plan-reco-copy{font-size:.76rem;color:var(--muted);line-height:1.55;margin-top:.25rem}
+.plan-price-line{font-size:.72rem;color:var(--gold);font-weight:700;margin-top:.4rem}
+.mini-note{font-size:.72rem;color:var(--muted);line-height:1.5;margin:-.25rem 0 1rem}
 
 /* Template grid */
 .tpl-grid-wrap{max-height:200px;overflow-y:auto;border:1px solid var(--border);padding:.5rem;margin-bottom:.85rem;background:var(--bg3)}
@@ -263,33 +271,21 @@ firebase.initializeApp(firebaseConfig);
       </div>
       <div class="ob-step-item" data-step="2">
         <div class="ob-step-dot">2</div>
-        <div><div class="ob-step-title">Your Business</div><div class="ob-step-sub">Type, size & plan</div></div>
+        <div><div class="ob-step-title">Primary Use</div><div class="ob-step-sub">Plan finder</div></div>
       </div>
       <div class="ob-step-item" data-step="3">
         <div class="ob-step-dot">3</div>
-        <div><div class="ob-step-title">Setup Checklist</div><div class="ob-step-sub">Choose optional add-ons</div></div>
+        <div><div class="ob-step-title">Business Basics</div><div class="ob-step-sub">Invoice details</div></div>
       </div>
       <div class="ob-step-item" data-step="4">
         <div class="ob-step-dot">4</div>
-        <div><div class="ob-step-title">Business Profile</div><div class="ob-step-sub">Optional invoice details</div></div>
-      </div>
-      <div class="ob-step-item" data-step="5">
-        <div class="ob-step-dot">5</div>
-        <div><div class="ob-step-title">Team & Payroll</div><div class="ob-step-sub">Optional staff setup</div></div>
-      </div>
-      <div class="ob-step-item" data-step="6">
-        <div class="ob-step-dot">6</div>
-        <div><div class="ob-step-title">Notifications</div><div class="ob-step-sub">Optional reminders</div></div>
-      </div>
-      <div class="ob-step-item" data-step="7">
-        <div class="ob-step-dot">7</div>
         <div><div class="ob-step-title">All Set</div><div class="ob-step-sub">Ready to launch</div></div>
       </div>
     </div>
 
     <div class="ob-progress-wrap">
-      <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress" style="width:14.3%"></div></div>
-      <div class="ob-progress-text" id="ob-progress-text">Step 1 of 7</div>
+      <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress" style="width:25%"></div></div>
+      <div class="ob-progress-text" id="ob-progress-text">Step 1 of 4</div>
     </div>
   </div>
 
@@ -302,7 +298,7 @@ firebase.initializeApp(firebaseConfig);
         <p class="ob-eyebrow">15-day free trial</p>
         <h1 class="ob-title">Create your <em>account</em>.</h1>
         <div class="ob-rule"></div>
-        <p class="ob-sub">Only the basics are required. You can add business profile, payroll, and notification details now or skip them.</p>
+        <p class="ob-sub">Only the essentials are required. Next, choose what you need first and we will suggest the best plan while keeping every package open for you.</p>
         <div class="ob-input-row">
           <div class="ob-field"><label>First Name *</label><input class="ob-input" id="s1-fname" placeholder="Your first name"></div>
           <div class="ob-field"><label>Last Name *</label><input class="ob-input" id="s1-lname" placeholder="Your last name"></div>
@@ -316,60 +312,46 @@ firebase.initializeApp(firebaseConfig);
         <div class="ob-nav"><span></span><button class="btn-next" onclick="window.nextStep(1)">Continue →</button></div>
       </div>
 
-      <!-- ═══ STEP 2: BUSINESS ═══ -->
+      <!-- ═══ STEP 2: PRIMARY USE + PLAN ═══ -->
       <div class="ob-card" id="step-2">
-        <p class="ob-eyebrow">Business basics</p>
-        <h1 class="ob-title">Tell us about your <em>business</em>.</h1>
+        <p class="ob-eyebrow">Primary use</p>
+        <h1 class="ob-title">What do you need <em>first</em>?</h1>
         <div class="ob-rule"></div>
-        <div class="ob-input-row">
-          <div class="ob-field"><label>Business Name *</label><input class="ob-input" id="s2-bizname" placeholder="Your business name"></div>
-          <div class="ob-field"><label>Industry *</label>
-            <select class="ob-input ob-select" id="s2-industry">
-              <option value="">Select...</option>
-              <option>Retail</option><option>Services</option><option>Food & Bev</option>
-              <option>Restaurant / Café / F&B</option><option>Hotel / Villa / Hospitality</option>
-              <option>Logistics / Transport</option>
-              <option>Construction / Contractor</option><option>Digital Agency / Freelancer</option>
-              <option>Multi-branch Operation</option><option>Manufacturing</option><option>Other</option>
-            </select>
-          </div>
-        </div>
-        <div class="ob-field" style="margin-bottom:.6rem"><label>Free Trial Plan *</label></div>
-        <div class="tier-cards">
-          <div class="tier-card" onclick="window.selectTier('starter',this)">
-            <div class="tier-name">Starter</div><div class="tier-price">15-day trial</div>
-            <div class="tier-features">• Dashboard & Cashflow<br>• Invoices (3 templates)<br>• Up to 2 users</div>
-          </div>
-          <div class="tier-card" onclick="window.selectTier('growth',this)">
-            <div class="tier-badge">Most Popular</div>
-            <div class="tier-name">Growth</div><div class="tier-price">15-day trial</div>
-            <div class="tier-features">• Everything in Starter<br>• Payroll & Debt (10 templates)<br>• Up to 8 users</div>
-          </div>
-          <div class="tier-card" onclick="window.selectTier('premium',this)">
-            <div class="tier-name">Premium</div><div class="tier-price">15-day trial</div>
-            <div class="tier-features">• Everything in Growth<br>• AI & Multi-branch (30 templates)<br>• Unlimited users</div>
-          </div>
-        </div>
-        <div class="ob-field" style="margin-bottom:.5rem"><label>Primary use cases</label></div>
+        <p class="ob-sub">Pick your main use. We will recommend the cleanest plan for that work, but you can still choose Starter, Growth, or Premium yourself.</p>
+        <div class="ob-field" style="margin-bottom:.5rem"><label>Primary use *</label></div>
         <div class="ob-choices cols-2" id="use-cases">
-          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track Cash In & Out</div><div class="ob-choice-desc">Daily cashflow visibility</div></div></button>
-          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Invoice Clients</div><div class="ob-choice-desc">Create & send invoices</div></div></button>
-          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">👥</span><div><div class="ob-choice-label">Manage Payroll</div><div class="ob-choice-desc">Staff salaries & EPF</div></div></button>
-          <button class="ob-choice" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Business Reports</div><div class="ob-choice-desc">Analytics & insights</div></div></button>
+          <button class="ob-choice" data-plan="starter" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Customers, invoices, payment status, reports.</div></div></button>
+          <button class="ob-choice" data-plan="growth" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track money in and out</div><div class="ob-choice-desc">Cashflow, income, expenses, suppliers, operations.</div></div></button>
+          <button class="ob-choice" data-plan="growth" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Manage reports and outstanding money</div><div class="ob-choice-desc">Who owes me, business reports, basic insights.</div></div></button>
+          <button class="ob-choice" data-plan="premium" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">⚙️</span><div><div class="ob-choice-label">Need payroll, automation, or advanced control</div><div class="ob-choice-desc">Premium tools for deeper operations and analytics.</div></div></button>
         </div>
-        <div style="background:var(--bg3);border:1px solid var(--border);padding:1rem;margin-bottom:1rem">
-          <div class="notif-section-title" style="margin-bottom:.8rem">First Client Optional</div>
-          <div class="ob-input-row">
-            <div class="ob-field"><label>Client Name</label><input class="ob-input" id="s2-client-name" placeholder="Client name"></div>
-            <div class="ob-field"><label>Client Phone</label><input class="ob-input" id="s2-client-phone" placeholder="+94 77 000 0000"></div>
+        <div class="plan-reco" id="plan-suggestion">
+          <div class="plan-reco-label">Suggested plan</div>
+          <div class="plan-reco-title" id="plan-suggestion-title">Choose a primary use</div>
+          <div class="plan-reco-copy" id="plan-suggestion-copy">Once you pick what you need first, we will suggest the best fit. You can still choose any package.</div>
+          <div class="plan-price-line" id="plan-suggestion-price">Starter LKR 5,500 · Growth LKR 12,500 · Premium LKR 18,500</div>
+        </div>
+        <div class="ob-field" style="margin-bottom:.6rem"><label>Your package choice *</label></div>
+        <div class="tier-cards">
+          <div class="tier-card" data-tier="starter" onclick="window.selectTier('starter',this,true)">
+            <div class="tier-name">Starter</div><div class="tier-price">LKR 5,500 / month</div>
+            <div class="tier-features">• Invoice control system<br>• Customers & payments<br>• Reports, edit backlog<br>• Up to 2 users</div>
           </div>
-          <div class="ob-field" style="margin-bottom:0"><label>Client Email</label><input class="ob-input" type="email" id="s2-client-email" placeholder="accounts@client.lk"></div>
+          <div class="tier-card" data-tier="growth" onclick="window.selectTier('growth',this,true)">
+            <div class="tier-badge">Most Popular</div>
+            <div class="tier-name">Growth</div><div class="tier-price">LKR 12,500 / month</div>
+            <div class="tier-features">• Cashflow operations<br>• Expenses & suppliers<br>• Who owes me<br>• Up to 8 users</div>
+          </div>
+          <div class="tier-card" data-tier="premium" onclick="window.selectTier('premium',this,true)">
+            <div class="tier-name">Premium</div><div class="tier-price">LKR 18,500 / month</div>
+            <div class="tier-features">• Payroll & automation<br>• Advanced analytics<br>• Deeper controls<br>• Priority support</div>
+          </div>
         </div>
         <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(2)">← Back</button><button class="btn-next" onclick="window.nextStep(2)">Continue →</button></div>
       </div>
 
-      <!-- ═══ STEP 3: SETUP CHECKLIST ═══ -->
-      <div class="ob-card" id="step-3">
+      <!-- ═══ LEGACY OPTIONAL SETUP: HIDDEN IN QUICK ONBOARDING ═══ -->
+      <div class="ob-card" id="legacy-step-setup" style="display:none">
         <p class="ob-eyebrow">Optional setup</p>
         <h1 class="ob-title">Choose what to add <em>now</em>.</h1>
         <div class="ob-rule"></div>
@@ -392,13 +374,25 @@ firebase.initializeApp(firebaseConfig);
         <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(3)">← Back</button><button class="btn-next" onclick="window.nextStep(3)">Continue →</button></div>
       </div>
 
-      <!-- ═══ STEP 4: BUSINESS PROFILE ═══ -->
-      <div class="ob-card" id="step-4">
+      <!-- ═══ STEP 3: BUSINESS BASICS ═══ -->
+      <div class="ob-card" id="step-3">
         <div class="ob-card-scroll">
-        <p class="ob-eyebrow">Optional · Business profile</p>
-        <h1 class="ob-title">Invoice identity.</h1>
+        <p class="ob-eyebrow">Business basics</p>
+        <h1 class="ob-title">Set your invoice <em>identity</em>.</h1>
         <div class="ob-rule"></div>
-        <p class="ob-sub">Add only what you have ready. Missing details can be completed later in Settings.</p>
+        <p class="ob-sub">Add the business details needed for your first invoices. Anything optional can be completed later in Settings.</p>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Business Name *</label><input class="ob-input" id="s4-bizname" placeholder="Your business name"></div>
+          <div class="ob-field"><label>Industry</label>
+            <select class="ob-input ob-select" id="s3-industry">
+              <option value="">Select if useful...</option>
+              <option>Retail</option><option>Services</option><option>Food & Bev</option>
+              <option>Restaurant / Café / F&B</option><option>Hotel / Villa / Hospitality</option>
+              <option>Logistics / Transport</option><option>Construction / Contractor</option>
+              <option>Digital Agency / Freelancer</option><option>Manufacturing</option><option>Other</option>
+            </select>
+          </div>
+        </div>
         <div class="logo-upload-area" onclick="document.getElementById('logo-file').click()">
           <img class="logo-preview" id="logo-preview-img" style="display:none" src="" alt="Logo">
           <div id="logo-placeholder"><div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
@@ -408,29 +402,34 @@ firebase.initializeApp(firebaseConfig);
           <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewLogo(this)">
         </div>
         <div class="ob-input-row">
-          <div class="ob-field"><label>Business Name on Invoices</label><input class="ob-input" id="s4-bizname" placeholder="Your business name"></div>
           <div class="ob-field"><label>Business Reg. No.</label><input class="ob-input" id="s4-regno" placeholder="PV 00000 (optional)"></div>
+          <div class="ob-field"><label>Invoice Email</label><input class="ob-input" type="email" id="s4-email" placeholder="invoices@yourbusiness.com"></div>
         </div>
         <div class="ob-field"><label>Business Address</label><input class="ob-input" id="s4-addr" placeholder="Business address"></div>
+        <div style="background:var(--bg3);border:1px solid var(--border);padding:1rem;margin:1rem 0">
+          <div class="notif-section-title" style="margin-bottom:.8rem">First Customer Optional</div>
+          <div class="ob-input-row">
+            <div class="ob-field"><label>Customer Name</label><input class="ob-input" id="s2-client-name" placeholder="Customer name"></div>
+            <div class="ob-field"><label>Customer Phone / WhatsApp</label><input class="ob-input" id="s2-client-phone" placeholder="+94 77 000 0000"></div>
+          </div>
+          <div class="ob-field" style="margin-bottom:0"><label>Customer Email</label><input class="ob-input" type="email" id="s2-client-email" placeholder="accounts@customer.lk"></div>
+        </div>
         <div class="ob-input-row">
-          <div class="ob-field"><label>Invoice Email</label><input class="ob-input" type="email" id="s4-email" placeholder="invoices@yourbusiness.com"></div>
           <div class="ob-field"><label>VAT / Tax Number</label><input class="ob-input" id="s4-vat" placeholder="Optional"></div>
+          <div class="ob-field"><label>Default VAT / Tax Rate</label><input class="ob-input" type="number" min="0" max="100" id="s4-taxrate" placeholder="15"></div>
         </div>
         <div class="ob-field"><label>Invoice Footer Message</label><input class="ob-input" id="s4-footer" placeholder="Thank you for your business. Payment due within 30 days."></div>
         <div class="ob-field" style="margin-top:.75rem"><label id="tpl-label">Invoice Template</label></div>
         <div class="tpl-grid-wrap"><div class="tpl-grid" id="tpl-grid"></div></div>
         </div>
         <div class="ob-nav">
-          <button class="btn-back" onclick="window.prevStep(4)">← Back</button>
-          <div style="display:flex;gap:.6rem;align-items:center">
-            <button class="btn-skip" onclick="window.skipOptional(4)">Skip</button>
-            <button class="btn-next" onclick="window.nextStep(4)">Continue →</button>
-          </div>
+          <button class="btn-back" onclick="window.prevStep(3)">← Back</button>
+          <button class="btn-next" onclick="window.nextStep(3)">Finish Setup →</button>
         </div>
       </div>
 
-      <!-- ═══ STEP 5: TEAM & PAYROLL ═══ -->
-      <div class="ob-card" id="step-5">
+      <!-- ═══ LEGACY TEAM & PAYROLL: HIDDEN IN QUICK ONBOARDING ═══ -->
+      <div class="ob-card" id="legacy-step-team" style="display:none">
         <div class="ob-card-scroll">
         <p class="ob-eyebrow">Optional · Team & payroll</p>
         <h1 class="ob-title">Team & payroll.</h1>
@@ -484,8 +483,8 @@ firebase.initializeApp(firebaseConfig);
         </div>
       </div>
 
-      <!-- ═══ STEP 6: NOTIFICATIONS ═══ -->
-      <div class="ob-card" id="step-6">
+      <!-- ═══ LEGACY NOTIFICATIONS: HIDDEN IN QUICK ONBOARDING ═══ -->
+      <div class="ob-card" id="legacy-step-notifications" style="display:none">
         <div class="ob-card-scroll">
         <p class="ob-eyebrow">Optional · Notifications</p>
         <h1 class="ob-title">Notifications.</h1>
@@ -586,8 +585,8 @@ firebase.initializeApp(firebaseConfig);
         </div>
       </div>
 
-      <!-- ═══ STEP 7: SUCCESS ═══ -->
-      <div class="ob-card" id="step-7">
+      <!-- ═══ STEP 4: SUCCESS ═══ -->
+      <div class="ob-card" id="step-4">
         <div class="ob-success">
           <div class="ob-success-ring">✓</div>
           <p class="ob-eyebrow" style="text-align:center">Setup Complete</p>
@@ -598,17 +597,16 @@ firebase.initializeApp(firebaseConfig);
             <div class="ob-feature-item">Account created & securely saved</div>
             <div class="ob-feature-item" id="fl-profile">Business basics saved</div>
             <div class="ob-feature-item" id="fl-template">Invoice template selected</div>
-            <div class="ob-feature-item" id="fl-payroll" style="display:none">Payroll set up with EPF/ETF calculations</div>
-            <div class="ob-feature-item" id="fl-notif" style="display:none">Notifications configured</div>
+            <div class="ob-feature-item">Plan recommendation reviewed</div>
           </div>
           <div class="summary-box">
             <div class="summary-box-label">Account Summary</div>
             <div id="account-summary"></div>
           </div>
           <div class="tour-card-grid">
-            <div class="tour-card"><div class="tour-card-icon">💰</div><div class="tour-card-title">Add Income</div><div class="tour-card-text">Start with daily sales, service fees, deposits, and invoice payments.</div></div>
-            <div class="tour-card"><div class="tour-card-icon">🧾</div><div class="tour-card-title">Track Expenses</div><div class="tour-card-text">Capture rent, utilities, salaries, supplies, marketing, and transport costs.</div></div>
-            <div class="tour-card"><div class="tour-card-icon">📨</div><div class="tour-card-title">Send Invoices</div><div class="tour-card-text">Create branded LKR invoices with client details and payment status.</div></div>
+            <div class="tour-card"><div class="tour-card-icon">📊</div><div class="tour-card-title">Open Dashboard</div><div class="tour-card-text">Start from the clearest view of payments, outstanding invoices, and reminders.</div></div>
+            <div class="tour-card"><div class="tour-card-icon">🧾</div><div class="tour-card-title">Send Invoices</div><div class="tour-card-text">Create branded LKR invoices with customer details and payment status.</div></div>
+            <div class="tour-card"><div class="tour-card-icon">👥</div><div class="tour-card-title">Manage Customers</div><div class="tour-card-text">Keep contact details, invoice history, and notes in one place.</div></div>
           </div>
           <div class="launch-choice" style="grid-template-columns:1fr">
             <button class="btn-next" id="launch-btn" onclick="window.launchDashboard()">Start Free Trial →</button>
@@ -623,12 +621,12 @@ firebase.initializeApp(firebaseConfig);
 
 <script>
 let currentStep = 1;
-const totalSteps = 7;
+const totalSteps = 4;
 const state = {
   fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',
-  bizName:'',industry:'',tier:'',useCases:[],firstClient:null,expLevel:'',
+  bizName:'',industry:'',tier:'',suggestedTier:'starter',planTouched:false,useCases:[],firstClient:null,expLevel:'',
   setupTasks:{profile:true,payroll:false,notifications:false},
-  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',footer:'',selectedTemplate:0,
+  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',selectedTemplate:0,
   empCount:0,employees:[],payFreq:'Monthly',
   channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:''
 };
@@ -693,23 +691,16 @@ window.skipOptional = function skipOptional(step){
   window.nextStep(step,true);
 }
 function stepTaskKey(step){
-  return step===4?'profile':step===5?'payroll':step===6?'notifications':'';
+  return '';
 }
 function isStepEnabled(step){
-  const key=stepTaskKey(step);
-  return key ? state.setupTasks[key] !== false : true;
+  return step>=1 && step<=totalSteps;
 }
 function getNextStep(from){
-  for(let s=from+1;s<=totalSteps;s++){
-    if(isStepEnabled(s)) return s;
-  }
-  return totalSteps;
+  return Math.min(from+1,totalSteps);
 }
 function getPrevStep(from){
-  for(let s=from-1;s>=1;s--){
-    if(isStepEnabled(s)) return s;
-  }
-  return 1;
+  return Math.max(from-1,1);
 }
 function goToStep(step){
   const cur=document.getElementById(`step-${currentStep}`);
@@ -770,18 +761,18 @@ function validateStep(step){
     }
   }
   if(step===2){
-    if(!document.getElementById('s2-bizname').value.trim()) return showStepError(2,'Please enter your business name.',['s2-bizname']);
+    if(document.querySelectorAll('#use-cases .ob-choice.selected').length===0) return showStepError(2,'Please choose at least one primary use.');
     if(!state.tier) return showStepError(2,'Please select the plan you want to trial.');
-    if(!isEmail(document.getElementById('s2-client-email').value.trim())) return showStepError(2,'Please enter a valid first client email, or leave it blank.',['s2-client-email']);
-    if(!isPhone(document.getElementById('s2-client-phone').value.trim())) return showStepError(2,'Please enter a valid first client phone number, or leave it blank.',['s2-client-phone']);
   }
-  if(step===4){
+  if(step===3){
     const biz=document.getElementById('s4-bizname').value.trim();
     const invEmail=document.getElementById('s4-email').value.trim();
     const footer=document.getElementById('s4-footer').value.trim();
-    if(state.setupTasks.profile && !biz) return showStepError(4,'Please enter the invoice business name, or use Skip if you want to complete this later.',['s4-bizname']);
-    if(!isEmail(invEmail)) return showStepError(4,'Please enter a valid invoice email, or leave it blank.',['s4-email']);
-    if(footer.length>180) return showStepError(4,'Please keep the invoice footer under 180 characters.',['s4-footer']);
+    if(!biz) return showStepError(3,'Please enter your business name.',['s4-bizname']);
+    if(!isEmail(invEmail)) return showStepError(3,'Please enter a valid invoice email, or leave it blank.',['s4-email']);
+    if(!isEmail(document.getElementById('s2-client-email').value.trim())) return showStepError(3,'Please enter a valid first customer email, or leave it blank.',['s2-client-email']);
+    if(!isPhone(document.getElementById('s2-client-phone').value.trim())) return showStepError(3,'Please enter a valid first customer phone number, or leave it blank.',['s2-client-phone']);
+    if(footer.length>180) return showStepError(3,'Please keep the invoice footer under 180 characters.',['s4-footer']);
   }
   if(step===5){
     if(!state.setupTasks.payroll) return true;
@@ -814,9 +805,19 @@ function validateStep(step){
 function saveStepData(step){
   if(step===1){state.fname=document.getElementById('s1-fname').value.trim();state.lname=document.getElementById('s1-lname').value.trim();state.email=document.getElementById('s1-email').value.trim();state.phone=document.getElementById('s1-phone').value.trim();state.password=document.getElementById('s1-pass').value;}
   if(step===2){
-    state.bizName=document.getElementById('s2-bizname').value.trim();
-    state.industry=document.getElementById('s2-industry').value;
     state.useCases=[...document.querySelectorAll('#use-cases .ob-choice.selected')].map(el=>el.querySelector('.ob-choice-label').textContent);
+    state.suggestedTier=getSuggestedTier();
+  }
+  if(step===3){
+    state.bizName=document.getElementById('s4-bizname').value.trim();
+    state.invoiceBiz=state.bizName;
+    state.industry=document.getElementById('s3-industry').value;
+    state.regno=document.getElementById('s4-regno').value;
+    state.addr=document.getElementById('s4-addr').value.trim();
+    state.invEmail=document.getElementById('s4-email').value;
+    state.vat=document.getElementById('s4-vat').value;
+    state.taxRate=document.getElementById('s4-taxrate').value;
+    state.footer=document.getElementById('s4-footer').value;
     var clientName=document.getElementById('s2-client-name').value.trim();
     state.firstClient=clientName?{
       id:Date.now(),
@@ -827,10 +828,7 @@ function saveStepData(step){
       addr:'',
       notes:'Added during onboarding'
     }:null;
-    const inv=document.getElementById('s4-bizname');if(inv&&!inv.value) inv.value=state.bizName;
   }
-  if(step===3){window.syncSetupTasks();}
-  if(step===4){state.invoiceBiz=document.getElementById('s4-bizname').value.trim();state.regno=document.getElementById('s4-regno').value;state.addr=document.getElementById('s4-addr').value.trim();state.invEmail=document.getElementById('s4-email').value;state.vat=document.getElementById('s4-vat').value;state.footer=document.getElementById('s4-footer').value;}
   if(step===5){
     state.payFreq=document.getElementById('s5-payfreq').value;
     state.employees=[];
@@ -854,8 +852,43 @@ function saveStepData(step){
   localStorage.setItem('cls-onboarding',JSON.stringify(state));
 }
 
-// ── CHOICES ──
-window.toggleChoice = function toggleChoice(el){el.classList.toggle('selected');}
+// ── CHOICES + PLAN RECOMMENDATION ──
+const planInfo = {
+  starter:{name:'Starter',price:'LKR 5,500 / month',templates:3,reason:'Best for invoice control, customers, payments, reports, and simple staff access.'},
+  growth:{name:'Growth',price:'LKR 12,500 / month',templates:10,reason:'Best for money in/out, expenses, suppliers, who owes me, reports, and operations control.'},
+  premium:{name:'Premium',price:'LKR 18,500 / month',templates:30,reason:'Best when you need payroll, automation, advanced analytics, and deeper controls.'}
+};
+function getSuggestedTier(){
+  const selected=[...document.querySelectorAll('#use-cases .ob-choice.selected')];
+  if(selected.some(el=>el.dataset.plan==='premium')) return 'premium';
+  if(selected.some(el=>el.dataset.plan==='growth')) return 'growth';
+  return selected.length ? 'starter' : 'starter';
+}
+function syncRecommendedBadges(){
+  document.querySelectorAll('.tier-card').forEach(card=>{
+    card.classList.toggle('recommended',card.dataset.tier===state.suggestedTier);
+  });
+}
+function renderPlanRecommendation(){
+  const selectedCount=document.querySelectorAll('#use-cases .ob-choice.selected').length;
+  state.suggestedTier=getSuggestedTier();
+  const info=planInfo[state.suggestedTier];
+  const title=document.getElementById('plan-suggestion-title');
+  const copy=document.getElementById('plan-suggestion-copy');
+  const price=document.getElementById('plan-suggestion-price');
+  if(title) title.textContent=selectedCount ? `${info.name} looks right for you.` : 'Choose a primary use';
+  if(copy) copy.textContent=selectedCount ? info.reason + ' You can still select any plan below.' : 'Once you pick what you need first, we will suggest the best fit. You can still choose any package.';
+  if(price) price.textContent=selectedCount ? info.price : 'Starter LKR 5,500 · Growth LKR 12,500 · Premium LKR 18,500';
+  syncRecommendedBadges();
+  if(selectedCount && !state.planTouched){
+    const card=document.querySelector(`.tier-card[data-tier="${state.suggestedTier}"]`);
+    if(card) window.selectTier(state.suggestedTier,card,false);
+  }
+}
+window.toggleChoice = function toggleChoice(el){
+  el.classList.toggle('selected');
+  renderPlanRecommendation();
+}
 window.syncSetupTasks = function syncSetupTasks(){
   state.setupTasks = {
     profile: !!document.getElementById('task-profile')?.checked,
@@ -863,11 +896,13 @@ window.syncSetupTasks = function syncSetupTasks(){
     notifications: !!document.getElementById('task-notifications')?.checked
   };
 }
-window.selectTier = function selectTier(tier,el){
+window.selectTier = function selectTier(tier,el,manual){
   state.tier=tier;
+  if(manual) state.planTouched=true;
   document.querySelectorAll('.tier-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  buildTemplateGrid(tier==='starter'?3:tier==='growth'?10:30);
+  buildTemplateGrid(planInfo[tier]?.templates || 3);
+  syncRecommendedBadges();
 }
 window.selectExp = function selectExp(level,el){
   state.expLevel=level;
@@ -962,23 +997,21 @@ window.toggleChannel = function toggleChannel(ch,el){
 
 // ── SUCCESS ──
 function buildSuccess(){
-  const tierLabels={starter:'Starter — LKR 5,500/mo',growth:'Growth — LKR 12,500/mo',premium:'Premium — LKR 28,500/mo'};
+  const tierLabels={starter:'Starter — LKR 5,500/mo',growth:'Growth — LKR 12,500/mo',premium:'Premium — LKR 18,500/mo'};
   const tplName=allTemplates[state.selectedTemplate]?.name||'Classic Gold';
+  const suggested=tierLabels[state.suggestedTier]||tierLabels.starter;
+  const selected=tierLabels[state.tier]||state.tier;
   const rows=[
     ['Name',`${state.fname} ${state.lname}`],
     ['Email',state.email],
     ['Business',state.invoiceBiz||state.bizName],
     ['Industry',state.industry||'—'],
-    ['Plan',tierLabels[state.tier]||state.tier],
+    ['Suggested Plan',suggested],
+    ['Selected Plan',selected],
     ['Invoice Template',tplName],
-    ['First Client',state.firstClient?state.firstClient.name:'Skipped'],
-    ['Payroll Frequency',state.employees.length>0?state.payFreq:'Not set up'],
-    ['Staff',state.employees.length>0?`${state.employees.length} employees configured`:'Not set up'],
-    ['Notifications',selectedChannels.length>0?selectedChannels.join(', ')+' enabled':'None selected'],
+    ['First Customer',state.firstClient?state.firstClient.name:'Skipped'],
   ];
   document.getElementById('account-summary').innerHTML=rows.map(r=>`<div class="summary-row"><strong>${r[0]}</strong>${r[1]}</div>`).join('');
-  if(state.employees.length>0) document.getElementById('fl-payroll').style.display='flex';
-  if(selectedChannels.length>0) document.getElementById('fl-notif').style.display='flex';
 }
 
 async function writeArrayCollection(uid,col,items){
@@ -1027,7 +1060,7 @@ window.launchDashboard = async function launchDashboard(){
   if(btn){ btn.textContent = 'Saving your details…'; btn.disabled = true; }
 
   try {
-    const prices = { starter: 5500, growth: 12500, premium: 28500 };
+    const prices = { starter: 5500, growth: 12500, premium: 18500 };
     const planFiles = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
 
     if (state.googleAuth) {
@@ -1045,6 +1078,7 @@ window.launchDashboard = async function launchDashboard(){
         industry: state.industry || '',
         addr: state.addr || '',
         vat: state.vat || '',
+        defaultTaxRate: state.taxRate || '',
         footer: state.footer || '',
         plan: state.tier || 'starter',
         planPrice: prices[state.tier] || 5500,
@@ -1095,6 +1129,7 @@ window.launchDashboard = async function launchDashboard(){
         industry: state.industry || '',
         addr: state.addr || '',
         vat: state.vat || '',
+        defaultTaxRate: state.taxRate || '',
         footer: state.footer || '',
         plan: state.tier || 'starter',
         planPrice: prices[state.tier] || 5500,
@@ -1153,7 +1188,7 @@ buildTemplateGrid(3);
       if (p.lname) { var el = document.getElementById('s1-lname'); if(el) el.value = p.lname; }
       if (p.email) { var el = document.getElementById('s1-email'); if(el) el.value = p.email; }
       if (p.phone) { var el = document.getElementById('s1-phone'); if(el) el.value = p.phone; }
-      if (p.bizName) { var el = document.getElementById('s2-bizname'); if(el) el.value = p.bizName; }
+      if (p.bizName) { var el = document.getElementById('s4-bizname'); if(el) el.value = p.bizName; }
       // Google auth — hide password fields, lock email, show welcome note
       if (p.googleAuth) {
         var passWrap1 = document.getElementById('s1-pass'); if(passWrap1) passWrap1.closest('.ob-field').style.display='none';
@@ -1189,9 +1224,10 @@ buildTemplateGrid(3);
     var cards = document.querySelectorAll('.tier-card');
     cards.forEach(function(card) {
       var oc = card.getAttribute('onclick') || '';
-      if (oc.indexOf("'" + plan + "'") > -1) { selectTier(plan, card); }
+      if (oc.indexOf("'" + plan + "'") > -1) { selectTier(plan, card, true); }
     });
   }
+  renderPlanRecommendation();
 })();
 </script>
 </body>

@@ -1239,9 +1239,53 @@ footer { background: #FAF4EE !important; }
 /* Scroll progress */
 #scroll-progress { background: linear-gradient(90deg,#C8847A,#B8922A,#E8C46A) !important; }
 
+/* Refined short landing page */
+body.landing-slim #trust,
+body.landing-slim #problem,
+body.landing-slim #features,
+body.landing-slim #testimonials,
+body.landing-slim #roadmap,
+body.landing-slim #faq,
+body.landing-slim #demo-gate,
+body.landing-slim #particle-canvas{display:none!important}
+body.landing-slim #hero{min-height:auto;align-items:flex-start;text-align:left;padding:7rem 2.5rem 4rem;background:linear-gradient(135deg,#fffaf4 0%,#f7ece4 100%)!important}
+.hero-simple{width:min(1180px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(300px,.75fr);gap:4rem;align-items:center}
+.hero-simple-copy{max-width:700px}
+.hero-simple .hero-eyebrow{color:#B8922A!important;margin-bottom:1.1rem;letter-spacing:.22em}
+.hero-simple .hero-title{font-size:clamp(3rem,5.8vw,5.85rem);line-height:.98;margin-bottom:1.2rem;max-width:760px;letter-spacing:0}
+.hero-simple .hero-rule{margin:0 0 1.4rem;width:72px;background:linear-gradient(90deg,#1C1814,#B8922A)!important}
+.hero-simple .hero-product-line{margin:0 0 1.6rem;max-width:620px;font-size:1.05rem;line-height:1.75;color:#5d5348}
+.hero-quick-list{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:1.4rem 0 1.6rem}
+.hero-quick-item{border:1px solid rgba(184,146,42,.24);background:rgba(255,255,255,.64);padding:.85rem .9rem}
+.hero-quick-item strong{display:block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#1C1814;margin-bottom:.25rem}
+.hero-quick-item span{font-size:.78rem;color:#6B6258;line-height:1.45}
+.hero-price-strip{display:flex;flex-wrap:wrap;gap:.65rem;margin:1.25rem 0 1.5rem}
+.hero-price-pill{border:1px solid rgba(184,146,42,.34);background:#fff;padding:.55rem .8rem;font-size:.76rem;color:#6B6258}
+.hero-price-pill strong{font-family:var(--font-display);font-size:1.12rem;color:#1C1814;font-weight:600;margin-right:.25rem}
+.hero-actions{justify-content:flex-start;margin-bottom:.7rem}
+.hero-brand-panel{position:relative;background:#fff;border:1px solid rgba(184,146,42,.22);box-shadow:0 24px 70px rgba(82,60,25,.12);padding:1.1rem}
+.hero-brand-panel::before{content:'';position:absolute;inset:1rem;border:1px solid rgba(184,146,42,.18);pointer-events:none}
+.hero-brand-panel img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
+.hero-brand-caption{position:absolute;left:2rem;right:2rem;bottom:2rem;background:rgba(255,255,255,.88);border:1px solid rgba(184,146,42,.2);padding:.85rem 1rem;color:#4d443b;font-size:.82rem;line-height:1.45}
+.hero-brand-caption strong{display:block;color:#1C1814;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.15rem}
+body.landing-slim #pricing{padding:4.75rem 0 5rem;background:#fff}
+body.landing-slim .pricing-header{margin-bottom:2.5rem}
+body.landing-slim #cta{padding:4.5rem 0}
+@media(max-width:960px){
+  body.landing-slim #hero{padding:6.25rem 1.25rem 3rem}
+  .hero-simple{grid-template-columns:1fr;gap:2rem}
+  .hero-brand-panel{max-width:430px;margin:0 auto}
+  .hero-quick-list{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .hero-simple .hero-title{font-size:clamp(2.55rem,14vw,3.6rem)}
+  .hero-price-strip{flex-direction:column}
+  .hero-actions .btn-gold,.hero-actions .btn-outline{width:100%;text-align:center}
+}
+
 </style>
 </head>
-<body>
+<body class="landing-slim">
 
 
 <div id="demo-back-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:2000;background:#fff;border-bottom:2px solid #1a1714;padding:.6rem 1.5rem;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.1)">
@@ -1307,10 +1351,7 @@ footer { background: #FAF4EE !important; }
 <nav id="main-nav">
   <div class="nav-logo">Ceylonry<span>Labs</span>.io</div>
   <ul class="nav-links">
-    <li><a href="#problem">Why Us</a></li>
-    <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#testimonials">Stories</a></li>
     <li><a href="#" class="nav-cta" onclick="showDemo(event)">Live Demo</a></li>
     <li><a href="onboarding.html" style="padding:.55rem 1.4rem;background:var(--gold);color:#fff;font-family:var(--font-body);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;transition:all .25s;font-weight:600;" onmouseover="this.style.background='#D4A840'" onmouseout="this.style.background='#B8922A'">Start Free Trial</a></li>
     <li><a href="signin.html" style="padding:.55rem 1.4rem;border:1px solid rgba(184,146,42,.4);color:#6B6258;font-family:var(--font-body);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;transition:all .25s;" onmouseover="this.style.color='#B8922A';this.style.borderColor='#B8922A'" onmouseout="this.style.color='#6B6258';this.style.borderColor='rgba(184,146,42,.4)'">Sign In</a></li>
@@ -1322,59 +1363,39 @@ footer { background: #FAF4EE !important; }
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobile-menu">
-  <a href="#problem" class="mobile-link">The Problem</a>
-  <a href="#features" class="mobile-link">Platform</a>
   <a href="#pricing" class="mobile-link">Pricing</a>
-  <a href="#roadmap" class="mobile-link">Roadmap</a>
-  <a href="#testimonials" class="mobile-link">Reviews</a>
   <a href="#" class="m-cta mobile-link" onclick="showDemo(event)">Live Demo →</a>
+  <a href="onboarding.html" class="mobile-link">Start Free Trial</a>
+  <a href="signin.html" class="mobile-link">Sign In</a>
 </div>
 
 <!-- HERO -->
 <section id="hero">
-  <div class="hero-inner">
-    <p class="hero-eyebrow">CeylonryLabs.io &nbsp;·&nbsp; Cashflow &amp; Invoicing</p>
-    <h1 class="hero-title">
-      You are both —<br>a <em>present mama</em><br>and a powerful <span class="hero-mobile-break"><br></span>CEO.
-    </h1>
-    <div class="hero-rule"></div>
-    <p class="hero-tagline">"You can build your dream <em>and</em> raise them too.<br>We handle the numbers so you can focus on what matters."</p>
-    <p class="hero-product-line">A simple cashflow and invoicing app for Sri Lankan small businesses. Track your money, send invoices, and see your profit in one clear dashboard.</p>
-
-    <div class="hero-3d-stage" id="hero-3d-stage" aria-label="Interactive 3D cashflow dashboard preview">
-      <canvas id="hero-3d-canvas"></canvas>
-      <div class="hero-3d-caption"><span></span><strong>Drag to explore</strong><span></span></div>
-    </div>
-
-    <!-- ── TRIAL STEPS ── -->
-    <div class="hero-trial-steps" style="display:flex;justify-content:center;gap:0;margin-bottom:2rem;opacity:0;animation:fadeUp .8s 1.1s forwards;flex-wrap:wrap">
-      <div class="hero-trial-step" style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
-        <span style="width:22px;height:22px;background:var(--gold);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">1</span>
-        Sign up free &mdash; takes 3 min
+  <div class="hero-simple">
+    <div class="hero-simple-copy">
+      <p class="hero-eyebrow">CeylonryLabs.io &nbsp;·&nbsp; Cashflow System</p>
+      <h1 class="hero-title">Run the numbers without losing the day.</h1>
+      <div class="hero-rule"></div>
+      <p class="hero-product-line">A simple Sri Lankan cashflow and invoicing system for business owners who need invoices, payments, expenses, reports, and staff access in one clean place.</p>
+      <div class="hero-quick-list">
+        <div class="hero-quick-item"><strong>1. Pick use</strong><span>Tell us what you need first.</span></div>
+        <div class="hero-quick-item"><strong>2. Get match</strong><span>We suggest the right plan.</span></div>
+        <div class="hero-quick-item"><strong>3. You choose</strong><span>Select any package you prefer.</span></div>
       </div>
-      <div class="hero-step-arrow" style="display:flex;align-items:center;padding:.6rem .4rem;font-size:.8rem;color:var(--gold)">→</div>
-      <div class="hero-trial-step" style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
-        <span style="width:22px;height:22px;background:var(--gold);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">2</span>
-        15 days full access &mdash; no card needed
+      <div class="hero-price-strip" aria-label="Plan prices">
+        <div class="hero-price-pill"><strong>LKR 5,500</strong> Starter</div>
+        <div class="hero-price-pill"><strong>LKR 12,500</strong> Growth</div>
+        <div class="hero-price-pill"><strong>LKR 18,500</strong> Premium</div>
       </div>
-      <div class="hero-step-arrow" style="display:flex;align-items:center;padding:.6rem .4rem;font-size:.8rem;color:var(--gold)">→</div>
-      <div class="hero-trial-step" style="display:flex;align-items:center;gap:.6rem;background:rgba(184,146,42,.07);border:1px solid rgba(184,146,42,.25);padding:.6rem 1.1rem;font-size:.73rem;color:var(--text-muted);letter-spacing:.04em">
-        <span style="width:22px;height:22px;background:var(--gold);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0">3</span>
-        Choose your plan &amp; subscribe
+      <div class="hero-actions">
+        <a href="onboarding.html" class="btn-gold">Start 15-Day Free Trial →</a>
+        <a href="#pricing" class="btn-outline">See Pricing</a>
       </div>
+      <div class="cta-trust">No card needed · Guided setup · Choose your own plan</div>
     </div>
-
-    <div class="hero-actions">
-      <a href="onboarding.html" class="btn-gold">Start Your 15-Day Free Trial →</a>
-      <a href="signin.html" class="btn-outline">Sign In</a>
-    </div>
-    <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
-    <div style="margin-top:1.5rem;font-size:.78rem;color:var(--text-dim);letter-spacing:.06em;opacity:0;animation:fadeUp .8s 1.5s forwards">
-      No credit card &nbsp;·&nbsp; No accounting knowledge needed &nbsp;·&nbsp; Setup in under 3 minutes
-    </div>
-    <div class="hero-scroll-inline">
-      <div class="scroll-line-v"></div>
-      <span>Scroll</span>
+    <div class="hero-brand-panel">
+      <img src="assets/mrs-gamage-cashflow.png" alt="Cashflow System by Ceylonry Labs branding">
+      <div class="hero-brand-caption"><strong>Built for real operators</strong>Invoices, money flow, customers, suppliers, reports, and team access without heavy accounting software.</div>
     </div>
   </div>
 </section>
@@ -1504,8 +1525,8 @@ footer { background: #FAF4EE !important; }
   <div class="section-inner">
     <div class="pricing-header reveal">
       <p class="section-eyebrow">Simple Pricing — Start Free</p>
-      <h2 class="section-title">Honest pricing<br>for <em>every stage</em><br>of your journey.</h2>
-      <p class="section-sub">Start with a <strong>15-day free trial</strong> — no credit card, no commitment. Sign up in 3 minutes, get full access, then choose the plan that fits your business.</p>
+      <h2 class="section-title">Three plans.<br><em>One clear choice</em>.</h2>
+      <p class="section-sub">Start with a <strong>15-day free trial</strong>. Onboarding suggests the best plan from your primary use, but the final package is always your choice.</p>
     </div>
 
     <div class="pricing-grid reveal">
@@ -1514,16 +1535,16 @@ footer { background: #FAF4EE !important; }
         <div class="pricing-tier">Starter</div>
         <div class="pricing-price"><sup>LKR</sup> 5,500</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; Up to 2 users</div>
-        <p class="pricing-tagline">Built for Startups & Small Businesses</p>
+        <p class="pricing-tagline">Invoice Control System</p>
         <ul class="pricing-features">
-          <li>Financial dashboard</li>
-          <li>Cash in / out tracking</li>
-          <li>Expense tracking</li>
-          <li>Basic reporting & profit overview</li>
-          <li>Invoice management</li>
-          <li>3 modern invoice templates</li>
-          <li>PDF invoice export</li>
-          <li>Logo upload support</li>
+          <li>Invoice dashboard</li>
+          <li>Create and edit invoices</li>
+          <li>Customers and payment tracking</li>
+          <li>Edit backlog and audit reasons</li>
+          <li>Invoice reports</li>
+          <li>3 invoice templates</li>
+          <li>PDF, email, and WhatsApp sharing</li>
+          <li>Up to 2 users</li>
         </ul>
         <a href="onboarding.html?plan=starter" target="_blank" rel="noopener" class="pricing-btn outline">Start Free Trial →</a>
         <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
@@ -1535,17 +1556,18 @@ footer { background: #FAF4EE !important; }
         <div class="pricing-tier">Growth</div>
         <div class="pricing-price"><sup>LKR</sup> 12,500</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; Up to 8 users</div>
-        <p class="pricing-tagline">Built for Growing SMEs</p>
+        <p class="pricing-tagline">Cashflow & Operations Control</p>
         <ul class="pricing-features">
           <li>Everything in Starter +</li>
-          <li>Payroll management</li>
-          <li>Debt tracking</li>
+          <li>Money in and out tracking</li>
+          <li>Expense tracking</li>
           <li>Supplier management</li>
-          <li>Advanced analytics</li>
-          <li>Business insights</li>
-          <li>10 premium invoice templates</li>
+          <li>Who owes me</li>
+          <li>Business reports</li>
+          <li>Basic business insights</li>
+          <li>Monthly email reports</li>
           <li>VAT / Tax support</li>
-          <li>Due payment reminders</li>
+          <li>Manual payment reminders</li>
         </ul>
         <a href="onboarding.html?plan=growth" target="_blank" rel="noopener" class="pricing-btn gold">Start Free Trial →</a>
         <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
@@ -1554,26 +1576,26 @@ footer { background: #FAF4EE !important; }
       <!-- Premium -->
       <div class="pricing-card">
         <div class="pricing-tier">Premium</div>
-        <div class="pricing-price"><sup>LKR</sup> 28,500</div>
+        <div class="pricing-price"><sup>LKR</sup> 18,500</div>
         <div class="pricing-period">per month &nbsp;·&nbsp; Unlimited users</div>
-        <p class="pricing-tagline">Built for Large Operations</p>
+        <p class="pricing-tagline">Advanced Controls & Automation</p>
         <ul class="pricing-features">
           <li>Everything in Growth +</li>
-          <li>Multi-branch dashboards</li>
-          <li>AI forecasting</li>
-          <li>Executive financial overview</li>
-          <li>Department visibility</li>
-          <li>Team permission controls</li>
-          <li>Unlimited custom templates</li>
+          <li>Payroll management</li>
+          <li>Advanced analytics</li>
+          <li>Forecasting and deeper insights</li>
+          <li>Automated reminders</li>
+          <li>Advanced permissions</li>
+          <li>More invoice templates</li>
           <li>Priority support</li>
-          <li>Custom integrations</li>
+          <li>Premium onboarding support</li>
         </ul>
         <a href="onboarding.html?plan=premium" target="_blank" rel="noopener" class="pricing-btn outline">Start Free Trial →</a>
         <div class="cta-trust">🔒 Bank-level encryption · Your data is never shared</div>
       </div>
     </div>
 
-    <p style="text-align:center;font-size:.78rem;color:var(--text-dim);margin-top:2rem;letter-spacing:.08em;">Perfect for: Mum Entrepreneurs &nbsp;·&nbsp; Home Bakers &nbsp;·&nbsp; Beauty Salons &nbsp;·&nbsp; Fashion Boutiques &nbsp;·&nbsp; Freelancers &nbsp;·&nbsp; Cafés &nbsp;·&nbsp; Retail Shops &nbsp;·&nbsp; Coaches &nbsp;·&nbsp; SMEs &amp; Growing Businesses</p>
+    <p style="text-align:center;font-size:.78rem;color:var(--text-dim);margin-top:2rem;letter-spacing:.08em;">Start with the plan we suggest, or choose the one you already know you need.</p>
   </div>
 </section>
 
@@ -1825,8 +1847,8 @@ footer { background: #FAF4EE !important; }
   <div class="section-inner">
     <div class="cta-inner">
       <p class="section-eyebrow reveal" style="text-align:center">You Deserve This</p>
-      <h2 class="cta-title reveal reveal-delay-1">You built your business<br>with <em>love and courage</em>.</h2>
-      <p class="cta-sub reveal reveal-delay-2">Now let us make the financial part easy. Join hundreds of women entrepreneurs across Sri Lanka who finally feel in control of their money — and their future.</p>
+      <h2 class="cta-title reveal reveal-delay-1">Start with clarity.<br><em>Stay in control</em>.</h2>
+      <p class="cta-sub reveal reveal-delay-2">Set up the basics, choose your primary use, get a plan suggestion, and launch the system that fits your business.</p>
       <div class="cta-actions reveal reveal-delay-3">
         <a href="onboarding.html" class="btn-gold">Start Your 15-Day Free Trial →</a>
         <button class="btn-outline" onclick="openContactModal()" style="cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif">Talk to Us</button>
@@ -1842,36 +1864,35 @@ footer { background: #FAF4EE !important; }
     <div class="footer-top">
       <div>
         <div class="footer-brand-name">Ceylonry<span>Labs</span>.io</div>
-        <div class="footer-tagline">Built for Women. Built for Growth.</div>
+        <div class="footer-tagline">Cashflow, invoices, reports, and operations control.</div>
         <div class="footer-contact">
           <div>🌐 ceylonrylabs.io</div>
           <div><a href="mailto:hello@ceylonrylabs.io">hello@ceylonrylabs.io</a></div>
-          <div style="margin-top:.75rem;font-size:.75rem;color:var(--text-dim)">🇱🇰 Built in Sri Lanka.<br>Designed for women who mean business. 💛</div>
+          <div style="margin-top:.75rem;font-size:.75rem;color:var(--text-dim)">Built in Sri Lanka.<br>Designed for practical business control.</div>
         </div>
       </div>
       <div>
         <div class="footer-col-title">Platform</div>
         <ul class="footer-links">
-          <li><a href="#features">Financial Dashboard</a></li>
-          <li><a href="#features">Cashflow Tracking</a></li>
-          <li><a href="#features">Invoice Management</a></li>
-          <li><a href="#features">Payroll System</a></li>
-          <li><a href="#features">Debt Monitor</a></li>
+          <li><a href="#pricing">Financial Dashboard</a></li>
+          <li><a href="#pricing">Cashflow Tracking</a></li>
+          <li><a href="#pricing">Invoice Management</a></li>
+          <li><a href="#pricing">Customer Management</a></li>
+          <li><a href="#pricing">Reports</a></li>
         </ul>
       </div>
       <div>
         <div class="footer-col-title">Company</div>
         <ul class="footer-links">
-          <li><a href="#problem">The Problem</a></li>
-          <li><a href="#why">Why Us</a></li>
-          <li><a href="#roadmap">Roadmap</a></li>
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#pricing">Plans</a></li>
           <li><a href="#pricing">Pricing</a></li>
         </ul>
       </div>
       <div>
         <div class="footer-col-title">Get Started</div>
         <ul class="footer-links">
-          <li><a href="#demo-gate">Live Demo</a></li>
+          <li><a href="#" onclick="showDemo(event)">Live Demo</a></li>
           <li><a href="#pricing">Starter Plan</a></li>
           <li><a href="#pricing">Growth Plan</a></li>
           <li><a href="#pricing">Premium Plan</a></li>

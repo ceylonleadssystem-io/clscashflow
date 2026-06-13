@@ -417,7 +417,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div><div class="pg-title" id="pg-title">Executive Overview</div><div class="pg-sub" id="pg-sub">Your complete business at a glance</div></div>
     <div class="tb-r">
       <span class="tb-date" id="tb-date"></span>
-      <span class="tb-badge">Premium · Unlimited · LKR 15,500/mo</span>
+      <span class="tb-badge">Premium · Unlimited · LKR 18,500/mo</span>
     </div>
   </div>
   <div class="content">
@@ -656,7 +656,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
         <div class="plan-box">
           <div style="font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(201,168,76,.4);margin-bottom:.3rem">Your Current Plan</div>
           <div class="plan-name">Premium ✦</div>
-          <div class="plan-price">LKR 15,500 / month</div>
+          <div class="plan-price">LKR 18,500 / month</div>
           <div class="plan-tagline">Built for Large Operations · Unlimited Users</div>
           <div style="font-size:.56rem;letter-spacing:.13em;text-transform:uppercase;color:rgba(201,168,76,.35);margin-bottom:.5rem">Everything in Growth, plus:</div>
           <div class="plan-list">
@@ -1852,8 +1852,8 @@ window.clsSignOut = function clsSignOut() { _fauth.signOut().then(function() { w
 
 window.showPaywall = function showPaywall(profile) {
   var plan = (profile && profile.plan) || 'premium';
-  var prices = { starter: 5500, growth: 12500, premium: 15500 };
-  var price = prices[plan] || 28500;
+  var prices = { starter: 5500, growth: 12500, premium: 18500 };
+  var price = prices[plan] || 18500;
   var planName = plan.charAt(0).toUpperCase() + plan.slice(1);
   var waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month).\n\nName: ' + ((profile && profile.name) || '') + '\nEmail: ' + ((profile && profile.email) || ''));
   var waNum = '94778815628';

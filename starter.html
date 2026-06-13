@@ -2759,7 +2759,7 @@ window.clsSignOut = function clsSignOut() { _auth.signOut().then(() => window.lo
 // Paywall overlay
 window.showPaywall = function showPaywall(profile) {
   const plan = (profile && profile.plan) || 'starter';
-  const prices = { starter: 5500, growth: 12500, premium: 28500 };
+  const prices = { starter: 5500, growth: 12500, premium: 18500 };
   const price = prices[plan] || 5500;
   const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
   const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));

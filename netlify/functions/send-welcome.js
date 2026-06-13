@@ -42,7 +42,7 @@ exports.handler = async function handler(event) {
   });
 
   const planLabels = { starter: 'Starter', growth: 'Growth', premium: 'Premium' };
-  const planPrices = { starter: '5,500', growth: '12,500', premium: '28,500' };
+  const planPrices = { starter: '5,500', growth: '12,500', premium: '18,500' };
   const planLabel  = planLabels[plan] || plan;
   const planPrice  = planPrices[plan] || '5,500';
   const loginUrl   = 'https://ceylonrylabscashflow.netlify.app/signin.html';

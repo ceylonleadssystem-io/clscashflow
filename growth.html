@@ -1802,7 +1802,7 @@ window.openGrowthBilling = function openGrowthBilling() {
 
 window.showPaywall = function showPaywall(profile) {
   var plan = (profile && profile.plan) || 'growth';
-  var prices = { starter: 5500, growth: 12500, premium: 15500 };
+  var prices = { starter: 5500, growth: 12500, premium: 18500 };
   var price = prices[plan] || 12500;
   var planName = plan.charAt(0).toUpperCase() + plan.slice(1);
   var waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month).\n\nName: ' + ((profile && profile.name) || '') + '\nEmail: ' + ((profile && profile.email) || ''));
