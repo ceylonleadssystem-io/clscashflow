@@ -376,7 +376,8 @@ document.addEventListener('click',function(e){
     var arg=actionEl.getAttribute('data-cls-arg');
     var hasThis=actionEl.getAttribute('data-cls-this');
     if(typeof window[fn]==='function'){
-      if(hasThis)window[fn](arg,actionEl);
+      if(hasThis&&arg!==null)window[fn](arg,actionEl);
+      else if(hasThis)window[fn](actionEl);
       else if(arg!==null)window[fn](arg);
       else window[fn]();
     }
@@ -867,7 +868,7 @@ document.addEventListener('click',function(e){
 <!-- ════ INVOICE MODAL ════ -->
 <div class="modal-overlay" id="inv-modal">
   <div class="modal-box">
-    <div class="modal-head"><div class="modal-title" id="inv-modal-title">Raise New Invoice</div><button class="modal-close" data-cls-fn="closeModal" data-cls-arg="inv-modal">×</button></div>
+    <div class="modal-head"><div class="modal-title" id="inv-modal-title">Raise New Invoice</div><button type="button" class="modal-close" onclick="window.closeModal('inv-modal')" data-cls-fn="closeModal" data-cls-arg="inv-modal">×</button></div>
     <div class="modal-body">
       <input type="hidden" id="i-edit-num">
       <div class="client-select-bar">
@@ -917,7 +918,7 @@ document.addEventListener('click',function(e){
       <table class="li-table">
         <thead><tr><th style="width:45%">Description</th><th style="width:11%">Qty</th><th style="width:18%">Unit Price</th><th style="width:18%">Total</th><th style="width:8%"></th></tr></thead>
         <tbody id="li-body">
-          <tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>
+          <tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button type="button" class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>
         </tbody>
       </table>
       <button class="btn-add-li" data-cls-fn="addLi">+ Add Line Item</button>
@@ -946,7 +947,7 @@ document.addEventListener('click',function(e){
     <div class="modal-head"><div class="modal-title">Delete Invoice</div><button class="modal-close" data-cls-fn="closeModal" data-cls-arg="delete-inv-modal">×</button></div>
     <div class="modal-body">
       <input type="hidden" id="del-inv-num">
-      <div style="font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:.85rem">This will remove <strong id="del-inv-label" style="color:var(--text)">this invoice</strong> from the invoice register. The delete reason will be saved in the admin edit backlog.</div>
+      <div style="font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:.85rem">This will remove <strong id="del-inv-label" style="color:var(--text)">this invoice</strong> from the invoice register, dashboard, reports, and any linked payment collection entries. The delete reason will be saved in the admin edit backlog.</div>
       <div class="f-group"><label>Reason for Delete *</label><textarea class="f-input" id="del-inv-reason" rows="3" placeholder="Example: Duplicate invoice raised by mistake." style="resize:vertical"></textarea></div>
     </div>
     <div class="modal-foot">
@@ -1294,7 +1295,12 @@ window.openModal = function openModal(id){
   if(id==='txn-modal'||id==='exp-modal') refreshSupplierSelects();
   document.getElementById(id).classList.add('open');
 }
-window.closeModal = function closeModal(id){document.getElementById(id).classList.remove('open');}
+window.closeModal = function closeModal(id){
+  var modal=document.getElementById(id);
+  if(!modal)return;
+  modal.classList.remove('open');
+  if(id==='inv-modal')currentPayInv=null;
+}
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
 document.addEventListener('keydown',e=>{if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
 
@@ -1548,6 +1554,8 @@ function summarizeBacklogValue(value){
   if(value.status) parts.push('Status: '+value.status);
   if(value.amount!=null) parts.push('Amount: '+fmtAmt(value.amount));
   if(value.paidAmount!=null) parts.push('Paid: '+fmtAmt(value.paidAmount));
+  if(value.reversedPaymentTotal!=null) parts.push('Reversed payments: '+fmtAmt(value.reversedPaymentTotal));
+  if(value.total!=null&&value.invoice) parts.push('Reversed payments: '+fmtAmt(value.total));
   if(value.date) parts.push('Date: '+fmtD(String(value.date).slice(0,10)));
   if(value.email) parts.push('Email: '+value.email);
   if(value.phone) parts.push('Phone: '+value.phone);
@@ -1584,6 +1592,13 @@ function addDeleteBacklog(kind,itemId,label,reason,before){
     editedBy:getEditorName(),
     editorUid:_signedInUid||_uid||''
   });
+}
+function isInvoicePaymentTransaction(txn, invoiceNum){
+  if(!txn||!invoiceNum)return false;
+  var ref=String(txn.ref||'');
+  var desc=String(txn.desc||'');
+  var cat=String(txn.cat||'');
+  return cat==='Invoice Payment' && (ref===invoiceNum || ref.indexOf(invoiceNum+' ·')===0 || desc.indexOf(invoiceNum)>-1);
 }
 
 // ════════════════════════════════
@@ -1671,7 +1686,7 @@ function resetInvoiceModal(){
   var vr=document.getElementById('inv-vatrate');if(vr)vr.value=(DB.settings.vatRate!=null?DB.settings.vatRate:15);
   const cs=document.getElementById('i-client-sel');if(cs)cs.value='';
   setInvoiceTemplate(getDefaultInvoiceTemplate());
-  document.getElementById('li-body').innerHTML=`<tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>`;
+  document.getElementById('li-body').innerHTML=`<tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button type="button" class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>`;
   calcInv();
 }
 function normalizeTemplateIdx(idx){
@@ -1703,12 +1718,15 @@ window.selectDefaultInvoiceTemplate = function selectDefaultInvoiceTemplate(idx)
   if(input)input.value=String(tpl);
   syncTemplatePickers(tpl);
 }
-window.addLi = function addLi(){const tbody=document.getElementById('li-body');const tr=document.createElement('tr');tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;tbody.appendChild(tr);}
+window.addLi = function addLi(){const tbody=document.getElementById('li-body');const tr=document.createElement('tr');tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button type="button" class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;tbody.appendChild(tr);}
 window.autoGrowLi = function autoGrowLi(el){el.style.height='auto';el.style.height=(el.scrollHeight+2)+'px';}
-window.rmLi = function rmLi(btn){if(document.querySelectorAll('#li-body tr').length>1){btn.closest('tr').remove();calcInv();}}
+window.rmLi = function rmLi(btn){
+  if(!btn||!btn.closest)return;
+  if(document.querySelectorAll('#li-body tr').length>1){btn.closest('tr').remove();calcInv();}
+}
 function makeLineItemRow(line){
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;
+  tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button type="button" class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;
   if(line){
     tr.querySelector('.li-desc').value=line.desc||'';
     tr.querySelector('.li-qty').value=line.qty||1;
@@ -1830,10 +1848,26 @@ window.confirmDeleteInvoice=function confirmDeleteInvoice(){
   const idx=DB.invoices.findIndex(function(i){return i.num===num;});
   if(idx<0){alert('Could not find this invoice to delete.');return;}
   const inv=DB.invoices[idx];
-  addDeleteBacklog('invoice',inv.num,inv.num+' · '+inv.client,reason,snapshotForLog(inv));
+  const linkedPayments=(DB.transactions||[]).filter(function(t){return isInvoicePaymentTransaction(t,inv.num);});
+  const before=snapshotForLog(inv);
+  before.reversedPayments=linkedPayments.map(function(t){return {date:t.date,amount:t.amount,ref:t.ref,desc:t.desc};});
+  before.reversedPaymentTotal=linkedPayments.reduce(function(a,t){return a+(Number(t.amount)||0);},0);
+  addDeleteBacklog('invoice',inv.num,inv.num+' · '+inv.client,reason,before);
+  if(linkedPayments.length){
+    addDeleteBacklog('payment',inv.num,inv.num+' · '+inv.client,'Payment collection reversed because invoice was deleted: '+reason,snapshotForLog({invoice:inv.num,payments:before.reversedPayments,total:before.reversedPaymentTotal}));
+  }
   DB.invoices.splice(idx,1);
-  saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('delete-inv-modal');
-  alert('Invoice deleted and the reason was saved in the admin backlog.');
+  if(linkedPayments.length){
+    DB.transactions=DB.transactions.filter(function(t){return !isInvoicePaymentTransaction(t,inv.num);});
+  }
+  saveDB();
+  renderInvoices();
+  renderDashboard();
+  renderBacklog();
+  if(typeof renderReports==='function')renderReports();
+  if(typeof renderCashflow==='function')renderCashflow();
+  closeModal('delete-inv-modal');
+  alert('Invoice deleted. Linked payment collections reversed: '+fmtAmt(before.reversedPaymentTotal)+'. The reason was saved in the admin backlog.');
 };
 
 // ════════════════════════════════
