@@ -2,6 +2,16 @@
   publish = "."
   functions = "netlify/functions"
 
+[[redirects]]
+  from = "/mrs-gamage-story"
+  to = "/mrs-gamage-story.html"
+  status = 200
+
+[[redirects]]
+  from = "/join-the-movement"
+  to = "/mrs-gamage-story.html"
+  status = 200
+
 # Standard security headers (no restrictive CSP, so inline scripts keep working)
 [[headers]]
   for = "/*"

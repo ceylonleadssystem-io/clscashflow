@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mrs. Gamage Story — Cashflow System by Ceylonry Labs.io</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F7F1E8;
+  --brown:#4A3B2A;
+  --gold:#B8923E;
+  --sage:#C7CBA8;
+  --muted:#6F6353;
+  --card:#FDFAF4;
+  --line:#E5D9C9;
+  --serif:"Fraunces",serif;
+  --sans:"Inter",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--brown);font-family:var(--sans);font-weight:400;line-height:1.65;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit}
+.container{width:min(1160px,calc(100% - 48px));margin:0 auto}
+.label{margin:0 0 18px;color:var(--gold);font-size:11px;line-height:1;letter-spacing:2px;text-transform:uppercase;font-weight:500}
+.serif{font-family:var(--serif);font-weight:400;letter-spacing:-.8px;line-height:1}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--gold);border-radius:999px;padding:13px 22px;background:var(--gold);color:var(--card);font-size:14px;font-weight:500;text-decoration:none;transition:transform .25s ease,background .25s ease,color .25s ease}
+.pill:hover{transform:translateY(-2px)}
+.pill.secondary{background:transparent;color:var(--brown)}
+.pill.secondary:hover{background:var(--card)}
+.site-nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--cream) 92%,transparent);backdrop-filter:blur(18px);border-bottom:1px solid color-mix(in srgb,var(--brown) 12%,transparent)}
+.nav-inner{height:78px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px}
+.wordmark{display:inline-flex;align-items:center;gap:12px;text-decoration:none;min-width:0}
+.wordmark img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+.wordmark-text{display:flex;flex-direction:column;line-height:1}
+.wordmark-title{font-family:var(--serif);font-size:24px;font-weight:500;letter-spacing:-.8px}
+.wordmark-sub{margin-top:4px;color:var(--muted);font-size:10px;letter-spacing:1.3px;text-transform:uppercase}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s ease}
+.nav-links a:hover{color:var(--brown)}
+.nav-cta{justify-self:end;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap}
+.nav-cta .pill{padding:10px 16px;font-size:13px}
+.hero{padding:60px 0 46px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:58px;align-items:center}
+.hero h1{font-size:clamp(48px,6.4vw,84px);margin:0}
+.hero p{color:var(--muted);font-size:19px;line-height:1.7;max-width:720px;margin:26px 0 0}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
+.brand-portrait{background:var(--card);border:1px solid var(--line);border-radius:36px;padding:20px;box-shadow:0 30px 90px color-mix(in srgb,var(--brown) 11%,transparent)}
+.brand-portrait img{border-radius:28px}
+.story-band{padding:54px 0}
+.story-card{background:var(--card);border:1px solid var(--line);border-radius:36px;padding:56px;display:grid;grid-template-columns:.42fr 1fr;gap:58px}
+.story-card h2,.split-card h2,.movement h2,.form-head h2{font-size:clamp(38px,5vw,68px);margin:0}
+.story-copy{color:var(--muted);font-size:18px;line-height:1.78}
+.story-copy p{margin:0 0 20px}
+.story-list{display:grid;gap:6px;margin:22px 0;color:var(--brown);font-weight:500}
+.quote-line{font-family:var(--serif);font-size:32px;line-height:1.12;color:var(--brown);letter-spacing:-.4px;margin-top:28px}
+.split{padding:42px 0}
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.split-card{background:var(--card);border:1px solid var(--line);border-radius:30px;padding:38px}
+.split-card p{color:var(--muted);font-size:17px;margin:20px 0 0}
+.movement{padding:76px 0}
+.movement-box{background:var(--brown);color:var(--cream);border-radius:40px;padding:64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.62fr);gap:48px;align-items:start}
+.movement .label{color:var(--gold)}
+.movement p{color:color-mix(in srgb,var(--cream) 82%,transparent);font-size:17px;line-height:1.72;margin:18px 0 0}
+.movement-note{background:color-mix(in srgb,var(--cream) 10%,transparent);border:1px solid color-mix(in srgb,var(--cream) 18%,transparent);border-radius:24px;padding:24px}
+.movement-note strong{color:var(--cream)}
+.form-section{padding:40px 0 96px}
+.form-shell{display:grid;grid-template-columns:.52fr 1fr;gap:36px;align-items:start}
+.form-head{position:sticky;top:110px}
+.form-head p{color:var(--muted);font-size:17px;line-height:1.7;margin:20px 0 0}
+.disclaimer{margin-top:24px;border-left:3px solid var(--gold);background:var(--card);padding:18px;color:var(--muted);font-size:13px;line-height:1.7}
+.story-form{background:var(--card);border:1px solid var(--line);border-radius:30px;padding:34px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field.full{grid-column:1/-1}
+label{display:block;color:var(--brown);font-size:11px;letter-spacing:1.8px;text-transform:uppercase;font-weight:500;margin-bottom:8px}
+input,select,textarea{width:100%;border:1px solid var(--line);background:#fffdf9;color:var(--brown);font-family:var(--sans);font-size:15px;padding:14px 15px;border-radius:0;outline:none;transition:border-color .2s ease,box-shadow .2s ease}
+textarea{min-height:170px;resize:vertical;line-height:1.6}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 12%,transparent)}
+.consent{display:flex;gap:12px;align-items:flex-start;color:var(--muted);font-size:13px;line-height:1.6;margin:22px 0}
+.consent input{width:18px;height:18px;margin-top:2px;accent-color:var(--gold);box-shadow:none}
+.form-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.form-status{color:var(--muted);font-size:14px}
+.form-status.success{color:#607044}
+.form-status.error{color:#9a3e35}
+.footer{padding:36px 0;color:var(--muted);font-size:14px}
+.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid color-mix(in srgb,var(--brown) 12%,transparent);padding-top:24px}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+.reveal.in{opacity:1;transform:translateY(0)}
+@media(max-width:980px){
+  .nav-inner{grid-template-columns:1fr auto}
+  .nav-links{display:none}
+  .hero-grid,.story-card,.split-grid,.movement-box,.form-shell{grid-template-columns:1fr}
+  .form-head{position:static}
+}
+@media(max-width:640px){
+  .container{width:min(1160px,calc(100% - 28px))}
+  .site-nav{position:relative}
+  .nav-inner{height:auto;padding:18px 0;display:flex;justify-content:space-between;align-items:center}
+  .wordmark img{width:40px;height:40px}
+  .wordmark-sub{display:none}
+  .nav-cta .pill.secondary{display:none}
+  .hero{padding-top:54px}
+  .hero h1{font-size:clamp(46px,16vw,72px)}
+  .story-card,.movement-box,.story-form{padding:28px;border-radius:26px}
+  .form-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal{opacity:1!important;transform:none!important}
+}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <div class="container nav-inner">
+    <a class="wordmark" href="index.html" aria-label="Cashflow System by Ceylonry Labs.io">
+      <img src="assets/mrs-gamage-cashflow.png" alt="Cashflow System by Ceylonry Labs.io logo">
+      <span class="wordmark-text">
+        <span class="wordmark-title">Cashflow System</span>
+        <span class="wordmark-sub">By Ceylonry Labs.io</span>
+      </span>
+    </a>
+    <div class="nav-links" aria-label="Story navigation">
+      <a href="index.html#pricing">Pricing</a>
+      <a href="#story">Story</a>
+      <a href="#mission">Mission</a>
+      <a href="#movement">Join the Movement</a>
+      <a href="starter.html?demo=1">Demo</a>
+    </div>
+    <div class="nav-cta">
+      <a class="pill secondary" href="signin.html">Sign in</a>
+      <a class="pill" href="#story-form">Submit your story</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <p class="label">Cashflow System Brand Story</p>
+        <h1 class="serif">Are you a woman with a story?<br>Are you a mom with a vision?</h1>
+        <p>Cashflow System was built for women entrepreneurs and small business owners who are talented, hardworking, and full of potential — but need better structure, clearer cashflow, and stronger financial control to grow.</p>
+        <div class="hero-actions">
+          <a class="pill" href="#movement">Join the Movement</a>
+          <a class="pill secondary" href="#story-form">Share Your Business Story</a>
+        </div>
+      </div>
+      <figure class="brand-portrait reveal">
+        <img src="assets/mrs-gamage-cashflow.png" alt="Mrs. Gamage Cashflow System brand illustration">
+      </figure>
+    </div>
+  </section>
+
+  <section class="story-band reveal" id="story">
+    <div class="container">
+      <article class="story-card">
+        <div>
+          <p class="label">Founder-led story</p>
+          <h2 class="serif">The Story of Mrs. Gamage</h2>
+        </div>
+        <div class="story-copy">
+          <p>Mrs. Gamage makes the best butter cake in Nugegoda.</p>
+          <p>Her customers love her. Orders come through WhatsApp. Friends recommend her. Birthdays, office treats, school events, family gatherings — everyone knows she is the person to call.</p>
+          <p>But behind the busy kitchen, there is another story.</p>
+          <div class="story-list">
+            <span>Late payments.</span>
+            <span>Untracked expenses.</span>
+            <span>Receipts in drawers.</span>
+            <span>Invoices sent manually.</span>
+            <span>Money coming in, but disappearing just as quickly.</span>
+            <span>A business that feels busy, but not always profitable.</span>
+          </div>
+          <p>Mrs. Gamage is not lazy.<br>She is not careless.<br>She is not lacking talent.</p>
+          <p>She simply never had a simple system that helped her see the truth of her business.</p>
+          <p>That is why Cashflow System was created.</p>
+          <p>To help business owners like Mrs. Gamage raise invoices, track payments, understand income, manage reports, and make better business decisions without feeling overwhelmed.</p>
+          <div class="quote-line">Because being busy is not the same as being profitable.</div>
+          <p>And every woman with a business deserves to know where her money is going.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="split reveal" id="mission">
+    <div class="container split-grid">
+      <article class="split-card">
+        <p class="label">Our Mission</p>
+        <h2 class="serif">Clarity, confidence, and structure.</h2>
+        <p>Our mission is to help women entrepreneurs, mom business owners, and small SMEs take control of their business finances through simple, practical, and affordable digital tools.</p>
+        <p>We want to make invoicing, payment tracking, reports, customer management, and cashflow visibility easier for business owners who are building something meaningful with limited time, limited support, and real responsibilities.</p>
+        <p>Cashflow System exists to bring clarity, confidence, and structure to small businesses.</p>
+      </article>
+      <article class="split-card">
+        <p class="label">Our Vision</p>
+        <h2 class="serif">From survival mode to structure.</h2>
+        <p>Our vision is to become the most trusted business control system for women-led and small businesses in Sri Lanka and beyond.</p>
+        <p>We believe thousands of talented women are running businesses from kitchens, homes, shops, salons, studios, and small offices — but many do not have access to the right systems, funding guidance, or business structure.</p>
+        <p>We want to help them grow from survival mode to confident, structured, profitable businesses.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="movement reveal" id="movement">
+    <div class="container">
+      <div class="movement-box">
+        <div>
+          <p class="label">Join the Movement</p>
+          <h2 class="serif">Are you a woman with a story?<br>Are you a mom with a vision?</h2>
+          <p>We are building more than a software system. We are building a movement for women-led businesses that deserve structure, visibility, support, and growth opportunities.</p>
+          <p>If you are building a business, running a home-based brand, managing customers, chasing payments, or trying to grow with limited resources, we want to hear your story.</p>
+          <p>Selected businesses may be considered for future growth opportunities, business support, visibility campaigns, and potential funding introductions.</p>
+          <div class="hero-actions">
+            <a class="pill" href="#story-form">Submit Your Story</a>
+          </div>
+        </div>
+        <aside class="movement-note">
+          <p><strong>Funding interest note:</strong> We are exploring future business funding opportunities for selected women-led businesses. Eligible applicants may be considered for potential funding support or investor introductions ranging from approximately LKR 5 million to LKR 9 million, subject to review, eligibility, documentation, and availability.</p>
+          <p><strong>Important disclaimer:</strong> This is not a guaranteed funding offer. Submission of the form does not guarantee funding, investment, approval, or financial support. Selected businesses may be contacted for further review.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section reveal" id="story-form">
+    <div class="container form-shell">
+      <div class="form-head">
+        <p class="label">Tell Us Your Business Story</p>
+        <h2 class="serif">Share the business you are building.</h2>
+        <p>Share your details with us. If your story aligns with our future business support and funding opportunities, our team may contact you.</p>
+        <div class="disclaimer">Cashflow System / Ceylonry Labs may explore business support, visibility, or funding-related opportunities for selected businesses in the future. Submission of this form does not guarantee funding, investment, approval, or financial support. Any funding opportunity will be subject to review, eligibility, documentation, and availability.</div>
+      </div>
+      <form class="story-form" id="business-story-form">
+        <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px">
+        <div class="form-grid">
+          <div class="field"><label for="fullName">Full Name *</label><input id="fullName" name="fullName" required></div>
+          <div class="field"><label for="businessName">Business Name *</label><input id="businessName" name="businessName" required></div>
+          <div class="field"><label for="email">Email Address *</label><input id="email" name="email" type="email" required></div>
+          <div class="field"><label for="whatsapp">WhatsApp Number *</label><input id="whatsapp" name="whatsapp" required></div>
+          <div class="field full"><label for="location">City / Location</label><input id="location" name="location"></div>
+          <div class="field full">
+            <label for="founderType">Are you a woman founder, mom entrepreneur, or small business owner?</label>
+            <select id="founderType" name="founderType">
+              <option value="">Select one</option>
+              <option>Woman Founder</option>
+              <option>Mom Entrepreneur</option>
+              <option>Small Business Owner</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field full"><label for="businessType">What type of business do you run?</label><input id="businessType" name="businessType" placeholder="Bakery, clothing, retail, salon, services, education, handmade products, online store..."></div>
+          <div class="field">
+            <label for="businessDuration">How long have you been running the business?</label>
+            <select id="businessDuration" name="businessDuration">
+              <option value="">Select one</option>
+              <option>Not started yet</option>
+              <option>Less than 6 months</option>
+              <option>6 months to 1 year</option>
+              <option>1 to 3 years</option>
+              <option>More than 3 years</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="biggestChallenge">What is your biggest business challenge right now?</label>
+            <select id="biggestChallenge" name="biggestChallenge">
+              <option value="">Select one</option>
+              <option>Late payments</option>
+              <option>Cashflow tracking</option>
+              <option>Invoicing</option>
+              <option>Expenses</option>
+              <option>Lack of capital</option>
+              <option>Business structure</option>
+              <option>Marketing</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field full"><label for="story">Tell us your story *</label><textarea id="story" name="story" required></textarea></div>
+          <div class="field">
+            <label for="fundingInterest">Are you interested in future funding or business support opportunities?</label>
+            <select id="fundingInterest" name="fundingInterest">
+              <option value="">Select one</option>
+              <option>Yes</option>
+              <option>No</option>
+              <option>Maybe</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fundingRequirement">Estimated funding requirement</label>
+            <select id="fundingRequirement" name="fundingRequirement">
+              <option value="">Select one</option>
+              <option>Below LKR 1 million</option>
+              <option>LKR 1 million to 3 million</option>
+              <option>LKR 3 million to 5 million</option>
+              <option>LKR 5 million to 9 million</option>
+              <option>Above LKR 9 million</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+        </div>
+        <label class="consent">
+          <input type="checkbox" name="consent" required>
+          <span>I understand that submitting this form does not guarantee funding, investment, or approval. I agree to be contacted by Cashflow System / Ceylonry Labs regarding my submission.</span>
+        </label>
+        <div class="form-actions">
+          <button class="pill" type="submit" id="story-submit">Submit My Story</button>
+          <span class="form-status" id="story-status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-row">
+    <span>Cashflow System by CeylonryLabs.io</span>
+    <span>hello@ceylonrylabs.io</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const revealItems = Array.from(document.querySelectorAll('.reveal'));
+  if (reduced || !('IntersectionObserver' in window)) {
+    revealItems.forEach(item => item.classList.add('in'));
+  } else {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('in');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: .14 });
+    revealItems.forEach(item => observer.observe(item));
+  }
+
+  const form = document.getElementById('business-story-form');
+  const submit = document.getElementById('story-submit');
+  const status = document.getElementById('story-status');
+
+  function setStatus(type, msg) {
+    status.className = 'form-status ' + (type || '');
+    status.textContent = msg || '';
+  }
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fd = new FormData(form);
+    if (fd.get('website')) return;
+    const payload = {
+      fullName: fd.get('fullName'),
+      businessName: fd.get('businessName'),
+      email: fd.get('email'),
+      whatsapp: fd.get('whatsapp'),
+      location: fd.get('location'),
+      founderType: fd.get('founderType'),
+      businessType: fd.get('businessType'),
+      businessDuration: fd.get('businessDuration'),
+      biggestChallenge: fd.get('biggestChallenge'),
+      story: fd.get('story'),
+      fundingInterest: fd.get('fundingInterest'),
+      fundingRequirement: fd.get('fundingRequirement'),
+      consent: fd.get('consent') === 'on'
+    };
+
+    submit.disabled = true;
+    submit.textContent = 'Submitting...';
+    setStatus('', 'Sending your story...');
+
+    try {
+      const res = await fetch('/.netlify/functions/send-story-submission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out.ok) throw new Error(out.error || 'Submission failed');
+      localStorage.setItem('cls-last-story-submission', JSON.stringify({ ...payload, submittedAt: new Date().toISOString() }));
+      form.reset();
+      setStatus('success', 'Thank you for sharing your story. Our team has received your submission. If your business aligns with future opportunities, we may contact you for the next step.');
+    } catch (err) {
+      setStatus('error', 'Sorry, something went wrong. Please try again or contact us directly.');
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Submit My Story';
+    }
+  });
+})();
+</script>
+</body>
+</html>
