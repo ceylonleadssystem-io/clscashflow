@@ -120,7 +120,7 @@ exports.handler = async function handler(event) {
     auth: { user, pass }
   });
 
-  const subject = 'New Business Story Submission — Cashflow System';
+  const subject = 'New Business Story Submission - Cashflow System';
   const text =
     'A new business story has been submitted.\n\n' +
     'Full Name: ' + data.fullName + '\n' +

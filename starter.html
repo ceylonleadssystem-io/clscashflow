@@ -2824,8 +2824,8 @@ function initDemoMode(){
   if(!document.getElementById('demo-banner')){
     const banner=document.createElement('div');
     banner.id='demo-banner';
-    banner.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:'DM Sans',sans-serif;font-size:.78rem;";
-    banner.innerHTML='<span>Demo mode · sample data only</span><button data-cls-fn="openInvoiceModal" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:&quot;DM Sans&quot;,sans-serif">Try creating an invoice →</button>';
+    banner.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;z-index:900;font-family:'DM Sans',sans-serif;font-size:.78rem;";
+    banner.innerHTML='<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><span>Demo mode · sample data only</span><a href="index.html" style="color:#fff;border:1px solid rgba(255,255,255,.35);padding:.36rem .9rem;text-decoration:none;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600">Home</a></div><button data-cls-fn="openInvoiceModal" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:&quot;DM Sans&quot;,sans-serif">Try creating an invoice →</button>';
     document.body.appendChild(banner);
   }
 }
