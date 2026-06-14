@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CashFlow by CeylonryLabs.io</title>
+<title>Cashflow System by Ceylonry Labs.io</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
@@ -48,19 +48,14 @@ a{color:inherit}
 .nav-cta .pill{padding:10px 16px;font-size:13px;white-space:nowrap;line-height:1}
 
 /* Hero */
-.hero{padding:96px 0 74px}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.82fr);gap:72px;align-items:end;min-width:0}
-.hero-copy{padding-bottom:18px}
+.hero{padding:108px 0 88px;text-align:center}
+.hero-grid{display:block;max-width:980px;margin:0 auto;min-width:0}
+.hero-copy{padding-bottom:0}
 .hero h1{margin:0;font-size:clamp(64px,9vw,128px)}
 .hero-word{display:inline-block;opacity:0;transform:translateY(24px)}
-.hero-sub{max-width:650px;margin:28px 0 0;color:var(--muted);font-size:20px;line-height:1.55}
-.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
+.hero-sub{max-width:680px;margin:28px auto 0;color:var(--muted);font-size:20px;line-height:1.55}
+.hero-actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:34px}
 .hero-note{margin-top:18px;color:var(--muted);font-size:14px}
-.hero-card{background:var(--card);border-radius:32px;padding:30px;border:1px solid color-mix(in srgb,var(--brown) 10%,transparent)}
-.hero-card-title{font-family:var(--serif);font-size:32px;letter-spacing:-.6px;line-height:1.05;margin:0 0 16px}
-.hero-card-row{display:flex;justify-content:space-between;gap:20px;border-top:1px solid color-mix(in srgb,var(--brown) 12%,transparent);padding:16px 0;color:var(--muted);font-size:14px}
-.hero-card-row strong{color:var(--brown);font-weight:500}
-
 /* Story Teaser */
 .story-teaser{padding:18px 0 72px}
 .story-teaser-card{background:var(--card);border:1px solid color-mix(in srgb,var(--brown) 10%,transparent);border-radius:34px;padding:34px;display:grid;grid-template-columns:210px minmax(0,1fr) auto;gap:34px;align-items:center}
@@ -101,18 +96,21 @@ a{color:inherit}
 .section-head h2{margin:0;font-size:clamp(46px,6vw,78px)}
 .section-head p{margin:0;color:var(--muted);font-size:18px;line-height:1.6}
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.price-card{background:var(--card);border-radius:28px;border:1px solid color-mix(in srgb,var(--brown) 10%,transparent);padding:28px;transition:transform .25s ease}
+.price-card{background:var(--card);border-radius:28px;border:1px solid color-mix(in srgb,var(--brown) 10%,transparent);padding:28px;transition:transform .25s ease;display:flex;flex-direction:column}
 .price-card:hover{transform:translateY(-4px)}
 .price-card.featured{background:var(--brown);color:var(--card)}
 .price-card h3{margin:0 0 18px;font-family:var(--serif);font-size:34px;letter-spacing:-.6px;font-weight:400}
 .price{font-family:var(--serif);font-size:46px;line-height:1;letter-spacing:-.8px;color:var(--gold);margin-bottom:10px}
 .price small{font-family:var(--sans);font-size:13px;letter-spacing:0;color:var(--muted)}
 .featured .price small{color:var(--cream)}
-.price-card p{margin:0;color:var(--muted);min-height:70px}
+.price-card p{margin:0;color:var(--muted)}
 .featured p{color:var(--cream)}
-.price-card ul{list-style:none;margin:24px 0 0;padding:0;display:grid;gap:10px;color:var(--muted);font-size:14px}
-.featured ul{color:var(--cream)}
-.price-actions{margin-top:28px;display:flex}
+.feature-kicker{margin-top:26px;color:var(--gold);font-size:11px;letter-spacing:1.7px;text-transform:uppercase;font-weight:500}
+.price-card ul{list-style:none;margin:12px 0 0;padding:0;color:var(--muted);font-size:14px;border-top:1px solid color-mix(in srgb,var(--brown) 12%,transparent)}
+.price-card li{padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--brown) 10%,transparent);line-height:1.35}
+.featured ul{color:var(--cream);border-top-color:color-mix(in srgb,var(--cream) 18%,transparent)}
+.featured li{border-bottom-color:color-mix(in srgb,var(--cream) 14%,transparent)}
+.price-actions{margin-top:auto;padding-top:28px;display:flex}
 .price-actions .pill{width:100%;padding:12px 18px;font-size:13px}
 .featured .pill.secondary{border-color:var(--gold);color:var(--card)}
 .featured .pill.secondary:hover{background:color-mix(in srgb,var(--cream) 10%,transparent)}
@@ -129,12 +127,20 @@ a{color:inherit}
 .benefit p{margin:0;color:var(--muted);font-size:15px;line-height:1.6}
 
 /* Image band */
-.image-band{padding:72px 0 96px}
-.photo-wrap{border-radius:38px;overflow:hidden;background:var(--sage);padding:18px;display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:18px}
-.photo-card{position:relative;min-height:360px;border-radius:26px;overflow:hidden;background:var(--card)}
-.photo-card img{width:100%;height:100%;object-fit:cover}
-.photo-card:first-child{min-height:460px}
-.photo-label{position:absolute;left:18px;right:18px;bottom:18px;background:var(--card);border-radius:999px;padding:10px 16px;color:var(--muted);font-size:13px}
+.image-band{padding:72px 0 108px}
+.image-head{display:grid;grid-template-columns:minmax(0,.82fr) minmax(300px,.55fr);gap:56px;align-items:end;margin-bottom:32px}
+.image-head h2{font-size:clamp(42px,5.6vw,78px);margin:0}
+.image-head p{margin:0;color:var(--muted);font-size:18px;line-height:1.65}
+.photo-wrap{border-radius:42px;overflow:hidden;background:var(--sage);padding:22px;display:grid;grid-template-columns:1.15fr .85fr .85fr;gap:18px;box-shadow:0 30px 80px color-mix(in srgb,var(--brown) 10%,transparent)}
+.photo-card{position:relative;min-height:390px;border-radius:28px;overflow:hidden;background:var(--card);border:1px solid color-mix(in srgb,var(--brown) 10%,transparent)}
+.photo-card img{width:100%;height:100%;object-fit:cover;transition:transform .8s ease}
+.photo-card:hover img{transform:scale(1.03)}
+.photo-card:first-child{min-height:500px}
+.photo-card:nth-child(2) img{object-position:center center}
+.photo-card:nth-child(3) img{object-position:center center}
+.photo-label{position:absolute;left:18px;right:18px;bottom:18px;background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid color-mix(in srgb,var(--brown) 10%,transparent);border-radius:22px;padding:14px 16px;color:var(--muted);font-size:13px;backdrop-filter:blur(10px)}
+.photo-label strong{display:block;color:var(--brown);font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.1;letter-spacing:-.3px;margin-bottom:4px}
+.photo-label span{display:block;line-height:1.45}
 
 /* CTA */
 .closing{padding:32px 0 112px}
@@ -163,6 +169,7 @@ a{color:inherit}
   .hero{padding-top:70px}
   .kpi-grid,.pricing-grid{grid-template-columns:1fr}
   .benefit-grid{grid-template-columns:repeat(2,1fr)}
+  .image-head{grid-template-columns:1fr;gap:18px}
   .photo-wrap{grid-template-columns:1fr}
   .photo-card,.photo-card:first-child{min-height:320px}
 }
@@ -180,8 +187,6 @@ a{color:inherit}
   .hero-copy{min-width:0}
   .hero-sub{font-size:17px;max-width:320px;overflow-wrap:break-word}
   .hero-note{max-width:320px}
-  .hero-card{padding:24px 22px;border-radius:24px}
-  .hero-card-row{display:grid;grid-template-columns:1fr;gap:4px}
   .device-stage{padding:16px;border-radius:26px}
   .device-body{padding:18px}
   .dash-head,.device-lower{grid-template-columns:1fr;display:grid}
@@ -241,13 +246,6 @@ a{color:inherit}
           </div>
           <div class="hero-note">15-day free trial. No card needed.</div>
         </div>
-        <aside class="hero-card reveal" aria-label="Plan preview">
-          <h2 class="hero-card-title">Simple setup, then your choice.</h2>
-          <div class="hero-card-row"><span>First question</span><strong>Primary use</strong></div>
-          <div class="hero-card-row"><span>Recommendation</span><strong>Best-fit plan</strong></div>
-          <div class="hero-card-row"><span>Final decision</span><strong>You choose</strong></div>
-          <div class="hero-card-row"><span>Starting price</span><strong>LKR 5,500</strong></div>
-        </aside>
       </div>
     </section>
 
@@ -335,10 +333,15 @@ a{color:inherit}
             <h3>Starter</h3>
             <div class="price">LKR 5,500 <small>/ mo</small></div>
             <p>Invoice control for small teams that need customers, payments, reports, and audit history.</p>
+            <div class="feature-kicker">Included</div>
             <ul>
-              <li>Invoices and customers</li>
+              <li>Invoice dashboard</li>
+              <li>Create and edit invoices</li>
+              <li>Customer records</li>
               <li>Payment tracking</li>
-              <li>Reports and edit backlog</li>
+              <li>PDF, email and WhatsApp sharing</li>
+              <li>Reports and edit backlog with reasons</li>
+              <li>Up to 2 users</li>
             </ul>
             <div class="price-actions"><a class="pill secondary" href="onboarding.html?plan=starter">Start free trial ↗</a></div>
           </article>
@@ -346,10 +349,18 @@ a{color:inherit}
             <h3>Growth</h3>
             <div class="price">LKR 12,500 <small>/ mo</small></div>
             <p>Cashflow and operations control for businesses tracking money in, expenses, suppliers, and who owes them.</p>
+            <div class="feature-kicker">Everything in Starter, plus</div>
             <ul>
               <li>Money in and out</li>
-              <li>Expenses and suppliers</li>
+              <li>Expense tracking</li>
+              <li>Supplier management</li>
+              <li>Who Owes Me</li>
+              <li>Business reports</li>
               <li>Basic business insights</li>
+              <li>Monthly email reports</li>
+              <li>VAT / tax support</li>
+              <li>Manual payment reminders</li>
+              <li>Up to 8 users</li>
             </ul>
             <div class="price-actions"><a class="pill" href="onboarding.html?plan=growth">Start free trial ↗</a></div>
           </article>
@@ -357,9 +368,15 @@ a{color:inherit}
             <h3>Premium</h3>
             <div class="price">LKR 18,500 <small>/ mo</small></div>
             <p>Advanced controls for payroll, automation, deeper analytics, and larger operational teams.</p>
+            <div class="feature-kicker">Everything in Growth, plus</div>
             <ul>
-              <li>Payroll and automations</li>
+              <li>Payroll management</li>
+              <li>Feedback form system</li>
               <li>Advanced analytics</li>
+              <li>Forecasting and deeper insights</li>
+              <li>Automated reminders</li>
+              <li>Advanced permissions</li>
+              <li>More invoice templates</li>
               <li>Premium onboarding support</li>
             </ul>
             <div class="price-actions"><a class="pill secondary" href="onboarding.html?plan=premium">Start free trial ↗</a></div>
@@ -397,20 +414,27 @@ a{color:inherit}
       </div>
     </section>
 
-    <section class="image-band reveal" aria-label="Photography placeholders">
+    <section class="image-band reveal" aria-label="Mrs. Gamage business photography">
       <div class="container">
+        <div class="image-head">
+          <div>
+            <p class="label">Real business rhythm</p>
+            <h2 class="serif">Built for the work behind the orders.</h2>
+          </div>
+          <p>Cashflow System is made for the quiet middle of business: packing orders, sending invoices, following up payments, and knowing whether the month is actually profitable.</p>
+        </div>
         <div class="photo-wrap">
           <figure class="photo-card">
-            <img alt="Placeholder for warm real photography: Sri Lankan kitchen with hands at work" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 560'%3E%3Crect width='900' height='560' fill='%23FDFAF4'/%3E%3Crect x='52' y='52' width='796' height='456' rx='36' fill='%23C7CBA8'/%3E%3Ctext x='450' y='270' font-family='Inter, sans-serif' font-size='34' text-anchor='middle' fill='%234A3B2A'%3ESri Lankan kitchen photo%3C/text%3E%3Ctext x='450' y='314' font-family='Inter, sans-serif' font-size='18' text-anchor='middle' fill='%236F6353'%3EPlaceholder for real photography%3C/text%3E%3C/svg%3E">
-            <figcaption class="photo-label">Photo placeholder: Sri Lankan kitchen</figcaption>
+            <img src="assets/mrs-gamage-cake-counter.png" loading="lazy" alt="Mrs. Gamage decorating a butter cake at her bakery counter">
+            <figcaption class="photo-label"><strong>Orders become invoices.</strong><span>From WhatsApp order to branded invoice, without losing the customer details.</span></figcaption>
           </figure>
           <figure class="photo-card">
-            <img alt="Placeholder for warm real photography: cakes and bakery counter" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 620 560'%3E%3Crect width='620' height='560' fill='%23FDFAF4'/%3E%3Crect x='42' y='52' width='536' height='456' rx='34' fill='%23C7CBA8'/%3E%3Ctext x='310' y='270' font-family='Inter, sans-serif' font-size='30' text-anchor='middle' fill='%234A3B2A'%3ECakes and counter%3C/text%3E%3Ctext x='310' y='312' font-family='Inter, sans-serif' font-size='17' text-anchor='middle' fill='%236F6353'%3EPlaceholder%3C/text%3E%3C/svg%3E">
-            <figcaption class="photo-label">Photo placeholder: cakes</figcaption>
+            <img src="assets/mrs-gamage-packing-orders.png" loading="lazy" alt="Mrs. Gamage packing customer orders with labels and notes">
+            <figcaption class="photo-label"><strong>Every order tracked.</strong><span>Keep customers, payments, and follow-ups together in one simple flow.</span></figcaption>
           </figure>
           <figure class="photo-card">
-            <img alt="Placeholder for warm real photography: hands packing orders" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 620 560'%3E%3Crect width='620' height='560' fill='%23FDFAF4'/%3E%3Crect x='42' y='52' width='536' height='456' rx='34' fill='%23C7CBA8'/%3E%3Ctext x='310' y='270' font-family='Inter, sans-serif' font-size='30' text-anchor='middle' fill='%234A3B2A'%3EHands at work%3C/text%3E%3Ctext x='310' y='312' font-family='Inter, sans-serif' font-size='17' text-anchor='middle' fill='%236F6353'%3EPlaceholder%3C/text%3E%3C/svg%3E">
-            <figcaption class="photo-label">Photo placeholder: hands at work</figcaption>
+            <img src="assets/mrs-gamage-kitchen-cake.png" loading="lazy" alt="Mrs. Gamage presenting a finished butter cake in her kitchen">
+            <figcaption class="photo-label"><strong>Profit made visible.</strong><span>See what came in, what is pending, and what still needs attention.</span></figcaption>
           </figure>
         </div>
       </div>
@@ -432,7 +456,7 @@ a{color:inherit}
 
   <footer class="footer">
     <div class="container footer-row">
-      <span>CashFlow by CeylonryLabs.io</span>
+      <span>Cashflow System by Ceylonry Labs.io</span>
       <span>hello@ceylonrylabs.io</span>
     </div>
   </footer>
