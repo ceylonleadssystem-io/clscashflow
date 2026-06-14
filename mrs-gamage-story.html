@@ -250,7 +250,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 
         <p>Share your details with us. If your story aligns with our future business support and funding opportunities, our team may contact you.</p>
         <div class="disclaimer">Cashflow System / Ceylonry Labs may explore business support, visibility, or funding-related opportunities for selected businesses in the future. Submission of this form does not guarantee funding, investment, approval, or financial support. Any funding opportunity will be subject to review, eligibility, documentation, and availability.</div>
       </div>
-      <form class="story-form" id="business-story-form">
+      <form class="story-form" id="business-story-form" name="business-story" method="POST" action="/story-thank-you.html" data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="business-story">
+        <p style="display:none"><label>Do not fill this out: <input name="bot-field"></label></p>
         <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px">
         <div class="form-grid">
           <div class="field"><label for="fullName">Full Name *</label><input id="fullName" name="fullName" required></div>
@@ -318,7 +320,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 
           </div>
         </div>
         <label class="consent">
-          <input type="checkbox" name="consent" required>
+          <input type="checkbox" name="consent" value="Yes" required>
           <span>I understand that submitting this form does not guarantee funding, investment, or approval. I agree to be contacted by Cashflow System / Ceylonry Labs regarding my submission.</span>
         </label>
         <div class="form-actions">
@@ -363,10 +365,45 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 
     status.textContent = msg || '';
   }
 
+  function isLocalPreview() {
+    return ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+  }
+
+  function encodeNetlifyForm(fd) {
+    const body = new URLSearchParams();
+    body.append('form-name', 'business-story');
+    for (const [key, value] of fd.entries()) {
+      if (key === 'website' || key === 'form-name') continue;
+      body.append(key, value);
+    }
+    return body.toString();
+  }
+
+  async function submitToNetlifyForms(fd) {
+    const res = await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: encodeNetlifyForm(fd)
+    });
+    if (!res.ok) throw new Error('Netlify form capture failed');
+    return true;
+  }
+
+  async function submitToEmailFunction(payload) {
+    const res = await fetch('/.netlify/functions/send-story-submission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok || !out.ok) throw new Error(out.error || 'Email function failed');
+    return out;
+  }
+
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
     const fd = new FormData(form);
-    if (fd.get('website')) return;
+    if (fd.get('website') || fd.get('bot-field')) return;
     const payload = {
       fullName: fd.get('fullName'),
       businessName: fd.get('businessName'),
@@ -380,7 +417,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 
       story: fd.get('story'),
       fundingInterest: fd.get('fundingInterest'),
       fundingRequirement: fd.get('fundingRequirement'),
-      consent: fd.get('consent') === 'on'
+      consent: fd.get('consent') === 'Yes'
     };
 
     submit.disabled = true;
@@ -388,18 +425,23 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 
     setStatus('', 'Sending your story...');
 
     try {
-      const res = await fetch('/.netlify/functions/send-story-submission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok || !out.ok) throw new Error(out.error || 'Submission failed');
+      let sentByFunction = false;
+      try {
+        await submitToEmailFunction(payload);
+        sentByFunction = true;
+      } catch (functionError) {
+        if (isLocalPreview()) {
+          throw new Error('Local preview cannot send email. Deploy to Netlify or run netlify dev to test this form.');
+        }
+        await submitToNetlifyForms(fd);
+      }
       localStorage.setItem('cls-last-story-submission', JSON.stringify({ ...payload, submittedAt: new Date().toISOString() }));
       form.reset();
-      setStatus('success', 'Thank you for sharing your story. Our team has received your submission. If your business aligns with future opportunities, we may contact you for the next step.');
+      setStatus('success', sentByFunction
+        ? 'Thank you for sharing your story. Our team has received your submission by email. If your business aligns with future opportunities, we may contact you for the next step.'
+        : 'Thank you for sharing your story. Our team has received your submission. If your business aligns with future opportunities, we may contact you for the next step.');
     } catch (err) {
-      setStatus('error', 'Sorry, something went wrong. Please try again or contact us directly.');
+      setStatus('error', err && err.message ? err.message : 'Sorry, something went wrong. Please try again or contact us directly.');
     } finally {
       submit.disabled = false;
       submit.textContent = 'Submit My Story';

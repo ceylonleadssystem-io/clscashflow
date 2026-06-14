@@ -113,10 +113,12 @@ exports.handler = async function handler(event) {
   const storeResult = await storeSubmission(data);
   const to = process.env.STORY_SUBMISSION_TO || process.env.BUSINESS_OWNER_EMAIL || 'hello@ceylonrylabs.io';
   const fromAddr = process.env.SMTP_FROM || user;
+  const smtpPort = Number(process.env.SMTP_PORT || 465);
+  const smtpSecure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE !== 'false' : smtpPort === 465;
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: true,
+    port: smtpPort,
+    secure: smtpSecure,
     auth: { user, pass }
   });
 
