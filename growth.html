@@ -227,6 +227,29 @@ tr:hover td{background:var(--bg3)}
 .tpl-card.sel{border-color:var(--rose);background:var(--white)}
 .tpl-prev{height:50px;width:100%;display:flex;align-items:center;justify-content:center}
 .tpl-name{font-size:.56rem;letter-spacing:.06em;text-transform:uppercase;color:var(--black);font-weight:600;padding:.28rem .2rem;background:var(--white);border-top:1px solid var(--border)}
+.settings-template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:.55rem 0 .9rem}
+.settings-template-card{border:2px solid var(--border);background:var(--bg);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .16s;text-align:center}
+.settings-template-card:hover{border-color:var(--gold);transform:translateY(-1px)}
+.settings-template-card.sel{border-color:var(--black);background:var(--white)}
+.settings-template-card .tpl-name{font-size:.52rem}
+.template-helper{font-size:.64rem;color:var(--muted);line-height:1.45;margin-top:-.12rem}
+.settings-preview-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:.85rem;margin-top:.65rem}
+.settings-preview-label{font-size:.54rem;letter-spacing:.17em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.55rem}
+.settings-invoice-preview{background:#fff;border:1px solid var(--border);box-shadow:0 8px 22px rgba(44,31,20,.08);padding:1rem;min-height:265px;border-radius:4px}
+.preview-invoice-top{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;border-bottom:2px solid var(--black);padding-bottom:.75rem;margin-bottom:.85rem}
+.preview-logo-box{width:80px;height:42px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:.56rem;color:var(--dim);overflow:hidden;background:#fff}
+.preview-logo-box img{max-width:100%;max-height:100%;object-fit:contain}
+.preview-title{font-size:1.15rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--black);line-height:1}
+.preview-number{font-size:.62rem;color:var(--muted);font-family:var(--fm);margin-top:.25rem;text-align:right}
+.preview-columns{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:.95rem}
+.preview-k{font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.25rem}
+.preview-v{font-size:.72rem;font-weight:700;color:var(--text)}
+.preview-m{font-size:.62rem;color:var(--muted);line-height:1.5;margin-top:.2rem}
+.preview-table-head{display:grid;grid-template-columns:1.6fr .45fr .7fr .8fr;background:var(--black);color:#fff;font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:.45rem .55rem}
+.preview-table-row{display:grid;grid-template-columns:1.6fr .45fr .7fr .8fr;border-bottom:1px solid var(--border);font-size:.62rem;padding:.55rem;color:var(--text)}
+.preview-table-row div:nth-child(n+2),.preview-table-head div:nth-child(n+2){text-align:right}
+.preview-total{margin-left:auto;margin-top:.8rem;background:var(--black);color:#fff;display:flex;justify-content:space-between;gap:1rem;width:min(235px,100%);padding:.75rem .9rem;font-size:.68rem;font-weight:700}
+.preview-total span:last-child{font-family:var(--fm);color:var(--gold-l)}
 
 /* PAYROLL */
 .staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:.9rem;padding:1.25rem}
@@ -602,16 +625,22 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="fg"><label>Invoice Footer Message</label><input class="fi" id="s-footer" type="text" placeholder="e.g. Thank you for your business!"></div>
               <div class="frow">
                 <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
-                <div class="fg"><label>Default Invoice Template</label><select class="fi fsel" id="s-default-tpl">
-                  <option value="0">Classic</option><option value="1">Prestige</option><option value="2">Modern</option><option value="3">Dark Pro</option><option value="4">Minimal</option>
-                  <option value="5">Split Pro</option><option value="6">Ceylon Gold</option><option value="7">Corporate</option><option value="8">Bold Block</option><option value="9">Signature</option>
-                </select></div>
+                <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
+              </div>
+              <div class="settings-template-grid" id="settings-template-grid"></div>
+              <div class="settings-preview-wrap">
+                <div class="settings-preview-label">Invoice Preview</div>
+                <div class="settings-invoice-preview" id="settings-invoice-preview"></div>
               </div>
               <div class="fsec">Your Business Logo</div>
               <div style="border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)" onclick="document.getElementById('logo-inp').click()">
                 <img id="logo-prev" style="max-height:46px;display:none;margin:0 auto .45rem;object-fit:contain" src="" alt="">
                 <div id="logo-hint"><div style="font-size:1.3rem;margin-bottom:.3rem">🏢</div><div style="font-size:.79rem;color:var(--muted)">Click to upload your logo</div><div style="font-size:.67rem;color:var(--dim);margin-top:.18rem">PNG or JPG · Max 2MB · Shows on all invoices</div></div>
                 <input type="file" id="logo-inp" accept="image/*" style="display:none" onchange="previewLogo(this)">
+              </div>
+              <div class="frow" style="margin-top:.85rem;margin-bottom:0">
+                <div class="fg"><label>Logo Alignment</label><select class="fi fsel" id="s-logo-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>
+                <div class="fg"><label>Logo Size</label><select class="fi fsel" id="s-logo-size"><option value="S">Small</option><option value="M">Medium</option><option value="L">Large</option></select></div>
               </div>
             </div>
           </div>
@@ -915,10 +944,13 @@ function mapStarterSettings(src) {
   out.vat = src.vat || src.taxNo || out.vat || '';
   out.footer = src.footer || out.footer || 'Thank you for your business.';
   out.logo = src.logo || out.logo || '';
+  out.monthlyReport = src.monthlyReport === true || out.monthlyReport === true;
   out.logoAlign = src.logoAlign || out.logoAlign || 'left';
   out.logoSize = src.logoSize || out.logoSize || 'M';
   out.defaultTpl = normalizeGrowthTemplate(src.defaultTpl != null ? src.defaultTpl : out.defaultTpl);
   out.vatRate = toNum(src.vatRate != null ? src.vatRate : out.vatRate || 15);
+  out.growthImportedFromStarter = src.growthImportedFromStarter === true || out.growthImportedFromStarter === true;
+  out.growthOpsStarted = src.growthOpsStarted === true;
   for (var i = 1; i <= 8; i++) out['u' + i] = src['u' + i] || out['u' + i] || '';
   return out;
 }
@@ -1002,16 +1034,39 @@ function applyStarterDataSnapshot(raw) {
   D.invoices = (snap.invoices || []).map(mapStarterInvoice);
   var starterClients = snap.clients && Array.isArray(snap.clients.list) ? snap.clients.list : (Array.isArray(snap.clients) ? snap.clients : []);
   D.clients = starterClients.map(mapStarterCustomer);
-  D.txns = (snap.transactions || snap.txns || []).map(mapStarterTransaction);
-  D.txns = addDerivedPaymentTransactions(D.txns, D.invoices);
-  D.exps = (snap.expenses || snap.exps || []).map(mapStarterExpense);
-  var starterSuppliers = snap.suppliers && Array.isArray(snap.suppliers.list) ? snap.suppliers.list : (Array.isArray(snap.suppliers) ? snap.suppliers : []);
-  D.suppliers = starterSuppliers.map(mapStarterSupplier);
+  D.txns = addDerivedPaymentTransactions([], D.invoices);
+  D.exps = [];
+  D.suppliers = [];
   D.payables = [];
   D.staff = [];
   D.autos = [];
+  D.settings.growthImportedFromStarter = true;
+  D.settings.growthOpsStarted = false;
   D._nextInvId = toNum(snap.nextInvNum || snap.nextInvId || D._nextInvId || 1);
   normalizeGrowthData();
+  return true;
+}
+function resetGrowthOperatingData() {
+  D.txns = addDerivedPaymentTransactions([], D.invoices);
+  D.exps = [];
+  D.suppliers = [];
+  D.payables = [];
+  D.settings.growthImportedFromStarter = true;
+  D.settings.growthOpsStarted = false;
+  syncGrowthComputedData();
+}
+function looksLikeLegacyGrowthDemoExpenses() {
+  if (!D.exps || !D.exps.length) return false;
+  var total = D.exps.reduce(function(a, e) { return a + toNum(e.amount); }, 0);
+  var cats = D.exps.map(function(e) { return e.cat || ''; }).join('|');
+  return Math.abs(total - 825000) < 1 && /Payroll/i.test(cats) && /Fuel\s*&\s*Transport/i.test(cats) && /Rent/i.test(cats);
+}
+function maybeResetStarterGrowthOps() {
+  var isStarterUpgrade = (_profile && String(_profile.upgradedFrom || '').toLowerCase() === 'starter') || D.settings.growthImportedFromStarter === true;
+  if (!isStarterUpgrade || D.settings.growthOpsStarted === true) return false;
+  if (D.exps.length === 0 && D.payables.length === 0 && D.suppliers.length === 0) return false;
+  if (!looksLikeLegacyGrowthDemoExpenses() && !D.settings.growthImportedFromStarter) return false;
+  resetGrowthOperatingData();
   return true;
 }
 async function consumeStarterUpgradeSnapshot() {
@@ -1634,6 +1689,91 @@ var TPLS = [
   {name:'Signature', bg:'#FAFAF8', fg:'#B8922A'}
 ];
 
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function(ch) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+
+function collectSettingsDraft() {
+  function val(id, fallback) {
+    var el = document.getElementById(id);
+    return el ? el.value : fallback;
+  }
+  return {
+    biz: val('s-biz', D.settings.biz) || D.settings.biz || 'Your Business',
+    user: val('s-user', D.settings.user) || D.settings.user || '',
+    addr: val('s-addr', D.settings.addr) || D.settings.addr || 'Business address',
+    email: val('s-email', D.settings.email) || D.settings.email || 'invoices@yourbusiness.lk',
+    vat: val('s-vat', D.settings.vat) || D.settings.vat || 'Optional',
+    footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Thank you for your business.',
+    vatRate: toNum(val('s-vatrate', D.settings.vatRate)),
+    defaultTpl: normalizeGrowthTemplate(val('s-default-tpl', D.settings.defaultTpl)),
+    logoAlign: val('s-logo-align', D.settings.logoAlign) || D.settings.logoAlign || 'left',
+    logoSize: val('s-logo-size', D.settings.logoSize) || D.settings.logoSize || 'M',
+    logo: D.settings.logo || ''
+  };
+}
+
+function renderSettingsTemplatePicker() {
+  var grid = document.getElementById('settings-template-grid');
+  if (!grid) return;
+  var active = normalizeGrowthTemplate((document.getElementById('s-default-tpl') || {}).value || D.settings.defaultTpl);
+  grid.innerHTML = TPLS.map(function(t, i) {
+    return '<div class="settings-template-card' + (i === active ? ' sel' : '') + '" onclick="window.selectGrowthDefaultTemplate(' + i + ')">' +
+      '<div class="tpl-prev" style="background:' + t.bg + '"><span style="font-size:.5rem;font-weight:700;letter-spacing:.09em;color:' + t.fg + ';text-transform:uppercase">' + escHtml(t.name) + '</span></div>' +
+      '<div class="tpl-name">' + escHtml(t.name) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+window.selectGrowthDefaultTemplate = function selectGrowthDefaultTemplate(idx) {
+  D.settings.defaultTpl = normalizeGrowthTemplate(idx);
+  var field = document.getElementById('s-default-tpl');
+  if (field) field.value = D.settings.defaultTpl;
+  renderSettingsTemplatePicker();
+  renderSettingsInvoicePreview();
+}
+
+function renderSettingsInvoicePreview() {
+  var box = document.getElementById('settings-invoice-preview');
+  if (!box) return;
+  var s = collectSettingsDraft();
+  var tpl = TPLS[s.defaultTpl] || TPLS[0];
+  var logoWidth = s.logoSize === 'L' ? '112px' : (s.logoSize === 'S' ? '58px' : '84px');
+  var logoHeight = s.logoSize === 'L' ? '54px' : (s.logoSize === 'S' ? '34px' : '44px');
+  var logoMargin = s.logoAlign === 'center' ? '0 auto .45rem' : (s.logoAlign === 'right' ? '0 0 .45rem auto' : '0 auto .45rem 0');
+  var logo = s.logo ? '<img src="' + s.logo + '" alt="Logo">' : 'Logo';
+  box.innerHTML =
+    '<div style="height:5px;background:' + tpl.bg + ';margin:-1rem -1rem 1rem;border-radius:4px 4px 0 0"></div>' +
+    '<div class="preview-invoice-top">' +
+      '<div style="flex:1;text-align:' + escHtml(s.logoAlign) + '">' +
+        '<div class="preview-logo-box" style="width:' + logoWidth + ';height:' + logoHeight + ';margin:' + logoMargin + '">' + logo + '</div>' +
+        '<div class="preview-v">' + escHtml(s.biz) + '</div>' +
+        '<div class="preview-m">' + escHtml(s.email) + '</div>' +
+      '</div>' +
+      '<div style="text-align:right"><div class="preview-title">Invoice</div><div class="preview-number">INV-0001</div><div class="preview-m">VAT: ' + escHtml(s.vat) + '</div></div>' +
+    '</div>' +
+    '<div class="preview-columns">' +
+      '<div><div class="preview-k">From</div><div class="preview-v">' + escHtml(s.biz) + '</div><div class="preview-m">' + escHtml(s.addr) + '</div></div>' +
+      '<div><div class="preview-k">Bill To</div><div class="preview-v">Sample Customer</div><div class="preview-m">Customer billing address</div></div>' +
+    '</div>' +
+    '<div class="preview-table-head"><div>Description</div><div>Qty</div><div>Price</div><div>Amount</div></div>' +
+    '<div class="preview-table-row"><div>Service or product</div><div>1</div><div>LKR 100,000</div><div>LKR 100,000</div></div>' +
+    '<div class="preview-m" style="margin-top:.65rem">' + escHtml(s.footer) + '</div>' +
+    '<div class="preview-total"><span>Total Due</span><span>LKR 100,000</span></div>';
+}
+
+function bindSettingsPreviewInputs() {
+  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-logo-align','s-logo-size'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el || el.dataset.previewBound) return;
+    el.dataset.previewBound = '1';
+    el.addEventListener('input', renderSettingsInvoicePreview);
+    el.addEventListener('change', renderSettingsInvoicePreview);
+  });
+}
+
 window.openInvMo = function openInvMo() {
   selTpl = normalizeGrowthTemplate(D.settings.defaultTpl);
   buildTplPicker();
@@ -1738,6 +1878,7 @@ window.addTxn = function addTxn() {
   var desc = document.getElementById('t-desc').value.trim();
   var amt = Number(document.getElementById('t-amt').value);
   if (!d || !desc || !amt) { showToast('Please fill in all fields', 'err'); return; }
+  D.settings.growthOpsStarted = true;
   D.txns.unshift({id:'T'+Date.now(), date:d, desc:desc, type:document.getElementById('t-type').value, cat:document.getElementById('t-cat').value, amount:amt, ref:document.getElementById('t-ref').value});
   closeMo('mo-txn');
   syncGrowthComputedData();
@@ -1754,6 +1895,7 @@ window.addExp = function addExp() {
   var vendor = document.getElementById('e-vendor').value.trim();
   var cat = document.getElementById('e-cat').value;
   var supplier = vendor ? D.suppliers.find(function(s) { return s.name.toLowerCase() === vendor.toLowerCase(); }) : null;
+  D.settings.growthOpsStarted = true;
   if (vendor && !supplier) {
     supplier = {id:'SP'+Date.now(), name:vendor, cat:cat, contact:'', phone:'', ytd:0, status:'active', email:'', addr:''};
     D.suppliers.push(supplier);
@@ -1799,6 +1941,7 @@ window.saveClient = function saveClient() {
 window.addSup = function addSup() {
   var name = document.getElementById('sp-name').value.trim();
   if (!name) { showToast('Supplier name is required', 'err'); return; }
+  D.settings.growthOpsStarted = true;
   D.suppliers.push({id:'SP'+Date.now(), name:name, cat:document.getElementById('sp-cat').value, contact:document.getElementById('sp-contact').value, phone:document.getElementById('sp-phone').value, ytd:0, status:'active', email:'', addr:''});
   closeMo('mo-sup');
   renderSuppliers();
@@ -1824,10 +1967,14 @@ window.saveSettings = function saveSettings() {
   D.settings.footer = document.getElementById('s-footer').value;
   var vatRateEl = document.getElementById('s-vatrate');
   var defaultTplEl = document.getElementById('s-default-tpl');
+  var logoAlignEl = document.getElementById('s-logo-align');
+  var logoSizeEl = document.getElementById('s-logo-size');
   if (vatRateEl) {
     D.settings.vatRate = parseFloat(vatRateEl.value);
     if (isNaN(D.settings.vatRate)) D.settings.vatRate = 15;
   }
+  if (logoAlignEl) D.settings.logoAlign = logoAlignEl.value || 'left';
+  if (logoSizeEl) D.settings.logoSize = logoSizeEl.value || 'M';
   if (defaultTplEl) {
     D.settings.defaultTpl = normalizeGrowthTemplate(defaultTplEl.value);
     D.invoices.forEach(function(inv) { inv.tpl = D.settings.defaultTpl; });
@@ -1842,6 +1989,8 @@ window.saveSettings = function saveSettings() {
   var ini = userName.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
   document.getElementById('sb-uname').textContent = userName;
   document.getElementById('sb-av').textContent = ini;
+  renderSettingsTemplatePicker();
+  renderSettingsInvoicePreview();
   showToast('Settings saved!', 'ok');
   saveData();
 }
@@ -1856,6 +2005,7 @@ function previewLogo(input) {
     prev.src = e.target.result;
     prev.style.display = 'block';
     if (hint) hint.style.display = 'none';
+    renderSettingsInvoicePreview();
     saveData();
   };
   reader.readAsDataURL(input.files[0]);
@@ -2022,6 +2172,9 @@ _fauth.onAuthStateChanged(async function(user) {
 
     await loadData(_uid);
     var importedFromStarter = await consumeStarterUpgradeSnapshot();
+    var resetFreshGrowthOps = false;
+    if (!importedFromStarter) resetFreshGrowthOps = maybeResetStarterGrowthOps();
+    if (resetFreshGrowthOps) await saveData();
 
     // ── Run original init logic ──
     var _ds = new Date().toLocaleDateString('en-LK', {weekday:'short', day:'numeric', month:'long', year:'numeric'});
@@ -2049,6 +2202,10 @@ _fauth.onAuthStateChanged(async function(user) {
     if (vatRateField) vatRateField.value = s.vatRate != null ? s.vatRate : 15;
     var defaultTplField = document.getElementById('s-default-tpl');
     if (defaultTplField) defaultTplField.value = normalizeGrowthTemplate(s.defaultTpl);
+    var logoAlignField = document.getElementById('s-logo-align');
+    if (logoAlignField) logoAlignField.value = s.logoAlign || 'left';
+    var logoSizeField = document.getElementById('s-logo-size');
+    if (logoSizeField) logoSizeField.value = s.logoSize || 'M';
     for (var ui = 1; ui <= 8; ui++) {
       var uField = document.getElementById('s-u' + ui);
       if (uField) uField.value = s['u' + ui] || (ui === 1 ? accountEmail : '');
@@ -2061,6 +2218,9 @@ _fauth.onAuthStateChanged(async function(user) {
     }
     var monthlyReport = document.getElementById('s-monthly-report');
     if (monthlyReport) monthlyReport.checked = !!s.monthlyReport;
+    renderSettingsTemplatePicker();
+    renderSettingsInvoicePreview();
+    bindSettingsPreviewInputs();
     ['t-date','e-date'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = today(); });
     renderDashboard();
     renderGrowthTrialStatus();
