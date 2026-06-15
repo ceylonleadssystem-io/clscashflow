@@ -90,7 +90,7 @@ a{color:inherit;text-decoration:none}
 <div class="topbar">
   <div class="logo">Ceylonry<span>Labs</span>.io</div>
   <div style="display:flex;align-items:center;gap:1.25rem">
-    <a class="back-link" href="starter.html">&larr; Back to Dashboard</a>
+    <a class="back-link" id="back-dashboard-link" href="starter.html">&larr; Back to Dashboard</a>
     <button class="btn-signout" data-cls-fn="clsSignOut">Sign Out</button>
   </div>
 </div>
@@ -101,7 +101,7 @@ a{color:inherit;text-decoration:none}
 <div id="gate" class="gate hidden">
   <h2>Owner access only</h2>
   <p>Only the account owner can manage team members and roles. If you need access changed, please ask your account owner.</p>
-  <a class="btn" href="starter.html">Return to Dashboard</a>
+  <a class="btn" id="gate-dashboard-link" href="starter.html">Return to Dashboard</a>
 </div>
 
 <!-- MAIN -->
@@ -216,6 +216,19 @@ function inviteBaseUrl(){
 function buildInviteLink(id){
   return inviteBaseUrl() + '?owner=' + encodeURIComponent(_ownerUid) + '&i=' + encodeURIComponent(id);
 }
+function dashboardHref(){
+  var params = new URLSearchParams(location.search);
+  var ret = params.get('return') || '';
+  if (/^[a-z0-9._-]+\.html$/i.test(ret)) return ret;
+  return PLAN_FILES[_plan] || 'starter.html';
+}
+function applyDashboardLinks(){
+  var href = dashboardHref();
+  ['back-dashboard-link','gate-dashboard-link'].forEach(function(id){
+    var a = el(id);
+    if (a) a.href = href;
+  });
+}
 function initials(name, email){
   var src = (name || email || '?').trim();
   return (src[0] || '?').toUpperCase();
@@ -236,13 +249,16 @@ _auth.onAuthStateChanged(async function(user){
     // if ownerUid points to themselves, or if they hold an admin/owner role.
     var isOwner = !_profile.ownerUid || _profile.ownerUid === user.uid
                   || _profile.role === 'owner';
+    _plan = ((new URLSearchParams(location.search)).get('plan') || _profile.plan || 'starter').toLowerCase();
+    if (!Object.prototype.hasOwnProperty.call(PLAN_LIMITS, _plan)) _plan = 'starter';
+    applyDashboardLinks();
+
     if(!isOwner){
       el('loading').classList.add('hidden');
       el('gate').classList.remove('hidden');
       return;
     }
     _ownerUid = user.uid;
-    _plan = (_profile.plan || 'starter').toLowerCase();
 
     // header
     el('biz-name').textContent = _profile.bizName || _profile.name || 'your business';
