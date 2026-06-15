@@ -600,6 +600,13 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="fg"><label>Business Address</label><input class="fi" id="s-addr" type="text" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
               <div class="frow"><div class="fg"><label>Your Email</label><input class="fi" id="s-email" type="email" placeholder="you@yourbusiness.lk"></div><div class="fg"><label>VAT / Tax Number (if any)</label><input class="fi" id="s-vat" type="text" placeholder="Optional"></div></div>
               <div class="fg"><label>Invoice Footer Message</label><input class="fi" id="s-footer" type="text" placeholder="e.g. Thank you for your business!"></div>
+              <div class="frow">
+                <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
+                <div class="fg"><label>Default Invoice Template</label><select class="fi fsel" id="s-default-tpl">
+                  <option value="0">Classic</option><option value="1">Prestige</option><option value="2">Modern</option><option value="3">Dark Pro</option><option value="4">Minimal</option>
+                  <option value="5">Split Pro</option><option value="6">Ceylon Gold</option><option value="7">Corporate</option><option value="8">Bold Block</option><option value="9">Signature</option>
+                </select></div>
+              </div>
               <div class="fsec">Your Business Logo</div>
               <div style="border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)" onclick="document.getElementById('logo-inp').click()">
                 <img id="logo-prev" style="max-height:46px;display:none;margin:0 auto .45rem;object-fit:contain" src="" alt="">
@@ -744,7 +751,7 @@ var D = {
   payables:[],
   suppliers:[],
   autos:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,logoAlign:'left',logoSize:'M',u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1
 };
 
@@ -803,7 +810,7 @@ var growthTourSteps = [
   {view:'debt',title:'Who Owes Me',body:'<p>Growth keeps collections visible without automatic reminder scheduling.</p><div class="g-tour-list"><div><strong>Receivables:</strong> outstanding and overdue invoices by customer.</div><div><strong>Payables:</strong> supplier or operating amounts you still owe when connected.</div><div><strong>Follow-up:</strong> use manual reminder buttons.</div></div>'},
   {view:'suppliers',title:'Suppliers',body:'<p>Track supplier contacts, status, categories, and total spend.</p><div class="g-tour-list"><div><strong>Suppliers:</strong> name, contact, category, active/inactive status.</div><div><strong>Reports:</strong> supplier spend can be exported from reports.</div></div>'},
   {view:'reports',title:'Reports',body:'<p>Growth reports are business reports, not advanced analytics.</p><div class="g-tour-list"><div><strong>Included:</strong> income vs expenses, profit, customer revenue, supplier spend, outstanding and overdue invoices.</div><div><strong>Export:</strong> PDF and CSV/Excel style downloads.</div></div>'},
-  {view:'team',title:'Team Access',body:'<p>Growth supports up to 8 users with simple roles.</p><div class="g-tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> invoices, customers, money in/out, and expenses.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
+  {view:'team',title:'Team Access',body:'<p>Growth supports up to 8 users with simple roles.</p><div class="g-tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> invoices, customers, money in/out, and expenses.</div><div><strong>Accountant:</strong> finance views only, with settings and team management hidden.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
   {view:'settings',title:'Settings & Billing',body:'<p>Manage your business profile and Growth plan basics.</p><div class="g-tour-list"><div><strong>Business:</strong> logo, address, invoice email, VAT/tax number and invoice footer.</div><div><strong>Notifications:</strong> monthly email report preference; automatic reminders stay in Premium.</div></div>'}
 ];
 var growthTourIndex = 0;
@@ -892,6 +899,139 @@ function sumItem(lbl, val, color) {
   return '<div class="sum-i"><div class="sum-lbl">' + lbl + '</div><div class="sum-val"' + style + '>' + val + '</div></div>';
 }
 function toNum(v) { return Number(v || 0) || 0; }
+function normalizeGrowthTemplate(v) {
+  var max = (typeof TPLS !== 'undefined' && TPLS.length) ? TPLS.length - 1 : 0;
+  var n = parseInt(v, 10);
+  if (isNaN(n)) n = 0;
+  return Math.max(0, Math.min(max, n));
+}
+function mapStarterSettings(src) {
+  src = src || {};
+  var out = Object.assign({}, D.settings);
+  out.biz = src.bizName || src.biz || src.businessName || out.biz || '';
+  out.user = src.username || src.user || out.user || '';
+  out.addr = src.addr || src.address || out.addr || '';
+  out.email = src.email || src.invEmail || src.invoiceEmail || out.email || '';
+  out.vat = src.vat || src.taxNo || out.vat || '';
+  out.footer = src.footer || out.footer || 'Thank you for your business.';
+  out.logo = src.logo || out.logo || '';
+  out.logoAlign = src.logoAlign || out.logoAlign || 'left';
+  out.logoSize = src.logoSize || out.logoSize || 'M';
+  out.defaultTpl = normalizeGrowthTemplate(src.defaultTpl != null ? src.defaultTpl : out.defaultTpl);
+  out.vatRate = toNum(src.vatRate != null ? src.vatRate : out.vatRate || 15);
+  for (var i = 1; i <= 8; i++) out['u' + i] = src['u' + i] || out['u' + i] || '';
+  return out;
+}
+function mapStarterInvoice(inv, i) {
+  inv = inv || {};
+  var id = inv.num || inv.id || ('INV-' + String(i + 1).padStart(4, '0'));
+  var lines = (inv.lines || inv.items || []).map(function(it) {
+    it = it || {};
+    var qty = toNum(it.qty || it.units || 1) || 1;
+    var total = toNum(it.total);
+    var price = toNum(it.price || (total ? total / qty : 0));
+    return {desc:it.desc || it.name || 'Invoice item', qty:qty, price:price, total:total || qty * price};
+  });
+  var sub = toNum(inv.sub || inv.afterDisc || lines.reduce(function(a, it) { return a + toNum(it.total || it.qty * it.price); }, 0));
+  var totalAmt = toNum(inv.total || inv.amount || inv.grand || sub + toNum(inv.vat) - toNum(inv.disc));
+  var paid = inv.paid != null ? toNum(inv.paid) : toNum(inv.paidAmount);
+  var status = inv.status || 'unpaid';
+  if (totalAmt > 0 && paid >= totalAmt) status = 'paid';
+  else if (paid > 0) status = 'partial';
+  return {
+    id:String(id),
+    num:String(id),
+    client:inv.client || inv.clientName || 'Customer',
+    cemail:inv.cemail || inv.email || '',
+    cphone:inv.cphone || inv.phone || '',
+    caddr:inv.caddr || inv.clientAddress || '',
+    date:inv.date || today(),
+    due:inv.due || inv.dueDate || inv.date || today(),
+    terms:inv.terms || 'Net 30',
+    cur:inv.cur || inv.currency || 'LKR',
+    items:lines,
+    lines:lines,
+    sub:sub,
+    vat:toNum(inv.vat),
+    vatRate:toNum(inv.vatRate),
+    disc:toNum(inv.disc),
+    total:totalAmt,
+    amount:totalAmt,
+    status:status,
+    paid:paid,
+    paidAmount:paid,
+    tpl:normalizeGrowthTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),
+    notes:inv.notes || D.settings.footer || ''
+  };
+}
+function mapStarterTransaction(t, i) {
+  t = t || {};
+  return {id:String(t.id || t._id || ('T' + Date.now() + i)), date:t.date || today(), desc:t.desc || t.description || 'Transaction', type:t.type === 'out' ? 'out' : 'in', cat:t.cat || t.category || 'Other', amount:toNum(t.amount), ref:t.ref || t.reference || ''};
+}
+function mapStarterExpense(e, i) {
+  e = e || {};
+  return {id:String(e.id || e._id || ('E' + Date.now() + i)), date:e.date || today(), desc:e.desc || e.description || 'Expense', vendor:e.vendor || e.supplierName || e.supplier || '', cat:e.cat || e.category || 'Other', amount:toNum(e.amount), supplierId:e.supplierId || ''};
+}
+function mapStarterCustomer(c, i) {
+  c = c || {};
+  return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || c.name || 'Customer', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
+}
+function mapStarterSupplier(s, i) {
+  s = s || {};
+  return {id:String(s.id || s._id || ('SP' + Date.now() + i)), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', ytd:toNum(s.ytd || s.totalSpend), status:s.status || 'active', email:s.email || '', addr:s.addr || s.address || ''};
+}
+function addDerivedPaymentTransactions(txns, invoices) {
+  var seenRefs = {};
+  txns.forEach(function(t) {
+    var ref = String(t.ref || '').trim();
+    if (ref) seenRefs[ref] = true;
+  });
+  invoices.forEach(function(inv) {
+    var id = String(inv.id || inv.num || '');
+    var paid = toNum(inv.paid || inv.paidAmount);
+    if (!id || paid <= 0 || seenRefs[id]) return;
+    txns.unshift({id:'T-' + id, date:inv.date || today(), desc:'Payment received - ' + inv.client, type:'in', cat:'Invoice Payment', amount:paid, ref:id});
+    seenRefs[id] = true;
+  });
+  return txns;
+}
+function applyStarterDataSnapshot(raw) {
+  var snap = raw && (raw.db || raw.data || raw);
+  if (!snap) return false;
+  D.settings = mapStarterSettings(snap.settings || {});
+  D.invoices = (snap.invoices || []).map(mapStarterInvoice);
+  var starterClients = snap.clients && Array.isArray(snap.clients.list) ? snap.clients.list : (Array.isArray(snap.clients) ? snap.clients : []);
+  D.clients = starterClients.map(mapStarterCustomer);
+  D.txns = (snap.transactions || snap.txns || []).map(mapStarterTransaction);
+  D.txns = addDerivedPaymentTransactions(D.txns, D.invoices);
+  D.exps = (snap.expenses || snap.exps || []).map(mapStarterExpense);
+  var starterSuppliers = snap.suppliers && Array.isArray(snap.suppliers.list) ? snap.suppliers.list : (Array.isArray(snap.suppliers) ? snap.suppliers : []);
+  D.suppliers = starterSuppliers.map(mapStarterSupplier);
+  D.payables = [];
+  D.staff = [];
+  D.autos = [];
+  D._nextInvId = toNum(snap.nextInvNum || snap.nextInvId || D._nextInvId || 1);
+  normalizeGrowthData();
+  return true;
+}
+async function consumeStarterUpgradeSnapshot() {
+  var raw = localStorage.getItem('cls-starter-growth-snapshot');
+  if (!raw) return false;
+  try {
+    var parsed = JSON.parse(raw);
+    var matchesOwner = !parsed.ownerUid || !_uid || parsed.ownerUid === _uid || parsed.signedInUid === _signedInUid;
+    if (!matchesOwner) return false;
+    var ok = applyStarterDataSnapshot(parsed);
+    if (ok) {
+      localStorage.removeItem('cls-starter-growth-snapshot');
+      await saveData();
+      return true;
+    }
+  } catch(e) {
+    console.error('Growth import snapshot:', e);
+  }
+  return false;
+}
 function emptyState(title, body, actionLabel, action) {
   return '<div class="empty-state in-card">' +
     '<div class="empty-state-icon">＋</div>' +
@@ -952,8 +1092,9 @@ function normalizeGrowthData() {
     if (!paid && status === 'paid') paid = total;
     if (total > 0 && paid >= total) status = 'paid';
     else if (paid > 0) status = 'partial';
-    return {id:String(id), num:String(id), client:inv.client || inv.clientName || 'Customer', caddr:inv.caddr || inv.clientAddress || '', date:inv.date || today(), due:inv.due || inv.dueDate || inv.date || today(), items:items, lines:items, sub:sub, vat:toNum(inv.vat), disc:toNum(inv.disc), total:total, amount:total, status:status, paid:paid, paidAmount:paid, tpl:toNum(inv.tpl), notes:inv.notes || ''};
+    return {id:String(id), num:String(id), client:inv.client || inv.clientName || 'Customer', cemail:inv.cemail || inv.email || '', cphone:inv.cphone || inv.phone || '', caddr:inv.caddr || inv.clientAddress || '', date:inv.date || today(), due:inv.due || inv.dueDate || inv.date || today(), terms:inv.terms || 'Net 30', cur:inv.cur || inv.currency || 'LKR', items:items, lines:items, sub:sub, vat:toNum(inv.vat), vatRate:toNum(inv.vatRate), disc:toNum(inv.disc), total:total, amount:total, status:status, paid:paid, paidAmount:paid, tpl:normalizeGrowthTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl), notes:inv.notes || ''};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
+  D.txns = addDerivedPaymentTransactions(D.txns, D.invoices);
   var maxInvNo = D.invoices.reduce(function(max, inv) {
     var m = String(inv.id || '').match(/(\d+)$/);
     return m ? Math.max(max, Number(m[1])) : max;
@@ -1361,12 +1502,13 @@ function renderSupTable(f) {
 function renderTeamAccess() {
   document.getElementById('team-sum').innerHTML =
     sumItem('Growth Users', 'Up to 8') +
-    sumItem('Roles', 'Owner / Staff / View Only', 'var(--gold)') +
+    sumItem('Roles', 'Owner / Staff / Accountant / View Only', 'var(--gold)') +
     sumItem('Permissions', 'Basic', 'var(--green)');
 
   document.getElementById('team-body').innerHTML =
     '<tr><td><strong>Owner/Admin</strong></td><td>Full access to dashboard, money in/out, expenses, invoices, customers, who owes me, suppliers, reports, insights, team access, and settings.</td><td class="tr">Up to 8 users</td></tr>' +
     '<tr><td><strong>Staff</strong></td><td>Invoices, customers, money in/out, and expenses. No settings or team management.</td><td class="tr">Up to 8 users</td></tr>' +
+    '<tr><td><strong>Accountant</strong></td><td>Access dashboard, money in/out, expenses, invoices, customers, who owes me, suppliers, reports, and insights. No account settings or team management.</td><td class="tr">Up to 8 users</td></tr>' +
     '<tr><td><strong>View Only</strong></td><td>Dashboard and reports only. No editing, payment recording, exports, or reminders.</td><td class="tr">Up to 8 users</td></tr>';
 }
 
@@ -1493,13 +1635,13 @@ var TPLS = [
 ];
 
 window.openInvMo = function openInvMo() {
-  selTpl = 0;
+  selTpl = normalizeGrowthTemplate(D.settings.defaultTpl);
   buildTplPicker();
   document.getElementById('inv-date').valueAsDate = new Date();
   var due = new Date(); due.setDate(due.getDate()+30);
   document.getElementById('inv-due').valueAsDate = due;
   ['inv-cli','inv-caddr','inv-notes'].forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('inv-vat').value = 0;
+  document.getElementById('inv-vat').value = D.settings.vatRate != null ? D.settings.vatRate : 0;
   document.getElementById('inv-disc').value = 0;
   document.getElementById('li-body').innerHTML = '';
   addLi();
@@ -1680,6 +1822,20 @@ window.saveSettings = function saveSettings() {
   D.settings.email = document.getElementById('s-email').value;
   D.settings.vat = document.getElementById('s-vat').value;
   D.settings.footer = document.getElementById('s-footer').value;
+  var vatRateEl = document.getElementById('s-vatrate');
+  var defaultTplEl = document.getElementById('s-default-tpl');
+  if (vatRateEl) {
+    D.settings.vatRate = parseFloat(vatRateEl.value);
+    if (isNaN(D.settings.vatRate)) D.settings.vatRate = 15;
+  }
+  if (defaultTplEl) {
+    D.settings.defaultTpl = normalizeGrowthTemplate(defaultTplEl.value);
+    D.invoices.forEach(function(inv) { inv.tpl = D.settings.defaultTpl; });
+  }
+  for (var i = 1; i <= 8; i++) {
+    var userEl = document.getElementById('s-u' + i);
+    if (userEl) D.settings['u' + i] = userEl.value.trim();
+  }
   var monthlyReport = document.getElementById('s-monthly-report');
   if (monthlyReport) D.settings.monthlyReport = monthlyReport.checked;
   var userName = D.settings.user || 'User';
@@ -1750,8 +1906,22 @@ async function saveData() {
     normalizeGrowthData();
     var batch = _fdb.batch();
     var userRef = _fdb.collection('users').doc(_uid);
+    var savedSettings = Object.assign({}, D.settings, {
+      bizName:D.settings.biz,
+      username:D.settings.user
+    });
     // Save settings
-    batch.set(userRef, { settings: D.settings, nextInvId: D._nextInvId || 1 }, { merge: true });
+    batch.set(userRef, {
+      settings: savedSettings,
+      nextInvId: D._nextInvId || 1,
+      nextInvNum: D._nextInvId || 1,
+      bizName: D.settings.biz || '',
+      addr: D.settings.addr || '',
+      email: D.settings.email || '',
+      invEmail: D.settings.email || '',
+      vat: D.settings.vat || '',
+      footer: D.settings.footer || ''
+    }, { merge: true });
     await batch.commit();
     // Save collections
     var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, payables: D.payables };
@@ -1777,8 +1947,8 @@ async function loadData(uid) {
     var profSnap = await userRef.get();
     if (profSnap.exists) {
       var profileData = profSnap.data() || {};
-      if (profileData.settings) Object.assign(D.settings, profileData.settings);
-      if (profileData.nextInvId) D._nextInvId = profileData.nextInvId;
+      if (profileData.settings) D.settings = mapStarterSettings(profileData.settings);
+      if (profileData.nextInvId || profileData.nextInvNum) D._nextInvId = profileData.nextInvId || profileData.nextInvNum;
     }
     var cols = ['transactions','expenses','invoices','clients','suppliers','payables'];
     var keys = ['txns','exps','invoices','clients','suppliers','payables'];
@@ -1851,6 +2021,7 @@ _fauth.onAuthStateChanged(async function(user) {
     if (_profile.name) D.settings.user = _profile.name;
 
     await loadData(_uid);
+    var importedFromStarter = await consumeStarterUpgradeSnapshot();
 
     // ── Run original init logic ──
     var _ds = new Date().toLocaleDateString('en-LK', {weekday:'short', day:'numeric', month:'long', year:'numeric'});
@@ -1866,10 +2037,28 @@ _fauth.onAuthStateChanged(async function(user) {
     var fn = accountName.split(' ')[0];
     document.getElementById('greet-h').textContent = greet + ', ' + fn + '! 🌿';
     document.getElementById('sb-uname').textContent = accountName || '';
+    var visibleRole = String(_profile.role || _profile.accessRole || 'admin').toLowerCase();
+    var roleLabel = visibleRole === 'accountant' ? 'Accountant' : (visibleRole === 'staff' ? 'Staff' : (visibleRole === 'viewer' || visibleRole === 'view-only' ? 'View Only' : 'Admin'));
+    var roleNode = document.querySelector('.sb-urole');
+    if (roleNode) roleNode.textContent = roleLabel + ' · Growth Plan';
     var ini = (accountName || 'U').split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
     document.getElementById('sb-av').textContent = ini;
     var s = D.settings;
     [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
+    var vatRateField = document.getElementById('s-vatrate');
+    if (vatRateField) vatRateField.value = s.vatRate != null ? s.vatRate : 15;
+    var defaultTplField = document.getElementById('s-default-tpl');
+    if (defaultTplField) defaultTplField.value = normalizeGrowthTemplate(s.defaultTpl);
+    for (var ui = 1; ui <= 8; ui++) {
+      var uField = document.getElementById('s-u' + ui);
+      if (uField) uField.value = s['u' + ui] || (ui === 1 ? accountEmail : '');
+    }
+    if (s.logo) {
+      var logoPrev = document.getElementById('logo-prev');
+      var logoHint = document.getElementById('logo-hint');
+      if (logoPrev) { logoPrev.src = s.logo; logoPrev.style.display = 'block'; }
+      if (logoHint) logoHint.style.display = 'none';
+    }
     var monthlyReport = document.getElementById('s-monthly-report');
     if (monthlyReport) monthlyReport.checked = !!s.monthlyReport;
     ['t-date','e-date'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = today(); });
@@ -1877,7 +2066,7 @@ _fauth.onAuthStateChanged(async function(user) {
     renderGrowthTrialStatus();
     enforcePermissions();
     if (new URLSearchParams(window.location.search).get('upgraded') === 'growth') {
-      showToast('Growth unlocked. Your trial time continues here.', 'ok');
+      showToast(importedFromStarter ? 'Growth unlocked with your Starter data.' : 'Growth unlocked. Your trial time continues here.', 'ok');
     }
     maybeStartGrowthTour();
 

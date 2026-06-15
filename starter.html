@@ -1215,6 +1215,15 @@ window.openGrowthUpgrade = async function openGrowthUpgrade(){
   const oldText=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='Upgrading...';}
   try{
+    await saveDB();
+    try{
+      localStorage.setItem('cls-starter-growth-snapshot',JSON.stringify({
+        ownerUid:_uid,
+        signedInUid:_signedInUid,
+        createdAt:Date.now(),
+        db:DB
+      }));
+    }catch(snapshotErr){console.warn('Growth upgrade snapshot skipped:',snapshotErr);}
     const st=getTrialStatus();
     const profileUpdate={
       plan:'growth',
