@@ -158,6 +158,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
 /* TABLES */
 table{width:100%;border-collapse:collapse}
+.table-wrap{width:100%;overflow-x:auto}
 th{font-size:.57rem;letter-spacing:.13em;text-transform:uppercase;color:#fff;padding:.6rem 1.2rem;text-align:left;background:var(--black);white-space:nowrap;font-weight:500}
 td{padding:.7rem 1.2rem;font-size:.81rem;color:var(--muted);border-bottom:1px solid var(--border);vertical-align:middle}
 td:first-child{color:var(--text)}
@@ -189,12 +190,34 @@ tr:hover td{background:var(--bg3)}
 .bo{background:transparent;border:1px solid var(--bacc);color:var(--gold)}.bo:hover{background:var(--bg3)}
 .bgr{background:var(--green);color:#fff}.bgr:hover{opacity:.85}
 .bsm{padding:.27rem .62rem;font-size:.59rem;letter-spacing:.07em;text-transform:uppercase;font-family:var(--fb);cursor:pointer;border:none;background:var(--black);color:#fff;transition:all .18s;white-space:nowrap;border-radius:3px}
+.bsm:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .bsm:hover{background:var(--gold)}
 .bsmo{background:transparent;border:1px solid var(--bacc);color:var(--gold)}.bsmo:hover{background:var(--bg3)}
 .bsmgr{background:var(--green);color:#fff}.bsmgr:hover{opacity:.85}
 .bsmwa{background:#25D366;color:#fff}.bsmwa:hover{background:#1eb851}
 .bsmdel{background:transparent;border:1px solid rgba(192,57,43,.35);color:var(--red)}.bsmdel:hover{background:var(--red);color:#fff}
 .bsmem{background:#168A62;color:#fff}.bsmem:hover{background:#116A4C}
+.invoice-table{min-width:1260px;table-layout:fixed}
+.invoice-table th:nth-child(1),.invoice-table td:nth-child(1){width:165px}
+.invoice-table th:nth-child(2),.invoice-table td:nth-child(2){width:155px}
+.invoice-table th:nth-child(3),.invoice-table td:nth-child(3){width:112px}
+.invoice-table th:nth-child(4),.invoice-table td:nth-child(4){width:112px}
+.invoice-table th:nth-child(5),.invoice-table td:nth-child(5){width:110px}
+.invoice-table th:nth-child(6),.invoice-table td:nth-child(6){width:170px}
+.invoice-table th:nth-child(7),.invoice-table td:nth-child(7){width:175px}
+.invoice-table th:nth-child(8),.invoice-table td:nth-child(8){width:285px}
+.invoice-table td{height:70px}
+.invoice-customer{font-weight:600;color:var(--muted);line-height:1.28;word-break:break-word}
+.invoice-amount{font-family:var(--fm);font-weight:700;color:var(--gold);white-space:nowrap;letter-spacing:0;text-align:right;font-size:.76rem;line-height:1.2}
+.invoice-actions{display:grid;grid-template-columns:repeat(3,74px);gap:.38rem;justify-content:end;align-items:center}
+.invoice-actions .bsm,.invoice-actions .pill{height:32px;min-width:0;width:100%;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center;border-radius:4px}
+.invoice-actions .bsm{font-size:.56rem;letter-spacing:.08em}
+.invoice-actions .pill{font-size:.54rem}
+.invoice-actions .action-wide{grid-column:span 2}
+.invoice-pay{min-width:145px}
+.invoice-pay .pay-wrap{gap:.45rem}
+.invoice-pay .pay-bar{min-width:76px}
+.invoice-pay .pay-pend{line-height:1.25}
 
 /* FORM */
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
@@ -617,7 +640,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="view" id="view-invoices">
       <div class="help"><b>Invoices</b> — Bills you send to customers. Track which are paid, waiting, partial, or overdue. Includes VAT &amp; tax support and manual reminders.</div>
       <div class="sumbar c3" id="inv-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">All Invoices</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><table><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Invoices</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><div class="table-wrap"><table class="invoice-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
     </div>
 
     <!-- CUSTOMERS -->
@@ -1340,26 +1363,28 @@ window.exportCSV = function exportCSV(type) {
 
 window.exportReportPDF = function exportReportPDF() {
   syncGrowthComputedData();
-  var inc = D.txns.filter(function(t){return t.type==='in';}).reduce(function(a,t){return a+t.amount;},0);
-  var out = D.exps.reduce(function(a,e){return a+e.amount;},0);
-  var outstanding = D.recv.reduce(function(a,r){return a+r.amount;},0);
-  var overdue = D.recv.filter(function(r){return r.days>0;}).reduce(function(a,r){return a+r.amount;},0);
-  var suppliers = D.suppliers.slice().sort(function(a,b){return toNum(b.ytd)-toNum(a.ytd);}).slice(0,8);
-  var customers = D.clients.map(function(c){
-    var invs = D.invoices.filter(function(i){return i.client===c.biz;});
-    return {name:c.biz||c.name,total:invs.reduce(function(a,i){return a+toNum(i.total);},0),paid:invs.reduce(function(a,i){return a+toNum(i.paid);},0),count:invs.length};
-  }).filter(function(c){return c.count;}).sort(function(a,b){return b.total-a.total;}).slice(0,8);
-  var html = '<!doctype html><html><head><title>Growth Business Report</title><style>@page{size:A4;margin:16mm}body{font-family:Arial,sans-serif;color:#1a1714}.top{border-bottom:3px solid #1a1714;padding-bottom:18px;margin-bottom:24px;display:flex;justify-content:space-between}.brand{font-family:Georgia,serif;font-size:28px}.gold{color:#B8922A}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}.card{border:1px solid #ddd;padding:12px}.lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#777}.val{font-size:18px;font-weight:700;margin-top:5px}h2{font-family:Georgia,serif;font-size:20px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;margin-bottom:18px}th{background:#1a1714;color:#fff;text-align:left;font-size:11px;padding:8px}td{border-bottom:1px solid #eee;padding:8px;font-size:12px}.tr{text-align:right}.foot{margin-top:28px;border-top:1px solid #eee;padding-top:12px;text-align:center;font-size:11px;color:#999}</style></head><body>' +
-    '<div class="top"><div><div class="brand">'+(D.settings.biz||'Your Business')+'</div><div style="font-size:12px;color:#777">'+(D.settings.addr||'')+'</div></div><div style="text-align:right"><div class="lbl">Growth Report</div><div>'+new Date().toLocaleDateString('en-GB')+'</div></div></div>' +
-    '<div class="grid"><div class="card"><div class="lbl">Income</div><div class="val gold">'+fmt(inc)+'</div></div><div class="card"><div class="lbl">Expenses</div><div class="val">'+fmt(out)+'</div></div><div class="card"><div class="lbl">Profit</div><div class="val">'+fmt(inc-out)+'</div></div><div class="card"><div class="lbl">Outstanding</div><div class="val">'+fmt(outstanding)+'</div></div></div>' +
-    '<h2>Outstanding Invoice Report</h2><table><thead><tr><th>Customer</th><th>Invoice</th><th>Days</th><th class="tr">Amount</th></tr></thead><tbody>' + (D.recv.map(function(r){return '<tr><td>'+r.client+'</td><td>'+r.inv+'</td><td>'+r.days+'</td><td class="tr">'+fmt(r.amount)+'</td></tr>';}).join('') || '<tr><td colspan="4">No outstanding invoices.</td></tr>') + '</tbody></table>' +
-    '<h2>Overdue Invoice Report</h2><div style="font-size:14px;margin-bottom:16px">Overdue amount: <strong>'+fmt(overdue)+'</strong></div>' +
-    '<h2>Customer Revenue Report</h2><table><thead><tr><th>Customer</th><th>Invoices</th><th class="tr">Total</th><th class="tr">Paid</th></tr></thead><tbody>' + (customers.map(function(c){return '<tr><td>'+c.name+'</td><td>'+c.count+'</td><td class="tr">'+fmt(c.total)+'</td><td class="tr">'+fmt(c.paid)+'</td></tr>';}).join('') || '<tr><td colspan="4">No customer revenue yet.</td></tr>') + '</tbody></table>' +
-    '<h2>Supplier Spend Report</h2><table><thead><tr><th>Supplier</th><th>Type</th><th class="tr">Spend</th></tr></thead><tbody>' + (suppliers.map(function(s){return '<tr><td>'+s.name+'</td><td>'+s.cat+'</td><td class="tr">'+fmt(s.ytd)+'</td></tr>';}).join('') || '<tr><td colspan="3">No supplier spend yet.</td></tr>') + '</tbody></table>' +
-    '<div class="foot">Report generated by Growth — Cashflow & Operations Control · CeylonryLabs.io</div></body></html>';
-  var w = window.open('', '_blank', 'width=900,height=760');
-  if (!w) { alert('Please allow pop-ups to export the report.'); return; }
-  w.document.write(html); w.document.close(); w.onload = function(){ setTimeout(function(){ w.print(); }, 500); };
+  renderReports();
+  var src = document.getElementById('view-reports');
+  var print = document.getElementById('print-inv');
+  if (!src || !print) return;
+  var clone = src.cloneNode(true);
+  clone.querySelectorAll('button,a').forEach(function(el){ el.remove(); });
+  var sourceCanvases = src.querySelectorAll('canvas');
+  clone.querySelectorAll('canvas').forEach(function(canvas, idx) {
+    var img = document.createElement('img');
+    img.className = 'report-canvas-img';
+    try { img.src = sourceCanvases[idx] ? sourceCanvases[idx].toDataURL('image/png') : ''; } catch(e) { img.alt = 'Chart'; }
+    canvas.replaceWith(img);
+  });
+  var reportCss = '<style>@page{size:A4 landscape;margin:10mm}#print-inv{background:#F7F4EF;color:#2C1F14}.print-report{font-family:Arial,Helvetica,sans-serif;background:#F7F4EF;color:#2C1F14;padding:0;max-width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-report *{box-sizing:border-box}.print-report-top{border-bottom:4px solid #2C1F14;padding-bottom:16px;margin-bottom:16px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px}.print-report-brand{font-family:Georgia,serif;font-size:30px;font-weight:700;line-height:1.05}.print-report-sub{font-size:12px;color:#7D6C5E;margin-top:4px}.print-report-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8B7B6B;font-weight:800}.print-report-date{font-size:17px;font-weight:800;margin-top:3px}.print-report .view{display:block!important}.print-report .sumbar{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:10px!important;margin:0 0 12px!important}.print-report .sum-i{background:#FDFAF4!important;border:1px solid #E0D6C9!important;border-radius:8px!important;padding:12px 14px!important;min-height:74px!important}.print-report .sum-lbl{font-size:9px!important;letter-spacing:.18em!important;text-transform:uppercase!important;color:#8B7B6B!important;font-weight:800!important}.print-report .sum-val{font-family:Georgia,serif!important;font-size:21px!important;white-space:nowrap!important}.print-report .g2c{display:grid!important;grid-template-columns:1.45fr .75fr!important;gap:12px!important;margin-bottom:12px!important}.print-report .chart-card,.print-report .card,.print-report .rep-card{background:#FDFAF4!important;border:1px solid #E0D6C9!important;border-radius:8px!important;padding:12px 13px!important;break-inside:avoid!important;page-break-inside:avoid!important;box-shadow:none!important}.print-report .chart-card{min-height:220px!important}.print-report .ch-title,.print-report .card-title{font-family:Georgia,serif!important;font-size:17px!important;font-weight:400!important;color:#2C1F14!important}.print-report .ch-sub{font-size:11px!important;color:#7D6C5E!important;margin-top:3px!important}.print-report .ch-wrap{height:158px!important;margin-top:8px!important}.print-report .report-canvas-img{width:100%!important;height:158px!important;object-fit:contain!important;display:block!important}.print-report .rep-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important;margin-bottom:12px!important}.print-report .rep-lbl{font-size:10px!important;letter-spacing:.18em!important;text-transform:uppercase!important;color:#8B7B6B!important;font-weight:800!important;margin-bottom:8px!important}.print-report .rep-row{display:flex!important;justify-content:space-between!important;gap:16px!important;border-bottom:1px solid #EAE1D5!important;padding:7px 0!important;font-size:12px!important}.print-report .rep-row:last-child{border-bottom:0!important}.print-report .pos{color:#159C62!important}.print-report .neg{color:#C0392B!important}.print-report .tot{border-top:2px solid #2C1F14!important;font-weight:800!important}.print-report table{width:100%!important;border-collapse:collapse!important;margin-top:0!important}.print-report th{background:#2C1F14!important;color:#fff!important;text-align:left!important;font-size:9px!important;letter-spacing:.15em!important;text-transform:uppercase!important;padding:8px 10px!important}.print-report td{border-bottom:1px solid #EAE1D5!important;padding:8px 10px!important;font-size:11px!important;color:#2C1F14!important}.print-report .tr{text-align:right!important}.print-report .tc{text-align:center!important}.print-report .card-head{padding:0 0 9px!important;border:0!important}.print-report-foot{border-top:1px solid #E0D6C9;margin-top:12px;padding-top:9px;text-align:center;font-size:10px;color:#9A8E80;letter-spacing:.04em}@media print{#print-inv{display:block!important}.print-report{width:100%;padding:0}.print-report .help{display:none!important}}</style>';
+  print.innerHTML = reportCss +
+    '<div class="print-report"><div class="print-report-top"><div><div class="print-report-brand">' + escHtml(D.settings.biz || 'Your Business') + '</div><div class="print-report-sub">' + escHtml(D.settings.addr || 'Growth — Cashflow & Operations Control') + '</div></div><div style="text-align:right"><div class="print-report-label">Growth Report</div><div class="print-report-date">' + escHtml(formatDateHuman(today())) + '</div><div class="print-report-sub">Cashflow &amp; Operations Control</div></div></div>' +
+    clone.innerHTML +
+    '<div class="print-report-foot">Report generated with Cashflow System by Ceylonry Labs.io</div></div>';
+  setTimeout(function() {
+    window.print();
+    setTimeout(function(){ print.innerHTML = ''; }, 700);
+  }, 250);
 }
 
 window.emailMonthlyReport = function emailMonthlyReport() {
@@ -1755,15 +1780,17 @@ function renderInvoices() {
     var pct = i.total > 0 ? Math.round(i.paid/i.total*100) : 0;
     var displayStatus = invoiceStatus(i);
     var sc = statusCls[displayStatus] || 'pdr';
-    var payBar = '<div class="pay-wrap"><div class="pay-bar"><div class="pay-fill' + (i.status==='partial' ? ' pt' : '') + '" style="width:' + pct + '%"></div></div><span style="font-size:.67rem;font-family:var(--fm);color:var(--muted)">' + pct + '%</span></div>' + (i.total-i.paid > 0 ? '<div class="pay-pend">' + fmt(i.total-i.paid) + ' pending</div>' : '');
+    var pending = Math.max(0, toNum(i.total) - toNum(i.paid));
+    var safeId = String(i.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    var payBar = '<div class="invoice-pay"><div class="pay-wrap"><div class="pay-bar"><div class="pay-fill' + (displayStatus==='partial' ? ' pt' : '') + '" style="width:' + pct + '%"></div></div><span style="font-size:.67rem;font-family:var(--fm);color:var(--muted)">' + pct + '%</span></div>' + (pending > 0 ? '<div class="pay-pend">' + fmt(pending) + ' pending</div>' : '') + '</div>';
     var actions =
-      '<button class="bsm" onclick="window.printInv(\'' + i.id + '\')">PDF</button>' +
-      '<button class="bsm bsmem" onclick="window.emailInv(\'' + i.id + '\')">Email</button>' +
-      '<button class="bsm bsmwa" onclick="window.waRemind(\'' + i.id + '\')">WA</button>' +
-      '<button class="bsm bsmo" onclick="window.editInv(\'' + i.id + '\')">Edit</button>' +
-      '<button class="bsm bsmdel" onclick="window.deleteInv(\'' + i.id + '\')">Delete</button>' +
-      (displayStatus !== 'paid' ? '<button class="bsm bsmgr" onclick="window.openPayMo(\'' + i.id + '\')">Pay</button>' : '<span class="pill pi">Settled</span>');
-    return '<tr><td class="mono gld" style="font-size:.77rem">' + i.id + '</td><td style="font-weight:500">' + i.client + '</td><td>' + i.date + '</td><td>' + i.due + '</td><td><span class="pill ' + sc + '">' + displayStatus + '</span></td><td>' + payBar + '</td><td class="tr mono gld">' + fmt(i.total) + '</td><td><div style="display:flex;gap:.3rem;justify-content:flex-end;flex-wrap:wrap">' + actions + '</div></td></tr>';
+      '<button class="bsm" onclick="window.printInv(\'' + safeId + '\')">PDF</button>' +
+      '<button class="bsm bsmem" onclick="window.emailInv(\'' + safeId + '\')">Email</button>' +
+      '<button class="bsm bsmwa" onclick="window.waRemind(\'' + safeId + '\')">WA</button>' +
+      '<button class="bsm bsmo" onclick="window.editInv(\'' + safeId + '\')">Edit</button>' +
+      '<button class="bsm bsmdel" onclick="window.deleteInv(\'' + safeId + '\')">Delete</button>' +
+      (displayStatus !== 'paid' ? '<button class="bsm bsmgr" onclick="window.openPayMo(\'' + safeId + '\')">Pay</button>' : '<span class="pill pi">Settled</span>');
+    return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
   }).join('') || emptyRow(8, 'No invoices yet', 'Create a Growth invoice with VAT support, payment tracking, and reminder tools.', 'Create Invoice', 'window.openInvMo()');
 }
 
@@ -2508,6 +2535,7 @@ function buildInvoicePrintHtml(inv) {
   var balance = invoiceBalance(inv);
   return '<style>' +
     '@page{size:A4;margin:0}@media print{#print-inv{display:block!important;background:#fff;color:#1d1712}.inv-page{box-shadow:none!important}}.inv-page{width:794px;min-height:1123px;margin:0 auto;background:#fff;position:relative;font-family:Arial,Helvetica,sans-serif;padding:70px 76px 58px;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--muted:#6F6353;--line:#E8DED2;--paper:#FFFFFF;color:#1d1712;box-sizing:border-box}.inv-page *{box-sizing:border-box}.inv-main{position:relative;z-index:1}.inv-top-rule{height:5px;background:var(--accent);margin-bottom:46px}.inv-hero{display:grid;grid-template-columns:1fr 270px;gap:52px;align-items:start;margin-bottom:58px}.inv-logo-img{display:block;object-fit:contain;margin-bottom:16px}.inv-logo-text{font-family:Georgia,serif;font-size:26px;line-height:1.05;margin-bottom:14px;color:inherit}.inv-business{font-family:Georgia,serif;font-size:29px;font-weight:700;color:inherit;margin-bottom:8px}.inv-small{font-size:12px;line-height:1.65;color:var(--muted);white-space:pre-line}.inv-title{text-align:right}.inv-title h1{font-size:46px;letter-spacing:9px;text-transform:uppercase;margin:0 0 12px;color:var(--dark);line-height:1}.inv-title b{font-size:15px;color:#1d1712}.inv-meta{font-size:12px;line-height:1.9;color:var(--muted);margin-top:24px}.inv-meta span{display:inline-block;width:58px;color:#A89A8B}.inv-parties{display:grid;grid-template-columns:1fr 1fr 170px;gap:36px;margin-bottom:70px}.inv-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:12px}.inv-name{font-size:17px;font-weight:800;color:#111;margin-bottom:7px;line-height:1.35}.inv-status{display:inline-flex;align-items:center;border:1px solid var(--line);padding:7px 10px;border-radius:999px;text-transform:capitalize;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:10px}.inv-table{width:100%;border-collapse:collapse;margin-bottom:30px;table-layout:fixed}.inv-table th{border-bottom:3px solid var(--dark);color:#1d1712;background:transparent;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:0 14px 13px;text-align:left}.inv-table th:nth-child(1){width:54%}.inv-table th:nth-child(2){width:12%}.inv-table th:nth-child(3){width:17%}.inv-table th:nth-child(4){width:17%}.inv-table th:nth-child(n+2),.inv-table td:nth-child(n+2){text-align:right}.inv-table td{padding:17px 14px;border-bottom:1px solid var(--line);font-size:13px;color:#111;vertical-align:top}.inv-desc{white-space:pre-line;line-height:1.45;font-weight:700;word-break:break-word}.inv-table td:nth-child(n+2){font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500}.inv-bottom{display:grid;grid-template-columns:1fr 330px;gap:48px;align-items:start;margin-top:18px}.inv-note-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin-bottom:12px;color:var(--dark)}.inv-note{font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line}.inv-totals-print{border-top:1px solid var(--line);padding-top:14px}.inv-totals-print>div{display:flex;justify-content:space-between;gap:24px;font-size:13px;padding:8px 0;color:#55483e}.inv-totals-print b{font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;color:#111}.inv-grand{background:var(--dark);color:#fff!important;margin-top:14px;padding:20px 22px!important;align-items:center}.inv-grand span{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800}.inv-grand b{font-size:21px;color:#fff!important}.inv-brand-foot{position:absolute;left:76px;right:76px;bottom:42px;border-top:1px solid var(--line);padding-top:14px;text-align:center;font-size:10px;letter-spacing:.08em;color:#A89A8B}.inv-brand-foot b{color:#1d1712}.tpl-gold .inv-top-rule,.tpl-ceylon .inv-top-rule,.tpl-bold .inv-top-rule{height:9px;background:linear-gradient(90deg,var(--accent),#D8B456,var(--accent))}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:var(--dark);color:#fff;padding:34px;margin:-18px 0 54px}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:#fff}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:rgba(255,255,255,.75)}.tpl-line .inv-top-rule{height:4px;background:var(--accent)}.tpl-line .inv-title h1{color:var(--accent)}.tpl-minimal .inv-top-rule{height:3px;background:#111}.tpl-minimal .inv-title h1{letter-spacing:6px;color:#111}.tpl-minimal .inv-grand{background:#111}.tpl-darkside,.tpl-split{background:#FDF9F2}.tpl-darkside .inv-top-rule,.tpl-split .inv-top-rule{height:6px;background:#111}.tpl-darkside .inv-title h1,.tpl-split .inv-title h1{color:#111}.tpl-corporate{--accent:#1E5B8A;--dark:#113B5E}.tpl-bold .inv-title{border:3px solid var(--accent);padding:22px 24px}.tpl-bold .inv-title h1{color:var(--accent)}.tpl-signature{background:#FDFAF4;font-family:Georgia,serif}.tpl-signature .inv-top-rule{height:8px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.tpl-signature .inv-table th{border-bottom-color:var(--accent);font-family:Arial,Helvetica,sans-serif}.tpl-signature .inv-grand{background:#4A3B2A}' +
+    '.inv-page{padding:62px 72px 52px!important;overflow:hidden!important}.inv-main{min-height:1000px!important;display:flex!important;flex-direction:column!important}.inv-top-rule{margin-bottom:38px!important}.inv-hero{grid-template-columns:minmax(0,1fr) 285px!important;gap:46px!important;margin-bottom:46px!important}.inv-title h1{font-size:42px!important;letter-spacing:8px!important}.inv-business{font-size:28px!important}.inv-parties{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 170px!important;gap:34px!important;margin-bottom:50px!important}.inv-table{margin-bottom:22px!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-table th{padding:0 12px 12px!important}.inv-table td{padding:15px 12px!important}.inv-bottom{grid-template-columns:minmax(0,1fr) 325px!important;gap:52px!important;margin-top:8px!important;align-items:start!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-totals-print{padding-top:12px!important}.inv-totals-print>div{padding:8px 0!important}.inv-grand{display:flex!important;justify-content:space-between!important;gap:18px!important;white-space:nowrap!important;min-height:62px!important;max-width:100%!important;padding:18px 22px!important}.inv-grand b{font-size:21px!important}.inv-brand-foot{position:static!important;margin-top:auto!important;border-top:1px solid var(--line)!important;padding-top:15px!important;text-align:center!important;font-size:10px!important;line-height:1.4!important;color:#A89A8B!important}.inv-brand-foot b{color:#1d1712!important}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:transparent!important;color:#1d1712!important;padding:0!important;margin:-4px 0 46px!important}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:var(--dark)!important}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:var(--muted)!important}.tpl-darkside,.tpl-split{background:#fff!important}.tpl-bold .inv-title{border:0!important;padding:0!important}.tpl-bold .inv-title h1{color:var(--accent)!important}@media print{.inv-page{width:210mm!important;min-height:297mm!important;padding:16mm 18mm 12mm!important;overflow:hidden!important}.inv-main{min-height:269mm!important;display:flex!important;flex-direction:column!important}.inv-brand-foot{margin-top:auto!important}}' +
     '</style>' +
     '<div class="inv-page ' + cls + '"><main class="inv-main">' +
       '<div class="inv-top-rule"></div>' +
