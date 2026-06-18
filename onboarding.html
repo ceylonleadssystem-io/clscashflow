@@ -295,6 +295,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 </script>
+<script src="assets/platform.js"></script>
 </head>
 <body>
 
@@ -1209,10 +1210,15 @@ async function acceptOnboardingInvite(uid,email){
   }
   var ownerDoc=await firebase.firestore().collection('users').doc(state.inviteOwner).get();
   var owner=ownerDoc.exists?ownerDoc.data():{};
+  var ownerPlan=String(owner.lastPlan||owner.currentPlan||owner.plan||state.tier||'starter').toLowerCase();
   await firebase.firestore().collection('users').doc(uid).set({
     role: invite.role||'viewer',
     ownerUid: state.inviteOwner,
-    plan: owner.plan||state.tier||'starter',
+    plan: ownerPlan,
+    currentPlan: ownerPlan,
+    lastPlan: ownerPlan,
+    trialStart: owner.trialStart || null,
+    trialEnd: owner.trialEnd || null,
     paid: owner.paid===true,
     acceptedInviteAt: firebase.firestore.FieldValue.serverTimestamp()
   }, {merge:true});
@@ -1252,6 +1258,8 @@ window.launchDashboard = async function launchDashboard(){
         footer: state.footer || '',
         logo: state.logo || '',
         plan: state.tier || 'starter',
+        currentPlan: state.tier || 'starter',
+        lastPlan: state.tier || 'starter',
         planPrice: prices[state.tier] || 5500,
         trialStart: new Date().toISOString(),
         trialEnd: googleTrialEnd.toISOString(),
@@ -1282,6 +1290,7 @@ window.launchDashboard = async function launchDashboard(){
           })
         });
       } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
+      if (window.clsRememberPlan) await window.clsRememberPlan(state.tier || 'starter', user.uid, firebase.firestore());
       window.location.href = planFiles[state.tier] || 'starter.html';
 
     } else {
@@ -1305,6 +1314,8 @@ window.launchDashboard = async function launchDashboard(){
         footer: state.footer || '',
         logo: state.logo || '',
         plan: state.tier || 'starter',
+        currentPlan: state.tier || 'starter',
+        lastPlan: state.tier || 'starter',
         planPrice: prices[state.tier] || 5500,
         trialStart: new Date().toISOString(),
         trialEnd: trialEnd.toISOString(),
@@ -1335,6 +1346,7 @@ window.launchDashboard = async function launchDashboard(){
           })
         });
       } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
+      if (window.clsRememberPlan) await window.clsRememberPlan(state.tier || 'starter', uid, firebase.firestore());
       window.location.href = planFiles[state.tier] || 'starter.html';
     }
 

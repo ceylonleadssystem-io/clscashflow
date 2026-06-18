@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CeylonryLabs.io — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="assets/platform.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:980px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <div class="brand">Ceylonry<span>Labs</span>.io Admin</div>
+    <div class="sub">Cashflow System control room</div>
+  </div>
+  <div class="actions">
+    <a class="btn" href="index.html">Home</a>
+    <button class="btn dark hidden" id="refresh-btn" type="button">Refresh</button>
+    <button class="btn red hidden" id="signout-btn" type="button">Sign out</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="login-view" class="login">
+    <div class="label">Hidden Admin</div>
+    <h1>Sign in.</h1>
+    <p class="muted">Use the platform admin account. For security, the password is managed only in Firebase Auth.</p>
+    <div class="field">
+      <label>Email</label>
+      <input id="admin-email" type="email" value="devteam@ceylonrylabs.io" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="admin-pass" type="password" autocomplete="current-password">
+    </div>
+    <button class="btn dark" id="admin-login" type="button" style="width:100%;margin-top:18px">Open admin panel</button>
+    <div class="error" id="login-error"></div>
+    <div class="admin-note">Create this user in Firebase Authentication with the password you chose. Do not store admin passwords inside website files.</div>
+  </section>
+
+  <section id="admin-view" class="hidden">
+    <div class="section-head">
+      <div>
+        <div class="label">Overview</div>
+        <h1>Platform activity.</h1>
+        <p class="muted">Users, visitor tracking, UTC timestamps, and support tickets.</p>
+      </div>
+      <div class="utc" id="utc-clock"></div>
+    </div>
+
+    <div class="grid kpis">
+      <div class="card"><div class="label">Users</div><div class="kpi-number" id="kpi-users">0</div><p class="muted">Signed-in accounts</p></div>
+      <div class="card"><div class="label">Visits</div><div class="kpi-number" id="kpi-visits">0</div><p class="muted">Recent tracked visits</p></div>
+      <div class="card"><div class="label">Tickets</div><div class="kpi-number" id="kpi-tickets">0</div><p class="muted">Recent support requests</p></div>
+      <div class="card"><div class="label">Open</div><div class="kpi-number" id="kpi-open">0</div><p class="muted">Needs attention</p></div>
+    </div>
+
+    <section class="section">
+      <div class="section-head"><h2>Users</h2><span class="muted">Latest profile, plan, and last seen data</span></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Owner</th><th>Trial End</th><th>Last Seen UTC</th><th>Path</th></tr></thead>
+        <tbody id="users-body"></tbody>
+      </table></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Visits</h2><span class="muted">Location comes from Netlify geo when deployed</span></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>UTC</th><th>User</th><th>Plan</th><th>Path</th><th>City</th><th>Country</th><th>Timezone</th><th>IP</th></tr></thead>
+        <tbody id="visits-body"></tbody>
+      </table></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Support Tickets</h2><span class="muted">Chat and bug reports from the Help widget</span></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Status</th><th>Priority</th><th>Type</th><th>Email</th><th>Message</th><th>Page</th><th>UTC</th><th>Actions</th></tr></thead>
+        <tbody id="tickets-body"></tbody>
+      </table></div>
+    </section>
+  </section>
+</main>
+
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
+  authDomain: "ceylonry-labs.firebaseapp.com",
+  projectId: "ceylonry-labs",
+  storageBucket: "ceylonry-labs.firebasestorage.app",
+  messagingSenderId: "979885533126",
+  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
+
+function $(id){ return document.getElementById(id); }
+function esc(v){ return String(v == null ? '' : v).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function fmtDate(v){
+  if (!v) return '';
+  if (v.toDate) return v.toDate().toISOString();
+  var d = new Date(v);
+  return isNaN(d.getTime()) ? String(v) : d.toISOString();
+}
+function planPill(plan){
+  plan = String(plan || 'starter').toLowerCase();
+  var cls = plan === 'premium' ? 'warn' : (plan === 'growth' ? 'ok' : '');
+  return '<span class="pill '+cls+'">'+esc(plan || 'starter')+'</span>';
+}
+function statusPill(status){
+  status = String(status || 'open').toLowerCase();
+  var cls = status === 'closed' ? 'ok' : (status === 'in-progress' ? 'warn' : 'bad');
+  return '<span class="pill '+cls+'">'+esc(status)+'</span>';
+}
+function showLogin(msg){
+  $('login-view').classList.remove('hidden');
+  $('admin-view').classList.add('hidden');
+  $('refresh-btn').classList.add('hidden');
+  $('signout-btn').classList.add('hidden');
+  if (msg) $('login-error').textContent = msg;
+}
+function showAdmin(){
+  $('login-view').classList.add('hidden');
+  $('admin-view').classList.remove('hidden');
+  $('refresh-btn').classList.remove('hidden');
+  $('signout-btn').classList.remove('hidden');
+}
+function renderEmpty(id, cols, text){
+  $(id).innerHTML = '<tr><td colspan="'+cols+'" class="muted">'+esc(text)+'</td></tr>';
+}
+
+async function readCollection(name, opts){
+  opts = opts || {};
+  var ref = db.collection(name);
+  if (opts.order) ref = ref.orderBy(opts.order, opts.dir || 'desc');
+  if (opts.limit) ref = ref.limit(opts.limit);
+  try {
+    return await ref.get();
+  } catch (e) {
+    var fallback = db.collection(name);
+    if (opts.limit) fallback = fallback.limit(opts.limit);
+    return await fallback.get();
+  }
+}
+
+async function loadAdminData(){
+  showAdmin();
+  renderEmpty('users-body', 8, 'Loading users...');
+  renderEmpty('visits-body', 8, 'Loading visits...');
+  renderEmpty('tickets-body', 8, 'Loading tickets...');
+  try {
+    var usersSnap = await readCollection('users', { order:'createdAt', dir:'desc', limit:300 });
+    var users = [];
+    usersSnap.forEach(function(d){ users.push({ id:d.id, data:d.data() || {} }); });
+    $('kpi-users').textContent = users.length;
+    $('users-body').innerHTML = users.map(function(row){
+      var u = row.data;
+      var plan = u.lastPlan || u.currentPlan || u.plan || '';
+      return '<tr><td>'+esc(u.name || u.displayName || '')+'</td><td>'+esc(u.email || '')+'</td><td>'+esc(u.role || 'owner')+'</td><td>'+planPill(plan)+'</td><td>'+esc(u.ownerUid || row.id)+'</td><td>'+esc(fmtDate(u.trialEnd))+'</td><td>'+esc(u.lastSeenUtc || fmtDate(u.lastSeenAt))+'</td><td>'+esc(u.lastSeenPath || '')+'</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="muted">No users found.</td></tr>';
+  } catch (e) {
+    renderEmpty('users-body', 8, 'Could not load users. Check Firestore rules.');
+  }
+
+  try {
+    var visitsSnap = await readCollection('platformVisits', { order:'createdAt', dir:'desc', limit:160 });
+    var visits = [];
+    visitsSnap.forEach(function(d){ visits.push({ id:d.id, data:d.data() || {} }); });
+    $('kpi-visits').textContent = visits.length;
+    $('visits-body').innerHTML = visits.map(function(row){
+      var v = row.data, g = v.geo || {};
+      return '<tr><td>'+esc(v.utcAt || fmtDate(v.createdAt))+'</td><td>'+esc(v.email || v.displayName || v.uid || 'Visitor')+'</td><td>'+planPill(v.lastPlan)+'</td><td>'+esc(v.path || '')+'</td><td>'+esc(g.city || '')+'</td><td>'+esc(g.country || '')+'</td><td>'+esc(g.timezone || v.timezone || '')+'</td><td>'+esc(v.ip || '')+'</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="muted">No visits tracked yet. Netlify functions must be deployed to store visits.</td></tr>';
+  } catch (e) {
+    renderEmpty('visits-body', 8, 'Could not load visits. Check Firestore rules.');
+  }
+
+  try {
+    var ticketsSnap = await readCollection('supportTickets', { order:'createdAt', dir:'desc', limit:160 });
+    var tickets = [];
+    ticketsSnap.forEach(function(d){ tickets.push({ id:d.id, data:d.data() || {} }); });
+    $('kpi-tickets').textContent = tickets.length;
+    $('kpi-open').textContent = tickets.filter(function(t){ return String(t.data.status || 'open').toLowerCase() !== 'closed'; }).length;
+    $('tickets-body').innerHTML = tickets.map(function(row){
+      var t = row.data;
+      return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td><div class="actions"><button class="btn" data-status="in-progress" data-ticket="'+row.id+'">In progress</button><button class="btn gold" data-status="closed" data-ticket="'+row.id+'">Close</button></div></td></tr>';
+    }).join('') || '<tr><td colspan="8" class="muted">No support tickets yet.</td></tr>';
+  } catch (e) {
+    renderEmpty('tickets-body', 8, 'Could not load tickets. Check Firestore rules.');
+  }
+}
+
+async function updateTicket(id, status){
+  await db.collection('supportTickets').doc(id).set({
+    status: status,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+  await loadAdminData();
+}
+
+$('admin-login').addEventListener('click', async function(){
+  $('login-error').textContent = '';
+  var email = $('admin-email').value.trim().toLowerCase();
+  var pass = $('admin-pass').value;
+  if (email !== ADMIN_EMAIL) { $('login-error').textContent = 'This panel only accepts the platform admin email.'; return; }
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch (e) {
+    $('login-error').textContent = e.message;
+  }
+});
+$('refresh-btn').addEventListener('click', loadAdminData);
+$('signout-btn').addEventListener('click', function(){ auth.signOut(); });
+document.addEventListener('click', function(ev){
+  var btn = ev.target.closest('[data-ticket]');
+  if (!btn) return;
+  updateTicket(btn.getAttribute('data-ticket'), btn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
+});
+setInterval(function(){ $('utc-clock').textContent = 'UTC ' + new Date().toISOString().replace('T',' ').replace(/\.\d+Z$/,''); }, 1000);
+
+auth.onAuthStateChanged(function(user){
+  if (!user) { showLogin(); return; }
+  if ((user.email || '').toLowerCase() !== ADMIN_EMAIL) {
+    auth.signOut();
+    showLogin('This account is not allowed to access the admin panel.');
+    return;
+  }
+  loadAdminData();
+});
+</script>
+</body>
+</html>

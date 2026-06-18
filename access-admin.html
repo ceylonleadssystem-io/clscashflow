@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -90,7 +91,7 @@ a{color:inherit;text-decoration:none}
 <div class="topbar">
   <div class="logo">Ceylonry<span>Labs</span>.io</div>
   <div style="display:flex;align-items:center;gap:1.25rem">
-    <a class="back-link" id="back-dashboard-link" href="starter.html">&larr; Back to Dashboard</a>
+    <a class="back-link" id="back-dashboard-link" href="#">&larr; Back to Dashboard</a>
     <button class="btn-signout" data-cls-fn="clsSignOut">Sign Out</button>
   </div>
 </div>
@@ -101,7 +102,7 @@ a{color:inherit;text-decoration:none}
 <div id="gate" class="gate hidden">
   <h2>Owner access only</h2>
   <p>Only the account owner can manage team members and roles. If you need access changed, please ask your account owner.</p>
-  <a class="btn" id="gate-dashboard-link" href="starter.html">Return to Dashboard</a>
+  <a class="btn" id="gate-dashboard-link" href="#">Return to Dashboard</a>
 </div>
 
 <!-- MAIN -->
@@ -193,7 +194,7 @@ var _auth = firebase.auth();
 var _user = null;      // signed-in firebase user
 var _profile = null;   // their profile doc data
 var _ownerUid = null;  // the account whose team we manage (= owner)
-var _plan = 'starter';
+var _plan = (localStorage.getItem('cls-last-plan') || localStorage.getItem('cls-current-plan') || 'starter').toLowerCase();
 
 var PLAN_LIMITS = { starter: 2, growth: 8, premium: Infinity };
 var PLAN_NAMES  = { starter: 'Starter', growth: 'Growth', premium: 'Premium' };
@@ -229,6 +230,7 @@ function applyDashboardLinks(){
     if (a) a.href = href;
   });
 }
+applyDashboardLinks();
 function initials(name, email){
   var src = (name || email || '?').trim();
   return (src[0] || '?').toUpperCase();
@@ -249,8 +251,15 @@ _auth.onAuthStateChanged(async function(user){
     // if ownerUid points to themselves, or if they hold an admin/owner role.
     var isOwner = !_profile.ownerUid || _profile.ownerUid === user.uid
                   || _profile.role === 'owner';
-    _plan = ((new URLSearchParams(location.search)).get('plan') || _profile.plan || 'starter').toLowerCase();
+    _plan = ((new URLSearchParams(location.search)).get('plan')
+      || _profile.lastPlan
+      || _profile.currentPlan
+      || _profile.plan
+      || localStorage.getItem('cls-last-plan')
+      || localStorage.getItem('cls-current-plan')
+      || 'starter').toLowerCase();
     if (!Object.prototype.hasOwnProperty.call(PLAN_LIMITS, _plan)) _plan = 'starter';
+    if (window.clsRememberPlan) await window.clsRememberPlan(_plan, user.uid, _db);
     applyDashboardLinks();
 
     if(!isOwner){

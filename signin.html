@@ -23,6 +23,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 </script>
+<script src="assets/platform.js"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -182,9 +183,33 @@ async function redirectToDashboard(user) {
     }
     const doc = await firebase.firestore().collection('users').doc(user.uid).get();
     if (doc.exists) {
-      const data = doc.data();
       const planFiles = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
-      const dest = data.role === 'staff' ? 'starter.html' : (planFiles[data.plan] || 'starter.html');
+      const data = doc.data();
+      let plan = String(data.lastPlan || data.currentPlan || data.plan || '').toLowerCase();
+
+      if (data.ownerUid && (!planFiles[plan] || plan === 'starter')) {
+        const ownerDoc = await firebase.firestore().collection('users').doc(data.ownerUid).get();
+        const owner = ownerDoc.exists ? ownerDoc.data() : {};
+        const ownerPlan = String(owner.lastPlan || owner.currentPlan || owner.plan || plan || 'starter').toLowerCase();
+        if (planFiles[ownerPlan]) {
+          plan = ownerPlan;
+          await firebase.firestore().collection('users').doc(user.uid).set({
+            plan: ownerPlan,
+            currentPlan: ownerPlan,
+            lastPlan: ownerPlan,
+            trialStart: owner.trialStart || data.trialStart || null,
+            trialEnd: owner.trialEnd || data.trialEnd || null,
+            paid: owner.paid === true
+          }, { merge: true });
+        }
+      }
+
+      if (!planFiles[plan]) {
+        plan = String(localStorage.getItem('cls-last-plan') || localStorage.getItem('cls-current-plan') || 'starter').toLowerCase();
+      }
+      if (!planFiles[plan]) plan = 'starter';
+      if (window.clsRememberPlan) await window.clsRememberPlan(plan, user.uid, firebase.firestore());
+      const dest = planFiles[plan] || 'starter.html';
       window.location.href = dest;
     } else {
       // Profile not found — send to onboarding
@@ -225,13 +250,18 @@ async function acceptInvite(user) {
   }
   const ownerDoc = await firebase.firestore().collection('users').doc(inviteOwner).get();
   const owner = ownerDoc.exists ? ownerDoc.data() : {};
+  const ownerPlan = String(owner.lastPlan || owner.currentPlan || owner.plan || 'starter').toLowerCase();
   await firebase.firestore().collection('users').doc(user.uid).set({
     name: user.displayName || inviteRecord.name || '',
     email: user.email || inviteRecord.email || '',
     role: inviteRecord.role || 'viewer',
     ownerUid: inviteOwner,
-    plan: owner.plan || 'starter',
+    plan: ownerPlan,
+    currentPlan: ownerPlan,
+    lastPlan: ownerPlan,
     paid: owner.paid === true,
+    trialStart: owner.trialStart || null,
+    trialEnd: owner.trialEnd || null,
     bizName: owner.bizName || owner.invoiceBiz || '',
     onboardingComplete: true,
     acceptedInviteAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -292,6 +322,8 @@ window.signInGoogle = async function signInGoogle() {
         email: user.email,
         phone: user.phoneNumber || '',
         plan: 'starter',
+        currentPlan: 'starter',
+        lastPlan: 'starter',
         planPrice: 5500,
         trialStart: new Date().toISOString(),
         trialEnd: trialEnd.toISOString(),

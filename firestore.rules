@@ -6,6 +6,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isPlatformAdmin() {
+      return signedIn()
+        && request.auth.token.email == 'devteam@ceylonrylabs.io';
+    }
+
     function userDoc(uid) {
       return get(/databases/$(database)/documents/users/$(uid));
     }
@@ -29,18 +34,24 @@ service cloud.firestore {
       allow create: if signedIn() && request.auth.uid == uid;
       allow get: if signedIn()
         && (
+          isPlatformAdmin()
+          ||
           request.auth.uid == uid
           || resource.data.ownerUid == request.auth.uid
           || isOwnerOrTeam(uid)
         );
       allow list: if signedIn()
         && (
+          isPlatformAdmin()
+          ||
           request.auth.uid == uid
           || resource.data.ownerUid == request.auth.uid
           || isOwnerOrTeam(uid)
         );
       allow update: if signedIn()
         && (
+          isPlatformAdmin()
+          ||
           request.auth.uid == uid
           || resource.data.ownerUid == request.auth.uid
           || request.resource.data.ownerUid == request.auth.uid
@@ -48,32 +59,35 @@ service cloud.firestore {
       allow delete: if false;
 
       match /team/{memberOrInviteId} {
-        allow get: if isOwnerOrTeam(uid) || resource.data.status == 'pending';
-        allow list: if isOwner(uid);
-        allow create: if isOwner(uid);
+        allow get: if isPlatformAdmin() || isOwnerOrTeam(uid) || resource.data.status == 'pending';
+        allow list: if isPlatformAdmin() || isOwner(uid);
+        allow create: if isPlatformAdmin() || isOwner(uid);
         allow update: if isOwner(uid)
+          || isPlatformAdmin()
           || (
             resource.data.status == 'pending'
             && signedIn()
             && request.auth.token.email != null
             && request.auth.token.email == resource.data.email
           );
-        allow delete: if isOwner(uid);
+        allow delete: if isPlatformAdmin() || isOwner(uid);
       }
 
       match /{subcollection}/{docId} {
-        allow read, write: if subcollection != 'team' && isOwnerOrTeam(uid);
+        allow read, write: if subcollection != 'team' && (isPlatformAdmin() || isOwnerOrTeam(uid));
       }
     }
 
     match /invites/{inviteId} {
-      allow get: if resource.data.status == 'pending' || isOwner(resource.data.ownerUid);
+      allow get: if isPlatformAdmin() || resource.data.status == 'pending' || isOwner(resource.data.ownerUid);
       allow list: if false;
       allow create: if signedIn()
-        && request.resource.data.ownerUid == request.auth.uid
+        && (isPlatformAdmin() || request.resource.data.ownerUid == request.auth.uid)
         && request.resource.data.status == 'pending';
       allow update: if signedIn()
         && (
+          isPlatformAdmin()
+          ||
           isOwner(resource.data.ownerUid)
           || (
             resource.data.status == 'pending'
@@ -81,7 +95,23 @@ service cloud.firestore {
             && request.auth.token.email == resource.data.email
           )
         );
-      allow delete: if isOwner(resource.data.ownerUid);
+      allow delete: if isPlatformAdmin() || isOwner(resource.data.ownerUid);
+    }
+
+    match /platformVisits/{visitId} {
+      allow read, list, delete: if isPlatformAdmin();
+      allow create, update: if false;
+    }
+
+    match /supportTickets/{ticketId} {
+      allow create: if signedIn();
+      allow read, list, update, delete: if isPlatformAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /businessStorySubmissions/{submissionId} {
+      allow read, list, update, delete: if isPlatformAdmin();
+      allow create: if false;
     }
   }
 }

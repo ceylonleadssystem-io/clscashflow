@@ -12,6 +12,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1883,6 +1884,7 @@ _fauth.onAuthStateChanged(async function(user) {
     if (!profDoc.exists) { window.location.href = 'signin.html'; return; }
     _profile = profDoc.data();
     if (_profile.ownerUid) _uid = _profile.ownerUid;
+    if (window.clsRememberPlan) await window.clsRememberPlan('premium', _signedInUid, _fdb);
     var now = new Date();
     var trialEnd = new Date(_profile.trialEnd || now);
     var isPaid = _profile.paid === true;
@@ -1917,12 +1919,14 @@ _fauth.onAuthStateChanged(async function(user) {
     renderExec();
     enforcePermissions();
 
-    if (!isPaid) {
-      var daysLeft = Math.max(0, Math.ceil((trialEnd - now) / 86400000));
-      var banner = document.createElement('div');
-      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:\'DM Sans\',sans-serif;font-size:.78rem;';
-      banner.innerHTML = '<span>⏳ <strong>' + daysLeft + ' day' + (daysLeft!==1?'s':'') + ' left</strong> on your free trial</span><button onclick="window.showPaywall(_profile)" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:\'DM Sans\',sans-serif">Activate Plan →</button>';
-      document.body.appendChild(banner);
+    if (!isPaid && window.clsMountTrialCountdown) {
+      window.clsMountTrialCountdown({
+        profile: _profile,
+        trialEnd: trialEnd,
+        planName: 'Premium',
+        actionText: 'Activate Plan',
+        onAction: function(){ window.showPaywall(_profile); }
+      });
     }
   } catch(e) { console.error('Premium auth guard:', e); }
 });
