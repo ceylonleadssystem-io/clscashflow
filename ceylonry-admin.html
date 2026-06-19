@@ -101,6 +101,38 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 
+function isAdminEmail(email) {
+  return String(email || '').trim().toLowerCase() === ADMIN_EMAIL;
+}
+function isCredentialError(code) {
+  return ['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential', 'auth/invalid-login-credentials'].indexOf(code) !== -1;
+}
+async function ensureAdminProfile(user, createdNow) {
+  if (!user || !isAdminEmail(user.email)) return;
+  var stamp = firebase.firestore.FieldValue.serverTimestamp();
+  var payload = {
+    name: user.displayName || 'Ceylonry Labs Admin',
+    email: ADMIN_EMAIL,
+    role: 'platform_admin',
+    accountType: 'platform_admin',
+    plan: 'admin',
+    currentPlan: 'admin',
+    lastPlan: 'admin',
+    paid: true,
+    onboardingComplete: true,
+    adminAccess: true,
+    lastSeenAt: stamp,
+    lastSeenUtc: new Date().toISOString(),
+    lastSeenPath: window.location.pathname,
+    updatedAt: stamp
+  };
+  if (createdNow) {
+    payload.createdAt = stamp;
+    payload.adminCreatedAt = stamp;
+  }
+  await db.collection('users').doc(user.uid).set(payload, { merge: true });
+}
+
 function $(id){ return document.getElementById(id); }
 function esc(v){ return String(v == null ? '' : v).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function fmtDate(v){
@@ -209,10 +241,27 @@ $('admin-login').addEventListener('click', async function(){
   $('login-error').textContent = '';
   var email = $('admin-email').value.trim().toLowerCase();
   var pass = $('admin-pass').value;
-  if (email !== ADMIN_EMAIL) { $('login-error').textContent = 'This panel only accepts the platform admin email.'; return; }
+  if (!isAdminEmail(email)) { $('login-error').textContent = 'This panel only accepts the platform admin email.'; return; }
   try {
-    await auth.signInWithEmailAndPassword(email, pass);
+    var cred = await auth.signInWithEmailAndPassword(email, pass);
+    await ensureAdminProfile(cred.user, false);
   } catch (e) {
+    if (isCredentialError(e.code)) {
+      try {
+        var created = await auth.createUserWithEmailAndPassword(email, pass);
+        await ensureAdminProfile(created.user, true);
+        return;
+      } catch(createErr) {
+        if (createErr.code === 'auth/email-already-in-use' || isCredentialError(createErr.code)) {
+          $('login-error').textContent = 'The admin account exists, but Firebase rejected this password. Reset the admin password in Firebase Authentication, then sign in again.';
+        } else if (createErr.code === 'auth/operation-not-allowed') {
+          $('login-error').textContent = 'Firebase Email/Password sign-in is disabled. Enable it in Firebase Authentication to create the admin account.';
+        } else {
+          $('login-error').textContent = 'Could not create the admin account: ' + createErr.message;
+        }
+        return;
+      }
+    }
     $('login-error').textContent = e.message;
   }
 });
@@ -227,12 +276,14 @@ setInterval(function(){ $('utc-clock').textContent = 'UTC ' + new Date().toISOSt
 
 auth.onAuthStateChanged(function(user){
   if (!user) { showLogin(); return; }
-  if ((user.email || '').toLowerCase() !== ADMIN_EMAIL) {
+  if (!isAdminEmail(user.email)) {
     auth.signOut();
     showLogin('This account is not allowed to access the admin panel.');
     return;
   }
-  loadAdminData();
+  ensureAdminProfile(user, false).then(loadAdminData).catch(function(e){
+    showLogin('Admin profile could not be prepared: ' + e.message);
+  });
 });
 </script>
 </body>

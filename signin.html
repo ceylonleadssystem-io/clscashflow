@@ -174,6 +174,42 @@ function isPlatformAdminEmail(email) {
   return String(email || '').trim().toLowerCase() === PLATFORM_ADMIN_EMAIL;
 }
 
+function isCredentialError(code) {
+  return ['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential', 'auth/invalid-login-credentials'].indexOf(code) !== -1;
+}
+
+async function ensurePlatformAdminProfile(user, createdNow) {
+  if (!user || !isPlatformAdminEmail(user.email)) return;
+  var stamp = firebase.firestore.FieldValue.serverTimestamp();
+  var payload = {
+    name: user.displayName || 'Ceylonry Labs Admin',
+    email: PLATFORM_ADMIN_EMAIL,
+    role: 'platform_admin',
+    accountType: 'platform_admin',
+    plan: 'admin',
+    currentPlan: 'admin',
+    lastPlan: 'admin',
+    paid: true,
+    onboardingComplete: true,
+    adminAccess: true,
+    lastSeenAt: stamp,
+    lastSeenUtc: new Date().toISOString(),
+    lastSeenPath: window.location.pathname,
+    updatedAt: stamp
+  };
+  if (createdNow) {
+    payload.createdAt = stamp;
+    payload.adminCreatedAt = stamp;
+  }
+  await firebase.firestore().collection('users').doc(user.uid).set(payload, { merge: true });
+}
+
+async function bootstrapPlatformAdmin(email, pass) {
+  var cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+  await ensurePlatformAdminProfile(cred.user, true);
+  window.location.href = 'ceylonry-admin.html';
+}
+
 // ── AUTH STATE: redirect if already signed in ──
 firebase.auth().onAuthStateChanged(async function(user) {
   if (user) {
@@ -184,6 +220,7 @@ firebase.auth().onAuthStateChanged(async function(user) {
 async function redirectToDashboard(user) {
   try {
     if (isPlatformAdminEmail(user && user.email)) {
+      await ensurePlatformAdminProfile(user, false);
       window.location.href = 'ceylonry-admin.html';
       return;
     }
@@ -305,10 +342,27 @@ window.signIn = async function signIn() {
     const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
     await redirectToDashboard(cred.user);
   } catch(err) {
+    if (isPlatformAdminEmail(email) && isCredentialError(err.code)) {
+      try {
+        btn.textContent = 'Creating admin…';
+        await bootstrapPlatformAdmin(email, pass);
+        return;
+      } catch(createErr) {
+        btn.textContent = 'Sign In →'; btn.disabled = false;
+        if (createErr.code === 'auth/email-already-in-use' || createErr.code === 'auth/wrong-password' || createErr.code === 'auth/invalid-credential' || createErr.code === 'auth/invalid-login-credentials') {
+          showErr('The admin account exists, but Firebase rejected this password. Reset the admin password in Firebase Authentication, then sign in again.');
+        } else if (createErr.code === 'auth/operation-not-allowed') {
+          showErr('Firebase Email/Password sign-in is disabled. Enable it in Firebase Authentication to create the admin account.');
+        } else {
+          showErr('Could not create the admin account: ' + createErr.message);
+        }
+        return;
+      }
+    }
     btn.textContent = 'Sign In →'; btn.disabled = false;
-    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+    if (isCredentialError(err.code)) {
       if (isPlatformAdminEmail(email)) {
-        showErr('Admin routing is ready, but Firebase rejected this login. Create or reset the admin Auth user in Firebase, then sign in here again.');
+        showErr('Admin routing is ready, but Firebase rejected this login. Reset the admin password in Firebase Authentication, then sign in here again.');
       } else {
         showErr('Incorrect email or password. Please try again.');
       }
@@ -326,6 +380,7 @@ window.signInGoogle = async function signInGoogle() {
     const result = await firebase.auth().signInWithPopup(provider);
     const user = result.user;
     if (isPlatformAdminEmail(user && user.email)) {
+      await ensurePlatformAdminProfile(user, false);
       window.location.href = 'ceylonry-admin.html';
       return;
     }

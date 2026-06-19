@@ -50,6 +50,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .btn-up:hover{background:var(--gold)}
 .btn-back-starter{display:block;width:100%;margin-top:.45rem;background:transparent;color:var(--muted);border:1px solid var(--border);padding:.52rem;cursor:pointer;font-family:var(--fb);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;border-radius:var(--r);transition:all .2s}
 .btn-back-starter:hover{color:var(--gold);border-color:var(--gold);background:rgba(184,146,42,.06)}
+.btn-sign-out{display:block;width:100%;margin-top:.45rem;background:#fff;color:var(--red);border:1px solid rgba(192,57,43,.28);padding:.52rem;cursor:pointer;font-family:var(--fb);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;border-radius:var(--r);transition:all .2s}
+.btn-sign-out:hover{background:rgba(192,57,43,.08);border-color:var(--red)}
 .growth-trial-pill{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;background:rgba(29,158,98,.1);border:1px solid rgba(29,158,98,.22);color:var(--green);padding:.23rem .7rem;border-radius:2px;font-weight:700}
 .growth-trial-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-left:3px solid var(--gold);border-radius:var(--r);padding:.8rem .9rem;margin:.85rem 0;color:rgba(255,255,255,.78);font-size:.72rem;line-height:1.55}
 .growth-trial-box strong{color:#fff}
@@ -528,7 +530,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     </div>
     <button class="btn-up" onclick="window.showToast('Premium upgrade will be available from your account team.')">✨ Upgrade to Premium</button>
     <button class="btn-back-starter" onclick="window.goBackToStarter(this)">← Back to Starter</button>
-    <button onclick="window.clsSignOut()" style="width:100%;margin-top:.4rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);padding:.5rem;cursor:pointer;font-family:var(--fb);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;border-radius:var(--r);transition:all .2s;" onmouseover="this.style.color='#ff6b6b'" onmouseout="this.style.color='rgba(255,255,255,.4)'">Sign Out</button>
+    <button class="btn-sign-out" onclick="window.clsSignOut()">Sign Out</button>
   </div>
 </nav>
 
@@ -2639,7 +2641,17 @@ async function loadData(uid) {
   } catch(e) { console.error('loadData:', e); }
 }
 
-window.clsSignOut = function clsSignOut() { _fauth.signOut().then(function() { window.location.href = 'signin.html'; }); }
+window.clsSignOut = function clsSignOut() {
+  try {
+    localStorage.removeItem('cls-growth-tour-pending');
+  } catch (e) {}
+  var finish = function() { window.location.href = 'signin.html'; };
+  if (_fauth && typeof _fauth.signOut === 'function') {
+    _fauth.signOut().then(finish).catch(finish);
+  } else {
+    finish();
+  }
+}
 
 window.openGrowthBilling = function openGrowthBilling() {
   var settingsItem = document.querySelector('.nav-item[data-view="settings"]');
