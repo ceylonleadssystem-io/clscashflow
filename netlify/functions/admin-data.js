@@ -92,6 +92,73 @@ async function readCollection(db, name, orderField, limit) {
   }
 }
 
+async function countQuery(ref) {
+  try {
+    if (typeof ref.count !== 'function') return null;
+    const snap = await ref.count().get();
+    const data = snap.data && snap.data();
+    return data && typeof data.count === 'number' ? data.count : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function parseVisitTime(data) {
+  data = data || {};
+  const raw = data.createdAt || data.utcAt || data.lastSeenAt || '';
+  if (raw && typeof raw.toDate === 'function') return raw.toDate().getTime();
+  const time = Date.parse(raw);
+  return Number.isFinite(time) ? time : 0;
+}
+
+function visitorKey(data) {
+  data = data || {};
+  return String(data.visitorId || data.sessionId || data.uid || data.email || data.ip || '').trim();
+}
+
+function isLandingVisit(data) {
+  data = data || {};
+  const path = String(data.path || '').toLowerCase();
+  return data.isLanding === true || path === '/' || path === '' || path.endsWith('/index.html');
+}
+
+function buildStats(users, visits, tickets) {
+  const now = Date.now();
+  const recentCutoff = now - 10 * 60 * 1000;
+  const uniqueVisitors = new Set();
+  const liveVisitors = new Set();
+  let landingVisitsRecent = 0;
+  let lastVisitAt = '';
+
+  visits.forEach(function(row) {
+    const data = row.data || {};
+    const key = visitorKey(data);
+    const time = parseVisitTime(data);
+    if (key) uniqueVisitors.add(key);
+    if (key && time >= recentCutoff) liveVisitors.add(key);
+    if (isLandingVisit(data)) landingVisitsRecent += 1;
+    if (!lastVisitAt || time > Date.parse(lastVisitAt)) {
+      lastVisitAt = data.utcAt || data.createdAt || data.lastSeenAt || '';
+    }
+  });
+
+  return {
+    usersTotal: users.length,
+    visitsTotal: visits.length,
+    uniqueVisitorsTotal: uniqueVisitors.size,
+    recentVisitsShown: visits.length,
+    ticketsTotal: tickets.length,
+    openTicketsTotal: tickets.filter(function(row) {
+      return String((row.data || {}).status || 'open').toLowerCase() !== 'closed';
+    }).length,
+    uniqueVisitorsRecent: uniqueVisitors.size,
+    liveVisitorsLast10Min: liveVisitors.size,
+    landingVisitsTotal: landingVisitsRecent,
+    landingVisitsRecent,
+    lastVisitAt
+  };
+}
+
 function readBody(event) {
   try {
     return JSON.parse(event.body || '{}');
@@ -138,14 +205,25 @@ exports.handler = async function handler(event) {
       return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
     }
 
-    const users = await readCollection(db, 'users', 'createdAt', 300);
-    const visits = await readCollection(db, 'platformVisits', 'createdAt', 160);
-    const tickets = await readCollection(db, 'supportTickets', 'createdAt', 160);
+    const users = await readCollection(db, 'users', 'createdAt', 500);
+    const visits = await readCollection(db, 'platformVisits', 'createdAt', 500);
+    const tickets = await readCollection(db, 'supportTickets', 'createdAt', 300);
+    const stats = buildStats(users, visits, tickets);
+
+    const usersTotal = await countQuery(db.collection('users'));
+    const visitsTotal = await countQuery(db.collection('platformVisits'));
+    const ticketsTotal = await countQuery(db.collection('supportTickets'));
+    const landingVisitsTotal = await countQuery(db.collection('platformVisits').where('isLanding', '==', true));
+
+    if (usersTotal != null) stats.usersTotal = usersTotal;
+    if (visitsTotal != null) stats.visitsTotal = visitsTotal;
+    if (ticketsTotal != null) stats.ticketsTotal = ticketsTotal;
+    if (landingVisitsTotal != null) stats.landingVisitsTotal = landingVisitsTotal;
 
     return {
       statusCode: 200,
       headers: headers(),
-      body: JSON.stringify({ ok: true, users, visits, tickets })
+      body: JSON.stringify({ ok: true, users, visits, tickets, stats })
     };
   } catch (err) {
     return {

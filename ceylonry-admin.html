@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="assets/platform.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(4,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:980px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1120px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -56,9 +56,11 @@
 
     <div class="grid kpis">
       <div class="card"><div class="label">Users</div><div class="kpi-number" id="kpi-users">0</div><p class="muted">Signed-in accounts</p></div>
-      <div class="card"><div class="label">Visits</div><div class="kpi-number" id="kpi-visits">0</div><p class="muted">Recent tracked visits</p></div>
-      <div class="card"><div class="label">Tickets</div><div class="kpi-number" id="kpi-tickets">0</div><p class="muted">Recent support requests</p></div>
-      <div class="card"><div class="label">Open</div><div class="kpi-number" id="kpi-open">0</div><p class="muted">Needs attention</p></div>
+      <div class="card"><div class="label">Visitors</div><div class="kpi-number" id="kpi-visitors">0</div><p class="muted">Unique website visitors</p></div>
+      <div class="card"><div class="label">Page views</div><div class="kpi-number" id="kpi-visits">0</div><p class="muted">Total tracked visits</p></div>
+      <div class="card"><div class="label">Landing visits</div><div class="kpi-number" id="kpi-landing">0</div><p class="muted">Homepage entries</p></div>
+      <div class="card"><div class="label">Live now</div><div class="kpi-number" id="kpi-live">0</div><p class="muted">Visitors in last 10 minutes</p></div>
+      <div class="card"><div class="label">Open tickets</div><div class="kpi-number" id="kpi-open">0</div><p class="muted"><span id="kpi-tickets">0</span> total requests</p></div>
     </div>
 
     <section class="section">
@@ -72,7 +74,7 @@
     <section class="section">
       <div class="section-head"><h2>Visits</h2><span class="muted">Location comes from Netlify geo when deployed</span></div>
       <div class="table-wrap"><table class="table">
-        <thead><tr><th>UTC</th><th>User</th><th>Plan</th><th>Path</th><th>City</th><th>Country</th><th>Timezone</th><th>IP</th></tr></thead>
+        <thead><tr><th>UTC</th><th>Visitor</th><th>Page</th><th>Plan</th><th>Path</th><th>City</th><th>Country</th><th>Timezone</th><th>Device</th><th>IP</th></tr></thead>
         <tbody id="visits-body"></tbody>
       </table></div>
     </section>
@@ -135,11 +137,52 @@ async function ensureAdminProfile(user, createdNow) {
 
 function $(id){ return document.getElementById(id); }
 function esc(v){ return String(v == null ? '' : v).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function fmtInt(v){ return Number(v || 0).toLocaleString('en-US'); }
 function fmtDate(v){
   if (!v) return '';
   if (v.toDate) return v.toDate().toISOString();
   var d = new Date(v);
   return isNaN(d.getTime()) ? String(v) : d.toISOString();
+}
+function visitMs(v){
+  if (!v) return 0;
+  var raw = v.utcAt || v.localAt || v.createdAt || v.lastSeenAt;
+  if (!raw) return 0;
+  if (raw.toDate) return raw.toDate().getTime();
+  var d = new Date(raw);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+function isLandingVisit(v){
+  if (!v) return false;
+  if (v.isLanding === true) return true;
+  var path = String(v.path || '').split('?')[0].replace(/\/+$/, '') || '/';
+  return path === '/' || path === '/index.html';
+}
+function pagePill(v){
+  var kind = String((v && v.pageKind) || '').toLowerCase();
+  if (isLandingVisit(v) || kind === 'landing') return '<span class="pill land">Landing</span>';
+  if (v && v.isPortal) return '<span class="pill ok">Portal</span>';
+  return '<span class="pill">'+esc(kind || 'Page')+'</span>';
+}
+function clientStats(users, visits, tickets){
+  var now = Date.now();
+  var liveIds = {};
+  var visitorIds = {};
+  (visits || []).forEach(function(row){
+    var v = row.data || {};
+    var id = v.visitorId || v.sessionId || v.uid || v.email || row.id;
+    if (id) visitorIds[id] = true;
+    if (now - visitMs(v) <= 10 * 60 * 1000) liveIds[id] = true;
+  });
+  return {
+    usersTotal: (users || []).length,
+    visitsTotal: (visits || []).length,
+    uniqueVisitorsTotal: Object.keys(visitorIds).length,
+    landingVisitsTotal: (visits || []).filter(function(row){ return isLandingVisit(row.data || {}); }).length,
+    liveVisitorsLast10Min: Object.keys(liveIds).length,
+    ticketsTotal: (tickets || []).length,
+    openTicketsTotal: (tickets || []).filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length
+  };
 }
 function planPill(plan){
   plan = String(plan || 'starter').toLowerCase();
@@ -202,9 +245,10 @@ async function fetchAdminFunction(body){
   return json;
 }
 
-function renderUsers(users){
+function renderUsers(users, stats){
   users = users || [];
-  $('kpi-users').textContent = users.length;
+  stats = stats || clientStats(users, [], []);
+  $('kpi-users').textContent = fmtInt(stats.usersTotal == null ? users.length : stats.usersTotal);
   $('users-body').innerHTML = users.map(function(row){
     var u = row.data || {};
     var plan = u.lastPlan || u.currentPlan || u.plan || '';
@@ -212,19 +256,26 @@ function renderUsers(users){
   }).join('') || '<tr><td colspan="8" class="muted">No users found yet.</td></tr>';
 }
 
-function renderVisits(visits){
+function renderVisits(visits, stats){
   visits = visits || [];
-  $('kpi-visits').textContent = visits.length;
+  stats = stats || clientStats([], visits, []);
+  $('kpi-visitors').textContent = fmtInt(stats.uniqueVisitorsTotal == null ? clientStats([], visits, []).uniqueVisitorsTotal : stats.uniqueVisitorsTotal);
+  $('kpi-visits').textContent = fmtInt(stats.visitsTotal == null ? visits.length : stats.visitsTotal);
+  $('kpi-landing').textContent = fmtInt(stats.landingVisitsTotal == null ? visits.filter(function(row){ return isLandingVisit(row.data || {}); }).length : stats.landingVisitsTotal);
+  $('kpi-live').textContent = fmtInt(stats.liveVisitorsLast10Min || 0);
   $('visits-body').innerHTML = visits.map(function(row){
     var v = row.data || {}, g = v.geo || {};
-    return '<tr><td>'+esc(v.utcAt || fmtDate(v.createdAt))+'</td><td>'+esc(v.email || v.displayName || v.uid || 'Visitor')+'</td><td>'+planPill(v.lastPlan)+'</td><td>'+esc(v.path || '')+'</td><td>'+esc(g.city || '')+'</td><td>'+esc(g.country || '')+'</td><td>'+esc(g.timezone || v.timezone || '')+'</td><td>'+esc(v.ip || '')+'</td></tr>';
-  }).join('') || '<tr><td colspan="8" class="muted">No visits tracked yet. Visits appear after the deployed Netlify tracker receives traffic.</td></tr>';
+    var visitor = v.email || v.displayName || v.uid || v.visitorId || v.sessionId || 'Anonymous visitor';
+    var device = [v.screen, v.language].filter(Boolean).join(' · ');
+    return '<tr><td>'+esc(v.utcAt || fmtDate(v.createdAt))+'</td><td>'+esc(visitor)+'</td><td>'+pagePill(v)+'</td><td>'+planPill(v.lastPlan)+'</td><td class="visit-path">'+esc(v.path || '')+'</td><td>'+esc(g.city || '')+'</td><td>'+esc(g.country || '')+'</td><td>'+esc(g.timezone || v.timezone || '')+'</td><td>'+esc(device)+'</td><td>'+esc(v.ip || '')+'</td></tr>';
+  }).join('') || '<tr><td colspan="10" class="muted">No visits tracked yet. Open the landing page after publishing the updated Firestore rules, or configure Firebase Admin on Netlify for full IP and geo tracking.</td></tr>';
 }
 
-function renderTickets(tickets){
+function renderTickets(tickets, stats){
   tickets = tickets || [];
-  $('kpi-tickets').textContent = tickets.length;
-  $('kpi-open').textContent = tickets.filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length;
+  stats = stats || clientStats([], [], tickets);
+  $('kpi-tickets').textContent = fmtInt(stats.ticketsTotal == null ? tickets.length : stats.ticketsTotal);
+  $('kpi-open').textContent = fmtInt(stats.openTicketsTotal == null ? tickets.filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length : stats.openTicketsTotal);
   $('tickets-body').innerHTML = tickets.map(function(row){
     var t = row.data || {};
     return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td><div class="actions"><button class="btn" data-status="in-progress" data-ticket="'+row.id+'">In progress</button><button class="btn gold" data-status="closed" data-ticket="'+row.id+'">Close</button></div></td></tr>';
@@ -234,14 +285,14 @@ function renderTickets(tickets){
 async function loadAdminData(){
   showAdmin();
   renderEmpty('users-body', 8, 'Loading users...');
-  renderEmpty('visits-body', 8, 'Loading visits...');
+  renderEmpty('visits-body', 10, 'Loading visits...');
   renderEmpty('tickets-body', 8, 'Loading tickets...');
   var adminFunctionError = '';
   try {
     var payload = await fetchAdminFunction();
-    renderUsers(payload.users || []);
-    renderVisits(payload.visits || []);
-    renderTickets(payload.tickets || []);
+    renderUsers(payload.users || [], payload.stats || {});
+    renderVisits(payload.visits || [], payload.stats || {});
+    renderTickets(payload.tickets || [], payload.stats || {});
     return;
   } catch (serverErr) {
     adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
@@ -263,7 +314,7 @@ async function loadAdminData(){
     visitsSnap.forEach(function(d){ visits.push({ id:d.id, data:d.data() || {} }); });
     renderVisits(visits);
   } catch (e) {
-    renderEmpty('visits-body', 8, 'Could not load visits. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
+    renderEmpty('visits-body', 10, 'Could not load visits. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
   }
 
   try {
@@ -324,6 +375,11 @@ document.addEventListener('click', function(ev){
   updateTicket(btn.getAttribute('data-ticket'), btn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
 });
 setInterval(function(){ $('utc-clock').textContent = 'UTC ' + new Date().toISOString().replace('T',' ').replace(/\.\d+Z$/,''); }, 1000);
+setInterval(function(){
+  if (!$('admin-view').classList.contains('hidden')) {
+    loadAdminData().catch(function(e){ console.warn('Auto refresh skipped:', e); });
+  }
+}, 30000);
 
 auth.onAuthStateChanged(function(user){
   if (!user) { showLogin(); return; }

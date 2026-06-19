@@ -36,6 +36,70 @@ service cloud.firestore {
       return isOwner(ownerUid) || isTeamMember(ownerUid);
     }
 
+    function optionalString(key, max) {
+      return !(key in request.resource.data)
+        || (request.resource.data[key] is string && request.resource.data[key].size() <= max);
+    }
+
+    function optionalBool(key) {
+      return !(key in request.resource.data) || request.resource.data[key] is bool;
+    }
+
+    function validPlatformVisitCreate() {
+      return request.resource.data.keys().hasOnly([
+          'eventType',
+          'visitId',
+          'visitorId',
+          'sessionId',
+          'uid',
+          'email',
+          'displayName',
+          'path',
+          'url',
+          'title',
+          'referrer',
+          'timezone',
+          'language',
+          'userAgent',
+          'screen',
+          'lastPlan',
+          'pageKind',
+          'isLanding',
+          'isPortal',
+          'utcAt',
+          'localAt',
+          'firstSeenAt',
+          'createdAt',
+          'source'
+        ])
+        && request.resource.data.eventType == 'page_view'
+        && request.resource.data.source == 'browser-fallback'
+        && request.resource.data.visitId is string
+        && request.resource.data.visitId.size() <= 140
+        && request.resource.data.visitorId is string
+        && request.resource.data.visitorId.size() <= 180
+        && optionalString('sessionId', 180)
+        && optionalString('uid', 140)
+        && optionalString('email', 180)
+        && optionalString('displayName', 180)
+        && optionalString('path', 300)
+        && optionalString('url', 900)
+        && optionalString('title', 240)
+        && optionalString('referrer', 900)
+        && optionalString('timezone', 120)
+        && optionalString('language', 80)
+        && optionalString('userAgent', 500)
+        && optionalString('screen', 80)
+        && optionalString('lastPlan', 40)
+        && optionalString('pageKind', 80)
+        && optionalBool('isLanding')
+        && optionalBool('isPortal')
+        && optionalString('utcAt', 90)
+        && optionalString('localAt', 180)
+        && optionalString('firstSeenAt', 90)
+        && optionalString('createdAt', 90);
+    }
+
     match /users/{uid} {
       allow create: if signedIn() && request.auth.uid == uid;
       allow get: if signedIn()
@@ -106,7 +170,8 @@ service cloud.firestore {
 
     match /platformVisits/{visitId} {
       allow read, list, delete: if isPlatformAdmin();
-      allow create, update: if false;
+      allow create: if validPlatformVisitCreate();
+      allow update: if false;
     }
 
     match /supportTickets/{ticketId} {

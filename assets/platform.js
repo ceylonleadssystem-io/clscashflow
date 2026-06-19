@@ -2,6 +2,8 @@
   var VALID_PLANS = { starter: true, growth: true, premium: true };
   var PLAN_FILES = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
   var SUPPORT_ID = 'cls-support-widget';
+  var FIREBASE_PROJECT_ID = 'ceylonry-labs';
+  var FIREBASE_API_KEY = 'AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI';
 
   function nowIso() {
     return new Date().toISOString();
@@ -30,6 +32,41 @@
 
   function isPortalPath() {
     return !!planFromPath();
+  }
+
+  function isLandingPath(path) {
+    path = String(path || location.pathname || '').toLowerCase();
+    return path === '/' || path === '' || path.endsWith('/index.html');
+  }
+
+  function pageKind() {
+    var plan = planFromPath();
+    if (plan) return plan + '-portal';
+    if (/signin/i.test(location.pathname || '')) return 'signin';
+    if (/onboarding/i.test(location.pathname || '')) return 'onboarding';
+    if (/ceylonry-admin/i.test(location.pathname || '')) return 'admin';
+    if (isLandingPath(location.pathname)) return 'landing';
+    return 'website';
+  }
+
+  function newId(prefix) {
+    var randomPart = '';
+    try {
+      if (window.crypto && crypto.randomUUID) randomPart = crypto.randomUUID();
+    } catch (e) {}
+    if (!randomPart) {
+      randomPart = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12);
+    }
+    return (prefix || 'id') + '-' + randomPart;
+  }
+
+  function persistentId(key, prefix) {
+    var id = safeGet(key);
+    if (!id) {
+      id = newId(prefix);
+      safeSet(key, id);
+    }
+    return id;
   }
 
   function getFirestore(db) {
@@ -178,9 +215,91 @@
     return { uid: user.uid, email: user.email || '', displayName: user.displayName || '' };
   }
 
+  function cleanString(value, max) {
+    value = String(value == null ? '' : value);
+    return max && value.length > max ? value.slice(0, max) : value;
+  }
+
+  function firestoreValue(value) {
+    if (typeof value === 'boolean') return { booleanValue: value };
+    if (typeof value === 'number' && isFinite(value)) return { doubleValue: value };
+    return { stringValue: cleanString(value, 1000) };
+  }
+
+  function firestoreFields(obj) {
+    var fields = {};
+    Object.keys(obj || {}).forEach(function(key) {
+      if (obj[key] !== undefined && obj[key] !== null) fields[key] = firestoreValue(obj[key]);
+    });
+    return fields;
+  }
+
+  function safeVisitPayload(payload) {
+    payload = payload || {};
+    return {
+      eventType: 'page_view',
+      visitId: cleanString(payload.visitId || newId('visit'), 140),
+      visitorId: cleanString(payload.visitorId, 180),
+      sessionId: cleanString(payload.sessionId, 180),
+      uid: cleanString(payload.uid, 140),
+      email: cleanString(payload.email, 180),
+      displayName: cleanString(payload.displayName, 180),
+      path: cleanString(payload.path, 300),
+      url: cleanString(payload.url, 900),
+      title: cleanString(payload.title, 240),
+      referrer: cleanString(payload.referrer, 900),
+      timezone: cleanString(payload.timezone, 120),
+      language: cleanString(payload.language, 80),
+      userAgent: cleanString(payload.userAgent, 500),
+      screen: cleanString(payload.screen, 80),
+      lastPlan: cleanString(payload.lastPlan, 40),
+      pageKind: cleanString(payload.pageKind, 80),
+      isLanding: payload.isLanding === true,
+      isPortal: payload.isPortal === true,
+      utcAt: cleanString(payload.utcAt || nowIso(), 90),
+      localAt: cleanString(payload.localAt, 180),
+      firstSeenAt: cleanString(payload.firstSeenAt, 90),
+      createdAt: nowIso(),
+      source: 'browser-fallback'
+    };
+  }
+
+  async function storeVisitFallback(payload) {
+    if (!FIREBASE_PROJECT_ID || !FIREBASE_API_KEY) return false;
+    var body = { fields: firestoreFields(safeVisitPayload(payload)) };
+    var url = 'https://firestore.googleapis.com/v1/projects/' +
+      encodeURIComponent(FIREBASE_PROJECT_ID) +
+      '/databases/(default)/documents/platformVisits?key=' +
+      encodeURIComponent(FIREBASE_API_KEY);
+    try {
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        keepalive: true
+      });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function trackVisit() {
     if (location.protocol === 'file:') return;
+    var visitorId = persistentId('cls-visitor-id', 'visitor');
+    var sessionId = safeGet('cls-session-id');
+    var sessionStarted = safeGet('cls-session-started');
+    var sessionAge = sessionStarted ? Date.now() - Number(sessionStarted) : Infinity;
+    if (!sessionId || !sessionStarted || sessionAge > 30 * 60 * 1000) {
+      sessionId = newId('session');
+      safeSet('cls-session-id', sessionId);
+      safeSet('cls-session-started', String(Date.now()));
+    }
     var payload = {
+      eventType: 'page_view',
+      visitId: newId('visit'),
+      visitorId: visitorId,
+      sessionId: sessionId,
       path: location.pathname,
       url: location.href,
       title: document.title || '',
@@ -191,8 +310,13 @@
       screen: (screen && screen.width ? screen.width + 'x' + screen.height : ''),
       utcAt: nowIso(),
       localAt: new Date().toString(),
-      lastPlan: safeGet('cls-last-plan') || planFromPath()
+      firstSeenAt: safeGet('cls-first-seen-at') || nowIso(),
+      lastPlan: safeGet('cls-last-plan') || planFromPath(),
+      pageKind: pageKind(),
+      isLanding: isLandingPath(location.pathname),
+      isPortal: isPortalPath()
     };
+    if (!safeGet('cls-first-seen-at')) safeSet('cls-first-seen-at', payload.firstSeenAt);
     currentUserPayload().then(function(user) {
       Object.assign(payload, user);
       fetch('/.netlify/functions/track-visit', {
@@ -200,8 +324,28 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         keepalive: true
-      }).catch(function() {});
+      }).then(function(res) {
+        return res.json().catch(function() { return {}; });
+      }).then(function(json) {
+        if (!json || json.stored === false) return storeVisitFallback(payload);
+        return true;
+      }).catch(function() {
+        return storeVisitFallback(payload);
+      });
     });
+  }
+
+  async function saveSupportFallback(data) {
+    var db = getFirestore();
+    if (!db) throw new Error('Firebase is not available on this page.');
+    var payload = Object.assign({}, data, {
+      status: 'open',
+      source: 'browser-fallback',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    var doc = await db.collection('supportTickets').add(payload);
+    return doc.id;
   }
 
   function injectSupportCardStyle() {
@@ -295,10 +439,19 @@
         });
         var json = await res.json().catch(function() { return {}; });
         if (!res.ok || json.ok === false) throw new Error(json.error || 'Could not send ticket');
+        if (json.storage && json.storage.stored === false) {
+          await saveSupportFallback(data);
+        }
         status.textContent = 'Ticket sent. Our team will check it.';
         form.reset();
       } catch (err) {
-        status.textContent = 'Could not send ticket. Please email hello@ceylonrylabs.io.';
+        try {
+          await saveSupportFallback(data);
+          status.textContent = 'Ticket sent. Our team will check it.';
+          form.reset();
+        } catch (fallbackErr) {
+          status.textContent = 'Could not send ticket. Please email hello@ceylonrylabs.io.';
+        }
       }
     });
   }

@@ -47,6 +47,15 @@ function clean(s, max) {
   return s;
 }
 
+function bool(v) {
+  return v === true || v === 'true';
+}
+
+function isLandingPath(path) {
+  path = clean(path, 300).toLowerCase();
+  return path === '/' || path === '' || path.endsWith('/index.html');
+}
+
 exports.handler = async function handler(event, context) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: headers(), body: '' };
@@ -66,6 +75,10 @@ exports.handler = async function handler(event, context) {
   const ip = clean(event.headers['x-nf-client-connection-ip'] || event.headers['client-ip'] || forwarded.split(',')[0] || '', 120);
   const geo = (context && context.geo) || {};
   const payload = {
+    eventType: clean(body.eventType, 40) || 'page_view',
+    visitId: clean(body.visitId, 120),
+    visitorId: clean(body.visitorId, 160),
+    sessionId: clean(body.sessionId, 160),
     uid: clean(body.uid, 120),
     email: clean(body.email, 180),
     displayName: clean(body.displayName, 180),
@@ -78,8 +91,12 @@ exports.handler = async function handler(event, context) {
     userAgent: clean(body.userAgent, 500),
     screen: clean(body.screen, 80),
     lastPlan: clean(body.lastPlan, 40),
+    pageKind: clean(body.pageKind, 80),
+    isLanding: bool(body.isLanding) || isLandingPath(body.path),
+    isPortal: bool(body.isPortal),
     utcAt: clean(body.utcAt, 80) || new Date().toISOString(),
     localAt: clean(body.localAt, 160),
+    firstSeenAt: clean(body.firstSeenAt, 80),
     ip,
     geo: {
       country: clean(geo.country && (geo.country.name || geo.country.code || geo.country), 120),
@@ -100,6 +117,7 @@ exports.handler = async function handler(event, context) {
   try {
     const doc = await admin.firestore().collection('platformVisits').add({
       ...payload,
+      lastSeenAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
     return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: true, id: doc.id }) };
