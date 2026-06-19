@@ -182,58 +182,109 @@ async function readCollection(name, opts){
   }
 }
 
+async function fetchAdminFunction(body){
+  var user = auth.currentUser;
+  if (!user) throw new Error('Admin is not signed in.');
+  var token = await user.getIdToken();
+  var options = {
+    method: body ? 'POST' : 'GET',
+    headers: { Authorization: 'Bearer ' + token }
+  };
+  if (body) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+  var res = await fetch('/.netlify/functions/admin-data', options);
+  var json = await res.json().catch(function(){ return {}; });
+  if (!res.ok || !json.ok) {
+    throw new Error(json.error || 'Admin data function failed.');
+  }
+  return json;
+}
+
+function renderUsers(users){
+  users = users || [];
+  $('kpi-users').textContent = users.length;
+  $('users-body').innerHTML = users.map(function(row){
+    var u = row.data || {};
+    var plan = u.lastPlan || u.currentPlan || u.plan || '';
+    return '<tr><td>'+esc(u.name || u.displayName || '')+'</td><td>'+esc(u.email || '')+'</td><td>'+esc(u.role || 'owner')+'</td><td>'+planPill(plan)+'</td><td>'+esc(u.ownerUid || row.id)+'</td><td>'+esc(fmtDate(u.trialEnd))+'</td><td>'+esc(u.lastSeenUtc || fmtDate(u.lastSeenAt))+'</td><td>'+esc(u.lastSeenPath || '')+'</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="muted">No users found yet.</td></tr>';
+}
+
+function renderVisits(visits){
+  visits = visits || [];
+  $('kpi-visits').textContent = visits.length;
+  $('visits-body').innerHTML = visits.map(function(row){
+    var v = row.data || {}, g = v.geo || {};
+    return '<tr><td>'+esc(v.utcAt || fmtDate(v.createdAt))+'</td><td>'+esc(v.email || v.displayName || v.uid || 'Visitor')+'</td><td>'+planPill(v.lastPlan)+'</td><td>'+esc(v.path || '')+'</td><td>'+esc(g.city || '')+'</td><td>'+esc(g.country || '')+'</td><td>'+esc(g.timezone || v.timezone || '')+'</td><td>'+esc(v.ip || '')+'</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="muted">No visits tracked yet. Visits appear after the deployed Netlify tracker receives traffic.</td></tr>';
+}
+
+function renderTickets(tickets){
+  tickets = tickets || [];
+  $('kpi-tickets').textContent = tickets.length;
+  $('kpi-open').textContent = tickets.filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length;
+  $('tickets-body').innerHTML = tickets.map(function(row){
+    var t = row.data || {};
+    return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td><div class="actions"><button class="btn" data-status="in-progress" data-ticket="'+row.id+'">In progress</button><button class="btn gold" data-status="closed" data-ticket="'+row.id+'">Close</button></div></td></tr>';
+  }).join('') || '<tr><td colspan="8" class="muted">No support tickets yet.</td></tr>';
+}
+
 async function loadAdminData(){
   showAdmin();
   renderEmpty('users-body', 8, 'Loading users...');
   renderEmpty('visits-body', 8, 'Loading visits...');
   renderEmpty('tickets-body', 8, 'Loading tickets...');
+  var adminFunctionError = '';
+  try {
+    var payload = await fetchAdminFunction();
+    renderUsers(payload.users || []);
+    renderVisits(payload.visits || []);
+    renderTickets(payload.tickets || []);
+    return;
+  } catch (serverErr) {
+    adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
+    console.warn('Admin function unavailable, falling back to Firestore rules:', serverErr);
+  }
+
   try {
     var usersSnap = await readCollection('users', { order:'createdAt', dir:'desc', limit:300 });
     var users = [];
     usersSnap.forEach(function(d){ users.push({ id:d.id, data:d.data() || {} }); });
-    $('kpi-users').textContent = users.length;
-    $('users-body').innerHTML = users.map(function(row){
-      var u = row.data;
-      var plan = u.lastPlan || u.currentPlan || u.plan || '';
-      return '<tr><td>'+esc(u.name || u.displayName || '')+'</td><td>'+esc(u.email || '')+'</td><td>'+esc(u.role || 'owner')+'</td><td>'+planPill(plan)+'</td><td>'+esc(u.ownerUid || row.id)+'</td><td>'+esc(fmtDate(u.trialEnd))+'</td><td>'+esc(u.lastSeenUtc || fmtDate(u.lastSeenAt))+'</td><td>'+esc(u.lastSeenPath || '')+'</td></tr>';
-    }).join('') || '<tr><td colspan="8" class="muted">No users found.</td></tr>';
+    renderUsers(users);
   } catch (e) {
-    renderEmpty('users-body', 8, 'Could not load users. Check Firestore rules.');
+    renderEmpty('users-body', 8, 'Could not load users. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
   }
 
   try {
     var visitsSnap = await readCollection('platformVisits', { order:'createdAt', dir:'desc', limit:160 });
     var visits = [];
     visitsSnap.forEach(function(d){ visits.push({ id:d.id, data:d.data() || {} }); });
-    $('kpi-visits').textContent = visits.length;
-    $('visits-body').innerHTML = visits.map(function(row){
-      var v = row.data, g = v.geo || {};
-      return '<tr><td>'+esc(v.utcAt || fmtDate(v.createdAt))+'</td><td>'+esc(v.email || v.displayName || v.uid || 'Visitor')+'</td><td>'+planPill(v.lastPlan)+'</td><td>'+esc(v.path || '')+'</td><td>'+esc(g.city || '')+'</td><td>'+esc(g.country || '')+'</td><td>'+esc(g.timezone || v.timezone || '')+'</td><td>'+esc(v.ip || '')+'</td></tr>';
-    }).join('') || '<tr><td colspan="8" class="muted">No visits tracked yet. Netlify functions must be deployed to store visits.</td></tr>';
+    renderVisits(visits);
   } catch (e) {
-    renderEmpty('visits-body', 8, 'Could not load visits. Check Firestore rules.');
+    renderEmpty('visits-body', 8, 'Could not load visits. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
   }
 
   try {
     var ticketsSnap = await readCollection('supportTickets', { order:'createdAt', dir:'desc', limit:160 });
     var tickets = [];
     ticketsSnap.forEach(function(d){ tickets.push({ id:d.id, data:d.data() || {} }); });
-    $('kpi-tickets').textContent = tickets.length;
-    $('kpi-open').textContent = tickets.filter(function(t){ return String(t.data.status || 'open').toLowerCase() !== 'closed'; }).length;
-    $('tickets-body').innerHTML = tickets.map(function(row){
-      var t = row.data;
-      return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td><div class="actions"><button class="btn" data-status="in-progress" data-ticket="'+row.id+'">In progress</button><button class="btn gold" data-status="closed" data-ticket="'+row.id+'">Close</button></div></td></tr>';
-    }).join('') || '<tr><td colspan="8" class="muted">No support tickets yet.</td></tr>';
+    renderTickets(tickets);
   } catch (e) {
-    renderEmpty('tickets-body', 8, 'Could not load tickets. Check Firestore rules.');
+    renderEmpty('tickets-body', 8, 'Could not load tickets. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
   }
 }
 
 async function updateTicket(id, status){
-  await db.collection('supportTickets').doc(id).set({
-    status: status,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  try {
+    await fetchAdminFunction({ action: 'updateTicket', id: id, status: status });
+  } catch (serverErr) {
+    await db.collection('supportTickets').doc(id).set({
+      status: status,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
   await loadAdminData();
 }
 
