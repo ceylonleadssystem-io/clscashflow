@@ -28,6 +28,10 @@
     return '';
   }
 
+  function isPortalPath() {
+    return !!planFromPath();
+  }
+
   function getFirestore(db) {
     if (db) return db;
     try {
@@ -200,47 +204,80 @@
     });
   }
 
+  function injectSupportCardStyle() {
+    if (document.getElementById('cls-support-card-style')) return;
+    var style = document.createElement('style');
+    style.id = 'cls-support-card-style';
+    style.textContent =
+      '#cls-support-widget.cls-settings-support-card{margin-top:1rem;border:1px solid #DED7CC;background:#fff;border-left:3px solid #B8922A;padding:1rem 1.1rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814}' +
+      '.cls-settings-support-card .cls-support-top{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center}' +
+      '.cls-settings-support-card .cls-support-kicker{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:#B8922A;font-weight:700;margin-bottom:.2rem}' +
+      '.cls-settings-support-card .cls-support-title{font-family:Cormorant Garamond,Georgia,serif;font-size:1.25rem;line-height:1.1;margin-bottom:.15rem;color:#1C1814}' +
+      '.cls-settings-support-card .cls-support-copy{font-size:.76rem;line-height:1.55;color:#6B6258;max-width:560px}' +
+      '.cls-settings-support-card .cls-support-toggle,.cls-settings-support-card .cls-sp-submit{border:0;background:#1C1814;color:#fff;padding:.72rem 1rem;font-family:inherit;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:700;cursor:pointer;white-space:nowrap}' +
+      '.cls-settings-support-card .cls-support-toggle:hover,.cls-settings-support-card .cls-sp-submit:hover{background:#B8922A}' +
+      '.cls-settings-support-card .cls-support-form{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem;margin-top:1rem;padding-top:1rem;border-top:1px solid #E7DFD2}' +
+      '.cls-settings-support-card.open .cls-support-form{display:grid}' +
+      '.cls-settings-support-card .full{grid-column:1/-1}' +
+      '.cls-settings-support-card label{display:block;font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:#6B6258;font-weight:700;margin-bottom:.35rem}' +
+      '.cls-settings-support-card input,.cls-settings-support-card select,.cls-settings-support-card textarea{width:100%;border:1px solid #DCD4C8;background:#F7F5F0;padding:.75rem .8rem;font-family:inherit;font-size:.78rem;color:#1C1814;outline:none;border-radius:0}' +
+      '.cls-settings-support-card textarea{min-height:88px;resize:vertical}' +
+      '.cls-settings-support-card input:focus,.cls-settings-support-card select:focus,.cls-settings-support-card textarea:focus{border-color:#B8922A;background:#fff}' +
+      '.cls-settings-support-card .cls-sp-status{font-size:.72rem;color:#6B6258;line-height:1.5;align-self:center}' +
+      '@media(max-width:760px){.cls-settings-support-card .cls-support-top,.cls-settings-support-card .cls-support-form{grid-template-columns:1fr}.cls-settings-support-card .cls-support-toggle,.cls-settings-support-card .cls-sp-submit{width:100%}}' +
+      '@media print{#cls-support-widget{display:none!important}}';
+    document.head.appendChild(style);
+  }
+
   function mountSupportWidget() {
     if (document.getElementById(SUPPORT_ID)) return;
     if (/ceylonry-admin\.html/i.test(location.pathname)) return;
+    if (!isPortalPath()) return;
 
-    var launcher = document.createElement('button');
-    launcher.id = 'cls-support-launcher';
-    launcher.type = 'button';
-    launcher.textContent = 'Help';
+    var settingsView = document.getElementById('view-settings');
+    if (!settingsView) {
+      setTimeout(mountSupportWidget, 700);
+      return;
+    }
 
-    var panel = document.createElement('div');
-    panel.id = 'cls-support-panel';
-    panel.innerHTML =
-      '<div class="cls-sp-head"><div class="cls-sp-title">Need help?</div><button type="button" class="cls-sp-close" aria-label="Close">&times;</button></div>' +
-      '<form id="cls-support-form">' +
+    injectSupportCardStyle();
+
+    var wrap = document.createElement('div');
+    wrap.id = SUPPORT_ID;
+    wrap.className = 'cls-settings-support-card';
+    wrap.innerHTML =
+      '<div class="cls-support-top">' +
+        '<div>' +
+          '<div class="cls-support-kicker">Support</div>' +
+          '<div class="cls-support-title">Need help?</div>' +
+          '<div class="cls-support-copy">Send a small support ticket to the Ceylonry Labs team. We will receive your account, page, and UTC timestamp with the issue.</div>' +
+        '</div>' +
+        '<button type="button" class="cls-support-toggle">New ticket</button>' +
+      '</div>' +
+      '<form id="cls-support-form" class="cls-support-form">' +
         '<div><label>Name</label><input name="name" autocomplete="name"></div>' +
         '<div><label>Email</label><input name="email" type="email" autocomplete="email" required></div>' +
         '<div><label>Issue type</label><select name="type"><option>Question</option><option>Bug</option><option>Billing</option><option>Invoice/PDF issue</option><option>Account access</option></select></div>' +
         '<div><label>Priority</label><select name="priority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>' +
-        '<div><label>Message</label><textarea name="message" required placeholder="Tell us what happened..."></textarea></div>' +
+        '<div class="full"><label>Message</label><textarea name="message" required placeholder="Tell us what happened..."></textarea></div>' +
         '<button class="cls-sp-submit" type="submit">Send ticket</button>' +
-        '<div class="cls-sp-status" id="cls-support-status">We will receive this as a support ticket.</div>' +
+        '<div class="cls-sp-status" id="cls-support-status">This will be saved as a support ticket.</div>' +
       '</form>';
+    settingsView.appendChild(wrap);
 
-    var wrap = document.createElement('div');
-    wrap.id = SUPPORT_ID;
-    wrap.appendChild(launcher);
-    wrap.appendChild(panel);
-    document.body.appendChild(wrap);
-
-    launcher.addEventListener('click', function() { panel.classList.toggle('open'); });
-    panel.querySelector('.cls-sp-close').addEventListener('click', function() { panel.classList.remove('open'); });
+    wrap.querySelector('.cls-support-toggle').addEventListener('click', function() {
+      wrap.classList.toggle('open');
+    });
 
     var user = getAuthUser();
     if (user) {
-      var nameInput = panel.querySelector('input[name="name"]');
-      var emailInput = panel.querySelector('input[name="email"]');
+      var nameInput = wrap.querySelector('input[name="name"]');
+      var emailInput = wrap.querySelector('input[name="email"]');
       if (nameInput && user.displayName) nameInput.value = user.displayName;
       if (emailInput && user.email) emailInput.value = user.email;
     }
 
-    panel.querySelector('form').addEventListener('submit', async function(ev) {
+    wrap.querySelector('form').addEventListener('submit', async function(ev) {
       ev.preventDefault();
       var form = ev.currentTarget;
       var status = document.getElementById('cls-support-status');

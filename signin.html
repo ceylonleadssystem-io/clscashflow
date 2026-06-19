@@ -168,6 +168,11 @@ var inviteParams = new URLSearchParams(window.location.search);
 var inviteToken = inviteParams.get('invite') || '';
 var inviteOwner = inviteParams.get('owner') || '';
 var inviteRecord = null;
+var PLATFORM_ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
+
+function isPlatformAdminEmail(email) {
+  return String(email || '').trim().toLowerCase() === PLATFORM_ADMIN_EMAIL;
+}
 
 // ── AUTH STATE: redirect if already signed in ──
 firebase.auth().onAuthStateChanged(async function(user) {
@@ -178,6 +183,10 @@ firebase.auth().onAuthStateChanged(async function(user) {
 
 async function redirectToDashboard(user) {
   try {
+    if (isPlatformAdminEmail(user && user.email)) {
+      window.location.href = 'ceylonry-admin.html';
+      return;
+    }
     if (inviteToken && inviteOwner) {
       await acceptInvite(user);
     }
@@ -298,7 +307,11 @@ window.signIn = async function signIn() {
   } catch(err) {
     btn.textContent = 'Sign In →'; btn.disabled = false;
     if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-      showErr('Incorrect email or password. Please try again.');
+      if (isPlatformAdminEmail(email)) {
+        showErr('Admin routing is ready, but Firebase rejected this login. Create or reset the admin Auth user in Firebase, then sign in here again.');
+      } else {
+        showErr('Incorrect email or password. Please try again.');
+      }
     } else {
       showErr(err.message);
     }
@@ -312,6 +325,10 @@ window.signInGoogle = async function signInGoogle() {
   try {
     const result = await firebase.auth().signInWithPopup(provider);
     const user = result.user;
+    if (isPlatformAdminEmail(user && user.email)) {
+      window.location.href = 'ceylonry-admin.html';
+      return;
+    }
     const doc = await firebase.firestore().collection('users').doc(user.uid).get();
     if (!doc.exists) {
       // New Google user — create profile with starter plan
