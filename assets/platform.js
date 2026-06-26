@@ -384,13 +384,18 @@
         '<span class="cls-trial-muted">left in your 15-day trial</span>' +
       '</div>' +
       '<button type="button" id="cls-trial-action">' + (opts.actionText || 'View plan') + '</button>';
-    document.body.appendChild(bar);
+    var dashboardView = document.getElementById('view-dashboard');
+    if (dashboardView) {
+      dashboardView.insertBefore(bar, dashboardView.firstElementChild || null);
+    } else {
+      document.body.appendChild(bar);
+    }
 
     if (!document.getElementById('cls-platform-style')) {
       var style = document.createElement('style');
       style.id = 'cls-platform-style';
       style.textContent =
-        '#cls-trial-countdown{position:fixed;left:18px;right:18px;bottom:16px;z-index:9400;background:#1a1714;color:#fff;border:1px solid rgba(184,146,42,.35);box-shadow:0 18px 50px rgba(0,0,0,.2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:16px;font-family:DM Sans,Inter,Arial,sans-serif;font-size:13px}' +
+        '#cls-trial-countdown{position:static;width:100%;margin:0 0 18px;background:#1a1714;color:#fff;border:1px solid rgba(184,146,42,.35);box-shadow:0 10px 28px rgba(0,0,0,.08);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:16px;font-family:DM Sans,Inter,Arial,sans-serif;font-size:13px}' +
         '#cls-trial-countdown .cls-trial-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}' +
         '#cls-trial-countdown strong{letter-spacing:.08em;text-transform:uppercase;font-size:11px}' +
         '#cls-trial-clock{font-weight:700;color:#D4A840}' +
@@ -412,7 +417,7 @@
         '#cls-support-panel .cls-sp-submit{background:#1a1714;color:#fff;border:0;padding:12px 14px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;cursor:pointer}' +
         '#cls-support-panel .cls-sp-submit:hover{background:#B8922A}' +
         '#cls-support-panel .cls-sp-status{font-size:12px;color:#6B6258;line-height:1.5}' +
-        '@media(max-width:640px){#cls-trial-countdown{left:10px;right:10px;bottom:10px;align-items:flex-start;flex-direction:column}#cls-trial-action{width:100%}#cls-support-launcher{bottom:124px}}' +
+        '@media(max-width:640px){#cls-trial-countdown{align-items:flex-start;flex-direction:column}#cls-trial-action{width:100%}}' +
         '@media print{#cls-trial-countdown,#cls-support-launcher,#cls-support-panel{display:none!important}}';
       document.head.appendChild(style);
     }

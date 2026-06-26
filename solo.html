@@ -1104,9 +1104,11 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     // Trial / paywall check
     const now = new Date();
     const trialEnd = new Date(_profile.trialEnd || now);
-    const isPaid = _profile.paid === true;
+    const isPaused = window.clsIsAccountPaused ? window.clsIsAccountPaused(_profile) : _profile.accountPaused === true;
+    const isPaid = window.clsIsProfilePaid ? window.clsIsProfilePaid(_profile) : _profile.paid === true;
     _trialEnd = trialEnd;
     _isPaid = isPaid;
+    if (isPaused) { if (window.clsRenderAccountPaused) window.clsRenderAccountPaused(_profile, { plan: 'solo' }); return; }
     if (now > trialEnd && !isPaid) { showPaywall(_profile); return; }
 
     // Apply onboarding invoice profile, then preserve later Settings changes.
@@ -1197,7 +1199,7 @@ function getTrialStatus(){
   const now=new Date();
   const end=_trialEnd||(_profile&&_profile.trialEnd?new Date(_profile.trialEnd):now);
   const valid=end&&!isNaN(end.getTime());
-  const paid=_isPaid||(_profile&&_profile.paid===true);
+  const paid=_isPaid||(_profile&&(window.clsIsProfilePaid?window.clsIsProfilePaid(_profile):_profile.paid===true));
   const daysLeft=valid?Math.max(0,Math.ceil((end-now)/86400000)):0;
   return {paid:paid,end:valid?end:null,daysLeft:daysLeft,ended:valid&&now>end&&!paid};
 }
