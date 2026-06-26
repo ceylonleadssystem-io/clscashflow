@@ -7,6 +7,7 @@
     studio: { name: 'Studio', price: 5500, file: 'starter.html' },
     business: { name: 'Business', price: 8500, file: 'growth.html' }
   };
+  var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
   var SUPPORT_ID = 'cls-support-widget';
   var FIREBASE_PROJECT_ID = 'ceylonry-labs';
   var FIREBASE_API_KEY = 'AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI';
@@ -27,6 +28,23 @@
     plan = String(plan || '').toLowerCase();
     plan = PLAN_ALIASES[plan] || plan;
     return VALID_PLANS[plan] ? plan : '';
+  }
+
+  function planRank(plan) {
+    return PLAN_RANK[normalizePlan(plan)] || 0;
+  }
+
+  function highestPlanFrom(values) {
+    var best = '';
+    (values || []).forEach(function(value) {
+      var plan = normalizePlan(value);
+      if (planRank(plan) > planRank(best)) best = plan;
+    });
+    return best;
+  }
+
+  function rememberedPlan() {
+    return highestPlanFrom([safeGet('cls-current-plan'), safeGet('cls-last-plan')]);
   }
 
   function planFromPath() {
@@ -102,12 +120,13 @@
   window.clsRememberPlan = async function clsRememberPlan(plan, uid, db) {
     plan = normalizePlan(plan);
     if (!plan) return plan;
+    var user = getAuthUser();
+    uid = uid || (user && user.uid);
     safeSet('cls-last-plan', plan);
     safeSet('cls-current-plan', plan);
     safeSet('cls-last-plan-at', nowIso());
+    if (uid) safeSet('cls-plan-uid', uid);
 
-    var user = getAuthUser();
-    uid = uid || (user && user.uid);
     db = getFirestore(db);
     if (!uid || !db) return plan;
 
@@ -131,15 +150,12 @@
 
   function profilePlan(profile) {
     profile = profile || {};
-    return normalizePlan(profile.currentPlan)
-      || normalizePlan(profile.plan)
-      || normalizePlan(profile.lastPlan);
+    return highestPlanFrom([profile.currentPlan, profile.plan, profile.lastPlan, profile.requestedPlan]);
   }
 
   window.clsPlanForProfile = function clsPlanForProfile(profile) {
     return profilePlan(profile)
-      || normalizePlan(safeGet('cls-last-plan'))
-      || normalizePlan(safeGet('cls-current-plan'))
+      || rememberedPlan()
       || 'solo';
   };
 
@@ -169,6 +185,7 @@
     var user = getAuthUser();
     var uid = opts.uid || (user && user.uid);
     var db = getFirestore(opts.db);
+    if (uid) safeSet('cls-plan-uid', uid);
     if (!uid || !db) return true;
 
     var update = {
@@ -197,15 +214,36 @@
   }
 
   function bestPlan(profile, plan) {
-    return normalizePlan(plan)
-      || normalizePlan(profile && profile.currentPlan)
-      || normalizePlan(profile && profile.plan)
-      || normalizePlan(profile && profile.lastPlan)
-      || normalizePlan(safeGet('cls-last-plan'))
-      || normalizePlan(safeGet('cls-current-plan'))
+    return highestPlanFrom([
+        plan,
+        profile && profile.currentPlan,
+        profile && profile.plan,
+        profile && profile.lastPlan,
+        profile && profile.requestedPlan
+      ])
+      || rememberedPlan()
       || planFromPath()
       || 'solo';
   }
+
+  function enforceRememberedPlanRoute() {
+    var pathPlan = planFromPath();
+    if (!pathPlan) return;
+    var targetPlan = rememberedPlan();
+    if (!targetPlan || planRank(targetPlan) <= planRank(pathPlan)) return;
+    var user = getAuthUser();
+    var savedUid = safeGet('cls-plan-uid');
+    if (!user || !user.uid || !savedUid || savedUid !== user.uid) return;
+    var dest = window.clsPlanFileFor(targetPlan);
+    var current = (location.pathname || '').split('/').pop() || 'index.html';
+    if (dest && current !== dest) window.location.replace(dest);
+  }
+
+  window.clsEnforceRememberedPlanRoute = enforceRememberedPlanRoute;
+  window.addEventListener('pageshow', function() {
+    enforceRememberedPlanRoute();
+    setTimeout(enforceRememberedPlanRoute, 250);
+  });
 
   window.clsIsProfilePaid = function clsIsProfilePaid(profile) {
     profile = profile || {};

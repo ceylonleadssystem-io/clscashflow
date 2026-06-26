@@ -1219,9 +1219,16 @@ async function acceptOnboardingInvite(uid,email){
   var owner=ownerDoc.exists?ownerDoc.data():{};
   var planFiles = { solo:'solo.html', studio:'starter.html', business:'growth.html' };
   var planAliases = { starter:'studio', growth:'business', premium:'business' };
-  var rawOwnerPlan=String(owner.currentPlan||owner.plan||owner.lastPlan||state.tier||'solo').toLowerCase();
-  var mappedOwnerPlan=planAliases[rawOwnerPlan]||rawOwnerPlan;
-  var ownerPlan=planFiles[mappedOwnerPlan]?mappedOwnerPlan:'solo';
+  var planRank = { solo:1, studio:2, business:3 };
+  function normalizeInvitePlan(value) {
+    var raw = String(value || '').toLowerCase();
+    var mapped = planAliases[raw] || raw;
+    return planFiles[mapped] ? mapped : '';
+  }
+  var ownerPlan = [owner.currentPlan, owner.plan, owner.lastPlan, owner.requestedPlan, state.tier, 'solo'].reduce(function(best, value) {
+    var plan = normalizeInvitePlan(value);
+    return (planRank[plan] || 0) > (planRank[best] || 0) ? plan : best;
+  }, '') || 'solo';
   await firebase.firestore().collection('users').doc(uid).set({
     role: invite.role||'viewer',
     ownerUid: state.inviteOwner,
@@ -1249,11 +1256,31 @@ window.launchDashboard = async function launchDashboard(){
   try {
     const prices = { solo: 3500, studio: 5500, business: 8500 };
     const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
+    const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
+    const planRank = { solo: 1, studio: 2, business: 3 };
+    const normalizePlan = value => {
+      const raw = String(value || '').toLowerCase();
+      const mapped = planAliases[raw] || raw;
+      return planFiles[mapped] ? mapped : '';
+    };
+    const highestPlan = (...values) => values.reduce((best, value) => {
+      const plan = normalizePlan(value);
+      return (planRank[plan] || 0) > (planRank[best] || 0) ? plan : best;
+    }, '') || 'solo';
 
     if (state.googleAuth) {
       // Google user — already authenticated, just update their Firestore profile
       const user = firebase.auth().currentUser;
       if (!user) { showStepError(7,'Session expired. Please sign in again to continue.'); setTimeout(function(){window.location.href='signin.html';},1200); return; }
+      const existingDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+      const existingProfile = existingDoc.exists ? existingDoc.data() : {};
+      const selectedPlan = highestPlan(
+        existingProfile.currentPlan,
+        existingProfile.plan,
+        existingProfile.lastPlan,
+        existingProfile.requestedPlan,
+        state.tier || 'solo'
+      );
       var googleTrialEnd = new Date();
       googleTrialEnd.setDate(googleTrialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(user.uid).set({
@@ -1268,10 +1295,10 @@ window.launchDashboard = async function launchDashboard(){
         defaultTaxRate: state.taxRate || '',
         footer: state.footer || '',
         logo: state.logo || '',
-        plan: state.tier || 'solo',
-        currentPlan: state.tier || 'solo',
-        lastPlan: state.tier || 'solo',
-        planPrice: prices[state.tier] || 3500,
+        plan: selectedPlan,
+        currentPlan: selectedPlan,
+        lastPlan: selectedPlan,
+        planPrice: prices[selectedPlan] || 3500,
         trialStart: new Date().toISOString(),
         trialEnd: googleTrialEnd.toISOString(),
         paid: false,
@@ -1295,14 +1322,14 @@ window.launchDashboard = async function launchDashboard(){
           body: JSON.stringify({
             to: state.email,
             name: state.fname + ' ' + state.lname,
-            plan: state.tier || 'solo',
+            plan: selectedPlan,
             biz: state.bizName || 'your business',
             trialEnd: googleTrialEnd.toISOString()
           })
         });
       } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
-      if (window.clsRememberPlan) await window.clsRememberPlan(state.tier || 'solo', user.uid, firebase.firestore());
-      window.location.href = planFiles[state.tier] || 'solo.html';
+      if (window.clsRememberPlan) await window.clsRememberPlan(selectedPlan, user.uid, firebase.firestore());
+      window.location.href = planFiles[selectedPlan] || 'solo.html';
 
     } else {
       // Email user — create Firebase account then save profile

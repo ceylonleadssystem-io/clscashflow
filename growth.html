@@ -1002,6 +1002,7 @@ window.goBackToStudio = async function goBackToStudio(btn) {
     };
     if (st.end) update.trialEnd = st.end.toISOString();
     await _fdb.collection('users').doc(_signedInUid).set(update, { merge: true });
+    if (window.clsRememberPlan) await window.clsRememberPlan('studio', _signedInUid, _fdb);
     localStorage.removeItem('cls-growth-tour-pending');
     window.location.href = 'starter.html?from=business';
   } catch(e) {
