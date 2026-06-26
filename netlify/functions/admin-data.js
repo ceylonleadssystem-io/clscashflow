@@ -167,6 +167,56 @@ function readBody(event) {
   }
 }
 
+function userUpdateForAction(admin, updateType) {
+  const stamp = admin.firestore.FieldValue.serverTimestamp();
+  if (updateType === 'pause') {
+    return {
+      accountPaused: true,
+      paid: false,
+      subscriptionStatus: 'paused',
+      manualPaymentStatus: 'paused',
+      pausedAt: stamp,
+      pausedBy: 'platform_admin',
+      updatedAt: stamp
+    };
+  }
+  if (updateType === 'unpause') {
+    return {
+      accountPaused: false,
+      subscriptionStatus: 'active',
+      manualPaymentStatus: 'unpaused',
+      unpausedAt: stamp,
+      unpausedBy: 'platform_admin',
+      updatedAt: stamp
+    };
+  }
+  if (updateType === 'markPaid') {
+    return {
+      paid: true,
+      accountPaused: false,
+      subscriptionStatus: 'manual-paid',
+      manualPaymentStatus: 'paid',
+      paidManually: true,
+      manualPaidAt: stamp,
+      lastManualPaymentAt: stamp,
+      manualPaymentBy: 'platform_admin',
+      updatedAt: stamp
+    };
+  }
+  if (updateType === 'markUnpaid') {
+    return {
+      paid: false,
+      subscriptionStatus: 'manual-unpaid',
+      manualPaymentStatus: 'unpaid',
+      paidManually: false,
+      manualUnpaidAt: stamp,
+      manualPaymentBy: 'platform_admin',
+      updatedAt: stamp
+    };
+  }
+  return null;
+}
+
 exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: headers(), body: '' };
@@ -190,19 +240,39 @@ exports.handler = async function handler(event) {
 
     if (event.httpMethod === 'POST') {
       const body = readBody(event);
-      if (body.action !== 'updateTicket') {
+      const action = String(body.action || '').trim();
+      if (action === 'updateTicket') {
+        const id = String(body.id || '').trim();
+        const status = String(body.status || '').trim().toLowerCase();
+        if (!id || ['open', 'in-progress', 'closed'].indexOf(status) === -1) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid ticket update.' }) };
+        }
+        const update = {
+          status,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+        if (status === 'closed') {
+          update.closedAt = admin.firestore.FieldValue.serverTimestamp();
+          update.closedBy = 'platform_admin';
+        }
+        await db.collection('supportTickets').doc(id).set(update, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+
+      if (action === 'updateUser') {
+        const id = String(body.id || '').trim();
+        const updateType = String(body.updateType || '').trim();
+        const update = userUpdateForAction(admin, updateType);
+        if (!id || !update) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid user update.' }) };
+        }
+        await db.collection('users').doc(id).set(update, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+
+      if (action !== 'updateTicket') {
         return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown admin action.' }) };
       }
-      const id = String(body.id || '').trim();
-      const status = String(body.status || '').trim().toLowerCase();
-      if (!id || ['open', 'in-progress', 'closed'].indexOf(status) === -1) {
-        return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid ticket update.' }) };
-      }
-      await db.collection('supportTickets').doc(id).set({
-        status,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-      return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
     }
 
     const users = await readCollection(db, 'users', 'createdAt', 500);

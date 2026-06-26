@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="assets/platform.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1120px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.kpis,.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1280px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{padding:8px 10px;font-size:10px}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.secure-note{font-size:11px;color:#6B6258;line-height:1.5}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.kpis,.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -71,7 +71,7 @@
     <section class="section">
       <div class="section-head"><h2>Users</h2><span class="muted">Latest profile, plan, and last seen data</span></div>
       <div class="table-wrap"><table class="table">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Owner</th><th>Trial End</th><th>Last Seen UTC</th><th>Path</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Payment</th><th>Account</th><th>Owner</th><th>Trial End</th><th>Last Seen UTC</th><th>Path</th><th>Actions</th></tr></thead>
         <tbody id="users-body"></tbody>
       </table></div>
     </section>
@@ -201,6 +201,35 @@ function statusPill(status){
   var cls = status === 'closed' ? 'ok' : (status === 'in-progress' ? 'warn' : 'bad');
   return '<span class="pill '+cls+'">'+esc(status)+'</span>';
 }
+function paymentPill(u){
+  u = u || {};
+  var status = String(u.subscriptionStatus || '').toLowerCase();
+  if (u.paid === true || status === 'active' || status === 'manual-paid') return '<span class="pill ok">paid</span>';
+  if (status === 'paused') return '<span class="pill bad">paused</span>';
+  if (status === 'manual-unpaid') return '<span class="pill warn">unpaid</span>';
+  return '<span class="pill warn">trial/manual</span>';
+}
+function accountPill(u){
+  u = u || {};
+  if (u.accountPaused === true || String(u.subscriptionStatus || '').toLowerCase() === 'paused') return '<span class="pill bad">paused</span>';
+  if (String(u.role || '').toLowerCase() === 'removed') return '<span class="pill bad">removed</span>';
+  return '<span class="pill ok">active</span>';
+}
+function adminUserActions(row){
+  var u = row.data || {};
+  var email = esc(u.email || '');
+  var paused = u.accountPaused === true || String(u.subscriptionStatus || '').toLowerCase() === 'paused';
+  var id = esc(row.id || '');
+  var html = '<div class="actions">' +
+    '<button class="btn" data-user-action="resetPassword" data-user-id="'+id+'" data-user-email="'+email+'">Reset login</button>' +
+    '<button class="btn gold" data-user-action="markPaid" data-user-id="'+id+'">Manual paid</button>' +
+    '<button class="btn" data-user-action="markUnpaid" data-user-id="'+id+'">Mark unpaid</button>';
+  html += paused
+    ? '<button class="btn dark" data-user-action="unpause" data-user-id="'+id+'">Unpause</button>'
+    : '<button class="btn red" data-user-action="pause" data-user-id="'+id+'">Pause</button>';
+  html += '</div><div class="secure-note">Passwords are not viewable. Use reset login for secure access help.</div>';
+  return html;
+}
 function normalizePlan(plan){
   var aliases = { starter: 'studio', growth: 'business', premium: 'business' };
   plan = String(plan || '').toLowerCase();
@@ -231,7 +260,9 @@ function userIdentity(row){
     role: u.role || u.accountType || 'owner',
     plan: normalizePlan(u.currentPlan || u.plan || u.lastPlan),
     owner: u.ownerUid || row.id || '',
-    paid: u.paid === true || String(u.subscriptionStatus || '').toLowerCase() === 'active',
+    paid: u.paid === true || ['active','manual-paid'].indexOf(String(u.subscriptionStatus || '').toLowerCase()) !== -1,
+    paused: u.accountPaused === true || String(u.subscriptionStatus || '').toLowerCase() === 'paused',
+    subscriptionStatus: u.subscriptionStatus || '',
     trialEnd: u.trialEnd || '',
     lastSeen: u.lastSeenUtc || u.lastSeenAt || '',
     lastPath: u.lastSeenPath || '',
@@ -260,6 +291,7 @@ function openTicketsForUser(user, tickets){
 function userStatus(user, tasks){
   var role = String(user.role || '').toLowerCase();
   if (role === 'platform_admin' || user.plan === 'admin') return '<span class="pill">admin</span>';
+  if (user.paused) return '<span class="pill bad">paused</span>';
   if (role === 'removed') return '<span class="pill bad">removed</span>';
   if (user.paid) return '<span class="pill ok">paid</span>';
   var days = daysUntil(user.trialEnd);
@@ -280,6 +312,7 @@ function userTasks(user, latestVisit, tickets){
   } else if (role === 'removed') {
     tasks.push({ cls: 'bad', text: 'Removed access - confirm this user should stay removed.' });
   } else {
+    if (user.paused) tasks.push({ cls: 'bad', text: 'Account is paused - unpause only after payment or manual approval.' });
     if (!user.plan) tasks.push({ cls: 'bad', text: 'Assign the correct plan.' });
     if (!user.paid && days != null && days < 0) tasks.push({ cls: 'bad', text: 'Trial expired - payment or pause decision needed.' });
     else if (!user.paid && days != null && days <= 3) tasks.push({ cls: '', text: 'Trial ending soon - send upgrade/payment reminder.' });
@@ -351,8 +384,8 @@ function renderUsers(users, stats){
   $('users-body').innerHTML = users.map(function(row){
     var u = row.data || {};
     var plan = u.currentPlan || u.plan || u.lastPlan || '';
-    return '<tr><td>'+esc(u.name || u.displayName || '')+'</td><td>'+esc(u.email || '')+'</td><td>'+esc(u.role || 'owner')+'</td><td>'+planPill(plan)+'</td><td>'+esc(u.ownerUid || row.id)+'</td><td>'+esc(fmtDate(u.trialEnd))+'</td><td>'+esc(u.lastSeenUtc || fmtDate(u.lastSeenAt))+'</td><td>'+esc(u.lastSeenPath || '')+'</td></tr>';
-  }).join('') || '<tr><td colspan="8" class="muted">No users found yet.</td></tr>';
+    return '<tr><td>'+esc(u.name || u.displayName || '')+'</td><td>'+esc(u.email || '')+'</td><td>'+esc(u.role || 'owner')+'</td><td>'+planPill(plan)+'</td><td>'+paymentPill(u)+'</td><td>'+accountPill(u)+'</td><td>'+esc(u.ownerUid || row.id)+'</td><td>'+esc(fmtDate(u.trialEnd))+'</td><td>'+esc(u.lastSeenUtc || fmtDate(u.lastSeenAt))+'</td><td>'+esc(u.lastSeenPath || '')+'</td><td>'+adminUserActions(row)+'</td></tr>';
+  }).join('') || '<tr><td colspan="11" class="muted">No users found yet.</td></tr>';
 }
 
 function renderUserBreakdown(users, visits, tickets){
@@ -380,6 +413,8 @@ function renderUserBreakdown(users, visits, tickets){
       '<div class="user-card-head"><div><div class="user-name">'+esc(user.name)+'</div><div class="user-email">'+esc(user.email || 'No email saved')+'</div></div>'+userStatus(user, tasks)+'</div>' +
       '<div class="user-meta">' +
         '<div class="meta-box"><span>Plan</span><strong>'+planPill(user.plan)+'</strong></div>' +
+        '<div class="meta-box"><span>Payment</span><strong>'+paymentPill(user.raw)+'</strong></div>' +
+        '<div class="meta-box"><span>Account</span><strong>'+accountPill(user.raw)+'</strong></div>' +
         '<div class="meta-box"><span>Role</span><strong>'+esc(user.role)+'</strong></div>' +
         '<div class="meta-box"><span>Trial end</span><strong>'+esc(shortDate(user.trialEnd))+'</strong></div>' +
         '<div class="meta-box"><span>Last seen</span><strong>'+esc(shortDate(latestSeen))+'</strong></div>' +
@@ -387,6 +422,7 @@ function renderUserBreakdown(users, visits, tickets){
         '<div class="meta-box"><span>Last path</span><strong>'+esc(latestPath || 'Not tracked')+'</strong></div>' +
       '</div>' +
       '<div><div class="label" style="margin-bottom:8px">What needs to be done</div><ul class="task-list">'+taskHtml+'</ul></div>' +
+      '<div><div class="label" style="margin-bottom:8px">Account actions</div>'+adminUserActions(row)+'</div>' +
     '</article>';
   }).join('');
 }
@@ -413,7 +449,11 @@ function renderTickets(tickets, stats){
   $('kpi-open').textContent = fmtInt(stats.openTicketsTotal == null ? tickets.filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length : stats.openTicketsTotal);
   $('tickets-body').innerHTML = tickets.map(function(row){
     var t = row.data || {};
-    return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td><div class="actions"><button class="btn" data-status="in-progress" data-ticket="'+row.id+'">In progress</button><button class="btn gold" data-status="closed" data-ticket="'+row.id+'">Close</button></div></td></tr>';
+    var closed = String(t.status || 'open').toLowerCase() === 'closed';
+    var actionHtml = closed
+      ? '<span class="pill ok">closed by '+esc(t.closedBy || 'support')+'</span>'
+      : '<div class="actions"><button class="btn" data-status="in-progress" data-ticket="'+row.id+'">In progress</button><button class="btn gold" data-status="closed" data-ticket="'+row.id+'">Close</button></div>';
+    return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td>'+actionHtml+'</td></tr>';
   }).join('') || '<tr><td colspan="8" class="muted">No support tickets yet.</td></tr>';
 }
 
@@ -440,7 +480,7 @@ async function loadAdminData(opts){
   try {
     showAdmin();
     if (!adminHasRendered || opts.forceLoading) {
-      renderEmpty('users-body', 8, 'Loading users...');
+      renderEmpty('users-body', 11, 'Loading users...');
       renderEmpty('visits-body', 10, 'Loading visits...');
       renderEmpty('tickets-body', 8, 'Loading tickets...');
       $('user-breakdown').innerHTML = '<div class="card muted">Loading per-user breakdown...</div>';
@@ -462,7 +502,7 @@ async function loadAdminData(opts){
       usersSnap.forEach(function(d){ users.push({ id:d.id, data:d.data() || {} }); });
     } catch (e) {
       usersLoaded = false;
-      renderEmpty('users-body', 8, 'Could not load users. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
+      renderEmpty('users-body', 11, 'Could not load users. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
     }
 
     try {
@@ -498,12 +538,41 @@ async function updateTicket(id, status){
   try {
     await fetchAdminFunction({ action: 'updateTicket', id: id, status: status });
   } catch (serverErr) {
-    await db.collection('supportTickets').doc(id).set({
+    var payload = {
       status: status,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    };
+    if (status === 'closed') {
+      payload.closedAt = firebase.firestore.FieldValue.serverTimestamp();
+      payload.closedBy = 'platform_admin';
+    }
+    await db.collection('supportTickets').doc(id).set(payload, { merge: true });
   }
   await loadAdminData();
+}
+
+function adminUserUpdatePayload(updateType){
+  var stamp = firebase.firestore.FieldValue.serverTimestamp();
+  if (updateType === 'pause') return { accountPaused:true, paid:false, subscriptionStatus:'paused', manualPaymentStatus:'paused', pausedAt:stamp, pausedBy:'platform_admin', updatedAt:stamp };
+  if (updateType === 'unpause') return { accountPaused:false, subscriptionStatus:'active', manualPaymentStatus:'unpaused', unpausedAt:stamp, unpausedBy:'platform_admin', updatedAt:stamp };
+  if (updateType === 'markPaid') return { paid:true, accountPaused:false, subscriptionStatus:'manual-paid', manualPaymentStatus:'paid', paidManually:true, manualPaidAt:stamp, lastManualPaymentAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
+  if (updateType === 'markUnpaid') return { paid:false, subscriptionStatus:'manual-unpaid', manualPaymentStatus:'unpaid', paidManually:false, manualUnpaidAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
+  return null;
+}
+async function updateUserAccount(id, updateType){
+  try {
+    await fetchAdminFunction({ action: 'updateUser', id: id, updateType: updateType });
+  } catch (serverErr) {
+    var payload = adminUserUpdatePayload(updateType);
+    if (!payload) throw new Error('Unknown account action.');
+    await db.collection('users').doc(id).set(payload, { merge: true });
+  }
+  await loadAdminData({ forceLoading: true });
+}
+async function sendLoginReset(email){
+  if (!email) throw new Error('This user does not have an email saved.');
+  await auth.sendPasswordResetEmail(email);
+  alert('Password reset email sent to ' + email + '.');
 }
 
 $('admin-login').addEventListener('click', async function(){
@@ -541,9 +610,23 @@ $('signout-btn').addEventListener('click', function(){
   auth.signOut().then(function(){ showLogin(); });
 });
 document.addEventListener('click', function(ev){
-  var btn = ev.target.closest('[data-ticket]');
-  if (!btn) return;
-  updateTicket(btn.getAttribute('data-ticket'), btn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
+  var ticketBtn = ev.target.closest('[data-ticket]');
+  if (ticketBtn) {
+    updateTicket(ticketBtn.getAttribute('data-ticket'), ticketBtn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
+    return;
+  }
+  var userBtn = ev.target.closest('[data-user-action]');
+  if (!userBtn) return;
+  var action = userBtn.getAttribute('data-user-action');
+  var id = userBtn.getAttribute('data-user-id');
+  var email = userBtn.getAttribute('data-user-email') || '';
+  if (action === 'resetPassword') {
+    sendLoginReset(email).catch(function(e){ alert(e.message); });
+    return;
+  }
+  var labels = { pause:'pause this account', unpause:'unpause this account', markPaid:'mark this account as manually paid and unpause it', markUnpaid:'mark this account as unpaid' };
+  if (!confirm('Confirm: ' + (labels[action] || action) + '?')) return;
+  updateUserAccount(id, action).catch(function(e){ alert(e.message); });
 });
 function updateUtcClock(){
   $('utc-clock').textContent = 'UTC ' + new Date().toISOString().replace('T',' ').replace(/\.\d+Z$/,'');

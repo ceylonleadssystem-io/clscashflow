@@ -207,6 +207,18 @@
       || 'solo';
   }
 
+  window.clsIsProfilePaid = function clsIsProfilePaid(profile) {
+    profile = profile || {};
+    var status = String(profile.subscriptionStatus || '').toLowerCase();
+    return profile.paid === true || status === 'active' || status === 'manual-paid';
+  };
+
+  window.clsIsAccountPaused = function clsIsAccountPaused(profile) {
+    profile = profile || {};
+    var status = String(profile.subscriptionStatus || '').toLowerCase();
+    return profile.accountPaused === true || status === 'paused';
+  };
+
   function profileName(profile, user) {
     return (profile && (profile.name || profile.displayName || profile.username))
       || (user && user.displayName)
@@ -328,6 +340,31 @@
     });
   };
 
+  window.clsRenderAccountPaused = function clsRenderAccountPaused(profile, opts) {
+    opts = opts || {};
+    if (document.getElementById('cls-paywall')) return;
+    profile = profile || {};
+    var plan = bestPlan(profile, opts.plan);
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var ov = document.createElement('div');
+    ov.id = 'cls-paywall';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,23,20,.96);backdrop-filter:blur(12px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:DM Sans,Inter,Arial,sans-serif;';
+    ov.innerHTML =
+      '<div style="background:#fff;max-width:540px;width:100%;padding:3rem;text-align:center;color:#1a1714;">' +
+        '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2rem;font-weight:300;margin-bottom:.55rem">Account paused</div>' +
+        '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">This <strong>CLS ' + details.name + '</strong> account has been paused by CeylonryLabs support. Your data is still saved.</div>' +
+        '<button id="cls-wa-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Contact support</button>' +
+        '<button onclick="window.clsSignOut&&window.clsSignOut()" type="button" style="background:transparent;border:0;color:#A8A29A;font-size:.72rem;cursor:pointer;font-family:inherit">Sign out</button>' +
+        '<div style="font-size:.68rem;color:#A8A29A;margin-top:1rem">Admin can unpause this account after a manual payment or account review.</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    document.getElementById('cls-wa-action').addEventListener('click', function() {
+      var user = getAuthUser();
+      var msg = encodeURIComponent('Hi CeylonryLabs! My Cashflow System account is paused. Please help me reactivate it.\n\nEmail: ' + profileEmail(profile, user));
+      window.open('https://wa.me/94778815628?text=' + msg, '_blank');
+    });
+  };
+
   window.clsMountTrialCountdown = function clsMountTrialCountdown(opts) {
     opts = opts || {};
     var old = document.getElementById('cls-trial-countdown');
@@ -335,7 +372,7 @@
 
     var profile = opts.profile || {};
     var end = opts.trialEnd ? new Date(opts.trialEnd) : new Date(profile.trialEnd || Date.now());
-    if (!end || isNaN(end.getTime()) || profile.paid === true) return;
+    if (!end || isNaN(end.getTime()) || window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile)) return;
 
     var bar = document.createElement('div');
     bar.id = 'cls-trial-countdown';
@@ -412,9 +449,15 @@
     return { uid: user.uid, email: user.email || '', displayName: user.displayName || '' };
   }
 
-  function cleanString(value, max) {
-    value = String(value == null ? '' : value);
-    return max && value.length > max ? value.slice(0, max) : value;
+	  function cleanString(value, max) {
+	    value = String(value == null ? '' : value);
+	    return max && value.length > max ? value.slice(0, max) : value;
+	  }
+
+  function escapeHtml(value) {
+    return cleanString(value).replace(/[&<>"]/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
   }
 
   function firestoreValue(value) {
@@ -546,7 +589,7 @@
     return doc.id;
   }
 
-  function injectSupportCardStyle() {
+	  function injectSupportCardStyle() {
     if (document.getElementById('cls-support-card-style')) return;
     var style = document.createElement('style');
     style.id = 'cls-support-card-style';
@@ -564,14 +607,101 @@
       '.cls-settings-support-card label{display:block;font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:#6B6258;font-weight:700;margin-bottom:.35rem}' +
       '.cls-settings-support-card input,.cls-settings-support-card select,.cls-settings-support-card textarea{width:100%;border:1px solid #DCD4C8;background:#F7F5F0;padding:.75rem .8rem;font-family:inherit;font-size:.78rem;color:#1C1814;outline:none;border-radius:0}' +
       '.cls-settings-support-card textarea{min-height:88px;resize:vertical}' +
-      '.cls-settings-support-card input:focus,.cls-settings-support-card select:focus,.cls-settings-support-card textarea:focus{border-color:#B8922A;background:#fff}' +
-      '.cls-settings-support-card .cls-sp-status{font-size:.72rem;color:#6B6258;line-height:1.5;align-self:center}' +
-      '@media(max-width:760px){.cls-settings-support-card .cls-support-top,.cls-settings-support-card .cls-support-form{grid-template-columns:1fr}.cls-settings-support-card .cls-support-toggle,.cls-settings-support-card .cls-sp-submit{width:100%}}' +
+	      '.cls-settings-support-card input:focus,.cls-settings-support-card select:focus,.cls-settings-support-card textarea:focus{border-color:#B8922A;background:#fff}' +
+	      '.cls-settings-support-card .cls-sp-status{font-size:.72rem;color:#6B6258;line-height:1.5;align-self:center}' +
+	      '.cls-settings-support-card .cls-ticket-list{grid-column:1/-1;border-top:1px solid #E7DFD2;margin-top:.9rem;padding-top:.9rem;display:grid;gap:.55rem}' +
+	      '.cls-settings-support-card .cls-ticket-head{display:flex;justify-content:space-between;gap:.75rem;align-items:center}' +
+	      '.cls-settings-support-card .cls-ticket-refresh{background:transparent;border:1px solid #DCD4C8;color:#6B6258;padding:.45rem .65rem;font-family:inherit;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer}' +
+	      '.cls-settings-support-card .cls-ticket-row{border:1px solid #E7DFD2;background:#F7F5F0;padding:.75rem;display:grid;gap:.35rem}' +
+	      '.cls-settings-support-card .cls-ticket-meta{display:flex;gap:.45rem;flex-wrap:wrap;align-items:center;font-size:.66rem;color:#6B6258}' +
+	      '.cls-settings-support-card .cls-ticket-pill{border-radius:999px;padding:.22rem .48rem;background:#fff2db;color:#a66f00;font-weight:800;text-transform:capitalize}' +
+	      '.cls-settings-support-card .cls-ticket-pill.closed{background:#e2f5ea;color:#10834c}' +
+	      '.cls-settings-support-card .cls-ticket-pill.open{background:#fde8e4;color:#c0392b}' +
+	      '.cls-settings-support-card .cls-ticket-msg{font-size:.74rem;color:#1C1814;line-height:1.45;white-space:pre-wrap}' +
+	      '.cls-settings-support-card .cls-ticket-close{justify-self:start;background:#fff;color:#1C1814;border:1px solid rgba(184,146,42,.35);padding:.45rem .7rem;font-family:inherit;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;cursor:pointer}' +
+	      '@media(max-width:760px){.cls-settings-support-card .cls-support-top,.cls-settings-support-card .cls-support-form{grid-template-columns:1fr}.cls-settings-support-card .cls-support-toggle,.cls-settings-support-card .cls-sp-submit{width:100%}}' +
       '@media print{#cls-support-widget{display:none!important}}';
-    document.head.appendChild(style);
+	    document.head.appendChild(style);
+	  }
+
+  function ticketTime(row) {
+    var t = row && row.data || {};
+    var raw = t.utcAt || t.createdAt || t.updatedAt || '';
+    if (raw && raw.toDate) return raw.toDate().getTime();
+    var ms = Date.parse(raw);
+    return Number.isFinite(ms) ? ms : 0;
   }
 
-  function mountSupportWidget() {
+  function ticketStatusClass(status) {
+    status = String(status || 'open').toLowerCase();
+    return status === 'closed' ? 'closed' : (status === 'open' ? 'open' : '');
+  }
+
+  async function readMySupportTickets() {
+    var db = getFirestore();
+    var user = getAuthUser();
+    if (!db || !user) return [];
+    var rows = {};
+    async function collect(query) {
+      try {
+        var snap = await query.limit(12).get();
+        snap.forEach(function(doc) {
+          rows[doc.id] = { id: doc.id, data: doc.data() || {} };
+        });
+      } catch (e) {}
+    }
+    await collect(db.collection('supportTickets').where('uid', '==', user.uid));
+    if (user.email) await collect(db.collection('supportTickets').where('email', '==', String(user.email).toLowerCase()));
+    return Object.keys(rows).map(function(id) { return rows[id]; }).sort(function(a, b) {
+      return ticketTime(b) - ticketTime(a);
+    }).slice(0, 8);
+  }
+
+  function renderMyTickets(target, tickets) {
+    if (!target) return;
+    if (!tickets.length) {
+      target.innerHTML = '<div class="cls-sp-status">No support tickets yet.</div>';
+      return;
+    }
+    target.innerHTML = tickets.map(function(row) {
+      var t = row.data || {};
+      var status = String(t.status || 'open').toLowerCase();
+      var canClose = status !== 'closed';
+      var msg = cleanString(t.message || '', 180);
+      var when = t.utcAt || t.createdAt || '';
+      return '<div class="cls-ticket-row">' +
+        '<div class="cls-ticket-meta"><span class="cls-ticket-pill ' + ticketStatusClass(status) + '">' + escapeHtml(cleanString(status, 40)) + '</span><span>' + escapeHtml(cleanString(t.type || 'Question', 80)) + '</span><span>' + escapeHtml(cleanString(when, 28)) + '</span></div>' +
+        '<div class="cls-ticket-msg">' + escapeHtml(cleanString(msg, 180)) + '</div>' +
+        (canClose ? '<button type="button" class="cls-ticket-close" data-close-ticket="' + escapeHtml(row.id) + '">Close ticket</button>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  async function refreshMyTickets(wrap) {
+    var list = wrap && wrap.querySelector('[data-ticket-list]');
+    if (!list) return;
+    list.innerHTML = '<div class="cls-sp-status">Loading tickets...</div>';
+    try {
+      renderMyTickets(list, await readMySupportTickets());
+    } catch (e) {
+      list.innerHTML = '<div class="cls-sp-status">Could not load your tickets right now.</div>';
+    }
+  }
+
+  async function closeMyTicket(id, wrap) {
+    var db = getFirestore();
+    if (!db) throw new Error('Firebase is not available on this page.');
+    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('supportTickets').doc(id).set({
+      status: 'closed',
+      closedBy: 'customer',
+      customerClosedAt: stamp,
+      updatedAt: stamp
+    }, { merge: true });
+    await refreshMyTickets(wrap);
+  }
+
+	  function mountSupportWidget() {
     if (document.getElementById(SUPPORT_ID)) return;
     if (/ceylonry-admin\.html/i.test(location.pathname)) return;
     if (!isPortalPath()) return;
@@ -596,19 +726,37 @@
         '</div>' +
         '<button type="button" class="cls-support-toggle">New ticket</button>' +
       '</div>' +
-      '<form id="cls-support-form" class="cls-support-form">' +
-        '<div><label>Name</label><input name="name" autocomplete="name"></div>' +
-        '<div><label>Email</label><input name="email" type="email" autocomplete="email" required></div>' +
-        '<div><label>Issue type</label><select name="type"><option>Question</option><option>Bug</option><option>Billing</option><option>Invoice/PDF issue</option><option>Account access</option></select></div>' +
-        '<div><label>Priority</label><select name="priority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>' +
-        '<div class="full"><label>Message</label><textarea name="message" required placeholder="Tell us what happened..."></textarea></div>' +
-        '<button class="cls-sp-submit" type="submit">Send ticket</button>' +
-        '<div class="cls-sp-status" id="cls-support-status">This will be saved as a support ticket.</div>' +
-      '</form>';
+	      '<form id="cls-support-form" class="cls-support-form">' +
+	        '<div><label>Name</label><input name="name" autocomplete="name"></div>' +
+	        '<div><label>Email</label><input name="email" type="email" autocomplete="email" required></div>' +
+	        '<div><label>Issue type</label><select name="type"><option>Question</option><option>Bug</option><option>Billing</option><option>Invoice/PDF issue</option><option>Account access</option></select></div>' +
+	        '<div><label>Priority</label><select name="priority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>' +
+	        '<div class="full"><label>Message</label><textarea name="message" required placeholder="Tell us what happened..."></textarea></div>' +
+	        '<button class="cls-sp-submit" type="submit">Send ticket</button>' +
+	        '<div class="cls-sp-status" id="cls-support-status">This will be saved as a support ticket.</div>' +
+	      '</form>' +
+	      '<div class="cls-ticket-list">' +
+	        '<div class="cls-ticket-head"><div><div class="cls-support-kicker">My tickets</div><div class="cls-support-copy">Track open, in progress, and closed support tickets.</div></div><button type="button" class="cls-ticket-refresh" data-refresh-tickets>Refresh</button></div>' +
+	        '<div data-ticket-list><div class="cls-sp-status">Loading tickets...</div></div>' +
+	      '</div>';
     settingsView.appendChild(wrap);
 
-    wrap.querySelector('.cls-support-toggle').addEventListener('click', function() {
-      wrap.classList.toggle('open');
+	    wrap.querySelector('.cls-support-toggle').addEventListener('click', function() {
+	      wrap.classList.toggle('open');
+	    });
+    wrap.querySelector('[data-refresh-tickets]').addEventListener('click', function() {
+      refreshMyTickets(wrap);
+    });
+    wrap.addEventListener('click', function(ev) {
+      var btn = ev.target.closest('[data-close-ticket]');
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Closing...';
+      closeMyTicket(btn.getAttribute('data-close-ticket'), wrap).catch(function(e) {
+        btn.disabled = false;
+        btn.textContent = 'Close ticket';
+        alert(e.message || 'Could not close ticket.');
+      });
     });
 
     var user = getAuthUser();
@@ -622,9 +770,10 @@
     wrap.querySelector('form').addEventListener('submit', async function(ev) {
       ev.preventDefault();
       var form = ev.currentTarget;
-      var status = document.getElementById('cls-support-status');
-      var data = Object.fromEntries(new FormData(form).entries());
-      data.page = location.href;
+	      var status = document.getElementById('cls-support-status');
+	      var data = Object.fromEntries(new FormData(form).entries());
+	      data.email = cleanString(data.email, 180).toLowerCase();
+	      data.page = location.href;
       data.utcAt = nowIso();
       data.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
       Object.assign(data, await currentUserPayload());
@@ -640,19 +789,22 @@
         if (json.storage && json.storage.stored === false) {
           await saveSupportFallback(data);
         }
-        status.textContent = 'Ticket sent. Our team will check it.';
-        form.reset();
-      } catch (err) {
-        try {
-          await saveSupportFallback(data);
-          status.textContent = 'Ticket sent. Our team will check it.';
-          form.reset();
-        } catch (fallbackErr) {
-          status.textContent = 'Could not send ticket. Please email hello@ceylonrylabs.io.';
-        }
-      }
-    });
-  }
+	        status.textContent = 'Ticket sent. Our team will check it.';
+	        form.reset();
+	        refreshMyTickets(wrap);
+	      } catch (err) {
+	        try {
+	          await saveSupportFallback(data);
+	          status.textContent = 'Ticket sent. Our team will check it.';
+	          form.reset();
+	          refreshMyTickets(wrap);
+	        } catch (fallbackErr) {
+	          status.textContent = 'Could not send ticket. Please email hello@ceylonrylabs.io.';
+	        }
+	      }
+	    });
+    refreshMyTickets(wrap);
+	  }
 
   function boot() {
     var pathPlan = planFromPath();

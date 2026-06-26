@@ -922,7 +922,7 @@ function getBusinessTrialStatus() {
   var now = new Date();
   var end = _trialEnd || (_profile && _profile.trialEnd ? new Date(_profile.trialEnd) : now);
   var valid = end && !isNaN(end.getTime());
-  var paid = _isPaid || (_profile && _profile.paid === true);
+  var paid = _isPaid || (_profile && (window.clsIsProfilePaid ? window.clsIsProfilePaid(_profile) : _profile.paid === true));
   var daysLeft = valid ? Math.max(0, Math.ceil((end - now) / 86400000)) : 0;
   return {paid:paid, end:valid ? end : null, daysLeft:daysLeft, ended:valid && now > end && !paid};
 }
@@ -2704,9 +2704,11 @@ _fauth.onAuthStateChanged(async function(user) {
 
     var now = new Date();
     var trialEnd = new Date(_profile.trialEnd || now);
-    var isPaid = _profile.paid === true;
+    var isPaused = window.clsIsAccountPaused ? window.clsIsAccountPaused(_profile) : _profile.accountPaused === true;
+    var isPaid = window.clsIsProfilePaid ? window.clsIsProfilePaid(_profile) : _profile.paid === true;
     _trialEnd = trialEnd;
     _isPaid = isPaid;
+    if (isPaused) { if (window.clsRenderAccountPaused) window.clsRenderAccountPaused(_profile, { plan: 'business' }); return; }
     if (now > trialEnd && !isPaid) { showPaywall(_profile); return; }
 
     // Merge profile into D.settings

@@ -97,7 +97,29 @@ service cloud.firestore {
         && optionalString('utcAt', 90)
         && optionalString('localAt', 180)
         && optionalString('firstSeenAt', 90)
-        && optionalString('createdAt', 90);
+	        && optionalString('createdAt', 90);
+    }
+
+    function isTicketOwner() {
+      return signedIn()
+        && (
+          resource.data.uid == request.auth.uid
+          || (
+            request.auth.token.email != null
+            && resource.data.email == request.auth.token.email
+          )
+        );
+    }
+
+    function validCustomerTicketClose() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'updatedAt',
+          'customerClosedAt',
+          'closedBy'
+        ])
+        && request.resource.data.status == 'closed'
+        && request.resource.data.closedBy == 'customer';
     }
 
     match /users/{uid} {
@@ -175,9 +197,10 @@ service cloud.firestore {
     }
 
     match /supportTickets/{ticketId} {
-      allow create: if signedIn();
-      allow read, list, update, delete: if isPlatformAdmin()
-        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, list: if isPlatformAdmin() || isTicketOwner();
+      allow update: if isPlatformAdmin() || (isTicketOwner() && validCustomerTicketClose());
+      allow delete: if isPlatformAdmin();
     }
 
     match /businessStorySubmissions/{submissionId} {
