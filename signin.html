@@ -229,15 +229,21 @@ async function redirectToDashboard(user) {
     }
     const doc = await firebase.firestore().collection('users').doc(user.uid).get();
     if (doc.exists) {
-      const planFiles = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
+      const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
+      const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
+      const normalizePlan = value => {
+        const raw = String(value || '').toLowerCase();
+        const mapped = planAliases[raw] || raw;
+        return planFiles[mapped] ? mapped : '';
+      };
       const data = doc.data();
-      let plan = String(data.lastPlan || data.currentPlan || data.plan || '').toLowerCase();
+      let plan = normalizePlan(data.lastPlan || data.currentPlan || data.plan || '');
 
-      if (data.ownerUid && (!planFiles[plan] || plan === 'starter')) {
+      if (data.ownerUid) {
         const ownerDoc = await firebase.firestore().collection('users').doc(data.ownerUid).get();
         const owner = ownerDoc.exists ? ownerDoc.data() : {};
-        const ownerPlan = String(owner.lastPlan || owner.currentPlan || owner.plan || plan || 'starter').toLowerCase();
-        if (planFiles[ownerPlan]) {
+        const ownerPlan = normalizePlan(owner.lastPlan || owner.currentPlan || owner.plan || plan || 'solo');
+        if (planFiles[ownerPlan] && ownerPlan !== plan) {
           plan = ownerPlan;
           await firebase.firestore().collection('users').doc(user.uid).set({
             plan: ownerPlan,
@@ -251,11 +257,11 @@ async function redirectToDashboard(user) {
       }
 
       if (!planFiles[plan]) {
-        plan = String(localStorage.getItem('cls-last-plan') || localStorage.getItem('cls-current-plan') || 'starter').toLowerCase();
+        plan = normalizePlan(localStorage.getItem('cls-last-plan') || localStorage.getItem('cls-current-plan') || 'solo');
       }
-      if (!planFiles[plan]) plan = 'starter';
+      if (!planFiles[plan]) plan = 'solo';
       if (window.clsRememberPlan) await window.clsRememberPlan(plan, user.uid, firebase.firestore());
-      const dest = planFiles[plan] || 'starter.html';
+      const dest = planFiles[plan] || 'solo.html';
       window.location.href = dest;
     } else {
       // Profile not found — send to onboarding
@@ -296,7 +302,11 @@ async function acceptInvite(user) {
   }
   const ownerDoc = await firebase.firestore().collection('users').doc(inviteOwner).get();
   const owner = ownerDoc.exists ? ownerDoc.data() : {};
-  const ownerPlan = String(owner.lastPlan || owner.currentPlan || owner.plan || 'starter').toLowerCase();
+  const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
+  const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
+  const rawOwnerPlan = String(owner.lastPlan || owner.currentPlan || owner.plan || 'solo').toLowerCase();
+  const mappedOwnerPlan = planAliases[rawOwnerPlan] || rawOwnerPlan;
+  const ownerPlan = planFiles[mappedOwnerPlan] ? mappedOwnerPlan : 'solo';
   await firebase.firestore().collection('users').doc(user.uid).set({
     name: user.displayName || inviteRecord.name || '',
     email: user.email || inviteRecord.email || '',
@@ -386,17 +396,17 @@ window.signInGoogle = async function signInGoogle() {
     }
     const doc = await firebase.firestore().collection('users').doc(user.uid).get();
     if (!doc.exists) {
-      // New Google user — create profile with starter plan
+      // New Google user — create profile with Solo plan
       const trialEnd = new Date();
       trialEnd.setDate(trialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(user.uid).set({
         name: user.displayName || '',
         email: user.email,
         phone: user.phoneNumber || '',
-        plan: 'starter',
-        currentPlan: 'starter',
-        lastPlan: 'starter',
-        planPrice: 5500,
+        plan: 'solo',
+        currentPlan: 'solo',
+        lastPlan: 'solo',
+        planPrice: 3500,
         trialStart: new Date().toISOString(),
         trialEnd: trialEnd.toISOString(),
         paid: false,

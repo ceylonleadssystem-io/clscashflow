@@ -361,34 +361,34 @@ firebase.initializeApp(firebaseConfig);
         <p class="ob-eyebrow">Primary use</p>
         <h1 class="ob-title">What do you need <em>first</em>?</h1>
         <div class="ob-rule"></div>
-        <p class="ob-sub">Pick your main use. We will recommend the cleanest plan for that work, but you can still choose Starter, Growth, or Premium yourself.</p>
+        <p class="ob-sub">Pick your main use. We will recommend the cleanest plan for that work, but you can still choose Solo, Studio, or Business yourself.</p>
         <div class="ob-field" style="margin-bottom:.5rem"><label>Primary use *</label></div>
         <div class="ob-choices cols-2" id="use-cases">
-          <button class="ob-choice" data-plan="starter" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Customers, invoices, payment status, reports.</div></div></button>
-          <button class="ob-choice" data-plan="growth" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track money in and out</div><div class="ob-choice-desc">Cashflow, income, expenses, suppliers, operations.</div></div></button>
-          <button class="ob-choice" data-plan="growth" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Manage reports and outstanding money</div><div class="ob-choice-desc">Who owes me, business reports, basic insights.</div></div></button>
-          <button class="ob-choice" data-plan="premium" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">⚙️</span><div><div class="ob-choice-label">Need payroll, automation, or advanced control</div><div class="ob-choice-desc">Premium tools for deeper operations and analytics.</div></div></button>
+          <button class="ob-choice" data-plan="solo" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Dashboard, customers, invoices, PDF, email and WhatsApp.</div></div></button>
+          <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track money in and out</div><div class="ob-choice-desc">Cashflow, income, expenses, reminders, and team access.</div></div></button>
+          <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Manage reports and outstanding money</div><div class="ob-choice-desc">Quotes, partial payments, multi-currency, and better reports.</div></div></button>
+          <button class="ob-choice" data-plan="business" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">⚙️</span><div><div class="ob-choice-label">Need AI, forecasting, or advanced control</div><div class="ob-choice-desc">Business tools for unlimited teams, insights, integrations, and security.</div></div></button>
         </div>
         <div class="plan-reco" id="plan-suggestion">
           <div class="plan-reco-label">Suggested plan</div>
           <div class="plan-reco-title" id="plan-suggestion-title">Choose a primary use</div>
           <div class="plan-reco-copy" id="plan-suggestion-copy">Once you pick what you need first, we will suggest the best fit. You can still choose any package.</div>
-          <div class="plan-price-line" id="plan-suggestion-price">Starter LKR 5,500 · Growth LKR 12,500 · Premium LKR 18,500</div>
+          <div class="plan-price-line" id="plan-suggestion-price">Solo LKR 3,500 · Studio LKR 5,500 · Business LKR 8,500</div>
         </div>
         <div class="ob-field" style="margin-bottom:.6rem"><label>Your package choice *</label></div>
         <div class="tier-cards">
-          <div class="tier-card" data-tier="starter" onclick="window.selectTier('starter',this,true)">
-            <div class="tier-name">Starter</div><div class="tier-price">LKR 5,500 / month</div>
-            <div class="tier-features">• Invoice control system<br>• Customers & payments<br>• Reports, edit backlog<br>• Up to 2 users</div>
+          <div class="tier-card" data-tier="solo" onclick="window.selectTier('solo',this,true)">
+            <div class="tier-name">Solo</div><div class="tier-price">LKR 3,500 / month</div>
+            <div class="tier-features">• 1 user<br>• Up to 30 customers<br>• Professional invoices<br>• Basic reports</div>
           </div>
-          <div class="tier-card" data-tier="growth" onclick="window.selectTier('growth',this,true)">
+          <div class="tier-card" data-tier="studio" onclick="window.selectTier('studio',this,true)">
             <div class="tier-badge">Most Popular</div>
-            <div class="tier-name">Growth</div><div class="tier-price">LKR 12,500 / month</div>
-            <div class="tier-features">• Cashflow operations<br>• Expenses & suppliers<br>• Who owes me<br>• Up to 8 users</div>
+            <div class="tier-name">Studio</div><div class="tier-price">LKR 5,500 / month</div>
+            <div class="tier-features">• Up to 5 users<br>• Up to 100 customers<br>• Quotes & recurring invoices<br>• Expenses and cashflow</div>
           </div>
-          <div class="tier-card" data-tier="premium" onclick="window.selectTier('premium',this,true)">
-            <div class="tier-name">Premium</div><div class="tier-price">LKR 18,500 / month</div>
-            <div class="tier-features">• Payroll & automation<br>• Advanced analytics<br>• Deeper controls<br>• Priority support</div>
+          <div class="tier-card" data-tier="business" onclick="window.selectTier('business',this,true)">
+            <div class="tier-name">Business</div><div class="tier-price">LKR 8,500 / month</div>
+            <div class="tier-features">• Unlimited users<br>• Unlimited customers<br>• AI insights & forecast<br>• Advanced reports</div>
           </div>
         </div>
         <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(2)">← Back</button><button class="btn-next" onclick="window.nextStep(2)">Continue →</button></div>
@@ -720,7 +720,7 @@ let currentStep = 1;
 const totalSteps = 4;
 const state = {
   fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',
-  bizName:'',industry:'',tier:'',suggestedTier:'starter',planTouched:false,useCases:[],firstClient:null,expLevel:'',
+  bizName:'',industry:'',tier:'',suggestedTier:'solo',planTouched:false,useCases:[],firstClient:null,expLevel:'',
   setupTasks:{profile:true,payroll:false,notifications:false},
   logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',selectedTemplate:0,
   empCount:0,employees:[],payFreq:'Monthly',
@@ -1007,15 +1007,21 @@ function saveStepData(step){
 
 // ── CHOICES + PLAN RECOMMENDATION ──
 const planInfo = {
-  starter:{name:'Starter',price:'LKR 5,500 / month',templates:3,reason:'Best for invoice control, customers, payments, reports, and simple staff access.'},
-  growth:{name:'Growth',price:'LKR 12,500 / month',templates:3,reason:'Best for money in/out, expenses, suppliers, who owes me, reports, and operations control.'},
-  premium:{name:'Premium',price:'LKR 18,500 / month',templates:3,reason:'Best when you need payroll, automation, advanced analytics, and deeper controls.'}
+  solo:{name:'Solo',price:'LKR 3,500 / month',templates:3,reason:'Best for one owner who needs professional invoices, customers, payment tracking, PDF, email, WhatsApp, and basic reports.'},
+  studio:{name:'Studio',price:'LKR 5,500 / month',templates:3,reason:'Best for small teams that need quotes, recurring invoices, reminders, expenses, cashflow, multi-currency, and stronger branding.'},
+  business:{name:'Business',price:'LKR 8,500 / month',templates:3,reason:'Best when you need unlimited users, AI insights, forecasting, advanced reports, role permissions, priority support, and integrations.'}
 };
 function getSuggestedTier(){
   const selected=[...document.querySelectorAll('#use-cases .ob-choice.selected')];
-  if(selected.some(el=>el.dataset.plan==='premium')) return 'premium';
-  if(selected.some(el=>el.dataset.plan==='growth')) return 'growth';
-  return selected.length ? 'starter' : 'starter';
+  if(selected.some(el=>el.dataset.plan==='business')) return 'business';
+  if(selected.some(el=>el.dataset.plan==='studio')) return 'studio';
+  return selected.length ? 'solo' : 'solo';
+}
+function normalizeTier(tier){
+  const aliases={starter:'studio',growth:'business',premium:'business'};
+  tier=String(tier||'').toLowerCase();
+  tier=aliases[tier]||tier;
+  return planInfo[tier]?tier:'solo';
 }
 function syncRecommendedBadges(){
   document.querySelectorAll('.tier-card').forEach(card=>{
@@ -1031,7 +1037,7 @@ function renderPlanRecommendation(){
   const price=document.getElementById('plan-suggestion-price');
   if(title) title.textContent=selectedCount ? `${info.name} looks right for you.` : 'Choose a primary use';
   if(copy) copy.textContent=selectedCount ? info.reason + ' You can still select any plan below.' : 'Once you pick what you need first, we will suggest the best fit. You can still choose any package.';
-  if(price) price.textContent=selectedCount ? info.price : 'Starter LKR 5,500 · Growth LKR 12,500 · Premium LKR 18,500';
+  if(price) price.textContent=selectedCount ? info.price : 'Solo LKR 3,500 · Studio LKR 5,500 · Business LKR 8,500';
   syncRecommendedBadges();
   if(selectedCount && !state.planTouched){
     const card=document.querySelector(`.tier-card[data-tier="${state.suggestedTier}"]`);
@@ -1050,6 +1056,7 @@ window.syncSetupTasks = function syncSetupTasks(){
   };
 }
 window.selectTier = function selectTier(tier,el,manual){
+  tier=normalizeTier(tier);
   state.tier=tier;
   if(manual) state.planTouched=true;
   document.querySelectorAll('.tier-card').forEach(c=>c.classList.remove('selected'));
@@ -1151,9 +1158,9 @@ window.toggleChannel = function toggleChannel(ch,el){
 
 // ── SUCCESS ──
 function buildSuccess(){
-  const tierLabels={starter:'Starter — LKR 5,500/mo',growth:'Growth — LKR 12,500/mo',premium:'Premium — LKR 18,500/mo'};
+  const tierLabels={solo:'Solo — LKR 3,500/mo',studio:'Studio — LKR 5,500/mo',business:'Business — LKR 8,500/mo'};
   const tplName=allTemplates[normalizeTplIdx(state.selectedTemplate)]?.name||'Brand Gold';
-  const suggested=tierLabels[state.suggestedTier]||tierLabels.starter;
+  const suggested=tierLabels[state.suggestedTier]||tierLabels.solo;
   const selected=tierLabels[state.tier]||state.tier;
   const rows=[
     ['Name',`${state.fname} ${state.lname}`],
@@ -1210,7 +1217,11 @@ async function acceptOnboardingInvite(uid,email){
   }
   var ownerDoc=await firebase.firestore().collection('users').doc(state.inviteOwner).get();
   var owner=ownerDoc.exists?ownerDoc.data():{};
-  var ownerPlan=String(owner.lastPlan||owner.currentPlan||owner.plan||state.tier||'starter').toLowerCase();
+  var planFiles = { solo:'solo.html', studio:'starter.html', business:'growth.html' };
+  var planAliases = { starter:'studio', growth:'business', premium:'business' };
+  var rawOwnerPlan=String(owner.lastPlan||owner.currentPlan||owner.plan||state.tier||'solo').toLowerCase();
+  var mappedOwnerPlan=planAliases[rawOwnerPlan]||rawOwnerPlan;
+  var ownerPlan=planFiles[mappedOwnerPlan]?mappedOwnerPlan:'solo';
   await firebase.firestore().collection('users').doc(uid).set({
     role: invite.role||'viewer',
     ownerUid: state.inviteOwner,
@@ -1236,8 +1247,8 @@ window.launchDashboard = async function launchDashboard(){
   if(btn){ btn.textContent = 'Saving your details…'; btn.disabled = true; }
 
   try {
-    const prices = { starter: 5500, growth: 12500, premium: 18500 };
-    const planFiles = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
+    const prices = { solo: 3500, studio: 5500, business: 8500 };
+    const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
 
     if (state.googleAuth) {
       // Google user — already authenticated, just update their Firestore profile
@@ -1257,10 +1268,10 @@ window.launchDashboard = async function launchDashboard(){
         defaultTaxRate: state.taxRate || '',
         footer: state.footer || '',
         logo: state.logo || '',
-        plan: state.tier || 'starter',
-        currentPlan: state.tier || 'starter',
-        lastPlan: state.tier || 'starter',
-        planPrice: prices[state.tier] || 5500,
+        plan: state.tier || 'solo',
+        currentPlan: state.tier || 'solo',
+        lastPlan: state.tier || 'solo',
+        planPrice: prices[state.tier] || 3500,
         trialStart: new Date().toISOString(),
         trialEnd: googleTrialEnd.toISOString(),
         paid: false,
@@ -1284,14 +1295,14 @@ window.launchDashboard = async function launchDashboard(){
           body: JSON.stringify({
             to: state.email,
             name: state.fname + ' ' + state.lname,
-            plan: state.tier || 'starter',
+            plan: state.tier || 'solo',
             biz: state.bizName || 'your business',
             trialEnd: googleTrialEnd.toISOString()
           })
         });
       } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
-      if (window.clsRememberPlan) await window.clsRememberPlan(state.tier || 'starter', user.uid, firebase.firestore());
-      window.location.href = planFiles[state.tier] || 'starter.html';
+      if (window.clsRememberPlan) await window.clsRememberPlan(state.tier || 'solo', user.uid, firebase.firestore());
+      window.location.href = planFiles[state.tier] || 'solo.html';
 
     } else {
       // Email user — create Firebase account then save profile
@@ -1313,10 +1324,10 @@ window.launchDashboard = async function launchDashboard(){
         defaultTaxRate: state.taxRate || '',
         footer: state.footer || '',
         logo: state.logo || '',
-        plan: state.tier || 'starter',
-        currentPlan: state.tier || 'starter',
-        lastPlan: state.tier || 'starter',
-        planPrice: prices[state.tier] || 5500,
+        plan: state.tier || 'solo',
+        currentPlan: state.tier || 'solo',
+        lastPlan: state.tier || 'solo',
+        planPrice: prices[state.tier] || 3500,
         trialStart: new Date().toISOString(),
         trialEnd: trialEnd.toISOString(),
         paid: false,
@@ -1340,14 +1351,14 @@ window.launchDashboard = async function launchDashboard(){
           body: JSON.stringify({
             to: state.email,
             name: state.fname + ' ' + state.lname,
-            plan: state.tier || 'starter',
+            plan: state.tier || 'solo',
             biz: state.bizName || 'your business',
             trialEnd: trialEnd.toISOString()
           })
         });
       } catch(mailErr) { console.warn('Welcome email failed:', mailErr); }
-      if (window.clsRememberPlan) await window.clsRememberPlan(state.tier || 'starter', uid, firebase.firestore());
-      window.location.href = planFiles[state.tier] || 'starter.html';
+      if (window.clsRememberPlan) await window.clsRememberPlan(state.tier || 'solo', uid, firebase.firestore());
+      window.location.href = planFiles[state.tier] || 'solo.html';
     }
 
   } catch(err) {
@@ -1409,6 +1420,7 @@ bindInvoicePreviewInputs();
   }
   var plan = params.get('plan');
   if (plan) {
+    plan = normalizeTier(plan);
     var cards = document.querySelectorAll('.tier-card');
     cards.forEach(function(card) {
       var oc = card.getAttribute('onclick') || '';

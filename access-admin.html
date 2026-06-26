@@ -114,12 +114,12 @@ a{color:inherit;text-decoration:none}
     <p class="page-sub">Give the people you trust access to <strong id="biz-name">your business</strong> — and decide exactly what each person can see and do.</p>
 
     <div class="seat-bar">
-      <div class="seat-count"><span id="seats-used">1</span><span style="font-size:1.1rem;color:var(--dim)"> / <span id="seats-total">2</span></span></div>
+      <div class="seat-count"><span id="seats-used">1</span><span style="font-size:1.1rem;color:var(--dim)"> / <span id="seats-total">1</span></span></div>
       <div style="flex:1">
-        <div class="seat-meta"><strong>Seats used</strong> on your <span id="plan-name">Starter</span> plan</div>
+        <div class="seat-meta"><strong>Seats used</strong> on your <span id="plan-name">Solo</span> plan</div>
         <div class="seat-track" style="margin-top:.5rem"><div id="seat-fill" class="seat-fill" style="width:50%"></div></div>
       </div>
-      <span class="plan-pill" id="plan-pill">Starter</span>
+      <span class="plan-pill" id="plan-pill">Solo</span>
     </div>
   </div>
 
@@ -194,15 +194,22 @@ var _auth = firebase.auth();
 var _user = null;      // signed-in firebase user
 var _profile = null;   // their profile doc data
 var _ownerUid = null;  // the account whose team we manage (= owner)
-var _plan = (localStorage.getItem('cls-last-plan') || localStorage.getItem('cls-current-plan') || 'starter').toLowerCase();
+var _plan = (localStorage.getItem('cls-last-plan') || localStorage.getItem('cls-current-plan') || 'solo').toLowerCase();
 
-var PLAN_LIMITS = { starter: 2, growth: 8, premium: Infinity };
-var PLAN_NAMES  = { starter: 'Starter', growth: 'Growth', premium: 'Premium' };
-var PLAN_FILES  = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
+var PLAN_LIMITS = { solo: 1, studio: 5, business: Infinity };
+var PLAN_NAMES  = { solo: 'Solo', studio: 'Studio', business: 'Business' };
+var PLAN_FILES  = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
+var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
 var ROLE_LABELS = { admin:'Admin', staff:'Staff', accountant:'Accountant', viewer:'Viewer' };
 
 // ── helpers ──
 function el(id){ return document.getElementById(id); }
+function normalizePlan(plan){
+  plan = String(plan || '').toLowerCase();
+  plan = PLAN_ALIASES[plan] || plan;
+  return Object.prototype.hasOwnProperty.call(PLAN_LIMITS, plan) ? plan : 'solo';
+}
+_plan = normalizePlan(_plan);
 function showMsg(text, ok){
   var m = el('msg');
   m.textContent = text;
@@ -221,7 +228,7 @@ function dashboardHref(){
   var params = new URLSearchParams(location.search);
   var ret = params.get('return') || '';
   if (/^[a-z0-9._-]+\.html$/i.test(ret)) return ret;
-  return PLAN_FILES[_plan] || 'starter.html';
+  return PLAN_FILES[_plan] || 'solo.html';
 }
 function applyDashboardLinks(){
   var href = dashboardHref();
@@ -257,8 +264,8 @@ _auth.onAuthStateChanged(async function(user){
       || _profile.plan
       || localStorage.getItem('cls-last-plan')
       || localStorage.getItem('cls-current-plan')
-      || 'starter').toLowerCase();
-    if (!Object.prototype.hasOwnProperty.call(PLAN_LIMITS, _plan)) _plan = 'starter';
+      || 'solo');
+    _plan = normalizePlan(_plan);
     if (window.clsRememberPlan) await window.clsRememberPlan(_plan, user.uid, _db);
     applyDashboardLinks();
 
@@ -271,8 +278,8 @@ _auth.onAuthStateChanged(async function(user){
 
     // header
     el('biz-name').textContent = _profile.bizName || _profile.name || 'your business';
-    el('plan-name').textContent = PLAN_NAMES[_plan] || 'Starter';
-    el('plan-pill').textContent = PLAN_NAMES[_plan] || 'Starter';
+    el('plan-name').textContent = PLAN_NAMES[_plan] || 'Solo';
+    el('plan-pill').textContent = PLAN_NAMES[_plan] || 'Solo';
 
     el('loading').classList.add('hidden');
     el('app').classList.remove('hidden');
@@ -313,7 +320,7 @@ async function loadTeam(){
 }
 
 function seatsState(activeCount, pendingCount){
-  var limit = PLAN_LIMITS[_plan] || 2;
+  var limit = PLAN_LIMITS[_plan] || 1;
   var used = 1 + activeCount + pendingCount; // owner + members + outstanding invites
   return { limit: limit, used: used, full: used >= limit };
 }

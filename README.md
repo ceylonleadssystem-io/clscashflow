@@ -1,15 +1,16 @@
 # CLS CashFlow
 
-CeylonryLabs.io CashFlow system for Starter, Growth, and Premium plans.
+CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 
 ## Files
 
 - `index.html` - landing page
 - `signin.html` - Firebase sign in
 - `onboarding.html` - account setup flow
-- `starter.html` - Starter dashboard
-- `growth.html` - Growth dashboard
-- `premium.html` - Premium dashboard
+- `solo.html` - Solo dashboard
+- `starter.html` - Studio dashboard
+- `growth.html` - Business dashboard
+- `premium.html` - legacy premium prototype page, no longer linked in the active plan flow
 - `access-admin.html` - team access and invite management
 - `accept-invite.html` - invite acceptance page
 - `netlify/functions/send-invoice.js` - built-in SMTP invoice email fallback
@@ -74,4 +75,4 @@ For the simplest EmailJS body, use:
 {{{message_html}}}
 ```
 
-If you want the no-logo stationery style, paste the contents of `emailjs-custom-invoice-template.html` into the EmailJS body instead. The Starter dashboard now sends the custom fields used by that template, including `business_name`, `client_name`, `invoice_no`, `items_html`, `subtotal`, and `grand_total`.
+If you want the no-logo stationery style, paste the contents of `emailjs-custom-invoice-template.html` into the EmailJS body instead. The Solo and Studio invoice dashboards send the custom fields used by that template, including `business_name`, `client_name`, `invoice_no`, `items_html`, `subtotal`, and `grand_total`.

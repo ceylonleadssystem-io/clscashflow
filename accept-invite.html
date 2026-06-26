@@ -125,7 +125,13 @@ firebase.initializeApp(firebaseConfig);
 var _db = firebase.firestore();
 var _auth = firebase.auth();
 
-var PLAN_FILES = { starter:'starter.html', growth:'growth.html', premium:'premium.html' };
+var PLAN_FILES = { solo:'solo.html', studio:'starter.html', business:'growth.html' };
+var PLAN_ALIASES = { starter:'studio', growth:'business', premium:'business' };
+function normalizePlan(plan){
+  plan = String(plan || '').toLowerCase();
+  plan = PLAN_ALIASES[plan] || plan;
+  return PLAN_FILES[plan] ? plan : 'solo';
+}
 var ROLE_LABELS = { admin:'Admin', staff:'Staff', accountant:'Accountant', viewer:'Viewer' };
 
 var _inviteId = null;
@@ -179,7 +185,7 @@ async function attachAndFinish(user, name){
     email: (user.email || _invite.email || '').toLowerCase(),
     ownerUid: _invite.ownerUid,
     role: _invite.role,
-    plan: _invite.plan || 'starter',
+    plan: normalizePlan(_invite.plan),
     bizName: _invite.bizName || '',
     isTeamMember: true,
     paid: true,                 // members are seats under the owner; no separate billing
@@ -192,7 +198,7 @@ async function attachAndFinish(user, name){
     acceptedAt: new Date().toISOString()
   });
   show('success');
-  var dest = PLAN_FILES[(_invite.plan||'starter').toLowerCase()] || 'starter.html';
+  var dest = PLAN_FILES[normalizePlan(_invite.plan)] || 'solo.html';
   setTimeout(function(){ window.location.href = dest; }, 1400);
 }
 

@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CeylonryLabs.io — Studio</title>
+<title>CeylonryLabs.io — Solo</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Firebase SDKs -->
@@ -338,14 +338,15 @@ body.is-admin .admin-only{display:flex}
 
 @media print{@page{size:A4;margin:0}html,body{margin:0!important;padding:0!important}body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 #print-invoice{display:none}
+.solo-hidden,[data-solo-hidden="1"]{display:none!important}
 </style>
 </head>
 <body>
 <script>
 window.CLS_RUN=function(fn,arg){if(typeof window[fn]==='function')window[fn](arg);};
-window.openWhatsAppSupport=function(){window.open('https://wa.me/94778815628?text='+encodeURIComponent('Hi CeylonryLabs! I need help with my Studio Invoice Control System billing.'),'_blank');};
+window.openWhatsAppSupport=function(){window.open('https://wa.me/94778815628?text='+encodeURIComponent('Hi CeylonryLabs! I need help with my Solo Invoice Control System billing.'),'_blank');};
 window.closeAndOpenClient=function(){if(window.closeModal)window.closeModal('inv-modal');if(window.openClientModal)window.openClientModal();};
-window.showPaywallBtn=function(){if(window.openBusinessUpgrade)window.openBusinessUpgrade();};
+window.showPaywallBtn=function(){if(window.openStudioUpgrade)window.openStudioUpgrade();};
 window.triggerLogoUpload=function(){var el=document.getElementById('settings-logo');if(el)el.click();};
 
 document.addEventListener('click',function(e){
@@ -359,7 +360,8 @@ document.addEventListener('click',function(e){
     if(viewEl)viewEl.classList.add('active');
     navEl.classList.add('active');
     document.querySelectorAll('[data-nav="'+view+'"]').forEach(function(i){i.classList.add('active');});
-    var titles={dashboard:'Studio Invoice Control System',invoices:'Invoices',clients:'Customers',reports:'Reports',team:'Team Access',backlog:'Edit Backlog',settings:'Settings'};
+    if(view==='team'||view==='backlog') view='dashboard';
+    var titles={dashboard:'Solo Invoice Control System',invoices:'Invoices',clients:'Customers',reports:'Reports',settings:'Settings'};
     var titleEl=document.getElementById('page-title');
     if(titleEl&&titles[view])titleEl.textContent=titles[view];
     if(view==='dashboard'&&typeof window.renderDashboard==='function')window.renderDashboard();
@@ -392,7 +394,7 @@ document.addEventListener('click',function(e){
   <div class="sb-logo-wrap">
     <div id="sb-logo-img-wrap"></div>
     <div class="sb-logo">Ceylonry<span>Labs</span>.io</div>
-    <span class="sb-plan-tag">Studio</span>
+    <span class="sb-plan-tag">Solo</span>
   </div>
   <div class="sb-nav">
     <div class="sb-section" data-sidebar-section="main">Main</div>
@@ -401,14 +403,14 @@ document.addEventListener('click',function(e){
     <a class="sb-item" data-nav="clients"><span class="sb-icon">👥</span> Customers</a>
     <div class="sb-section" data-sidebar-section="insights">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
-    <a class="sb-item" data-nav="team"><span class="sb-icon">🔐</span> Team Access</a>
-    <a class="sb-item" data-nav="backlog"><span class="sb-icon">🗂️</span> Edit Backlog</a>
+    <a class="sb-item solo-hidden" data-nav="team"><span class="sb-icon">🔐</span> Team Access</a>
+    <a class="sb-item solo-hidden" data-nav="backlog"><span class="sb-icon">🗂️</span> Edit Backlog</a>
     <div class="sb-section" data-sidebar-section="account">Account</div>
     <a class="sb-item" data-nav="settings"><span class="sb-icon">⚙️</span> Settings</a>
   </div>
   <div class="sb-footer">
     <div class="sb-biz"><strong id="sb-biz-name">My Business</strong><span id="sb-user-email">user@email.com</span></div>
-    <button class="btn-upgrade" data-cls-fn="openBusinessUpgrade">Upgrade to Business →</button>
+    <button class="btn-upgrade" data-cls-fn="openStudioUpgrade">Upgrade to Studio →</button>
     <button data-cls-fn="clsSignOut" style="display:block;width:100%;text-align:center;padding:.5rem;background:transparent;border:1px solid rgba(184,146,42,.2);color:var(--muted);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-b);cursor:pointer;margin-top:.5rem;transition:all .2s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Sign Out</button>
   </div>
 </nav>
@@ -417,12 +419,12 @@ document.addEventListener('click',function(e){
 <div id="main">
   <div class="top-bar">
     <div class="top-bar-left">
-      <div class="page-title" id="page-title">Studio Invoice Control System</div>
-      <div class="page-sub" id="page-sub">Create invoices, manage customers, track payments, export reports, and control staff edits.</div>
+      <div class="page-title" id="page-title">Solo Invoice Control System</div>
+      <div class="page-sub" id="page-sub">Create invoices, manage up to 30 customers, track payments, export PDFs, and send by email or WhatsApp.</div>
     </div>
     <div class="top-bar-right">
       <div class="top-date" id="top-date"></div>
-      <div class="top-badge">Studio Plan</div>
+      <div class="top-badge">Solo Plan</div>
     </div>
   </div>
   <div class="content">
@@ -501,7 +503,7 @@ document.addEventListener('click',function(e){
     </div>
 
     <!-- ═ EDIT BACKLOG ═ -->
-    <div class="view" id="view-backlog">
+    <div class="view solo-hidden" id="view-backlog">
       <div class="sum-bar c3" id="backlog-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Admin Edit Backlog</div><button class="btn-act-outline" data-cls-fn="renderBacklog">Refresh</button></div>
@@ -590,9 +592,9 @@ document.addEventListener('click',function(e){
     </div>
 
     <!-- ═ TEAM ACCESS ═ -->
-    <div class="view" id="view-team">
+    <div class="view solo-hidden" id="view-team">
       <div class="sum-bar c3" id="team-summary-bar" style="margin-bottom:1.25rem">
-        <div class="sum-item"><div class="sum-label">Studio Users</div><div class="sum-val" id="team-user-count">5 Max</div></div>
+        <div class="sum-item"><div class="sum-label">Solo Users</div><div class="sum-val" id="team-user-count">1 Max</div></div>
         <div class="sum-item"><div class="sum-label">Roles</div><div class="sum-val" style="font-size:1.05rem">Owner / Staff / Accountant / View Only</div></div>
         <div class="sum-item"><div class="sum-label">Access</div><div class="sum-val" style="color:var(--gold);font-size:1.05rem">Invoice Control</div></div>
       </div>
@@ -602,12 +604,12 @@ document.addEventListener('click',function(e){
           <thead><tr><th>Role</th><th>Permissions</th><th>User Limit</th></tr></thead>
           <tbody id="team-access-table">
             <tr><td><strong>Owner/Admin</strong></td><td>Full access to invoices, customers, reports, payments, settings, and edit backlog.</td><td style="text-align:right">Included</td></tr>
-            <tr><td><strong>Staff</strong></td><td>Create invoices, manage customers, record payments, and share invoices.</td><td style="text-align:right">Up to 5 users total</td></tr>
-            <tr><td><strong>Accountant</strong></td><td>Access dashboard, invoices, customers, and reports only. No team access, settings, or edit backlog.</td><td style="text-align:right">Up to 5 users total</td></tr>
-            <tr><td><strong>View Only</strong></td><td>View dashboard and reports only. No editing or payment actions.</td><td style="text-align:right">Up to 5 users total</td></tr>
+            <tr><td><strong>Staff</strong></td><td>Not available on Solo.</td><td style="text-align:right">Upgrade to Studio</td></tr>
+            <tr><td><strong>Accountant</strong></td><td>Not available on Solo.</td><td style="text-align:right">Upgrade to Studio</td></tr>
+            <tr><td><strong>View Only</strong></td><td>Not available on Solo.</td><td style="text-align:right">Upgrade to Studio</td></tr>
           </tbody>
         </table>
-        <div style="padding:1rem;font-size:.82rem;color:var(--muted);line-height:1.7">Studio keeps team access simple. For more users, advanced roles, and approvals, upgrade to Business.</div>
+        <div style="padding:1rem;font-size:.82rem;color:var(--muted);line-height:1.7">Solo is a one-user plan. Upgrade to Studio when you need team access, more customers, reminders, expenses, and richer cashflow tools.</div>
       </div>
     </div>
 
@@ -620,7 +622,7 @@ document.addEventListener('click',function(e){
       <div class="settings-helper">
         <div>
           <div class="settings-helper-title">Quick System Tour</div>
-          <div class="settings-helper-text">A short walkthrough for the Studio Invoice Control System: dashboard, invoices, customers, reports, team access, edit backlog, and billing.</div>
+          <div class="settings-helper-text">A short walkthrough for the Solo Invoice Control System: dashboard, invoices, customers, reports, settings, and billing.</div>
         </div>
         <button class="btn-act-outline" data-cls-fn="startSystemTour">Start Tour</button>
       </div>
@@ -678,24 +680,24 @@ document.addEventListener('click',function(e){
           </div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15" style="max-width:200px"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the default on new invoices. You can still change it per invoice (B2B rates can differ).</div></div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Invoice Footer Message</label><input class="f-input" id="set-footer" placeholder="Thank you for your business. Payment due within 30 days."></div>
-          <div class="f-section" style="margin-top:.75rem">Users (Up to 5)</div>
+          <div class="f-section" style="margin-top:.75rem">Solo user</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
             <div class="f-group"><label>User 1 Email (You)</label><input class="f-input" id="set-u1" placeholder="you@email.com"></div>
-            <div class="f-group"><label>User 2 Email (Optional)</label><input class="f-input" id="set-u2" placeholder="colleague@email.com"></div>
+            <div class="f-group solo-hidden"><label>User 2 Email (Optional)</label><input class="f-input" id="set-u2" placeholder="colleague@email.com"></div>
           </div>
         </div>
       </div>
     
       <div style="margin-top:1.5rem;max-width:640px">
-        <div class="table-header"><div class="table-title">Team Access</div><a class="btn-act" href="access-admin.html">Manage Team</a></div>
-        <div style="padding:1rem;font-size:.85rem;color:var(--muted);line-height:1.8">Invite team members, assign roles, and control access. <a href="access-admin.html" style="color:var(--gold);font-weight:600">Open Access Admin</a></div>
+        <div class="table-header"><div class="table-title">Solo Limits</div><button class="btn-act" data-cls-fn="openStudioUpgrade">Upgrade</button></div>
+        <div style="padding:1rem;font-size:.85rem;color:var(--muted);line-height:1.8">Solo includes 1 user and up to 30 customers. Upgrade to Studio for team access, 100 customers, quotes, recurring invoices, automatic reminders, expenses, and cashflow tools.</div>
       </div>
       <div style="margin-top:1rem;max-width:640px">
-        <div class="table-header"><div class="table-title">Billing</div><button class="btn-act" data-cls-fn="openBusinessUpgrade">Upgrade</button></div>
+        <div class="table-header"><div class="table-title">Billing</div><button class="btn-act" data-cls-fn="openStudioUpgrade">Upgrade</button></div>
         <div style="padding:1rem">
-          <strong>Studio Plan</strong> — LKR 5,500/mo &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
+          <strong>Solo Plan</strong> — LKR 3,500/mo &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
           <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
-          <br><button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff">Upgrade to Business</button>
+          <br><button class="btn-act" data-cls-fn="openStudioUpgrade" style="background:var(--gold);color:#fff">Upgrade to Studio</button>
         </div>
       </div>
     </div>
@@ -1044,8 +1046,8 @@ async function saveCollection(col, arr) {
 }
 
 async function saveDB() {
-  if (DEMO_MODE) { localStorage.setItem('cls-starter-demo-backup', JSON.stringify(DB)); return; }
-  if (!_uid) { localStorage.setItem('cls-starter-backup', JSON.stringify(DB)); return; }
+  if (DEMO_MODE) { localStorage.setItem('cls-solo-demo-backup', JSON.stringify(DB)); return; }
+  if (!_uid) { localStorage.setItem('cls-solo-backup', JSON.stringify(DB)); return; }
   try {
     await Promise.all([
       saveCollection('transactions', DB.transactions),
@@ -1096,7 +1098,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     if (!profileDoc.exists) { window.location.href = 'signin.html'; return; }
     _profile = profileDoc.data();
     if (_profile.ownerUid) _uid = _profile.ownerUid;
-    if (window.clsRememberPlan) await window.clsRememberPlan('studio', _signedInUid, _db);
+    if (window.clsRememberPlan) await window.clsRememberPlan('solo', _signedInUid, _db);
 
     // Trial / paywall check
     const now = new Date();
@@ -1133,9 +1135,9 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
       window.clsMountTrialCountdown({
         profile: _profile,
         trialEnd: trialEnd,
-        planName: 'Studio',
-        actionText: 'Upgrade to Business',
-        onAction: window.openBusinessUpgrade
+        planName: 'Solo',
+        actionText: 'Upgrade to Studio',
+        onAction: window.openStudioUpgrade
       });
     }
   } catch(e) { console.error('Auth guard error:', e); }
@@ -1144,6 +1146,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
 function enforcePermissions(){
   if(!_profile) return;
   document.body.classList.toggle('is-admin', isAdminUser());
+  document.querySelectorAll('[data-nav="team"],[data-nav="backlog"]').forEach(function(el){el.style.display='none';});
   if(!isAdminUser()){
     document.querySelectorAll('[data-nav="backlog"]').forEach(function(el){el.style.display='none';});
     var backlogView=document.getElementById('view-backlog');
@@ -1203,16 +1206,16 @@ function renderTrialStatus(){
   const billingEl=document.getElementById('billing-trial-status');
   let msg='';
   if(st.paid){
-    msg='Your paid plan is active. You can still request Business features any time.';
+    msg='Your paid plan is active. You can still upgrade to Studio when you need more customers or team access.';
   }else if(st.ended){
     msg='Your free trial ended'+(st.end?' on '+formatLongDate(st.end):'')+'. Upgrade to keep using the system without interruption.';
   }else{
-    msg='You have <strong>'+st.daysLeft+' day'+(st.daysLeft!==1?'s':'')+' left</strong> on your free trial'+(st.end?' until '+formatLongDate(st.end):'')+'. You can upgrade to Business now without waiting for the trial to finish.';
+    msg='You have <strong>'+st.daysLeft+' day'+(st.daysLeft!==1?'s':'')+' left</strong> on your free trial'+(st.end?' until '+formatLongDate(st.end):'')+'. You can upgrade to Studio now without waiting for the trial to finish.';
   }
   if(settingsEl)settingsEl.innerHTML=msg;
   if(billingEl)billingEl.innerHTML=msg;
 }
-window.openBusinessUpgrade = async function openBusinessUpgrade(){
+window.openStudioUpgrade = async function openStudioUpgrade(){
   if(!_signedInUid){alert('Please sign in again before upgrading.');return;}
   const btn=document.activeElement&&document.activeElement.matches('button,a')?document.activeElement:null;
   const oldText=btn?btn.textContent:'';
@@ -1220,46 +1223,43 @@ window.openBusinessUpgrade = async function openBusinessUpgrade(){
   try{
     await saveDB();
     try{
-      localStorage.setItem('cls-starter-growth-snapshot',JSON.stringify({
+      localStorage.setItem('cls-solo-studio-snapshot',JSON.stringify({
         ownerUid:_uid,
         signedInUid:_signedInUid,
         createdAt:Date.now(),
         db:DB
       }));
-    }catch(snapshotErr){console.warn('Business upgrade snapshot skipped:',snapshotErr);}
+    }catch(snapshotErr){console.warn('Studio upgrade snapshot skipped:',snapshotErr);}
     const st=getTrialStatus();
     const profileUpdate={
-      plan:'business',
-      currentPlan:'business',
-      lastPlan:'business',
-      requestedPlan:'business',
-      planPrice:8500,
-      upgradedFrom:'studio',
+      plan:'studio',
+      currentPlan:'studio',
+      lastPlan:'studio',
+      requestedPlan:'studio',
+      planPrice:5500,
+      upgradedFrom:'solo',
       upgradedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
     if(st.end)profileUpdate.trialEnd=st.end.toISOString();
     await _db.collection('users').doc(_signedInUid).set(profileUpdate,{merge:true});
-    if (window.clsRememberPlan) await window.clsRememberPlan('business', _signedInUid, _db);
+    if (window.clsRememberPlan) await window.clsRememberPlan('studio', _signedInUid, _db);
     if(_profile)Object.assign(_profile,profileUpdate,{trialEnd:profileUpdate.trialEnd||_profile.trialEnd});
-    localStorage.setItem('cls-growth-tour-pending','1');
-    window.location.href='growth.html?upgraded=business';
+    window.location.href='starter.html?upgraded=studio';
   }catch(e){
-    console.error('Business upgrade error:',e);
-    alert('Could not upgrade to Business right now. Please try again.');
+    console.error('Studio upgrade error:',e);
+    alert('Could not upgrade to Studio right now. Please try again.');
     if(btn){btn.disabled=false;btn.textContent=oldText;}
   }
 };
 const tourSteps=[
-  {view:'dashboard',title:'Dashboard',body:'<p>This is the invoice control room for the Studio plan.</p><div class="tour-list"><div><strong>Check health:</strong> total invoiced, paid amount, outstanding amount, overdue invoices, and this month invoice value.</div><div><strong>Follow up:</strong> use due reminders and aging buckets to see which invoices need attention first.</div></div>'},
+  {view:'dashboard',title:'Dashboard',body:'<p>This is the invoice control room for the Solo plan.</p><div class="tour-list"><div><strong>Check health:</strong> total invoiced, paid amount, outstanding amount, overdue invoices, and this month invoice value.</div><div><strong>Follow up:</strong> use due reminders and aging buckets to see which invoices need attention first.</div></div>'},
   {view:'invoices',title:'Invoices',body:'<p>Create, send, and collect invoices from one register.</p><div class="tour-list"><div><strong>Raise invoice:</strong> choose customer, items, VAT, terms, and template.</div><div><strong>Email or WhatsApp:</strong> share the invoice directly with the customer.</div><div><strong>Record payment:</strong> full or partial payments update outstanding balances.</div></div>'},
   {view:'clients',title:'Customers',body:'<p>Customers are reusable billing records for invoices.</p><div class="tour-list"><div><strong>Save details:</strong> name, business, email, WhatsApp, billing address, notes, and terms.</div><div><strong>Create faster:</strong> start a new invoice from a customer card.</div></div>'},
   {view:'reports',title:'Reports',body:'<p>Reports are based only on invoices and payments.</p><div class="tour-list"><div><strong>Review:</strong> invoice summary, paid vs unpaid, outstanding, overdue, and customer-wise totals.</div><div><strong>Export:</strong> download a clean invoice report PDF.</div></div>'},
-  {view:'team',title:'Team Access',body:'<p>Studio team access is simple and limited to five users.</p><div class="tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> create invoices, manage customers, and mark payments.</div><div><strong>Accountant:</strong> dashboard, invoices, customers, and reports only.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
-  {view:'backlog',title:'Edit Backlog',body:'<p>Admins can review invoice, customer, and payment changes.</p><div class="tour-list"><div><strong>Audit fields:</strong> date, edited item, previous value, new value, edited by, and reason.</div></div>'},
   {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, default invoice template, footer message, logo alignment, and logo size.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
 ];
 let tourIndex=0;
-function tourStorageKey(){return 'cls-studio-tour-seen-'+(_signedInUid||_uid||'local');}
+function tourStorageKey(){return 'cls-solo-tour-seen-'+(_signedInUid||_uid||'local');}
 function openTourView(view){
   const nav=document.querySelector('.sb-item[data-nav="'+view+'"]')||document.querySelector('[data-nav="'+view+'"]');
   if(nav)nav.click();
@@ -1294,9 +1294,9 @@ function maybeStartFirstTour(){
 // ════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════
-const pageTitles={dashboard:['Studio Invoice Control System','Create invoices, manage customers, track payments, export reports, and control staff edits.'],invoices:['Invoice Management','Create, send, and track invoices'],clients:['Customer Directory','Manage your customers and billing contacts'],reports:['Invoice Reports','Invoice summary, paid vs unpaid, overdue invoices, and customer-wise reports'],team:['Team Access','Control Studio roles for up to 5 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],settings:['Business Settings','Manage your invoice profile and preferences']};
+const pageTitles={dashboard:['Solo Invoice Control System','Create invoices, manage up to 30 customers, track payments, export PDFs, and send by email or WhatsApp.'],invoices:['Invoice Management','Create, send, and track invoices'],clients:['Customer Directory','Manage up to 30 customers and billing contacts'],reports:['Invoice Reports','Invoice summary, paid vs unpaid, overdue invoices, and customer-wise reports'],settings:['Business Settings','Manage your invoice profile and preferences']};
 window.nav = window.nav = function nav(view){
-  if(view==='backlog'&&!isAdminUser()) view='dashboard';
+  if(view==='team'||view==='backlog') view='dashboard';
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   var _vel=document.getElementById('view-'+view);if(_vel)_vel.classList.add('active');
@@ -1308,8 +1308,6 @@ window.nav = window.nav = function nav(view){
   if(view==='invoices'){renderInvoices();populateClientSelect();}
   if(view==='clients') renderClients();
   if(view==='reports') renderReports();
-  if(view==='team') renderTeamAccess();
-  if(view==='backlog') renderBacklog();
   if(view==='settings') loadSettings();
 }
 
@@ -2077,7 +2075,7 @@ function renderReports(){
 
 function renderTeamAccess(){
   const countEl=document.getElementById('team-user-count');
-  if(countEl) countEl.textContent='5 Max';
+  if(countEl) countEl.textContent='1 Max';
 }
 
 // ════════════════════════════════
@@ -2243,7 +2241,7 @@ function buildInvoiceEmailHTML(inv){
 
   // Footer
   +'<div style="margin-top:34px;padding-top:16px;border-top:1px solid #ededed;text-align:center;font-size:11px;color:#bdbab4;letter-spacing:.3px">'
-  +'Invoice generated by Studio Invoice Control System - <strong style="color:'+ac+'">CeylonryLabs.io</strong></div>'
+  +'Invoice generated by Solo Invoice Control System - <strong style="color:'+ac+'">CeylonryLabs.io</strong></div>'
 
   +'</div></div>';
 }
@@ -2342,7 +2340,7 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
   </div>
 </div>
 <div class="footer"><div><strong>${s.bizName||'Your Business'}</strong><br>${s.addr||''}</div><div style="text-align:right;max-width:280px">${s.footer||'Thank you for your business.'}</div></div>
-<div class="powered">Invoice generated by Studio Invoice Control System - <b>CeylonryLabs.io</b></div>
+<div class="powered">Invoice generated by Solo Invoice Control System - <b>CeylonryLabs.io</b></div>
 </div></body></html>`;
 }
 window.viewPrintInvoice = function viewPrintInvoice(num){
@@ -2400,8 +2398,17 @@ function renderClients(){
     </div>`).join('');
 }
 
+function soloCustomerLimitReached(){
+  if(!DB.clients) DB.clients={list:[],nextId:1};
+  return Array.isArray(DB.clients.list) && DB.clients.list.length >= 30;
+}
+
 window.openClientModal = function openClientModal(){
   if(!DB.clients) DB.clients={list:[],nextId:1};
+  if(soloCustomerLimitReached()){
+    alert('Solo includes up to 30 customers. Upgrade to Studio to manage up to 100 customers.');
+    return;
+  }
   document.getElementById('c-edit-id').value='';
   document.getElementById('c-name').value='';
   document.getElementById('c-biz').value='';
@@ -2440,6 +2447,10 @@ window.saveClient = function saveClient(){
   const editId=parseInt(document.getElementById('c-edit-id').value)||0;
   const reason=document.getElementById('c-edit-reason').value.trim();
   if(editId&&!reason){alert('Please mention the reason for editing this customer.');return;}
+  if(!editId&&soloCustomerLimitReached()){
+    alert('Solo includes up to 30 customers. Upgrade to Studio to add more.');
+    return;
+  }
   const data={
     id:editId||(Date.now()+Math.floor(Math.random()*1000)),
     name,
@@ -2789,7 +2800,7 @@ function seedDemoData(){
   _uid='demo-workspace';
   _trialEnd=new Date(today.getTime()+15*86400000);
   _isPaid=false;
-  _profile={role:'owner',name:'Demo Owner',email:'demo@ceylonrylabs.io',plan:'studio',paid:false,trialEnd:_trialEnd.toISOString()};
+  _profile={role:'owner',name:'Demo Owner',email:'demo@ceylonrylabs.io',plan:'solo',paid:false,trialEnd:_trialEnd.toISOString()};
   DB.settings={
     bizName:'Poddo Kids Club',
     username:'Demo Owner',
@@ -2855,9 +2866,9 @@ if(DEMO_MODE) initDemoMode();
 
 // Paywall overlay
 window.showPaywall = function showPaywall(profile) {
-  const plan = (profile && profile.plan) || 'studio';
+  const plan = (profile && profile.plan) || 'solo';
   const prices = { solo: 3500, studio: 5500, business: 8500, starter: 5500, growth: 8500, premium: 8500 };
-  const price = prices[plan] || 5500;
+  const price = prices[plan] || 3500;
   const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
   const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));
   const waNum = '94778815628'; // ← replace
@@ -2925,7 +2936,7 @@ window.exportReportPDF=function(){
    +'<div class="card"><h3>Paid vs Unpaid</h3>'+cf+'</div></div>'
    +'<div class="sec-title">Customer-wise Invoice Report</div>'
    +'<table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody>'+cat+'</tbody></table>'
-   +'<div class="powered">Report generated by Studio Invoice Control System - <b>CeylonryLabs.io</b></div>'
+   +'<div class="powered">Report generated by Solo Invoice Control System - <b>CeylonryLabs.io</b></div>'
    +'</div></body></html>';
   var w=window.open('','_blank','width=880,height=760');
   if(!w){alert('Please allow pop-ups to export the report.');return;}
@@ -2959,7 +2970,7 @@ window.waInvoiceWithPDF=function(num){
   }
   var phone=String(inv.cphone||'').replace(/[^0-9]/g,'');
   if(phone&&!phone.startsWith('94'))phone='94'+phone.replace(/^0/,'');
-  var msg=encodeURIComponent('Hi '+inv.client+',\n\nPlease find your invoice from '+biz+'.\n\nInvoice: '+inv.num+'\nAmount: '+cur+' '+Number(inv.amount||0).toLocaleString()+'\nDue: '+fmtD(inv.due)+'\n\nPDF invoice attached.\n\nInvoice generated by Studio Invoice Control System - CeylonryLabs.io');
+  var msg=encodeURIComponent('Hi '+inv.client+',\n\nPlease find your invoice from '+biz+'.\n\nInvoice: '+inv.num+'\nAmount: '+cur+' '+Number(inv.amount||0).toLocaleString()+'\nDue: '+fmtD(inv.due)+'\n\nPDF invoice attached.\n\nInvoice generated by Solo Invoice Control System - CeylonryLabs.io');
   setTimeout(function(){window.open('https://wa.me/'+(phone||'')+'?text='+msg,'_blank');},1200);
 };
 window.toggleExpenseLog=function(type){var t=document.getElementById('expense-log-toggle');if(t)t.style.display=type==='out'?'block':'none';};

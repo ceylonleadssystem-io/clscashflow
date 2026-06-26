@@ -185,9 +185,11 @@ function clientStats(users, visits, tickets){
   };
 }
 function planPill(plan){
-  plan = String(plan || 'starter').toLowerCase();
-  var cls = plan === 'premium' ? 'warn' : (plan === 'growth' ? 'ok' : '');
-  return '<span class="pill '+cls+'">'+esc(plan || 'starter')+'</span>';
+  var aliases = { starter: 'studio', growth: 'business', premium: 'business' };
+  plan = String(plan || 'solo').toLowerCase();
+  plan = aliases[plan] || plan;
+  var cls = plan === 'business' ? 'warn' : (plan === 'studio' ? 'ok' : '');
+  return '<span class="pill '+cls+'">'+esc(plan || 'solo')+'</span>';
 }
 function statusPill(status){
   status = String(status || 'open').toLowerCase();
@@ -368,7 +370,9 @@ $('admin-login').addEventListener('click', async function(){
   }
 });
 $('refresh-btn').addEventListener('click', loadAdminData);
-$('signout-btn').addEventListener('click', function(){ auth.signOut(); });
+$('signout-btn').addEventListener('click', function(){
+  auth.signOut().then(function(){ showLogin(); });
+});
 document.addEventListener('click', function(ev){
   var btn = ev.target.closest('[data-ticket]');
   if (!btn) return;
@@ -384,8 +388,7 @@ setInterval(function(){
 auth.onAuthStateChanged(function(user){
   if (!user) { showLogin(); return; }
   if (!isAdminEmail(user.email)) {
-    auth.signOut();
-    showLogin('This account is not allowed to access the admin panel.');
+    showLogin('This account is not allowed to access the admin panel. Your normal account remains signed in.');
     return;
   }
   ensureAdminProfile(user, false).then(loadAdminData).catch(function(e){

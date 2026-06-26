@@ -1,6 +1,7 @@
 (function() {
-  var VALID_PLANS = { starter: true, growth: true, premium: true };
-  var PLAN_FILES = { starter: 'starter.html', growth: 'growth.html', premium: 'premium.html' };
+  var VALID_PLANS = { solo: true, studio: true, business: true };
+  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
+  var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
   var SUPPORT_ID = 'cls-support-widget';
   var FIREBASE_PROJECT_ID = 'ceylonry-labs';
   var FIREBASE_API_KEY = 'AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI';
@@ -19,14 +20,16 @@
 
   function normalizePlan(plan) {
     plan = String(plan || '').toLowerCase();
+    plan = PLAN_ALIASES[plan] || plan;
     return VALID_PLANS[plan] ? plan : '';
   }
 
   function planFromPath() {
     var path = (location.pathname || '').toLowerCase();
-    if (path.indexOf('growth') !== -1) return 'growth';
-    if (path.indexOf('premium') !== -1) return 'premium';
-    if (path.indexOf('starter') !== -1) return 'starter';
+    if (path.indexOf('solo') !== -1) return 'solo';
+    if (path.indexOf('growth') !== -1) return 'business';
+    if (path.indexOf('premium') !== -1) return 'business';
+    if (path.indexOf('starter') !== -1) return 'studio';
     return '';
   }
 
@@ -127,8 +130,8 @@
       || normalizePlan(profile.plan)
       || normalizePlan(safeGet('cls-last-plan'))
       || normalizePlan(safeGet('cls-current-plan'))
-      || 'starter';
-    return PLAN_FILES[plan] || PLAN_FILES.starter;
+      || 'solo';
+    return PLAN_FILES[plan] || PLAN_FILES.solo;
   };
 
   window.clsMountTrialCountdown = function clsMountTrialCountdown(opts) {
