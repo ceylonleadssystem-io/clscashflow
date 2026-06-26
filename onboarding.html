@@ -1219,7 +1219,7 @@ async function acceptOnboardingInvite(uid,email){
   var owner=ownerDoc.exists?ownerDoc.data():{};
   var planFiles = { solo:'solo.html', studio:'starter.html', business:'growth.html' };
   var planAliases = { starter:'studio', growth:'business', premium:'business' };
-  var rawOwnerPlan=String(owner.lastPlan||owner.currentPlan||owner.plan||state.tier||'solo').toLowerCase();
+  var rawOwnerPlan=String(owner.currentPlan||owner.plan||owner.lastPlan||state.tier||'solo').toLowerCase();
   var mappedOwnerPlan=planAliases[rawOwnerPlan]||rawOwnerPlan;
   var ownerPlan=planFiles[mappedOwnerPlan]?mappedOwnerPlan:'solo';
   await firebase.firestore().collection('users').doc(uid).set({

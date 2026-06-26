@@ -129,15 +129,67 @@
     return plan;
   };
 
-  window.clsRouteForProfile = function clsRouteForProfile(profile) {
+  function profilePlan(profile) {
     profile = profile || {};
-    var plan = normalizePlan(profile.lastPlan)
-      || normalizePlan(profile.currentPlan)
+    return normalizePlan(profile.currentPlan)
       || normalizePlan(profile.plan)
+      || normalizePlan(profile.lastPlan);
+  }
+
+  window.clsPlanForProfile = function clsPlanForProfile(profile) {
+    return profilePlan(profile)
       || normalizePlan(safeGet('cls-last-plan'))
       || normalizePlan(safeGet('cls-current-plan'))
       || 'solo';
+  };
+
+  window.clsPlanFileFor = function clsPlanFileFor(plan) {
+    plan = normalizePlan(plan) || 'solo';
     return PLAN_FILES[plan] || PLAN_FILES.solo;
+  };
+
+  window.clsRouteForProfile = function clsRouteForProfile(profile) {
+    return window.clsPlanFileFor(window.clsPlanForProfile(profile));
+  };
+
+  window.clsGuardPlanAccess = async function clsGuardPlanAccess(expectedPlan, profile, opts) {
+    opts = opts || {};
+    expectedPlan = normalizePlan(expectedPlan) || 'solo';
+    var accountPlan = profilePlan(profile);
+    if (accountPlan && accountPlan !== expectedPlan) {
+      var dest = window.clsPlanFileFor(accountPlan);
+      var current = (location.pathname || '').split('/').pop() || 'index.html';
+      if (current !== dest) window.location.replace(dest);
+      return false;
+    }
+
+    safeSet('cls-last-plan', expectedPlan);
+    safeSet('cls-current-plan', expectedPlan);
+
+    var user = getAuthUser();
+    var uid = opts.uid || (user && user.uid);
+    var db = getFirestore(opts.db);
+    if (!uid || !db) return true;
+
+    var update = {
+      lastSeenPath: location.pathname,
+      lastSeenUrl: location.href,
+      lastSeenUtc: nowIso()
+    };
+    if (!accountPlan) {
+      update.plan = expectedPlan;
+      update.currentPlan = expectedPlan;
+      update.lastPlan = expectedPlan;
+    }
+    try {
+      if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
+        update.lastSeenAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+      await db.collection('users').doc(uid).set(update, { merge: true });
+    } catch (e) {
+      console.warn('Plan access check update skipped:', e);
+    }
+    return true;
   };
 
   function money(n) {
@@ -146,9 +198,9 @@
 
   function bestPlan(profile, plan) {
     return normalizePlan(plan)
-      || normalizePlan(profile && profile.lastPlan)
       || normalizePlan(profile && profile.currentPlan)
       || normalizePlan(profile && profile.plan)
+      || normalizePlan(profile && profile.lastPlan)
       || normalizePlan(safeGet('cls-last-plan'))
       || normalizePlan(safeGet('cls-current-plan'))
       || planFromPath()
@@ -431,6 +483,7 @@
 
   function trackVisit() {
     if (location.protocol === 'file:') return;
+    if (/ceylonry-admin\.html/i.test(location.pathname || '')) return;
     var visitorId = persistentId('cls-visitor-id', 'visitor');
     var sessionId = safeGet('cls-session-id');
     var sessionStarted = safeGet('cls-session-started');

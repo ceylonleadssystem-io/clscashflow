@@ -1097,7 +1097,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     if (!profileDoc.exists) { window.location.href = 'signin.html'; return; }
     _profile = profileDoc.data();
     if (_profile.ownerUid) _uid = _profile.ownerUid;
-    if (window.clsRememberPlan) await window.clsRememberPlan('studio', _signedInUid, _db);
+    if (window.clsGuardPlanAccess && !(await window.clsGuardPlanAccess('studio', _profile, { uid: _signedInUid, db: _db }))) return;
 
     // Trial / paywall check
     const now = new Date();

@@ -237,12 +237,12 @@ async function redirectToDashboard(user) {
         return planFiles[mapped] ? mapped : '';
       };
       const data = doc.data();
-      let plan = normalizePlan(data.lastPlan || data.currentPlan || data.plan || '');
+      let plan = normalizePlan(data.currentPlan || data.plan || data.lastPlan || '');
 
       if (data.ownerUid) {
         const ownerDoc = await firebase.firestore().collection('users').doc(data.ownerUid).get();
         const owner = ownerDoc.exists ? ownerDoc.data() : {};
-        const ownerPlan = normalizePlan(owner.lastPlan || owner.currentPlan || owner.plan || plan || 'solo');
+        const ownerPlan = normalizePlan(owner.currentPlan || owner.plan || owner.lastPlan || plan || 'solo');
         if (planFiles[ownerPlan] && ownerPlan !== plan) {
           plan = ownerPlan;
           await firebase.firestore().collection('users').doc(user.uid).set({
@@ -304,7 +304,7 @@ async function acceptInvite(user) {
   const owner = ownerDoc.exists ? ownerDoc.data() : {};
   const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
   const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
-  const rawOwnerPlan = String(owner.lastPlan || owner.currentPlan || owner.plan || 'solo').toLowerCase();
+  const rawOwnerPlan = String(owner.currentPlan || owner.plan || owner.lastPlan || 'solo').toLowerCase();
   const mappedOwnerPlan = planAliases[rawOwnerPlan] || rawOwnerPlan;
   const ownerPlan = planFiles[mappedOwnerPlan] ? mappedOwnerPlan : 'solo';
   await firebase.firestore().collection('users').doc(user.uid).set({

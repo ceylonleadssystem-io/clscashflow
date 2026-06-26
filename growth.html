@@ -2700,7 +2700,7 @@ _fauth.onAuthStateChanged(async function(user) {
     if (!profDoc.exists) { window.location.href = 'signin.html'; return; }
     _profile = profDoc.data();
     if (_profile.ownerUid) _uid = _profile.ownerUid;
-    if (window.clsRememberPlan) await window.clsRememberPlan('business', _signedInUid, _fdb);
+    if (window.clsGuardPlanAccess && !(await window.clsGuardPlanAccess('business', _profile, { uid: _signedInUid, db: _fdb }))) return;
 
     var now = new Date();
     var trialEnd = new Date(_profile.trialEnd || now);

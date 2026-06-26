@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="assets/platform.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1120px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1120px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.kpis,.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -62,6 +62,11 @@
       <div class="card"><div class="label">Live now</div><div class="kpi-number" id="kpi-live">0</div><p class="muted">Visitors in last 10 minutes</p></div>
       <div class="card"><div class="label">Open tickets</div><div class="kpi-number" id="kpi-open">0</div><p class="muted"><span id="kpi-tickets">0</span> total requests</p></div>
     </div>
+
+    <section class="section">
+      <div class="section-head"><h2>Per-user breakdown</h2><span class="muted">Who is there, current status, and what needs to be done</span></div>
+      <div class="user-breakdown" id="user-breakdown"></div>
+    </section>
 
     <section class="section">
       <div class="section-head"><h2>Users</h2><span class="muted">Latest profile, plan, and last seen data</span></div>
@@ -196,6 +201,98 @@ function statusPill(status){
   var cls = status === 'closed' ? 'ok' : (status === 'in-progress' ? 'warn' : 'bad');
   return '<span class="pill '+cls+'">'+esc(status)+'</span>';
 }
+function normalizePlan(plan){
+  var aliases = { starter: 'studio', growth: 'business', premium: 'business' };
+  plan = String(plan || '').toLowerCase();
+  return aliases[plan] || plan;
+}
+function dateMs(v){
+  if (!v) return 0;
+  if (v.toDate) return v.toDate().getTime();
+  var d = new Date(v);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+function shortDate(v){
+  var ms = dateMs(v);
+  if (!ms) return 'Not set';
+  return new Date(ms).toISOString().slice(0, 10);
+}
+function daysUntil(v){
+  var ms = dateMs(v);
+  if (!ms) return null;
+  return Math.ceil((ms - Date.now()) / 86400000);
+}
+function userIdentity(row){
+  var u = row.data || {};
+  return {
+    id: row.id || '',
+    name: u.name || u.displayName || u.bizName || u.businessName || 'Unnamed user',
+    email: String(u.email || '').toLowerCase(),
+    role: u.role || u.accountType || 'owner',
+    plan: normalizePlan(u.currentPlan || u.plan || u.lastPlan),
+    owner: u.ownerUid || row.id || '',
+    paid: u.paid === true || String(u.subscriptionStatus || '').toLowerCase() === 'active',
+    trialEnd: u.trialEnd || '',
+    lastSeen: u.lastSeenUtc || u.lastSeenAt || '',
+    lastPath: u.lastSeenPath || '',
+    raw: u
+  };
+}
+function latestUserVisit(user, visits){
+  var best = null, bestMs = 0;
+  (visits || []).forEach(function(row){
+    var v = row.data || {};
+    var match = (user.email && String(v.email || '').toLowerCase() === user.email) || (user.id && v.uid === user.id) || (user.owner && v.uid === user.owner);
+    if (!match) return;
+    var ms = visitMs(v);
+    if (ms > bestMs) { best = row; bestMs = ms; }
+  });
+  return best;
+}
+function openTicketsForUser(user, tickets){
+  return (tickets || []).filter(function(row){
+    var t = row.data || {};
+    var open = String(t.status || 'open').toLowerCase() !== 'closed';
+    var match = user.email && String(t.email || '').toLowerCase() === user.email;
+    return open && match;
+  });
+}
+function userStatus(user, tasks){
+  var role = String(user.role || '').toLowerCase();
+  if (role === 'platform_admin' || user.plan === 'admin') return '<span class="pill">admin</span>';
+  if (role === 'removed') return '<span class="pill bad">removed</span>';
+  if (user.paid) return '<span class="pill ok">paid</span>';
+  var days = daysUntil(user.trialEnd);
+  if (days == null) return '<span class="pill warn">trial unknown</span>';
+  if (days < 0) return '<span class="pill bad">trial expired</span>';
+  if (days <= 3) return '<span class="pill warn">'+days+'d trial</span>';
+  return '<span class="pill ok">trial active</span>';
+}
+function userTasks(user, latestVisit, tickets){
+  var tasks = [];
+  var role = String(user.role || '').toLowerCase();
+  var days = daysUntil(user.trialEnd);
+  var lastSeenMs = dateMs(user.lastSeen) || (latestVisit ? visitMs(latestVisit.data || {}) : 0);
+  var lastSeenAge = lastSeenMs ? Math.floor((Date.now() - lastSeenMs) / 86400000) : null;
+
+  if (role === 'platform_admin' || user.plan === 'admin') {
+    tasks.push({ cls: 'ok', text: 'Internal admin account - no customer follow-up needed.' });
+  } else if (role === 'removed') {
+    tasks.push({ cls: 'bad', text: 'Removed access - confirm this user should stay removed.' });
+  } else {
+    if (!user.plan) tasks.push({ cls: 'bad', text: 'Assign the correct plan.' });
+    if (!user.paid && days != null && days < 0) tasks.push({ cls: 'bad', text: 'Trial expired - payment or pause decision needed.' });
+    else if (!user.paid && days != null && days <= 3) tasks.push({ cls: '', text: 'Trial ending soon - send upgrade/payment reminder.' });
+    else if (!user.paid && days == null) tasks.push({ cls: '', text: 'Trial end missing - check onboarding record.' });
+    if (!user.raw.name && !user.raw.displayName) tasks.push({ cls: '', text: 'Profile name missing - ask user to complete business profile.' });
+    if (user.raw.onboardingComplete === false || /onboarding/i.test(user.lastPath || '')) tasks.push({ cls: '', text: 'Onboarding may be incomplete - check setup progress.' });
+    if (lastSeenAge == null) tasks.push({ cls: '', text: 'No activity tracked yet - confirm account setup.' });
+    else if (lastSeenAge >= 14) tasks.push({ cls: '', text: 'No activity for ' + lastSeenAge + ' days - follow up.' });
+    if (tickets.length) tasks.push({ cls: 'bad', text: tickets.length + ' open support ticket' + (tickets.length === 1 ? '' : 's') + ' - respond.' });
+  }
+  if (!tasks.length) tasks.push({ cls: 'ok', text: 'No immediate action needed.' });
+  return tasks;
+}
 function showLogin(msg){
   $('login-view').classList.remove('hidden');
   $('admin-view').classList.add('hidden');
@@ -253,9 +350,45 @@ function renderUsers(users, stats){
   $('kpi-users').textContent = fmtInt(stats.usersTotal == null ? users.length : stats.usersTotal);
   $('users-body').innerHTML = users.map(function(row){
     var u = row.data || {};
-    var plan = u.lastPlan || u.currentPlan || u.plan || '';
+    var plan = u.currentPlan || u.plan || u.lastPlan || '';
     return '<tr><td>'+esc(u.name || u.displayName || '')+'</td><td>'+esc(u.email || '')+'</td><td>'+esc(u.role || 'owner')+'</td><td>'+planPill(plan)+'</td><td>'+esc(u.ownerUid || row.id)+'</td><td>'+esc(fmtDate(u.trialEnd))+'</td><td>'+esc(u.lastSeenUtc || fmtDate(u.lastSeenAt))+'</td><td>'+esc(u.lastSeenPath || '')+'</td></tr>';
   }).join('') || '<tr><td colspan="8" class="muted">No users found yet.</td></tr>';
+}
+
+function renderUserBreakdown(users, visits, tickets){
+  users = users || [];
+  visits = visits || [];
+  tickets = tickets || [];
+  var wrap = $('user-breakdown');
+  if (!wrap) return;
+  if (!users.length) {
+    wrap.innerHTML = '<div class="card muted">No users found yet.</div>';
+    return;
+  }
+  wrap.innerHTML = users.map(function(row){
+    var user = userIdentity(row);
+    var latestVisit = latestUserVisit(user, visits);
+    var userTickets = openTicketsForUser(user, tickets);
+    var lastVisitData = latestVisit ? (latestVisit.data || {}) : {};
+    var latestPath = user.lastPath || lastVisitData.path || '';
+    var latestSeen = user.lastSeen || lastVisitData.utcAt || lastVisitData.createdAt || '';
+    var tasks = userTasks(user, latestVisit, userTickets);
+    var taskHtml = tasks.map(function(task){
+      return '<li class="'+esc(task.cls || '')+'">'+esc(task.text)+'</li>';
+    }).join('');
+    return '<article class="user-card">' +
+      '<div class="user-card-head"><div><div class="user-name">'+esc(user.name)+'</div><div class="user-email">'+esc(user.email || 'No email saved')+'</div></div>'+userStatus(user, tasks)+'</div>' +
+      '<div class="user-meta">' +
+        '<div class="meta-box"><span>Plan</span><strong>'+planPill(user.plan)+'</strong></div>' +
+        '<div class="meta-box"><span>Role</span><strong>'+esc(user.role)+'</strong></div>' +
+        '<div class="meta-box"><span>Trial end</span><strong>'+esc(shortDate(user.trialEnd))+'</strong></div>' +
+        '<div class="meta-box"><span>Last seen</span><strong>'+esc(shortDate(latestSeen))+'</strong></div>' +
+        '<div class="meta-box"><span>Owner</span><strong>'+esc(user.owner)+'</strong></div>' +
+        '<div class="meta-box"><span>Last path</span><strong>'+esc(latestPath || 'Not tracked')+'</strong></div>' +
+      '</div>' +
+      '<div><div class="label" style="margin-bottom:8px">What needs to be done</div><ul class="task-list">'+taskHtml+'</ul></div>' +
+    '</article>';
+  }).join('');
 }
 
 function renderVisits(visits, stats){
@@ -284,48 +417,80 @@ function renderTickets(tickets, stats){
   }).join('') || '<tr><td colspan="8" class="muted">No support tickets yet.</td></tr>';
 }
 
-async function loadAdminData(){
-  showAdmin();
-  renderEmpty('users-body', 8, 'Loading users...');
-  renderEmpty('visits-body', 10, 'Loading visits...');
-  renderEmpty('tickets-body', 8, 'Loading tickets...');
-  var adminFunctionError = '';
+var adminLoading = false;
+var adminHasRendered = false;
+function setRefreshState(isLoading){
+  var btn = $('refresh-btn');
+  if (!btn) return;
+  btn.disabled = !!isLoading;
+  btn.textContent = isLoading ? 'Loading' : 'Refresh';
+}
+function renderAdminPayload(users, visits, tickets, stats){
+  renderUsers(users || [], stats || {});
+  renderUserBreakdown(users || [], visits || [], tickets || []);
+  renderVisits(visits || [], stats || {});
+  renderTickets(tickets || [], stats || {});
+  adminHasRendered = true;
+}
+async function loadAdminData(opts){
+  opts = opts || {};
+  if (adminLoading) return;
+  adminLoading = true;
+  setRefreshState(true);
   try {
-    var payload = await fetchAdminFunction();
-    renderUsers(payload.users || [], payload.stats || {});
-    renderVisits(payload.visits || [], payload.stats || {});
-    renderTickets(payload.tickets || [], payload.stats || {});
-    return;
-  } catch (serverErr) {
-    adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
-    console.warn('Admin function unavailable, falling back to Firestore rules:', serverErr);
-  }
+    showAdmin();
+    if (!adminHasRendered || opts.forceLoading) {
+      renderEmpty('users-body', 8, 'Loading users...');
+      renderEmpty('visits-body', 10, 'Loading visits...');
+      renderEmpty('tickets-body', 8, 'Loading tickets...');
+      $('user-breakdown').innerHTML = '<div class="card muted">Loading per-user breakdown...</div>';
+    }
+    var adminFunctionError = '';
+    try {
+      var payload = await fetchAdminFunction();
+      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.stats || {});
+      return;
+    } catch (serverErr) {
+      adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
+      console.warn('Admin function unavailable, falling back to Firestore rules:', serverErr);
+    }
 
-  try {
-    var usersSnap = await readCollection('users', { order:'createdAt', dir:'desc', limit:300 });
-    var users = [];
-    usersSnap.forEach(function(d){ users.push({ id:d.id, data:d.data() || {} }); });
-    renderUsers(users);
-  } catch (e) {
-    renderEmpty('users-body', 8, 'Could not load users. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
-  }
+    var users = [], visits = [], tickets = [];
+    var usersLoaded = true, visitsLoaded = true, ticketsLoaded = true;
+    try {
+      var usersSnap = await readCollection('users', { order:'createdAt', dir:'desc', limit:300 });
+      usersSnap.forEach(function(d){ users.push({ id:d.id, data:d.data() || {} }); });
+    } catch (e) {
+      usersLoaded = false;
+      renderEmpty('users-body', 8, 'Could not load users. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
+    }
 
-  try {
-    var visitsSnap = await readCollection('platformVisits', { order:'createdAt', dir:'desc', limit:160 });
-    var visits = [];
-    visitsSnap.forEach(function(d){ visits.push({ id:d.id, data:d.data() || {} }); });
-    renderVisits(visits);
-  } catch (e) {
-    renderEmpty('visits-body', 10, 'Could not load visits. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
-  }
+    try {
+      var visitsSnap = await readCollection('platformVisits', { order:'createdAt', dir:'desc', limit:160 });
+      visitsSnap.forEach(function(d){ visits.push({ id:d.id, data:d.data() || {} }); });
+    } catch (e) {
+      visitsLoaded = false;
+      renderEmpty('visits-body', 10, 'Could not load visits. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
+    }
 
-  try {
-    var ticketsSnap = await readCollection('supportTickets', { order:'createdAt', dir:'desc', limit:160 });
-    var tickets = [];
-    ticketsSnap.forEach(function(d){ tickets.push({ id:d.id, data:d.data() || {} }); });
-    renderTickets(tickets);
-  } catch (e) {
-    renderEmpty('tickets-body', 8, 'Could not load tickets. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
+    try {
+      var ticketsSnap = await readCollection('supportTickets', { order:'createdAt', dir:'desc', limit:160 });
+      ticketsSnap.forEach(function(d){ tickets.push({ id:d.id, data:d.data() || {} }); });
+    } catch (e) {
+      ticketsLoaded = false;
+      renderEmpty('tickets-body', 8, 'Could not load tickets. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
+    }
+
+    var stats = clientStats(users, visits, tickets);
+    if (usersLoaded) renderUsers(users, stats);
+    if (usersLoaded) renderUserBreakdown(users, visitsLoaded ? visits : [], ticketsLoaded ? tickets : []);
+    else $('user-breakdown').innerHTML = '<div class="card muted">Could not build the per-user breakdown because users could not be loaded.</div>';
+    if (visitsLoaded) renderVisits(visits, stats);
+    if (ticketsLoaded) renderTickets(tickets, stats);
+    adminHasRendered = true;
+  } finally {
+    adminLoading = false;
+    setRefreshState(false);
   }
 }
 
@@ -369,7 +534,9 @@ $('admin-login').addEventListener('click', async function(){
     $('login-error').textContent = e.message;
   }
 });
-$('refresh-btn').addEventListener('click', loadAdminData);
+$('refresh-btn').addEventListener('click', function(){
+  loadAdminData({ forceLoading: true }).catch(function(e){ console.warn('Refresh failed:', e); });
+});
 $('signout-btn').addEventListener('click', function(){
   auth.signOut().then(function(){ showLogin(); });
 });
@@ -378,12 +545,11 @@ document.addEventListener('click', function(ev){
   if (!btn) return;
   updateTicket(btn.getAttribute('data-ticket'), btn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
 });
-setInterval(function(){ $('utc-clock').textContent = 'UTC ' + new Date().toISOString().replace('T',' ').replace(/\.\d+Z$/,''); }, 1000);
-setInterval(function(){
-  if (!$('admin-view').classList.contains('hidden')) {
-    loadAdminData().catch(function(e){ console.warn('Auto refresh skipped:', e); });
-  }
-}, 30000);
+function updateUtcClock(){
+  $('utc-clock').textContent = 'UTC ' + new Date().toISOString().replace('T',' ').replace(/\.\d+Z$/,'');
+}
+updateUtcClock();
+setInterval(updateUtcClock, 1000);
 
 auth.onAuthStateChanged(function(user){
   if (!user) { showLogin(); return; }
@@ -391,7 +557,7 @@ auth.onAuthStateChanged(function(user){
     showLogin('This account is not allowed to access the admin panel. Your normal account remains signed in.');
     return;
   }
-  ensureAdminProfile(user, false).then(loadAdminData).catch(function(e){
+  ensureAdminProfile(user, false).then(function(){ return loadAdminData({ forceLoading: true }); }).catch(function(e){
     showLogin('Admin profile could not be prepared: ' + e.message);
   });
 });
