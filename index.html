@@ -3,165 +3,204 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cashflow System by Ceylonry Labs.io</title>
+<title>Cashflow System by CeylonryLabs.io</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="assets/platform.js"></script>
 <style>
 :root{
-  --cream:#F7F1E8;
-  --brown:#4A3B2A;
-  --gold:#B8923E;
-  --sage:#C7CBA8;
-  --muted:#6F6353;
-  --card:#FDFAF4;
-  --serif:"Fraunces",serif;
-  --sans:"Inter",sans-serif;
+  --sand:#F3EADF;
+  --sand-2:#EFE4D8;
+  --paper:#FFFCF7;
+  --ink:#2A1C13;
+  --ink-2:#3B2B20;
+  --muted:#857569;
+  --line:#DED3C8;
+  --gold:#D7A72F;
+  --sage:#BEC8A3;
+  --white:#fffaf4;
+  --shadow:0 24px 70px rgba(42,28,19,.10);
+  --serif:"Cormorant Garamond", Georgia, serif;
+  --sans:"DM Sans", Inter, Arial, sans-serif;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--cream);color:var(--brown);font-family:var(--sans);font-weight:400;line-height:1.6;overflow-x:hidden}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--sans);font-weight:400;line-height:1.6;overflow-x:hidden}
 img{max-width:100%;display:block}
 a{color:inherit}
-.page{overflow:hidden}
-.container{width:min(1180px,calc(100% - 48px));margin:0 auto}
-.label{margin:0 0 18px;color:var(--gold);font-size:11px;line-height:1;letter-spacing:2px;text-transform:uppercase;font-weight:500}
-.serif{font-family:var(--serif);font-weight:400;letter-spacing:-.8px;line-height:.98}
+.page{overflow:visible}
+.container{width:min(1250px,calc(100% - 48px));margin:0 auto}
+.narrow{width:min(980px,calc(100% - 48px));margin:0 auto}
+.serif{font-family:var(--serif);font-weight:400;letter-spacing:-.035em;line-height:.96}
+.eyebrow{margin:0 0 18px;color:var(--muted);font-size:12px;line-height:1;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
 .muted{color:var(--muted)}
-.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--gold);border-radius:999px;padding:13px 22px;background:var(--gold);color:var(--card);font-size:14px;font-weight:500;text-decoration:none;transition:transform .25s ease,background .25s ease,color .25s ease}
-.pill:hover{transform:translateY(-2px)}
-.pill.secondary{background:transparent;color:var(--brown)}
-.pill.secondary:hover{background:var(--card)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;border:1px solid var(--ink);border-radius:12px;padding:14px 22px;background:var(--ink);color:var(--white);font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 10px 22px rgba(42,28,19,.13);transition:transform .2s ease,background .2s ease,color .2s ease,border-color .2s ease}
+.btn:hover{transform:translateY(-2px)}
+.btn.light{background:var(--paper);color:var(--ink);border-color:var(--line);box-shadow:none}
+.btn.soft{background:#E9DCD2;color:var(--ink);border-color:#E9DCD2}
 
 /* Nav */
-.site-nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--cream) 90%,transparent);backdrop-filter:blur(18px);border-bottom:1px solid color-mix(in srgb,var(--brown) 12%,transparent)}
-.nav-inner{height:78px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:22px}
-.wordmark{display:inline-flex;align-items:center;gap:10px;text-decoration:none;white-space:nowrap}
-.wordmark img{width:38px;height:38px;border-radius:50%;object-fit:cover}
-.wordmark-text{display:flex;flex-direction:column;line-height:1}
-.wordmark-title{font-family:var(--serif);font-size:24px;line-height:1;font-weight:500;letter-spacing:-.8px}
-.wordmark-sub{margin-top:4px;color:var(--muted);font-size:9px;letter-spacing:1.2px;text-transform:uppercase}
-.nav-links{display:flex;align-items:center;justify-content:center;gap:22px;min-width:0}
-.nav-links a{font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s ease}
-.nav-links a:hover{color:var(--brown)}
-.nav-cta{justify-self:end;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap}
-.nav-cta .pill{padding:10px 16px;font-size:13px;white-space:nowrap;line-height:1}
+.site-nav{position:sticky;top:0;z-index:30;background:rgba(247,239,229,.88);backdrop-filter:blur(18px);border-bottom:1px solid rgba(42,28,19,.08)}
+.nav-inner{height:74px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
+.nav-brand{justify-self:start;display:none;font-family:var(--serif);font-size:24px;line-height:1;text-decoration:none;letter-spacing:-.03em}
+.nav-brand span{font-family:var(--sans);font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-left:6px}
+.nav-links{justify-self:center;display:flex;align-items:center;gap:30px;white-space:nowrap}
+.nav-links a{font-size:16px;color:#65584E;text-decoration:none;font-weight:500;transition:color .2s ease}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{justify-self:end;display:flex;align-items:center;gap:18px}
+.nav-signin{font-weight:700;text-decoration:none;color:var(--ink);font-size:14px}
+.nav-trial{padding:12px 18px;border-radius:10px;font-size:14px}
 
 /* Hero */
-.hero{padding:108px 0 88px;text-align:center}
-.hero-grid{display:block;max-width:980px;margin:0 auto;min-width:0}
-.hero-copy{padding-bottom:0}
-.hero h1{margin:0;font-size:clamp(64px,9vw,128px)}
+.hero{padding:98px 0 70px;text-align:center;background:linear-gradient(180deg,var(--sand) 0%,var(--sand-2) 100%)}
+.hero-copy{max-width:980px;margin:0 auto}
+.hero h1{margin:0;font-size:clamp(64px,9vw,132px)}
 .hero-word{display:inline-block;opacity:0;transform:translateY(24px)}
-.hero-sub{max-width:680px;margin:28px auto 0;color:var(--muted);font-size:20px;line-height:1.55}
+.hero-sub{max-width:700px;margin:28px auto 0;color:var(--muted);font-size:20px;line-height:1.65}
 .hero-actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:34px}
-.hero-note{margin-top:18px;color:var(--muted);font-size:14px}
-/* Story Teaser */
-.story-teaser{padding:18px 0 72px}
-.story-teaser-card{background:var(--card);border:1px solid color-mix(in srgb,var(--brown) 10%,transparent);border-radius:34px;padding:34px;display:grid;grid-template-columns:210px minmax(0,1fr) auto;gap:34px;align-items:center}
-.story-teaser-logo{background:var(--cream);border-radius:28px;padding:18px;border:1px solid color-mix(in srgb,var(--brown) 10%,transparent)}
-.story-teaser h2{font-size:clamp(34px,4vw,54px);margin:0 0 14px}
-.story-teaser p{margin:0;color:var(--muted);font-size:17px;line-height:1.68;max-width:690px}
+.hero-note{margin-top:17px;color:var(--muted);font-size:14px}
+.hero-proof{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:28px}
+.proof-chip{border:1px solid rgba(42,28,19,.1);background:rgba(255,252,247,.58);border-radius:999px;padding:9px 14px;color:#6F6258;font-size:13px}
+
+/* Story */
+.story-teaser{padding:38px 0 76px;background:var(--sand-2)}
+.story-teaser-card{background:var(--paper);border:1px solid rgba(42,28,19,.09);border-radius:22px;padding:28px;display:grid;grid-template-columns:210px minmax(0,1fr) auto;gap:34px;align-items:center;box-shadow:0 18px 55px rgba(42,28,19,.06)}
+.story-teaser-logo{background:var(--sand);border-radius:18px;padding:16px;border:1px solid rgba(42,28,19,.08)}
+.story-teaser h2{font-size:clamp(38px,4vw,58px);margin:0 0 12px}
+.story-teaser p{margin:0;color:var(--muted);font-size:17px;line-height:1.7;max-width:720px}
 
 /* Device */
-.product-showcase{padding:46px 0 82px}
-.device-stage{border-radius:38px;background:var(--sage);padding:44px;position:relative}
-.device{background:var(--card);border:1px solid color-mix(in srgb,var(--brown) 14%,transparent);border-radius:24px;box-shadow:0 34px 90px color-mix(in srgb,var(--brown) 16%,transparent);overflow:hidden;opacity:0;transform:translateY(28px)}
-.device-bar{height:44px;border-bottom:1px solid color-mix(in srgb,var(--brown) 12%,transparent);display:flex;align-items:center;gap:8px;padding:0 18px;background:var(--card)}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--sage)}
-.device-body{padding:30px}
-.dash-head{display:flex;justify-content:space-between;gap:24px;align-items:start;margin-bottom:28px}
-.dash-title{font-family:var(--serif);font-size:36px;letter-spacing:-.6px;line-height:1;margin:0}
+.product-showcase{padding:84px 0;background:var(--sand)}
+.section-head{text-align:center;max-width:820px;margin:0 auto 42px}
+.section-head h2{margin:0;font-size:clamp(48px,6vw,86px)}
+.section-head p{margin:18px auto 0;color:var(--muted);font-size:18px;line-height:1.7;max-width:680px}
+.device-stage{border-radius:28px;background:var(--sage);padding:34px;position:relative}
+.device{background:var(--paper);border:1px solid rgba(42,28,19,.12);border-radius:20px;box-shadow:0 34px 90px rgba(42,28,19,.16);overflow:hidden;opacity:0;transform:translateY(28px)}
+.device-bar{height:42px;border-bottom:1px solid rgba(42,28,19,.1);display:flex;align-items:center;gap:8px;padding:0 18px;background:var(--paper)}
+.dot{width:10px;height:10px;border-radius:50%;background:#D9CFC4}
+.device-body{padding:28px}
+.dash-head{display:flex;justify-content:space-between;gap:24px;align-items:start;margin-bottom:26px}
+.dash-title{font-family:var(--serif);font-size:38px;letter-spacing:-.04em;line-height:1;margin:0;font-weight:400}
 .dash-date{color:var(--muted);font-size:14px}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
-.kpi{background:var(--cream);border-radius:18px;padding:20px}
+.kpi{background:var(--sand);border-radius:16px;padding:20px}
 .kpi span{display:block;color:var(--muted);font-size:12px;margin-bottom:10px}
-.kpi strong{font-family:var(--serif);font-size:30px;letter-spacing:-.6px;font-weight:400}
+.kpi strong{font-family:var(--serif);font-size:32px;letter-spacing:-.04em;font-weight:500}
 .device-lower{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
-.chart-card,.owed-card{background:var(--cream);border-radius:20px;padding:22px}
+.chart-card,.owed-card{background:var(--sand);border-radius:18px;padding:22px}
 .chart-title,.owed-title{font-size:13px;color:var(--muted);margin-bottom:18px}
 .bars{height:180px;display:grid;grid-template-columns:repeat(6,1fr);gap:14px;align-items:end}
 .bar{border-radius:999px 999px 0 0;background:var(--gold)}
-.bar:nth-child(2),.bar:nth-child(5){background:var(--sage)}
-.owed-row{display:flex;justify-content:space-between;border-top:1px solid color-mix(in srgb,var(--brown) 12%,transparent);padding:14px 0;font-size:14px;color:var(--muted)}
-.owed-row strong{color:var(--brown);font-weight:500}
+.bar:nth-child(2),.bar:nth-child(5){background:#AEB98E}
+.owed-row{display:flex;justify-content:space-between;border-top:1px solid rgba(42,28,19,.11);padding:14px 0;font-size:14px;color:var(--muted)}
+.owed-row strong{color:var(--ink);font-weight:700}
 
 /* Trusted */
-.trusted{padding:10px 0 84px}
-.trusted-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:22px;color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.trusted{padding:0 0 86px;background:var(--sand)}
+.trusted-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:22px;color:var(--muted);font-size:12px;letter-spacing:.2em;text-transform:uppercase}
 
 /* Pricing */
-.pricing{padding:92px 0}
-.section-head{display:grid;grid-template-columns:minmax(0,.85fr) minmax(300px,.55fr);gap:60px;align-items:end;margin-bottom:42px}
-.section-head h2{margin:0;font-size:clamp(46px,6vw,78px)}
-.section-head p{margin:0;color:var(--muted);font-size:18px;line-height:1.6}
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.price-card{background:var(--card);border-radius:28px;border:1px solid color-mix(in srgb,var(--brown) 10%,transparent);padding:28px;transition:transform .25s ease;display:flex;flex-direction:column}
-.price-card:hover{transform:translateY(-4px)}
-.price-card.featured{background:var(--brown);color:var(--card)}
-.price-card h3{margin:0 0 18px;font-family:var(--serif);font-size:34px;letter-spacing:-.6px;font-weight:400}
-.price{font-family:var(--serif);font-size:46px;line-height:1;letter-spacing:-.8px;color:var(--gold);margin-bottom:10px}
-.price small{font-family:var(--sans);font-size:13px;letter-spacing:0;color:var(--muted)}
-.featured .price small{color:var(--cream)}
-.price-card p{margin:0;color:var(--muted)}
-.featured p{color:var(--cream)}
-.feature-kicker{margin-top:26px;color:var(--gold);font-size:11px;letter-spacing:1.7px;text-transform:uppercase;font-weight:500}
-.price-card ul{list-style:none;margin:12px 0 0;padding:0;color:var(--muted);font-size:14px;border-top:1px solid color-mix(in srgb,var(--brown) 12%,transparent)}
-.price-card li{padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--brown) 10%,transparent);line-height:1.35}
-.featured ul{color:var(--cream);border-top-color:color-mix(in srgb,var(--cream) 18%,transparent)}
-.featured li{border-bottom-color:color-mix(in srgb,var(--cream) 14%,transparent)}
-.price-actions{margin-top:auto;padding-top:28px;display:flex}
-.price-actions .pill{width:100%;padding:12px 18px;font-size:13px}
-.featured .pill.secondary{border-color:var(--gold);color:var(--card)}
-.featured .pill.secondary:hover{background:color-mix(in srgb,var(--cream) 10%,transparent)}
+.pricing{padding:78px 0 92px;background:var(--sand-2)}
+.pricing-head{text-align:center;margin-bottom:46px}
+.pricing-head h2{margin:0;font-size:clamp(52px,6vw,82px)}
+.pricing-head p{margin:18px auto 0;color:var(--muted);font-size:18px;line-height:1.6}
+.toggle-stack{display:grid;justify-items:center;gap:18px;margin-top:34px}
+.segmented{display:inline-flex;align-items:center;gap:4px;background:var(--paper);border:1px solid rgba(42,28,19,.08);border-radius:999px;padding:5px;box-shadow:0 10px 28px rgba(42,28,19,.06)}
+.segmented button{border:0;background:transparent;color:var(--muted);border-radius:999px;padding:10px 20px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:background .2s ease,color .2s ease}
+.segmented button.active{background:var(--ink);color:var(--white)}
+.save-badge{display:inline-block;margin-left:6px;background:#E8C35A;color:var(--ink);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:800;vertical-align:middle}
+.locale-note{display:none;color:var(--muted);font-size:13px;margin-top:2px}
+.locale-note.show{display:block}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.price-card{position:relative;background:var(--paper);border-radius:18px;border:1px solid rgba(42,28,19,.09);padding:34px 32px;box-shadow:0 18px 52px rgba(42,28,19,.08);display:flex;flex-direction:column;min-height:560px}
+.price-card.featured{background:var(--ink);color:var(--white);transform:translateY(-14px)}
+.popular-pill{position:absolute;left:50%;top:-16px;transform:translateX(-50%);background:var(--gold);color:var(--ink);border-radius:999px;padding:5px 18px;font-weight:800;font-size:14px;box-shadow:0 8px 18px rgba(42,28,19,.15)}
+.price-kicker{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;line-height:1.35;margin-bottom:28px}
+.featured .price-kicker{color:#B9ADA4}
+.price-icon{width:24px;height:24px;stroke:var(--ink);stroke-width:1.9;fill:none;flex:0 0 auto}
+.featured .price-icon{stroke:var(--gold)}
+.price-card h3{font-family:var(--serif);font-size:30px;line-height:1;margin:0 0 10px;font-weight:500;letter-spacing:-.02em}
+.price{display:flex;align-items:flex-end;gap:6px;margin:0 0 4px;font-weight:800;color:var(--ink)}
+.featured .price{color:var(--white)}
+.price-main{font-size:42px;letter-spacing:-.04em;line-height:1}
+.price-term{font-size:16px;color:var(--muted);font-weight:500;padding-bottom:5px}
+.featured .price-term{color:#B9ADA4}
+.billing-line{font-size:13px;color:var(--muted);min-height:22px}
+.featured .billing-line{color:#B9ADA4}
+.billing-line strong,.featured .billing-line strong{color:inherit}
+.plan-desc{margin:26px 0 18px;color:var(--muted);font-size:16px;line-height:1.65}
+.featured .plan-desc{color:#D8CCC2}
+.price-card ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:14px;color:#4C4038;font-size:16px}
+.featured ul{color:#E7DDD4}
+.price-card li{display:flex;align-items:flex-start;gap:12px;line-height:1.35}
+.check{color:var(--ink);font-weight:800}
+.featured .check{color:var(--gold)}
+.price-actions{margin-top:auto;padding-top:28px;text-align:center}
+.price-actions .btn{width:100%;border-radius:10px}
+.price-card .trial-small{margin-top:12px;color:var(--muted);font-size:12px;text-align:center}
+.featured .trial-small{color:#9E928A}
 
-/* Benefits */
-.benefits{padding:96px 0}
-.benefits h2{font-size:clamp(48px,7vw,88px);margin:0 0 48px}
-.benefit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
-.benefit{border-top:1px solid var(--gold);padding:24px 4px 10px;transition:transform .25s ease}
-.benefit:hover{transform:translateY(-4px)}
-.benefit svg{width:30px;height:30px;stroke:var(--gold);margin-bottom:28px;transition:stroke .25s ease,transform .25s ease}
-.benefit:hover svg{stroke:var(--brown);transform:translateX(3px)}
-.benefit h3{font-family:var(--serif);font-weight:400;font-size:28px;line-height:1.05;letter-spacing:-.5px;margin:0 0 12px}
-.benefit p{margin:0;color:var(--muted);font-size:15px;line-height:1.6}
+/* Features */
+.features{padding:94px 0;background:var(--sand)}
+.features h2{font-size:clamp(48px,7vw,88px);margin:0 0 48px;text-align:center}
+.feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.feature{border-top:1px solid rgba(42,28,19,.16);padding:24px 4px 10px;transition:transform .25s ease}
+.feature:hover{transform:translateY(-4px)}
+.feature svg{width:30px;height:30px;stroke:var(--gold);margin-bottom:28px;transition:stroke .25s ease,transform .25s ease}
+.feature:hover svg{stroke:var(--ink);transform:translateX(3px)}
+.feature h3{font-family:var(--serif);font-weight:500;font-size:30px;line-height:1.05;letter-spacing:-.03em;margin:0 0 12px}
+.feature p{margin:0;color:var(--muted);font-size:15px;line-height:1.65}
 
 /* Image band */
-.image-band{padding:72px 0 108px}
+.image-band{padding:72px 0 108px;background:var(--sand)}
 .image-head{display:grid;grid-template-columns:minmax(0,.82fr) minmax(300px,.55fr);gap:56px;align-items:end;margin-bottom:32px}
-.image-head h2{font-size:clamp(42px,5.6vw,78px);margin:0}
+.image-head h2{font-size:clamp(44px,5.6vw,78px);margin:0}
 .image-head p{margin:0;color:var(--muted);font-size:18px;line-height:1.65}
-.photo-wrap{border-radius:42px;overflow:hidden;background:var(--sage);padding:22px;display:grid;grid-template-columns:1.15fr .85fr .85fr;gap:18px;box-shadow:0 30px 80px color-mix(in srgb,var(--brown) 10%,transparent)}
-.photo-card{position:relative;min-height:390px;border-radius:28px;overflow:hidden;background:var(--card);border:1px solid color-mix(in srgb,var(--brown) 10%,transparent)}
+.photo-wrap{border-radius:26px;overflow:hidden;background:#C2CAA8;padding:18px;display:grid;grid-template-columns:1.15fr .85fr .85fr;gap:18px;box-shadow:0 30px 80px rgba(42,28,19,.10)}
+.photo-card{position:relative;min-height:390px;border-radius:18px;overflow:hidden;background:var(--paper);border:1px solid rgba(42,28,19,.08);margin:0}
 .photo-card img{width:100%;height:100%;object-fit:cover;transition:transform .8s ease}
 .photo-card:hover img{transform:scale(1.03)}
 .photo-card:first-child{min-height:500px}
-.photo-card:nth-child(2) img{object-position:center center}
-.photo-card:nth-child(3) img{object-position:center center}
-.photo-label{position:absolute;left:18px;right:18px;bottom:18px;background:color-mix(in srgb,var(--card) 94%,transparent);border:1px solid color-mix(in srgb,var(--brown) 10%,transparent);border-radius:22px;padding:14px 16px;color:var(--muted);font-size:13px;backdrop-filter:blur(10px)}
-.photo-label strong{display:block;color:var(--brown);font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.1;letter-spacing:-.3px;margin-bottom:4px}
+.photo-label{position:absolute;left:16px;right:16px;bottom:16px;background:rgba(255,252,247,.94);border:1px solid rgba(42,28,19,.08);border-radius:16px;padding:13px 15px;color:var(--muted);font-size:13px;backdrop-filter:blur(10px)}
+.photo-label strong{display:block;color:var(--ink);font-family:var(--serif);font-size:22px;font-weight:500;line-height:1.1;letter-spacing:-.02em;margin-bottom:4px}
 .photo-label span{display:block;line-height:1.45}
 
-/* Onboarding ticker */
-.closing{padding:32px 0 112px}
-.onboarding-box{background:var(--brown);color:var(--cream);border-radius:40px;padding:64px;display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.58fr);gap:42px;align-items:center}
-.onboarding-box .label{color:var(--gold)}
-.onboarding-box h2{font-size:clamp(44px,6.2vw,82px);margin:0}
-.onboarding-copy p{color:color-mix(in srgb,var(--cream) 82%,transparent);margin:18px 0 0;max-width:650px;font-size:18px}
-.onboarding-copy .pill{margin-top:32px;white-space:nowrap}
-.onboarding-panel{background:color-mix(in srgb,var(--cream) 10%,transparent);border:1px solid color-mix(in srgb,var(--cream) 16%,transparent);border-radius:30px;padding:28px}
-.onboarding-count{font-family:var(--serif);font-size:clamp(72px,8vw,112px);line-height:.9;letter-spacing:-1px;color:var(--gold)}
-.onboarding-count-label{display:block;margin-top:12px;color:color-mix(in srgb,var(--cream) 74%,transparent);font-size:12px;letter-spacing:1.8px;text-transform:uppercase}
-.live-line{display:flex;align-items:center;gap:10px;margin-top:28px;padding-top:22px;border-top:1px solid color-mix(in srgb,var(--cream) 16%,transparent);font-weight:500}
-.live-dot{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 color-mix(in srgb,var(--gold) 45%,transparent);animation:pulseDot 1.8s ease-out infinite}
-.next-line{margin-top:10px;color:color-mix(in srgb,var(--cream) 72%,transparent);font-size:14px}
-.city-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
-.city-chip{border:1px solid color-mix(in srgb,var(--cream) 18%,transparent);border-radius:999px;padding:7px 11px;color:color-mix(in srgb,var(--cream) 78%,transparent);font-size:12px}
-@keyframes pulseDot{70%{box-shadow:0 0 0 10px color-mix(in srgb,var(--gold) 0%,transparent)}100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gold) 0%,transparent)}}
+/* FAQ + CTA */
+.faq{padding:92px 0 124px;background:var(--sand)}
+.faq h2{text-align:center;font-size:clamp(48px,6vw,78px);margin:0 0 36px}
+.faq-list{display:grid;gap:16px}
+.faq-item{background:var(--paper);border:1px solid rgba(42,28,19,.1);border-radius:18px;overflow:hidden;box-shadow:0 14px 38px rgba(42,28,19,.05)}
+.faq-item summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:24px 28px;font-size:22px;font-weight:700;color:var(--ink)}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-plus{font-size:30px;line-height:1;transition:transform .2s ease}
+.faq-item[open] .faq-plus{transform:rotate(45deg)}
+.faq-item p{margin:0;padding:0 28px 24px;color:var(--muted);font-size:16px;line-height:1.7}
+.faq-cta{text-align:center;margin-top:58px}
+.faq-cta .btn{padding:18px 38px;border-radius:12px;font-size:18px}
+.faq-cta p{margin:16px 0 0;color:var(--muted)}
 
 /* Footer */
-.footer{padding:36px 0;color:var(--muted);font-size:14px}
-.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid color-mix(in srgb,var(--brown) 12%,transparent);padding-top:24px}
+.footer{background:var(--ink);color:#C9BDB5;padding:78px 0 28px}
+.footer-grid{display:grid;grid-template-columns:1.35fr .62fr .62fr .62fr .82fr;gap:54px;align-items:start}
+.footer-brand{font-family:var(--serif);font-size:34px;line-height:1;color:var(--white);letter-spacing:-.03em;margin-bottom:28px}
+.footer-brand span{font-family:var(--sans);font-size:14px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin-left:8px}
+.footer-intro{font-size:18px;line-height:1.6;margin:0 0 28px;max-width:450px}
+.footer-form{display:flex;gap:10px;max-width:520px}
+.footer-form input{min-width:0;flex:1;border:1px solid rgba(255,252,247,.18);background:rgba(255,252,247,.08);border-radius:10px;color:var(--white);padding:16px 18px;font:inherit;outline:none}
+.footer-form input::placeholder{color:#948880}
+.footer-form button{border:0;background:#E9DCD2;color:var(--ink);border-radius:10px;padding:0 24px;font:inherit;font-weight:800;cursor:pointer}
+.footer-trial{display:flex;align-items:center;gap:8px;margin-top:12px;color:#948880;font-size:14px}
+.footer-col h3{margin:0 0 24px;color:#948880;font-size:12px;letter-spacing:.24em;text-transform:uppercase}
+.footer-col a,.footer-col span{display:block;color:#D6CBC2;text-decoration:none;font-size:18px;margin-bottom:14px}
+.footer-col a:hover{color:var(--white)}
+.footer-email{display:flex!important;align-items:center;gap:10px;white-space:nowrap}
+.socials{display:flex;gap:12px;margin-top:24px}
+.socials a{width:44px;height:44px;border:1px solid rgba(255,252,247,.18);border-radius:50%;display:grid;place-items:center;color:#E9DCD2;text-decoration:none;font-size:13px;font-weight:800}
+.footer-bottom{border-top:1px solid rgba(255,252,247,.13);margin-top:62px;padding-top:24px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;color:#948880;font-size:14px}
+.footer-bottom-links{display:flex;gap:28px;flex-wrap:wrap}
+.footer-bottom a{color:#948880;text-decoration:none}
+.footer-bottom a:hover{color:var(--white)}
 
 /* Reveal + motion */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
@@ -170,41 +209,50 @@ a{color:inherit}
 @keyframes deviceRise{to{opacity:1;transform:translateY(0)}}
 @keyframes deviceFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 
-@media(max-width:980px){
-  .nav-inner{grid-template-columns:1fr auto}
-  .nav-links{display:none}
-  .hero-grid,.section-head,.onboarding-box,.story-teaser-card{grid-template-columns:1fr}
-  .story-teaser-card{align-items:start}
-  .story-teaser-logo{max-width:220px}
-  .hero{padding-top:70px}
-  .kpi-grid,.pricing-grid{grid-template-columns:1fr}
-  .benefit-grid{grid-template-columns:repeat(2,1fr)}
-  .image-head{grid-template-columns:1fr;gap:18px}
+@media(max-width:1100px){
+  .nav-inner{grid-template-columns:auto 1fr auto}
+  .nav-brand{display:block}
+  .nav-links{gap:18px}
+  .story-teaser-card{grid-template-columns:1fr}
+  .pricing-grid{grid-template-columns:1fr;max-width:640px;margin:0 auto}
+  .price-card.featured{transform:none}
+  .feature-grid{grid-template-columns:repeat(2,1fr)}
   .photo-wrap{grid-template-columns:1fr}
-  .photo-card,.photo-card:first-child{min-height:320px}
+  .photo-card,.photo-card:first-child{min-height:340px}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:42px}
 }
-@media(max-width:640px){
-  .container{width:min(1180px,calc(100% - 28px))}
+@media(max-width:760px){
+  .container,.narrow{width:min(1250px,calc(100% - 28px))}
   .site-nav{position:relative}
-  .nav-inner{height:auto;padding:18px 0;gap:14px;display:flex;justify-content:space-between;align-items:center}
-  .wordmark img{width:36px;height:36px}
-  .wordmark-title{font-size:22px}
-  .wordmark-sub{display:none}
-  .nav-cta{display:flex;justify-content:flex-start;width:auto}
-  .nav-cta .pill{padding:9px 13px;font-size:12px}
-  .nav-cta .pill.secondary{display:none}
-  .hero h1{font-size:clamp(52px,18vw,76px)}
-  .hero-copy{min-width:0}
-  .hero-sub{font-size:17px;max-width:320px;overflow-wrap:break-word}
-  .hero-note{max-width:320px}
-  .device-stage{padding:16px;border-radius:26px}
+  .nav-inner{height:auto;padding:18px 0;display:flex;justify-content:space-between}
+  .nav-links{display:none}
+  .nav-brand{display:block;font-size:23px}
+  .nav-brand span{display:none}
+  .nav-cta{gap:12px}
+  .nav-signin{font-size:13px}
+  .nav-trial{padding:10px 13px;font-size:13px}
+  .hero{padding:68px 0 52px}
+  .hero h1{font-size:clamp(56px,17vw,78px)}
+  .hero-sub{font-size:17px}
+  .story-teaser-card{padding:22px;gap:22px}
+  .story-teaser-logo{max-width:220px}
+  .device-stage{padding:14px;border-radius:20px}
   .device-body{padding:18px}
-  .dash-head,.device-lower{grid-template-columns:1fr;display:grid}
-  .dash-title{font-size:30px}
-  .benefit-grid{grid-template-columns:1fr}
-  .section-head h2,.benefits h2,.onboarding-box h2{letter-spacing:-.5px}
-  .onboarding-box{padding:42px 24px;border-radius:28px}
-  .onboarding-panel{padding:22px;border-radius:24px}
+  .dash-head,.device-lower{display:grid;grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr}
+  .pricing{padding-top:62px}
+  .pricing-head h2,.features h2,.faq h2{letter-spacing:-.03em}
+  .segmented button{padding:9px 13px;font-size:13px}
+  .price-card{min-height:auto;padding:30px 24px}
+  .feature-grid{grid-template-columns:1fr}
+  .image-head{grid-template-columns:1fr;gap:18px}
+  .faq-item summary{font-size:18px;padding:20px}
+  .faq-item p{padding:0 20px 20px}
+  .footer{padding-top:58px}
+  .footer-grid{grid-template-columns:1fr;gap:34px}
+  .footer-form{display:grid}
+  .footer-form button{padding:14px 18px}
+  .footer-bottom{display:grid}
 }
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -212,51 +260,45 @@ a{color:inherit}
   .reveal,.device,.hero-word{opacity:1!important;transform:none!important}
 }
 </style>
-<script src="assets/platform.js"></script>
 </head>
 <body>
 <div class="page">
   <nav class="site-nav">
     <div class="container nav-inner">
-      <a class="wordmark" href="#top" aria-label="Cashflow System by Ceylonry Labs.io">
-        <img src="assets/mrs-gamage-cashflow.png" alt="Cashflow System by Ceylonry Labs.io logo">
-        <span class="wordmark-text">
-          <span class="wordmark-title">Cashflow System</span>
-          <span class="wordmark-sub">By Ceylonry Labs.io</span>
-        </span>
-      </a>
+      <a class="nav-brand" href="#top" aria-label="Cashflow System home">Cashflow <span>System</span></a>
       <div class="nav-links" aria-label="Primary navigation">
-        <a href="#benefits">Benefits</a>
-        <a href="#pricing">Pricing</a>
         <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
         <a href="mrs-gamage-story.html">Story</a>
-        <a href="solo.html?demo=1">Demo</a>
-        <a href="#contact">Contact</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
       </div>
       <div class="nav-cta">
-        <a class="pill secondary" href="signin.html">Sign in</a>
-        <a class="pill secondary" href="onboarding.html">Sign up</a>
-        <a class="pill" href="onboarding.html">Start free trial ↗</a>
+        <a class="nav-signin" href="signin.html">Sign in</a>
+        <a class="btn nav-trial" href="onboarding.html">Start free trial</a>
       </div>
     </div>
   </nav>
 
   <main id="top">
     <section class="hero">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <p class="label">Cashflow and invoicing</p>
-          <h1 class="serif" aria-label="Get paid, effortlessly.">
-            <span class="hero-word">Get</span>
-            <span class="hero-word">paid,</span><br>
-            <span class="hero-word">effortlessly.</span>
-          </h1>
-          <p class="hero-sub">Create WhatsApp-ready invoices fast. Track who owes you. Plans start at LKR 3,500/month.</p>
-          <div class="hero-actions">
-            <a class="pill" href="onboarding.html">Start free trial ↗</a>
-            <a class="pill secondary" href="#pricing">View pricing</a>
-          </div>
-          <div class="hero-note">15-day free trial. No card needed.</div>
+      <div class="container hero-copy">
+        <p class="eyebrow">Cashflow and invoicing</p>
+        <h1 class="serif" aria-label="Get paid, effortlessly.">
+          <span class="hero-word">Get</span>
+          <span class="hero-word">paid,</span><br>
+          <span class="hero-word">effortlessly.</span>
+        </h1>
+        <p class="hero-sub">Invoicing and cash flow, built for small businesses. Send invoices by WhatsApp or email, track who owes you, and know where the month stands.</p>
+        <div class="hero-actions">
+          <a class="btn" href="onboarding.html">Start free - 15 days -></a>
+          <a class="btn light" href="#pricing">View pricing</a>
+        </div>
+        <div class="hero-note">No credit card required.</div>
+        <div class="hero-proof" aria-label="Product highlights">
+          <span class="proof-chip">Branded invoices</span>
+          <span class="proof-chip">WhatsApp sharing</span>
+          <span class="proof-chip">Cash flow dashboard</span>
         </div>
       </div>
     </section>
@@ -265,30 +307,35 @@ a{color:inherit}
       <div class="container">
         <div class="story-teaser-card">
           <div class="story-teaser-logo">
-            <img src="assets/mrs-gamage-cashflow.png" alt="Mrs. Gamage Cashflow System brand">
+            <img src="assets/mrs-gamage-cashflow.png" alt="Cashflow System brand mark">
           </div>
           <div>
-            <p class="label">The story behind the system</p>
+            <p class="eyebrow">The story behind the system</p>
             <h2 class="serif">Meet Mrs. Gamage.</h2>
             <p>Her butter cakes are loved, her WhatsApp orders keep coming, and her kitchen is always busy. Cashflow System was created for business owners like her who need invoices, payment tracking, customer records, and a clearer view of where the money goes.</p>
           </div>
-          <a class="pill secondary" href="mrs-gamage-story.html">Read her story ↗</a>
+          <a class="btn light" href="mrs-gamage-story.html">Read her story -></a>
         </div>
       </div>
     </section>
 
     <section class="product-showcase reveal" id="how-it-works">
       <div class="container">
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2 class="serif">Plan. Track. Grow.</h2>
+          <p>Create invoices, record payments, and watch outstanding balances without rebuilding your business inside spreadsheets.</p>
+        </div>
         <div class="device-stage">
           <div class="device" id="device">
             <div class="device-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
             <div class="device-body">
               <div class="dash-head">
                 <div>
-                  <p class="label">Dashboard</p>
+                  <p class="eyebrow">Dashboard</p>
                   <h2 class="dash-title">This month, clearly.</h2>
                 </div>
-                <div class="dash-date">Saturday, 13 June 2026</div>
+                <div class="dash-date">Friday, 26 June 2026</div>
               </div>
               <div class="kpi-grid">
                 <div class="kpi"><span>Total invoiced</span><strong>LKR 3.05M</strong></div>
@@ -297,7 +344,7 @@ a{color:inherit}
               </div>
               <div class="device-lower">
                 <div class="chart-card">
-                  <div class="chart-title">Paid vs outstanding</div>
+                  <div class="chart-title">Monthly cash flow</div>
                   <div class="bars" aria-label="Simple monthly bar chart">
                     <div class="bar" style="height:42%"></div>
                     <div class="bar" style="height:58%"></div>
@@ -308,9 +355,9 @@ a{color:inherit}
                   </div>
                 </div>
                 <div class="owed-card">
-                  <div class="owed-title">Who owes you</div>
+                  <div class="owed-title">Upcoming due invoices</div>
                   <div class="owed-row"><span>Kasun Perera</span><strong>LKR 320K</strong></div>
-                  <div class="owed-row"><span>Pasan Yasas</span><strong>LKR 320K</strong></div>
+                  <div class="owed-row"><span>Pasan Yasas</span><strong>LKR 180K</strong></div>
                   <div class="owed-row"><span>Due soon</span><strong>2 invoices</strong></div>
                   <div class="owed-row"><span>Reminder</span><strong>WhatsApp</strong></div>
                 </div>
@@ -333,93 +380,119 @@ a{color:inherit}
 
     <section class="pricing reveal" id="pricing">
       <div class="container">
-        <div class="section-head">
-          <div>
-            <p class="label">Pricing</p>
-            <h2 class="serif">Choose only what you need.</h2>
+        <div class="pricing-head">
+          <p class="eyebrow">Pricing</p>
+          <h2 class="serif">Choose only what you need.</h2>
+          <p>Start free for 15 days. Upgrade, downgrade, or cancel anytime.</p>
+          <div class="toggle-stack" aria-label="Pricing options">
+            <div class="segmented" role="group" aria-label="Currency">
+              <button type="button" class="active" data-currency="lkr" aria-pressed="true">Sri Lanka - LKR</button>
+              <button type="button" data-currency="usd" aria-pressed="false">International - USD</button>
+            </div>
+            <div class="segmented" role="group" aria-label="Billing cycle">
+              <button type="button" class="active" data-cycle="monthly" aria-pressed="true">Monthly</button>
+              <button type="button" data-cycle="annual" aria-pressed="false">Annual <span class="save-badge">Save 2 Months</span></button>
+            </div>
+            <div class="locale-note" id="price-locale-note">Detected you're outside Sri Lanka - prices shown in USD.</div>
           </div>
-          <p>Onboarding suggests a plan based on your first priority. Solo, Studio, and Business remain fully open for you to choose.</p>
         </div>
         <div class="pricing-grid">
-          <article class="price-card">
+          <article class="price-card" data-plan-card="solo">
+            <div class="price-kicker">
+              <svg class="price-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M5 12H3M21 12h-2"/><path d="M7.8 7.8 5.9 5.9M18.1 18.1l-1.9-1.9M16.2 7.8l1.9-1.9M5.9 18.1l1.9-1.9"/><circle cx="12" cy="12" r="3.5"/></svg>
+              <span>Best for freelancers & sole traders</span>
+            </div>
             <h3>Solo</h3>
-            <div class="price">LKR 3,500 <small>/ mo</small></div>
-            <p>Professional invoicing for one owner who needs a clean dashboard, customers, payments, and basic reports.</p>
-            <div class="feature-kicker">Included</div>
+            <div class="price"><span class="price-main" data-price="solo">Rs. 3,500</span><span class="price-term">/ mo</span></div>
+            <div class="billing-line" data-billing="solo">Billed monthly - cancel anytime</div>
+            <p class="plan-desc">For solo owners getting their invoicing on track.</p>
             <ul>
-              <li>1 user</li>
-              <li>Up to 30 customers</li>
-              <li>Professional branded invoices</li>
-              <li>Customer management</li>
-              <li>PDF, email and WhatsApp sharing</li>
-              <li>Basic reports</li>
+              <li><span class="check">✓</span><span>1 user</span></li>
+              <li><span class="check">✓</span><span>Up to 30 customers</span></li>
+              <li><span class="check">✓</span><span>Unlimited invoices</span></li>
+              <li><span class="check">✓</span><span>PDF invoices</span></li>
+              <li><span class="check">✓</span><span>WhatsApp & Email sharing</span></li>
+              <li><span class="check">✓</span><span>Basic reports</span></li>
             </ul>
-            <div class="price-actions"><a class="pill secondary" href="onboarding.html?plan=solo">Start free trial ↗</a></div>
+            <div class="price-actions">
+              <a class="btn" href="onboarding.html?plan=solo">Start free trial -></a>
+              <div class="trial-small">15 days free - No card required</div>
+            </div>
           </article>
-          <article class="price-card featured">
+          <article class="price-card featured" data-plan-card="studio">
+            <div class="popular-pill">Most popular</div>
+            <div class="price-kicker">
+              <svg class="price-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-8 12h6l-1 8 9-13h-6l1-7Z"/></svg>
+              <span>Best for small studios & agencies</span>
+            </div>
             <h3>Studio</h3>
-            <div class="price">LKR 5,500 <small>/ mo</small></div>
-            <p>Cashflow and invoice control for small teams that need quotes, reminders, expenses, and stronger branding.</p>
-            <div class="feature-kicker">Everything in Solo, plus</div>
+            <div class="price"><span class="price-main" data-price="studio">Rs. 5,500</span><span class="price-term">/ mo</span></div>
+            <div class="billing-line" data-billing="studio">Billed monthly - cancel anytime</div>
+            <p class="plan-desc">For growing teams that need quotes, recurring & multi-currency.</p>
             <ul>
-              <li>Up to 5 users</li>
-              <li>Up to 100 customers</li>
-              <li>Quotes and recurring invoices</li>
-              <li>Automatic reminders</li>
-              <li>Multi-currency</li>
-              <li>Expense tracking</li>
-              <li>Cash flow dashboard</li>
-              <li>Partial payments</li>
-              <li>Branding customization</li>
+              <li><span class="check">✓</span><span>Up to 5 users</span></li>
+              <li><span class="check">✓</span><span>Up to 100 customers</span></li>
+              <li><span class="check">✓</span><span>Quotes & convert to invoice</span></li>
+              <li><span class="check">✓</span><span>Recurring invoices</span></li>
+              <li><span class="check">✓</span><span>Partial payments</span></li>
+              <li><span class="check">✓</span><span>Multi-currency</span></li>
+              <li><span class="check">✓</span><span>Automatic payment reminders</span></li>
             </ul>
-            <div class="price-actions"><a class="pill" href="onboarding.html?plan=studio">Start free trial ↗</a></div>
+            <div class="price-actions">
+              <a class="btn soft" href="onboarding.html?plan=studio">Start free trial -></a>
+              <div class="trial-small">15 days free - No card required</div>
+            </div>
           </article>
-          <article class="price-card">
+          <article class="price-card" data-plan-card="business">
+            <div class="price-kicker">
+              <svg class="price-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 16V9M12 16V6M16 16v-5"/></svg>
+              <span>Best for established SMEs</span>
+            </div>
             <h3>Business</h3>
-            <div class="price">LKR 8,500 <small>/ mo</small></div>
-            <p>Advanced cashflow control for growing teams that need AI insights, forecasting, permissions, and priority support.</p>
-            <div class="feature-kicker">Everything in Studio, plus</div>
+            <div class="price"><span class="price-main" data-price="business">Rs. 8,500</span><span class="price-term">/ mo</span></div>
+            <div class="billing-line" data-billing="business">Billed monthly - cancel anytime</div>
+            <p class="plan-desc">For larger operations needing unlimited users & insights.</p>
             <ul>
-              <li>Unlimited users</li>
-              <li>Unlimited customers</li>
-              <li>AI insights</li>
-              <li>Cash flow forecasting</li>
-              <li>Advanced reports</li>
-              <li>Role permissions</li>
-              <li>Monthly business reports</li>
-              <li>API integrations</li>
-              <li>Two-factor authentication</li>
+              <li><span class="check">✓</span><span>Unlimited users</span></li>
+              <li><span class="check">✓</span><span>Unlimited customers</span></li>
+              <li><span class="check">✓</span><span>Advanced reports & insights</span></li>
+              <li><span class="check">✓</span><span>Monthly executive reports</span></li>
+              <li><span class="check">✓</span><span>Priority support</span></li>
+              <li><span class="check">✓</span><span>Future API integrations</span></li>
             </ul>
-            <div class="price-actions"><a class="pill secondary" href="onboarding.html?plan=business">Start free trial ↗</a></div>
+            <div class="price-actions">
+              <a class="btn" href="onboarding.html?plan=business">Start free trial -></a>
+              <div class="trial-small">15 days free - No card required</div>
+            </div>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="benefits reveal" id="benefits">
+    <section class="features reveal" id="features">
       <div class="container">
-        <p class="label">Benefits</p>
-        <h2 class="serif">We've cracked the code.</h2>
-        <div class="benefit-grid">
-          <article class="benefit">
+        <p class="eyebrow" style="text-align:center">Features</p>
+        <h2 class="serif">Everything small teams expect.</h2>
+        <div class="feature-grid">
+          <article class="feature">
             <svg viewBox="0 0 32 32" fill="none" stroke-width="1.7"><path d="M5 8h22v16H5z"/><path d="M9 12h14M9 16h8M9 20h11"/></svg>
-            <h3>WhatsApp send</h3>
-            <p>Generate the invoice, download the PDF, and share a clean payment message.</p>
+            <h3>Branded invoices</h3>
+            <p>Create professional invoices with logo, notes, terms, due dates, PDF, print, email, and WhatsApp sharing.</p>
           </article>
-          <article class="benefit">
+          <article class="feature">
             <svg viewBox="0 0 32 32" fill="none" stroke-width="1.7"><circle cx="16" cy="16" r="10"/><path d="M16 10v7l5 3"/></svg>
-            <h3>60 seconds</h3>
-            <p>Create a branded invoice without wrestling with spreadsheets or templates.</p>
+            <h3>Reminders</h3>
+            <p>See due today, upcoming, and overdue invoices so payment follow-up becomes part of the daily rhythm.</p>
           </article>
-          <article class="benefit">
+          <article class="feature">
             <svg viewBox="0 0 32 32" fill="none" stroke-width="1.7"><path d="M7 24c2-5 5-8 9-8s7 3 9 8"/><circle cx="16" cy="10" r="4"/></svg>
-            <h3>Who owes you</h3>
-            <p>See unpaid and overdue invoices by customer, date, and total amount.</p>
+            <h3>Customers</h3>
+            <p>Keep customer history, contact people, notes, balances, and sales totals in one searchable database.</p>
           </article>
-          <article class="benefit">
+          <article class="feature">
             <svg viewBox="0 0 32 32" fill="none" stroke-width="1.7"><path d="M6 26V6"/><path d="M6 26h20"/><path d="M11 21v-7M16 21V10M21 21v-4"/></svg>
-            <h3>Real month view</h3>
-            <p>Know what was invoiced, what was paid, and what still needs follow-up.</p>
+            <h3>Cash flow</h3>
+            <p>Track cash in, cash out, outstanding balances, monthly revenue, expenses, and forecasted payments.</p>
           </article>
         </div>
       </div>
@@ -429,7 +502,7 @@ a{color:inherit}
       <div class="container">
         <div class="image-head">
           <div>
-            <p class="label">Real business rhythm</p>
+            <p class="eyebrow">Real business rhythm</p>
             <h2 class="serif">Built for the work behind the orders.</h2>
           </div>
           <p>Cashflow System is made for the quiet middle of business: packing orders, sending invoices, following up payments, and knowing whether the month is actually profitable.</p>
@@ -451,38 +524,90 @@ a{color:inherit}
       </div>
     </section>
 
-    <section class="closing reveal" id="contact">
-      <div class="container">
-        <div class="onboarding-box">
-          <div class="onboarding-copy">
-            <p class="label">Live onboarding</p>
-            <h2 class="serif">Businesses are starting across Sri Lanka.</h2>
-            <p><strong id="onboarding-count-inline">34</strong> business owners have started setting up Cashflow System. A new setup is added every 30 seconds.</p>
-            <a class="pill" href="onboarding.html">Start free trial ↗</a>
-          </div>
-          <aside class="onboarding-panel" aria-label="Live onboarding counter">
-            <div class="onboarding-count" id="onboarding-count">34</div>
-            <span class="onboarding-count-label">Started onboarding</span>
-            <div class="live-line"><span class="live-dot"></span><span>Someone in <strong id="onboarding-location">Colombo</strong>, Sri Lanka joined setup</span></div>
-            <div class="next-line">Next setup in <strong id="onboarding-next">00:30</strong></div>
-            <div class="city-strip" aria-label="Sri Lanka onboarding locations">
-              <span class="city-chip">Colombo</span>
-              <span class="city-chip">Kandy</span>
-              <span class="city-chip">Galle</span>
-              <span class="city-chip">Jaffna</span>
-              <span class="city-chip">Matara</span>
-              <span class="city-chip">Negombo</span>
-            </div>
-          </aside>
+    <section class="faq reveal" id="faq">
+      <div class="narrow">
+        <p class="eyebrow" style="text-align:center">FAQ</p>
+        <h2 class="serif">Questions before you start?</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Can I start without a card?<span class="faq-plus">+</span></summary>
+            <p>Yes. Every plan starts with a 15-day free trial and no credit card required. When the trial ends, you can activate the plan through Payable.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I send invoices through WhatsApp?<span class="faq-plus">+</span></summary>
+            <p>Yes. You can download the invoice PDF and share a clean WhatsApp message with the customer from the dashboard.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Do you support customers outside Sri Lanka?<span class="faq-plus">+</span></summary>
+            <p>The system supports multi-currency workflows. Sri Lanka pricing is live first, and international pricing can be enabled as payment support expands.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What if I outgrow my plan?<span class="faq-plus">+</span></summary>
+            <p>You can move from Solo to Studio or Business when your customer count, team size, or reporting needs grow. Your saved data stays with the account.</p>
+          </details>
+        </div>
+        <div class="faq-cta">
+          <a class="btn" href="onboarding.html">Start free - 15 days -></a>
+          <p>No credit card required.</p>
         </div>
       </div>
     </section>
+
   </main>
 
-  <footer class="footer">
-    <div class="container footer-row">
-      <span>Cashflow System by Ceylonry Labs.io</span>
-      <span>hello@ceylonrylabs.io</span>
+  <footer class="footer" id="contact">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">Cashflow <span>System</span></div>
+          <p class="footer-intro">Invoicing and cash flow, built for small businesses. By CeylonryLabs.io - Plan. Track. Grow.</p>
+          <form class="footer-form" action="onboarding.html">
+            <input type="email" name="email" placeholder="you@yourbusiness.com" aria-label="Business email">
+            <button type="submit">Start free</button>
+          </form>
+          <div class="footer-trial">15-day trial, no card required</div>
+        </div>
+        <div class="footer-col">
+          <h3>Product</h3>
+          <a href="#how-it-works">How it works</a>
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="footer-col">
+          <h3>Company</h3>
+          <a href="mrs-gamage-story.html">Our story</a>
+          <a href="#features">Mission</a>
+          <a href="mrs-gamage-story.html">Share your story</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h3>Resources</h3>
+          <a href="signin.html">Sign in</a>
+          <a href="onboarding.html">Start free trial</a>
+          <a href="#faq">Support</a>
+        </div>
+        <div class="footer-col">
+          <h3>Get in touch</h3>
+          <a class="footer-email" href="mailto:hello@ceylonrylabs.io">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+            hello@ceylonrylabs.io
+          </a>
+          <div class="socials" aria-label="Social links">
+            <a href="#" aria-label="Instagram">IG</a>
+            <a href="#" aria-label="Facebook">f</a>
+            <a href="#" aria-label="LinkedIn">in</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 CeylonryLabs.io. Built with care in Sri Lanka.</span>
+        <div class="footer-bottom-links">
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="mailto:hello@ceylonrylabs.io">hello@ceylonrylabs.io</a>
+        </div>
+      </div>
     </div>
   </footer>
 </div>
@@ -506,69 +631,69 @@ a{color:inherit}
     });
   }
 
-  const tickerEls = {
-    count: document.getElementById('onboarding-count'),
-    inline: document.getElementById('onboarding-count-inline'),
-    location: document.getElementById('onboarding-location'),
-    next: document.getElementById('onboarding-next')
-  };
-  const cities = [
-    'Colombo','Kandy','Galle','Jaffna','Matara','Negombo','Kurunegala','Anuradhapura',
-    'Batticaloa','Trincomalee','Ratnapura','Nuwara Eliya','Badulla','Kalutara','Gampaha'
-  ];
-  const tickerKey = 'cls-onboarding-ticker-v1';
-  const tickerMs = 30000;
-
-  function loadTickerState() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(tickerKey) || 'null');
-      if (saved && Number.isFinite(saved.count) && Number.isFinite(saved.lastTick)) {
-        return {
-          count: Math.max(34, saved.count),
-          lastTick: saved.lastTick,
-          cityIndex: Number.isFinite(saved.cityIndex) ? saved.cityIndex : 0
-        };
+  const pricing = {
+    lkr: {
+      monthly: {
+        solo: ['Rs. 3,500', 'Billed monthly - cancel anytime'],
+        studio: ['Rs. 5,500', 'Billed monthly - cancel anytime'],
+        business: ['Rs. 8,500', 'Billed monthly - cancel anytime']
+      },
+      annual: {
+        solo: ['Rs. 3,000', 'Rs. 36,000 billed yearly - save Rs. 6,000'],
+        studio: ['Rs. 5,000', 'Rs. 60,000 billed yearly - save Rs. 6,000'],
+        business: ['Rs. 7,900', 'Rs. 94,800 billed yearly - save Rs. 7,200']
       }
-    } catch (err) {}
-    return { count: 34, lastTick: Date.now(), cityIndex: 0 };
-  }
-
-  let tickerState = loadTickerState();
-
-  function saveTickerState() {
-    try { localStorage.setItem(tickerKey, JSON.stringify(tickerState)); } catch (err) {}
-  }
-
-  function syncTickerState() {
-    const now = Date.now();
-    const elapsedTicks = Math.max(0, Math.floor((now - tickerState.lastTick) / tickerMs));
-    if (elapsedTicks > 0) {
-      tickerState.count += elapsedTicks;
-      tickerState.cityIndex += elapsedTicks;
-      tickerState.lastTick += elapsedTicks * tickerMs;
-      saveTickerState();
+    },
+    usd: {
+      monthly: {
+        solo: ['$ 12', 'Billed monthly - cancel anytime'],
+        studio: ['$ 19', 'Billed monthly - cancel anytime'],
+        business: ['$ 29', 'Billed monthly - cancel anytime']
+      },
+      annual: {
+        solo: ['$ 10', '$ 120 billed yearly - save $ 24'],
+        studio: ['$ 16', '$ 192 billed yearly - save $ 36'],
+        business: ['$ 24', '$ 288 billed yearly - save $ 60']
+      }
     }
+  };
+  const pricingState = { currency: 'lkr', cycle: 'monthly' };
+  const note = document.getElementById('price-locale-note');
+
+  function setActive(selector, key, value) {
+    document.querySelectorAll(selector).forEach(button => {
+      const isActive = button.getAttribute(key) === value;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
   }
 
-  function formatCountdown(ms) {
-    const seconds = Math.max(0, Math.ceil(ms / 1000));
-    return '00:' + String(seconds).padStart(2, '0');
+  function renderPricing() {
+    const group = pricing[pricingState.currency][pricingState.cycle];
+    Object.keys(group).forEach(plan => {
+      const price = document.querySelector('[data-price="' + plan + '"]');
+      const billing = document.querySelector('[data-billing="' + plan + '"]');
+      if (price) price.textContent = group[plan][0];
+      if (billing) billing.textContent = group[plan][1];
+    });
+    setActive('[data-currency]', 'data-currency', pricingState.currency);
+    setActive('[data-cycle]', 'data-cycle', pricingState.cycle);
+    if (note) note.classList.toggle('show', pricingState.currency === 'usd');
   }
 
-  function renderTicker() {
-    if (!tickerEls.count || !tickerEls.inline || !tickerEls.location || !tickerEls.next) return;
-    syncTickerState();
-    const now = Date.now();
-    const nextMs = tickerMs - ((now - tickerState.lastTick) % tickerMs);
-    const city = cities[tickerState.cityIndex % cities.length];
-    tickerEls.count.textContent = tickerState.count.toLocaleString();
-    tickerEls.inline.textContent = tickerState.count.toLocaleString();
-    tickerEls.location.textContent = city;
-    tickerEls.next.textContent = formatCountdown(nextMs);
-  }
-
-  renderTicker();
-  window.setInterval(renderTicker, 1000);
+  document.addEventListener('click', event => {
+    const currencyButton = event.target.closest('[data-currency]');
+    const cycleButton = event.target.closest('[data-cycle]');
+    if (currencyButton) {
+      pricingState.currency = currencyButton.getAttribute('data-currency') || 'lkr';
+      renderPricing();
+    }
+    if (cycleButton) {
+      pricingState.cycle = cycleButton.getAttribute('data-cycle') || 'monthly';
+      renderPricing();
+    }
+  });
+  renderPricing();
 
   const revealItems = Array.from(document.querySelectorAll('.reveal'));
   const device = document.getElementById('device');

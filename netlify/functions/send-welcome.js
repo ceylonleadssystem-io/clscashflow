@@ -20,7 +20,9 @@ exports.handler = async function handler(event) {
 
   const to      = (data.to || '').trim();
   const name    = (data.name || '').trim();
-  const plan    = (data.plan || 'starter').trim();
+  const rawPlan = (data.plan || 'solo').trim().toLowerCase();
+  const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
+  const plan    = planAliases[rawPlan] || rawPlan;
   const biz     = (data.biz || 'CLS CashFlow').trim();
   const trialEnd = (data.trialEnd || '').trim();
 
@@ -41,10 +43,10 @@ exports.handler = async function handler(event) {
     auth: { user, pass }
   });
 
-  const planLabels = { starter: 'Starter', growth: 'Growth', premium: 'Premium' };
-  const planPrices = { starter: '5,500', growth: '12,500', premium: '18,500' };
-  const planLabel  = planLabels[plan] || plan;
-  const planPrice  = planPrices[plan] || '5,500';
+  const planLabels = { solo: 'Solo', studio: 'Studio', business: 'Business' };
+  const planPrices = { solo: '3,500', studio: '5,500', business: '8,500' };
+  const planLabel  = planLabels[plan] || 'Solo';
+  const planPrice  = planPrices[plan] || '3,500';
   const loginUrl   = 'https://ceylonrylabscashflow.netlify.app/signin.html';
 
   const trialEndFmt = trialEnd

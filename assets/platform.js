@@ -2,6 +2,11 @@
   var VALID_PLANS = { solo: true, studio: true, business: true };
   var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
+  var PLAN_DETAILS = {
+    solo: { name: 'Solo', price: 3500, file: 'solo.html' },
+    studio: { name: 'Studio', price: 5500, file: 'starter.html' },
+    business: { name: 'Business', price: 8500, file: 'growth.html' }
+  };
   var SUPPORT_ID = 'cls-support-widget';
   var FIREBASE_PROJECT_ID = 'ceylonry-labs';
   var FIREBASE_API_KEY = 'AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI';
@@ -92,6 +97,7 @@
   }
 
   window.clsPlanFiles = PLAN_FILES;
+  window.clsPlanDetails = PLAN_DETAILS;
 
   window.clsRememberPlan = async function clsRememberPlan(plan, uid, db) {
     plan = normalizePlan(plan);
@@ -132,6 +138,142 @@
       || normalizePlan(safeGet('cls-current-plan'))
       || 'solo';
     return PLAN_FILES[plan] || PLAN_FILES.solo;
+  };
+
+  function money(n) {
+    return 'LKR ' + Number(n || 0).toLocaleString();
+  }
+
+  function bestPlan(profile, plan) {
+    return normalizePlan(plan)
+      || normalizePlan(profile && profile.lastPlan)
+      || normalizePlan(profile && profile.currentPlan)
+      || normalizePlan(profile && profile.plan)
+      || normalizePlan(safeGet('cls-last-plan'))
+      || normalizePlan(safeGet('cls-current-plan'))
+      || planFromPath()
+      || 'solo';
+  }
+
+  function profileName(profile, user) {
+    return (profile && (profile.name || profile.displayName || profile.username))
+      || (user && user.displayName)
+      || '';
+  }
+
+  function profileEmail(profile, user) {
+    return (profile && profile.email) || (user && user.email) || '';
+  }
+
+  window.clsOpenPlanWhatsApp = function clsOpenPlanWhatsApp(plan, profile) {
+    plan = bestPlan(profile, plan);
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var user = getAuthUser();
+    var msg = encodeURIComponent(
+      'Hi CeylonryLabs! I would like to activate my ' + details.name +
+      ' Plan (' + money(details.price) + '/month).' +
+      '\n\nName: ' + profileName(profile, user) +
+      '\nEmail: ' + profileEmail(profile, user)
+    );
+    window.open('https://wa.me/94778815628?text=' + msg, '_blank');
+  };
+
+  window.clsStartPayableCheckout = async function clsStartPayableCheckout(plan, opts) {
+    opts = opts || {};
+    var profile = opts.profile || window._profile || null;
+    plan = bestPlan(profile, plan || opts.plan);
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var user = getAuthUser();
+    if (!user || !user.getIdToken) {
+      alert('Please sign in again before starting payment.');
+      window.location.href = 'signin.html';
+      return;
+    }
+
+    var btn = opts.button || (document.activeElement && document.activeElement.tagName ? document.activeElement : null);
+    var oldText = btn && 'textContent' in btn ? btn.textContent : '';
+    if (btn && 'disabled' in btn) {
+      btn.disabled = true;
+      btn.textContent = 'Opening Payable...';
+    }
+
+    try {
+      var token = await user.getIdToken();
+      var res = await fetch('/.netlify/functions/payable-create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          plan: plan,
+          amount: details.price,
+          currency: 'LKR',
+          uid: user.uid,
+          email: profileEmail(profile, user),
+          name: profileName(profile, user),
+          returnUrl: location.origin + '/payable-return.html?plan=' + encodeURIComponent(plan),
+          cancelUrl: location.href
+        })
+      });
+      var out = await res.json().catch(function() { return {}; });
+      if (!res.ok || !out.ok) {
+        throw new Error(out.error || 'Could not start Payable checkout.');
+      }
+      if (!out.checkoutUrl) {
+        throw new Error('Payable did not return a checkout URL.');
+      }
+      window.location.href = out.checkoutUrl;
+    } catch (e) {
+      console.error('Payable checkout error:', e);
+      alert((e && e.message ? e.message : 'Could not start Payable checkout.') + '\n\nYou can still activate through WhatsApp while Payable is being configured.');
+      window.clsOpenPlanWhatsApp(plan, profile);
+      if (btn && 'disabled' in btn) {
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }
+    }
+  };
+
+  window.clsStartCurrentPlanPayment = function clsStartCurrentPlanPayment() {
+    return window.clsStartPayableCheckout();
+  };
+
+  window.clsRenderSubscriptionPaywall = function clsRenderSubscriptionPaywall(profile, opts) {
+    opts = opts || {};
+    if (document.getElementById('cls-paywall')) return;
+    profile = profile || {};
+    var plan = bestPlan(profile, opts.plan);
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var user = getAuthUser();
+    var trialEnd = profile.trialEnd ? new Date(profile.trialEnd) : null;
+    var trialText = trialEnd && !isNaN(trialEnd.getTime())
+      ? 'Your 15-day free trial ended on ' + trialEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
+      : 'Your 15-day free trial has ended.';
+
+    var ov = document.createElement('div');
+    ov.id = 'cls-paywall';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(26,23,20,.96);backdrop-filter:blur(12px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:2rem;font-family:DM Sans,Inter,Arial,sans-serif;';
+    ov.innerHTML =
+      '<div style="background:#fff;max-width:540px;width:100%;padding:3rem;text-align:center;color:#1a1714;">' +
+        '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2rem;font-weight:300;margin-bottom:.55rem">Payment required</div>' +
+        '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">' + trialText + '<br>Activate your <strong>CLS ' + details.name + '</strong> subscription to continue using your dashboard and data.</div>' +
+        '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.25);padding:1.45rem;margin-bottom:1.5rem">' +
+          '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.price) + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
+          '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · Monthly subscription</div>' +
+        '</div>' +
+        '<button id="cls-payable-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay with Payable</button>' +
+        '<button id="cls-wa-action" type="button" style="display:block;width:100%;background:#fff;color:#6B6258;border:1px solid rgba(184,146,42,.35);padding:.85rem;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;font-family:inherit">Activate via WhatsApp</button>' +
+        '<button onclick="window.clsSignOut&&window.clsSignOut()" type="button" style="margin-top:1rem;background:transparent;border:0;color:#A8A29A;font-size:.72rem;cursor:pointer;font-family:inherit">Sign out</button>' +
+        '<div style="font-size:.68rem;color:#A8A29A;margin-top:1rem">Your data stays saved while payment is completed.</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+    document.getElementById('cls-payable-action').addEventListener('click', function() {
+      window.clsStartPayableCheckout(plan, { profile: profile, button: this });
+    });
+    document.getElementById('cls-wa-action').addEventListener('click', function() {
+      window.clsOpenPlanWhatsApp(plan, profile || { email: user && user.email });
+    });
   };
 
   window.clsMountTrialCountdown = function clsMountTrialCountdown(opts) {

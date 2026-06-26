@@ -1,7 +1,7 @@
 {
   "name": "cls-cashflow",
   "version": "1.0.0",
-  "description": "CeylonryLabs.io CashFlow — Starter/Growth/Premium SaaS",
+  "description": "CeylonryLabs.io CashFlow — Solo/Studio/Business SaaS",
   "private": true,
   "dependencies": {
     "firebase-admin": "^12.7.0",

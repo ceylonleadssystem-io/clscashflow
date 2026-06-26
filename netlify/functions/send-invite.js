@@ -31,7 +31,9 @@ exports.handler = async function handler(event) {
   const bizName = String(data.bizName || 'CeylonryLabs CashFlow').trim();
   const ownerName = String(data.ownerName || '').trim();
   const role = String(data.role || 'team member').trim();
-  const plan = String(data.plan || 'starter').trim();
+  const rawPlan = String(data.plan || 'solo').trim().toLowerCase();
+  const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
+  const plan = planAliases[rawPlan] || rawPlan;
 
   if (!to || !inviteLink) {
     return {
@@ -60,7 +62,8 @@ exports.handler = async function handler(event) {
   });
 
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+  const planLabels = { solo: 'Solo', studio: 'Studio', business: 'Business' };
+  const planLabel = planLabels[plan] || 'Solo';
   const subject = 'You have been invited to ' + bizName + ' on CLS CashFlow';
 
   const text =

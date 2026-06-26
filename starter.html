@@ -695,7 +695,8 @@ document.addEventListener('click',function(e){
         <div style="padding:1rem">
           <strong>Studio Plan</strong> — LKR 5,500/mo &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
           <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
-          <br><button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff">Upgrade to Business</button>
+          <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio with Payable</button>
+          <button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Business</button>
         </div>
       </div>
     </div>
@@ -2855,6 +2856,10 @@ if(DEMO_MODE) initDemoMode();
 
 // Paywall overlay
 window.showPaywall = function showPaywall(profile) {
+  if (window.clsRenderSubscriptionPaywall) {
+    window.clsRenderSubscriptionPaywall(profile, { plan: 'studio' });
+    return;
+  }
   const plan = (profile && profile.plan) || 'studio';
   const prices = { solo: 3500, studio: 5500, business: 8500, starter: 5500, growth: 8500, premium: 8500 };
   const price = prices[plan] || 5500;

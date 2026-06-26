@@ -16,6 +16,8 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify/functions/send-invoice.js` - built-in SMTP invoice email fallback
 - `netlify/functions/send-invite.js` - team invite email function
 - `netlify/functions/send-welcome.js` - welcome email function
+- `netlify/functions/payable-create-checkout.js` - server-side Payable checkout creator
+- `netlify/functions/payable-webhook.js` - server-side Payable payment confirmation handler
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
 - `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
@@ -51,6 +53,23 @@ For Hostinger, the common values are:
 - `SMTP_USER`: your full mailbox, for example `noreply@ceylonrylabs.io`
 - `SMTP_PASS`: the mailbox password
 - `SMTP_FROM`: optional, usually same as `SMTP_USER`
+
+## Payable Subscription Payments
+
+Payable credentials must be added only in Netlify environment variables. Do not place the business key or token in GitHub, HTML, or browser JavaScript.
+
+Required for Payable checkout:
+
+- `PAYABLE_BUSINESS_KEY`
+- `PAYABLE_BUSINESS_TOKEN`
+- `PAYABLE_CHECKOUT_URL` - the checkout/session API endpoint Payable gives you
+- `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
+- `FIREBASE_SERVICE_ACCOUNT` - Firebase service account JSON, either raw JSON or base64 encoded
+- `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
+
+The 15-day trial is controlled by each user's `trialEnd` value in Firestore. After it ends, the dashboards require payment unless the user profile has `paid: true`. The Payable webhook sets `paid: true`, `subscriptionStatus: active`, and the selected plan after a verified paid callback.
+
+The Payable API field names may need one final adjustment once Payable sends the exact checkout documentation. The integration is centralized in `netlify/functions/payable-create-checkout.js`, so that mapping can be changed without touching the dashboards.
 
 ## Team Invites
 

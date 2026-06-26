@@ -777,7 +777,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="plan-item"><span class="plan-item-check">✓</span>More Invoice Templates</div>
               <div class="plan-item"><span class="plan-item-check">✓</span>Manual Payment Reminders</div>
             </div>
-            <button onclick="window.startBusinessTour()" style="margin-top:1.15rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Business Tour</button>
+            <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business with Payable</button>
+            <button onclick="window.startBusinessTour()" style="margin-top:.5rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Business Tour</button>
             <button onclick="window.goBackToStudio(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Studio</button>
             <button onclick="window.showToast('Priority support is included with Business.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Priority Support</button>
           </div>
@@ -2662,6 +2663,10 @@ window.openBusinessBilling = function openBusinessBilling() {
 }
 
 window.showPaywall = function showPaywall(profile) {
+  if (window.clsRenderSubscriptionPaywall) {
+    window.clsRenderSubscriptionPaywall(profile, { plan: 'business' });
+    return;
+  }
   var plan = (profile && profile.plan) || 'business';
   var prices = { solo: 3500, studio: 5500, business: 8500, starter: 5500, growth: 8500, premium: 8500 };
   var price = prices[plan] || 8500;
