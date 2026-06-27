@@ -1559,6 +1559,7 @@ function renderRecentTable(){
 }
 
 function escHTML(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function normKey(v){return String(v||'').trim().toLowerCase();}
 function getFilterRange(prefix){
   const fromEl=document.getElementById(prefix+'-from');
   const toEl=document.getElementById(prefix+'-to');
@@ -2402,6 +2403,45 @@ window.printInvoiceFromModal = function printInvoiceFromModal(){const d=getInvDa
 // ════════════════════════════════
 // CLIENTS
 // ════════════════════════════════
+function clientMatchesInvoice(c, inv){
+  if(!c||!inv)return false;
+  const names=[c.name,c.biz].map(normKey).filter(Boolean);
+  const invName=normKey(inv.client);
+  if(invName&&names.indexOf(invName)!==-1)return true;
+  if(c.email&&inv.cemail&&normKey(c.email)===normKey(inv.cemail))return true;
+  const cp=String(c.phone||'').replace(/\D/g,'');
+  const ip=String(inv.cphone||'').replace(/\D/g,'');
+  return !!(cp&&ip&&cp===ip);
+}
+function findClientForInvoice(inv){
+  const list=(DB.clients&&Array.isArray(DB.clients.list))?DB.clients.list:[];
+  return list.find(function(c){return clientMatchesInvoice(c,inv);})||null;
+}
+function invoiceContactPhone(inv){
+  const c=findClientForInvoice(inv);
+  let phone=String((inv&&inv.cphone)||(c&&c.phone)||'').replace(/\D/g,'');
+  if(phone&&!phone.startsWith('94'))phone='94'+phone.replace(/^0/,'');
+  return phone;
+}
+function invoiceContactEmail(inv){
+  const c=findClientForInvoice(inv);
+  return (inv&&inv.cemail)||(c&&c.email)||'';
+}
+function syncCustomerToOpenInvoices(before,data){
+  if(!data||!Array.isArray(DB.invoices))return 0;
+  const keys=[data.name,data.biz,data.email,data.phone,before&&before.name,before&&before.biz,before&&before.email,before&&before.phone].map(normKey).filter(Boolean);
+  let changed=0;
+  DB.invoices.forEach(function(inv){
+    const invKeys=[inv.client,inv.cemail,inv.cphone].map(normKey).filter(Boolean);
+    const matches=invKeys.some(function(k){return keys.indexOf(k)!==-1;});
+    if(!matches||invoiceBalance(inv)<=0)return;
+    if(data.email&&(!inv.cemail||!before||normKey(inv.cemail)===normKey(before.email||''))){inv.cemail=data.email;changed++;}
+    if(data.phone&&(!inv.cphone||!before||String(inv.cphone).replace(/\D/g,'')===String(before.phone||'').replace(/\D/g,''))){inv.cphone=data.phone;changed++;}
+    if(data.addr&&(!inv.caddr||!before||normKey(inv.caddr)===normKey(before.addr||''))){inv.caddr=data.addr;changed++;}
+    if(data.terms&&(!inv.terms||!before||normKey(inv.terms)===normKey(before.terms||''))){inv.terms=data.terms;changed++;}
+  });
+  return changed;
+}
 function renderClients(){
   if(!DB.clients) DB.clients={list:[],nextId:1};
   const list=DB.clients.list||[];
@@ -2485,9 +2525,12 @@ window.saveClient = function saveClient(){
     terms:document.getElementById('c-terms').value,
     notes:document.getElementById('c-notes').value.trim()
   };
-  if(editId){const i=DB.clients.list.findIndex(c=>c.id===editId);if(i>-1){const before=snapshotForLog(DB.clients.list[i]);DB.clients.list[i]=data;addEditBacklog('customer',editId,data.name,reason,before,snapshotForLog(data));}}
+  let before=null;
+  if(editId){const i=DB.clients.list.findIndex(c=>c.id===editId);if(i>-1){before=snapshotForLog(DB.clients.list[i]);DB.clients.list[i]=data;addEditBacklog('customer',editId,data.name,reason,before,snapshotForLog(data));}}
   else DB.clients.list.push(data);
-  saveDB();renderClients();populateClientSelect();renderBacklog();closeModal('client-modal');
+  const synced=syncCustomerToOpenInvoices(before,data);
+  saveDB();renderClients();populateClientSelect();renderBacklog();renderDashboard();renderInvoices();closeModal('client-modal');
+  if(synced) alert('Customer saved. Open unpaid invoices for this customer were updated with the latest contact details.');
 }
 
 window.deleteClient = function deleteClient(id){
@@ -2575,7 +2618,8 @@ function loadLogoSize(){
 // ════════════════════════════════
 window.emailInvoice = async function emailInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
-  if(!inv.cemail){alert('This customer has no email address. Open the invoice and add the customer email first.');return;}
+  const email=invoiceContactEmail(inv);
+  if(!email){alert('This customer has no email address. Open the customer or invoice and add the customer email first.');return;}
   const s=DB.settings;
   const cur=inv.cur||'LKR';
   const fmtM=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -2583,7 +2627,7 @@ window.emailInvoice = async function emailInvoice(num){
 
   // ── Path 1: custom browser email service, if configured behind the scenes ──
   if(s.ejsKey&&s.ejsService&&s.ejsTemplate&&window.emailjs){
-    if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
+    if(!confirm('Email invoice '+inv.num+' to '+email+'?'))return;
     const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const itemRows=(inv.lines&&inv.lines.length?inv.lines:[{desc:'Invoice total',qty:1,price:inv.amount,total:inv.amount}]).map(l=>
       '<tr>'
@@ -2601,7 +2645,7 @@ window.emailInvoice = async function emailInvoice(num){
     const terms=inv.terms||'Net 30';
     const taxAmount=inv.vat||0;
     const params={
-      to_email:inv.cemail, to_name:inv.client||'Customer',
+      to_email:email, to_name:inv.client||'Customer',
       from_name:businessName, reply_to:businessEmail,
       subject:'Invoice '+inv.num+' from '+businessName+' — '+cur+' '+fmtM(inv.amount),
       message_html: buildInvoiceEmailHTML(inv),
@@ -2625,7 +2669,7 @@ window.emailInvoice = async function emailInvoice(num){
     };
     try{
       await emailjs.send(s.ejsService, s.ejsTemplate, params, {publicKey:s.ejsKey});
-      alert('✓ Invoice '+inv.num+' emailed to '+inv.cemail+'.');
+      alert('✓ Invoice '+inv.num+' emailed to '+email+'.');
     }catch(e){
       console.error('Email service error:',e);
       const reason=(e&&(e.text||e.message))||'Please contact support if this keeps happening.';
@@ -2635,13 +2679,13 @@ window.emailInvoice = async function emailInvoice(num){
   }
 
   // ── Path 2: built-in Netlify SMTP function (fallback) ──
-  if(!confirm('Email invoice '+inv.num+' to '+inv.cemail+'?'))return;
+  if(!confirm('Email invoice '+inv.num+' to '+email+'?'))return;
   const accent=(tplDefs[getDefaultInvoiceTemplate()]||tplDefs[0]).accent;
   try{
     const res=await fetch('/.netlify/functions/send-invoice',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        to:inv.cemail, clientName:inv.client||'', bizName:s.bizName||'Your Business',
+        to:email, clientName:inv.client||'', bizName:s.bizName||'Your Business',
         bizEmail:s.email||'', bizAddr:s.addr||'', accent:accent,
         invNum:inv.num, date:fmtD(inv.date), due:fmtD(inv.due), terms:inv.terms||'Net 30',
         cur:cur, amount:inv.amount, sub:sub,
@@ -2651,7 +2695,7 @@ window.emailInvoice = async function emailInvoice(num){
       })
     });
     const out=await res.json().catch(()=>({}));
-    if(res.ok&&out.ok){alert('✓ Invoice '+inv.num+' emailed to '+inv.cemail+'.');}
+    if(res.ok&&out.ok){alert('✓ Invoice '+inv.num+' emailed to '+email+'.');}
     else{alert('Could not send the email. Please try again or contact support.\n\n'+(out.error||''));}
   }catch(e){console.error('emailInvoice error:',e);alert('Could not reach the email service. Please try again or contact support.');}
 }
@@ -2669,14 +2713,14 @@ window.waInvoice = function waInvoice(num){
     (inv.notes||s.footer||'Thank you for your business! 🙏')+'\n\n'+
     '_'+(s.bizName||'Your Business')+' · Powered by CeylonryLabs.io_'
   );
-  const phone=inv.cphone?inv.cphone.replace(/[^0-9]/g,''):'';
+  const phone=invoiceContactPhone(inv);
   window.open(phone?'https://wa.me/'+phone+'?text='+msg:'https://wa.me/?text='+msg,'_blank');
 }
 
 window.waDueReminder = function waDueReminder(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
-  const phone=inv.cphone?inv.cphone.replace(/[^0-9]/g,''):'';
-  if(!phone){alert('This customer has no WhatsApp number. Open the invoice and add the customer phone first.');return;}
+  const phone=invoiceContactPhone(inv);
+  if(!phone){alert('This customer has no WhatsApp number. Open the customer or invoice and add the customer phone first.');return;}
   const s=DB.settings;
   const bal=invoiceBalance(inv);
   const todayMs=new Date().setHours(0,0,0,0);
@@ -2972,7 +3016,7 @@ window.exportReportPDF=function(){
 };
 
 function invoiceWaPhone(inv){
-  var phone=String(inv&&inv.cphone||'').replace(/[^0-9]/g,'');
+  var phone=invoiceContactPhone(inv);
   if(phone&&!phone.startsWith('94'))phone='94'+phone.replace(/^0/,'');
   return phone;
 }
