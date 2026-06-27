@@ -231,23 +231,19 @@ async function redirectToDashboard(user) {
     if (doc.exists) {
       const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
       const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
-      const planRank = { solo: 1, studio: 2, business: 3 };
       const normalizePlan = value => {
         const raw = String(value || '').toLowerCase();
         const mapped = planAliases[raw] || raw;
         return planFiles[mapped] ? mapped : '';
       };
-      const highestPlan = (...values) => values.reduce((best, value) => {
-        const plan = normalizePlan(value);
-        return (planRank[plan] || 0) > (planRank[best] || 0) ? plan : best;
-      }, '');
+      const firstPlan = (...values) => values.map(normalizePlan).find(Boolean) || '';
       const data = doc.data();
-      let plan = highestPlan(data.currentPlan, data.plan, data.lastPlan, data.requestedPlan);
+      let plan = firstPlan(data.currentPlan, data.plan, data.requestedPlan, data.lastPlan);
 
       if (data.ownerUid) {
         const ownerDoc = await firebase.firestore().collection('users').doc(data.ownerUid).get();
         const owner = ownerDoc.exists ? ownerDoc.data() : {};
-        const ownerPlan = highestPlan(owner.currentPlan, owner.plan, owner.lastPlan, owner.requestedPlan, plan, 'solo');
+        const ownerPlan = firstPlan(owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, plan, 'solo');
         if (planFiles[ownerPlan] && ownerPlan !== plan) {
           plan = ownerPlan;
           await firebase.firestore().collection('users').doc(user.uid).set({
@@ -262,7 +258,7 @@ async function redirectToDashboard(user) {
       }
 
       if (!planFiles[plan]) {
-        plan = highestPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo');
+        plan = firstPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo');
       }
       if (!planFiles[plan]) plan = 'solo';
       if (window.clsRememberPlan) await window.clsRememberPlan(plan, user.uid, firebase.firestore());
@@ -309,16 +305,12 @@ async function acceptInvite(user) {
   const owner = ownerDoc.exists ? ownerDoc.data() : {};
   const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
   const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
-  const planRank = { solo: 1, studio: 2, business: 3 };
   const normalizePlan = value => {
     const raw = String(value || '').toLowerCase();
     const mapped = planAliases[raw] || raw;
     return planFiles[mapped] ? mapped : '';
   };
-  const ownerPlan = [owner.currentPlan, owner.plan, owner.lastPlan, owner.requestedPlan, 'solo'].reduce((best, value) => {
-    const plan = normalizePlan(value);
-    return (planRank[plan] || 0) > (planRank[best] || 0) ? plan : best;
-  }, '') || 'solo';
+  const ownerPlan = [owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, 'solo'].map(normalizePlan).find(Boolean) || 'solo';
   await firebase.firestore().collection('users').doc(user.uid).set({
     name: user.displayName || inviteRecord.name || '',
     email: user.email || inviteRecord.email || '',

@@ -46,6 +46,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .sb-logo-img{max-height:72px;max-width:170px;object-fit:contain;margin-bottom:.75rem;display:block}
 .btn-upgrade{display:block;text-align:center;padding:.6rem;background:var(--gold);color:#fff;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;text-decoration:none;cursor:pointer;border:none;width:100%;font-family:var(--font-b);transition:all .25s}
 .btn-upgrade:hover{background:var(--gold-l)}
+.btn-downgrade{display:block;width:100%;margin-top:.45rem;background:transparent;color:var(--muted);border:1px solid var(--border);padding:.52rem;cursor:pointer;font-family:var(--font-b);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
+.btn-downgrade:hover{color:var(--gold);border-color:var(--gold);background:rgba(184,146,42,.06)}
 
 /* ── MAIN ── */
 #main{position:absolute;top:0;left:var(--sb);right:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
@@ -409,6 +411,7 @@ document.addEventListener('click',function(e){
   <div class="sb-footer">
     <div class="sb-biz"><strong id="sb-biz-name">My Business</strong><span id="sb-user-email">user@email.com</span></div>
     <button class="btn-upgrade" data-cls-fn="openBusinessUpgrade">Upgrade to Business →</button>
+    <button class="btn-downgrade" data-cls-fn="goBackToSolo" data-cls-this="true">← Back to Solo</button>
     <button data-cls-fn="clsSignOut" style="display:block;width:100%;text-align:center;padding:.5rem;background:transparent;border:1px solid rgba(184,146,42,.2);color:var(--muted);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-b);cursor:pointer;margin-top:.5rem;transition:all .2s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">Sign Out</button>
   </div>
 </nav>
@@ -697,6 +700,7 @@ document.addEventListener('click',function(e){
           <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
           <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio with Payable</button>
           <button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Business</button>
+          <button class="btn-act" data-cls-fn="goBackToSolo" data-cls-this="true" style="background:#fff;color:var(--muted);margin-left:.45rem;border:1px solid var(--border)">Back to Solo</button>
         </div>
       </div>
     </div>
@@ -1249,6 +1253,34 @@ window.openBusinessUpgrade = async function openBusinessUpgrade(){
   }catch(e){
     console.error('Business upgrade error:',e);
     alert('Could not upgrade to Business right now. Please try again.');
+    if(btn){btn.disabled=false;btn.textContent=oldText;}
+  }
+};
+window.goBackToSolo = async function goBackToSolo(btn){
+  if(!_signedInUid){alert('Please sign in again before switching plans.');return;}
+  if(!confirm('Switch back to Solo? Your Studio data stays saved, but Studio-only tools will be hidden.')) return;
+  const oldText=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='Switching...';}
+  try{
+    await saveDB();
+    const st=getTrialStatus();
+    const profileUpdate={
+      plan:'solo',
+      currentPlan:'solo',
+      lastPlan:'solo',
+      requestedPlan:'solo',
+      planPrice:3500,
+      downgradedFrom:'studio',
+      downgradedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(st.end)profileUpdate.trialEnd=st.end.toISOString();
+    await _db.collection('users').doc(_signedInUid).set(profileUpdate,{merge:true});
+    if(window.clsRememberPlan) await window.clsRememberPlan('solo', _signedInUid, _db);
+    if(_profile)Object.assign(_profile,profileUpdate,{trialEnd:profileUpdate.trialEnd||_profile.trialEnd});
+    window.location.href='solo.html?from=studio';
+  }catch(e){
+    console.error('Solo switch error:',e);
+    alert('Could not switch back to Solo right now. Please try again.');
     if(btn){btn.disabled=false;btn.textContent=oldText;}
   }
 };

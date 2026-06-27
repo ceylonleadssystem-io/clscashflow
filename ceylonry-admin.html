@@ -223,7 +223,10 @@ function adminUserActions(row){
   var html = '<div class="actions">' +
     '<button class="btn" data-user-action="resetPassword" data-user-id="'+id+'" data-user-email="'+email+'">Reset login</button>' +
     '<button class="btn gold" data-user-action="markPaid" data-user-id="'+id+'">Manual paid</button>' +
-    '<button class="btn" data-user-action="markUnpaid" data-user-id="'+id+'">Mark unpaid</button>';
+    '<button class="btn" data-user-action="markUnpaid" data-user-id="'+id+'">Mark unpaid</button>' +
+    '<button class="btn" data-user-action="setPlanSolo" data-user-id="'+id+'">Set Solo</button>' +
+    '<button class="btn" data-user-action="setPlanStudio" data-user-id="'+id+'">Set Studio</button>' +
+    '<button class="btn" data-user-action="setPlanBusiness" data-user-id="'+id+'">Set Business</button>';
   html += paused
     ? '<button class="btn dark" data-user-action="unpause" data-user-id="'+id+'">Unpause</button>'
     : '<button class="btn red" data-user-action="pause" data-user-id="'+id+'">Pause</button>';
@@ -557,6 +560,9 @@ function adminUserUpdatePayload(updateType){
   if (updateType === 'unpause') return { accountPaused:false, subscriptionStatus:'active', manualPaymentStatus:'unpaused', unpausedAt:stamp, unpausedBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'markPaid') return { paid:true, accountPaused:false, subscriptionStatus:'manual-paid', manualPaymentStatus:'paid', paidManually:true, manualPaidAt:stamp, lastManualPaymentAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'markUnpaid') return { paid:false, subscriptionStatus:'manual-unpaid', manualPaymentStatus:'unpaid', paidManually:false, manualUnpaidAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
+  if (updateType === 'setPlanSolo') return { plan:'solo', currentPlan:'solo', lastPlan:'solo', requestedPlan:'solo', planPrice:3500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
+  if (updateType === 'setPlanStudio') return { plan:'studio', currentPlan:'studio', lastPlan:'studio', requestedPlan:'studio', planPrice:5500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
+  if (updateType === 'setPlanBusiness') return { plan:'business', currentPlan:'business', lastPlan:'business', requestedPlan:'business', planPrice:8500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
   return null;
 }
 async function updateUserAccount(id, updateType){
@@ -624,7 +630,15 @@ document.addEventListener('click', function(ev){
     sendLoginReset(email).catch(function(e){ alert(e.message); });
     return;
   }
-  var labels = { pause:'pause this account', unpause:'unpause this account', markPaid:'mark this account as manually paid and unpause it', markUnpaid:'mark this account as unpaid' };
+  var labels = {
+    pause:'pause this account',
+    unpause:'unpause this account',
+    markPaid:'mark this account as manually paid and unpause it',
+    markUnpaid:'mark this account as unpaid',
+    setPlanSolo:'move this account to Solo',
+    setPlanStudio:'move this account to Studio',
+    setPlanBusiness:'move this account to Business'
+  };
   if (!confirm('Confirm: ' + (labels[action] || action) + '?')) return;
   updateUserAccount(id, action).catch(function(e){ alert(e.message); });
 });

@@ -214,6 +214,42 @@ function userUpdateForAction(admin, updateType) {
       updatedAt: stamp
     };
   }
+  if (updateType === 'setPlanSolo') {
+    return {
+      plan: 'solo',
+      currentPlan: 'solo',
+      lastPlan: 'solo',
+      requestedPlan: 'solo',
+      planPrice: 3500,
+      planChangedBy: 'platform_admin',
+      planChangedAt: stamp,
+      updatedAt: stamp
+    };
+  }
+  if (updateType === 'setPlanStudio') {
+    return {
+      plan: 'studio',
+      currentPlan: 'studio',
+      lastPlan: 'studio',
+      requestedPlan: 'studio',
+      planPrice: 5500,
+      planChangedBy: 'platform_admin',
+      planChangedAt: stamp,
+      updatedAt: stamp
+    };
+  }
+  if (updateType === 'setPlanBusiness') {
+    return {
+      plan: 'business',
+      currentPlan: 'business',
+      lastPlan: 'business',
+      requestedPlan: 'business',
+      planPrice: 8500,
+      planChangedBy: 'platform_admin',
+      planChangedAt: stamp,
+      updatedAt: stamp
+    };
+  }
   return null;
 }
 

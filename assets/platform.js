@@ -34,17 +34,8 @@
     return PLAN_RANK[normalizePlan(plan)] || 0;
   }
 
-  function highestPlanFrom(values) {
-    var best = '';
-    (values || []).forEach(function(value) {
-      var plan = normalizePlan(value);
-      if (planRank(plan) > planRank(best)) best = plan;
-    });
-    return best;
-  }
-
   function rememberedPlan() {
-    return highestPlanFrom([safeGet('cls-current-plan'), safeGet('cls-last-plan')]);
+    return normalizePlan(safeGet('cls-current-plan')) || normalizePlan(safeGet('cls-last-plan'));
   }
 
   function planFromPath() {
@@ -150,7 +141,10 @@
 
   function profilePlan(profile) {
     profile = profile || {};
-    return highestPlanFrom([profile.currentPlan, profile.plan, profile.lastPlan, profile.requestedPlan]);
+    return normalizePlan(profile.currentPlan)
+      || normalizePlan(profile.plan)
+      || normalizePlan(profile.requestedPlan)
+      || normalizePlan(profile.lastPlan);
   }
 
   window.clsPlanForProfile = function clsPlanForProfile(profile) {
@@ -214,13 +208,11 @@
   }
 
   function bestPlan(profile, plan) {
-    return highestPlanFrom([
-        plan,
-        profile && profile.currentPlan,
-        profile && profile.plan,
-        profile && profile.lastPlan,
-        profile && profile.requestedPlan
-      ])
+    return normalizePlan(plan)
+      || normalizePlan(profile && profile.currentPlan)
+      || normalizePlan(profile && profile.plan)
+      || normalizePlan(profile && profile.requestedPlan)
+      || normalizePlan(profile && profile.lastPlan)
       || rememberedPlan()
       || planFromPath()
       || 'solo';

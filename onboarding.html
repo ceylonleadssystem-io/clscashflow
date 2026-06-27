@@ -1219,16 +1219,12 @@ async function acceptOnboardingInvite(uid,email){
   var owner=ownerDoc.exists?ownerDoc.data():{};
   var planFiles = { solo:'solo.html', studio:'starter.html', business:'growth.html' };
   var planAliases = { starter:'studio', growth:'business', premium:'business' };
-  var planRank = { solo:1, studio:2, business:3 };
   function normalizeInvitePlan(value) {
     var raw = String(value || '').toLowerCase();
     var mapped = planAliases[raw] || raw;
     return planFiles[mapped] ? mapped : '';
   }
-  var ownerPlan = [owner.currentPlan, owner.plan, owner.lastPlan, owner.requestedPlan, state.tier, 'solo'].reduce(function(best, value) {
-    var plan = normalizeInvitePlan(value);
-    return (planRank[plan] || 0) > (planRank[best] || 0) ? plan : best;
-  }, '') || 'solo';
+  var ownerPlan = [owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, state.tier, 'solo'].map(normalizeInvitePlan).find(Boolean) || 'solo';
   await firebase.firestore().collection('users').doc(uid).set({
     role: invite.role||'viewer',
     ownerUid: state.inviteOwner,
@@ -1257,16 +1253,12 @@ window.launchDashboard = async function launchDashboard(){
     const prices = { solo: 3500, studio: 5500, business: 8500 };
     const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
     const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
-    const planRank = { solo: 1, studio: 2, business: 3 };
     const normalizePlan = value => {
       const raw = String(value || '').toLowerCase();
       const mapped = planAliases[raw] || raw;
       return planFiles[mapped] ? mapped : '';
     };
-    const highestPlan = (...values) => values.reduce((best, value) => {
-      const plan = normalizePlan(value);
-      return (planRank[plan] || 0) > (planRank[best] || 0) ? plan : best;
-    }, '') || 'solo';
+    const firstPlan = (...values) => values.map(normalizePlan).find(Boolean) || 'solo';
 
     if (state.googleAuth) {
       // Google user — already authenticated, just update their Firestore profile
@@ -1274,11 +1266,11 @@ window.launchDashboard = async function launchDashboard(){
       if (!user) { showStepError(7,'Session expired. Please sign in again to continue.'); setTimeout(function(){window.location.href='signin.html';},1200); return; }
       const existingDoc = await firebase.firestore().collection('users').doc(user.uid).get();
       const existingProfile = existingDoc.exists ? existingDoc.data() : {};
-      const selectedPlan = highestPlan(
+      const selectedPlan = firstPlan(
         existingProfile.currentPlan,
         existingProfile.plan,
-        existingProfile.lastPlan,
         existingProfile.requestedPlan,
+        existingProfile.lastPlan,
         state.tier || 'solo'
       );
       var googleTrialEnd = new Date();
