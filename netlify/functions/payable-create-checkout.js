@@ -97,6 +97,8 @@ function publicPayablePayload(payload) {
   const copy = Object.assign({}, payload);
   delete copy.business_token;
   delete copy.businessToken;
+  delete copy.merchant_token;
+  delete copy.merchantToken;
   if (copy.webhook_url) {
     copy.webhook_url = String(copy.webhook_url).replace(/([?&]secret=)[^&]*/i, '$1redacted');
   }
@@ -186,11 +188,16 @@ exports.handler = async function handler(event) {
 
   const businessKey = process.env.PAYABLE_BUSINESS_KEY || '';
   const businessToken = process.env.PAYABLE_BUSINESS_TOKEN || '';
-  if (!businessKey || !businessToken) {
+  const merchantId = process.env.PAYABLE_MERCHANT_ID || '';
+  const merchantToken = process.env.PAYABLE_MERCHANT_TOKEN || '';
+  const authToken = merchantToken || businessToken;
+  if (!businessKey || !businessToken || !merchantId || !merchantToken) {
     return { statusCode: 500, headers: headers(), body: JSON.stringify({ ok: false, error: 'Payable credentials are missing in Netlify environment variables.' }) };
   }
 
   const payablePayload = {
+    merchant_id: merchantId,
+    merchant_token: merchantToken,
     business_key: businessKey,
     business_token: businessToken,
     order_id: sessionId,
@@ -213,7 +220,9 @@ exports.handler = async function handler(event) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ' + businessToken,
+        'Authorization': 'Bearer ' + authToken,
+        'X-Merchant-ID': merchantId,
+        'X-Merchant-Token': merchantToken,
         'X-Business-Key': businessKey,
         'X-Business-Token': businessToken
       },

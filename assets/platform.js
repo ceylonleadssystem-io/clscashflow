@@ -207,6 +207,35 @@
     return 'LKR ' + Number(n || 0).toLocaleString();
   }
 
+  function plainText(value, max) {
+    value = String(value == null ? '' : value).trim();
+    return max && value.length > max ? value.slice(0, max) : value;
+  }
+
+  function fieldTimestamp() {
+    try {
+      if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
+        return firebase.firestore.FieldValue.serverTimestamp();
+      }
+    } catch (e) {}
+    return nowIso();
+  }
+
+  function makePaymentRequestToken(plan) {
+    var prefix = 'CLS-' + String(plan || 'solo').toUpperCase().slice(0, 3) + '-';
+    var randomPart = '';
+    try {
+      var arr = new Uint32Array(2);
+      window.crypto.getRandomValues(arr);
+      randomPart = Array.prototype.map.call(arr, function(n) {
+        return n.toString(36).toUpperCase();
+      }).join('');
+    } catch (e) {
+      randomPart = Math.random().toString(36).slice(2, 10).toUpperCase();
+    }
+    return prefix + Date.now().toString(36).toUpperCase() + '-' + randomPart.slice(0, 8);
+  }
+
   function bestPlan(profile, plan) {
     return normalizePlan(plan)
       || normalizePlan(profile && profile.currentPlan)
@@ -333,6 +362,79 @@
     return window.clsStartPayableCheckout();
   };
 
+  window.clsEnsurePaymentRequest = async function clsEnsurePaymentRequest(profile, opts) {
+    opts = opts || {};
+    profile = profile || {};
+    var user = getAuthUser();
+    var db = getFirestore(opts.db);
+    if (!user || !user.uid || !db) return null;
+    if (!opts.force && (window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile))) return null;
+
+    var trialEnd = profile.trialEnd ? new Date(profile.trialEnd) : null;
+    if (!opts.force && (!trialEnd || isNaN(trialEnd.getTime()) || Date.now() <= trialEnd.getTime())) return null;
+
+    var plan = bestPlan(profile, opts.plan);
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var storageKey = 'cls-payment-request-' + user.uid + '-' + plan;
+    var token = plainText(profile.paymentRequestToken || safeGet(storageKey), 80);
+    if (!token) {
+      token = makePaymentRequestToken(plan);
+      safeSet(storageKey, token);
+    }
+
+    var request = {
+      token: token,
+      uid: user.uid,
+      ownerUid: plainText(profile.ownerUid || user.uid, 160),
+      name: plainText(profileName(profile, user), 180),
+      email: plainText(profileEmail(profile, user), 180).toLowerCase(),
+      businessName: plainText(profile.bizName || profile.invoiceBiz || profile.businessName || '', 180),
+      plan: plan,
+      planName: details.name,
+      amount: details.price,
+      currency: 'LKR',
+      trialEnd: trialEnd && !isNaN(trialEnd.getTime()) ? trialEnd.toISOString() : '',
+      status: 'pending',
+      source: 'trial-expired',
+      page: location.pathname,
+      updatedAt: fieldTimestamp(),
+      updatedAtUtc: nowIso()
+    };
+    var userUpdate = {
+      paymentRequestToken: token,
+      paymentRequestStatus: 'pending',
+      paymentRequestPlan: plan,
+      paymentRequestAmount: details.price,
+      manualPaymentStatus: 'payment-requested',
+      updatedAt: fieldTimestamp()
+    };
+
+    try {
+      var requestRef = db.collection('paymentRequests').doc(token);
+      var existing = await requestRef.get();
+      var existingData = existing.exists ? (existing.data() || {}) : {};
+      if (!existing.exists) {
+        request.createdAt = fieldTimestamp();
+        request.createdAtUtc = nowIso();
+      } else {
+        delete request.status;
+        delete request.createdAt;
+        delete request.createdAtUtc;
+      }
+      await requestRef.set(request, { merge: true });
+      if (existingData.status) userUpdate.paymentRequestStatus = existingData.status;
+      await db.collection('users').doc(user.uid).set(userUpdate, { merge: true });
+      profile.paymentRequestToken = token;
+      profile.paymentRequestStatus = userUpdate.paymentRequestStatus;
+      profile.paymentRequestPlan = plan;
+      profile.paymentRequestAmount = details.price;
+      return request;
+    } catch (e) {
+      console.warn('Payment request token could not be saved:', e);
+      return { token: token, plan: plan, planName: details.name, amount: details.price, unsaved: true };
+    }
+  };
+
   window.clsRenderSubscriptionPaywall = function clsRenderSubscriptionPaywall(profile, opts) {
     opts = opts || {};
     if (document.getElementById('cls-paywall')) return;
@@ -356,12 +458,22 @@
           '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.price) + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
           '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · Monthly subscription</div>' +
         '</div>' +
+        '<div id="cls-payment-request-token" style="background:#fff8ea;border:1px solid rgba(184,146,42,.28);padding:.8rem 1rem;margin:-.5rem 0 1rem;color:#6B6258;font-size:.74rem;line-height:1.55">Creating a manual payment request for admin...</div>' +
         '<button id="cls-payable-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay with Payable</button>' +
         '<button id="cls-wa-action" type="button" style="display:block;width:100%;background:#fff;color:#6B6258;border:1px solid rgba(184,146,42,.35);padding:.85rem;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;font-family:inherit">Activate via WhatsApp</button>' +
         '<button onclick="window.clsSignOut&&window.clsSignOut()" type="button" style="margin-top:1rem;background:transparent;border:0;color:#A8A29A;font-size:.72rem;cursor:pointer;font-family:inherit">Sign out</button>' +
         '<div style="font-size:.68rem;color:#A8A29A;margin-top:1rem">Your data stays saved while payment is completed.</div>' +
       '</div>';
     document.body.appendChild(ov);
+    window.clsEnsurePaymentRequest(profile, { plan: plan, force: true }).then(function(req) {
+      var tokenEl = document.getElementById('cls-payment-request-token');
+      if (!tokenEl) return;
+      if (req && req.token) {
+        tokenEl.innerHTML = 'Manual payment request token: <strong style="color:#1a1714;letter-spacing:.06em">' + escapeHtml(req.token) + '</strong><br>CeylonryLabs admin can use this token to send the invoice manually.';
+      } else {
+        tokenEl.textContent = 'Admin will be able to review this expired trial from the payment request list.';
+      }
+    });
     document.getElementById('cls-payable-action').addEventListener('click', function() {
       window.clsStartPayableCheckout(plan, { profile: profile, button: this });
     });

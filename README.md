@@ -56,18 +56,26 @@ For Hostinger, the common values are:
 
 ## Payable Subscription Payments
 
-Payable credentials must be added only in Netlify environment variables. Do not place the business key or token in GitHub, HTML, or browser JavaScript.
+Payable credentials must be added only in Netlify environment variables. Do not place keys or tokens in GitHub, HTML, or browser JavaScript.
 
 Required for Payable checkout:
 
-- `PAYABLE_BUSINESS_KEY`
-- `PAYABLE_BUSINESS_TOKEN`
+- `PAYABLE_MERCHANT_ID` - from Payable Settings -> API Integration
+- `PAYABLE_MERCHANT_TOKEN` - from Payable Settings -> API Integration
+- `PAYABLE_BUSINESS_KEY` - from Payable Settings -> Business Integration
+- `PAYABLE_BUSINESS_TOKEN` - from Payable Settings -> Business Integration
 - `PAYABLE_CHECKOUT_URL` - the checkout/session API endpoint Payable gives you
 - `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
 - `FIREBASE_SERVICE_ACCOUNT` - Firebase service account JSON, either raw JSON or base64 encoded
 - `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
 
+Give Payable this callback URL after you choose `PAYABLE_WEBHOOK_SECRET`:
+
+`https://www.ceylonrylabs.io/.netlify/functions/payable-webhook?secret=YOUR_PAYABLE_WEBHOOK_SECRET`
+
 The 15-day trial is controlled by each user's `trialEnd` value in Firestore. After it ends, the dashboards require payment unless the user profile has `paid: true`. The Payable webhook sets `paid: true`, `subscriptionStatus: active`, and the selected plan after a verified paid callback.
+
+If Payable checkout is not ready yet, the expired-trial paywall creates a manual payment request token in the `paymentRequests` collection. The admin panel shows those tokens so the team can manually send an invoice, mark the request as invoiced, mark it paid, or close it.
 
 The Payable API field names may need one final adjustment once Payable sends the exact checkout documentation. The integration is centralized in `netlify/functions/payable-create-checkout.js`, so that mapping can be changed without touching the dashboards.
 

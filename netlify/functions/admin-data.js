@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 function parseServiceAccount(raw) {
   if (!raw) return null;
   try {
@@ -122,7 +124,7 @@ function isLandingVisit(data) {
   return data.isLanding === true || path === '/' || path === '' || path.endsWith('/index.html');
 }
 
-function buildStats(users, visits, tickets) {
+function buildStats(users, visits, tickets, paymentRequests) {
   const now = Date.now();
   const recentCutoff = now - 10 * 60 * 1000;
   const uniqueVisitors = new Set();
@@ -151,6 +153,11 @@ function buildStats(users, visits, tickets) {
     openTicketsTotal: tickets.filter(function(row) {
       return String((row.data || {}).status || 'open').toLowerCase() !== 'closed';
     }).length,
+    paymentRequestsTotal: paymentRequests.length,
+    openPaymentRequestsTotal: paymentRequests.filter(function(row) {
+      const status = String((row.data || {}).status || 'pending').toLowerCase();
+      return status !== 'paid' && status !== 'closed';
+    }).length,
     uniqueVisitorsRecent: uniqueVisitors.size,
     liveVisitorsLast10Min: liveVisitors.size,
     landingVisitsTotal: landingVisitsRecent,
@@ -165,6 +172,99 @@ function readBody(event) {
   } catch (e) {
     return {};
   }
+}
+
+const PLAN_DETAILS = {
+  solo: { name: 'Solo', price: 3500 },
+  studio: { name: 'Studio', price: 5500 },
+  business: { name: 'Business', price: 8500 }
+};
+
+function normalizePlan(plan) {
+  const aliases = { starter: 'studio', growth: 'business', premium: 'business' };
+  plan = String(plan || '').toLowerCase();
+  plan = aliases[plan] || plan;
+  return Object.prototype.hasOwnProperty.call(PLAN_DETAILS, plan) ? plan : 'solo';
+}
+
+function parseTime(value) {
+  if (!value) return 0;
+  if (value && typeof value.toDate === 'function') return value.toDate().getTime();
+  const time = Date.parse(value);
+  return Number.isFinite(time) ? time : 0;
+}
+
+function isPaidProfile(data) {
+  data = data || {};
+  const status = String(data.subscriptionStatus || '').toLowerCase();
+  return data.paid === true || status === 'active' || status === 'manual-paid';
+}
+
+function isPausedProfile(data) {
+  data = data || {};
+  const status = String(data.subscriptionStatus || '').toLowerCase();
+  return data.accountPaused === true || status === 'paused';
+}
+
+function isInternalAdmin(data) {
+  data = data || {};
+  return String(data.role || '').toLowerCase() === 'platform_admin'
+    || String(data.accountType || '').toLowerCase() === 'platform_admin'
+    || String(data.currentPlan || data.plan || '').toLowerCase() === 'admin';
+}
+
+function makePaymentRequestToken(uid, plan) {
+  const suffix = crypto.randomBytes(4).toString('hex').toUpperCase();
+  return 'CLS-' + String(plan || 'solo').toUpperCase().slice(0, 3) + '-' + Date.now().toString(36).toUpperCase() + '-' + suffix;
+}
+
+async function ensureExpiredTrialPaymentRequests(admin, db, users) {
+  const now = Date.now();
+  await Promise.all((users || []).map(async function(row) {
+    const data = row.data || {};
+    if (!row.id || isInternalAdmin(data) || isPaidProfile(data) || isPausedProfile(data)) return;
+    const trialEndMs = parseTime(data.trialEnd);
+    if (!trialEndMs || trialEndMs >= now) return;
+
+    const plan = normalizePlan(data.currentPlan || data.plan || data.lastPlan);
+    const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    const token = String(data.paymentRequestToken || '').trim() || makePaymentRequestToken(row.id, plan);
+    const ref = db.collection('paymentRequests').doc(token);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      await ref.set({
+        token,
+        uid: row.id,
+        ownerUid: data.ownerUid || row.id,
+        name: data.name || data.displayName || '',
+        email: String(data.email || '').toLowerCase(),
+        businessName: data.bizName || data.invoiceBiz || data.businessName || '',
+        plan,
+        planName: planInfo.name,
+        amount: planInfo.price,
+        currency: 'LKR',
+        trialEnd: data.trialEnd || '',
+        status: 'pending',
+        source: 'admin-expired-trial-sweep',
+        page: data.lastSeenPath || '',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAtUtc: new Date().toISOString(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAtUtc: new Date().toISOString()
+      }, { merge: true });
+    }
+
+    if (!data.paymentRequestToken || !data.paymentRequestStatus) {
+      await db.collection('users').doc(row.id).set({
+        paymentRequestToken: token,
+        paymentRequestStatus: snap.exists ? ((snap.data() || {}).status || 'pending') : 'pending',
+        paymentRequestPlan: plan,
+        paymentRequestAmount: planInfo.price,
+        manualPaymentStatus: 'payment-requested',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+  }));
 }
 
 function userUpdateForAction(admin, updateType) {
@@ -253,6 +353,45 @@ function userUpdateForAction(admin, updateType) {
   return null;
 }
 
+function paymentRequestUpdateForStatus(admin, status) {
+  const stamp = admin.firestore.FieldValue.serverTimestamp();
+  if (status === 'pending') {
+    return {
+      status: 'pending',
+      updatedAt: stamp,
+      updatedBy: 'platform_admin'
+    };
+  }
+  if (status === 'invoiced') {
+    return {
+      status: 'invoiced',
+      invoiceSentAt: stamp,
+      invoiceSentBy: 'platform_admin',
+      updatedAt: stamp,
+      updatedBy: 'platform_admin'
+    };
+  }
+  if (status === 'paid') {
+    return {
+      status: 'paid',
+      paidAt: stamp,
+      paidBy: 'platform_admin',
+      updatedAt: stamp,
+      updatedBy: 'platform_admin'
+    };
+  }
+  if (status === 'closed') {
+    return {
+      status: 'closed',
+      closedAt: stamp,
+      closedBy: 'platform_admin',
+      updatedAt: stamp,
+      updatedBy: 'platform_admin'
+    };
+  }
+  return null;
+}
+
 exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: headers(), body: '' };
@@ -306,6 +445,35 @@ exports.handler = async function handler(event) {
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
       }
 
+      if (action === 'updatePaymentRequest') {
+        const id = String(body.id || '').trim();
+        const status = String(body.status || '').trim().toLowerCase();
+        const update = paymentRequestUpdateForStatus(admin, status);
+        if (!id || !update) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid payment request update.' }) };
+        }
+        const ref = db.collection('paymentRequests').doc(id);
+        const snap = await ref.get();
+        const request = snap.exists ? (snap.data() || {}) : {};
+        await ref.set(update, { merge: true });
+        if (request.uid) {
+          const userUpdate = status === 'paid'
+            ? userUpdateForAction(admin, 'markPaid')
+            : {
+                paymentRequestStatus: status,
+                paymentRequestToken: request.token || id,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+              };
+          if (status === 'paid') {
+            userUpdate.paymentRequestStatus = 'paid';
+            userUpdate.paymentRequestToken = request.token || id;
+            userUpdate.paymentRequestPaidAt = admin.firestore.FieldValue.serverTimestamp();
+          }
+          await db.collection('users').doc(String(request.uid)).set(userUpdate, { merge: true });
+        }
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+
       if (action !== 'updateTicket') {
         return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown admin action.' }) };
       }
@@ -314,22 +482,26 @@ exports.handler = async function handler(event) {
     const users = await readCollection(db, 'users', 'createdAt', 500);
     const visits = await readCollection(db, 'platformVisits', 'createdAt', 500);
     const tickets = await readCollection(db, 'supportTickets', 'createdAt', 300);
-    const stats = buildStats(users, visits, tickets);
+    await ensureExpiredTrialPaymentRequests(admin, db, users);
+    const paymentRequests = await readCollection(db, 'paymentRequests', 'createdAt', 300);
+    const stats = buildStats(users, visits, tickets, paymentRequests);
 
     const usersTotal = await countQuery(db.collection('users'));
     const visitsTotal = await countQuery(db.collection('platformVisits'));
     const ticketsTotal = await countQuery(db.collection('supportTickets'));
+    const paymentRequestsTotal = await countQuery(db.collection('paymentRequests'));
     const landingVisitsTotal = await countQuery(db.collection('platformVisits').where('isLanding', '==', true));
 
     if (usersTotal != null) stats.usersTotal = usersTotal;
     if (visitsTotal != null) stats.visitsTotal = visitsTotal;
     if (ticketsTotal != null) stats.ticketsTotal = ticketsTotal;
+    if (paymentRequestsTotal != null) stats.paymentRequestsTotal = paymentRequestsTotal;
     if (landingVisitsTotal != null) stats.landingVisitsTotal = landingVisitsTotal;
 
     return {
       statusCode: 200,
       headers: headers(),
-      body: JSON.stringify({ ok: true, users, visits, tickets, stats })
+      body: JSON.stringify({ ok: true, users, visits, tickets, paymentRequests, stats })
     };
   } catch (err) {
     return {

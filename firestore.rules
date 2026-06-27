@@ -45,6 +45,18 @@ service cloud.firestore {
       return !(key in request.resource.data) || request.resource.data[key] is bool;
     }
 
+    function optionalAmount(key) {
+      return !(key in request.resource.data)
+        || request.resource.data[key] is int
+        || request.resource.data[key] is float;
+    }
+
+    function optionalTimestampOrString(key) {
+      return !(key in request.resource.data)
+        || request.resource.data[key] is timestamp
+        || request.resource.data[key] is string;
+    }
+
     function validPlatformVisitCreate() {
       return request.resource.data.keys().hasOnly([
           'eventType',
@@ -120,6 +132,49 @@ service cloud.firestore {
         ])
         && request.resource.data.status == 'closed'
         && request.resource.data.closedBy == 'customer';
+    }
+
+    function validPaymentRequestWrite() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          'token',
+          'uid',
+          'ownerUid',
+          'name',
+          'email',
+          'businessName',
+          'plan',
+          'planName',
+          'amount',
+          'currency',
+          'trialEnd',
+          'status',
+          'source',
+          'page',
+          'createdAt',
+          'createdAtUtc',
+          'updatedAt',
+          'updatedAtUtc'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.source == 'trial-expired'
+        && request.resource.data.currency == 'LKR'
+        && request.resource.data.token is string
+        && request.resource.data.token.size() <= 80
+        && request.resource.data.plan in ['solo', 'studio', 'business']
+        && optionalString('ownerUid', 160)
+        && optionalString('name', 180)
+        && optionalString('email', 180)
+        && optionalString('businessName', 180)
+        && optionalString('planName', 80)
+        && optionalAmount('amount')
+        && optionalString('trialEnd', 90)
+        && optionalString('page', 300)
+        && optionalTimestampOrString('createdAt')
+        && optionalString('createdAtUtc', 90)
+        && optionalTimestampOrString('updatedAt')
+        && optionalString('updatedAtUtc', 90);
     }
 
     match /users/{uid} {
@@ -201,6 +256,12 @@ service cloud.firestore {
       allow read, list: if isPlatformAdmin() || isTicketOwner();
       allow update: if isPlatformAdmin() || (isTicketOwner() && validCustomerTicketClose());
       allow delete: if isPlatformAdmin();
+    }
+
+    match /paymentRequests/{requestId} {
+      allow read, list, update, delete: if isPlatformAdmin();
+      allow create: if validPaymentRequestWrite();
+      allow update: if validPaymentRequestWrite();
     }
 
     match /businessStorySubmissions/{submissionId} {

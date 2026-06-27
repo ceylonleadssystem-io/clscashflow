@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="assets/platform.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(6,minmax(0,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1280px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{padding:8px 10px;font-size:10px}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.secure-note{font-size:11px;color:#6B6258;line-height:1.5}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.kpis,.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1280px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.token{font-weight:800;letter-spacing:.08em;color:#1C1814;white-space:nowrap}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{padding:8px 10px;font-size:10px}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.secure-note{font-size:11px;color:#6B6258;line-height:1.5}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -61,7 +61,16 @@
       <div class="card"><div class="label">Landing visits</div><div class="kpi-number" id="kpi-landing">0</div><p class="muted">Homepage entries</p></div>
       <div class="card"><div class="label">Live now</div><div class="kpi-number" id="kpi-live">0</div><p class="muted">Visitors in last 10 minutes</p></div>
       <div class="card"><div class="label">Open tickets</div><div class="kpi-number" id="kpi-open">0</div><p class="muted"><span id="kpi-tickets">0</span> total requests</p></div>
+      <div class="card"><div class="label">Payment requests</div><div class="kpi-number" id="kpi-payment-requests">0</div><p class="muted">Expired trials needing invoices</p></div>
     </div>
+
+    <section class="section">
+      <div class="section-head"><h2>Payment Requests</h2><span class="muted">Tokens created automatically when trials expire</span></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Status</th><th>Token</th><th>User</th><th>Plan</th><th>Amount</th><th>Trial End</th><th>Created UTC</th><th>Actions</th></tr></thead>
+        <tbody id="payment-requests-body"></tbody>
+      </table></div>
+    </section>
 
     <section class="section">
       <div class="section-head"><h2>Per-user breakdown</h2><span class="muted">Who is there, current status, and what needs to be done</span></div>
@@ -149,6 +158,9 @@ function fmtDate(v){
   var d = new Date(v);
   return isNaN(d.getTime()) ? String(v) : d.toISOString();
 }
+function money(v){
+  return 'LKR ' + Number(v || 0).toLocaleString('en-US');
+}
 function visitMs(v){
   if (!v) return 0;
   var raw = v.utcAt || v.localAt || v.createdAt || v.lastSeenAt;
@@ -169,7 +181,7 @@ function pagePill(v){
   if (v && v.isPortal) return '<span class="pill ok">Portal</span>';
   return '<span class="pill">'+esc(kind || 'Page')+'</span>';
 }
-function clientStats(users, visits, tickets){
+function clientStats(users, visits, tickets, paymentRequests){
   var now = Date.now();
   var liveIds = {};
   var visitorIds = {};
@@ -186,7 +198,12 @@ function clientStats(users, visits, tickets){
     landingVisitsTotal: (visits || []).filter(function(row){ return isLandingVisit(row.data || {}); }).length,
     liveVisitorsLast10Min: Object.keys(liveIds).length,
     ticketsTotal: (tickets || []).length,
-    openTicketsTotal: (tickets || []).filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length
+    openTicketsTotal: (tickets || []).filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length,
+    paymentRequestsTotal: (paymentRequests || []).length,
+    openPaymentRequestsTotal: (paymentRequests || []).filter(function(r){
+      var status = String((r.data || {}).status || 'pending').toLowerCase();
+      return status !== 'paid' && status !== 'closed';
+    }).length
   };
 }
 function planPill(plan){
@@ -199,6 +216,11 @@ function planPill(plan){
 function statusPill(status){
   status = String(status || 'open').toLowerCase();
   var cls = status === 'closed' ? 'ok' : (status === 'in-progress' ? 'warn' : 'bad');
+  return '<span class="pill '+cls+'">'+esc(status)+'</span>';
+}
+function requestStatusPill(status){
+  status = String(status || 'pending').toLowerCase();
+  var cls = status === 'paid' ? 'ok' : (status === 'closed' ? '' : (status === 'invoiced' ? 'warn' : 'bad'));
   return '<span class="pill '+cls+'">'+esc(status)+'</span>';
 }
 function paymentPill(u){
@@ -291,6 +313,15 @@ function openTicketsForUser(user, tickets){
     return open && match;
   });
 }
+function openPaymentRequestsForUser(user, paymentRequests){
+  return (paymentRequests || []).filter(function(row){
+    var r = row.data || {};
+    var status = String(r.status || 'pending').toLowerCase();
+    var open = status !== 'paid' && status !== 'closed';
+    var match = (user.email && String(r.email || '').toLowerCase() === user.email) || (user.id && r.uid === user.id) || (user.owner && r.ownerUid === user.owner);
+    return open && match;
+  });
+}
 function userStatus(user, tasks){
   var role = String(user.role || '').toLowerCase();
   if (role === 'platform_admin' || user.plan === 'admin') return '<span class="pill">admin</span>';
@@ -303,12 +334,13 @@ function userStatus(user, tasks){
   if (days <= 3) return '<span class="pill warn">'+days+'d trial</span>';
   return '<span class="pill ok">trial active</span>';
 }
-function userTasks(user, latestVisit, tickets){
+function userTasks(user, latestVisit, tickets, paymentRequests){
   var tasks = [];
   var role = String(user.role || '').toLowerCase();
   var days = daysUntil(user.trialEnd);
   var lastSeenMs = dateMs(user.lastSeen) || (latestVisit ? visitMs(latestVisit.data || {}) : 0);
   var lastSeenAge = lastSeenMs ? Math.floor((Date.now() - lastSeenMs) / 86400000) : null;
+  var openRequests = paymentRequests || [];
 
   if (role === 'platform_admin' || user.plan === 'admin') {
     tasks.push({ cls: 'ok', text: 'Internal admin account - no customer follow-up needed.' });
@@ -317,6 +349,7 @@ function userTasks(user, latestVisit, tickets){
   } else {
     if (user.paused) tasks.push({ cls: 'bad', text: 'Account is paused - unpause only after payment or manual approval.' });
     if (!user.plan) tasks.push({ cls: 'bad', text: 'Assign the correct plan.' });
+    if (openRequests.length) tasks.push({ cls: 'bad', text: 'Payment request token pending - send or follow up manual invoice.' });
     if (!user.paid && days != null && days < 0) tasks.push({ cls: 'bad', text: 'Trial expired - payment or pause decision needed.' });
     else if (!user.paid && days != null && days <= 3) tasks.push({ cls: '', text: 'Trial ending soon - send upgrade/payment reminder.' });
     else if (!user.paid && days == null) tasks.push({ cls: '', text: 'Trial end missing - check onboarding record.' });
@@ -391,10 +424,11 @@ function renderUsers(users, stats){
   }).join('') || '<tr><td colspan="11" class="muted">No users found yet.</td></tr>';
 }
 
-function renderUserBreakdown(users, visits, tickets){
+function renderUserBreakdown(users, visits, tickets, paymentRequests){
   users = users || [];
   visits = visits || [];
   tickets = tickets || [];
+  paymentRequests = paymentRequests || [];
   var wrap = $('user-breakdown');
   if (!wrap) return;
   if (!users.length) {
@@ -405,10 +439,11 @@ function renderUserBreakdown(users, visits, tickets){
     var user = userIdentity(row);
     var latestVisit = latestUserVisit(user, visits);
     var userTickets = openTicketsForUser(user, tickets);
+    var userPaymentRequests = openPaymentRequestsForUser(user, paymentRequests);
     var lastVisitData = latestVisit ? (latestVisit.data || {}) : {};
     var latestPath = user.lastPath || lastVisitData.path || '';
     var latestSeen = user.lastSeen || lastVisitData.utcAt || lastVisitData.createdAt || '';
-    var tasks = userTasks(user, latestVisit, userTickets);
+    var tasks = userTasks(user, latestVisit, userTickets, userPaymentRequests);
     var taskHtml = tasks.map(function(task){
       return '<li class="'+esc(task.cls || '')+'">'+esc(task.text)+'</li>';
     }).join('');
@@ -445,6 +480,45 @@ function renderVisits(visits, stats){
   }).join('') || '<tr><td colspan="10" class="muted">No visits tracked yet. Open the landing page after publishing the updated Firestore rules, or configure Firebase Admin on Netlify for full IP and geo tracking.</td></tr>';
 }
 
+var paymentRequestCache = {};
+function paymentRequestMessage(row){
+  var r = (row && row.data) || {};
+  return [
+    'CLS Cashflow manual payment request',
+    '',
+    'Token: ' + (r.token || row.id || ''),
+    'Customer: ' + (r.name || r.businessName || 'Customer'),
+    'Email: ' + (r.email || ''),
+    'Plan: ' + (r.planName || r.plan || ''),
+    'Amount: ' + money(r.amount) + '/month',
+    'Trial ended: ' + (shortDate(r.trialEnd) || ''),
+    '',
+    'Please send the payment invoice for this subscription and mark the account paid after payment is received.'
+  ].join('\n');
+}
+function renderPaymentRequests(paymentRequests, stats){
+  paymentRequests = paymentRequests || [];
+  stats = stats || clientStats([], [], [], paymentRequests);
+  paymentRequestCache = {};
+  $('kpi-payment-requests').textContent = fmtInt(stats.openPaymentRequestsTotal == null ? paymentRequests.length : stats.openPaymentRequestsTotal);
+  $('payment-requests-body').innerHTML = paymentRequests.map(function(row){
+    var r = row.data || {};
+    paymentRequestCache[row.id] = row;
+    var status = String(r.status || 'pending').toLowerCase();
+    var closed = status === 'paid' || status === 'closed';
+    var actions = '<div class="actions"><button class="btn" data-copy-payment-request="'+esc(row.id)+'">Copy</button>';
+    if (!closed) {
+      actions += '<button class="btn" data-payment-request="'+esc(row.id)+'" data-payment-status="invoiced">Invoice sent</button>' +
+        '<button class="btn gold" data-payment-request="'+esc(row.id)+'" data-payment-status="paid">Mark paid</button>' +
+        '<button class="btn red" data-payment-request="'+esc(row.id)+'" data-payment-status="closed">Close</button>';
+    } else {
+      actions += '<span class="pill ok">'+esc(status)+'</span>';
+    }
+    actions += '</div>';
+    return '<tr><td>'+requestStatusPill(status)+'</td><td><span class="token">'+esc(r.token || row.id)+'</span></td><td>'+esc(r.name || r.businessName || '')+'<br><span class="muted">'+esc(r.email || '')+'</span></td><td>'+planPill(r.plan)+'</td><td>'+esc(money(r.amount))+'</td><td>'+esc(shortDate(r.trialEnd))+'</td><td>'+esc(r.createdAtUtc || fmtDate(r.createdAt))+'</td><td>'+actions+'</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="muted">No expired-trial payment requests yet.</td></tr>';
+}
+
 function renderTickets(tickets, stats){
   tickets = tickets || [];
   stats = stats || clientStats([], [], tickets);
@@ -468,9 +542,10 @@ function setRefreshState(isLoading){
   btn.disabled = !!isLoading;
   btn.textContent = isLoading ? 'Loading' : 'Refresh';
 }
-function renderAdminPayload(users, visits, tickets, stats){
+function renderAdminPayload(users, visits, tickets, paymentRequests, stats){
   renderUsers(users || [], stats || {});
-  renderUserBreakdown(users || [], visits || [], tickets || []);
+  renderPaymentRequests(paymentRequests || [], stats || {});
+  renderUserBreakdown(users || [], visits || [], tickets || [], paymentRequests || []);
   renderVisits(visits || [], stats || {});
   renderTickets(tickets || [], stats || {});
   adminHasRendered = true;
@@ -485,21 +560,22 @@ async function loadAdminData(opts){
     if (!adminHasRendered || opts.forceLoading) {
       renderEmpty('users-body', 11, 'Loading users...');
       renderEmpty('visits-body', 10, 'Loading visits...');
+      renderEmpty('payment-requests-body', 8, 'Loading payment requests...');
       renderEmpty('tickets-body', 8, 'Loading tickets...');
       $('user-breakdown').innerHTML = '<div class="card muted">Loading per-user breakdown...</div>';
     }
     var adminFunctionError = '';
     try {
       var payload = await fetchAdminFunction();
-      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.stats || {});
+      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.stats || {});
       return;
     } catch (serverErr) {
       adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
       console.warn('Admin function unavailable, falling back to Firestore rules:', serverErr);
     }
 
-    var users = [], visits = [], tickets = [];
-    var usersLoaded = true, visitsLoaded = true, ticketsLoaded = true;
+    var users = [], visits = [], tickets = [], paymentRequests = [];
+    var usersLoaded = true, visitsLoaded = true, ticketsLoaded = true, paymentRequestsLoaded = true;
     try {
       var usersSnap = await readCollection('users', { order:'createdAt', dir:'desc', limit:300 });
       usersSnap.forEach(function(d){ users.push({ id:d.id, data:d.data() || {} }); });
@@ -524,9 +600,18 @@ async function loadAdminData(opts){
       renderEmpty('tickets-body', 8, 'Could not load tickets. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
     }
 
-    var stats = clientStats(users, visits, tickets);
+    try {
+      var requestsSnap = await readCollection('paymentRequests', { order:'createdAt', dir:'desc', limit:160 });
+      requestsSnap.forEach(function(d){ paymentRequests.push({ id:d.id, data:d.data() || {} }); });
+    } catch (e) {
+      paymentRequestsLoaded = false;
+      renderEmpty('payment-requests-body', 8, 'Could not load payment requests. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
+    }
+
+    var stats = clientStats(users, visits, tickets, paymentRequests);
     if (usersLoaded) renderUsers(users, stats);
-    if (usersLoaded) renderUserBreakdown(users, visitsLoaded ? visits : [], ticketsLoaded ? tickets : []);
+    if (paymentRequestsLoaded) renderPaymentRequests(paymentRequests, stats);
+    if (usersLoaded) renderUserBreakdown(users, visitsLoaded ? visits : [], ticketsLoaded ? tickets : [], paymentRequestsLoaded ? paymentRequests : []);
     else $('user-breakdown').innerHTML = '<div class="card muted">Could not build the per-user breakdown because users could not be loaded.</div>';
     if (visitsLoaded) renderVisits(visits, stats);
     if (ticketsLoaded) renderTickets(tickets, stats);
@@ -552,6 +637,50 @@ async function updateTicket(id, status){
     await db.collection('supportTickets').doc(id).set(payload, { merge: true });
   }
   await loadAdminData();
+}
+
+function adminPaymentRequestUpdatePayload(status){
+  var stamp = firebase.firestore.FieldValue.serverTimestamp();
+  if (status === 'pending') return { status:'pending', updatedAt:stamp, updatedBy:'platform_admin' };
+  if (status === 'invoiced') return { status:'invoiced', invoiceSentAt:stamp, invoiceSentBy:'platform_admin', updatedAt:stamp, updatedBy:'platform_admin' };
+  if (status === 'paid') return { status:'paid', paidAt:stamp, paidBy:'platform_admin', updatedAt:stamp, updatedBy:'platform_admin' };
+  if (status === 'closed') return { status:'closed', closedAt:stamp, closedBy:'platform_admin', updatedAt:stamp, updatedBy:'platform_admin' };
+  return null;
+}
+async function updatePaymentRequest(id, status){
+  try {
+    await fetchAdminFunction({ action: 'updatePaymentRequest', id: id, status: status });
+  } catch (serverErr) {
+    var payload = adminPaymentRequestUpdatePayload(status);
+    if (!payload) throw new Error('Unknown payment request action.');
+    var row = paymentRequestCache[id] || {};
+    var request = row.data || {};
+    await db.collection('paymentRequests').doc(id).set(payload, { merge: true });
+    if (request.uid) {
+      var stamp = firebase.firestore.FieldValue.serverTimestamp();
+      var userPayload = status === 'paid'
+        ? adminUserUpdatePayload('markPaid')
+        : { paymentRequestStatus: status, paymentRequestToken: request.token || id, updatedAt: stamp };
+      if (status === 'paid') {
+        userPayload.paymentRequestStatus = 'paid';
+        userPayload.paymentRequestToken = request.token || id;
+        userPayload.paymentRequestPaidAt = stamp;
+      }
+      await db.collection('users').doc(String(request.uid)).set(userPayload, { merge: true });
+    }
+  }
+  await loadAdminData({ forceLoading: true });
+}
+async function copyPaymentRequest(id){
+  var row = paymentRequestCache[id];
+  if (!row) throw new Error('Payment request is not loaded yet.');
+  var text = paymentRequestMessage(row);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    await navigator.clipboard.writeText(text);
+    alert('Payment request copied.');
+  } else {
+    window.prompt('Copy this payment request:', text);
+  }
 }
 
 function adminUserUpdatePayload(updateType){
@@ -619,6 +748,19 @@ document.addEventListener('click', function(ev){
   var ticketBtn = ev.target.closest('[data-ticket]');
   if (ticketBtn) {
     updateTicket(ticketBtn.getAttribute('data-ticket'), ticketBtn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
+    return;
+  }
+  var copyRequestBtn = ev.target.closest('[data-copy-payment-request]');
+  if (copyRequestBtn) {
+    copyPaymentRequest(copyRequestBtn.getAttribute('data-copy-payment-request')).catch(function(e){ alert(e.message); });
+    return;
+  }
+  var requestBtn = ev.target.closest('[data-payment-request]');
+  if (requestBtn) {
+    var reqStatus = requestBtn.getAttribute('data-payment-status');
+    var confirmLabels = { invoiced:'mark this payment request as invoice sent', paid:'mark this payment request as paid and activate the account', closed:'close this payment request' };
+    if (!confirm('Confirm: ' + (confirmLabels[reqStatus] || reqStatus) + '?')) return;
+    updatePaymentRequest(requestBtn.getAttribute('data-payment-request'), reqStatus).catch(function(e){ alert(e.message); });
     return;
   }
   var userBtn = ev.target.closest('[data-user-action]');

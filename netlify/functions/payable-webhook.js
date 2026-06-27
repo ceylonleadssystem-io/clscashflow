@@ -71,17 +71,24 @@ function authCandidates(event) {
     header(event.headers, 'x-payable-webhook-secret'),
     header(event.headers, 'x-webhook-secret'),
     header(event.headers, 'x-api-key'),
+    header(event.headers, 'x-merchant-token'),
+    header(event.headers, 'x-business-token'),
     bearer ? bearer[1] : '',
     query.secret || query.token || ''
   ].filter(Boolean);
 }
 
 function verifyWebhook(event) {
-  const expected = process.env.PAYABLE_WEBHOOK_SECRET || process.env.PAYABLE_BUSINESS_TOKEN || '';
-  if (!expected) {
+  const expected = [
+    process.env.PAYABLE_WEBHOOK_SECRET,
+    process.env.PAYABLE_BUSINESS_TOKEN,
+    process.env.PAYABLE_MERCHANT_TOKEN
+  ].filter(Boolean);
+  if (!expected.length) {
     return { ok: false, statusCode: 500, error: 'Payable webhook secret is not configured.' };
   }
-  const ok = authCandidates(event).some((candidate) => safeEqual(candidate, expected));
+  const candidates = authCandidates(event);
+  const ok = expected.some((secret) => candidates.some((candidate) => safeEqual(candidate, secret)));
   return ok ? { ok: true } : { ok: false, statusCode: 401, error: 'Webhook verification failed.' };
 }
 
