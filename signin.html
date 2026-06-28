@@ -87,6 +87,34 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .reset-form{display:none}
 .reset-form.show{display:block}
 .main-form.hide{display:none}
+@media(max-width:760px){
+  html,body{min-height:100dvh;height:auto;display:block;padding:0;overflow-x:hidden}
+  .shell{display:block;width:100%;max-width:none;min-height:100dvh;box-shadow:none;background:var(--white)}
+  .left{display:none}
+  .right{min-height:100dvh;padding:1.25rem 1.05rem 2rem;justify-content:flex-start}
+  .right a[style]{margin-bottom:1.15rem!important}
+  .right-eyebrow{font-size:.54rem;letter-spacing:.2em;line-height:1.4;margin-bottom:.55rem}
+  .right-title{font-size:clamp(1.7rem,9vw,2.05rem);line-height:1.05;margin-bottom:.5rem}
+  .right-sub{font-size:.82rem;line-height:1.55;margin-bottom:1.25rem}
+  .rule{margin-bottom:1.2rem}
+  .btn-google,.btn-sign,.finput{min-height:48px}
+  .btn-google{font-size:.78rem;padding:.75rem .85rem}
+  .divider{gap:.55rem;margin-bottom:1.1rem}
+  .divider-text{font-size:.58rem;letter-spacing:.12em;text-align:center}
+  .field{margin-bottom:.9rem}
+  .field label{font-size:.56rem}
+  .finput{font-size:.9rem;padding:.78rem .95rem}
+  .forgot{float:none;text-align:left;margin:.1rem 0 1rem}
+  .btn-sign{margin-bottom:1rem}
+  .signup-link{font-size:.78rem;line-height:1.55}
+  .signup-link a{display:block;margin-top:.15rem}
+  .err-msg,.invite-banner{font-size:.76rem}
+}
+@media(max-width:360px){
+  .right{padding-left:.85rem;padding-right:.85rem}
+  .right-title{font-size:1.55rem}
+  .btn-google{gap:.5rem}
+}
 </style>
 </head>
 <body>

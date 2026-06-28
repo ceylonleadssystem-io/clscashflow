@@ -48,6 +48,18 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .hidden{display:none!important}
 .spinner{width:32px;height:32px;border:3px solid var(--bg4);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:1.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:560px){
+  html,body{display:block;min-height:100dvh;padding:0;overflow-x:hidden}
+  .card{min-height:100dvh;max-width:none;border:0;box-shadow:none;padding:1.4rem 1rem;display:flex;flex-direction:column;justify-content:center}
+  .logo{font-size:1.35rem}
+  .eyebrow{font-size:.56rem;line-height:1.45}
+  .invite-banner{padding:1rem}
+  .invite-banner .who{font-size:1.28rem}
+  .field input,.btn{min-height:48px}
+  .btn{font-size:.72rem;padding:.8rem}
+  .state h2{font-size:1.45rem}
+  .state p,.note{font-size:.8rem}
+}
 </style>
 </head>
 <body>

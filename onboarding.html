@@ -288,6 +288,46 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
   .payroll-table-wrap{overflow-x:auto}
   .tour-card-grid,.launch-choice,.showaround-actions{grid-template-columns:1fr}
 }
+@media(max-width:560px){
+  html,body{width:100%;overflow-x:hidden}
+  .ob-shell,.ob-right,.ob-steps-wrap{width:100%;max-width:100%}
+  .ob-right{padding:1rem .85rem 1.5rem;overflow-x:hidden}
+  .ob-steps-wrap,.ob-card,.ob-field{max-width:100%;min-width:0}
+  .ob-card{transform:none;width:100%;overflow:hidden}
+  .ob-card:not(.active){display:none}
+  .ob-card.exiting{transform:none}
+  .ob-eyebrow{font-size:.54rem;letter-spacing:.2em;line-height:1.4}
+  .ob-title{font-size:1.48rem;line-height:1.12}
+  .ob-sub{font-size:.78rem;line-height:1.55;margin-bottom:1rem;overflow-wrap:normal;word-break:normal}
+  .ob-rule{margin-bottom:1rem}
+  .ob-input,.btn-next,.btn-back,.btn-skip{min-height:46px;max-width:100%}
+  .ob-choice,.setup-task,.showaround-panel{padding:.85rem}
+  .ob-choice-label,.setup-task-title{font-size:.82rem}
+  .ob-choice-desc,.setup-task-copy,.tour-card-text{font-size:.7rem}
+  .tier-card{padding:1rem .85rem}
+  .tier-card.recommended::after{position:static;display:inline-block;margin:.35rem auto 0}
+  .tpl-grid.cols-3,.tpl-grid.cols-5,.tpl-grid.cols-6{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tpl-grid-wrap{max-height:260px}
+  .invoice-preview-card{padding:.8rem;border-radius:14px}
+  .invoice-preview-heading,.invoice-preview-head,.invoice-preview-party-grid,.invoice-preview-bottom{display:grid;grid-template-columns:1fr!important;text-align:left}
+  .invoice-preview-title-block{text-align:left}
+  .invoice-preview-page{padding:.8rem;min-height:auto}
+  .invoice-preview-page::before{left:.8rem;right:.8rem;top:.8rem}
+  .invoice-preview-table{min-width:420px}
+  .invoice-preview-page{overflow-x:auto}
+  .invoice-preview-total-box{width:100%}
+  .invoice-preview-meta span:nth-child(even){text-align:left}
+  .epf-legend{grid-template-columns:1fr}
+  .reminder-item,.showaround-head,.summary-row{display:grid;grid-template-columns:1fr;gap:.35rem}
+  .showaround-badge{justify-self:start}
+  .summary-row strong{min-width:0}
+  .ob-nav{display:grid;grid-template-columns:1fr;gap:.65rem}
+  .ob-nav .btn-back,.ob-nav .btn-next,.ob-nav .btn-skip{width:100%;padding:.75rem 1rem}
+}
+@media(max-width:380px){
+  .tpl-grid.cols-3,.tpl-grid.cols-5,.tpl-grid.cols-6{grid-template-columns:1fr}
+  .ob-title{font-size:1.34rem}
+}
 </style>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
