@@ -227,20 +227,31 @@ a{color:inherit}
   .footer-grid{grid-template-columns:1fr 1fr;gap:42px}
 }
 @media(max-width:760px){
-  .container,.narrow{width:min(1250px,calc(100% - 28px))}
-  .site-nav{position:relative}
-  .nav-inner{height:auto;padding:18px 0;display:flex;justify-content:space-between}
+  html,body,.page{max-width:100%;overflow-x:hidden}
+  .container,.narrow{width:auto;max-width:none;margin-left:16px;margin-right:16px}
+  .site-nav{position:sticky}
+  .nav-inner{height:auto;padding:12px 0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
   .nav-links{display:none}
-  .nav-logo{width:38px;height:38px}
-  .nav-brand{gap:10px}
-  .nav-brand-title{font-size:23px}
+  .nav-logo{width:34px;height:34px}
+  .nav-brand{gap:9px;min-width:0}
+  .nav-brand-title{font-size:clamp(20px,6vw,24px);overflow:hidden;text-overflow:ellipsis}
   .nav-brand-sub{display:none}
-  .nav-cta{gap:12px}
-  .nav-signin{font-size:13px}
-  .nav-trial{padding:10px 13px;font-size:13px}
-  .hero{padding:68px 0 52px}
-  .hero h1{font-size:clamp(56px,17vw,78px)}
-  .hero-sub{font-size:17px}
+  .nav-cta{display:none}
+  .nav-signin{font-size:13px;border:1px solid rgba(42,28,19,.16);border-radius:999px;padding:8px 12px;background:rgba(255,252,247,.62)}
+  .nav-trial{display:none}
+  .hero{padding:50px 0 54px}
+  .hero .eyebrow{font-size:10px;letter-spacing:.2em;margin-bottom:16px}
+  .hero h1{font-size:clamp(48px,15vw,66px);line-height:.92}
+  .hero-sub{font-size:16px;line-height:1.55;margin-top:22px}
+  .hero .container.hero-copy{width:100vw;max-width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding-left:20px;padding-right:20px}
+  .hero-copy{overflow:hidden}
+  .hero-sub{max-width:100%;margin-left:auto;margin-right:auto}
+  .hero-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:28px auto 0 clamp(20px,7vw,28px);width:100%;max-width:300px;overflow:hidden}
+  .hero-actions .btn{width:100%;min-height:56px;border-radius:14px;padding:14px 18px;font-size:16px}
+  .hero-note{margin-top:14px;font-size:13px}
+  .hero-proof{display:grid;grid-template-columns:1fr;gap:9px;margin:22px auto 0 clamp(20px,7vw,28px);max-width:280px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+  .proof-chip{width:100%;padding:8px 10px;font-size:12px;text-align:center}
+  .proof-chip:nth-child(3){grid-column:auto;justify-self:stretch;min-width:0}
   .story-teaser-card{padding:22px;gap:22px}
   .story-teaser-logo{max-width:220px}
   .device-stage{padding:14px;border-radius:20px}
