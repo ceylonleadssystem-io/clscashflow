@@ -264,6 +264,15 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .tour-card-text{font-size:.7rem;color:var(--muted);line-height:1.5}
 .launch-choice{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1rem}
 .launch-choice .btn-next,.launch-choice .btn-back{width:100%;padding:.9rem .75rem}
+.showaround-panel{border:1px solid var(--border);background:#fff;padding:1rem 1.1rem;margin:1rem 0;text-align:left}
+.showaround-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:.75rem}
+.showaround-title{font-family:var(--font-d);font-size:1.2rem;color:var(--text);line-height:1.15}
+.showaround-copy{font-size:.74rem;color:var(--muted);line-height:1.55;margin-top:.25rem}
+.showaround-badge{font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border2);padding:.25rem .5rem;white-space:nowrap}
+.showaround-actions{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
+.showaround-actions button{width:100%;padding:.8rem .75rem}
+.showaround-actions .selected{box-shadow:0 0 0 2px rgba(184,146,42,.18);border-color:var(--gold)}
+.showaround-status{font-size:.68rem;color:var(--dim);line-height:1.45;margin-top:.65rem}
 
 /* Scrollable step content */
 .ob-card-scroll{max-height:none;overflow:visible;padding-right:0}
@@ -277,7 +286,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
   .ob-input-row,.ob-input-row3{grid-template-columns:1fr}
   .epf-legend{grid-template-columns:1fr 1fr}
   .payroll-table-wrap{overflow-x:auto}
-  .tour-card-grid,.launch-choice{grid-template-columns:1fr}
+  .tour-card-grid,.launch-choice,.showaround-actions{grid-template-columns:1fr}
 }
 </style>
 <!-- Firebase SDKs -->
@@ -699,6 +708,21 @@ firebase.initializeApp(firebaseConfig);
             <div class="summary-box-label">Account Summary</div>
             <div id="account-summary"></div>
           </div>
+          <div class="showaround-panel" id="showaround-panel">
+            <div class="showaround-head">
+              <div>
+                <div class="ob-eyebrow" style="margin-bottom:.35rem">Optional show-around</div>
+                <div class="showaround-title">Want Sasuni to walk you through the system?</div>
+                <div class="showaround-copy">Your Customer Success Manager can show the dashboard, invoices, customers, and payment flow so you feel comfortable before sending your first invoice.</div>
+              </div>
+              <div class="showaround-badge">CSM Sasuni</div>
+            </div>
+            <div class="showaround-actions">
+              <button type="button" class="btn-next" id="showaround-book" onclick="window.bookShowAround()">Book show-around</button>
+              <button type="button" class="btn-back" id="showaround-skip" onclick="window.chooseShowAround('not-needed')">No thanks, continue</button>
+            </div>
+            <div class="showaround-status" id="showaround-status">This is optional. You can continue into the system either way.</div>
+          </div>
           <div class="tour-card-grid">
             <div class="tour-card"><div class="tour-card-icon">📊</div><div class="tour-card-title">Open Dashboard</div><div class="tour-card-text">Start from the clearest view of payments, outstanding invoices, and reminders.</div></div>
             <div class="tour-card"><div class="tour-card-icon">🧾</div><div class="tour-card-title">Send Invoices</div><div class="tour-card-text">Create branded LKR invoices with customer details and payment status.</div></div>
@@ -724,8 +748,10 @@ const state = {
   setupTasks:{profile:true,payroll:false,notifications:false},
   logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',selectedTemplate:0,
   empCount:0,employees:[],payFreq:'Monthly',
-  channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:''
+  channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:'',
+  showAround:'not-needed',showAroundUrl:'https://cal.com/cashflowsystem/show-around',customerSuccessManager:'Sasuni'
 };
+const SHOW_AROUND_URL = 'https://cal.com/cashflowsystem/show-around';
 
 // ── TEMPLATES ──
 const allTemplates = [
@@ -1162,6 +1188,7 @@ function buildSuccess(){
   const tplName=allTemplates[normalizeTplIdx(state.selectedTemplate)]?.name||'Brand Gold';
   const suggested=tierLabels[state.suggestedTier]||tierLabels.solo;
   const selected=tierLabels[state.tier]||state.tier;
+  const showAroundLabel=state.showAround==='booked'?'Booked with Sasuni':'Optional - skipped for now';
   const rows=[
     ['Name',`${state.fname} ${state.lname}`],
     ['Email',state.email],
@@ -1171,8 +1198,45 @@ function buildSuccess(){
     ['Selected Plan',selected],
     ['Invoice Template',tplName],
     ['First Customer',state.firstClient?state.firstClient.name:'Skipped'],
+    ['Show-around',showAroundLabel],
   ];
   document.getElementById('account-summary').innerHTML=rows.map(r=>`<div class="summary-row"><strong>${r[0]}</strong>${r[1]}</div>`).join('');
+  syncShowAroundUi();
+}
+
+function syncShowAroundUi(){
+  const book=document.getElementById('showaround-book');
+  const skip=document.getElementById('showaround-skip');
+  const status=document.getElementById('showaround-status');
+  if(book) book.classList.toggle('selected',state.showAround==='booked');
+  if(skip) skip.classList.toggle('selected',state.showAround!=='booked');
+  if(status) {
+    status.textContent = state.showAround==='booked'
+      ? 'Show-around requested. Cal.com opened in a new tab; your account will also remember Sasuni as your Customer Success Manager.'
+      : 'No show-around selected. You can still continue now and contact support later if needed.';
+  }
+}
+window.chooseShowAround = function chooseShowAround(choice){
+  state.showAround = choice === 'booked' ? 'booked' : 'not-needed';
+  state.showAroundUrl = SHOW_AROUND_URL;
+  state.customerSuccessManager = 'Sasuni';
+  localStorage.setItem('cls-onboarding',JSON.stringify(state));
+  syncShowAroundUi();
+  buildSuccess();
+}
+window.bookShowAround = function bookShowAround(){
+  window.chooseShowAround('booked');
+  window.open(SHOW_AROUND_URL,'_blank','noopener');
+}
+
+function showAroundPayload(){
+  return {
+    showAroundPreference: state.showAround || 'not-needed',
+    showAroundBooked: state.showAround === 'booked',
+    showAroundUrl: SHOW_AROUND_URL,
+    customerSuccessManager: 'Sasuni',
+    showAroundUpdatedAt: new Date().toISOString()
+  };
 }
 
 function buildInvoiceSettingsPayload(){
@@ -1263,7 +1327,7 @@ window.launchDashboard = async function launchDashboard(){
     if (state.googleAuth) {
       // Google user — already authenticated, just update their Firestore profile
       const user = firebase.auth().currentUser;
-      if (!user) { showStepError(7,'Session expired. Please sign in again to continue.'); setTimeout(function(){window.location.href='signin.html';},1200); return; }
+      if (!user) { showStepError(4,'Session expired. Please sign in again to continue.'); setTimeout(function(){window.location.href='signin.html';},1200); return; }
       const existingDoc = await firebase.firestore().collection('users').doc(user.uid).get();
       const existingProfile = existingDoc.exists ? existingDoc.data() : {};
       const selectedPlan = firstPlan(
@@ -1301,6 +1365,7 @@ window.launchDashboard = async function launchDashboard(){
         channels: state.channels,
         reminders: state.reminders,
         setupTasks: state.setupTasks,
+        ...showAroundPayload(),
         onboardingComplete: true,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -1357,6 +1422,7 @@ window.launchDashboard = async function launchDashboard(){
         channels: state.channels,
         reminders: state.reminders,
         setupTasks: state.setupTasks,
+        ...showAroundPayload(),
         onboardingComplete: true,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -1384,9 +1450,9 @@ window.launchDashboard = async function launchDashboard(){
     console.error(err);
     if(btn){ btn.textContent = 'Start Free Trial →'; btn.disabled = false; }
     if(err.code === 'auth/email-already-in-use'){
-      showStepError(7,'An account with this email already exists. Please sign in instead.');
+      showStepError(4,'An account with this email already exists. Please sign in instead.');
     } else {
-      showStepError(7,'Account creation failed: ' + err.message);
+      showStepError(4,'Account creation failed: ' + err.message);
     }
   }
 }

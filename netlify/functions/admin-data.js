@@ -94,6 +94,21 @@ async function readCollection(db, name, orderField, limit) {
   }
 }
 
+async function readChats(db) {
+  const threads = await readCollection(db, 'chatThreads', 'lastMessageAt', 300);
+  await Promise.all(threads.map(async function(row) {
+    try {
+      const snap = await db.collection('chatThreads').doc(row.id).collection('messages').orderBy('createdAt', 'asc').limit(80).get();
+      row.data.messages = snap.docs.map(function(doc) {
+        return { id: doc.id, data: serialize(doc.data() || {}) };
+      });
+    } catch (err) {
+      row.data.messages = [];
+    }
+  }));
+  return threads;
+}
+
 async function countQuery(ref) {
   try {
     if (typeof ref.count !== 'function') return null;
@@ -124,7 +139,12 @@ function isLandingVisit(data) {
   return data.isLanding === true || path === '/' || path === '' || path.endsWith('/index.html');
 }
 
-function buildStats(users, visits, tickets, paymentRequests) {
+function buildStats(users, visits, tickets, paymentRequests, chats) {
+  users = users || [];
+  visits = visits || [];
+  tickets = tickets || [];
+  paymentRequests = paymentRequests || [];
+  chats = chats || [];
   const now = Date.now();
   const recentCutoff = now - 10 * 60 * 1000;
   const uniqueVisitors = new Set();
@@ -157,6 +177,10 @@ function buildStats(users, visits, tickets, paymentRequests) {
     openPaymentRequestsTotal: paymentRequests.filter(function(row) {
       const status = String((row.data || {}).status || 'pending').toLowerCase();
       return status !== 'paid' && status !== 'closed';
+    }).length,
+    chatsTotal: chats.length,
+    openChatsTotal: chats.filter(function(row) {
+      return String((row.data || {}).status || 'open').toLowerCase() !== 'closed';
     }).length,
     uniqueVisitorsRecent: uniqueVisitors.size,
     liveVisitorsLast10Min: liveVisitors.size,
@@ -474,9 +498,60 @@ exports.handler = async function handler(event) {
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
       }
 
-      if (action !== 'updateTicket') {
-        return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown admin action.' }) };
+      if (action === 'replyChat') {
+        const id = String(body.id || body.threadId || '').trim();
+        const message = String(body.message || '').trim();
+        if (!id || !message || message.length > 1200) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid chat reply.' }) };
+        }
+        const stamp = admin.firestore.FieldValue.serverTimestamp();
+        const now = new Date().toISOString();
+        const ref = db.collection('chatThreads').doc(id);
+        await ref.collection('messages').add({
+          authorRole: 'admin',
+          authorName: 'Mrs. Gamage',
+          text: message,
+          createdAt: stamp,
+          createdAtUtc: now
+        });
+        await ref.set({
+          status: 'open',
+          assignedTo: 'Mrs. Gamage',
+          lastMessage: message.slice(0, 240),
+          lastMessageBy: 'admin',
+          lastMessageAt: stamp,
+          lastMessageAtUtc: now,
+          unreadForAdmin: false,
+          unreadForUser: true,
+          updatedAt: stamp,
+          updatedAtUtc: now
+        }, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
       }
+
+      if (action === 'updateChat') {
+        const id = String(body.id || body.threadId || '').trim();
+        const status = String(body.status || '').trim().toLowerCase();
+        if (!id || ['open', 'closed'].indexOf(status) === -1) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid chat update.' }) };
+        }
+        const stamp = admin.firestore.FieldValue.serverTimestamp();
+        const now = new Date().toISOString();
+        const update = {
+          status,
+          updatedAt: stamp,
+          updatedAtUtc: now
+        };
+        if (status === 'closed') {
+          update.closedAt = stamp;
+          update.closedAtUtc = now;
+          update.closedBy = 'platform_admin';
+        }
+        await db.collection('chatThreads').doc(id).set(update, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+
+      return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown admin action.' }) };
     }
 
     const users = await readCollection(db, 'users', 'createdAt', 500);
@@ -484,24 +559,27 @@ exports.handler = async function handler(event) {
     const tickets = await readCollection(db, 'supportTickets', 'createdAt', 300);
     await ensureExpiredTrialPaymentRequests(admin, db, users);
     const paymentRequests = await readCollection(db, 'paymentRequests', 'createdAt', 300);
-    const stats = buildStats(users, visits, tickets, paymentRequests);
+    const chats = await readChats(db);
+    const stats = buildStats(users, visits, tickets, paymentRequests, chats);
 
     const usersTotal = await countQuery(db.collection('users'));
     const visitsTotal = await countQuery(db.collection('platformVisits'));
     const ticketsTotal = await countQuery(db.collection('supportTickets'));
     const paymentRequestsTotal = await countQuery(db.collection('paymentRequests'));
+    const chatsTotal = await countQuery(db.collection('chatThreads'));
     const landingVisitsTotal = await countQuery(db.collection('platformVisits').where('isLanding', '==', true));
 
     if (usersTotal != null) stats.usersTotal = usersTotal;
     if (visitsTotal != null) stats.visitsTotal = visitsTotal;
     if (ticketsTotal != null) stats.ticketsTotal = ticketsTotal;
     if (paymentRequestsTotal != null) stats.paymentRequestsTotal = paymentRequestsTotal;
+    if (chatsTotal != null) stats.chatsTotal = chatsTotal;
     if (landingVisitsTotal != null) stats.landingVisitsTotal = landingVisitsTotal;
 
     return {
       statusCode: 200,
       headers: headers(),
-      body: JSON.stringify({ ok: true, users, visits, tickets, paymentRequests, stats })
+      body: JSON.stringify({ ok: true, users, visits, tickets, paymentRequests, chats, stats })
     };
   } catch (err) {
     return {

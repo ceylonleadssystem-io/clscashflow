@@ -766,7 +766,17 @@
 	      '.cls-settings-support-card .cls-ticket-pill.open{background:#fde8e4;color:#c0392b}' +
 	      '.cls-settings-support-card .cls-ticket-msg{font-size:.74rem;color:#1C1814;line-height:1.45;white-space:pre-wrap}' +
 	      '.cls-settings-support-card .cls-ticket-close{justify-self:start;background:#fff;color:#1C1814;border:1px solid rgba(184,146,42,.35);padding:.45rem .7rem;font-family:inherit;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;cursor:pointer}' +
+	      '.cls-settings-support-card .cls-live-chat{border-top:1px solid #E7DFD2;margin-top:1rem;padding-top:1rem;display:grid;gap:.75rem}' +
+	      '.cls-settings-support-card .cls-chat-messages{border:1px solid #E7DFD2;background:#F7F5F0;min-height:150px;max-height:300px;overflow:auto;padding:.75rem;display:grid;gap:.55rem}' +
+	      '.cls-settings-support-card .cls-chat-row{display:grid;gap:.18rem;max-width:86%;justify-self:start}' +
+	      '.cls-settings-support-card .cls-chat-row.admin{justify-self:end;text-align:right}' +
+	      '.cls-settings-support-card .cls-chat-bubble{background:#fff;border:1px solid #E7DFD2;padding:.65rem .75rem;font-size:.76rem;color:#1C1814;line-height:1.45;white-space:pre-wrap}' +
+	      '.cls-settings-support-card .cls-chat-row.admin .cls-chat-bubble{background:#1C1814;color:#fff;border-color:#1C1814}' +
+	      '.cls-settings-support-card .cls-chat-meta{font-size:.58rem;color:#8b8176;letter-spacing:.04em}' +
+	      '.cls-settings-support-card .cls-chat-compose{display:grid;grid-template-columns:1fr auto;gap:.65rem;align-items:start}' +
+	      '.cls-settings-support-card .cls-chat-compose textarea{min-height:54px}' +
 	      '@media(max-width:760px){.cls-settings-support-card .cls-support-top,.cls-settings-support-card .cls-support-form{grid-template-columns:1fr}.cls-settings-support-card .cls-support-toggle,.cls-settings-support-card .cls-sp-submit{width:100%}}' +
+	      '@media(max-width:760px){.cls-settings-support-card .cls-chat-compose{grid-template-columns:1fr}.cls-settings-support-card .cls-chat-row{max-width:100%}}' +
       '@media print{#cls-support-widget{display:none!important}}';
 	    document.head.appendChild(style);
 	  }
@@ -848,6 +858,184 @@
     await refreshMyTickets(wrap);
   }
 
+  var supportChatUnsubscribe = null;
+
+  function chatThreadId(user) {
+    var uid = user && user.uid ? user.uid : persistentId('cls-chat-visitor-id', 'visitor');
+    return 'chat-' + String(uid).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 120);
+  }
+
+  function chatMessageTime(data) {
+    data = data || {};
+    var raw = data.createdAt || data.createdAtUtc || data.updatedAt || '';
+    if (raw && raw.toDate) return raw.toDate().getTime();
+    var ms = Date.parse(raw);
+    return Number.isFinite(ms) ? ms : 0;
+  }
+
+  function chatWhen(data) {
+    var ms = chatMessageTime(data);
+    if (!ms) return cleanString(data && data.createdAtUtc || '', 24);
+    try {
+      return new Date(ms).toLocaleString([], { month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    } catch (e) {
+      return new Date(ms).toISOString();
+    }
+  }
+
+  async function ensureChatThread(db, user) {
+    if (!db) throw new Error('Firebase is not available on this page.');
+    if (!user) throw new Error('Please sign in to chat with support.');
+    var ref = db.collection('chatThreads').doc(chatThreadId(user));
+    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    var payload = {
+      uid: user.uid,
+      email: cleanString(user.email || '', 180).toLowerCase(),
+      displayName: cleanString(user.displayName || '', 180),
+      name: cleanString(user.displayName || user.email || 'Customer', 180),
+      status: 'open',
+      assignedTo: 'Mrs. Gamage',
+      source: 'portal-chat',
+      page: location.href,
+      lastSeenPath: location.pathname,
+      updatedAt: stamp,
+      updatedAtUtc: nowIso()
+    };
+    try {
+      var snap = await ref.get();
+      if (!snap.exists) {
+        payload.createdAt = stamp;
+        payload.createdAtUtc = nowIso();
+      }
+    } catch (e) {
+      payload.createdAt = stamp;
+      payload.createdAtUtc = nowIso();
+    }
+    await ref.set(payload, { merge: true });
+    return ref;
+  }
+
+  function renderChatMessages(target, rows) {
+    if (!target) return;
+    rows = rows || [];
+    if (!rows.length) {
+      target.innerHTML = '<div class="cls-sp-status">Start a chat with Mrs. Gamage. Staff can see this in the admin panel and reply from there.</div>';
+      return;
+    }
+    target.innerHTML = rows.map(function(row) {
+      var data = row.data || {};
+      var role = String(data.authorRole || '').toLowerCase();
+      var isAdmin = role === 'admin' || role === 'support';
+      var who = isAdmin ? cleanString(data.authorName || 'Mrs. Gamage', 80) : cleanString(data.authorName || data.email || 'You', 80);
+      return '<div class="cls-chat-row ' + (isAdmin ? 'admin' : 'customer') + '">' +
+        '<div class="cls-chat-meta">' + escapeHtml(who) + ' · ' + escapeHtml(chatWhen(data)) + '</div>' +
+        '<div class="cls-chat-bubble">' + escapeHtml(cleanString(data.text || '', 1200)) + '</div>' +
+      '</div>';
+    }).join('');
+    target.scrollTop = target.scrollHeight;
+  }
+
+  async function refreshChat(wrap) {
+    var list = wrap && wrap.querySelector('[data-chat-list]');
+    if (!list) return;
+    var db = getFirestore();
+    var user = getAuthUser();
+    if (!db || !user) {
+      list.innerHTML = '<div class="cls-sp-status">Please sign in to chat with support.</div>';
+      return;
+    }
+    list.innerHTML = '<div class="cls-sp-status">Loading chat...</div>';
+    try {
+      var thread = db.collection('chatThreads').doc(chatThreadId(user));
+      var threadSnap = await thread.get();
+      if (!threadSnap.exists) {
+        renderChatMessages(list, []);
+        return;
+      }
+      var snap = await thread.collection('messages').orderBy('createdAt', 'asc').limit(80).get();
+      var rows = [];
+      snap.forEach(function(doc) { rows.push({ id: doc.id, data: doc.data() || {} }); });
+      renderChatMessages(list, rows);
+      await thread.set({
+        unreadForUser: false,
+        lastUserReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastUserReadAtUtc: nowIso()
+      }, { merge: true });
+    } catch (e) {
+      list.innerHTML = '<div class="cls-sp-status">Could not load chat right now.</div>';
+    }
+  }
+
+  async function subscribeChat(wrap) {
+    if (supportChatUnsubscribe) {
+      try { supportChatUnsubscribe(); } catch (e) {}
+      supportChatUnsubscribe = null;
+    }
+    var list = wrap && wrap.querySelector('[data-chat-list]');
+    var db = getFirestore();
+    var user = getAuthUser();
+    if (!list || !db || !user) {
+      if (list) list.innerHTML = '<div class="cls-sp-status">Please sign in to chat with support.</div>';
+      return;
+    }
+    try {
+      var thread = db.collection('chatThreads').doc(chatThreadId(user));
+      var threadSnap = await thread.get();
+      if (!threadSnap.exists) {
+        renderChatMessages(list, []);
+        return;
+      }
+      supportChatUnsubscribe = thread.collection('messages').orderBy('createdAt', 'asc').limit(80).onSnapshot(function(snap) {
+        var rows = [];
+        snap.forEach(function(doc) { rows.push({ id: doc.id, data: doc.data() || {} }); });
+        renderChatMessages(list, rows);
+        thread.set({
+          unreadForUser: false,
+          lastUserReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastUserReadAtUtc: nowIso()
+        }, { merge: true }).catch(function() {});
+      }, function() {
+        refreshChat(wrap);
+      });
+    } catch (e) {
+      list.innerHTML = '<div class="cls-sp-status">Could not start chat right now.</div>';
+    }
+  }
+
+  async function sendChatMessage(wrap, text) {
+    text = cleanString(text, 1200).trim();
+    if (!text) throw new Error('Please type a message first.');
+    var db = getFirestore();
+    var user = getAuthUser();
+    var thread = await ensureChatThread(db, user);
+    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    var authorName = cleanString(user.displayName || user.email || 'Customer', 180);
+    await thread.collection('messages').add({
+      uid: user.uid,
+      email: cleanString(user.email || '', 180).toLowerCase(),
+      authorRole: 'customer',
+      authorName: authorName,
+      text: text,
+      page: location.href,
+      createdAt: stamp,
+      createdAtUtc: nowIso()
+    });
+    await thread.set({
+      status: 'open',
+      assignedTo: 'Mrs. Gamage',
+      lastMessage: cleanString(text, 240),
+      lastMessageBy: 'customer',
+      lastMessageAt: stamp,
+      lastMessageAtUtc: nowIso(),
+      unreadForAdmin: true,
+      unreadForUser: false,
+      updatedAt: stamp,
+      updatedAtUtc: nowIso()
+    }, { merge: true });
+    refreshChat(wrap);
+    subscribeChat(wrap);
+  }
+
 	  function mountSupportWidget() {
     if (document.getElementById(SUPPORT_ID)) return;
     if (/ceylonry-admin\.html/i.test(location.pathname)) return;
@@ -869,7 +1057,7 @@
         '<div>' +
           '<div class="cls-support-kicker">Support</div>' +
           '<div class="cls-support-title">Need help?</div>' +
-          '<div class="cls-support-copy">Send a small support ticket to the Ceylonry Labs team. We will receive your account, page, and UTC timestamp with the issue.</div>' +
+          '<div class="cls-support-copy">Chat with Mrs. Gamage for quick help, or send a support ticket for anything the team should track formally.</div>' +
         '</div>' +
         '<button type="button" class="cls-support-toggle">New ticket</button>' +
       '</div>' +
@@ -882,6 +1070,12 @@
 	        '<button class="cls-sp-submit" type="submit">Send ticket</button>' +
 	        '<div class="cls-sp-status" id="cls-support-status">This will be saved as a support ticket.</div>' +
 	      '</form>' +
+	      '<div class="cls-live-chat">' +
+	        '<div class="cls-ticket-head"><div><div class="cls-support-kicker">Mrs. Gamage live chat</div><div class="cls-support-copy">Send a message to our 24/7 help line. Staff replies appear here and in the admin system.</div></div><button type="button" class="cls-ticket-refresh" data-refresh-chat>Refresh</button></div>' +
+	        '<div class="cls-chat-messages" data-chat-list><div class="cls-sp-status">Loading chat...</div></div>' +
+	        '<form class="cls-chat-compose" data-chat-form><textarea name="chatMessage" required placeholder="Type your message..."></textarea><button class="cls-sp-submit" type="submit">Send</button></form>' +
+	        '<div class="cls-sp-status" data-chat-status>Messages are saved to your account so our team can continue the conversation.</div>' +
+	      '</div>' +
 	      '<div class="cls-ticket-list">' +
 	        '<div class="cls-ticket-head"><div><div class="cls-support-kicker">My tickets</div><div class="cls-support-copy">Track open, in progress, and closed support tickets.</div></div><button type="button" class="cls-ticket-refresh" data-refresh-tickets>Refresh</button></div>' +
 	        '<div data-ticket-list><div class="cls-sp-status">Loading tickets...</div></div>' +
@@ -893,6 +1087,9 @@
 	    });
     wrap.querySelector('[data-refresh-tickets]').addEventListener('click', function() {
       refreshMyTickets(wrap);
+    });
+    wrap.querySelector('[data-refresh-chat]').addEventListener('click', function() {
+      refreshChat(wrap);
     });
     wrap.addEventListener('click', function(ev) {
       var btn = ev.target.closest('[data-close-ticket]');
@@ -914,7 +1111,26 @@
       if (emailInput && user.email) emailInput.value = user.email;
     }
 
-    wrap.querySelector('form').addEventListener('submit', async function(ev) {
+    var chatForm = wrap.querySelector('[data-chat-form]');
+    if (chatForm) {
+      chatForm.addEventListener('submit', async function(ev) {
+        ev.preventDefault();
+        var field = chatForm.querySelector('[name="chatMessage"]');
+        var status = wrap.querySelector('[data-chat-status]');
+        var text = field ? field.value : '';
+        if (status) status.textContent = 'Sending...';
+        try {
+          await sendChatMessage(wrap, text);
+          if (field) field.value = '';
+          if (status) status.textContent = 'Sent. Mrs. Gamage will reply here.';
+        } catch (e) {
+          if (status) status.textContent = e.message || 'Could not send message right now.';
+        }
+      });
+    }
+
+    var supportForm = wrap.querySelector('#cls-support-form');
+    supportForm.addEventListener('submit', async function(ev) {
       ev.preventDefault();
       var form = ev.currentTarget;
 	      var status = document.getElementById('cls-support-status');
@@ -951,6 +1167,7 @@
 	      }
 	    });
     refreshMyTickets(wrap);
+    subscribeChat(wrap);
 	  }
 
   function boot() {

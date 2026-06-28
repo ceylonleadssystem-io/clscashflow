@@ -12,6 +12,23 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1280px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.token{font-weight:800;letter-spacing:.08em;color:#1C1814;white-space:nowrap}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{padding:8px 10px;font-size:10px}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.secure-note{font-size:11px;color:#6B6258;line-height:1.5}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
+<style>
+.chat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.chat-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}
+.chat-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.chat-title{font-weight:800;color:#1C1814}
+.chat-sub{font-size:12px;color:#6B6258;word-break:break-word}
+.chat-messages{border:1px solid #e8dfd4;background:#F7F5F0;max-height:260px;overflow:auto;padding:10px;display:grid;gap:8px}
+.chat-message{display:grid;gap:3px;max-width:88%;justify-self:start}
+.chat-message.admin{justify-self:end;text-align:right}
+.chat-bubble{background:#fff;border:1px solid #e8dfd4;padding:9px 10px;font-size:13px;line-height:1.45;white-space:pre-wrap}
+.chat-message.admin .chat-bubble{background:#1a1714;color:#fff;border-color:#1a1714}
+.chat-meta{font-size:10px;color:#7b6e61}
+.chat-reply{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.chat-reply textarea{min-height:62px;border:1px solid #d9cec0;background:#F7F5F0;padding:10px 11px;font:500 13px 'DM Sans';outline:none;resize:vertical}
+.chat-reply textarea:focus{border-color:#B8922A;background:#fff}
+@media(max-width:1000px){.chat-grid{grid-template-columns:1fr}.chat-reply{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header class="top">
@@ -62,6 +79,7 @@
       <div class="card"><div class="label">Live now</div><div class="kpi-number" id="kpi-live">0</div><p class="muted">Visitors in last 10 minutes</p></div>
       <div class="card"><div class="label">Open tickets</div><div class="kpi-number" id="kpi-open">0</div><p class="muted"><span id="kpi-tickets">0</span> total requests</p></div>
       <div class="card"><div class="label">Payment requests</div><div class="kpi-number" id="kpi-payment-requests">0</div><p class="muted">Expired trials needing invoices</p></div>
+      <div class="card"><div class="label">Open chats</div><div class="kpi-number" id="kpi-open-chats">0</div><p class="muted"><span id="kpi-chats">0</span> Mrs. Gamage threads</p></div>
     </div>
 
     <section class="section">
@@ -91,6 +109,11 @@
         <thead><tr><th>UTC</th><th>Visitor</th><th>Page</th><th>Plan</th><th>Path</th><th>City</th><th>Country</th><th>Timezone</th><th>Device</th><th>IP</th></tr></thead>
         <tbody id="visits-body"></tbody>
       </table></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Mrs. Gamage Live Chat</h2><span class="muted">Customer messages from the portal chat</span></div>
+      <div class="chat-grid" id="chats-body"></div>
     </section>
 
     <section class="section">
@@ -181,7 +204,7 @@ function pagePill(v){
   if (v && v.isPortal) return '<span class="pill ok">Portal</span>';
   return '<span class="pill">'+esc(kind || 'Page')+'</span>';
 }
-function clientStats(users, visits, tickets, paymentRequests){
+function clientStats(users, visits, tickets, paymentRequests, chats){
   var now = Date.now();
   var liveIds = {};
   var visitorIds = {};
@@ -203,6 +226,10 @@ function clientStats(users, visits, tickets, paymentRequests){
     openPaymentRequestsTotal: (paymentRequests || []).filter(function(r){
       var status = String((r.data || {}).status || 'pending').toLowerCase();
       return status !== 'paid' && status !== 'closed';
+    }).length,
+    chatsTotal: (chats || []).length,
+    openChatsTotal: (chats || []).filter(function(c){
+      return String((c.data || {}).status || 'open').toLowerCase() !== 'closed';
     }).length
   };
 }
@@ -322,6 +349,14 @@ function openPaymentRequestsForUser(user, paymentRequests){
     return open && match;
   });
 }
+function openChatsForUser(user, chats){
+  return (chats || []).filter(function(row){
+    var c = row.data || {};
+    var open = String(c.status || 'open').toLowerCase() !== 'closed';
+    var match = (user.email && String(c.email || '').toLowerCase() === user.email) || (user.id && c.uid === user.id) || (user.owner && c.uid === user.owner);
+    return open && match;
+  });
+}
 function userStatus(user, tasks){
   var role = String(user.role || '').toLowerCase();
   if (role === 'platform_admin' || user.plan === 'admin') return '<span class="pill">admin</span>';
@@ -334,7 +369,7 @@ function userStatus(user, tasks){
   if (days <= 3) return '<span class="pill warn">'+days+'d trial</span>';
   return '<span class="pill ok">trial active</span>';
 }
-function userTasks(user, latestVisit, tickets, paymentRequests){
+function userTasks(user, latestVisit, tickets, paymentRequests, chats){
   var tasks = [];
   var role = String(user.role || '').toLowerCase();
   var days = daysUntil(user.trialEnd);
@@ -353,11 +388,13 @@ function userTasks(user, latestVisit, tickets, paymentRequests){
     if (!user.paid && days != null && days < 0) tasks.push({ cls: 'bad', text: 'Trial expired - payment or pause decision needed.' });
     else if (!user.paid && days != null && days <= 3) tasks.push({ cls: '', text: 'Trial ending soon - send upgrade/payment reminder.' });
     else if (!user.paid && days == null) tasks.push({ cls: '', text: 'Trial end missing - check onboarding record.' });
+    if (user.raw.showAroundBooked === true) tasks.push({ cls: '', text: 'Show-around requested - confirm Sasuni Cal.com booking and follow up.' });
     if (!user.raw.name && !user.raw.displayName) tasks.push({ cls: '', text: 'Profile name missing - ask user to complete business profile.' });
     if (user.raw.onboardingComplete === false || /onboarding/i.test(user.lastPath || '')) tasks.push({ cls: '', text: 'Onboarding may be incomplete - check setup progress.' });
     if (lastSeenAge == null) tasks.push({ cls: '', text: 'No activity tracked yet - confirm account setup.' });
     else if (lastSeenAge >= 14) tasks.push({ cls: '', text: 'No activity for ' + lastSeenAge + ' days - follow up.' });
     if (tickets.length) tasks.push({ cls: 'bad', text: tickets.length + ' open support ticket' + (tickets.length === 1 ? '' : 's') + ' - respond.' });
+    if ((chats || []).length) tasks.push({ cls: 'bad', text: chats.length + ' open Mrs. Gamage chat' + (chats.length === 1 ? '' : 's') + ' - reply or close.' });
   }
   if (!tasks.length) tasks.push({ cls: 'ok', text: 'No immediate action needed.' });
   return tasks;
@@ -424,11 +461,12 @@ function renderUsers(users, stats){
   }).join('') || '<tr><td colspan="11" class="muted">No users found yet.</td></tr>';
 }
 
-function renderUserBreakdown(users, visits, tickets, paymentRequests){
+function renderUserBreakdown(users, visits, tickets, paymentRequests, chats){
   users = users || [];
   visits = visits || [];
   tickets = tickets || [];
   paymentRequests = paymentRequests || [];
+  chats = chats || [];
   var wrap = $('user-breakdown');
   if (!wrap) return;
   if (!users.length) {
@@ -440,10 +478,11 @@ function renderUserBreakdown(users, visits, tickets, paymentRequests){
     var latestVisit = latestUserVisit(user, visits);
     var userTickets = openTicketsForUser(user, tickets);
     var userPaymentRequests = openPaymentRequestsForUser(user, paymentRequests);
+    var userChats = openChatsForUser(user, chats);
     var lastVisitData = latestVisit ? (latestVisit.data || {}) : {};
     var latestPath = user.lastPath || lastVisitData.path || '';
     var latestSeen = user.lastSeen || lastVisitData.utcAt || lastVisitData.createdAt || '';
-    var tasks = userTasks(user, latestVisit, userTickets, userPaymentRequests);
+    var tasks = userTasks(user, latestVisit, userTickets, userPaymentRequests, userChats);
     var taskHtml = tasks.map(function(task){
       return '<li class="'+esc(task.cls || '')+'">'+esc(task.text)+'</li>';
     }).join('');
@@ -519,6 +558,69 @@ function renderPaymentRequests(paymentRequests, stats){
   }).join('') || '<tr><td colspan="8" class="muted">No expired-trial payment requests yet.</td></tr>';
 }
 
+function chatMessageMs(data){
+  data = data || {};
+  var raw = data.createdAt || data.createdAtUtc || data.updatedAt || '';
+  if (raw && raw.toDate) return raw.toDate().getTime();
+  var ms = Date.parse(raw);
+  return Number.isFinite(ms) ? ms : 0;
+}
+function chatThreadMs(row){
+  var c = (row && row.data) || {};
+  return chatMessageMs({ createdAt: c.lastMessageAt || c.updatedAt || c.createdAt, createdAtUtc: c.lastMessageAtUtc || c.updatedAtUtc || c.createdAtUtc });
+}
+function renderAdminChatMessages(messages, lastMessage){
+  messages = Array.isArray(messages) ? messages.slice() : [];
+  if (!messages.length && lastMessage) {
+    messages.push({ data: { authorRole: 'customer', authorName: 'Customer', text: lastMessage, createdAtUtc: '' } });
+  }
+  if (!messages.length) return '<div class="muted">No messages yet.</div>';
+  return messages.map(function(row){
+    var m = row.data || row || {};
+    var role = String(m.authorRole || '').toLowerCase();
+    var isAdmin = role === 'admin' || role === 'support';
+    var who = isAdmin ? (m.authorName || 'Mrs. Gamage') : (m.authorName || m.email || 'Customer');
+    var when = fmtDate(m.createdAt || m.createdAtUtc);
+    return '<div class="chat-message '+(isAdmin ? 'admin' : 'customer')+'">' +
+      '<div class="chat-meta">'+esc(who)+' · '+esc(when || '')+'</div>' +
+      '<div class="chat-bubble">'+esc(m.text || '')+'</div>' +
+    '</div>';
+  }).join('');
+}
+function renderChats(chats, stats){
+  chats = (chats || []).slice().sort(function(a,b){ return chatThreadMs(b) - chatThreadMs(a); });
+  stats = stats || clientStats([], [], [], [], chats);
+  if ($('kpi-chats')) $('kpi-chats').textContent = fmtInt(stats.chatsTotal == null ? chats.length : stats.chatsTotal);
+  if ($('kpi-open-chats')) $('kpi-open-chats').textContent = fmtInt(stats.openChatsTotal == null ? chats.filter(function(c){ return String((c.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length : stats.openChatsTotal);
+  var wrap = $('chats-body');
+  if (!wrap) return;
+  if (!chats.length) {
+    wrap.innerHTML = '<div class="card muted">No Mrs. Gamage chat threads yet.</div>';
+    return;
+  }
+  wrap.innerHTML = chats.map(function(row){
+    var c = row.data || {};
+    var status = String(c.status || 'open').toLowerCase();
+    var closed = status === 'closed';
+    var messages = Array.isArray(c.messages) ? c.messages : [];
+    var action = closed
+      ? '<button class="btn" data-chat-status="open" data-chat-id="'+esc(row.id)+'">Reopen</button>'
+      : '<button class="btn red" data-chat-status="closed" data-chat-id="'+esc(row.id)+'">Close</button>';
+    return '<article class="chat-card" data-chat-card data-chat-id="'+esc(row.id)+'">' +
+      '<div class="chat-card-head">' +
+        '<div><div class="chat-title">'+esc(c.name || c.displayName || c.email || 'Customer')+'</div><div class="chat-sub">'+esc(c.email || '')+'<br>'+esc(c.page || c.lastSeenPath || '')+'</div></div>' +
+        '<div>'+statusPill(status)+'</div>' +
+      '</div>' +
+      '<div class="chat-messages">'+renderAdminChatMessages(messages, c.lastMessage)+'</div>' +
+      '<div class="chat-reply">' +
+        '<textarea placeholder="Reply as Mrs. Gamage..."></textarea>' +
+        '<button class="btn dark" type="button" data-chat-reply="'+esc(row.id)+'">Reply</button>' +
+      '</div>' +
+      '<div class="actions">'+action+'</div>' +
+    '</article>';
+  }).join('');
+}
+
 function renderTickets(tickets, stats){
   tickets = tickets || [];
   stats = stats || clientStats([], [], tickets);
@@ -542,11 +644,12 @@ function setRefreshState(isLoading){
   btn.disabled = !!isLoading;
   btn.textContent = isLoading ? 'Loading' : 'Refresh';
 }
-function renderAdminPayload(users, visits, tickets, paymentRequests, stats){
+function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stats){
   renderUsers(users || [], stats || {});
   renderPaymentRequests(paymentRequests || [], stats || {});
-  renderUserBreakdown(users || [], visits || [], tickets || [], paymentRequests || []);
+  renderUserBreakdown(users || [], visits || [], tickets || [], paymentRequests || [], chats || []);
   renderVisits(visits || [], stats || {});
+  renderChats(chats || [], stats || {});
   renderTickets(tickets || [], stats || {});
   adminHasRendered = true;
 }
@@ -562,20 +665,21 @@ async function loadAdminData(opts){
       renderEmpty('visits-body', 10, 'Loading visits...');
       renderEmpty('payment-requests-body', 8, 'Loading payment requests...');
       renderEmpty('tickets-body', 8, 'Loading tickets...');
+      $('chats-body').innerHTML = '<div class="card muted">Loading Mrs. Gamage chats...</div>';
       $('user-breakdown').innerHTML = '<div class="card muted">Loading per-user breakdown...</div>';
     }
     var adminFunctionError = '';
     try {
       var payload = await fetchAdminFunction();
-      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.stats || {});
+      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {});
       return;
     } catch (serverErr) {
       adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
       console.warn('Admin function unavailable, falling back to Firestore rules:', serverErr);
     }
 
-    var users = [], visits = [], tickets = [], paymentRequests = [];
-    var usersLoaded = true, visitsLoaded = true, ticketsLoaded = true, paymentRequestsLoaded = true;
+    var users = [], visits = [], tickets = [], paymentRequests = [], chats = [];
+    var usersLoaded = true, visitsLoaded = true, ticketsLoaded = true, paymentRequestsLoaded = true, chatsLoaded = true;
     try {
       var usersSnap = await readCollection('users', { order:'createdAt', dir:'desc', limit:300 });
       usersSnap.forEach(function(d){ users.push({ id:d.id, data:d.data() || {} }); });
@@ -608,12 +712,33 @@ async function loadAdminData(opts){
       renderEmpty('payment-requests-body', 8, 'Could not load payment requests. Admin function: '+adminFunctionError+' Publish the updated Firestore rules if using direct browser reads.');
     }
 
-    var stats = clientStats(users, visits, tickets, paymentRequests);
+    try {
+      var chatsSnap = await readCollection('chatThreads', { order:'lastMessageAt', dir:'desc', limit:120 });
+      var chatRows = [];
+      chatsSnap.forEach(function(d){ chatRows.push({ id:d.id, data:d.data() || {} }); });
+      chats = await Promise.all(chatRows.map(async function(row){
+        try {
+          var messagesSnap = await db.collection('chatThreads').doc(row.id).collection('messages').orderBy('createdAt', 'asc').limit(80).get();
+          var messages = [];
+          messagesSnap.forEach(function(d){ messages.push({ id:d.id, data:d.data() || {} }); });
+          row.data.messages = messages;
+        } catch (e) {
+          row.data.messages = [];
+        }
+        return row;
+      }));
+    } catch (e) {
+      chatsLoaded = false;
+      $('chats-body').innerHTML = '<div class="card muted">Could not load Mrs. Gamage chats. Admin function: '+esc(adminFunctionError)+' Publish the updated Firestore rules if using direct browser reads.</div>';
+    }
+
+    var stats = clientStats(users, visits, tickets, paymentRequests, chats);
     if (usersLoaded) renderUsers(users, stats);
     if (paymentRequestsLoaded) renderPaymentRequests(paymentRequests, stats);
-    if (usersLoaded) renderUserBreakdown(users, visitsLoaded ? visits : [], ticketsLoaded ? tickets : [], paymentRequestsLoaded ? paymentRequests : []);
+    if (usersLoaded) renderUserBreakdown(users, visitsLoaded ? visits : [], ticketsLoaded ? tickets : [], paymentRequestsLoaded ? paymentRequests : [], chatsLoaded ? chats : []);
     else $('user-breakdown').innerHTML = '<div class="card muted">Could not build the per-user breakdown because users could not be loaded.</div>';
     if (visitsLoaded) renderVisits(visits, stats);
+    if (chatsLoaded) renderChats(chats, stats);
     if (ticketsLoaded) renderTickets(tickets, stats);
     adminHasRendered = true;
   } finally {
@@ -683,6 +808,56 @@ async function copyPaymentRequest(id){
   }
 }
 
+async function replyChat(id, message){
+  message = String(message || '').trim();
+  if (!id || !message) throw new Error('Type a reply first.');
+  try {
+    await fetchAdminFunction({ action: 'replyChat', id: id, message: message });
+  } catch (serverErr) {
+    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection('chatThreads').doc(id).collection('messages').add({
+      authorRole: 'admin',
+      authorName: 'Mrs. Gamage',
+      text: message,
+      createdAt: stamp,
+      createdAtUtc: new Date().toISOString()
+    });
+    await db.collection('chatThreads').doc(id).set({
+      status: 'open',
+      assignedTo: 'Mrs. Gamage',
+      lastMessage: message.slice(0, 240),
+      lastMessageBy: 'admin',
+      lastMessageAt: stamp,
+      lastMessageAtUtc: new Date().toISOString(),
+      unreadForAdmin: false,
+      unreadForUser: true,
+      updatedAt: stamp,
+      updatedAtUtc: new Date().toISOString()
+    }, { merge: true });
+  }
+  await loadAdminData({ forceLoading: true });
+}
+
+async function updateChatStatus(id, status){
+  try {
+    await fetchAdminFunction({ action: 'updateChat', id: id, status: status });
+  } catch (serverErr) {
+    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    var payload = {
+      status: status,
+      updatedAt: stamp,
+      updatedAtUtc: new Date().toISOString()
+    };
+    if (status === 'closed') {
+      payload.closedAt = stamp;
+      payload.closedAtUtc = new Date().toISOString();
+      payload.closedBy = 'platform_admin';
+    }
+    await db.collection('chatThreads').doc(id).set(payload, { merge: true });
+  }
+  await loadAdminData({ forceLoading: true });
+}
+
 function adminUserUpdatePayload(updateType){
   var stamp = firebase.firestore.FieldValue.serverTimestamp();
   if (updateType === 'pause') return { accountPaused:true, paid:false, subscriptionStatus:'paused', manualPaymentStatus:'paused', pausedAt:stamp, pausedBy:'platform_admin', updatedAt:stamp };
@@ -745,6 +920,25 @@ $('signout-btn').addEventListener('click', function(){
   auth.signOut().then(function(){ showLogin(); });
 });
 document.addEventListener('click', function(ev){
+  var chatReplyBtn = ev.target.closest('[data-chat-reply]');
+  if (chatReplyBtn) {
+    var card = chatReplyBtn.closest('[data-chat-card]');
+    var textarea = card ? card.querySelector('textarea') : null;
+    var message = textarea ? textarea.value : '';
+    chatReplyBtn.disabled = true;
+    chatReplyBtn.textContent = 'Sending';
+    replyChat(chatReplyBtn.getAttribute('data-chat-reply'), message).catch(function(e){
+      alert(e.message);
+      chatReplyBtn.disabled = false;
+      chatReplyBtn.textContent = 'Reply';
+    });
+    return;
+  }
+  var chatStatusBtn = ev.target.closest('[data-chat-status]');
+  if (chatStatusBtn) {
+    updateChatStatus(chatStatusBtn.getAttribute('data-chat-id'), chatStatusBtn.getAttribute('data-chat-status')).catch(function(e){ alert(e.message); });
+    return;
+  }
   var ticketBtn = ev.target.closest('[data-ticket]');
   if (ticketBtn) {
     updateTicket(ticketBtn.getAttribute('data-ticket'), ticketBtn.getAttribute('data-status')).catch(function(e){ alert(e.message); });

@@ -258,6 +258,31 @@ service cloud.firestore {
       allow delete: if isPlatformAdmin();
     }
 
+    match /chatThreads/{threadId} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, list: if isPlatformAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isPlatformAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow delete: if isPlatformAdmin();
+
+      match /messages/{messageId} {
+        allow read, list: if isPlatformAdmin()
+          || (
+            signedIn()
+            && get(/databases/$(database)/documents/chatThreads/$(threadId)).data.uid == request.auth.uid
+          );
+        allow create: if isPlatformAdmin()
+          || (
+            signedIn()
+            && get(/databases/$(database)/documents/chatThreads/$(threadId)).data.uid == request.auth.uid
+            && request.resource.data.uid == request.auth.uid
+            && request.resource.data.authorRole == 'customer'
+          );
+        allow update, delete: if isPlatformAdmin();
+      }
+    }
+
     match /paymentRequests/{requestId} {
       allow read, list, update, delete: if isPlatformAdmin();
       allow create: if validPaymentRequestWrite();
