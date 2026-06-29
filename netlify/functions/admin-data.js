@@ -374,6 +374,20 @@ function userUpdateForAction(admin, updateType) {
       updatedAt: stamp
     };
   }
+  if (updateType === 'deleteUser') {
+    return {
+      role: 'removed',
+      accountStatus: 'deleted',
+      deleted: true,
+      accountPaused: true,
+      paid: false,
+      subscriptionStatus: 'deleted',
+      manualPaymentStatus: 'deleted',
+      deletedAt: stamp,
+      deletedBy: 'platform_admin',
+      updatedAt: stamp
+    };
+  }
   return null;
 }
 
@@ -469,6 +483,42 @@ exports.handler = async function handler(event) {
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
       }
 
+      if (action === 'deleteUser') {
+        const id = String(body.id || '').trim();
+        if (!id) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Missing user id.' }) };
+        }
+        const userRef = db.collection('users').doc(id);
+        const snap = await userRef.get();
+        const profile = snap.exists ? (snap.data() || {}) : {};
+        if (String(profile.email || '').toLowerCase() === 'devteam@ceylonrylabs.io' || isInternalAdmin(profile)) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Platform admin account cannot be deleted from this panel.' }) };
+        }
+        await userRef.set(userUpdateForAction(admin, 'deleteUser'), { merge: true });
+        let authDeleted = false;
+        let authDeleteError = '';
+        try {
+          await admin.auth().deleteUser(id);
+          authDeleted = true;
+        } catch (err) {
+          authDeleteError = err && err.message ? err.message : 'Auth user was not deleted.';
+        }
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, authDeleted, authDeleteError }) };
+      }
+
+      if (action === 'resetLogin') {
+        const email = String(body.email || '').trim().toLowerCase();
+        if (!email) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Missing email address.' }) };
+        }
+        const continueUrl = String(body.continueUrl || 'https://ceylonrylabs.io/signin.html').trim();
+        const resetLink = await admin.auth().generatePasswordResetLink(email, {
+          url: continueUrl,
+          handleCodeInApp: false
+        });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, resetLink }) };
+      }
+
       if (action === 'updatePaymentRequest') {
         const id = String(body.id || '').trim();
         const status = String(body.status || '').trim().toLowerCase();
@@ -527,6 +577,115 @@ exports.handler = async function handler(event) {
           updatedAtUtc: now
         }, { merge: true });
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+
+      if (action === 'sendPaymentRequestChat') {
+        const id = String(body.id || body.threadId || '').trim();
+        if (!id) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Missing chat thread id.' }) };
+        }
+        const stamp = admin.firestore.FieldValue.serverTimestamp();
+        const now = new Date().toISOString();
+        const threadRef = db.collection('chatThreads').doc(id);
+        const threadSnap = await threadRef.get();
+        if (!threadSnap.exists) {
+          return { statusCode: 404, headers: headers(), body: JSON.stringify({ ok: false, error: 'Chat thread was not found.' }) };
+        }
+        const thread = threadSnap.data() || {};
+        let uid = String(thread.uid || thread.userUid || thread.ownerUid || '').trim();
+        let userDoc = null;
+        if (uid) {
+          const userSnap = await db.collection('users').doc(uid).get();
+          if (userSnap.exists) userDoc = { id: userSnap.id, data: userSnap.data() || {} };
+        }
+        if (!userDoc && thread.email) {
+          const byEmail = await db.collection('users').where('email', '==', String(thread.email).toLowerCase()).limit(1).get();
+          if (!byEmail.empty) {
+            const doc = byEmail.docs[0];
+            userDoc = { id: doc.id, data: doc.data() || {} };
+            uid = doc.id;
+          }
+        }
+        if (!userDoc) {
+          return { statusCode: 404, headers: headers(), body: JSON.stringify({ ok: false, error: 'Could not match this chat to a user account.' }) };
+        }
+
+        const profile = userDoc.data || {};
+        const plan = normalizePlan(profile.currentPlan || profile.plan || profile.lastPlan || thread.plan);
+        const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+        const token = String(profile.paymentRequestToken || '').trim() || makePaymentRequestToken(userDoc.id, plan);
+        const requestRef = db.collection('paymentRequests').doc(token);
+        const requestSnap = await requestRef.get();
+        const requestPayload = {
+          token,
+          uid: userDoc.id,
+          ownerUid: profile.ownerUid || userDoc.id,
+          name: profile.name || profile.displayName || thread.name || thread.displayName || '',
+          email: String(profile.email || thread.email || '').toLowerCase(),
+          businessName: profile.bizName || profile.invoiceBiz || profile.businessName || '',
+          plan,
+          planName: planInfo.name,
+          amount: planInfo.price,
+          currency: 'LKR',
+          trialEnd: profile.trialEnd || '',
+          status: 'invoiced',
+          source: 'admin-chat-payment-request',
+          page: thread.page || profile.lastSeenPath || '',
+          updatedAt: stamp,
+          updatedAtUtc: now
+        };
+        if (!requestSnap.exists) {
+          requestPayload.createdAt = stamp;
+          requestPayload.createdAtUtc = now;
+        }
+        await requestRef.set(requestPayload, { merge: true });
+
+        const trialEndMs = parseTime(profile.trialEnd);
+        const trialLine = trialEndMs && trialEndMs <= Date.now()
+          ? 'Your 15-day free trial has ended.'
+          : 'Your 15-day free trial is ready for activation.';
+        const message = [
+          'Hi ' + (profile.name || thread.name || 'there') + ',',
+          '',
+          trialLine,
+          'Package: ' + planInfo.name + ' Plan',
+          'Amount: LKR ' + Number(planInfo.price).toLocaleString('en-US') + '/month',
+          'Payment request token: ' + token,
+          '',
+          'Our team can send the manual invoice for this package. Reply here if you want us to resend details or confirm payment.'
+        ].join('\n');
+
+        await threadRef.collection('messages').add({
+          authorRole: 'admin',
+          authorName: 'Mrs. Gamage',
+          text: message,
+          paymentRequestToken: token,
+          paymentRequestPlan: plan,
+          createdAt: stamp,
+          createdAtUtc: now
+        });
+        await threadRef.set({
+          status: 'open',
+          assignedTo: 'Mrs. Gamage',
+          paymentRequestToken: token,
+          lastMessage: message.slice(0, 240),
+          lastMessageBy: 'admin',
+          lastMessageAt: stamp,
+          lastMessageAtUtc: now,
+          unreadForAdmin: false,
+          unreadForUser: true,
+          updatedAt: stamp,
+          updatedAtUtc: now
+        }, { merge: true });
+        await db.collection('users').doc(userDoc.id).set({
+          paymentRequestToken: token,
+          paymentRequestStatus: 'invoiced',
+          paymentRequestPlan: plan,
+          paymentRequestAmount: planInfo.price,
+          manualPaymentStatus: 'payment-requested',
+          updatedAt: stamp
+        }, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, token, plan, amount: planInfo.price }) };
       }
 
       if (action === 'updateChat') {

@@ -1480,6 +1480,18 @@ function invoiceBalance(inv){
 function invoiceDueMs(inv){
   return new Date(String(inv.due||todayStr()).slice(0,10)+'T00:00:00').getTime();
 }
+function refreshInvoiceNotifications(){
+  if(window.clsMountInvoiceNotifications){
+    window.clsMountInvoiceNotifications({
+      invoices: DB.invoices,
+      plan: 'solo',
+      target: '.top-bar-right',
+      formatAmount: fmtAmt,
+      getNumber: function(inv){ return inv.num; },
+      getCustomer: function(inv){ return inv.client; }
+    });
+  }
+}
 function renderDashboard(){
   const now=new Date();
   const mo=now.getMonth(), yr=now.getFullYear();
@@ -1502,6 +1514,7 @@ function renderDashboard(){
   renderDashboardReminders(unpaid,todayMs);
   renderInvoiceAging(unpaid,todayMs);
   renderRecentTable();
+  refreshInvoiceNotifications();
 }
 function renderDashboardReminders(unpaid,todayMs){
   const el=document.getElementById('due-reminder-list');if(!el)return;
@@ -1898,6 +1911,7 @@ function renderInvoices(){
         ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">💳 Pay</button>`:'<span style="font-size:.65rem;color:var(--green)">✓ Settled</span>'}
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
+  refreshInvoiceNotifications();
 }
 
 window.openInvoiceEditModal=function openInvoiceEditModal(num){

@@ -507,6 +507,128 @@
     });
   };
 
+  window.clsMountInvoiceNotifications = function clsMountInvoiceNotifications(opts) {
+    opts = opts || {};
+    var invoices = Array.isArray(opts.invoices) ? opts.invoices : [];
+    var target = document.querySelector(opts.target || '.top-bar-right') || document.querySelector('.tb-right');
+    if (!target) return;
+
+    if (!document.getElementById('cls-notification-style')) {
+      var style = document.createElement('style');
+      style.id = 'cls-notification-style';
+      style.textContent =
+        '.cls-notify{position:relative;display:inline-flex;align-items:center;z-index:40}' +
+        '.cls-notify-btn{position:relative;border:1px solid rgba(184,146,42,.36);background:#fff;color:#1a1714;min-width:38px;height:38px;padding:0 10px;font-family:DM Sans,Inter,Arial,sans-serif;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}' +
+        '.cls-notify-btn.muted{opacity:.55}' +
+        '.cls-notify-badge{position:absolute;right:-6px;top:-7px;min-width:18px;height:18px;border-radius:999px;background:#c0392b;color:#fff;font-size:10px;line-height:18px;text-align:center;padding:0 5px}' +
+        '.cls-notify-panel{position:absolute;right:0;top:calc(100% + 10px);width:min(360px,calc(100vw - 28px));background:#fff;border:1px solid #DED7CC;box-shadow:0 18px 54px rgba(0,0,0,.18);padding:14px;display:none;color:#1a1714;text-align:left}' +
+        '.cls-notify.open .cls-notify-panel{display:block}' +
+        '.cls-notify-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-bottom:1px solid #E7DFD2;padding-bottom:10px;margin-bottom:10px}' +
+        '.cls-notify-title{font-family:Cormorant Garamond,Georgia,serif;font-size:22px;line-height:1}' +
+        '.cls-notify-copy{font-size:12px;color:#6B6258;line-height:1.45;margin-top:3px}' +
+        '.cls-notify-mute{background:transparent;border:1px solid #DCD4C8;color:#6B6258;padding:7px 9px;font-family:inherit;font-size:10px;letter-spacing:.11em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:nowrap}' +
+        '.cls-notify-list{display:grid;gap:8px;max-height:280px;overflow:auto}' +
+        '.cls-notify-item{border-left:3px solid #B8922A;background:#F7F5F0;padding:9px 10px;font-size:12px;line-height:1.45}' +
+        '.cls-notify-item.bad{border-left-color:#c0392b;background:#FDECEA}' +
+        '.cls-notify-item.warn{border-left-color:#B8922A;background:#FFF8EA}' +
+        '.cls-notify-meta{font-size:10px;color:#6B6258;margin-top:3px}' +
+        '@media(max-width:760px){.cls-notify-panel{right:-6px;width:calc(100vw - 22px)}}' +
+        '@media print{.cls-notify{display:none!important}}';
+      document.head.appendChild(style);
+    }
+
+    function amount(inv) {
+      return Number(inv.amount != null ? inv.amount : (inv.total != null ? inv.total : 0)) || 0;
+    }
+    function paid(inv) {
+      return Number(inv.paidAmount != null ? inv.paidAmount : (inv.paid != null ? inv.paid : 0)) || 0;
+    }
+    function balance(inv) {
+      return Math.max(0, amount(inv) - paid(inv));
+    }
+    function dueMs(inv) {
+      var raw = String(inv.due || inv.dueDate || inv.date || '').slice(0, 10);
+      var ms = Date.parse(raw + 'T00:00:00');
+      return Number.isFinite(ms) ? ms : 0;
+    }
+    function invoiceNo(inv) {
+      return cleanString(typeof opts.getNumber === 'function' ? opts.getNumber(inv) : (inv.num || inv.id || 'Invoice'), 80);
+    }
+    function customer(inv) {
+      return cleanString(typeof opts.getCustomer === 'function' ? opts.getCustomer(inv) : (inv.client || inv.customer || inv.name || 'Customer'), 120);
+    }
+    function formatAmount(n) {
+      if (typeof opts.formatAmount === 'function') return opts.formatAmount(n);
+      return money(n);
+    }
+
+    var today = new Date();
+    var todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    var items = [];
+    invoices.forEach(function(inv) {
+      inv = inv || {};
+      var status = String(inv.status || '').toLowerCase();
+      var bal = balance(inv);
+      if (status === 'paid' || bal <= 0.01) return;
+      var due = dueMs(inv);
+      var diff = due ? Math.floor((due - todayStart) / 86400000) : null;
+      if (diff != null && diff < 0) {
+        items.push({ cls: 'bad', title: invoiceNo(inv) + ' is overdue', meta: customer(inv) + ' · ' + Math.abs(diff) + ' day' + (Math.abs(diff) === 1 ? '' : 's') + ' late · ' + formatAmount(bal) });
+      } else if (diff === 0) {
+        items.push({ cls: 'warn', title: invoiceNo(inv) + ' is due today', meta: customer(inv) + ' · ' + formatAmount(bal) + ' outstanding' });
+      } else if (diff != null && diff <= 7) {
+        items.push({ cls: 'warn', title: invoiceNo(inv) + ' is due soon', meta: customer(inv) + ' · in ' + diff + ' day' + (diff === 1 ? '' : 's') + ' · ' + formatAmount(bal) });
+      } else {
+        items.push({ cls: '', title: invoiceNo(inv) + ' is pending', meta: customer(inv) + ' · ' + formatAmount(bal) + ' outstanding' });
+      }
+    });
+
+    items.sort(function(a, b) {
+      var order = { bad: 0, warn: 1, '': 2 };
+      var av = Object.prototype.hasOwnProperty.call(order, a.cls) ? order[a.cls] : 2;
+      var bv = Object.prototype.hasOwnProperty.call(order, b.cls) ? order[b.cls] : 2;
+      return av - bv;
+    });
+
+    var user = getAuthUser();
+    var key = 'cls-notifications-muted-' + (user && user.uid ? user.uid : (opts.plan || rememberedPlan() || planFromPath() || 'anon'));
+    var muted = safeGet(key) === '1';
+    var wrap = document.getElementById('cls-invoice-notifications');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'cls-invoice-notifications';
+      wrap.className = 'cls-notify';
+      target.insertBefore(wrap, target.firstChild || null);
+    }
+    var count = items.length;
+    wrap.innerHTML =
+      '<button type="button" class="cls-notify-btn ' + (muted ? 'muted' : '') + '" aria-label="Invoice notifications">🔔' +
+        (!muted && count ? '<span class="cls-notify-badge">' + (count > 99 ? '99+' : count) + '</span>' : '') +
+      '</button>' +
+      '<div class="cls-notify-panel">' +
+        '<div class="cls-notify-head"><div><div class="cls-notify-title">Invoice alerts</div><div class="cls-notify-copy">' + (count ? count + ' invoice' + (count === 1 ? '' : 's') + ' need attention.' : 'Nothing urgent right now.') + '</div></div><button type="button" class="cls-notify-mute">' + (muted ? 'Unmute' : 'Mute') + '</button></div>' +
+        '<div class="cls-notify-list">' + (count ? items.slice(0, 12).map(function(item) {
+          return '<div class="cls-notify-item ' + item.cls + '"><strong>' + escapeHtml(item.title) + '</strong><div class="cls-notify-meta">' + escapeHtml(item.meta) + '</div></div>';
+        }).join('') : '<div class="cls-notify-copy">Paid and pending invoices will appear here when they need follow-up.</div>') + '</div>' +
+      '</div>';
+    wrap.querySelector('.cls-notify-btn').addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      wrap.classList.toggle('open');
+    });
+    wrap.querySelector('.cls-notify-mute').addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      safeSet(key, muted ? '' : '1');
+      window.clsMountInvoiceNotifications(opts);
+    });
+    if (!window.__clsNotifyDismissBound) {
+      window.__clsNotifyDismissBound = true;
+      document.addEventListener('click', function(ev) {
+        var node = document.getElementById('cls-invoice-notifications');
+        if (node && !node.contains(ev.target)) node.classList.remove('open');
+      });
+    }
+  };
+
   window.clsMountTrialCountdown = function clsMountTrialCountdown(opts) {
     opts = opts || {};
     var old = document.getElementById('cls-trial-countdown');
@@ -1111,6 +1233,21 @@
       if (emailInput && user.email) emailInput.value = user.email;
     }
 
+    try {
+      if (window.firebase && firebase.apps && firebase.apps.length && firebase.auth) {
+        firebase.auth().onAuthStateChanged(function(nextUser) {
+          var nameInput = wrap.querySelector('input[name="name"]');
+          var emailInput = wrap.querySelector('input[name="email"]');
+          if (nextUser) {
+            if (nameInput && nextUser.displayName && !nameInput.value) nameInput.value = nextUser.displayName;
+            if (emailInput && nextUser.email) emailInput.value = nextUser.email;
+          }
+          refreshMyTickets(wrap);
+          subscribeChat(wrap);
+        });
+      }
+    } catch (e) {}
+
     var chatForm = wrap.querySelector('[data-chat-form]');
     if (chatForm) {
       chatForm.addEventListener('submit', async function(ev) {
@@ -1166,8 +1303,10 @@
 	        }
 	      }
 	    });
-    refreshMyTickets(wrap);
-    subscribeChat(wrap);
+    setTimeout(function() {
+      refreshMyTickets(wrap);
+      subscribeChat(wrap);
+    }, 450);
 	  }
 
   function boot() {

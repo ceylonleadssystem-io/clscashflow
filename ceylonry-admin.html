@@ -29,6 +29,22 @@
 .chat-reply textarea:focus{border-color:#B8922A;background:#fff}
 @media(max-width:1000px){.chat-grid{grid-template-columns:1fr}.chat-reply{grid-template-columns:1fr}}
 </style>
+<style>
+.admin-tabs{position:sticky;top:84px;z-index:4;background:#F7F5F0;border-bottom:1px solid #e2d8ca;padding:12px 0;margin:8px 0 18px;display:flex;gap:8px;flex-wrap:wrap}
+.admin-tab{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 13px;font:800 10px 'DM Sans';letter-spacing:.13em;text-transform:uppercase;cursor:pointer}
+.admin-tab.active{background:#1a1714;color:#fff;border-color:#1a1714}
+[data-admin-section].admin-section-hidden{display:none!important}
+.admin-split-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.user-breakdown{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.user-card{padding:16px}
+.user-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+.user-card .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.user-card .actions .btn{width:100%;min-height:38px}
+.btn.danger-fill{background:#c0392b;color:#fff;border-color:#c0392b}
+.chat-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@media(max-width:760px){.admin-tabs{position:static}.user-card .actions{grid-template-columns:1fr 1fr}.top{position:static}.wrap{padding:16px}.section-head{align-items:flex-start;flex-direction:column}.table{min-width:940px}}
+@media(max-width:520px){.user-card .actions{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header class="top">
@@ -71,7 +87,16 @@
       <div class="utc" id="utc-clock"></div>
     </div>
 
-    <div class="grid kpis">
+    <nav class="admin-tabs" id="admin-tabs" aria-label="Admin sections">
+      <button class="admin-tab active" type="button" data-admin-tab="overview">Overview</button>
+      <button class="admin-tab" type="button" data-admin-tab="users">Users</button>
+      <button class="admin-tab" type="button" data-admin-tab="payments">Payments</button>
+      <button class="admin-tab" type="button" data-admin-tab="chats">Chats</button>
+      <button class="admin-tab" type="button" data-admin-tab="tickets">Tickets</button>
+      <button class="admin-tab" type="button" data-admin-tab="visits">Visits</button>
+    </nav>
+
+    <div class="grid kpis" data-admin-section="overview">
       <div class="card"><div class="label">Users</div><div class="kpi-number" id="kpi-users">0</div><p class="muted">Signed-in accounts</p></div>
       <div class="card"><div class="label">Visitors</div><div class="kpi-number" id="kpi-visitors">0</div><p class="muted">Unique website visitors</p></div>
       <div class="card"><div class="label">Page views</div><div class="kpi-number" id="kpi-visits">0</div><p class="muted">Total tracked visits</p></div>
@@ -82,7 +107,7 @@
       <div class="card"><div class="label">Open chats</div><div class="kpi-number" id="kpi-open-chats">0</div><p class="muted"><span id="kpi-chats">0</span> Mrs. Gamage threads</p></div>
     </div>
 
-    <section class="section">
+    <section class="section" data-admin-section="payments">
       <div class="section-head"><h2>Payment Requests</h2><span class="muted">Tokens created automatically when trials expire</span></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>Status</th><th>Token</th><th>User</th><th>Plan</th><th>Amount</th><th>Trial End</th><th>Created UTC</th><th>Actions</th></tr></thead>
@@ -90,12 +115,12 @@
       </table></div>
     </section>
 
-    <section class="section">
+    <section class="section" data-admin-section="users">
       <div class="section-head"><h2>Per-user breakdown</h2><span class="muted">Who is there, current status, and what needs to be done</span></div>
       <div class="user-breakdown" id="user-breakdown"></div>
     </section>
 
-    <section class="section">
+    <section class="section" data-admin-section="users">
       <div class="section-head"><h2>Users</h2><span class="muted">Latest profile, plan, and last seen data</span></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Payment</th><th>Account</th><th>Owner</th><th>Trial End</th><th>Last Seen UTC</th><th>Path</th><th>Actions</th></tr></thead>
@@ -103,7 +128,7 @@
       </table></div>
     </section>
 
-    <section class="section">
+    <section class="section" data-admin-section="visits">
       <div class="section-head"><h2>Visits</h2><span class="muted">Location comes from Netlify geo when deployed</span></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>UTC</th><th>Visitor</th><th>Page</th><th>Plan</th><th>Path</th><th>City</th><th>Country</th><th>Timezone</th><th>Device</th><th>IP</th></tr></thead>
@@ -111,12 +136,12 @@
       </table></div>
     </section>
 
-    <section class="section">
+    <section class="section" data-admin-section="chats">
       <div class="section-head"><h2>Mrs. Gamage Live Chat</h2><span class="muted">Customer messages from the portal chat</span></div>
       <div class="chat-grid" id="chats-body"></div>
     </section>
 
-    <section class="section">
+    <section class="section" data-admin-section="tickets">
       <div class="section-head"><h2>Support Tickets</h2><span class="muted">Chat and bug reports from the Help widget</span></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>Status</th><th>Priority</th><th>Type</th><th>Email</th><th>Message</th><th>Page</th><th>UTC</th><th>Actions</th></tr></thead>
@@ -261,8 +286,22 @@ function paymentPill(u){
 function accountPill(u){
   u = u || {};
   if (u.accountPaused === true || String(u.subscriptionStatus || '').toLowerCase() === 'paused') return '<span class="pill bad">paused</span>';
-  if (String(u.role || '').toLowerCase() === 'removed') return '<span class="pill bad">removed</span>';
+  if (isDeletedUser({ data: u })) return '<span class="pill bad">removed</span>';
   return '<span class="pill ok">active</span>';
+}
+function isDeletedUser(row){
+  var u = (row && row.data) || {};
+  return u.deleted === true
+    || String(u.accountStatus || '').toLowerCase() === 'deleted'
+    || String(u.subscriptionStatus || '').toLowerCase() === 'deleted'
+    || String(u.role || '').toLowerCase() === 'removed';
+}
+function isPlatformUser(row){
+  var u = (row && row.data) || {};
+  return String(u.email || '').toLowerCase() === ADMIN_EMAIL
+    || String(u.role || '').toLowerCase() === 'platform_admin'
+    || String(u.accountType || '').toLowerCase() === 'platform_admin'
+    || String(u.currentPlan || u.plan || '').toLowerCase() === 'admin';
 }
 function adminUserActions(row){
   var u = row.data || {};
@@ -279,6 +318,9 @@ function adminUserActions(row){
   html += paused
     ? '<button class="btn dark" data-user-action="unpause" data-user-id="'+id+'">Unpause</button>'
     : '<button class="btn red" data-user-action="pause" data-user-id="'+id+'">Pause</button>';
+  if (!isPlatformUser(row)) {
+    html += '<button class="btn danger-fill" data-user-action="deleteUser" data-user-id="'+id+'" data-user-email="'+email+'">Delete user</button>';
+  }
   html += '</div><div class="secure-note">Passwords are not viewable. Use reset login for secure access help.</div>';
   return html;
 }
@@ -411,6 +453,7 @@ function showAdmin(){
   $('admin-view').classList.remove('hidden');
   $('refresh-btn').classList.remove('hidden');
   $('signout-btn').classList.remove('hidden');
+  switchAdminSection(adminActiveSection);
 }
 function renderEmpty(id, cols, text){
   $(id).innerHTML = '<tr><td colspan="'+cols+'" class="muted">'+esc(text)+'</td></tr>';
@@ -606,6 +649,7 @@ function renderChats(chats, stats){
     var action = closed
       ? '<button class="btn" data-chat-status="open" data-chat-id="'+esc(row.id)+'">Reopen</button>'
       : '<button class="btn red" data-chat-status="closed" data-chat-id="'+esc(row.id)+'">Close</button>';
+    var paymentAction = '<button class="btn gold" data-chat-payment="'+esc(row.id)+'">Send payment request</button>';
     return '<article class="chat-card" data-chat-card data-chat-id="'+esc(row.id)+'">' +
       '<div class="chat-card-head">' +
         '<div><div class="chat-title">'+esc(c.name || c.displayName || c.email || 'Customer')+'</div><div class="chat-sub">'+esc(c.email || '')+'<br>'+esc(c.page || c.lastSeenPath || '')+'</div></div>' +
@@ -616,7 +660,7 @@ function renderChats(chats, stats){
         '<textarea placeholder="Reply as Mrs. Gamage..."></textarea>' +
         '<button class="btn dark" type="button" data-chat-reply="'+esc(row.id)+'">Reply</button>' +
       '</div>' +
-      '<div class="actions">'+action+'</div>' +
+      '<div class="chat-actions">'+paymentAction+action+'</div>' +
     '</article>';
   }).join('');
 }
@@ -638,19 +682,36 @@ function renderTickets(tickets, stats){
 
 var adminLoading = false;
 var adminHasRendered = false;
+var adminActiveSection = 'overview';
+var adminUserRows = [];
 function setRefreshState(isLoading){
   var btn = $('refresh-btn');
   if (!btn) return;
   btn.disabled = !!isLoading;
   btn.textContent = isLoading ? 'Loading' : 'Refresh';
 }
+function switchAdminSection(section){
+  adminActiveSection = section || 'overview';
+  document.querySelectorAll('[data-admin-section]').forEach(function(node){
+    node.classList.toggle('admin-section-hidden', node.getAttribute('data-admin-section') !== adminActiveSection);
+  });
+  document.querySelectorAll('[data-admin-tab]').forEach(function(btn){
+    btn.classList.toggle('active', btn.getAttribute('data-admin-tab') === adminActiveSection);
+  });
+}
 function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stats){
-  renderUsers(users || [], stats || {});
+  users = users || [];
+  var visibleUsers = users.filter(function(row){ return !isDeletedUser(row); });
+  var localStats = Object.assign({}, stats || {});
+  localStats.usersTotal = visibleUsers.length;
+  adminUserRows = visibleUsers;
+  renderUsers(visibleUsers, localStats);
   renderPaymentRequests(paymentRequests || [], stats || {});
-  renderUserBreakdown(users || [], visits || [], tickets || [], paymentRequests || [], chats || []);
+  renderUserBreakdown(visibleUsers, visits || [], tickets || [], paymentRequests || [], chats || []);
   renderVisits(visits || [], stats || {});
   renderChats(chats || [], stats || {});
   renderTickets(tickets || [], stats || {});
+  switchAdminSection(adminActiveSection);
   adminHasRendered = true;
 }
 async function loadAdminData(opts){
@@ -733,13 +794,17 @@ async function loadAdminData(opts){
     }
 
     var stats = clientStats(users, visits, tickets, paymentRequests, chats);
-    if (usersLoaded) renderUsers(users, stats);
+    var visibleUsers = users.filter(function(row){ return !isDeletedUser(row); });
+    stats.usersTotal = visibleUsers.length;
+    adminUserRows = visibleUsers;
+    if (usersLoaded) renderUsers(visibleUsers, stats);
     if (paymentRequestsLoaded) renderPaymentRequests(paymentRequests, stats);
-    if (usersLoaded) renderUserBreakdown(users, visitsLoaded ? visits : [], ticketsLoaded ? tickets : [], paymentRequestsLoaded ? paymentRequests : [], chatsLoaded ? chats : []);
+    if (usersLoaded) renderUserBreakdown(visibleUsers, visitsLoaded ? visits : [], ticketsLoaded ? tickets : [], paymentRequestsLoaded ? paymentRequests : [], chatsLoaded ? chats : []);
     else $('user-breakdown').innerHTML = '<div class="card muted">Could not build the per-user breakdown because users could not be loaded.</div>';
     if (visitsLoaded) renderVisits(visits, stats);
     if (chatsLoaded) renderChats(chats, stats);
     if (ticketsLoaded) renderTickets(tickets, stats);
+    switchAdminSection(adminActiveSection);
     adminHasRendered = true;
   } finally {
     adminLoading = false;
@@ -838,6 +903,18 @@ async function replyChat(id, message){
   await loadAdminData({ forceLoading: true });
 }
 
+async function sendPaymentRequestChat(id){
+  if (!id) throw new Error('Chat thread is missing.');
+  try {
+    var out = await fetchAdminFunction({ action: 'sendPaymentRequestChat', id: id });
+    alert('Payment request sent in chat' + (out && out.token ? ' with token ' + out.token : '') + '.');
+  } catch (serverErr) {
+    await replyChat(id, 'Hi, your 15-day Cashflow System trial is ready for activation. Please reply here and our team will send the payment invoice for your package.');
+    alert('Payment request message sent. The admin payment token could not be generated automatically: ' + (serverErr.message || serverErr));
+  }
+  await loadAdminData({ forceLoading: true });
+}
+
 async function updateChatStatus(id, status){
   try {
     await fetchAdminFunction({ action: 'updateChat', id: id, status: status });
@@ -867,11 +944,14 @@ function adminUserUpdatePayload(updateType){
   if (updateType === 'setPlanSolo') return { plan:'solo', currentPlan:'solo', lastPlan:'solo', requestedPlan:'solo', planPrice:3500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
   if (updateType === 'setPlanStudio') return { plan:'studio', currentPlan:'studio', lastPlan:'studio', requestedPlan:'studio', planPrice:5500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
   if (updateType === 'setPlanBusiness') return { plan:'business', currentPlan:'business', lastPlan:'business', requestedPlan:'business', planPrice:8500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
+  if (updateType === 'deleteUser') return { role:'removed', accountStatus:'deleted', deleted:true, accountPaused:true, paid:false, subscriptionStatus:'deleted', manualPaymentStatus:'deleted', deletedAt:stamp, deletedBy:'platform_admin', updatedAt:stamp };
   return null;
 }
 async function updateUserAccount(id, updateType){
   try {
-    await fetchAdminFunction({ action: 'updateUser', id: id, updateType: updateType });
+    await fetchAdminFunction(updateType === 'deleteUser'
+      ? { action: 'deleteUser', id: id }
+      : { action: 'updateUser', id: id, updateType: updateType });
   } catch (serverErr) {
     var payload = adminUserUpdatePayload(updateType);
     if (!payload) throw new Error('Unknown account action.');
@@ -881,8 +961,27 @@ async function updateUserAccount(id, updateType){
 }
 async function sendLoginReset(email){
   if (!email) throw new Error('This user does not have an email saved.');
-  await auth.sendPasswordResetEmail(email);
-  alert('Password reset email sent to ' + email + '.');
+  var actionSettings = { url: location.origin + '/signin.html', handleCodeInApp: false };
+  var backupLink = '';
+  try {
+    var out = await fetchAdminFunction({ action: 'resetLogin', email: email, continueUrl: actionSettings.url });
+    backupLink = out && out.resetLink ? out.resetLink : '';
+  } catch (serverErr) {
+    console.warn('Server reset link unavailable:', serverErr);
+  }
+  try {
+    await auth.sendPasswordResetEmail(email, actionSettings);
+  } catch (sendErr) {
+    if (backupLink) {
+      window.prompt('Firebase could not send the reset email automatically. Share this secure reset link with the user:', backupLink);
+      return;
+    }
+    throw sendErr;
+  }
+  if (backupLink && navigator.clipboard && navigator.clipboard.writeText) {
+    try { await navigator.clipboard.writeText(backupLink); } catch (e) {}
+  }
+  alert('Password reset email requested for ' + email + (backupLink ? '. A backup reset link was also copied for admin use.' : '.'));
 }
 
 $('admin-login').addEventListener('click', async function(){
@@ -920,6 +1019,11 @@ $('signout-btn').addEventListener('click', function(){
   auth.signOut().then(function(){ showLogin(); });
 });
 document.addEventListener('click', function(ev){
+  var tabBtn = ev.target.closest('[data-admin-tab]');
+  if (tabBtn) {
+    switchAdminSection(tabBtn.getAttribute('data-admin-tab'));
+    return;
+  }
   var chatReplyBtn = ev.target.closest('[data-chat-reply]');
   if (chatReplyBtn) {
     var card = chatReplyBtn.closest('[data-chat-card]');
@@ -937,6 +1041,12 @@ document.addEventListener('click', function(ev){
   var chatStatusBtn = ev.target.closest('[data-chat-status]');
   if (chatStatusBtn) {
     updateChatStatus(chatStatusBtn.getAttribute('data-chat-id'), chatStatusBtn.getAttribute('data-chat-status')).catch(function(e){ alert(e.message); });
+    return;
+  }
+  var chatPaymentBtn = ev.target.closest('[data-chat-payment]');
+  if (chatPaymentBtn) {
+    if (!confirm('Send a plan payment request into this customer chat?')) return;
+    sendPaymentRequestChat(chatPaymentBtn.getAttribute('data-chat-payment')).catch(function(e){ alert(e.message); });
     return;
   }
   var ticketBtn = ev.target.closest('[data-ticket]');
@@ -973,9 +1083,11 @@ document.addEventListener('click', function(ev){
     markUnpaid:'mark this account as unpaid',
     setPlanSolo:'move this account to Solo',
     setPlanStudio:'move this account to Studio',
-    setPlanBusiness:'move this account to Business'
+    setPlanBusiness:'move this account to Business',
+    deleteUser:'delete this user from the admin working list and pause access'
   };
   if (!confirm('Confirm: ' + (labels[action] || action) + '?')) return;
+  if (action === 'deleteUser' && !confirm('This hides the user from this admin list and may remove Firebase Auth access when the server admin function is configured. Continue?')) return;
   updateUserAccount(id, action).catch(function(e){ alert(e.message); });
 });
 function updateUtcClock(){
