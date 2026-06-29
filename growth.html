@@ -1975,11 +1975,11 @@ function renderDashboard() {
   var hasData = D.txns.length || D.invoices.length || D.exps.length || D.clients.length;
 
   document.getElementById('d-kpis').innerHTML =
-    kpi('Revenue This Month', fmtReportingShort(inc), hasData ? 'Recorded money in' : 'Add income or invoice payments', 'g') +
-    kpi('Expenses This Month', fmtReportingShort(out), 'Total business spending', 'rd') +
-    kpi('Net Profit', fmtReportingShort(inc-out), inc-out >= 0 ? 'You are profitable!' : 'Expenses exceed income', 'gr') +
-    kpi('Outstanding', fmtReportingShort(outstd), overdue + ' overdue invoice' + (overdue !== 1 ? 's' : ''), 'am') +
-    kpi('Cash Position', fmtReportingShort(inc-out), inc-out >= 0 ? 'Money in is ahead' : 'Expenses are ahead', inc-out >= 0 ? 'gr' : 'rd');
+    kpi('Revenue This Month', fmtReporting(inc), hasData ? 'Recorded money in' : 'Add income or invoice payments', 'g') +
+    kpi('Expenses This Month', fmtReporting(out), 'Total business spending', 'rd') +
+    kpi('Net Profit', fmtReporting(inc-out), inc-out >= 0 ? 'You are profitable!' : 'Expenses exceed income', 'gr') +
+    kpi('Outstanding', fmtReporting(outstd), overdue + ' overdue invoice' + (overdue !== 1 ? 's' : ''), 'am') +
+    kpi('Cash Position', fmtReporting(inc-out), inc-out >= 0 ? 'Money in is ahead' : 'Expenses are ahead', inc-out >= 0 ? 'gr' : 'rd');
 
   document.getElementById('d-recv').innerHTML = D.recv.length ? D.recv.slice(0,4).map(function(r) {
     var color = r.days > 30 ? 'var(--red)' : r.days > 14 ? 'var(--amber)' : 'var(--green)';
@@ -2005,12 +2005,12 @@ function renderDashboard() {
   if(gm1 && !hasData) {
     gm1.innerHTML = '<div class="empty-wide">' + emptyState('Business is ready for your real data', 'Create invoices, record money in/out, add expenses, customers, and suppliers. Business will show cashflow, operations, reports, and basic insights from real data.', 'Start Tour', 'window.startBusinessTour()') + '</div>';
   } else if(gm1) gm1.innerHTML =
-    kpiMini('Cash Position', fmtReportingShort(cashPosition), cashPosition>=0?'Money in is ahead':'Expenses are ahead', '💵', cashPosition>=0?'gr':'rd') +
-    kpiMini('Outstanding Invoices', fmtReportingShort(ar), pendingInvoices+' invoice'+(pendingInvoices!==1?'s':'')+' pending', '🔔', ar>0?'am':'gr') +
+    kpiMini('Cash Position', fmtReporting(cashPosition), cashPosition>=0?'Money in is ahead':'Expenses are ahead', '💵', cashPosition>=0?'gr':'rd') +
+    kpiMini('Outstanding Invoices', fmtReporting(ar), pendingInvoices+' invoice'+(pendingInvoices!==1?'s':'')+' pending', '🔔', ar>0?'am':'gr') +
     kpiMini('Overdue Invoices', overdueCount+'', overdueCount?'Needs manual follow-up':'Nothing overdue', '⏰', overdueCount?'rd':'gr') +
-    kpiMini('Supplier Payables', fmtReportingShort(ap), D.payables.length+' payment'+(D.payables.length!==1?'s':'')+' due', '📤', ap>0?'am':'gr') +
+    kpiMini('Supplier Payables', fmtReporting(ap), D.payables.length+' payment'+(D.payables.length!==1?'s':'')+' due', '📤', ap>0?'am':'gr') +
     kpiMini('Expense Load', expenseShare+'%', 'Expenses as share of income', '📊', expenseShare>70?'rd':expenseShare>45?'am':'gr') +
-    kpiMini('Top Expense Category', topExpense?topExpense[0]:'—', topExpense?fmtReportingShort(topExpense[1]):'Add expenses to track', '📌', 'bl');
+    kpiMini('Top Expense Category', topExpense?topExpense[0]:'—', topExpense?fmtReporting(topExpense[1]):'Add expenses to track', '📌', 'bl');
 
   refreshInvoiceNotifications();
   setTimeout(buildDashCharts, 80);
