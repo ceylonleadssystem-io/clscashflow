@@ -2514,11 +2514,15 @@ function renderClients(){
         ${c.notes?`<em style="color:var(--dim)">${c.notes}</em>`:''}
       </div>
       <div class="client-card-actions">
-        <button class="btn-sm btn-sm-dark" onclick="CLS_RUN('editClient',${c.id})">Edit</button>
-        <button class="btn-sm btn-sm-out" onclick="CLS_RUN('invoiceFromClient',${c.id})">+ Invoice</button>
-        <button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" onclick="CLS_RUN('deleteClient',${c.id})">✕</button>
+        <button class="btn-sm btn-sm-dark" type="button" data-cls-fn="editClient" data-cls-arg="${c.id}">Edit</button>
+        <button class="btn-sm btn-sm-out" type="button" data-cls-fn="invoiceFromClient" data-cls-arg="${c.id}">+ Invoice</button>
+        <button class="btn-sm" type="button" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="deleteClient" data-cls-arg="${c.id}">✕</button>
       </div>
     </div>`).join('');
+}
+
+function sameClientId(a,b){
+  return String(a) === String(b);
 }
 
 function soloCustomerLimitReached(){
@@ -2548,7 +2552,7 @@ window.openClientModal = function openClientModal(){
 
 window.editClient = function editClient(id){
   if(!DB.clients) return;
-  const c=DB.clients.list.find(x=>x.id===id);if(!c)return;
+  const c=DB.clients.list.find(x=>sameClientId(x.id,id));if(!c)return;
   document.getElementById('c-edit-id').value=c.id;
   document.getElementById('c-name').value=c.name||'';
   document.getElementById('c-biz').value=c.biz||'';
@@ -2585,7 +2589,7 @@ window.saveClient = function saveClient(){
     notes:document.getElementById('c-notes').value.trim()
   };
   let before=null;
-  if(editId){const i=DB.clients.list.findIndex(c=>c.id===editId);if(i>-1){before=snapshotForLog(DB.clients.list[i]);DB.clients.list[i]=data;addEditBacklog('customer',editId,data.name,reason,before,snapshotForLog(data));}}
+  if(editId){const i=DB.clients.list.findIndex(c=>sameClientId(c.id,editId));if(i>-1){before=snapshotForLog(DB.clients.list[i]);DB.clients.list[i]=data;addEditBacklog('customer',editId,data.name,reason,before,snapshotForLog(data));}}
   else DB.clients.list.push(data);
   const synced=syncCustomerToOpenInvoices(before,data);
   saveDB();renderClients();populateClientSelect();renderBacklog();renderDashboard();renderInvoices();closeModal('client-modal');
@@ -2595,13 +2599,13 @@ window.saveClient = function saveClient(){
 window.deleteClient = function deleteClient(id){
   if(!confirm('Remove this customer?'))return;
   if(!DB.clients)return;
-  DB.clients.list=DB.clients.list.filter(c=>c.id!==id);
+  DB.clients.list=DB.clients.list.filter(c=>!sameClientId(c.id,id));
   saveDB();renderClients();populateClientSelect();
 }
 
 window.invoiceFromClient = function invoiceFromClient(id){
   if(!DB.clients)return;
-  const c=DB.clients.list.find(x=>x.id===id);if(!c)return;
+  const c=DB.clients.list.find(x=>sameClientId(x.id,id));if(!c)return;
   nav('invoices');
   setTimeout(()=>{
     openInvoiceModal();
