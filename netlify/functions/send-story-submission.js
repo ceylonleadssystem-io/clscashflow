@@ -26,9 +26,27 @@ function parseServiceAccount(raw) {
 function splitServiceAccount() {
   const projectId = process.env.FIREBASE_PROJECT_ID || '';
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
-  const privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+  const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
   if (!projectId || !clientEmail || !privateKey) return null;
   return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey, projectId, clientEmail, privateKey };
+}
+
+function normalizePrivateKey(value) {
+  let key = String(value || '').trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1);
+  }
+  key = key.replace(/\\n/g, '\n').trim();
+  if (!key) return '';
+  if (key.includes('-----BEGIN PRIVATE KEY-----') && key.includes('-----END PRIVATE KEY-----')) {
+    const body = key
+      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+      .replace(/-----END PRIVATE KEY-----/g, '')
+      .replace(/\s+/g, '');
+    const wrapped = body.match(/.{1,64}/g) || [];
+    return '-----BEGIN PRIVATE KEY-----\n' + wrapped.join('\n') + '\n-----END PRIVATE KEY-----\n';
+  }
+  return key;
 }
 
 async function storeSubmission(data) {
