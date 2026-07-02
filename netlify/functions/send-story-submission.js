@@ -26,16 +26,28 @@ function parseServiceAccount(raw) {
 function splitServiceAccount() {
   const projectId = process.env.FIREBASE_PROJECT_ID || '';
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
-  const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
+  const privateKey = normalizePrivateKey(decodePrivateKey(process.env.FIREBASE_PRIVATE_KEY_B64) || process.env.FIREBASE_PRIVATE_KEY);
   if (!projectId || !clientEmail || !privateKey) return null;
   return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey, projectId, clientEmail, privateKey };
 }
 
+function decodePrivateKey(value) {
+  if (!value) return '';
+  try {
+    return Buffer.from(String(value).trim(), 'base64').toString('utf8');
+  } catch (e) {
+    return '';
+  }
+}
+
 function normalizePrivateKey(value) {
   let key = String(value || '').trim();
+  const jsonMatch = key.match(/"private_key"\s*:\s*"([\s\S]*?)"\s*,?$/);
+  if (jsonMatch) key = jsonMatch[1];
   if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
     key = key.slice(1, -1);
   }
+  key = key.replace(/^private_key\s*[:=]\s*/i, '').replace(/^["']+|["',;]+$/g, '');
   key = key.replace(/\\n/g, '\n').trim();
   if (!key) return '';
   if (key.includes('-----BEGIN PRIVATE KEY-----') && key.includes('-----END PRIVATE KEY-----')) {
