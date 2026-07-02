@@ -1,0 +1,43 @@
+# Cashflow System - local environment variables
+# Do not commit this file. It is already ignored by .gitignore.
+#
+# Paste the real values from Payable dashboard copy buttons and Netlify/Firebase.
+
+# Site
+SITE_URL=https://www.ceylonrylabs.io
+
+# Payable sandbox Direct API
+PAYABLE_ENV=sandbox
+PAYABLE_CHECKOUT_URL=https://sandboxipgpayment.payable.lk/ipg/sandbox/direct-api
+
+# Payable credentials
+# API Integration Details -> Merchant ID
+PAYABLE_MERCHANT_ID=PASTE_MERCHANT_ID_HERE
+
+# API Integration Details -> Merchant Token
+PAYABLE_MERCHANT_TOKEN=PASTE_MERCHANT_TOKEN_HERE
+
+# Business Integration Details -> Business Key
+PAYABLE_BUSINESS_KEY=PASTE_BUSINESS_KEY_HERE
+
+# Business Integration Details -> Business Token
+PAYABLE_BUSINESS_TOKEN=PASTE_BUSINESS_TOKEN_HERE
+
+# Choose any strong private value, then include it in the callback URL if needed:
+# https://www.ceylonrylabs.io/.netlify/functions/payable-webhook?secret=YOUR_SECRET
+PAYABLE_WEBHOOK_SECRET=PASTE_STRONG_RANDOM_SECRET_HERE
+
+# Firebase Admin SDK for Netlify functions.
+# Paste raw service-account JSON or base64 encoded service-account JSON.
+FIREBASE_SERVICE_ACCOUNT=PASTE_FIREBASE_SERVICE_ACCOUNT_HERE
+
+# Optional SMTP variables used by email/invite/support functions.
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+BUSINESS_OWNER_EMAIL=hello@ceylonrylabs.io
+SUPPORT_TO=hello@ceylonrylabs.io
+STORY_SUBMISSION_TO=hello@ceylonrylabs.io
