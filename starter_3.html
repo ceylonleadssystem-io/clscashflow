@@ -958,6 +958,9 @@ var DB = {
 
 var _dataVersion = 0;
 var _saveChain = Promise.resolve();
+var _saveQueued = false;
+var _saveInFlight = false;
+var _savePendingPromise = null;
 
 function clonePlain(value) {
   try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
@@ -1069,8 +1072,26 @@ function saveDB() {
     if (_uid) writeDBBackup(Date.now(), false);
     else localStorage.setItem('cls-starter3-backup', JSON.stringify(DB));
   } catch(e) {}
-  _saveChain = _saveChain.catch(function(){ return false; }).then(function(){ return saveDBNow(); });
-  return _saveChain;
+  _saveQueued = true;
+  if (_saveInFlight) return _savePendingPromise || Promise.resolve(true);
+  _saveInFlight = true;
+  _savePendingPromise = _saveChain = (async function drainSaveQueue() {
+    var saved = true;
+    while (_saveQueued) {
+      _saveQueued = false;
+      await new Promise(function(resolve) { setTimeout(resolve, 250); });
+      saved = await saveDBNow();
+    }
+    _saveInFlight = false;
+    _savePendingPromise = null;
+    return saved;
+  })().catch(function(err) {
+    console.error('saveDB queue error:', err);
+    _saveInFlight = false;
+    _savePendingPromise = null;
+    return false;
+  });
+  return _savePendingPromise;
 }
 
 async function loadDB() {

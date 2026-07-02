@@ -2719,9 +2719,10 @@ async function refreshAfterTxnChange(message, type) {
   renderSuppliers();
   renderDashboard();
   renderReports();
-  showToast('Saving transaction...', 'ok');
-  var saved = await saveData();
-  showToast(saved ? message : 'Transaction kept locally. Cloud sync will retry after refresh.', saved ? (type || 'ok') : 'err');
+  showToast(message, type || 'ok');
+  saveData().then(function(saved) {
+    if (!saved) showToast('Kept locally. Cloud sync will retry after refresh.', 'err');
+  });
 }
 window.addTxn = async function addTxn() {
   var saveBtn = document.getElementById('txn-save-btn');
@@ -3128,6 +3129,9 @@ var _trialEnd = null;
 var _isPaid = false;
 var _dataVersion = 0;
 var _saveChain = Promise.resolve();
+var _saveQueued = false;
+var _saveInFlight = false;
+var _savePendingPromise = null;
 
 function businessBackupKey(uid) {
   return 'cls-business-data-backup:' + String(uid || _uid || _signedInUid || 'unknown');
@@ -3266,8 +3270,26 @@ function saveData() {
   try {
     if (_uid) writeBusinessBackup(Date.now(), false);
   } catch(e) {}
-  _saveChain = _saveChain.catch(function(){ return false; }).then(function(){ return saveDataNow(); });
-  return _saveChain;
+  _saveQueued = true;
+  if (_saveInFlight) return _savePendingPromise || Promise.resolve(true);
+  _saveInFlight = true;
+  _savePendingPromise = _saveChain = (async function drainSaveQueue() {
+    var saved = true;
+    while (_saveQueued) {
+      _saveQueued = false;
+      await new Promise(function(resolve) { setTimeout(resolve, 250); });
+      saved = await saveDataNow();
+    }
+    _saveInFlight = false;
+    _savePendingPromise = null;
+    return saved;
+  })().catch(function(err) {
+    console.error('saveData queue error:', err);
+    _saveInFlight = false;
+    _savePendingPromise = null;
+    return false;
+  });
+  return _savePendingPromise;
 }
 
 // Load all D data from Supabase
@@ -3294,7 +3316,7 @@ async function loadData(uid) {
     }
     normalizeBusinessData();
     if (restoreBusinessBackupIfNewer(serverVersion)) {
-      showToast('Restored your latest unsynced changes. Syncing now...', 'ok');
+      showToast('Recovered latest local changes. Syncing in background...', 'ok');
       setTimeout(function() { saveData(); }, 500);
     }
   } catch(e) { console.error('loadData:', e); }
