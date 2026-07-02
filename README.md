@@ -66,12 +66,11 @@ Required for Payable checkout:
 - `PAYABLE_BUSINESS_TOKEN` - from Payable Settings -> Business Integration
 - `PAYABLE_CHECKOUT_URL` - the checkout/session API endpoint Payable gives you
 - `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
-- `FIREBASE_PROJECT_ID` - Firebase project id
-- `FIREBASE_CLIENT_EMAIL` - Firebase service account client email
-- `FIREBASE_PRIVATE_KEY` - Firebase service account private key with line breaks pasted as `\n`
 - `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
 
-Do not add `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_SERVICE_ACCOUNT_JSON`, `FIREBASE_PRIVATE_KEY_B64`, or `GOOGLE_APPLICATION_CREDENTIALS` in Netlify unless you have removed enough other variables to stay under the 4KB function environment limit. The split values above are the recommended Netlify setup because every function receives the full environment block.
+If your Netlify plan does not allow limiting environment variables to build-only scope, do not add Firebase Admin private-key variables in Netlify. Delete `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY` from Netlify to keep function uploads under Netlify/AWS Lambda's 4KB environment limit. The public Firebase browser config in the HTML files still supports client-side sign-in and dashboard data.
+
+Do not add `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_SERVICE_ACCOUNT_JSON`, `FIREBASE_PRIVATE_KEY_B64`, or `GOOGLE_APPLICATION_CREDENTIALS` in Netlify unless you have removed enough other variables to stay under the 4KB function environment limit.
 
 Give Payable this callback URL after you choose `PAYABLE_WEBHOOK_SECRET`:
 

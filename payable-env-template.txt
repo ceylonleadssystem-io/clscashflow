@@ -33,14 +33,11 @@ PAYABLE_BUSINESS_TOKEN=PASTE_BUSINESS_TOKEN_HERE
 PAYABLE_WEBHOOK_SECRET=PASTE_STRONG_RANDOM_SECRET_HERE
 
 # Firebase Admin SDK for Netlify functions.
-# Use these split variables in Netlify. Do not add FIREBASE_SERVICE_ACCOUNT,
-# FIREBASE_SERVICE_ACCOUNT_JSON, FIREBASE_PRIVATE_KEY_B64, or
-# GOOGLE_APPLICATION_CREDENTIALS unless you are sure the total function
-# environment stays below Netlify/AWS Lambda's 4KB limit.
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-# Paste the private key with escaped \n line breaks, not raw multiline JSON.
-FIREBASE_PRIVATE_KEY=
+# Leave these out of Netlify if your plan cannot scope variables to Builds only.
+# Adding FIREBASE_PRIVATE_KEY to all Functions can exceed the 4KB Lambda env limit.
+# FIREBASE_PROJECT_ID=
+# FIREBASE_CLIENT_EMAIL=
+# FIREBASE_PRIVATE_KEY=
 
 # Optional SMTP variables used by email/invite/support functions.
 SMTP_HOST=smtp.hostinger.com

@@ -14,6 +14,8 @@ function parseServiceAccount(raw) {
 }
 
 function serviceAccountFromSplitEnv() {
+  const fileAccount = serviceAccountFromSecretFile();
+  if (fileAccount) return fileAccount;
   const projectId = String(process.env.FIREBASE_PROJECT_ID || '').trim();
   const clientEmail = String(process.env.FIREBASE_CLIENT_EMAIL || '').trim();
   let privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').trim();
@@ -27,6 +29,14 @@ function serviceAccountFromSplitEnv() {
   privateKey = privateKey.replace(/^['"]|['"]$/g, '').replace(/\\n/g, '\n');
   if (!projectId || !clientEmail || !privateKey) return null;
   return { project_id: projectId, client_email: clientEmail, private_key: privateKey };
+}
+
+function serviceAccountFromSecretFile() {
+  try {
+    return require('./_secrets/firebase-service-account.json');
+  } catch (e) {
+    return null;
+  }
 }
 
 async function getAdmin() {

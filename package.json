@@ -4,7 +4,7 @@
   "description": "CeylonryLabs.io CashFlow — Solo/Studio/Business SaaS",
   "private": true,
   "scripts": {
-    "build": "echo \"Static site: no build step required\""
+    "build": "node scripts/write-firebase-secret.js && echo \"Static site: no build step required\""
   },
   "engines": {
     "node": "20.x"
