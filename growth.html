@@ -1084,6 +1084,7 @@ window.goBackToStudio = async function goBackToStudio(btn) {
   var oldText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Switching...'; }
   try {
+    await saveData();
     var st = getBusinessTrialStatus();
     var update = {
       plan: 'studio',
@@ -1421,14 +1422,15 @@ function applyStudioDataSnapshot(raw) {
   D.invoices = (snap.invoices || []).map(mapStudioInvoice);
   var StudioClients = snap.clients && Array.isArray(snap.clients.list) ? snap.clients.list : (Array.isArray(snap.clients) ? snap.clients : []);
   D.clients = StudioClients.map(mapStudioCustomer);
-  D.txns = addDerivedPaymentTransactions([], D.invoices);
-  D.exps = [];
-  D.suppliers = [];
+  D.txns = (snap.transactions || snap.txns || []).map(mapStudioTransaction);
+  D.exps = (snap.expenses || snap.exps || []).map(mapStudioExpense);
+  var StudioSuppliers = snap.suppliers && Array.isArray(snap.suppliers.list) ? snap.suppliers.list : (Array.isArray(snap.suppliers) ? snap.suppliers : []);
+  D.suppliers = StudioSuppliers.map(mapStudioSupplier);
   D.payables = [];
   D.staff = [];
   D.autos = [];
   D.settings.growthImportedFromStudio = true;
-  D.settings.growthOpsStarted = false;
+  D.settings.growthOpsStarted = D.txns.length > 0 || D.exps.length > 0 || D.suppliers.length > 0;
   D._nextInvId = toNum(snap.nextInvNum || snap.nextInvId || D._nextInvId || 1);
   normalizeBusinessData();
   return true;
