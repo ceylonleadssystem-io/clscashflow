@@ -10,6 +10,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
+  --rail-width:280px;
   --gold:#B8923E;--gold-l:#C8A253;--gold-d:#8B6D24;
   --bg:#F7F1E8;--bg2:#FDFAF4;--bg3:#F1E9DC;--bg4:#E8DCCB;
   --text:#4A3B2A;--muted:#6F6353;--dim:#9B907F;
@@ -21,10 +22,10 @@
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);overflow:auto}
 
 /* ── LAYOUT ── */
-.ob-shell{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+.ob-shell{display:block;min-height:100vh;padding-left:var(--rail-width)}
 
 /* ── LEFT PANEL ── */
-.ob-left{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;padding:1.6rem;position:sticky;top:0;height:100vh;overflow:hidden}
+.ob-left{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:space-between;padding:1.6rem;position:fixed;top:0;left:0;bottom:0;width:var(--rail-width);height:100vh;height:100dvh;overflow:hidden;z-index:20}
 .ob-left::before{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(to top,rgba(184,146,42,.06),transparent);pointer-events:none}
 .ob-logo{font-family:var(--font-d);font-size:1.45rem;font-weight:300;color:var(--text);position:relative;z-index:1}
 .ob-logo span{color:var(--gold)}
@@ -49,7 +50,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .ob-progress-text{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 
 /* ── RIGHT PANEL ── */
-.ob-right{display:flex;align-items:flex-start;justify-content:center;padding:1.75rem 1.5rem;overflow:visible;background:var(--bg)}
+.ob-right{display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:1.75rem 1.5rem;overflow:visible;background:var(--bg)}
 .ob-steps-wrap{width:100%;max-width:640px;position:relative}
 
 /* Step cards */
@@ -278,7 +279,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .ob-card-scroll{max-height:none;overflow:visible;padding-right:0}
 
 @media(max-width:860px){
-  .ob-shell{grid-template-columns:1fr}
+  .ob-shell{display:block;padding-left:0}
   .ob-left{display:none}
   .ob-right{padding:1.25rem;align-items:flex-start;overflow-y:auto}
   .ob-title{font-size:1.8rem}
@@ -331,7 +332,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 </style>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
@@ -392,14 +393,14 @@ firebase.initializeApp(firebaseConfig);
         <div class="ob-rule"></div>
         <p class="ob-sub">Only the essentials are required. Next, choose what you need first and we will suggest the best plan while keeping every package open for you.</p>
         <div class="ob-input-row">
-          <div class="ob-field"><label>First Name *</label><input class="ob-input" id="s1-fname" placeholder="Your first name"></div>
-          <div class="ob-field"><label>Last Name *</label><input class="ob-input" id="s1-lname" placeholder="Your last name"></div>
+          <div class="ob-field"><label for="s1-fname">First Name *</label><input class="ob-input" id="s1-fname" placeholder="Your first name" autocomplete="given-name" minlength="2" maxlength="60" required></div>
+          <div class="ob-field"><label for="s1-lname">Last Name *</label><input class="ob-input" id="s1-lname" placeholder="Your last name" autocomplete="family-name" minlength="2" maxlength="60" required></div>
         </div>
-        <div class="ob-field"><label>Email Address *</label><input class="ob-input" type="email" id="s1-email" placeholder="you@yourbusiness.com"></div>
-        <div class="ob-field"><label>Phone Number</label><input class="ob-input" type="tel" id="s1-phone" placeholder="+94 77 000 0000"></div>
+        <div class="ob-field"><label for="s1-email">Email Address *</label><input class="ob-input" type="email" id="s1-email" placeholder="you@yourbusiness.com" autocomplete="email" maxlength="254" required></div>
+        <div class="ob-field"><label for="s1-phone">Phone Number *</label><input class="ob-input" type="tel" id="s1-phone" placeholder="+94 77 000 0000" autocomplete="tel" minlength="7" maxlength="20" required></div>
         <div class="ob-input-row">
-          <div class="ob-field"><label>Password *</label><input class="ob-input" type="password" id="s1-pass" placeholder="Min 8 characters"></div>
-          <div class="ob-field"><label>Confirm Password *</label><input class="ob-input" type="password" id="s1-pass2" placeholder="Repeat password"></div>
+          <div class="ob-field"><label for="s1-pass">Password *</label><input class="ob-input" type="password" id="s1-pass" placeholder="Min 8 characters" autocomplete="new-password" minlength="8" maxlength="128" required></div>
+          <div class="ob-field"><label for="s1-pass2">Confirm Password *</label><input class="ob-input" type="password" id="s1-pass2" placeholder="Repeat password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
         </div>
         <div class="ob-nav"><span></span><button class="btn-next" onclick="window.nextStep(1)">Continue →</button></div>
       </div>
@@ -954,6 +955,8 @@ function showStepError(step,message,fieldIds){
   if(!card) return false;
   const err=document.createElement('div');
   err.className='ob-app-error';
+  err.setAttribute('role','alert');
+  err.setAttribute('aria-live','polite');
   err.textContent=message;
   const scroll=card.querySelector('.ob-card-scroll');
   const anchor=(scroll||card).querySelector('.ob-rule');
@@ -964,17 +967,29 @@ function showStepError(step,message,fieldIds){
 }
 function isEmail(v){return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
 function isPhone(v){return !v || /^[+0-9 ()-]{7,20}$/.test(v);}
+function isName(v){return /^[A-Za-z][A-Za-z .'-]{1,59}$/.test(String(v||'').trim());}
 
 // ── VALIDATION ──
 function validateStep(step){
   if(step===1){
-    if(!document.getElementById('s1-fname').value.trim()) return showStepError(1,'Please enter your first name.',['s1-fname']);
-    if(!document.getElementById('s1-email').value.trim()) return showStepError(1,'Please enter your email address.',['s1-email']);
-    if(!isEmail(document.getElementById('s1-email').value.trim())) return showStepError(1,'Please enter a valid email address.',['s1-email']);
-    if(!isPhone(document.getElementById('s1-phone').value.trim())) return showStepError(1,'Please enter a valid phone number or leave it blank.',['s1-phone']);
+    const fname=document.getElementById('s1-fname').value.trim();
+    const lname=document.getElementById('s1-lname').value.trim();
+    const email=document.getElementById('s1-email').value.trim();
+    const phone=document.getElementById('s1-phone').value.trim();
+    if(!fname) return showStepError(1,'Please enter your first name.',['s1-fname']);
+    if(!isName(fname)) return showStepError(1,'First name should use letters, spaces, hyphens, apostrophes, or periods only.',['s1-fname']);
+    if(!lname) return showStepError(1,'Please enter your last name.',['s1-lname']);
+    if(!isName(lname)) return showStepError(1,'Last name should use letters, spaces, hyphens, apostrophes, or periods only.',['s1-lname']);
+    if(!email) return showStepError(1,'Please enter your email address.',['s1-email']);
+    if(!isEmail(email)) return showStepError(1,'Please enter a valid email address.',['s1-email']);
+    if(!phone) return showStepError(1,'Please enter your phone number.',['s1-phone']);
+    if(!isPhone(phone)) return showStepError(1,'Please enter a valid phone number between 7 and 20 digits.',['s1-phone']);
     if(!state.googleAuth){
       const p=document.getElementById('s1-pass').value;
+      if(!p) return showStepError(1,'Please enter a password.',['s1-pass']);
       if(p.length<8) return showStepError(1,'Password must be at least 8 characters.',['s1-pass']);
+      if(p.length>128) return showStepError(1,'Password must be 128 characters or fewer.',['s1-pass']);
+      if(!document.getElementById('s1-pass2').value) return showStepError(1,'Please confirm your password.',['s1-pass2']);
       if(p!==document.getElementById('s1-pass2').value) return showStepError(1,'Passwords do not match.',['s1-pass','s1-pass2']);
     }
   }

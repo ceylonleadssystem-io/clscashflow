@@ -10,7 +10,7 @@
 
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
@@ -70,6 +70,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .finput{background:var(--bg3);border:1px solid var(--border2);padding:.7rem 1rem;color:var(--text);font-family:var(--font-b);font-size:.85rem;outline:none;transition:all .22s;width:100%}
 .finput:focus{border-color:#1a1714;background:var(--white);box-shadow:0 0 0 3px rgba(26,23,20,.05)}
 .finput::placeholder{color:var(--dim)}
+.password-field{position:relative}
+.password-field .finput{padding-right:3.1rem}
+.password-toggle{position:absolute;right:.55rem;top:50%;transform:translateY(-50%);border:1px solid var(--border2);background:var(--white);color:var(--muted);min-width:2.1rem;height:2.1rem;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-b);font-size:.68rem;font-weight:700;cursor:pointer;transition:all .2s}
+.password-toggle:hover,.password-toggle:focus{border-color:var(--gold);color:var(--text);outline:none}
 .forgot{font-size:.72rem;color:var(--gold);text-decoration:none;float:right;margin-top:-.5rem;margin-bottom:.85rem;display:block;text-align:right}
 .forgot:hover{color:var(--gold-l)}
 .btn-sign{width:100%;padding:.85rem;background:#1a1714;color:#fff;font-family:var(--font-b);font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;border:none;cursor:pointer;transition:all .25s;margin-bottom:1.25rem}
@@ -160,12 +164,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="divider"><span class="divider-text">or sign in with email</span></div>
 
       <div class="field">
-        <label>Email Address</label>
-        <input class="finput" type="email" id="si-email" placeholder="you@business.com" autocomplete="email">
+        <label for="si-email">Email Address</label>
+        <input class="finput" type="email" id="si-email" placeholder="you@business.com" autocomplete="email" maxlength="254" required>
       </div>
       <div class="field">
-        <label>Password</label>
-        <input class="finput" type="password" id="si-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
+        <label for="si-pass">Password</label>
+        <div class="password-field">
+          <input class="finput" type="password" id="si-pass" placeholder="••••••••" autocomplete="current-password" minlength="6" maxlength="128" required onkeydown="if(event.key==='Enter')signIn()">
+          <button class="password-toggle" type="button" id="si-pass-toggle" aria-label="Show password" onclick="window.togglePassword('si-pass','si-pass-toggle')">Show</button>
+        </div>
       </div>
       <a class="forgot" href="#" onclick="window.showReset(event)">Forgot your password?</a>
 
@@ -179,8 +186,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <!-- RESET PASSWORD FORM -->
     <div class="reset-form" id="reset-form">
       <div class="field">
-        <label>Your Email Address</label>
-        <input class="finput" type="email" id="reset-email" placeholder="you@business.com">
+        <label for="reset-email">Your Email Address</label>
+        <input class="finput" type="email" id="reset-email" placeholder="you@business.com" autocomplete="email" maxlength="254" required>
       </div>
       <button class="btn-sign" id="reset-btn" onclick="window.sendReset()">Send Reset Link →</button>
       <div class="signup-link" style="margin-top:.75rem">
@@ -366,7 +373,24 @@ function showErr(msg) {
   el.classList.add('show');
 }
 function clearErr() {
-  document.getElementById('err-msg').classList.remove('show');
+  const el = document.getElementById('err-msg');
+  el.classList.remove('show');
+  el.textContent = '';
+  el.style.background = '';
+  el.style.borderColor = '';
+  el.style.color = '';
+}
+function isEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+window.togglePassword = function togglePassword(inputId, buttonId) {
+  const input = document.getElementById(inputId);
+  const button = document.getElementById(buttonId);
+  if (!input || !button) return;
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  button.textContent = isHidden ? 'Hide' : 'Show';
+  button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
 }
 
 // ── EMAIL SIGN IN ──
@@ -374,7 +398,12 @@ window.signIn = async function signIn() {
   clearErr();
   const email = document.getElementById('si-email').value.trim();
   const pass = document.getElementById('si-pass').value;
-  if (!email || !pass) { showErr('Please enter your email and password.'); return; }
+  if (!email && !pass) { showErr('Please enter your email and password.'); return; }
+  if (!email) { showErr('Please enter your email address.'); return; }
+  if (!isEmail(email)) { showErr('Please enter a valid email address.'); return; }
+  if (!pass) { showErr('Please enter your password.'); return; }
+  if (pass.length < 6) { showErr('Password must be at least 6 characters.'); return; }
+  if (pass.length > 128) { showErr('Password must be 128 characters or fewer.'); return; }
 
   const btn = document.getElementById('sign-btn');
   btn.textContent = 'Signing in…'; btn.disabled = true;
@@ -478,8 +507,10 @@ window.showSignIn = function showSignIn(e) {
   clearErr();
 }
 window.sendReset = async function sendReset() {
+  clearErr();
   const email = document.getElementById('reset-email').value.trim();
   if (!email) { showErr('Please enter your email.'); return; }
+  if (!isEmail(email)) { showErr('Please enter a valid email address.'); return; }
   const btn = document.getElementById('reset-btn');
   btn.textContent = 'Sending…'; btn.disabled = true;
   try {

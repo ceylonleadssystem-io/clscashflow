@@ -2,6 +2,7 @@
   'use strict';
 
   var SUPABASE_URL = 'https://iudcinvfqbdzaptnnzqg.supabase.co';
+  var PUBLIC_SITE_ORIGIN = 'https://ceylonrylabs.io';
   var supabaseClient = null;
   var configPromise = null;
   var apps = [];
@@ -19,6 +20,22 @@
 
   function normalizePath(path) {
     return String(path || '').replace(/^\/+|\/+$/g, '');
+  }
+
+  function isLocalHost(hostname) {
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0' || hostname === '[::1]';
+  }
+
+  function siteOrigin() {
+    if (!window.location || isLocalHost(window.location.hostname)) return PUBLIC_SITE_ORIGIN;
+    return window.location.origin || PUBLIC_SITE_ORIGIN;
+  }
+
+  function authRedirectUrl(pathname, search) {
+    var path = pathname || (window.location && window.location.pathname) || '/signin.html';
+    var query = typeof search === 'string' ? search : ((window.location && window.location.search) || '');
+    if (!path || path === '/') path = '/signin.html';
+    return siteOrigin() + path + query;
   }
 
   function fieldValueToPlain(value) {
@@ -290,7 +307,7 @@
   };
   AuthCompat.prototype.sendPasswordResetEmail = async function(email, settings) {
     var client = await getClient();
-    var out = await client.auth.resetPasswordForEmail(email, { redirectTo: settings && settings.url ? settings.url : location.origin + '/signin.html' });
+    var out = await client.auth.resetPasswordForEmail(email, { redirectTo: settings && settings.url ? settings.url : authRedirectUrl('/signin.html', '') });
     if (out.error) throw compatAuthError(out.error);
   };
   AuthCompat.prototype.signOut = async function() {
@@ -301,7 +318,7 @@
   AuthCompat.prototype.signInWithPopup = async function(provider) {
     var client = await getClient();
     var providerName = provider && provider.providerId ? provider.providerId : 'google';
-    var out = await client.auth.signInWithOAuth({ provider: providerName, options: { redirectTo: location.href } });
+    var out = await client.auth.signInWithOAuth({ provider: providerName, options: { redirectTo: authRedirectUrl() } });
     if (out.error) throw compatAuthError(out.error);
     return new Promise(function() {});
   };
