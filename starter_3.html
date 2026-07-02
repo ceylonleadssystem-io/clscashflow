@@ -5,11 +5,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CeylonryLabs.io — Starter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260702-bulk-save"></script>
 <style>
@@ -1431,6 +1434,35 @@ function clearSupplierPicker(prefix){
 // DASHBOARD
 // ════════════════════════════════
 let cfChart=null, expChart=null;
+let chartRenderToken=0;
+function loadChartLibrary(){
+  if(window.Chart) return Promise.resolve(window.Chart);
+  if(window.clsLoadChart) return window.clsLoadChart();
+  if(!window._clsChartLoader){
+    window._clsChartLoader=new Promise(function(resolve,reject){
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+      s.async=true;
+      s.onload=function(){resolve(window.Chart);};
+      s.onerror=function(){reject(new Error('Could not load charts'));};
+      document.head.appendChild(s);
+    });
+  }
+  return window._clsChartLoader;
+}
+function scheduleCharts(){
+  const token=++chartRenderToken;
+  const run=function(){
+    loadChartLibrary().then(function(){
+      const active=document.querySelector('.view.active');
+      if(active&&active.id!=='view-dashboard') return;
+      if(token===chartRenderToken) buildCharts();
+    }).catch(function(e){console.warn('Chart load skipped:', e);});
+  };
+  if(window.clsRunWhenIdle) window.clsRunWhenIdle(run, 900);
+  else if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:900});
+  else setTimeout(run,120);
+}
 function renderDashboard(){
   const now=new Date();
   const mo=now.getMonth(), yr=now.getFullYear();
@@ -1469,7 +1501,7 @@ function renderDashboard(){
   document.getElementById('kpi-profit-sub').style.color=profit>=0?'var(--green)':'var(--red)';
   document.getElementById('kpi-bal-sub').textContent='Running total';
   renderRecentTable();
-  buildCharts();
+  scheduleCharts();
 }
 function animCount(id,target){
   const el=document.getElementById(id);if(!el)return;
@@ -1478,6 +1510,10 @@ function animCount(id,target){
   requestAnimationFrame(tick);
 }
 function buildCharts(){
+  if(!window.Chart) return;
+  const chartCanvas=document.getElementById('cashflow-chart');
+  const expenseCanvas=document.getElementById('exp-chart');
+  if(!chartCanvas||!expenseCanvas) return;
   // Cashflow bar chart — last 6 months
   const months=[];const inData=[];const outData=[];
   for(let i=5;i>=0;i--){
@@ -1487,14 +1523,14 @@ function buildCharts(){
     inData.push(DB.transactions.filter(t=>t.type==='in'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0));
     outData.push(DB.transactions.filter(t=>t.type==='out'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0)+DB.expenses.filter(e=>new Date(e.date).getMonth()===mo&&new Date(e.date).getFullYear()===yr).reduce((a,e)=>a+e.amount,0));
   }
-  const ctx1=document.getElementById('cashflow-chart').getContext('2d');
+  const ctx1=chartCanvas.getContext('2d');
   if(cfChart) cfChart.destroy();
   cfChart=new Chart(ctx1,{type:'bar',data:{labels:months,datasets:[{label:'Cash In',data:inData,backgroundColor:'rgba(26,158,92,.65)',borderRadius:3},{label:'Cash Out',data:outData,backgroundColor:'rgba(192,57,43,.25)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6258',font:{size:10},boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9},callback:v=>v>=1000000?'LKR '+(v/1000000).toFixed(1)+'M':v>=1000?'LKR '+(v/1000).toFixed(0)+'K':'LKR '+v}}}}});
   // Expense donut
   const cats={};DB.expenses.filter(e=>new Date(e.date).getMonth()===today.getMonth()).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount;});
   const catNames=Object.keys(cats);const catVals=Object.values(cats);
   const catColors=['#B8922A','#1B2E5C','#1F5C3A','#334155','#7C1D2E','#0F6B6B'];
-  const ctx2=document.getElementById('exp-chart').getContext('2d');
+  const ctx2=expenseCanvas.getContext('2d');
   if(expChart) expChart.destroy();
   const total=catVals.reduce((a,v)=>a+v,0)||1;
   if(catNames.length){

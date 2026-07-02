@@ -9,10 +9,51 @@
   };
   var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
   var SUPPORT_ID = 'cls-support-widget';
+  var scriptLoads = {};
 
   function nowIso() {
     return new Date().toISOString();
   }
+
+  function afterFirstPaint(fn, delay) {
+    var run = function() {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(fn, { timeout: delay || 3000 });
+      } else {
+        setTimeout(fn, delay || 3000);
+      }
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run, { once: true });
+    else setTimeout(run, 0);
+  }
+
+  function loadScriptOnce(src, id) {
+    id = id || src;
+    if (scriptLoads[id]) return scriptLoads[id];
+    if (document.getElementById(id)) {
+      scriptLoads[id] = Promise.resolve();
+      return scriptLoads[id];
+    }
+    scriptLoads[id] = new Promise(function(resolve, reject) {
+      var script = document.createElement('script');
+      script.id = id;
+      script.src = src;
+      script.async = true;
+      script.onload = function() { resolve(); };
+      script.onerror = function() { reject(new Error('Could not load ' + src)); };
+      document.head.appendChild(script);
+    });
+    return scriptLoads[id];
+  }
+
+  window.clsLoadScriptOnce = window.clsLoadScriptOnce || loadScriptOnce;
+  window.clsLoadChart = window.clsLoadChart || function() {
+    if (window.Chart) return Promise.resolve(window.Chart);
+    return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js', 'cls-chartjs').then(function() {
+      return window.Chart;
+    });
+  };
+  window.clsRunWhenIdle = window.clsRunWhenIdle || afterFirstPaint;
 
   function safeGet(key) {
     try { return localStorage.getItem(key) || ''; } catch (e) { return ''; }
@@ -1142,13 +1183,24 @@
 	      '</div>';
     settingsView.appendChild(wrap);
 
+    var supportActivityLoaded = false;
+    function loadSupportActivity() {
+      if (supportActivityLoaded) return;
+      supportActivityLoaded = true;
+      refreshMyTickets(wrap);
+      subscribeChat(wrap);
+    }
+
 	    wrap.querySelector('.cls-support-toggle').addEventListener('click', function() {
 	      wrap.classList.toggle('open');
+      if (wrap.classList.contains('open')) loadSupportActivity();
 	    });
     wrap.querySelector('[data-refresh-tickets]').addEventListener('click', function() {
+      supportActivityLoaded = true;
       refreshMyTickets(wrap);
     });
     wrap.querySelector('[data-refresh-chat]').addEventListener('click', function() {
+      supportActivityLoaded = true;
       refreshChat(wrap);
     });
     wrap.addEventListener('click', function(ev) {
@@ -1180,8 +1232,10 @@
             if (nameInput && nextUser.displayName && !nameInput.value) nameInput.value = nextUser.displayName;
             if (emailInput && nextUser.email) emailInput.value = nextUser.email;
           }
-          refreshMyTickets(wrap);
-          subscribeChat(wrap);
+          if (supportActivityLoaded) {
+            refreshMyTickets(wrap);
+            subscribeChat(wrap);
+          }
         });
       }
     } catch (e) {}
@@ -1241,17 +1295,13 @@
 	        }
 	      }
 	    });
-    setTimeout(function() {
-      refreshMyTickets(wrap);
-      subscribeChat(wrap);
-    }, 450);
 	  }
 
   function boot() {
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);
-    setTimeout(trackVisit, 900);
-    mountSupportWidget();
+    afterFirstPaint(trackVisit, 5000);
+    afterFirstPaint(mountSupportWidget, 3500);
   }
 
   if (document.readyState === 'loading') {

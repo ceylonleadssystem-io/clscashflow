@@ -6,12 +6,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLS CashFlow — Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260702-bulk-save"></script>
-<script src="assets/platform.js"></script>
+<script src="assets/platform.js?v=20260702-fast-ui"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -921,6 +924,41 @@ var D = {
 // UTILS
 // ═══════════════════════════════════════════════════════════
 var payInvId = null, selTpl = 0, CH = {};
+var chartRenderToken = 0;
+
+function loadChartLibrary() {
+  if (window.Chart) return Promise.resolve(window.Chart);
+  if (window.clsLoadChart) return window.clsLoadChart();
+  if (!window._clsChartLoader) {
+    window._clsChartLoader = new Promise(function(resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+      script.async = true;
+      script.onload = function() { resolve(window.Chart); };
+      script.onerror = function() { reject(new Error('Could not load charts')); };
+      document.head.appendChild(script);
+    });
+  }
+  return window._clsChartLoader;
+}
+
+function currentPremiumView() {
+  var active = document.querySelector('.view.active');
+  return active ? active.id.replace('view-', '') : 'exec';
+}
+
+function scheduleActiveCharts() {
+  var token = ++chartRenderToken;
+  var active = currentPremiumView();
+  var run = function() {
+    loadChartLibrary().then(function() {
+      if (token === chartRenderToken && currentPremiumView() === active && RENDERERS[active]) RENDERERS[active]();
+    }).catch(function(e) { console.warn('Chart load skipped:', e); });
+  };
+  if (window.clsRunWhenIdle) window.clsRunWhenIdle(run, 900);
+  else if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 900 });
+  else setTimeout(run, 120);
+}
 
 function fmt(n) { return 'LKR ' + Number(n||0).toLocaleString('en-LK',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtS(n) { if(n>=1000000) return 'LKR '+(n/1000000).toFixed(1)+'M'; if(n>=1000) return 'LKR '+(n/1000).toFixed(0)+'K'; return fmt(n); }
@@ -1020,6 +1058,10 @@ function destroyChart(key) { if(CH[key]) { CH[key].destroy(); delete CH[key]; } 
 function makeChart(id, type, labels, datasets, opts) {
   var canvas = document.getElementById(id);
   if (!canvas) return;
+  if (!window.Chart) {
+    scheduleActiveCharts();
+    return;
+  }
   var defOpts = {
     responsive:true, maintainAspectRatio:false,
     plugins:{legend:{labels:{font:{family:'DM Sans',size:10},boxWidth:12}}},
@@ -1496,6 +1538,10 @@ function renderKPI() {
     }).join('');
 
   // Charts
+  if (!window.Chart) {
+    scheduleActiveCharts();
+    return;
+  }
   destroyChart('ch-ltvcac'); destroyChart('ch-runway');
   var mo=['Dec','Jan','Feb','Mar','Apr','May'];
   var ltvD=mo.map(function(_,i){return K.ltv*(0.72+i*0.056);});
@@ -1566,6 +1612,10 @@ function renderIntelligence() {
   }).join('');
 
   destroyChart('ch-revq');
+  if (!window.Chart) {
+    scheduleActiveCharts();
+    return;
+  }
   var rec=Math.round(K.inc*.62);
   var c=document.getElementById('ch-revq');
   if(c) CH['ch-revq']=new Chart(c,{type:'doughnut',data:{labels:['Recurring','One-Time'],datasets:[{data:[rec,K.inc-rec],backgroundColor:['#1A9E62','#C9A84C'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:10},boxWidth:10}}}}});
@@ -1627,6 +1677,10 @@ function renderCohort() {
   }).join('');
 
   // Charts
+  if (!window.Chart) {
+    scheduleActiveCharts();
+    return;
+  }
   destroyChart('ch-cohort'); destroyChart('ch-cltv'); destroyChart('ch-churn');
   var cols=['rgba(201,168,76,.9)','rgba(201,168,76,.72)','rgba(201,168,76,.55)','rgba(201,168,76,.4)','rgba(201,168,76,.26)','rgba(201,168,76,.14)'];
   var dsets=[];

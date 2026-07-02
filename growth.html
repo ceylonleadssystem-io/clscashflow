@@ -6,13 +6,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ceylonry Labs Business — Cashflow & Operations Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260702-bulk-save"></script>
-<script src="assets/platform.js"></script>
+<script src="assets/platform.js?v=20260702-fast-ui"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -991,6 +994,35 @@ var D = {
 
 // ===================== UTILS =====================
 var payInvId = null, editInvId = null, selTpl = 0, CH = {};
+var chartRenderToken = 0;
+
+function loadChartLibrary() {
+  if (window.Chart) return Promise.resolve(window.Chart);
+  if (window.clsLoadChart) return window.clsLoadChart();
+  if (!window._clsChartLoader) {
+    window._clsChartLoader = new Promise(function(resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+      script.async = true;
+      script.onload = function() { resolve(window.Chart); };
+      script.onerror = function() { reject(new Error('Could not load charts')); };
+      document.head.appendChild(script);
+    });
+  }
+  return window._clsChartLoader;
+}
+
+function scheduleDashboardCharts() {
+  var token = ++chartRenderToken;
+  var run = function() {
+    loadChartLibrary().then(function() {
+      if (token === chartRenderToken && currentBusinessView() === 'dashboard') buildDashCharts();
+    }).catch(function(e) { console.warn('Chart load skipped:', e); });
+  };
+  if (window.clsRunWhenIdle) window.clsRunWhenIdle(run, 900);
+  else if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 900 });
+  else setTimeout(run, 120);
+}
 
 function fmt(n) {
   return 'LKR ' + Number(n||0).toLocaleString('en-LK', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -1725,6 +1757,7 @@ document.querySelectorAll('.nav-item').forEach(function(item) {
 
 // ===================== CHARTS =====================
 function buildDashCharts() {
+  if (!window.Chart) return;
   var monthInfo = monthWindow(6);
   var months = monthInfo.map(function(m) { return m.label; });
   var inData = sumByMonth(monthInfo, D.txns, function(t) { return t.type === 'in'; });
@@ -2014,7 +2047,7 @@ function renderDashboard() {
     kpiMini('Top Expense Category', topExpense?topExpense[0]:'—', topExpense?fmtReporting(topExpense[1]):'Add expenses to track', '📌', 'bl');
 
   refreshInvoiceNotifications();
-  setTimeout(buildDashCharts, 80);
+  scheduleDashboardCharts();
 }
 
 function kpiMini(lbl, val, sub, ico, accent) {
@@ -2209,6 +2242,11 @@ function renderTeamAccess() {
 }
 
 function renderReports() {
+  if (!window.Chart) {
+    loadChartLibrary().then(function() {
+      if (currentBusinessView() === 'reports') renderReports();
+    }).catch(function(e) { console.warn('Report chart load skipped:', e); });
+  }
   if (CH.rev) CH.rev.destroy();
   if (CH.ie) CH.ie.destroy();
 
@@ -2228,10 +2266,10 @@ function renderReports() {
   var expD = sumByMonth(monthInfo, D.exps);
 
   var c3 = document.getElementById('ch-rev');
-  if (c3) CH.rev = new Chart(c3, {type:'line',data:{labels:months,datasets:[{label:'Income',data:revD,borderColor:'#B8922A',backgroundColor:'rgba(184,146,42,.08)',tension:.4,fill:true,pointBackgroundColor:'#B8922A'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
+  if (window.Chart && c3) CH.rev = new Chart(c3, {type:'line',data:{labels:months,datasets:[{label:'Income',data:revD,borderColor:'#B8922A',backgroundColor:'rgba(184,146,42,.08)',tension:.4,fill:true,pointBackgroundColor:'#B8922A'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
 
   var c4 = document.getElementById('ch-ie');
-  if (c4) CH.ie = new Chart(c4, {type:'bar',data:{labels:months,datasets:[{label:'Income',data:revD,backgroundColor:'rgba(29,158,98,.65)',borderRadius:3},{label:'Expenses',data:expD,backgroundColor:'rgba(192,57,43,.55)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
+  if (window.Chart && c4) CH.ie = new Chart(c4, {type:'bar',data:{labels:months,datasets:[{label:'Income',data:revD,backgroundColor:'rgba(29,158,98,.65)',borderRadius:3},{label:'Expenses',data:expD,backgroundColor:'rgba(192,57,43,.55)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
 
   var byCat = {};
   D.exps.forEach(function(e){byCat[e.cat]=(byCat[e.cat]||0)+e.amount;});
