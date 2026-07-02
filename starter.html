@@ -1157,6 +1157,81 @@ async function loadDB() {
   } catch(e) { console.error('loadDB error:', e); }
 }
 
+function applyBusinessSwitchSnapshot(raw) {
+  const snap = raw && (raw.data || raw.db || raw);
+  if (!snap) return false;
+  const snapNum = v => Number(String(v == null ? 0 : v).replace(/,/g, '')) || 0;
+  const settings = snap.settings || {};
+  DB.settings = Object.assign({}, DB.settings, {
+    bizName: settings.biz || settings.bizName || DB.settings.bizName,
+    username: settings.user || settings.username || DB.settings.username,
+    addr: settings.addr || DB.settings.addr,
+    email: settings.email || DB.settings.email,
+    vat: settings.vat || DB.settings.vat,
+    footer: settings.footer || DB.settings.footer,
+    logo: settings.logo || DB.settings.logo,
+    logoAlign: settings.logoAlign || DB.settings.logoAlign,
+    logoSize: settings.logoSize || DB.settings.logoSize,
+    defaultTpl: settings.defaultTpl != null ? settings.defaultTpl : DB.settings.defaultTpl,
+    vatRate: settings.vatRate != null ? settings.vatRate : DB.settings.vatRate
+  });
+  DB.transactions = (snap.txns || snap.transactions || []).map(function(t, i) {
+    t = t || {};
+    return {id:t.id || ('T' + Date.now() + i), date:t.date || todayStr(), desc:t.desc || t.description || 'Transaction', type:t.type === 'out' ? 'out' : 'in', cat:t.cat || t.category || 'Other', amount:snapNum(t.amount), ref:t.ref || t.reference || ''};
+  });
+  DB.expenses = (snap.exps || snap.expenses || []).map(function(e, i) {
+    e = e || {};
+    return {id:e.id || ('E' + Date.now() + i), date:e.date || todayStr(), desc:e.desc || e.description || 'Expense', vendor:e.vendor || e.supplier || '', cat:e.cat || e.category || 'Other', amount:snapNum(e.amount), supplierId:e.supplierId || ''};
+  });
+  DB.invoices = (snap.invoices || []).map(function(inv, i) {
+    inv = inv || {};
+    const id = inv.num || inv.id || ('INV-' + String(i + 1).padStart(3, '0'));
+    const lines = (inv.lines || inv.items || []).map(function(it) {
+      it = it || {};
+      const qty = snapNum(it.qty || it.units || 1) || 1;
+      const price = snapNum(it.price);
+      return {desc:it.desc || it.name || 'Invoice item', qty:qty, price:price, total:snapNum(it.total || qty * price)};
+    });
+    return Object.assign({}, inv, {
+      id:id,
+      num:id,
+      client:inv.client || inv.clientName || 'Customer',
+      lines:lines,
+      items:lines,
+      total:snapNum(inv.total || inv.amount),
+      paid:snapNum(inv.paid || inv.paidAmount),
+      paidAmount:snapNum(inv.paid || inv.paidAmount)
+    });
+  });
+  DB.clients.list = (snap.clients || []).map(function(c, i) {
+    c = c || {};
+    return {id:c.id || ('C' + Date.now() + i), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || c.name || '', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
+  });
+  DB.suppliers.list = (snap.suppliers || []).map(function(s, i) {
+    s = s || {};
+    return {id:s.id || ('SP' + Date.now() + i), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', email:s.email || '', addr:s.addr || s.address || '', status:s.status || 'active'};
+  });
+  DB.editBacklog = snap.editBacklog || snap.editLog || DB.editBacklog || [];
+  DB.nextInvNum = snapNum(snap._nextInvId || snap.nextInvNum || DB.nextInvNum || 1) || 1;
+  return true;
+}
+
+async function consumeBusinessSwitchSnapshot() {
+  const raw = localStorage.getItem('cls-growth-starter-snapshot');
+  if (!raw) return false;
+  try {
+    const parsed = JSON.parse(raw);
+    const matchesOwner = !parsed.ownerUid || !_uid || parsed.ownerUid === _uid || parsed.signedInUid === _signedInUid;
+    if (!matchesOwner) return false;
+    if (applyBusinessSwitchSnapshot(parsed)) {
+      localStorage.removeItem('cls-growth-starter-snapshot');
+      await saveDB();
+      return true;
+    }
+  } catch(e) { console.error('Studio import snapshot:', e); }
+  return false;
+}
+
 // ── AUTH STATE: gate everything behind login ──
 if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
   if (!user) { window.location.href = 'signin.html'; return; }
@@ -1197,6 +1272,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
 
     // Load data then render
     await loadDB();
+    await consumeBusinessSwitchSnapshot();
     init();
     enforcePermissions();
     renderTrialStatus();

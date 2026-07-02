@@ -1084,6 +1084,15 @@ window.goBackToStudio = async function goBackToStudio(btn) {
   var oldText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Switching...'; }
   try {
+    await saveData();
+    try {
+      localStorage.setItem('cls-growth-starter-snapshot', JSON.stringify({
+        ownerUid:_uid,
+        signedInUid:_signedInUid,
+        createdAt:Date.now(),
+        data:D
+      }));
+    } catch(snapshotErr) { console.warn('Studio switch snapshot skipped:', snapshotErr); }
     var st = getBusinessTrialStatus();
     var update = {
       plan: 'studio',
@@ -1421,14 +1430,19 @@ function applyStudioDataSnapshot(raw) {
   D.invoices = (snap.invoices || []).map(mapStudioInvoice);
   var StudioClients = snap.clients && Array.isArray(snap.clients.list) ? snap.clients.list : (Array.isArray(snap.clients) ? snap.clients : []);
   D.clients = StudioClients.map(mapStudioCustomer);
-  D.txns = addDerivedPaymentTransactions([], D.invoices);
-  D.exps = [];
-  D.suppliers = [];
-  D.payables = [];
+  D.txns = (snap.transactions || snap.txns || []).map(mapStudioTransaction);
+  D.txns = addDerivedPaymentTransactions(D.txns, D.invoices);
+  D.exps = (snap.expenses || snap.exps || []).map(mapStudioExpense);
+  D.suppliers = (snap.suppliers && Array.isArray(snap.suppliers.list) ? snap.suppliers.list : (snap.suppliers || [])).map(mapStudioSupplier);
+  D.payables = (snap.payables || []).map(function(p, i) {
+    p = p || {};
+    return {id:String(p.id || ('P' + Date.now() + i)), supplier:p.supplier || p.vendor || 'Supplier', amount:toNum(p.amount), days:toNum(p.days), ref:p.ref || p.reference || ''};
+  });
   D.staff = [];
   D.autos = [];
+  D.editLog = snap.editLog || snap.editBacklog || [];
   D.settings.growthImportedFromStudio = true;
-  D.settings.growthOpsStarted = false;
+  D.settings.growthOpsStarted = !!(D.txns.length || D.exps.length || D.suppliers.length || D.payables.length);
   D._nextInvId = toNum(snap.nextInvNum || snap.nextInvId || D._nextInvId || 1);
   normalizeBusinessData();
   return true;
