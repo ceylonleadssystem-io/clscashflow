@@ -43,7 +43,11 @@ function serviceAccountFromSplitEnv() {
 
 function serviceAccountFromSecretFile() {
   try {
-    return require('./_secrets/firebase-service-account.json');
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, '_secrets', 'firebase-service-account.json');
+    if (!fs.existsSync(filePath)) return null;
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch (e) {
     return null;
   }
