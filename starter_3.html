@@ -957,6 +957,7 @@ var DB = {
 };
 
 var _dataVersion = 0;
+var _saveChain = Promise.resolve();
 
 function clonePlain(value) {
   try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
@@ -1026,8 +1027,8 @@ async function saveCollection(col, arr) {
   await batch.commit();
 }
 
-async function saveDB() {
-  if (!_uid) { localStorage.setItem('cls-starter-backup', JSON.stringify(DB)); return false; }
+async function saveDBNow() {
+  if (!_uid) { localStorage.setItem('cls-starter3-backup', JSON.stringify(DB)); return false; }
   try {
     const version = writeDBBackup(Date.now(), false);
     const savedSettings = Object.assign({}, DB.settings || {});
@@ -1055,6 +1056,15 @@ async function saveDB() {
     console.error('saveDB error:', e);
     return false;
   }
+}
+
+function saveDB() {
+  try {
+    if (_uid) writeDBBackup(Date.now(), false);
+    else localStorage.setItem('cls-starter3-backup', JSON.stringify(DB));
+  } catch(e) {}
+  _saveChain = _saveChain.catch(function(){ return false; }).then(function(){ return saveDBNow(); });
+  return _saveChain;
 }
 
 async function loadDB() {
@@ -1960,7 +1970,7 @@ function applySettings(){
 window.previewSettingsLogo = function previewSettingsLogo(input){
   if(!input.files||!input.files[0])return;
   const reader=new FileReader();
-  reader.onload=e=>{DB.settings.logo=e.target.result;const img=document.getElementById('settings-logo-preview');img.src=e.target.result;img.style.display='block';document.getElementById('logo-upload-placeholder').style.display='none';applySettings();};
+  reader.onload=e=>{DB.settings.logo=e.target.result;const img=document.getElementById('settings-logo-preview');img.src=e.target.result;img.style.display='block';document.getElementById('logo-upload-placeholder').style.display='none';applySettings();saveDB();};
   reader.readAsDataURL(input.files[0]);
 }
 

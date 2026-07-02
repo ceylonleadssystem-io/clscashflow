@@ -2390,6 +2390,7 @@ window.selectBusinessDefaultTemplate = function selectBusinessDefaultTemplate(id
   if (field) field.value = D.settings.defaultTpl;
   renderSettingsTemplatePicker();
   renderSettingsInvoicePreview();
+  saveData();
 }
 
 function renderSettingsInvoicePreview() {
@@ -3126,6 +3127,7 @@ var _signedInUid = null;
 var _trialEnd = null;
 var _isPaid = false;
 var _dataVersion = 0;
+var _saveChain = Promise.resolve();
 
 function businessBackupKey(uid) {
   return 'cls-business-data-backup:' + String(uid || _uid || _signedInUid || 'unknown');
@@ -3196,7 +3198,7 @@ function restoreBusinessBackupIfNewer(serverVersion) {
 }
 
 // Save all D data to Supabase
-async function saveData() {
+async function saveDataNow() {
   if (!_uid) {
     console.warn('saveData skipped: user id is not ready yet.');
     return false;
@@ -3250,6 +3252,14 @@ async function saveData() {
     showToast('Could not sync to cloud. Kept locally and will retry after refresh.', 'err');
     return false;
   }
+}
+
+function saveData() {
+  try {
+    if (_uid) writeBusinessBackup(Date.now(), false);
+  } catch(e) {}
+  _saveChain = _saveChain.catch(function(){ return false; }).then(function(){ return saveDataNow(); });
+  return _saveChain;
 }
 
 // Load all D data from Supabase
