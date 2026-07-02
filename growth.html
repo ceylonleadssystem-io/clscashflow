@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2708,7 +2708,7 @@ function syncExpenseForTxn(txn) {
     source:'money-out'
   });
 }
-function refreshAfterTxnChange(message, type) {
+async function refreshAfterTxnChange(message, type) {
   D.settings.growthOpsStarted = true;
   D.txns.sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   closeMo('mo-txn');
@@ -2718,28 +2718,41 @@ function refreshAfterTxnChange(message, type) {
   renderSuppliers();
   renderDashboard();
   renderReports();
-  showToast(message, type || 'ok');
-  saveData();
+  showToast('Saving transaction...', 'ok');
+  var saved = await saveData();
+  showToast(saved ? message : 'Transaction kept locally. Cloud sync will retry after refresh.', saved ? (type || 'ok') : 'err');
 }
-window.addTxn = function addTxn() {
+window.addTxn = async function addTxn() {
+  var saveBtn = document.getElementById('txn-save-btn');
+  if (saveBtn && saveBtn.disabled) return;
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
   var editId = document.getElementById('t-edit-id').value;
   var existing = editId ? D.txns.find(function(t) { return String(t.id) === String(editId); }) : null;
   if (existing && existing.source === 'invoice-payment') {
     showToast('Invoice payment transactions are managed from the invoice record.', 'err');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Save Changes' : 'Save Transaction'; }
     return;
   }
   var tx = buildTxnFromForm(existing);
-  if (!tx) { showToast('Please fill in all fields', 'err'); return; }
-  if (existing) {
-    var idx = D.txns.findIndex(function(t) { return String(t.id) === String(editId); });
-    if (idx > -1) D.txns[idx] = tx;
-    syncExpenseForTxn(tx);
-    refreshAfterTxnChange('Transaction updated!', 'ok');
+  if (!tx) {
+    showToast('Please fill in all fields', 'err');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Save Changes' : 'Save Transaction'; }
     return;
   }
-  D.txns.unshift(tx);
-  syncExpenseForTxn(tx);
-  refreshAfterTxnChange(tx.type === 'out' ? 'Money Out saved and added to Expenses.' : 'Transaction saved!', 'ok');
+  try {
+    if (existing) {
+      var idx = D.txns.findIndex(function(t) { return String(t.id) === String(editId); });
+      if (idx > -1) D.txns[idx] = tx;
+      syncExpenseForTxn(tx);
+      await refreshAfterTxnChange('Transaction updated!', 'ok');
+      return;
+    }
+    D.txns.unshift(tx);
+    syncExpenseForTxn(tx);
+    await refreshAfterTxnChange(tx.type === 'out' ? 'Money Out saved and added to Expenses.' : 'Transaction saved!', 'ok');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Save Changes' : 'Save Transaction'; }
+  }
 }
 window.editTxn = function editTxn(id) {
   var t = D.txns.find(function(tx) { return String(tx.id) === String(id); });
@@ -3103,14 +3116,7 @@ window.printInv = function printInv(id) {
 }
 
 // ===================== FIREBASE + AUTH =====================
-var _fbConfig = {
-  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
-  authDomain: "ceylonry-labs.firebaseapp.com",
-  projectId: "ceylonry-labs",
-  storageBucket: "ceylonry-labs.firebasestorage.app",
-  messagingSenderId: "979885533126",
-  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
-};
+var _fbConfig = {};
 firebase.initializeApp(_fbConfig);
 var _fdb = firebase.firestore();
 var _fauth = firebase.auth();
@@ -3119,18 +3125,93 @@ var _profile = null;
 var _signedInUid = null;
 var _trialEnd = null;
 var _isPaid = false;
+var _dataVersion = 0;
+
+function businessBackupKey(uid) {
+  return 'cls-business-data-backup:' + String(uid || _uid || _signedInUid || 'unknown');
+}
+
+function clonePlain(value) {
+  try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
+}
+
+function currentBusinessSnapshot(version, serverSaved) {
+  return {
+    version: Number(version || Date.now()),
+    serverSaved: serverSaved === true,
+    ownerUid: _uid || '',
+    signedInUid: _signedInUid || '',
+    data: {
+      settings: clonePlain(D.settings || {}),
+      nextInvId: D._nextInvId || 1,
+      txns: clonePlain(D.txns || []),
+      exps: clonePlain(D.exps || []),
+      invoices: clonePlain(D.invoices || []),
+      clients: clonePlain(D.clients || []),
+      suppliers: clonePlain(D.suppliers || []),
+      payables: clonePlain(D.payables || []),
+      editLog: clonePlain(D.editLog || [])
+    }
+  };
+}
+
+function writeBusinessBackup(version, serverSaved) {
+  if (!_uid) return Number(version || Date.now());
+  var nextVersion = Math.max(Number(version || Date.now()), _dataVersion || 0);
+  _dataVersion = nextVersion;
+  try {
+    localStorage.setItem(businessBackupKey(_uid), JSON.stringify(currentBusinessSnapshot(nextVersion, serverSaved)));
+  } catch (e) {
+    console.warn('Business local backup skipped:', e);
+  }
+  return nextVersion;
+}
+
+function readBusinessBackup(uid) {
+  try {
+    var raw = localStorage.getItem(businessBackupKey(uid));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function restoreBusinessBackupIfNewer(serverVersion) {
+  var backup = readBusinessBackup(_uid);
+  if (!backup || !backup.data) return false;
+  var backupVersion = Number(backup.version || 0);
+  if (!backupVersion || backupVersion <= Number(serverVersion || 0)) return false;
+  D.settings = Object.assign({}, D.settings, backup.data.settings || {});
+  D._nextInvId = backup.data.nextInvId || D._nextInvId || 1;
+  D.txns = backup.data.txns || backup.data.transactions || [];
+  D.exps = backup.data.exps || backup.data.expenses || [];
+  D.invoices = backup.data.invoices || [];
+  D.clients = backup.data.clients || [];
+  D.suppliers = backup.data.suppliers || [];
+  D.payables = backup.data.payables || [];
+  D.editLog = backup.data.editLog || [];
+  _dataVersion = backupVersion;
+  normalizeBusinessData();
+  return true;
+}
 
 // Save all D data to Supabase
 async function saveData() {
-  if (!_uid) return;
+  if (!_uid) {
+    console.warn('saveData skipped: user id is not ready yet.');
+    return false;
+  }
   try {
     normalizeBusinessData();
+    var version = writeBusinessBackup(Date.now(), false);
+    D.settings.growthDataVersion = version;
     var batch = _fdb.batch();
     var userRef = _fdb.collection('users').doc(_uid);
     var savedSettings = Object.assign({}, D.settings, {
       bizName:D.settings.biz,
       username:D.settings.user
     });
+    delete savedSettings.growthDataVersion;
     // Save settings
     batch.set(userRef, {
       settings: savedSettings,
@@ -3158,7 +3239,17 @@ async function saveData() {
       });
       await b2.commit();
     }
-  } catch(e) { console.error('saveData:', e); }
+    await userRef.set({
+      settings: Object.assign({}, savedSettings, { growthDataVersion: version }),
+      growthDataVersion: version
+    }, { merge: true });
+    writeBusinessBackup(version, true);
+    return true;
+  } catch(e) {
+    console.error('saveData:', e);
+    showToast('Could not sync to cloud. Kept locally and will retry after refresh.', 'err');
+    return false;
+  }
 }
 
 // Load all D data from Supabase
@@ -3166,20 +3257,25 @@ async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);
     var profSnap = await userRef.get();
+    var serverVersion = 0;
     if (profSnap.exists) {
       var profileData = profSnap.data() || {};
       if (profileData.settings) D.settings = mapStudioSettings(profileData.settings);
       if (profileData.nextInvId || profileData.nextInvNum) D._nextInvId = profileData.nextInvId || profileData.nextInvNum;
+      serverVersion = Number(profileData.growthDataVersion || 0);
+      _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
     }
     var cols = ['transactions','expenses','invoices','clients','suppliers','payables','editLog'];
     var keys = ['txns','exps','invoices','clients','suppliers','payables','editLog'];
     for (var i = 0; i < cols.length; i++) {
       var snap = await userRef.collection(cols[i]).get();
-      if (!snap.empty) {
-        D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
-      }
+      D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
     }
     normalizeBusinessData();
+    if (restoreBusinessBackupIfNewer(serverVersion)) {
+      showToast('Restored your latest unsynced changes. Syncing now...', 'ok');
+      setTimeout(function() { saveData(); }, 500);
+    }
   } catch(e) { console.error('loadData:', e); }
 }
 

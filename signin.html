@@ -10,16 +10,9 @@
 
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
-  authDomain: "ceylonry-labs.firebaseapp.com",
-  projectId: "ceylonry-labs",
-  storageBucket: "ceylonry-labs.firebasestorage.app",
-  messagingSenderId: "979885533126",
-  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
-};
+const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 </script>
 <script src="assets/platform.js"></script>
@@ -244,12 +237,53 @@ async function bootstrapPlatformAdmin(email, pass) {
   window.location.href = 'ceylonry-admin.html';
 }
 
+let authRedirectInProgress = false;
+
+function hasOAuthReturnParams() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+  return /access_token=|refresh_token=|provider_token=|code=|error=|error_description=/.test(hash + search);
+}
+
+async function routeSignedInUser(user) {
+  if (!user || authRedirectInProgress) return;
+  authRedirectInProgress = true;
+  await redirectToDashboard(user);
+}
+
+function watchOAuthReturnSession() {
+  if (!hasOAuthReturnParams()) return;
+  showErr('Google sign-in complete. Opening your dashboard...');
+  const errEl = document.getElementById('err-msg');
+  if (errEl) {
+    errEl.style.background = 'rgba(26,158,92,.08)';
+    errEl.style.borderColor = 'rgba(26,158,92,.25)';
+    errEl.style.color = 'var(--green)';
+  }
+  let tries = 0;
+  const timer = setInterval(function() {
+    tries += 1;
+    const user = firebase.auth().currentUser;
+    if (user) {
+      clearInterval(timer);
+      routeSignedInUser(user);
+    } else if (tries >= 20) {
+      clearInterval(timer);
+      firebase.auth().onAuthStateChanged(function(nextUser) {
+        if (nextUser) routeSignedInUser(nextUser);
+      });
+    }
+  }, 250);
+}
+
 // ── AUTH STATE: redirect if already signed in ──
 firebase.auth().onAuthStateChanged(async function(user) {
   if (user) {
-    await redirectToDashboard(user);
+    await routeSignedInUser(user);
   }
 });
+
+watchOAuthReturnSession();
 
 async function redirectToDashboard(user) {
   try {

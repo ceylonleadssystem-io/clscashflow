@@ -38,6 +38,43 @@
     return siteOrigin() + path + query;
   }
 
+  function oauthRedirectUrl() {
+    var path = (window.location && window.location.pathname) || '/signin.html';
+    if (/\/accept-invite\.html$/i.test(path)) return authRedirectUrl('/accept-invite.html', window.location.search || '');
+    if (/\/onboarding\.html$/i.test(path)) return authRedirectUrl('/onboarding.html', '');
+    return authRedirectUrl('/signin.html', '');
+  }
+
+  function hasOAuthReturnParams() {
+    var hash = (window.location && window.location.hash) || '';
+    var search = (window.location && window.location.search) || '';
+    return /access_token=|refresh_token=|provider_token=|code=/.test(hash + search);
+  }
+
+  async function refreshCurrentUserFromSession(notify) {
+    if (!supabaseClient) return null;
+    var session = await supabaseClient.auth.getSession();
+    var s = session && session.data && session.data.session;
+    currentUserCache = s && s.user ? wrapUser(s.user, s) : null;
+    if (notify && currentUserCache) {
+      authListeners.slice().forEach(function(cb) { try { cb(currentUserCache); } catch (e) {} });
+    }
+    return currentUserCache;
+  }
+
+  function watchOAuthSessionReady() {
+    if (!hasOAuthReturnParams()) return;
+    var tries = 0;
+    var timer = setInterval(function() {
+      tries += 1;
+      refreshCurrentUserFromSession(true).then(function(user) {
+        if (user || tries >= 20) clearInterval(timer);
+      }).catch(function() {
+        if (tries >= 20) clearInterval(timer);
+      });
+    }, 250);
+  }
+
   function fieldValueToPlain(value) {
     if (!value || typeof value !== 'object') return value;
     if (value.__serverTimestamp === true) return nowIso();
@@ -98,10 +135,8 @@
       currentUserCache = session && session.user ? wrapUser(session.user, session) : null;
       authListeners.slice().forEach(function(cb) { try { cb(currentUserCache); } catch (e) {} });
     });
-    var session = await supabaseClient.auth.getSession();
-    currentUserCache = session && session.data && session.data.session && session.data.session.user
-      ? wrapUser(session.data.session.user, session.data.session)
-      : null;
+    await refreshCurrentUserFromSession(false);
+    watchOAuthSessionReady();
     return supabaseClient;
   }
 
@@ -318,7 +353,7 @@
   AuthCompat.prototype.signInWithPopup = async function(provider) {
     var client = await getClient();
     var providerName = provider && provider.providerId ? provider.providerId : 'google';
-    var out = await client.auth.signInWithOAuth({ provider: providerName, options: { redirectTo: authRedirectUrl() } });
+    var out = await client.auth.signInWithOAuth({ provider: providerName, options: { redirectTo: oauthRedirectUrl() } });
     if (out.error) throw compatAuthError(out.error);
     return new Promise(function() {});
   };

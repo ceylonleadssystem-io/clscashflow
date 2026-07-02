@@ -320,17 +320,30 @@ function rowBelongsToUser(row, user) {
     || (!!email && clean(data.email, 240).toLowerCase() === email);
 }
 
+function workspaceOwnerFrom(path, id) {
+  const pathOwner = String(path || '').match(/^users\/([^/]+)/);
+  return (pathOwner && pathOwner[1]) || (path === 'users' ? id : '');
+}
+
+async function teamAccessFor(ownerUid, user) {
+  ownerUid = clean(ownerUid, 240);
+  const email = clean(user && user.email, 240).toLowerCase();
+  if (!ownerUid || !email) return null;
+  const invites = await queryDocuments('users/' + ownerUid + '/team', {
+    filters: [{ field: 'email', op: '==', value: email }],
+    fetchLimit: 100
+  }).catch(function() { return []; });
+  return invites.find(function(row) {
+    const data = row.data || {};
+    return clean(data.status || 'active', 80).toLowerCase() !== 'suspended';
+  }) || null;
+}
+
 async function canRead(row, user) {
   if (await isAdmin(user)) return true;
   if (rowBelongsToUser(row, user)) return true;
-  const email = clean(user && user.email, 240).toLowerCase();
-  if (row.path === 'users' && row.id && email) {
-    const invites = await queryDocuments('users/' + row.id + '/team', {
-      filters: [{ field: 'email', op: '==', value: email }],
-      limit: 1
-    }).catch(function() { return []; });
-    return invites.length > 0;
-  }
+  const ownerUid = workspaceOwnerFrom(row.path, row.id);
+  if (ownerUid && await teamAccessFor(ownerUid, user)) return true;
   return false;
 }
 
@@ -338,7 +351,12 @@ async function canWrite(path, id, data, user) {
   if (await isAdmin(user)) return true;
   if (rowBelongsToUser({ path, id, data: data || {} }, user)) return true;
   const existing = await getDocument(path, id).catch(function() { return null; });
-  return !!(existing && rowBelongsToUser({ path, id, data: existing.data || {} }, user));
+  if (existing && rowBelongsToUser({ path, id, data: existing.data || {} }, user)) return true;
+  const ownerUid = workspaceOwnerFrom(path, id);
+  const access = ownerUid ? await teamAccessFor(ownerUid, user) : null;
+  if (!access) return false;
+  const role = clean(access.data && access.data.role, 80).toLowerCase();
+  return role !== 'viewer' && role !== 'view only';
 }
 
 module.exports = {

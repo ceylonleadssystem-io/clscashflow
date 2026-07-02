@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1068,14 +1068,7 @@ console.log('%c CLS STARTER V4 — syntax fixed ','background:#1a9e5c;color:#fff
 // ════════════════════════════════
 // FIREBASE CONFIG & DATA STORE
 // ════════════════════════════════
-const firebaseConfig = {
-  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
-  authDomain: "ceylonry-labs.firebaseapp.com",
-  projectId: "ceylonry-labs",
-  storageBucket: "ceylonry-labs.firebasestorage.app",
-  messagingSenderId: "979885533126",
-  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
-};
+const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 const _db = firebase.firestore();
 const _auth = firebase.auth();
@@ -1097,6 +1090,60 @@ var DB = {
   nextInvNum:1
 };
 
+var _dataVersion = 0;
+
+function clonePlain(value) {
+  try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
+}
+
+function dbBackupKey(uid) {
+  return 'cls-starter-data-backup:' + String(uid || _uid || _signedInUid || 'unknown');
+}
+
+function writeDBBackup(version, serverSaved) {
+  if (!_uid) return Number(version || Date.now());
+  const nextVersion = Math.max(Number(version || Date.now()), _dataVersion || 0);
+  _dataVersion = nextVersion;
+  try {
+    localStorage.setItem(dbBackupKey(_uid), JSON.stringify({
+      version: nextVersion,
+      serverSaved: serverSaved === true,
+      ownerUid: _uid || '',
+      signedInUid: _signedInUid || '',
+      data: clonePlain(DB)
+    }));
+  } catch(e) { console.warn('Local data backup skipped:', e); }
+  return nextVersion;
+}
+
+function readDBBackup(uid) {
+  try {
+    const raw = localStorage.getItem(dbBackupKey(uid));
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function normalizeLoadedDBCollections() {
+  DB.clients = DB.clients && Array.isArray(DB.clients.list) ? DB.clients : { list: Array.isArray(DB.clients) ? DB.clients : [], nextId: 1 };
+  DB.suppliers = DB.suppliers && Array.isArray(DB.suppliers.list) ? DB.suppliers : { list: Array.isArray(DB.suppliers) ? DB.suppliers : [], nextId: 1 };
+  (function(){var seen={};DB.clients.list.forEach(function(c,i){if(c.id==null||seen[c.id]){c.id=Date.now()+i;}seen[c.id]=true;});})();
+  DB.invoices.sort((a,b) => (b.id||0) - (a.id||0));
+  DB.transactions.sort((a,b) => (b.id||0) - (a.id||0));
+  DB.expenses.sort((a,b) => (b.id||0) - (a.id||0));
+  DB.editBacklog.sort((a,b) => new Date(b.editedAt||0) - new Date(a.editedAt||0));
+}
+
+function restoreDBBackupIfNewer(serverVersion) {
+  const backup = readDBBackup(_uid);
+  if (!backup || !backup.data) return false;
+  const backupVersion = Number(backup.version || 0);
+  if (!backupVersion || backupVersion <= Number(serverVersion || 0)) return false;
+  Object.assign(DB, backup.data);
+  _dataVersion = backupVersion;
+  normalizeLoadedDBCollections();
+  return true;
+}
+
 // Supabase save — writes a single collection array
 async function saveCollection(col, arr) {
   if (!_uid) return;
@@ -1114,9 +1161,16 @@ async function saveCollection(col, arr) {
 }
 
 async function saveDB() {
-  if (DEMO_MODE) { localStorage.setItem('cls-starter-demo-backup', JSON.stringify(DB)); return; }
-  if (!_uid) { localStorage.setItem('cls-starter-backup', JSON.stringify(DB)); return; }
+  if (DEMO_MODE) { localStorage.setItem('cls-starter-demo-backup', JSON.stringify(DB)); return true; }
+  if (!_uid) { localStorage.setItem('cls-starter-backup', JSON.stringify(DB)); return false; }
   try {
+    const version = writeDBBackup(Date.now(), false);
+    const savedSettings = Object.assign({}, DB.settings || {});
+    delete savedSettings.dataVersion;
+    await _db.collection('users').doc(_uid).set({
+      settings: savedSettings,
+      nextInvNum: DB.nextInvNum
+    }, { merge: true });
     await Promise.all([
       saveCollection('transactions', DB.transactions),
       saveCollection('expenses', DB.expenses),
@@ -1125,17 +1179,26 @@ async function saveDB() {
       saveCollection('clients', DB.clients.list || []),
       saveCollection('suppliers', DB.suppliers.list || [])
     ]);
-    // Save settings + counters
     await _db.collection('users').doc(_uid).set({
-      settings: DB.settings,
-      nextInvNum: DB.nextInvNum
+      settings: Object.assign({}, savedSettings, { dataVersion: version }),
+      nextInvNum: DB.nextInvNum,
+      dataVersion: version
     }, { merge: true });
-  } catch(e) { console.error('saveDB error:', e); }
+    writeDBBackup(version, true);
+    return true;
+  } catch(e) {
+    console.error('saveDB error:', e);
+    return false;
+  }
 }
 
 async function loadDB() {
   if (!_uid) return;
   try {
+    const profileSnap = await _db.collection('users').doc(_uid).get();
+    const profileData = profileSnap.exists ? (profileSnap.data() || {}) : {};
+    const serverVersion = Number(profileData.dataVersion || 0);
+    _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
     const collections = ['transactions','expenses','invoices','editBacklog','clients','suppliers'];
     const results = await Promise.all(
       collections.map(c => _db.collection('users').doc(_uid).collection(c).get())
@@ -1145,14 +1208,9 @@ async function loadDB() {
     DB.invoices = results[2].docs.map(d => d.data());
     DB.editBacklog = results[3].docs.map(d => d.data());
     DB.clients.list = results[4].docs.map(d => d.data());
-    // Repair missing/duplicate client ids (older data could share ids)
-    (function(){var seen={};DB.clients.list.forEach(function(c,i){if(c.id==null||seen[c.id]){c.id=Date.now()+i;}seen[c.id]=true;});})();
     DB.suppliers.list = results[5].docs.map(d => d.data());
-    // Sort invoices newest first
-    DB.invoices.sort((a,b) => (b.id||0) - (a.id||0));
-    DB.transactions.sort((a,b) => (b.id||0) - (a.id||0));
-    DB.expenses.sort((a,b) => (b.id||0) - (a.id||0));
-    DB.editBacklog.sort((a,b) => new Date(b.editedAt||0) - new Date(a.editedAt||0));
+    normalizeLoadedDBCollections();
+    if (restoreDBBackupIfNewer(serverVersion)) setTimeout(function(){ saveDB(); }, 500);
   } catch(e) { console.error('loadDB error:', e); }
 }
 

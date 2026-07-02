@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1697,6 +1697,7 @@ window.saveInv = function saveInv() {
   var id='INV-'+String(D.invoices.length+1).padStart(3,'0');
   D.invoices.unshift({id:id,client:client,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,sub:t.sub,vat:t.vat,disc:t.disc,total:t.total,status:'sent',paid:0,tpl:selTpl,notes:document.getElementById('inv-notes').value});
   closeMo('mo-inv'); renderInvoices(); showToast(id+' created!','ok');
+  saveData();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1718,18 +1719,21 @@ window.confirmPay = function confirmPay() {
   inv.status=inv.paid>=inv.total?'paid':'partial';
   D.txns.unshift({id:'T'+Date.now(),date:today(),desc:'Payment — '+inv.client,type:'in',cat:'Invoice Payment',amount:amt,ref:inv.id});
   closeMo('mo-pay'); renderInvoices(); showToast('Payment of '+fmt(amt)+' recorded!','ok');
+  saveData();
 }
 window.addTxn = function addTxn() {
   var d=document.getElementById('t-date').value,desc=document.getElementById('t-desc').value.trim(),amt=Number(document.getElementById('t-amt').value);
   if(!d||!desc||!amt){showToast('Please fill all fields','err');return;}
   D.txns.unshift({id:'T'+Date.now(),date:d,desc:desc,type:document.getElementById('t-type').value,cat:document.getElementById('t-cat').value,amount:amt,ref:document.getElementById('t-ref').value});
   closeMo('mo-txn'); renderCashflow(); showToast('Transaction saved!','ok');
+  saveData();
 }
 window.addExp = function addExp() {
   var d=document.getElementById('e-date').value,desc=document.getElementById('e-desc').value.trim(),amt=Number(document.getElementById('e-amt').value);
   if(!d||!desc||!amt){showToast('Please fill all fields','err');return;}
   D.exps.unshift({id:'E'+Date.now(),date:d,desc:desc,vendor:document.getElementById('e-vendor').value,cat:document.getElementById('e-cat').value,amount:amt});
   closeMo('mo-exp'); renderExpenses(); showToast('Expense saved!','ok');
+  saveData();
 }
 window.openCliMo = function openCliMo(id) {
   document.getElementById('cli-mo-t').textContent=id?'Edit Client':'Add Client';
@@ -1746,21 +1750,24 @@ window.saveClient = function saveClient() {
   var obj={id:id||'C'+Date.now(),name:name,biz:document.getElementById('c-biz').value,email:document.getElementById('c-email').value,phone:phone,addr:document.getElementById('c-addr').value,terms:document.getElementById('c-terms').value,notes:document.getElementById('c-notes').value};
   if(id){var idx=D.clients.findIndex(function(c){return c.id===id;});if(idx>-1)D.clients[idx]=obj;}else D.clients.push(obj);
   closeMo('mo-client'); renderClients(); showToast('Client saved!','ok');
+  saveData();
 }
-window.paySalary = function paySalary(id){var s=D.staff.find(function(x){return x.id===id;});if(s&&!s.paid){s.paid=true;renderPayroll();showToast(s.name+' marked as paid!','ok');}}
-window.payAll = function payAll(){D.staff.forEach(function(s){s.paid=true;});renderPayroll();showToast('All staff paid!','ok');}
+window.paySalary = function paySalary(id){var s=D.staff.find(function(x){return x.id===id;});if(s&&!s.paid){s.paid=true;renderPayroll();showToast(s.name+' marked as paid!','ok');saveData();}}
+window.payAll = function payAll(){D.staff.forEach(function(s){s.paid=true;});renderPayroll();showToast('All staff paid!','ok');saveData();}
 window.addStaff = function addStaff() {
   var name=document.getElementById('sf-name').value.trim(),sal=Number(document.getElementById('sf-sal').value);
   if(!name||!sal){showToast('Name and salary required','err');return;}
   var ini=name.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
   D.staff.push({id:'S'+Date.now(),name:name,role:document.getElementById('sf-role').value,ini:ini,col:document.getElementById('sf-col').value,sal:sal,paid:false,rev:0,invs:0});
   closeMo('mo-staff'); renderPayroll(); showToast('Staff added!','ok');
+  saveData();
 }
 window.addSup = function addSup() {
   var name=document.getElementById('sp-name').value.trim();
   if(!name){showToast('Supplier name required','err');return;}
   D.suppliers.push({id:'SP'+Date.now(),name:name,cat:document.getElementById('sp-cat').value,contact:document.getElementById('sp-contact').value,phone:document.getElementById('sp-phone').value,ytd:0,status:'active'});
   closeMo('mo-sup'); renderSuppliers(); showToast('Supplier added!','ok');
+  saveData();
 }
 window.waRemind = function waRemind(id) {
   var inv=D.invoices.find(function(i){return i.id===id;});if(!inv)return;
@@ -1780,11 +1787,12 @@ window.saveSettings = function saveSettings() {
   document.getElementById('sb-uname').textContent=D.settings.user;
   document.getElementById('sb-av').textContent=ini;
   showToast('Settings saved!','ok');
+  saveData();
 }
 function previewLogo(input) {
   if(!input.files||!input.files[0])return;
   var r=new FileReader();
-  r.onload=function(e){D.settings.logo=e.target.result;var prev=document.getElementById('logo-prev');var hint=document.getElementById('logo-hint');prev.src=e.target.result;prev.style.display='block';if(hint)hint.style.display='none';};
+  r.onload=function(e){D.settings.logo=e.target.result;var prev=document.getElementById('logo-prev');var hint=document.getElementById('logo-hint');prev.src=e.target.result;prev.style.display='block';if(hint)hint.style.display='none';saveData();};
   r.readAsDataURL(input.files[0]);
 }
 window.printInv = function printInv(id) {
@@ -1801,29 +1809,71 @@ window.printInv = function printInv(id) {
 // INIT
 // ═══════════════════════════════════════════════════════════
 // ===================== FIREBASE + AUTH =====================
-var _fbConfig = {
-  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
-  authDomain: "ceylonry-labs.firebaseapp.com",
-  projectId: "ceylonry-labs",
-  storageBucket: "ceylonry-labs.firebasestorage.app",
-  messagingSenderId: "979885533126",
-  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
-};
+var _fbConfig = {};
 firebase.initializeApp(_fbConfig);
 var _fdb = firebase.firestore();
 var _fauth = firebase.auth();
 var _uid = null;
 var _profile = null;
 var _signedInUid = null;
+var _dataVersion = 0;
+
+function clonePlain(value) {
+  try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
+}
+
+function premiumBackupKey(uid) {
+  return 'cls-premium-data-backup:' + String(uid || _uid || _signedInUid || 'unknown');
+}
+
+function writePremiumBackup(version, serverSaved) {
+  if (!_uid) return Number(version || Date.now());
+  var nextVersion = Math.max(Number(version || Date.now()), _dataVersion || 0);
+  _dataVersion = nextVersion;
+  try {
+    localStorage.setItem(premiumBackupKey(_uid), JSON.stringify({
+      version: nextVersion,
+      serverSaved: serverSaved === true,
+      ownerUid: _uid || '',
+      signedInUid: _signedInUid || '',
+      data: clonePlain(D)
+    }));
+  } catch(e) { console.warn('Premium local backup skipped:', e); }
+  return nextVersion;
+}
+
+function readPremiumBackup(uid) {
+  try {
+    var raw = localStorage.getItem(premiumBackupKey(uid));
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function restorePremiumBackupIfNewer(serverVersion) {
+  var backup = readPremiumBackup(_uid);
+  if (!backup || !backup.data) return false;
+  var backupVersion = Number(backup.version || 0);
+  if (!backupVersion || backupVersion <= Number(serverVersion || 0)) return false;
+  Object.assign(D, backup.data);
+  _dataVersion = backupVersion;
+  return true;
+}
 
 async function saveData() {
-  if (!_uid) return;
+  if (!_uid) {
+    try { localStorage.setItem('cls-premium-backup', JSON.stringify(D)); } catch(e) {}
+    return false;
+  }
   try {
-    await _fdb.collection('users').doc(_uid).set({ settings: D.settings }, { merge: true });
-    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers };
+    var version = writePremiumBackup(Date.now(), false);
+    var savedSettings = Object.assign({}, D.settings || {});
+    delete savedSettings.dataVersion;
+    var userRef = _fdb.collection('users').doc(_uid);
+    await userRef.set({ settings: savedSettings }, { merge: true });
+    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, staff: D.staff, receivables: D.recv, payables: D.payables };
     for (var col in cols) {
       var arr = cols[col] || [];
-      var colRef = _fdb.collection('users').doc(_uid).collection(col);
+      var colRef = userRef.collection(col);
       var snap = await colRef.get();
       var b = _fdb.batch();
       snap.docs.forEach(function(d) { b.delete(d.ref); });
@@ -1832,19 +1882,33 @@ async function saveData() {
       });
       await b.commit();
     }
-  } catch(e) { console.error('Premium saveData:', e); }
+    await userRef.set({
+      settings: Object.assign({}, savedSettings, { dataVersion: version }),
+      dataVersion: version
+    }, { merge: true });
+    writePremiumBackup(version, true);
+    return true;
+  } catch(e) {
+    console.error('Premium saveData:', e);
+    showToast('Could not sync to cloud. Kept locally and will retry after refresh.', 'err');
+    return false;
+  }
 }
 
 async function loadData(uid) {
   try {
     var snap = await _fdb.collection('users').doc(uid).get();
-    if (snap.exists && snap.data().settings) Object.assign(D.settings, snap.data().settings);
-    var cols = ['transactions','expenses','invoices','clients','suppliers'];
-    var keys = ['txns','exps','invoices','clients','suppliers'];
+    var profileData = snap.exists ? (snap.data() || {}) : {};
+    if (profileData.settings) Object.assign(D.settings, profileData.settings);
+    var serverVersion = Number(profileData.dataVersion || 0);
+    _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
+    var cols = ['transactions','expenses','invoices','clients','suppliers','staff','receivables','payables'];
+    var keys = ['txns','exps','invoices','clients','suppliers','staff','recv','payables'];
     for (var i = 0; i < cols.length; i++) {
       var cs = await _fdb.collection('users').doc(uid).collection(cols[i]).get();
-      if (!cs.empty) D[keys[i]] = cs.docs.map(function(d) { return d.data(); });
+      D[keys[i]] = cs.docs.map(function(d) { return d.data(); });
     }
+    if (restorePremiumBackupIfNewer(serverVersion)) setTimeout(function(){ saveData(); }, 500);
   } catch(e) { console.error('Premium loadData:', e); }
 }
 

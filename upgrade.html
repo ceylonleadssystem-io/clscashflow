@@ -8,7 +8,7 @@
 <title>CLS CashFlow — Upgrade</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--gold:#c9a84c;--cream:#f5f0e8;--dark:#1a1714;--muted:#6b6258;--line:rgba(201,168,76,.25);--white:#fff}
@@ -50,7 +50,7 @@ li{font-size:13px;color:var(--muted);line-height:1.5;display:flex;gap:9px}li:bef
   
 </div>
 <script>
-var firebaseConfig={apiKey:"AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",authDomain:"ceylonry-labs.firebaseapp.com",projectId:"ceylonry-labs",storageBucket:"ceylonry-labs.firebasestorage.app",messagingSenderId:"979885533126",appId:"1:979885533126:web:a444d1d0d14867126d34c7"};
+var firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 var auth=firebase.auth();
 var currentUid='';

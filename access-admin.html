@@ -7,7 +7,7 @@
 <title>CeylonryLabs.io — Team Access</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-redirect"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -178,14 +178,7 @@ a{color:inherit;text-decoration:none}
 // ════════════════════════════════
 // FIREBASE
 // ════════════════════════════════
-var firebaseConfig = {
-  apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
-  authDomain: "ceylonry-labs.firebaseapp.com",
-  projectId: "ceylonry-labs",
-  storageBucket: "ceylonry-labs.firebasestorage.app",
-  messagingSenderId: "979885533126",
-  appId: "1:979885533126:web:a444d1d0d14867126d34c7"
-};
+var firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 var _db = firebase.firestore();
 var _auth = firebase.auth();
