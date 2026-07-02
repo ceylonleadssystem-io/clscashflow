@@ -1,57 +1,5 @@
-const admin = require('firebase-admin');
+const { firebaseAdminFacade } = require('../lib/supabase');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
-function parseServiceAccount(raw) {
-  if (!raw) return serviceAccountFromSplitEnv();
-  try {
-    return JSON.parse(raw);
-  } catch (e) {
-    try {
-      return JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
-    } catch (err) {
-      return serviceAccountFromSplitEnv();
-    }
-  }
-}
-
-function serviceAccountFromSplitEnv() {
-  const fileAccount = serviceAccountFromSecretFile();
-  if (fileAccount) return fileAccount;
-  const projectId = String(process.env.FIREBASE_PROJECT_ID || '').trim();
-  const clientEmail = String(process.env.FIREBASE_CLIENT_EMAIL || '').trim();
-  let privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').trim();
-  if (!privateKey && process.env.FIREBASE_PRIVATE_KEY_B64) {
-    try {
-      privateKey = Buffer.from(process.env.FIREBASE_PRIVATE_KEY_B64, 'base64').toString('utf8').trim();
-    } catch (e) {
-      privateKey = '';
-    }
-  }
-  privateKey = privateKey.replace(/^['"]|['"]$/g, '').replace(/\\n/g, '\n');
-  if (!projectId || !clientEmail || !privateKey) return null;
-  return { project_id: projectId, client_email: clientEmail, private_key: privateKey };
-}
-
-function serviceAccountFromSecretFile() {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const filePath = path.join(__dirname, '_secrets', 'firebase-service-account.json');
-    if (!fs.existsSync(filePath)) return null;
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch (e) {
-    return null;
-  }
-}
-
-if (!admin.apps.length) {
-  const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '');
-  if (serviceAccount) {
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-  } else {
-    admin.initializeApp();
-  }
-}
 
 exports.handler = async function handler(event) {
   if (event.httpMethod !== 'POST') {
@@ -67,6 +15,12 @@ exports.handler = async function handler(event) {
   }
 
   if (stripeEvent.type === 'checkout.session.completed') {
+    let admin;
+    try {
+      admin = firebaseAdminFacade();
+    } catch (e) {
+      return { statusCode: 500, body: 'Supabase service role is not configured.' };
+    }
     const session = stripeEvent.data.object;
     if (session.payment_status === 'paid') {
       const uid = session.client_reference_id || (session.metadata && session.metadata.uid);

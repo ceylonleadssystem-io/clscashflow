@@ -6,9 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CeylonryLabs.io — Team Access</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-firebase-compat.js"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -409,7 +408,7 @@ window.createInvite = async function createInvite(){
   var role = el('inv-role').value;
   if(!email || email.indexOf('@') < 1){ showMsg('Please enter a valid email address.'); return; }
 
-  // Re-check seats live when Firestore rules allow the count queries.
+  // Re-check seats live when Supabase access allow the count queries.
   // Some production rules allow invite creation but block collection scans;
   // in that case, continue and let the create write/rules decide.
   var memSnap = null;

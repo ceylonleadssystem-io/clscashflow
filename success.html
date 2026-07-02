@@ -6,9 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLS CashFlow — Payment Success</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-firebase-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--gold:#c9a84c;--cream:#f5f0e8;--dark:#1a1714;--muted:#6b6258;--line:rgba(201,168,76,.25)}
@@ -27,7 +26,7 @@ p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:20px}.summary{
   <div class="mark">✓</div>
   <div class="ey">Payment Successful</div>
   <h1>Your CLS plan is active.</h1>
-  <p id="status">Updating your Firebase profile now. If you used a live Stripe link, the webhook will also confirm payment server-side.</p>
+  <p id="status">Updating your Supabase profile now. If you used a live Stripe link, the webhook will also confirm payment server-side.</p>
   <div class="summary" id="summary"></div>
   <a class="btn" id="dash" href="starter.html">Go to Dashboard →</a>
 </div>

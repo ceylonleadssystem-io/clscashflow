@@ -8,10 +8,9 @@
 <title>CeylonryLabs.io — Sign In</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Supabase compatibility SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-firebase-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
@@ -392,9 +391,9 @@ window.signIn = async function signIn() {
       } catch(createErr) {
         btn.textContent = 'Sign In →'; btn.disabled = false;
         if (createErr.code === 'auth/email-already-in-use' || createErr.code === 'auth/wrong-password' || createErr.code === 'auth/invalid-credential' || createErr.code === 'auth/invalid-login-credentials') {
-          showErr('The admin account exists, but Firebase rejected this password. Reset the admin password in Firebase Authentication, then sign in again.');
+          showErr('The admin account exists, but Supabase rejected this password. Reset the admin password in Supabase Authentication, then sign in again.');
         } else if (createErr.code === 'auth/operation-not-allowed') {
-          showErr('Firebase Email/Password sign-in is disabled. Enable it in Firebase Authentication to create the admin account.');
+          showErr('Supabase Email/Password sign-in is disabled. Enable it in Supabase Authentication to create the admin account.');
         } else {
           showErr('Could not create the admin account: ' + createErr.message);
         }
@@ -404,7 +403,7 @@ window.signIn = async function signIn() {
     btn.textContent = 'Sign In →'; btn.disabled = false;
     if (isCredentialError(err.code)) {
       if (isPlatformAdminEmail(email)) {
-        showErr('Admin routing is ready, but Firebase rejected this login. Reset the admin password in Firebase Authentication, then sign in here again.');
+        showErr('Admin routing is ready, but Supabase rejected this login. Reset the admin password in Supabase Authentication, then sign in here again.');
       } else {
         showErr('Incorrect email or password. Please try again.');
       }

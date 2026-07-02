@@ -9,10 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Supabase compatibility SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-firebase-compat.js"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -3121,7 +3120,7 @@ var _signedInUid = null;
 var _trialEnd = null;
 var _isPaid = false;
 
-// Save all D data to Firestore
+// Save all D data to Supabase
 async function saveData() {
   if (!_uid) return;
   try {
@@ -3162,7 +3161,7 @@ async function saveData() {
   } catch(e) { console.error('saveData:', e); }
 }
 
-// Load all D data from Firestore
+// Load all D data from Supabase
 async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);

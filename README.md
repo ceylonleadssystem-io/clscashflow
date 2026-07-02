@@ -5,7 +5,7 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 ## Files
 
 - `index.html` - landing page
-- `signin.html` - Firebase sign in
+- `signin.html` - Supabase sign in
 - `onboarding.html` - account setup flow
 - `solo.html` - Solo dashboard
 - `starter.html` - Studio dashboard
@@ -21,7 +21,7 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
 - `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
-- `firestore.rules` - suggested Firebase Firestore rules for team invites and owner/team access
+- `supabase/schema.sql` - Supabase document table used by Auth, dashboards, admin, support, visits, and payments
 
 ## GitHub Upload
 
@@ -35,6 +35,18 @@ Netlify should use:
 - Functions directory: `netlify/functions`
 
 These are already configured in `netlify.toml`.
+
+## Supabase
+
+This version stores application data in Supabase through `netlify/functions/supabase-docs.js` and `netlify/lib/supabase.js`.
+
+Run `supabase/schema.sql` in the Supabase SQL editor for project `iudcinvfqbdzaptnnzqg`, then add these variables in Netlify environment variables only:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Do not add these values to GitHub, HTML, or a committed `.env` file. The service role key is server-only and must stay in Netlify.
 
 ## Optional SMTP Environment Variables
 
@@ -68,17 +80,13 @@ Required for Payable checkout:
 - `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
 - `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
 
-If your Netlify plan does not allow limiting environment variables to build-only scope, do not add Firebase Admin private-key variables in Netlify. Delete `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY` from Netlify to keep function uploads under Netlify/AWS Lambda's 4KB environment limit. The public Firebase browser config in the HTML files still supports client-side sign-in and dashboard data.
-
-Do not add `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_SERVICE_ACCOUNT_JSON`, `FIREBASE_PRIVATE_KEY_B64`, or `GOOGLE_APPLICATION_CREDENTIALS` in Netlify unless you have removed enough other variables to stay under the 4KB function environment limit.
-
 Give Payable this callback URL after you choose `PAYABLE_WEBHOOK_SECRET`:
 
 `https://www.ceylonrylabs.io/.netlify/functions/payable-webhook?secret=YOUR_PAYABLE_WEBHOOK_SECRET`
 
-The 15-day trial is controlled by each user's `trialEnd` value in Firestore. After it ends, the dashboards require payment unless the user profile has `paid: true`. The Payable webhook sets `paid: true`, `subscriptionStatus: active`, and the selected plan after a verified paid callback.
+The 15-day trial is controlled by each user's `trialEnd` value in Supabase. After it ends, the dashboards require payment unless the user profile has `paid: true`. The Payable webhook sets `paid: true`, `subscriptionStatus: active`, and the selected plan after a verified paid callback.
 
-If Payable checkout is not ready yet, the expired-trial paywall creates a manual payment request token in the `paymentRequests` collection. The admin panel shows those tokens so the team can manually send an invoice, mark the request as invoiced, mark it paid, or close it.
+If Payable checkout is not ready yet, the expired-trial paywall creates a manual payment request token in the `paymentRequests` document path. The admin panel shows those tokens so the team can manually send an invoice, mark the request as invoiced, mark it paid, or close it.
 
 The Payable API field names may need one final adjustment once Payable sends the exact checkout documentation. The integration is centralized in `netlify/functions/payable-create-checkout.js`, so that mapping can be changed without touching the dashboards.
 
@@ -86,9 +94,7 @@ The Payable API field names may need one final adjustment once Payable sends the
 
 `access-admin.html` now creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
 
-If invite creation shows `Missing or insufficient permissions`, publish the included `firestore.rules` in Firebase:
-
-Firebase Console -> Firestore Database -> Rules -> paste the contents of `firestore.rules` -> Publish.
+If invite creation shows `Not allowed`, confirm the user is signed in, the invite is being written under `users/{ownerUid}/team`, and the Supabase `app_documents` table from `supabase/schema.sql` has been created.
 
 ## EmailJS
 

@@ -9,8 +9,6 @@
   };
   var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
   var SUPPORT_ID = 'cls-support-widget';
-  var FIREBASE_PROJECT_ID = 'ceylonry-labs';
-  var FIREBASE_API_KEY = 'AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI';
 
   function nowIso() {
     return new Date().toISOString();
@@ -729,68 +727,8 @@
     });
   }
 
-  function firestoreValue(value) {
-    if (typeof value === 'boolean') return { booleanValue: value };
-    if (typeof value === 'number' && isFinite(value)) return { doubleValue: value };
-    return { stringValue: cleanString(value, 1000) };
-  }
-
-  function firestoreFields(obj) {
-    var fields = {};
-    Object.keys(obj || {}).forEach(function(key) {
-      if (obj[key] !== undefined && obj[key] !== null) fields[key] = firestoreValue(obj[key]);
-    });
-    return fields;
-  }
-
-  function safeVisitPayload(payload) {
-    payload = payload || {};
-    return {
-      eventType: 'page_view',
-      visitId: cleanString(payload.visitId || newId('visit'), 140),
-      visitorId: cleanString(payload.visitorId, 180),
-      sessionId: cleanString(payload.sessionId, 180),
-      uid: cleanString(payload.uid, 140),
-      email: cleanString(payload.email, 180),
-      displayName: cleanString(payload.displayName, 180),
-      path: cleanString(payload.path, 300),
-      url: cleanString(payload.url, 900),
-      title: cleanString(payload.title, 240),
-      referrer: cleanString(payload.referrer, 900),
-      timezone: cleanString(payload.timezone, 120),
-      language: cleanString(payload.language, 80),
-      userAgent: cleanString(payload.userAgent, 500),
-      screen: cleanString(payload.screen, 80),
-      lastPlan: cleanString(payload.lastPlan, 40),
-      pageKind: cleanString(payload.pageKind, 80),
-      isLanding: payload.isLanding === true,
-      isPortal: payload.isPortal === true,
-      utcAt: cleanString(payload.utcAt || nowIso(), 90),
-      localAt: cleanString(payload.localAt, 180),
-      firstSeenAt: cleanString(payload.firstSeenAt, 90),
-      createdAt: nowIso(),
-      source: 'browser-fallback'
-    };
-  }
-
   async function storeVisitFallback(payload) {
-    if (!FIREBASE_PROJECT_ID || !FIREBASE_API_KEY) return false;
-    var body = { fields: firestoreFields(safeVisitPayload(payload)) };
-    var url = 'https://firestore.googleapis.com/v1/projects/' +
-      encodeURIComponent(FIREBASE_PROJECT_ID) +
-      '/databases/(default)/documents/platformVisits?key=' +
-      encodeURIComponent(FIREBASE_API_KEY);
-    try {
-      var res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        keepalive: true
-      });
-      return res.ok;
-    } catch (e) {
-      return false;
-    }
+    return false;
   }
 
   function trackVisit() {
@@ -847,7 +785,7 @@
 
   async function saveSupportFallback(data) {
     var db = getFirestore();
-    if (!db) throw new Error('Firebase is not available on this page.');
+    if (!db) throw new Error('Data storage is not available on this page.');
     var payload = Object.assign({}, data, {
       status: 'open',
       source: 'browser-fallback',
@@ -969,7 +907,7 @@
 
   async function closeMyTicket(id, wrap) {
     var db = getFirestore();
-    if (!db) throw new Error('Firebase is not available on this page.');
+    if (!db) throw new Error('Data storage is not available on this page.');
     var stamp = firebase.firestore.FieldValue.serverTimestamp();
     await db.collection('supportTickets').doc(id).set({
       status: 'closed',
@@ -1006,7 +944,7 @@
   }
 
   async function ensureChatThread(db, user) {
-    if (!db) throw new Error('Firebase is not available on this page.');
+    if (!db) throw new Error('Data storage is not available on this page.');
     if (!user) throw new Error('Please sign in to chat with support.');
     var ref = db.collection('chatThreads').doc(chatThreadId(user));
     var stamp = firebase.firestore.FieldValue.serverTimestamp();

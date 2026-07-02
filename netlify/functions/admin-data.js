@@ -1,67 +1,12 @@
 const crypto = require('crypto');
-
-function parseServiceAccount(raw) {
-  if (!raw) return serviceAccountFromSplitEnv();
-  try {
-    return JSON.parse(raw);
-  } catch (e) {
-    try {
-      return JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
-    } catch (err) {
-      return serviceAccountFromSplitEnv();
-    }
-  }
-}
-
-function serviceAccountFromSplitEnv() {
-  const fileAccount = serviceAccountFromSecretFile();
-  if (fileAccount) return fileAccount;
-  const projectId = String(process.env.FIREBASE_PROJECT_ID || '').trim();
-  const clientEmail = String(process.env.FIREBASE_CLIENT_EMAIL || '').trim();
-  let privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').trim();
-  if (!privateKey && process.env.FIREBASE_PRIVATE_KEY_B64) {
-    try {
-      privateKey = Buffer.from(process.env.FIREBASE_PRIVATE_KEY_B64, 'base64').toString('utf8').trim();
-    } catch (e) {
-      privateKey = '';
-    }
-  }
-  privateKey = privateKey.replace(/^['"]|['"]$/g, '').replace(/\\n/g, '\n');
-  if (!projectId || !clientEmail || !privateKey) return null;
-  return { project_id: projectId, client_email: clientEmail, private_key: privateKey };
-}
-
-function serviceAccountFromSecretFile() {
-  try {
-    const fs = require('fs');
-    const path = require('path');
-    const filePath = path.join(__dirname, '_secrets', 'firebase-service-account.json');
-    if (!fs.existsSync(filePath)) return null;
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch (e) {
-    return null;
-  }
-}
+const { firebaseAdminFacade } = require('../lib/supabase');
 
 async function getAdmin() {
-  let admin;
   try {
-    admin = require('firebase-admin');
+    return firebaseAdminFacade();
   } catch (e) {
     return null;
   }
-
-  if (!admin.apps.length) {
-    const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '');
-    if (serviceAccount) {
-      admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      admin.initializeApp();
-    } else {
-      return null;
-    }
-  }
-  return admin;
 }
 
 function headers() {
@@ -473,7 +418,7 @@ exports.handler = async function handler(event) {
     return {
       statusCode: 503,
       headers: headers(),
-      body: JSON.stringify({ ok: false, error: 'Firebase admin is not configured on Netlify.' })
+      body: JSON.stringify({ ok: false, error: 'Supabase service role is not configured on Netlify.' })
     };
   }
 

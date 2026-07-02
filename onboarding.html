@@ -329,10 +329,9 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
   .ob-title{font-size:1.34rem}
 }
 </style>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Supabase compatibility SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-firebase-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCyKT7FWZYdW7dgKf-nV95NFLpZcIGBAWI",
@@ -1365,7 +1364,7 @@ window.launchDashboard = async function launchDashboard(){
     const firstPlan = (...values) => values.map(normalizePlan).find(Boolean) || 'solo';
 
     if (state.googleAuth) {
-      // Google user — already authenticated, just update their Firestore profile
+      // Google user — already authenticated, just update their Supabase profile
       const user = firebase.auth().currentUser;
       if (!user) { showStepError(4,'Session expired. Please sign in again to continue.'); setTimeout(function(){window.location.href='signin.html';},1200); return; }
       const existingDoc = await firebase.firestore().collection('users').doc(user.uid).get();
@@ -1429,7 +1428,7 @@ window.launchDashboard = async function launchDashboard(){
       window.location.href = planFiles[selectedPlan] || 'solo.html';
 
     } else {
-      // Email user — create Firebase account then save profile
+      // Email user — create Supabase account then save profile
       const cred = await firebase.auth().createUserWithEmailAndPassword(state.email, state.password);
       const uid = cred.user.uid;
       await cred.user.updateProfile({ displayName: state.fname + ' ' + state.lname });

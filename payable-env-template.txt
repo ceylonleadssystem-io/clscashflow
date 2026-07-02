@@ -1,7 +1,7 @@
 # Cashflow System - local environment variables
 # Do not commit this file. It is already ignored by .gitignore.
 #
-# Paste the real values from Payable dashboard copy buttons and Netlify/Firebase.
+# Paste the real values from Payable dashboard copy buttons, Netlify, and Supabase.
 
 # Site
 SITE_URL=https://www.ceylonrylabs.io
@@ -32,12 +32,11 @@ PAYABLE_BUSINESS_TOKEN=PASTE_BUSINESS_TOKEN_HERE
 # https://www.ceylonrylabs.io/.netlify/functions/payable-webhook?secret=YOUR_SECRET
 PAYABLE_WEBHOOK_SECRET=PASTE_STRONG_RANDOM_SECRET_HERE
 
-# Firebase Admin SDK for Netlify functions.
-# Leave these out of Netlify if your plan cannot scope variables to Builds only.
-# Adding FIREBASE_PRIVATE_KEY to all Functions can exceed the 4KB Lambda env limit.
-# FIREBASE_PROJECT_ID=
-# FIREBASE_CLIENT_EMAIL=
-# FIREBASE_PRIVATE_KEY=
+# Supabase
+# Add these only in Netlify environment variables. Do not commit real keys.
+SUPABASE_URL=https://iudcinvfqbdzaptnnzqg.supabase.co
+SUPABASE_ANON_KEY=PASTE_SUPABASE_ANON_KEY_HERE
+SUPABASE_SERVICE_ROLE_KEY=PASTE_SUPABASE_SERVICE_ROLE_KEY_HERE
 
 # Optional SMTP variables used by email/invite/support functions.
 SMTP_HOST=smtp.hostinger.com
