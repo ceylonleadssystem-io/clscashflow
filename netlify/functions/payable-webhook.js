@@ -131,10 +131,10 @@ function webhookData(body) {
 
 function sessionIdFrom(body) {
   const parts = webhookData(body);
-  return clean(firstValue(parts.meta, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference']), 140)
-    || clean(firstValue(parts.payment, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
-    || clean(firstValue(parts.data, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
-    || clean(firstValue(parts.body, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140);
+  return clean(firstValue(parts.meta, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference']), 140)
+    || clean(firstValue(parts.payment, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference', 'payment_reference']), 140)
+    || clean(firstValue(parts.data, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference', 'payment_reference']), 140)
+    || clean(firstValue(parts.body, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference', 'payment_reference']), 140);
 }
 
 function statusFrom(body) {
@@ -199,8 +199,8 @@ exports.handler = async function handler(event) {
   const parts = webhookData(body);
   const paid = isPaid(body);
   const rawStatus = statusFrom(body) || (paid ? 'paid' : 'received');
-  const plan = normalizePlan(saved.plan || parts.meta.plan || parts.payment.plan || parts.data.plan || parts.body.plan) || 'solo';
-  const uid = clean(saved.uid || parts.meta.uid || parts.payment.uid || parts.data.uid || parts.body.uid, 160);
+  const plan = normalizePlan(saved.plan || parts.meta.plan || parts.payment.plan || parts.data.plan || parts.body.plan || parts.payment.custom2 || parts.data.custom2 || parts.body.custom2) || 'solo';
+  const uid = clean(saved.uid || parts.meta.uid || parts.payment.uid || parts.data.uid || parts.body.uid || parts.payment.custom1 || parts.data.custom1 || parts.body.custom1, 160);
   const amount = Number(saved.amount || parts.payment.amount || parts.data.amount || parts.body.amount || PLANS[plan].price || 0);
   const transactionId = clean(firstValue(parts.payment, ['id', 'transaction_id', 'payment_id'])
     || firstValue(parts.data, ['id', 'transaction_id', 'payment_id'])

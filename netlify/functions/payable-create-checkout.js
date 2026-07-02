@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 function parseServiceAccount(raw) {
   if (!raw) return null;
   try {
@@ -23,6 +25,11 @@ function headers() {
 function clean(value, max) {
   value = String(value == null ? '' : value).trim();
   return max && value.length > max ? value.slice(0, max) : value;
+}
+
+function envValue(name) {
+  const value = clean(process.env[name] || '', 0);
+  return /^PASTE_/i.test(value) ? '' : value;
 }
 
 async function getAdmin() {
@@ -82,7 +89,9 @@ function payableWebhookUrl(baseUrl) {
 
 function findCheckoutUrl(result) {
   if (!result || typeof result !== 'object') return '';
-  return result.checkoutUrl
+  return result.paymentPage
+    || result.payment_page
+    || result.checkoutUrl
     || result.checkout_url
     || result.paymentUrl
     || result.payment_url
@@ -95,14 +104,76 @@ function findCheckoutUrl(result) {
 
 function publicPayablePayload(payload) {
   const copy = Object.assign({}, payload);
-  delete copy.business_token;
-  delete copy.businessToken;
-  delete copy.merchant_token;
-  delete copy.merchantToken;
+  if (copy.webhookUrl) {
+    copy.webhookUrl = String(copy.webhookUrl).replace(/([?&]secret=)[^&]*/i, '$1redacted');
+  }
   if (copy.webhook_url) {
     copy.webhook_url = String(copy.webhook_url).replace(/([?&]secret=)[^&]*/i, '$1redacted');
   }
+  if (copy.checkValue) copy.checkValue = 'redacted';
   return copy;
+}
+
+function sha512Upper(value) {
+  return crypto.createHash('sha512').update(String(value), 'utf8').digest('hex').toUpperCase();
+}
+
+function payableRootUrl() {
+  const env = String(process.env.PAYABLE_ENV || 'sandbox').toLowerCase();
+  return env === 'live' || env === 'production'
+    ? 'https://ipgpayment.payable.lk'
+    : 'https://sandboxipgpayment.payable.lk';
+}
+
+function payableAuthUrl() {
+  return process.env.PAYABLE_AUTH_URL || (payableRootUrl() + '/ipg/auth/direct-api');
+}
+
+function payableCheckoutUrl() {
+  if (process.env.PAYABLE_CHECKOUT_URL || process.env.PAYABLE_API_URL) {
+    return process.env.PAYABLE_CHECKOUT_URL || process.env.PAYABLE_API_URL;
+  }
+  const env = String(process.env.PAYABLE_ENV || 'sandbox').toLowerCase();
+  return payableRootUrl() + (env === 'live' || env === 'production' ? '/ipg/pro/direct-api' : '/ipg/sandbox/direct-api');
+}
+
+function splitName(fullName, email) {
+  const fallback = email ? String(email).split('@')[0] : 'Customer';
+  const parts = String(fullName || fallback).trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || 'Customer',
+    lastName: parts.slice(1).join(' ') || 'Customer'
+  };
+}
+
+async function getPayableAccessToken({ authUrl, businessKey, businessToken, originDomain }) {
+  const basicAuth = Buffer.from(businessKey + ':' + businessToken, 'utf8').toString('base64');
+  const res = await fetch(authUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': basicAuth
+    },
+    body: JSON.stringify({
+      grant_type: 'client_credentials',
+      originDomain
+    })
+  });
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text || '{}');
+  } catch (e) {
+    data = { raw: text };
+  }
+  if (!res.ok || !data.accessToken) {
+    const err = new Error('Payable auth request failed.');
+    err.status = res.status;
+    err.response = data;
+    throw err;
+  }
+  return { accessToken: data.accessToken, response: data };
 }
 
 const PLANS = {
@@ -152,11 +223,14 @@ exports.handler = async function handler(event) {
   const baseUrl = siteUrl(event);
   const sessionId = 'cls-' + plan + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
   const amount = planInfo.price;
-  const checkoutUrl = process.env.PAYABLE_CHECKOUT_URL || process.env.PAYABLE_API_URL || '';
+  const amountText = Number(amount).toFixed(2);
+  const checkoutUrl = payableCheckoutUrl();
+  const authUrl = payableAuthUrl();
   const returnBase = clean(body.returnUrl, 900) || (baseUrl + '/payable-return.html');
   const returnUrl = appendQuery(returnBase, { plan, session: sessionId });
   const cancelUrl = clean(body.cancelUrl, 900) || (baseUrl + '/' + (plan === 'business' ? 'growth.html' : plan === 'studio' ? 'starter.html' : 'solo.html'));
   const webhookUrl = payableWebhookUrl(baseUrl);
+  const originDomain = clean(envValue('PAYABLE_ORIGIN_DOMAIN') || baseUrl, 300);
 
   const db = admin.firestore();
   const sessionRef = db.collection('payablePayments').doc(sessionId);
@@ -186,45 +260,68 @@ exports.handler = async function handler(event) {
     };
   }
 
-  const businessKey = process.env.PAYABLE_BUSINESS_KEY || '';
-  const businessToken = process.env.PAYABLE_BUSINESS_TOKEN || '';
-  const merchantId = process.env.PAYABLE_MERCHANT_ID || '';
-  const merchantToken = process.env.PAYABLE_MERCHANT_TOKEN || '';
-  const authToken = merchantToken || businessToken;
-  if (!businessKey || !businessToken || !merchantId || !merchantToken) {
+  const businessKey = envValue('PAYABLE_BUSINESS_KEY');
+  const businessToken = envValue('PAYABLE_BUSINESS_TOKEN');
+  const merchantKey = envValue('PAYABLE_MERCHANT_KEY') || envValue('PAYABLE_MERCHANT_ID');
+  const merchantToken = envValue('PAYABLE_MERCHANT_TOKEN');
+  if (!businessKey || !businessToken || !merchantKey || !merchantToken) {
     return { statusCode: 500, headers: headers(), body: JSON.stringify({ ok: false, error: 'Payable credentials are missing in Netlify environment variables.' }) };
   }
 
+  const customerName = splitName(name, email);
+  const paymentType = String(process.env.PAYABLE_PAYMENT_TYPE || '1');
+  const checkValue = sha512Upper([
+    merchantKey,
+    sessionId,
+    amountText,
+    'LKR',
+    sha512Upper(merchantToken)
+  ].join('|'));
   const payablePayload = {
-    merchant_id: merchantId,
-    merchant_token: merchantToken,
-    business_key: businessKey,
-    business_token: businessToken,
-    order_id: sessionId,
-    reference: sessionId,
-    amount,
-    currency: 'LKR',
-    description: 'CLS ' + planInfo.name + ' Plan - Monthly Subscription',
-    customer_name: name,
-    customer_email: email,
-    return_url: returnUrl,
-    cancel_url: cancelUrl,
-    webhook_url: webhookUrl,
-    metadata: { uid, plan, sessionId }
+    merchantKey,
+    currencyCode: 'LKR',
+    checkValue,
+    invoiceId: sessionId,
+    paymentType: Number(paymentType) || 1,
+    amount: amountText,
+    orderDescription: 'CLS ' + planInfo.name + ' Plan - Monthly Subscription',
+    logoUrl: process.env.PAYABLE_LOGO_URL || (baseUrl + '/assets/mrs-gamage-cashflow.png'),
+    returnUrl,
+    cancelUrl,
+    webhookUrl,
+    originDomain,
+    customerFirstName: clean(body.customerFirstName || customerName.firstName, 120),
+    customerLastName: clean(body.customerLastName || customerName.lastName, 120),
+    customerMobilePhone: clean(body.customerMobilePhone || body.phone || '0770000000', 40),
+    customerEmail: email,
+    billingAddressStreet: clean(body.billingAddressStreet || 'Colombo', 180),
+    billingAddressCity: clean(body.billingAddressCity || 'Colombo', 120),
+    billingAddressPostcodeZip: clean(body.billingAddressPostcodeZip || '00100', 40),
+    billingAddressCountry: clean(body.billingAddressCountry || 'LK', 4),
+    custom1: uid,
+    custom2: plan
   };
+  if (payablePayload.paymentType === 2) {
+    payablePayload.interval = process.env.PAYABLE_RECURRING_INTERVAL || 'MONTHLY';
+    payablePayload.doFirstPayment = process.env.PAYABLE_DO_FIRST_PAYMENT || '1';
+    payablePayload.recurringAmount = amountText;
+    payablePayload.startDate = new Date().toISOString().slice(0, 10);
+    payablePayload.endDate = process.env.PAYABLE_RECURRING_END_DATE || 'FOREVER';
+    payablePayload.isRetry = process.env.PAYABLE_IS_RETRY || '1';
+    payablePayload.retryAttempts = process.env.PAYABLE_RETRY_ATTEMPTS || '3';
+  }
 
   let payableResponse;
+  let authResponse;
   try {
+    const auth = await getPayableAccessToken({ authUrl, businessKey, businessToken, originDomain });
+    authResponse = auth.response;
     const res = await fetch(checkoutUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ' + authToken,
-        'X-Merchant-ID': merchantId,
-        'X-Merchant-Token': merchantToken,
-        'X-Business-Key': businessKey,
-        'X-Business-Token': businessToken
+        'Authorization': 'Bearer ' + auth.accessToken
       },
       body: JSON.stringify(payablePayload)
     });
@@ -238,6 +335,7 @@ exports.handler = async function handler(event) {
       await sessionRef.set({
         status: 'checkout_failed',
         payableStatusCode: res.status,
+        payableAuthResponse: authResponse,
         payableResponse,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -247,6 +345,8 @@ exports.handler = async function handler(event) {
     await sessionRef.set({
       status: 'checkout_error',
       error: err && err.message ? err.message : 'Payable request failed',
+      payableStatusCode: err && err.status ? err.status : null,
+      payableResponse: err && err.response ? err.response : null,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
     return { statusCode: 502, headers: headers(), body: JSON.stringify({ ok: false, error: 'Could not reach Payable checkout service.' }) };

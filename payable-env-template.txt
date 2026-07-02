@@ -8,11 +8,16 @@ SITE_URL=https://www.ceylonrylabs.io
 
 # Payable sandbox Direct API
 PAYABLE_ENV=sandbox
+PAYABLE_AUTH_URL=https://sandboxipgpayment.payable.lk/ipg/auth/direct-api
 PAYABLE_CHECKOUT_URL=https://sandboxipgpayment.payable.lk/ipg/sandbox/direct-api
+PAYABLE_ORIGIN_DOMAIN=https://www.ceylonrylabs.io
+PAYABLE_PAYMENT_TYPE=1
 
 # Payable credentials
-# API Integration Details -> Merchant ID
+# API Integration Details -> Merchant Key / Merchant ID
 PAYABLE_MERCHANT_ID=PASTE_MERCHANT_ID_HERE
+# Optional alias if Payable labels it as Merchant Key:
+PAYABLE_MERCHANT_KEY=
 
 # API Integration Details -> Merchant Token
 PAYABLE_MERCHANT_TOKEN=PASTE_MERCHANT_TOKEN_HERE

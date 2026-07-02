@@ -60,11 +60,14 @@ Payable credentials must be added only in Netlify environment variables. Do not 
 
 Required for Payable checkout:
 
-- `PAYABLE_MERCHANT_ID` - from Payable Settings -> API Integration
+- `PAYABLE_MERCHANT_ID` / `PAYABLE_MERCHANT_KEY` - from Payable Settings -> API Integration
 - `PAYABLE_MERCHANT_TOKEN` - from Payable Settings -> API Integration
 - `PAYABLE_BUSINESS_KEY` - from Payable Settings -> Business Integration
 - `PAYABLE_BUSINESS_TOKEN` - from Payable Settings -> Business Integration
+- `PAYABLE_AUTH_URL` - sandbox: `https://sandboxipgpayment.payable.lk/ipg/auth/direct-api`
 - `PAYABLE_CHECKOUT_URL` - the checkout/session API endpoint Payable gives you
+- `PAYABLE_ORIGIN_DOMAIN` - the approved HTTPS domain, for example `https://www.ceylonrylabs.io`
+- `PAYABLE_PAYMENT_TYPE` - `1` for one-time activation, or `2` for recurring if Payable enables recurring subscriptions
 - `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
 - `FIREBASE_SERVICE_ACCOUNT` - Firebase service account JSON, either raw JSON or base64 encoded
 - `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`

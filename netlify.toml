@@ -1,4 +1,5 @@
 [build]
+  command = "node -e \"console.log('Static site build complete')\""
   publish = "."
   functions = "netlify/functions"
 
