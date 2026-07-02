@@ -257,6 +257,20 @@
     await docsRequest({ action: 'add', path: this.path, id: id, data: fieldValueToPlain(data || {}) });
     return new DocumentRef(this.path, id);
   };
+  CollectionRef.prototype.replaceAll = async function(docs) {
+    docs = Array.isArray(docs) ? docs : [];
+    await docsRequest({
+      action: 'replaceCollection',
+      path: this.path,
+      docs: docs.map(function(doc, index) {
+        var raw = doc && Object.prototype.hasOwnProperty.call(doc, 'data') ? doc.data : doc;
+        raw = fieldValueToPlain(raw || {});
+        var id = doc && doc.id != null ? doc.id : (raw.id != null ? raw.id : (raw._id != null ? raw._id : (raw.num != null ? raw.num : index)));
+        return { id: String(id), data: raw };
+      })
+    });
+    return this;
+  };
   CollectionRef.prototype.where = function(field, op, value) {
     return new CollectionRef(this.path, this._filters.concat([{ field: field, op: op, value: value }]), this._order, this._limit);
   };

@@ -294,6 +294,56 @@ async function deleteDocument(path, id) {
   if (error) throw error;
 }
 
+async function replaceCollection(path, docs) {
+  path = clean(path, 240);
+  docs = Array.isArray(docs) ? docs : [];
+  const now = new Date().toISOString();
+  const rows = docs.map(function(doc) {
+    const data = normalizeData(doc && doc.data);
+    const id = clean((doc && doc.id) || newId('doc'), 240);
+    return {
+      path,
+      id,
+      data,
+      owner_uid: ownerFrom(path, id, data),
+      email: emailFrom(data),
+      updated_at: now
+    };
+  });
+
+  const { data: existing, error: existingError } = await service()
+    .from('app_documents')
+    .select('id')
+    .eq('path', path)
+    .limit(5000);
+  if (existingError) throw existingError;
+
+  if (rows.length) {
+    const { error } = await service()
+      .from('app_documents')
+      .upsert(rows, { onConflict: 'path,id' });
+    if (error) throw error;
+  }
+
+  const keep = new Set(rows.map(function(row) { return row.id; }));
+  const obsolete = (existing || [])
+    .map(function(row) { return row.id; })
+    .filter(function(id) { return !keep.has(id); });
+  for (let i = 0; i < obsolete.length; i += 200) {
+    const chunk = obsolete.slice(i, i + 200);
+    const { error } = await service()
+      .from('app_documents')
+      .delete()
+      .eq('path', path)
+      .in('id', chunk);
+    if (error) throw error;
+  }
+
+  return rows.map(function(row) {
+    return { id: row.id, data: row.data };
+  });
+}
+
 function newId(prefix) {
   return (prefix ? prefix + '_' : '') + crypto.randomUUID();
 }
@@ -370,6 +420,7 @@ module.exports = {
   queryDocuments,
   upsertDocument,
   deleteDocument,
+  replaceCollection,
   newId,
   isAdmin,
   canRead,

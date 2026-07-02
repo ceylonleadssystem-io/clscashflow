@@ -3229,18 +3229,26 @@ async function saveDataNow() {
     await batch.commit();
     // Save collections
     var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, payables: D.payables, editLog: D.editLog };
-    for (var col in cols) {
+    var saveJobs = Object.keys(cols).map(async function(col) {
       var arr = cols[col] || [];
       var colRef = userRef.collection(col);
+      var docs = arr.map(function(item, i) {
+        var id = item && (item.id || item.num || item._id || (item.itemId && item.date ? item.itemId + '-' + item.date : null)) || i;
+        return { id: String(id), data: Object.assign({}, item) };
+      });
+      if (typeof colRef.replaceAll === 'function') {
+        await colRef.replaceAll(docs);
+        return;
+      }
       var existSnap = await colRef.get();
       var b2 = _fdb.batch();
       existSnap.docs.forEach(function(d) { b2.delete(d.ref); });
-      arr.forEach(function(item) {
-        var docRef = item.id ? colRef.doc(String(item.id)) : colRef.doc();
-        b2.set(docRef, Object.assign({}, item));
+      docs.forEach(function(doc) {
+        b2.set(colRef.doc(doc.id), doc.data);
       });
       await b2.commit();
-    }
+    });
+    await Promise.all(saveJobs);
     await userRef.set({
       settings: Object.assign({}, savedSettings, { growthDataVersion: version }),
       growthDataVersion: version
@@ -3277,8 +3285,11 @@ async function loadData(uid) {
     }
     var cols = ['transactions','expenses','invoices','clients','suppliers','payables','editLog'];
     var keys = ['txns','exps','invoices','clients','suppliers','payables','editLog'];
+    var snaps = await Promise.all(cols.map(function(col) {
+      return userRef.collection(col).get();
+    }));
     for (var i = 0; i < cols.length; i++) {
-      var snap = await userRef.collection(cols[i]).get();
+      var snap = snaps[i];
       D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
     }
     normalizeBusinessData();

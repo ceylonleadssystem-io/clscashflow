@@ -1014,15 +1014,21 @@ function restoreDBBackupIfNewer(serverVersion) {
 // Supabase save — writes a single collection array
 async function saveCollection(col, arr) {
   if (!_uid) return;
-  const batch = _db.batch();
   const ref = _db.collection('users').doc(_uid).collection(col);
+  const docs = (arr || []).map(function(item, i) {
+    const id = item && (item._id || item.id || item.num || (item.itemId && item.editedAt ? item.itemId + '-' + item.editedAt : null)) || i;
+    return { id: String(id), data: { ...item, _ts: firebase.firestore.FieldValue.serverTimestamp() } };
+  });
+  if (typeof ref.replaceAll === 'function') {
+    await ref.replaceAll(docs);
+    return;
+  }
+  const batch = _db.batch();
   // Clear + rewrite (simple approach for single-file app)
   const existing = await ref.get();
   existing.docs.forEach(d => batch.delete(d.ref));
-  arr.forEach((item, i) => {
-    const docRef = item._id ? ref.doc(String(item._id)) : ref.doc();
-    const data = { ...item, _ts: firebase.firestore.FieldValue.serverTimestamp() };
-    batch.set(docRef, data);
+  docs.forEach((doc) => {
+    batch.set(ref.doc(doc.id), doc.data);
   });
   await batch.commit();
 }

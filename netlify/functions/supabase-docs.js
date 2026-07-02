@@ -5,6 +5,7 @@ const {
   queryDocuments,
   upsertDocument,
   deleteDocument,
+  replaceCollection,
   newId,
   canRead,
   canWrite
@@ -100,6 +101,17 @@ exports.handler = async function handler(event) {
       }
       await deleteDocument(path, id);
       return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+    }
+
+    if (action === 'replaceCollection') {
+      const docs = Array.isArray(body.docs) ? body.docs : [];
+      const sample = docs[0] || { id: '__empty__', data: {} };
+      const sampleId = String(sample.id || '__empty__');
+      const sampleData = sample.data && typeof sample.data === 'object' ? sample.data : {};
+      const allowed = await canWrite(path, sampleId, sampleData, user);
+      if (!allowed) return { statusCode: 403, headers: headers(), body: JSON.stringify({ ok: false, error: 'Not allowed.' }) };
+      const savedDocs = await replaceCollection(path, docs);
+      return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, docs: savedDocs }) };
     }
 
     return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown document action.' }) };
