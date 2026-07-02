@@ -1,21 +1,60 @@
+functionsDirectory = "/opt/build/repo/netlify/functions"
+functionsDirectoryOrigin = "config-v1"
+headersOrigin = "config"
+redirectsOrigin = "config"
+plugins = []
+
 [build]
-  publish = "."
-  functions = "netlify/functions"
+publish = "/opt/build/repo"
+publishOrigin = "config"
+functions = "/opt/build/repo/netlify/functions"
 
-[[redirects]]
-  from = "/mrs-gamage-story"
-  to = "/mrs-gamage-story.html"
-  status = 200
+  [build.environment]
 
-[[redirects]]
-  from = "/join-the-movement"
-  to = "/mrs-gamage-story.html"
-  status = 200
+  [build.processing]
 
-# Standard security headers (no restrictive CSP, so inline scripts keep working)
+    [build.processing.css]
+
+    [build.processing.html]
+
+    [build.processing.images]
+
+    [build.processing.js]
+
+  [build.services]
+
+[functions]
+
+  [functions."*"]
+
 [[headers]]
-  for = "/*"
+for = "/*"
+
   [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
+  X-Frame-Options = "SAMEORIGIN"
+  X-Content-Type-Options = "nosniff"
+  Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+from = "/mrs-gamage-story"
+to = "/mrs-gamage-story.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/join-the-movement"
+to = "/mrs-gamage-story.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
