@@ -23,8 +23,16 @@ function parseServiceAccount(raw) {
   }
 }
 
+function splitServiceAccount() {
+  const projectId = process.env.FIREBASE_PROJECT_ID || '';
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
+  const privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+  if (!projectId || !clientEmail || !privateKey) return null;
+  return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey };
+}
+
 async function storeSubmission(data) {
-  const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '');
+  const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '') || splitServiceAccount();
   if (!serviceAccount && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     return { stored: false, reason: 'Firebase admin credentials not configured' };
   }

@@ -69,7 +69,8 @@ Required for Payable checkout:
 - `PAYABLE_ORIGIN_DOMAIN` - the approved HTTPS domain, for example `https://www.ceylonrylabs.io`
 - `PAYABLE_PAYMENT_TYPE` - `1` for one-time activation, or `2` for recurring if Payable enables recurring subscriptions
 - `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
-- `FIREBASE_SERVICE_ACCOUNT` - Firebase service account JSON, either raw JSON or base64 encoded
+- `FIREBASE_SERVICE_ACCOUNT` - Firebase service account JSON, either raw JSON or base64 encoded. Do not also add `FIREBASE_SERVICE_ACCOUNT_JSON`.
+- If Netlify reports the AWS Lambda 4KB environment variable limit, remove `FIREBASE_SERVICE_ACCOUNT` and use the smaller split values instead: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`.
 - `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
 
 Give Payable this callback URL after you choose `PAYABLE_WEBHOOK_SECRET`:

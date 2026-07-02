@@ -33,8 +33,12 @@ PAYABLE_BUSINESS_TOKEN=PASTE_BUSINESS_TOKEN_HERE
 PAYABLE_WEBHOOK_SECRET=PASTE_STRONG_RANDOM_SECRET_HERE
 
 # Firebase Admin SDK for Netlify functions.
-# Paste raw service-account JSON or base64 encoded service-account JSON.
+# Option A: paste raw service-account JSON. Do not also add FIREBASE_SERVICE_ACCOUNT_JSON.
 FIREBASE_SERVICE_ACCOUNT=PASTE_FIREBASE_SERVICE_ACCOUNT_HERE
+# Option B: smaller split variables. Use these instead of FIREBASE_SERVICE_ACCOUNT if Netlify hits the 4KB Lambda env limit.
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
 
 # Optional SMTP variables used by email/invite/support functions.
 SMTP_HOST=smtp.hostinger.com

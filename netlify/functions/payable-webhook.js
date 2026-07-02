@@ -13,6 +13,14 @@ function parseServiceAccount(raw) {
   }
 }
 
+function splitServiceAccount() {
+  const projectId = process.env.FIREBASE_PROJECT_ID || '';
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
+  const privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+  if (!projectId || !clientEmail || !privateKey) return null;
+  return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey };
+}
+
 function headers() {
   return {
     'Content-Type': 'application/json',
@@ -31,7 +39,7 @@ async function getAdmin() {
   }
 
   if (!admin.apps.length) {
-    const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '');
+    const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '') || splitServiceAccount();
     if (serviceAccount) {
       admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
     } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
