@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-bulk-save"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1177,7 +1177,34 @@ async function saveDBNow() {
     const version = writeDBBackup(Date.now(), false);
     const savedSettings = Object.assign({}, DB.settings || {});
     delete savedSettings.dataVersion;
-    await _db.collection('users').doc(_uid).set({
+    const userRef = _db.collection('users').doc(_uid);
+    const docsFor = function(arr) {
+      return (arr || []).map(function(item, i) {
+        const id = item && (item._id || item.id || item.num || (item.itemId && item.editedAt ? item.itemId + '-' + item.editedAt : null)) || i;
+        return { id: String(id), data: { ...item, _ts: firebase.firestore.FieldValue.serverTimestamp() } };
+      });
+    };
+    if (typeof userRef.replaceCollections === 'function') {
+      try {
+        await userRef.replaceCollections({
+          settings: Object.assign({}, savedSettings, { dataVersion: version }),
+          nextInvNum: DB.nextInvNum,
+          dataVersion: version
+        }, {
+          transactions: docsFor(DB.transactions),
+          expenses: docsFor(DB.expenses),
+          invoices: docsFor(DB.invoices),
+          editBacklog: docsFor(DB.editBacklog || []),
+          clients: docsFor(DB.clients.list || []),
+          suppliers: docsFor(DB.suppliers.list || [])
+        });
+        writeDBBackup(version, true);
+        return true;
+      } catch (bulkErr) {
+        console.warn('Bulk save failed; retrying fallback save.', bulkErr);
+      }
+    }
+    await userRef.set({
       settings: savedSettings,
       nextInvNum: DB.nextInvNum
     }, { merge: true });
@@ -1189,7 +1216,7 @@ async function saveDBNow() {
       saveCollection('clients', DB.clients.list || []),
       saveCollection('suppliers', DB.suppliers.list || [])
     ]);
-    await _db.collection('users').doc(_uid).set({
+    await userRef.set({
       settings: Object.assign({}, savedSettings, { dataVersion: version }),
       nextInvNum: DB.nextInvNum,
       dataVersion: version
@@ -1233,14 +1260,21 @@ function saveDB() {
 async function loadDB() {
   if (!_uid) return;
   try {
-    const profileSnap = await _db.collection('users').doc(_uid).get();
+    const userRef = _db.collection('users').doc(_uid);
+    const collections = ['transactions','expenses','invoices','editBacklog','clients','suppliers'];
+    let profileSnap;
+    let results;
+    if (typeof userRef.getCollections === 'function') {
+      const bundle = await userRef.getCollections(collections);
+      profileSnap = bundle.profile;
+      results = collections.map(c => bundle.collections[c] || { docs: [] });
+    } else {
+      profileSnap = await userRef.get();
+      results = await Promise.all(collections.map(c => userRef.collection(c).get()));
+    }
     const profileData = profileSnap.exists ? (profileSnap.data() || {}) : {};
     const serverVersion = Number(profileData.dataVersion || 0);
     _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
-    const collections = ['transactions','expenses','invoices','editBacklog','clients','suppliers'];
-    const results = await Promise.all(
-      collections.map(c => _db.collection('users').doc(_uid).collection(c).get())
-    );
     DB.transactions = results[0].docs.map(d => d.data());
     DB.expenses = results[1].docs.map(d => d.data());
     DB.invoices = results[2].docs.map(d => d.data());

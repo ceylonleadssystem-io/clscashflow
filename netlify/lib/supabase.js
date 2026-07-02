@@ -344,6 +344,23 @@ async function replaceCollection(path, docs) {
   });
 }
 
+async function replaceWorkspace(path, id, data, collections) {
+  path = clean(path, 240);
+  id = clean(id, 240);
+  data = normalizeData(data);
+  collections = collections && typeof collections === 'object' ? collections : {};
+  const savedProfile = await upsertDocument(path, id, data, true);
+  const basePath = path + '/' + id + '/';
+  const savedCollections = {};
+  for (const name of Object.keys(collections)) {
+    const collectionName = clean(name, 120);
+    if (!collectionName) continue;
+    const docs = Array.isArray(collections[name]) ? collections[name] : [];
+    savedCollections[collectionName] = await replaceCollection(basePath + collectionName, docs);
+  }
+  return { profile: savedProfile, collections: savedCollections };
+}
+
 function newId(prefix) {
   return (prefix ? prefix + '_' : '') + crypto.randomUUID();
 }
@@ -421,6 +438,7 @@ module.exports = {
   upsertDocument,
   deleteDocument,
   replaceCollection,
+  replaceWorkspace,
   newId,
   isAdmin,
   canRead,

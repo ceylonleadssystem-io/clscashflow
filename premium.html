@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-bulk-save"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1817,6 +1817,10 @@ var _uid = null;
 var _profile = null;
 var _signedInUid = null;
 var _dataVersion = 0;
+var _saveChain = Promise.resolve();
+var _saveQueued = false;
+var _saveInFlight = false;
+var _savePendingPromise = null;
 
 function clonePlain(value) {
   try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
@@ -1859,7 +1863,7 @@ function restorePremiumBackupIfNewer(serverVersion) {
   return true;
 }
 
-async function saveData() {
+async function saveDataNow() {
   if (!_uid) {
     try { localStorage.setItem('cls-premium-backup', JSON.stringify(D)); } catch(e) {}
     return false;
@@ -1869,8 +1873,30 @@ async function saveData() {
     var savedSettings = Object.assign({}, D.settings || {});
     delete savedSettings.dataVersion;
     var userRef = _fdb.collection('users').doc(_uid);
-    await userRef.set({ settings: savedSettings }, { merge: true });
     var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, staff: D.staff, receivables: D.recv, payables: D.payables };
+    var docsFor = function(arr) {
+      return (arr || []).map(function(item, i) {
+        var id = item && (item.id || item.num || item._id || (item.itemId && item.date ? item.itemId + '-' + item.date : null)) || i;
+        return { id: String(id), data: Object.assign({}, item) };
+      });
+    };
+    if (typeof userRef.replaceCollections === 'function') {
+      var collectionPayload = {};
+      Object.keys(cols).forEach(function(col) {
+        collectionPayload[col] = docsFor(cols[col] || []);
+      });
+      try {
+        await userRef.replaceCollections({
+          settings: Object.assign({}, savedSettings, { dataVersion: version }),
+          dataVersion: version
+        }, collectionPayload);
+        writePremiumBackup(version, true);
+        return true;
+      } catch (bulkErr) {
+        console.warn('Bulk save failed; retrying fallback save.', bulkErr);
+      }
+    }
+    await userRef.set({ settings: savedSettings }, { merge: true });
     for (var col in cols) {
       var arr = cols[col] || [];
       var colRef = userRef.collection(col);
@@ -1895,17 +1921,56 @@ async function saveData() {
   }
 }
 
+function saveData() {
+  try {
+    if (_uid) writePremiumBackup(Date.now(), false);
+    else localStorage.setItem('cls-premium-backup', JSON.stringify(D));
+  } catch(e) {}
+  _saveQueued = true;
+  if (_saveInFlight) return _savePendingPromise || Promise.resolve(true);
+  _saveInFlight = true;
+  _savePendingPromise = _saveChain = (async function drainSaveQueue() {
+    var saved = true;
+    while (_saveQueued) {
+      _saveQueued = false;
+      await new Promise(function(resolve) { setTimeout(resolve, 250); });
+      saved = await saveDataNow();
+    }
+    _saveInFlight = false;
+    _savePendingPromise = null;
+    return saved;
+  })().catch(function(err) {
+    console.error('Premium save queue error:', err);
+    _saveInFlight = false;
+    _savePendingPromise = null;
+    return false;
+  });
+  return _savePendingPromise;
+}
+
 async function loadData(uid) {
   try {
-    var snap = await _fdb.collection('users').doc(uid).get();
+    var userRef = _fdb.collection('users').doc(uid);
+    var cols = ['transactions','expenses','invoices','clients','suppliers','staff','receivables','payables'];
+    var keys = ['txns','exps','invoices','clients','suppliers','staff','recv','payables'];
+    var snap;
+    var snaps;
+    if (typeof userRef.getCollections === 'function') {
+      var bundle = await userRef.getCollections(cols);
+      snap = bundle.profile;
+      snaps = cols.map(function(col) { return bundle.collections[col] || { docs: [] }; });
+    } else {
+      snap = await userRef.get();
+      snaps = await Promise.all(cols.map(function(col) {
+        return userRef.collection(col).get();
+      }));
+    }
     var profileData = snap.exists ? (snap.data() || {}) : {};
     if (profileData.settings) Object.assign(D.settings, profileData.settings);
     var serverVersion = Number(profileData.dataVersion || 0);
     _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
-    var cols = ['transactions','expenses','invoices','clients','suppliers','staff','receivables','payables'];
-    var keys = ['txns','exps','invoices','clients','suppliers','staff','recv','payables'];
     for (var i = 0; i < cols.length; i++) {
-      var cs = await _fdb.collection('users').doc(uid).collection(cols[i]).get();
+      var cs = snaps[i];
       D[keys[i]] = cs.docs.map(function(d) { return d.data(); });
     }
     if (restorePremiumBackupIfNewer(serverVersion)) setTimeout(function(){ saveData(); }, 500);

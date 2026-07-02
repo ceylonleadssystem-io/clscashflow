@@ -231,8 +231,39 @@
     var json = await docsRequest({ action: 'get', path: this.path, id: this.id });
     return new DocSnapshot(this, json.exists ? json.doc : null);
   };
+  DocumentRef.prototype.getCollections = async function(names) {
+    var json = await docsRequest({ action: 'getWorkspace', path: this.path, id: this.id, collections: names || [] });
+    var profile = new DocSnapshot(this, json.exists ? json.doc : null);
+    var collections = {};
+    Object.keys(json.collections || {}).forEach(function(name) {
+      collections[name] = new QuerySnapshot((json.collections[name] || []).map(function(doc) {
+        return new DocSnapshot(new DocumentRef(this.path + '/' + this.id + '/' + name, doc.id), doc);
+      }, this));
+    }, this);
+    return { profile: profile, collections: collections };
+  };
   DocumentRef.prototype.set = async function(data, opts) {
     await docsRequest({ action: 'set', path: this.path, id: this.id, data: fieldValueToPlain(data || {}), merge: !!(opts && opts.merge) });
+    return this;
+  };
+  DocumentRef.prototype.replaceCollections = async function(data, collections) {
+    var payloadCollections = {};
+    Object.keys(collections || {}).forEach(function(name) {
+      var docs = Array.isArray(collections[name]) ? collections[name] : [];
+      payloadCollections[name] = docs.map(function(doc, index) {
+        var raw = doc && Object.prototype.hasOwnProperty.call(doc, 'data') ? doc.data : doc;
+        raw = fieldValueToPlain(raw || {});
+        var id = doc && doc.id != null ? doc.id : (raw.id != null ? raw.id : (raw._id != null ? raw._id : (raw.num != null ? raw.num : index)));
+        return { id: String(id), data: raw };
+      });
+    });
+    await docsRequest({
+      action: 'replaceWorkspace',
+      path: this.path,
+      id: this.id,
+      data: fieldValueToPlain(data || {}),
+      collections: payloadCollections
+    });
     return this;
   };
   DocumentRef.prototype.update = async function(data) {

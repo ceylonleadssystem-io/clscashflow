@@ -6,6 +6,7 @@ const {
   upsertDocument,
   deleteDocument,
   replaceCollection,
+  replaceWorkspace,
   newId,
   canRead,
   canWrite
@@ -77,6 +78,27 @@ exports.handler = async function handler(event) {
       return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, docs: allowed }) };
     }
 
+    if (action === 'getWorkspace') {
+      if (!id) throw new Error('Missing document id.');
+      const doc = await getDocument(path, id);
+      const allowed = doc
+        ? await canRead({ path, id: doc.id, data: doc.data }, user)
+        : await canWrite(path, id, {}, user);
+      if (!allowed) return { statusCode: 403, headers: headers(), body: JSON.stringify({ ok: false, error: 'Not allowed.' }) };
+      const requested = Array.isArray(body.collections) ? body.collections : [];
+      const collections = {};
+      await Promise.all(requested.map(async function(name) {
+        name = String(name || '').replace(/^\/+|\/+$/g, '');
+        if (!name || name.indexOf('/') !== -1) return;
+        collections[name] = await queryDocuments(path + '/' + id + '/' + name, { fetchLimit: 5000 });
+      }));
+      return {
+        statusCode: 200,
+        headers: headers(),
+        body: JSON.stringify({ ok: true, exists: !!doc, doc: doc || null, collections })
+      };
+    }
+
     if (action === 'set' || action === 'update') {
       if (!id) throw new Error('Missing document id.');
       const allowed = await canWrite(path, id, data, user);
@@ -112,6 +134,24 @@ exports.handler = async function handler(event) {
       if (!allowed) return { statusCode: 403, headers: headers(), body: JSON.stringify({ ok: false, error: 'Not allowed.' }) };
       const savedDocs = await replaceCollection(path, docs);
       return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, docs: savedDocs }) };
+    }
+
+    if (action === 'replaceWorkspace') {
+      if (!id) throw new Error('Missing document id.');
+      const collections = body.collections && typeof body.collections === 'object' ? body.collections : {};
+      const allowed = await canWrite(path, id, data, user);
+      if (!allowed) return { statusCode: 403, headers: headers(), body: JSON.stringify({ ok: false, error: 'Not allowed.' }) };
+      for (const name of Object.keys(collections)) {
+        const docs = Array.isArray(collections[name]) ? collections[name] : [];
+        const childPath = path + '/' + id + '/' + name;
+        const sample = docs[0] || { id: '__empty__', data: {} };
+        const sampleId = String(sample.id || '__empty__');
+        const sampleData = sample.data && typeof sample.data === 'object' ? sample.data : {};
+        const childAllowed = await canWrite(childPath, sampleId, sampleData, user);
+        if (!childAllowed) return { statusCode: 403, headers: headers(), body: JSON.stringify({ ok: false, error: 'Not allowed.' }) };
+      }
+      const saved = await replaceWorkspace(path, id, data, collections);
+      return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, saved }) };
     }
 
     return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown document action.' }) };

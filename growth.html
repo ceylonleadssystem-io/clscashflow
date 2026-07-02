@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-google-session-ready"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260702-bulk-save"></script>
 <script src="assets/platform.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2714,11 +2714,9 @@ async function refreshAfterTxnChange(message, type) {
   D.txns.sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   closeMo('mo-txn');
   syncBusinessComputedData();
-  renderCashflow();
-  renderExpenses();
-  renderSuppliers();
-  renderDashboard();
-  renderReports();
+  var activeView = currentBusinessView();
+  if (RENDERERS[activeView]) RENDERERS[activeView]();
+  else renderCashflow();
   showToast(message, type || 'ok');
   saveData().then(function(saved) {
     if (!saved) showToast('Kept locally. Cloud sync will retry after refresh.', 'err');
@@ -3211,13 +3209,45 @@ async function saveDataNow() {
     normalizeBusinessData();
     var version = writeBusinessBackup(Date.now(), false);
     D.settings.growthDataVersion = version;
-    var batch = _fdb.batch();
     var userRef = _fdb.collection('users').doc(_uid);
     var savedSettings = Object.assign({}, D.settings, {
       bizName:D.settings.biz,
       username:D.settings.user
     });
     delete savedSettings.growthDataVersion;
+    var profileData = {
+      settings: Object.assign({}, savedSettings, { growthDataVersion: version }),
+      nextInvId: D._nextInvId || 1,
+      nextInvNum: D._nextInvId || 1,
+      bizName: D.settings.biz || '',
+      addr: D.settings.addr || '',
+      email: D.settings.email || '',
+      invEmail: D.settings.email || '',
+      vat: D.settings.vat || '',
+      footer: D.settings.footer || '',
+      growthDataVersion: version
+    };
+    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, payables: D.payables, editLog: D.editLog };
+    var docsFor = function(arr) {
+      return (arr || []).map(function(item, i) {
+        var id = item && (item.id || item.num || item._id || (item.itemId && item.date ? item.itemId + '-' + item.date : null)) || i;
+        return { id: String(id), data: Object.assign({}, item) };
+      });
+    };
+    if (typeof userRef.replaceCollections === 'function') {
+      var collectionPayload = {};
+      Object.keys(cols).forEach(function(col) {
+        collectionPayload[col] = docsFor(cols[col] || []);
+      });
+      try {
+        await userRef.replaceCollections(profileData, collectionPayload);
+        writeBusinessBackup(version, true);
+        return true;
+      } catch (bulkErr) {
+        console.warn('Bulk save failed; retrying fallback save.', bulkErr);
+      }
+    }
+    var batch = _fdb.batch();
     // Save settings
     batch.set(userRef, {
       settings: savedSettings,
@@ -3232,14 +3262,10 @@ async function saveDataNow() {
     }, { merge: true });
     await batch.commit();
     // Save collections
-    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, payables: D.payables, editLog: D.editLog };
     var saveJobs = Object.keys(cols).map(async function(col) {
       var arr = cols[col] || [];
       var colRef = userRef.collection(col);
-      var docs = arr.map(function(item, i) {
-        var id = item && (item.id || item.num || item._id || (item.itemId && item.date ? item.itemId + '-' + item.date : null)) || i;
-        return { id: String(id), data: Object.assign({}, item) };
-      });
+      var docs = docsFor(arr);
       if (typeof colRef.replaceAll === 'function') {
         await colRef.replaceAll(docs);
         return;
@@ -3253,10 +3279,7 @@ async function saveDataNow() {
       await b2.commit();
     });
     await Promise.all(saveJobs);
-    await userRef.set({
-      settings: Object.assign({}, savedSettings, { growthDataVersion: version }),
-      growthDataVersion: version
-    }, { merge: true });
+    await userRef.set(profileData, { merge: true });
     writeBusinessBackup(version, true);
     return true;
   } catch(e) {
@@ -3296,7 +3319,20 @@ function saveData() {
 async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);
-    var profSnap = await userRef.get();
+    var cols = ['transactions','expenses','invoices','clients','suppliers','payables','editLog'];
+    var keys = ['txns','exps','invoices','clients','suppliers','payables','editLog'];
+    var profSnap;
+    var snaps;
+    if (typeof userRef.getCollections === 'function') {
+      var bundle = await userRef.getCollections(cols);
+      profSnap = bundle.profile;
+      snaps = cols.map(function(col) { return bundle.collections[col] || { docs: [] }; });
+    } else {
+      profSnap = await userRef.get();
+      snaps = await Promise.all(cols.map(function(col) {
+        return userRef.collection(col).get();
+      }));
+    }
     var serverVersion = 0;
     if (profSnap.exists) {
       var profileData = profSnap.data() || {};
@@ -3305,11 +3341,6 @@ async function loadData(uid) {
       serverVersion = Number(profileData.growthDataVersion || 0);
       _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
     }
-    var cols = ['transactions','expenses','invoices','clients','suppliers','payables','editLog'];
-    var keys = ['txns','exps','invoices','clients','suppliers','payables','editLog'];
-    var snaps = await Promise.all(cols.map(function(col) {
-      return userRef.collection(col).get();
-    }));
     for (var i = 0; i < cols.length; i++) {
       var snap = snaps[i];
       D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
