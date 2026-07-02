@@ -95,7 +95,6 @@
       <button class="admin-tab" type="button" data-admin-tab="tickets">Tickets</button>
       <button class="admin-tab" type="button" data-admin-tab="visits">Visits</button>
     </nav>
-    <div class="admin-note" id="admin-load-status">Loading admin data...</div>
 
     <div class="grid kpis" data-admin-section="overview">
       <div class="card"><div class="label">Users</div><div class="kpi-number" id="kpi-users">0</div><p class="muted">Signed-in accounts</p></div>
@@ -459,13 +458,6 @@ function showAdmin(){
 function renderEmpty(id, cols, text){
   $(id).innerHTML = '<tr><td colspan="'+cols+'" class="muted">'+esc(text)+'</td></tr>';
 }
-function setAdminLoadStatus(message, type){
-  var node = $('admin-load-status');
-  if (!node) return;
-  node.textContent = message || '';
-  node.style.display = message ? '' : 'none';
-  node.style.borderLeftColor = type === 'error' ? '#c0392b' : (type === 'ok' ? '#10834c' : '#B8922A');
-}
 
 async function readCollection(name, opts){
   opts = opts || {};
@@ -729,7 +721,6 @@ async function loadAdminData(opts){
   setRefreshState(true);
   try {
     showAdmin();
-    setAdminLoadStatus('Loading admin data...', 'warn');
     if (!adminHasRendered || opts.forceLoading) {
       renderEmpty('users-body', 11, 'Loading users...');
       renderEmpty('visits-body', 10, 'Loading visits...');
@@ -742,11 +733,9 @@ async function loadAdminData(opts){
     try {
       var payload = await fetchAdminFunction();
       renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {});
-      setAdminLoadStatus('Loaded from secure Admin function. Users: '+(payload.users || []).length+', visits: '+(payload.visits || []).length+', tickets: '+(payload.tickets || []).length+'.', 'ok');
       return;
     } catch (serverErr) {
       adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
-      setAdminLoadStatus('Admin function failed: '+adminFunctionError+' Trying direct Firestore fallback now.', 'error');
       console.warn('Admin function unavailable, falling back to Firestore rules:', serverErr);
     }
 
@@ -815,7 +804,6 @@ async function loadAdminData(opts){
     if (visitsLoaded) renderVisits(visits, stats);
     if (chatsLoaded) renderChats(chats, stats);
     if (ticketsLoaded) renderTickets(tickets, stats);
-    setAdminLoadStatus('Loaded using browser Firestore fallback. If counts are zero or tables are empty, the Admin function is still failing: '+adminFunctionError, adminFunctionError ? 'error' : 'ok');
     switchAdminSection(adminActiveSection);
     adminHasRendered = true;
   } finally {

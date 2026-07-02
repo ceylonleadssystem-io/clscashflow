@@ -13,44 +13,6 @@ function parseServiceAccount(raw) {
   }
 }
 
-function splitServiceAccount() {
-  const projectId = process.env.FIREBASE_PROJECT_ID || '';
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
-  const privateKey = normalizePrivateKey(decodePrivateKey(process.env.FIREBASE_PRIVATE_KEY_B64) || process.env.FIREBASE_PRIVATE_KEY);
-  if (!projectId || !clientEmail || !privateKey) return null;
-  return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey, projectId, clientEmail, privateKey };
-}
-
-function decodePrivateKey(value) {
-  if (!value) return '';
-  try {
-    return Buffer.from(String(value).trim(), 'base64').toString('utf8');
-  } catch (e) {
-    return '';
-  }
-}
-
-function normalizePrivateKey(value) {
-  let key = String(value || '').trim();
-  const jsonMatch = key.match(/"private_key"\s*:\s*"([\s\S]*?)"\s*,?$/);
-  if (jsonMatch) key = jsonMatch[1];
-  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
-    key = key.slice(1, -1);
-  }
-  key = key.replace(/^private_key\s*[:=]\s*/i, '').replace(/^["']+|["',;]+$/g, '');
-  key = key.replace(/\\n/g, '\n').trim();
-  if (!key) return '';
-  if (key.includes('-----BEGIN PRIVATE KEY-----') && key.includes('-----END PRIVATE KEY-----')) {
-    const body = key
-      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-      .replace(/-----END PRIVATE KEY-----/g, '')
-      .replace(/\s+/g, '');
-    const wrapped = body.match(/.{1,64}/g) || [];
-    return '-----BEGIN PRIVATE KEY-----\n' + wrapped.join('\n') + '\n-----END PRIVATE KEY-----\n';
-  }
-  return key;
-}
-
 function headers() {
   return {
     'Content-Type': 'application/json',
@@ -69,7 +31,7 @@ async function getAdmin() {
   }
 
   if (!admin.apps.length) {
-    const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '') || splitServiceAccount();
+    const serviceAccount = parseServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT || '');
     if (serviceAccount) {
       admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
     } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -169,10 +131,10 @@ function webhookData(body) {
 
 function sessionIdFrom(body) {
   const parts = webhookData(body);
-  return clean(firstValue(parts.meta, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference']), 140)
-    || clean(firstValue(parts.payment, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference', 'payment_reference']), 140)
-    || clean(firstValue(parts.data, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference', 'payment_reference']), 140)
-    || clean(firstValue(parts.body, ['sessionId', 'session_id', 'orderId', 'order_id', 'invoiceId', 'invoice_id', 'reference', 'payment_reference']), 140);
+  return clean(firstValue(parts.meta, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference']), 140)
+    || clean(firstValue(parts.payment, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
+    || clean(firstValue(parts.data, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
+    || clean(firstValue(parts.body, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140);
 }
 
 function statusFrom(body) {
@@ -237,8 +199,8 @@ exports.handler = async function handler(event) {
   const parts = webhookData(body);
   const paid = isPaid(body);
   const rawStatus = statusFrom(body) || (paid ? 'paid' : 'received');
-  const plan = normalizePlan(saved.plan || parts.meta.plan || parts.payment.plan || parts.data.plan || parts.body.plan || parts.payment.custom2 || parts.data.custom2 || parts.body.custom2) || 'solo';
-  const uid = clean(saved.uid || parts.meta.uid || parts.payment.uid || parts.data.uid || parts.body.uid || parts.payment.custom1 || parts.data.custom1 || parts.body.custom1, 160);
+  const plan = normalizePlan(saved.plan || parts.meta.plan || parts.payment.plan || parts.data.plan || parts.body.plan) || 'solo';
+  const uid = clean(saved.uid || parts.meta.uid || parts.payment.uid || parts.data.uid || parts.body.uid, 160);
   const amount = Number(saved.amount || parts.payment.amount || parts.data.amount || parts.body.amount || PLANS[plan].price || 0);
   const transactionId = clean(firstValue(parts.payment, ['id', 'transaction_id', 'payment_id'])
     || firstValue(parts.data, ['id', 'transaction_id', 'payment_id'])

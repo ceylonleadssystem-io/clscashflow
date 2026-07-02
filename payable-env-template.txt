@@ -35,8 +35,10 @@ PAYABLE_WEBHOOK_SECRET=PASTE_STRONG_RANDOM_SECRET_HERE
 # Firebase Admin SDK for Netlify functions.
 # Option A: paste raw service-account JSON. Do not also add FIREBASE_SERVICE_ACCOUNT_JSON.
 FIREBASE_SERVICE_ACCOUNT=PASTE_FIREBASE_SERVICE_ACCOUNT_HERE
-# Option B: smaller split variables. Use these instead of FIREBASE_SERVICE_ACCOUNT if Netlify hits the 4KB Lambda env limit.
-# Prefer FIREBASE_PRIVATE_KEY_B64 because it avoids PEM newline formatting issues in Netlify.
+# Option B: smaller split variables. Use these instead of FIREBASE_SERVICE_ACCOUNT.
+# If Netlify hits the 4KB Lambda env limit, prefer FIREBASE_PRIVATE_KEY
+# with escaped \n line breaks. FIREBASE_PRIVATE_KEY_B64 is easier to paste,
+# but it is larger and can push Netlify functions over the 4KB limit.
 FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
