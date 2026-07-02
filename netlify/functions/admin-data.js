@@ -18,7 +18,7 @@ function splitServiceAccount() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
   const privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
   if (!projectId || !clientEmail || !privateKey) return null;
-  return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey };
+  return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey, projectId, clientEmail, privateKey };
 }
 
 async function getAdmin() {
@@ -446,16 +446,15 @@ exports.handler = async function handler(event) {
     return { statusCode: 405, headers: headers(), body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
   }
 
-  const admin = await getAdmin();
-  if (!admin) {
-    return {
-      statusCode: 503,
-      headers: headers(),
-      body: JSON.stringify({ ok: false, error: 'Firebase admin is not configured on Netlify.' })
-    };
-  }
-
   try {
+    const admin = await getAdmin();
+    if (!admin) {
+      return {
+        statusCode: 503,
+        headers: headers(),
+        body: JSON.stringify({ ok: false, error: 'Firebase admin is not configured on Netlify. Check FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY.' })
+      };
+    }
     await verifyAdmin(admin, event);
     const db = admin.firestore();
 

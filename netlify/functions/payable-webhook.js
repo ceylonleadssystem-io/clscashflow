@@ -18,7 +18,7 @@ function splitServiceAccount() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || '';
   const privateKey = String(process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
   if (!projectId || !clientEmail || !privateKey) return null;
-  return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey };
+  return { type: 'service_account', project_id: projectId, client_email: clientEmail, private_key: privateKey, projectId, clientEmail, privateKey };
 }
 
 function headers() {
