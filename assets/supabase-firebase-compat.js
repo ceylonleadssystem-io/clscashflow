@@ -4,6 +4,7 @@
   var SUPABASE_URL = 'https://iudcinvfqbdzaptnnzqg.supabase.co';
   var PUBLIC_SITE_ORIGIN = 'https://ceylonrylabs.io';
   var AUTH_STORAGE_KEY = 'cls-cashflow-auth';
+  var SESSION_BACKUP_KEY = 'cls-cashflow-auth-backup';
   var supabaseClient = null;
   var clientPromise = null;
   var configPromise = null;
@@ -11,6 +12,7 @@
   var authListeners = [];
   var currentUserCache = null;
   var authNullTimer = null;
+  var sessionRefreshPromise = null;
   var authStateVersion = 0;
   var explicitSignOutInProgress = false;
   var lastAuthSuccessAt = 0;
@@ -24,21 +26,93 @@
   function setCurrentUser(user, notify) {
     currentUserCache = user || null;
     authStateVersion += 1;
-    if (user) lastAuthSuccessAt = Date.now();
+    if (user) {
+      lastAuthSuccessAt = Date.now();
+      window.__CLS_LAST_AUTH_UID = user.uid || '';
+      window.__CLS_LAST_AUTH_AT = lastAuthSuccessAt;
+    }
     if (notify) notifyAuthListeners(currentUserCache);
     return currentUserCache;
   }
 
-  async function sessionUserOnce() {
+  function persistSessionBackup(session) {
+    if (!session || !session.user || !session.access_token || !session.refresh_token) return;
+    try {
+      localStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at || 0,
+        user: {
+          id: session.user.id,
+          email: session.user.email || '',
+          user_metadata: session.user.user_metadata || {}
+        },
+        savedAt: Date.now()
+      }));
+    } catch (e) {}
+  }
+
+  function readSessionBackup() {
+    try {
+      var raw = localStorage.getItem(SESSION_BACKUP_KEY);
+      if (!raw) return null;
+      var backup = JSON.parse(raw);
+      if (!backup || !backup.access_token || !backup.refresh_token) return null;
+      if (Date.now() - Number(backup.savedAt || 0) > 1000 * 60 * 60 * 24 * 14) return null;
+      return backup;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearSessionBackup() {
+    try { localStorage.removeItem(SESSION_BACKUP_KEY); } catch (e) {}
+  }
+
+  async function currentSessionOnce() {
     if (!supabaseClient) return null;
     var session = await supabaseClient.auth.getSession();
     var s = session && session.data && session.data.session;
+    if (s && s.user && s.expires_at && (s.expires_at * 1000 - Date.now()) < 30000) {
+      if (!sessionRefreshPromise) {
+        sessionRefreshPromise = supabaseClient.auth.refreshSession()
+          .then(function(out) { return out && out.data ? out.data.session : null; })
+          .catch(function() { return null; })
+          .finally(function() { sessionRefreshPromise = null; });
+      }
+      var refreshed = await sessionRefreshPromise;
+      if (refreshed && refreshed.user) s = refreshed;
+    }
+    if (s && s.user) persistSessionBackup(s);
+    return s && s.user ? s : null;
+  }
+
+  async function sessionUserOnce() {
+    var s = await currentSessionOnce();
     return s && s.user ? wrapUser(s.user, s) : null;
+  }
+
+  async function restoreSessionFromBackup() {
+    if (!supabaseClient || explicitSignOutInProgress) return null;
+    var backup = readSessionBackup();
+    if (!backup) return null;
+    var out = await supabaseClient.auth.setSession({
+      access_token: backup.access_token,
+      refresh_token: backup.refresh_token
+    }).catch(function() { return null; });
+    var session = out && out.data && out.data.session;
+    if (session && session.user) {
+      persistSessionBackup(session);
+      return wrapUser(session.user, session);
+    }
+    return null;
   }
 
   async function confirmMissingSession() {
     for (var i = 0; i < 4; i += 1) {
       var user = await sessionUserOnce().catch(function() { return null; });
+      if (user) return user;
+      user = await restoreSessionFromBackup().catch(function() { return null; });
       if (user) return user;
       await sleep(450);
     }
@@ -58,6 +132,10 @@
         if (currentUserCache && authStateVersion !== scheduledVersion) return;
         if (currentUserCache && Date.now() - lastAuthSuccessAt < 15000) {
           scheduleVerifiedSignedOut(2500);
+          return;
+        }
+        if (currentUserCache) {
+          scheduleVerifiedSignedOut(30000);
           return;
         }
         setCurrentUser(null, true);
@@ -95,7 +173,7 @@
       var keys = [];
       for (var i = 0; i < localStorage.length; i += 1) keys.push(localStorage.key(i));
       keys.forEach(function(key) {
-        if (!key || keep[key]) return;
+        if (!key || keep[key] || key === SESSION_BACKUP_KEY) return;
         if (/^sb-iudcinvfqbdzaptnnzqg-auth-token/.test(key) || key === 'supabase.auth.token') {
           localStorage.removeItem(key);
         }
@@ -222,11 +300,13 @@
               authNullTimer = null;
             }
             explicitSignOutInProgress = false;
+            persistSessionBackup(session);
             setCurrentUser(wrapUser(session.user, session), true);
             return;
           }
           if (explicitSignOutInProgress) {
             explicitSignOutInProgress = false;
+            clearSessionBackup();
             setCurrentUser(null, true);
             return;
           }
@@ -244,9 +324,13 @@
   }
 
   async function accessToken() {
-    var client = await getClient();
-    var session = await client.auth.getSession();
-    return session && session.data && session.data.session ? session.data.session.access_token : '';
+    await getClient();
+    var session = await currentSessionOnce();
+    if (!session) {
+      var restored = await restoreSessionFromBackup().catch(function() { return null; });
+      if (restored) session = await currentSessionOnce();
+    }
+    return session && session.access_token ? session.access_token : '';
   }
 
   function wrapUser(user, session) {
@@ -259,7 +343,6 @@
       displayName: meta.full_name || meta.name || user.email || '',
       photoURL: meta.avatar_url || '',
       getIdToken: async function() {
-        if (session && session.access_token) return session.access_token;
         return accessToken();
       },
       updateProfile: async function(profile) {
@@ -282,15 +365,22 @@
   }
 
   async function docsRequest(payload) {
-    var token = await accessToken();
-    var res = await fetch('/.netlify/functions/supabase-docs', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token ? 'Bearer ' + token : ''
-      },
-      body: JSON.stringify(payload)
-    });
+    async function send() {
+      var token = await accessToken();
+      return fetch('/.netlify/functions/supabase-docs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? 'Bearer ' + token : ''
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+    var res = await send();
+    if (res.status === 401) {
+      await restoreSessionFromBackup().catch(function() { return null; });
+      res = await send();
+    }
     var json = await res.json().catch(function() { return {}; });
     if (!res.ok || !json.ok) throw new Error(json.error || 'Supabase document request failed.');
     return json;
@@ -478,6 +568,8 @@
       if (currentUserCache) return currentUserCache;
       var refreshed = await refreshCurrentUserFromSession(false).catch(function() { return null; });
       if (refreshed) return refreshed;
+      var restored = await restoreSessionFromBackup().catch(function() { return null; });
+      if (restored) return setCurrentUser(restored, false);
       await sleep(150);
     }
     return null;
@@ -489,6 +581,7 @@
     }).then(function(session) {
       var s = session && session.data && session.data.session;
       if (s && s.user) {
+        persistSessionBackup(s);
         setCurrentUser(wrapUser(s.user, s), false);
         cb(currentUserCache);
       }
@@ -502,6 +595,7 @@
     var client = await getClient();
     var out = await client.auth.signInWithPassword({ email: email, password: password });
     if (out.error) throw compatAuthError(out.error, 'auth/invalid-credential');
+    persistSessionBackup(out.data.session);
     var user = setCurrentUser(wrapUser(out.data.user, out.data.session), true);
     return { user: user };
   };
@@ -513,6 +607,7 @@
         if (existingError) throw compatAuthError(existingError, 'auth/email-already-in-use');
         throw compatAuthError(signedIn.error, 'auth/invalid-credential');
       }
+      persistSessionBackup(signedIn.data.session);
       var user = setCurrentUser(wrapUser(signedIn.data.user, signedIn.data.session), true);
       return { user: user };
     }
@@ -533,6 +628,7 @@
       var out = await client.auth.signUp({ email: email, password: password });
       if (out.error) throw compatAuthError(out.error, 'auth/email-already-in-use');
       if (out.data && out.data.session) {
+        persistSessionBackup(out.data.session);
         var createdUser = setCurrentUser(wrapUser(out.data.user, out.data.session), true);
         return { user: createdUser };
       }
@@ -547,6 +643,7 @@
   AuthCompat.prototype.signOut = async function() {
     var client = await getClient();
     explicitSignOutInProgress = true;
+    clearSessionBackup();
     await client.auth.signOut();
     setCurrentUser(null, true);
   };
