@@ -3,6 +3,7 @@
 
   var SUPABASE_URL = 'https://iudcinvfqbdzaptnnzqg.supabase.co';
   var PUBLIC_SITE_ORIGIN = 'https://ceylonrylabs.io';
+  var AUTH_STORAGE_KEY = 'cls-cashflow-auth';
   var supabaseClient = null;
   var clientPromise = null;
   var configPromise = null;
@@ -10,6 +11,9 @@
   var authListeners = [];
   var currentUserCache = null;
   var authNullTimer = null;
+  var authStateVersion = 0;
+  var explicitSignOutInProgress = false;
+  var lastAuthSuccessAt = 0;
 
   function notifyAuthListeners(user) {
     authListeners.slice().forEach(function(cb) {
@@ -17,16 +21,50 @@
     });
   }
 
-  function scheduleVerifiedSignedOut() {
+  function setCurrentUser(user, notify) {
+    currentUserCache = user || null;
+    authStateVersion += 1;
+    if (user) lastAuthSuccessAt = Date.now();
+    if (notify) notifyAuthListeners(currentUserCache);
+    return currentUserCache;
+  }
+
+  async function sessionUserOnce() {
+    if (!supabaseClient) return null;
+    var session = await supabaseClient.auth.getSession();
+    var s = session && session.data && session.data.session;
+    return s && s.user ? wrapUser(s.user, s) : null;
+  }
+
+  async function confirmMissingSession() {
+    for (var i = 0; i < 4; i += 1) {
+      var user = await sessionUserOnce().catch(function() { return null; });
+      if (user) return user;
+      await sleep(450);
+    }
+    return null;
+  }
+
+  function scheduleVerifiedSignedOut(delayMs) {
     if (authNullTimer) clearTimeout(authNullTimer);
+    var scheduledVersion = authStateVersion;
     authNullTimer = setTimeout(function() {
       authNullTimer = null;
-      refreshCurrentUserFromSession(false).then(function(user) {
-        if (!user) notifyAuthListeners(null);
+      confirmMissingSession().then(function(user) {
+        if (user) {
+          setCurrentUser(user, true);
+          return;
+        }
+        if (currentUserCache && authStateVersion !== scheduledVersion) return;
+        if (currentUserCache && Date.now() - lastAuthSuccessAt < 15000) {
+          scheduleVerifiedSignedOut(2500);
+          return;
+        }
+        setCurrentUser(null, true);
       }).catch(function() {
-        notifyAuthListeners(null);
+        if (!currentUserCache) setCurrentUser(null, true);
       });
-    }, 1500);
+    }, delayMs || 2500);
   }
 
   function randomId(prefix) {
@@ -48,6 +86,21 @@
 
   function isLocalHost(hostname) {
     return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0' || hostname === '[::1]';
+  }
+
+  function clearLegacyAuthStorage() {
+    try {
+      var keep = {};
+      keep[AUTH_STORAGE_KEY] = true;
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i += 1) keys.push(localStorage.key(i));
+      keys.forEach(function(key) {
+        if (!key || keep[key]) return;
+        if (/^sb-iudcinvfqbdzaptnnzqg-auth-token/.test(key) || key === 'supabase.auth.token') {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {}
   }
 
   function siteOrigin() {
@@ -76,14 +129,9 @@
   }
 
   async function refreshCurrentUserFromSession(notify) {
-    if (!supabaseClient) return null;
-    var session = await supabaseClient.auth.getSession();
-    var s = session && session.data && session.data.session;
-    currentUserCache = s && s.user ? wrapUser(s.user, s) : null;
-    if (notify && currentUserCache) {
-      notifyAuthListeners(currentUserCache);
-    }
-    return currentUserCache;
+    var user = await sessionUserOnce();
+    if (user) setCurrentUser(user, notify);
+    return user || null;
   }
 
   function watchOAuthSessionReady() {
@@ -157,12 +205,13 @@
       if (window.__CLS_SUPABASE_CLIENT) {
         supabaseClient = window.__CLS_SUPABASE_CLIENT;
       } else {
+        clearLegacyAuthStorage();
         supabaseClient = window.supabase.createClient(SUPABASE_URL, cfg.anonKey, {
           auth: {
             persistSession: true,
             autoRefreshToken: true,
             detectSessionInUrl: true,
-            storageKey: 'cls-cashflow-auth'
+            storageKey: AUTH_STORAGE_KEY
           }
         });
         window.__CLS_SUPABASE_CLIENT = supabaseClient;
@@ -172,8 +221,13 @@
               clearTimeout(authNullTimer);
               authNullTimer = null;
             }
-            currentUserCache = wrapUser(session.user, session);
-            notifyAuthListeners(currentUserCache);
+            explicitSignOutInProgress = false;
+            setCurrentUser(wrapUser(session.user, session), true);
+            return;
+          }
+          if (explicitSignOutInProgress) {
+            explicitSignOutInProgress = false;
+            setCurrentUser(null, true);
             return;
           }
           scheduleVerifiedSignedOut();
@@ -434,8 +488,10 @@
       return client.auth.getSession();
     }).then(function(session) {
       var s = session && session.data && session.data.session;
-      currentUserCache = s && s.user ? wrapUser(s.user, s) : null;
-      if (currentUserCache) cb(currentUserCache);
+      if (s && s.user) {
+        setCurrentUser(wrapUser(s.user, s), false);
+        cb(currentUserCache);
+      }
       else scheduleVerifiedSignedOut();
     }).catch(function() { scheduleVerifiedSignedOut(); });
     return function() {
@@ -446,9 +502,8 @@
     var client = await getClient();
     var out = await client.auth.signInWithPassword({ email: email, password: password });
     if (out.error) throw compatAuthError(out.error, 'auth/invalid-credential');
-    currentUserCache = wrapUser(out.data.user, out.data.session);
-    notifyAuthListeners(currentUserCache);
-    return { user: currentUserCache };
+    var user = setCurrentUser(wrapUser(out.data.user, out.data.session), true);
+    return { user: user };
   };
   AuthCompat.prototype.createUserWithEmailAndPassword = async function(email, password) {
     var client = await getClient();
@@ -458,9 +513,8 @@
         if (existingError) throw compatAuthError(existingError, 'auth/email-already-in-use');
         throw compatAuthError(signedIn.error, 'auth/invalid-credential');
       }
-      currentUserCache = wrapUser(signedIn.data.user, signedIn.data.session);
-      notifyAuthListeners(currentUserCache);
-      return { user: currentUserCache };
+      var user = setCurrentUser(wrapUser(signedIn.data.user, signedIn.data.session), true);
+      return { user: user };
     }
     try {
       var res = await fetch('/.netlify/functions/supabase-signup', {
@@ -479,9 +533,8 @@
       var out = await client.auth.signUp({ email: email, password: password });
       if (out.error) throw compatAuthError(out.error, 'auth/email-already-in-use');
       if (out.data && out.data.session) {
-        currentUserCache = wrapUser(out.data.user, out.data.session);
-        notifyAuthListeners(currentUserCache);
-        return { user: currentUserCache };
+        var createdUser = setCurrentUser(wrapUser(out.data.user, out.data.session), true);
+        return { user: createdUser };
       }
       return finishWithPasswordSignIn();
     }
@@ -493,8 +546,9 @@
   };
   AuthCompat.prototype.signOut = async function() {
     var client = await getClient();
+    explicitSignOutInProgress = true;
     await client.auth.signOut();
-    currentUserCache = null;
+    setCurrentUser(null, true);
   };
   AuthCompat.prototype.signInWithPopup = async function(provider) {
     var client = await getClient();
