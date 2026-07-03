@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260703-session-fix"></script>
-<script src="assets/platform.js?v=20260703-session-fix"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260703-auth-stable"></script>
+<script src="assets/platform.js?v=20260703-auth-stable"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -3439,7 +3439,7 @@ window.showPaywall = function showPaywall(profile) {
 
 // ===================== INIT =====================
 _fauth.onAuthStateChanged(async function(user) {
-  if (!user) { window.location.href = 'signin.html'; return; }
+  if (!user) { if (window.clsRedirectToSignInAfterAuthCheck) window.clsRedirectToSignInAfterAuthCheck(); else window.location.href = 'signin.html'; return; }
   _signedInUid = user.uid;
   _uid = user.uid;
   try {

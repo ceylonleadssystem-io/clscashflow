@@ -179,6 +179,29 @@
     return null;
   }
 
+  var pendingSigninRedirect = null;
+
+  window.clsRedirectToSignInAfterAuthCheck = function clsRedirectToSignInAfterAuthCheck(delayMs) {
+    if (pendingSigninRedirect) return pendingSigninRedirect;
+    pendingSigninRedirect = new Promise(function(resolve) {
+      setTimeout(async function() {
+        var user = getAuthUser();
+        if (!user) {
+          try {
+            var auth = window.firebase && firebase.auth ? firebase.auth() : null;
+            if (auth && typeof auth.waitForCurrentUser === 'function') {
+              user = await auth.waitForCurrentUser(4500);
+            }
+          } catch (e) {}
+        }
+        pendingSigninRedirect = null;
+        if (!user) window.location.href = 'signin.html';
+        resolve(user || null);
+      }, delayMs || 900);
+    });
+    return pendingSigninRedirect;
+  };
+
   window.clsPlanFiles = PLAN_FILES;
   window.clsPlanDetails = PLAN_DETAILS;
 

@@ -9,6 +9,25 @@
   var apps = [];
   var authListeners = [];
   var currentUserCache = null;
+  var authNullTimer = null;
+
+  function notifyAuthListeners(user) {
+    authListeners.slice().forEach(function(cb) {
+      try { cb(user); } catch (e) {}
+    });
+  }
+
+  function scheduleVerifiedSignedOut() {
+    if (authNullTimer) clearTimeout(authNullTimer);
+    authNullTimer = setTimeout(function() {
+      authNullTimer = null;
+      refreshCurrentUserFromSession(false).then(function(user) {
+        if (!user) notifyAuthListeners(null);
+      }).catch(function() {
+        notifyAuthListeners(null);
+      });
+    }, 1500);
+  }
 
   function randomId(prefix) {
     var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
@@ -17,6 +36,10 @@
 
   function nowIso() {
     return new Date().toISOString();
+  }
+
+  function sleep(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms); });
   }
 
   function normalizePath(path) {
@@ -58,7 +81,7 @@
     var s = session && session.data && session.data.session;
     currentUserCache = s && s.user ? wrapUser(s.user, s) : null;
     if (notify && currentUserCache) {
-      authListeners.slice().forEach(function(cb) { try { cb(currentUserCache); } catch (e) {} });
+      notifyAuthListeners(currentUserCache);
     }
     return currentUserCache;
   }
@@ -144,8 +167,16 @@
         });
         window.__CLS_SUPABASE_CLIENT = supabaseClient;
         supabaseClient.auth.onAuthStateChange(function(_event, session) {
-          currentUserCache = session && session.user ? wrapUser(session.user, session) : null;
-          authListeners.slice().forEach(function(cb) { try { cb(currentUserCache); } catch (e) {} });
+          if (session && session.user) {
+            if (authNullTimer) {
+              clearTimeout(authNullTimer);
+              authNullTimer = null;
+            }
+            currentUserCache = wrapUser(session.user, session);
+            notifyAuthListeners(currentUserCache);
+            return;
+          }
+          scheduleVerifiedSignedOut();
         });
       }
       await refreshCurrentUserFromSession(false);
@@ -382,6 +413,21 @@
   Object.defineProperty(AuthCompat.prototype, 'currentUser', {
     get: function() { return currentUserCache; }
   });
+  AuthCompat.prototype.waitForCurrentUser = async function(timeoutMs) {
+    var deadline = Date.now() + (timeoutMs || 4500);
+    try {
+      await getClient();
+    } catch (e) {
+      return null;
+    }
+    while (Date.now() <= deadline) {
+      if (currentUserCache) return currentUserCache;
+      var refreshed = await refreshCurrentUserFromSession(false).catch(function() { return null; });
+      if (refreshed) return refreshed;
+      await sleep(150);
+    }
+    return null;
+  };
   AuthCompat.prototype.onAuthStateChanged = function(cb) {
     authListeners.push(cb);
     getClient().then(function(client) {
@@ -389,8 +435,9 @@
     }).then(function(session) {
       var s = session && session.data && session.data.session;
       currentUserCache = s && s.user ? wrapUser(s.user, s) : null;
-      cb(currentUserCache);
-    }).catch(function() { cb(null); });
+      if (currentUserCache) cb(currentUserCache);
+      else scheduleVerifiedSignedOut();
+    }).catch(function() { scheduleVerifiedSignedOut(); });
     return function() {
       authListeners = authListeners.filter(function(item) { return item !== cb; });
     };
@@ -400,6 +447,7 @@
     var out = await client.auth.signInWithPassword({ email: email, password: password });
     if (out.error) throw compatAuthError(out.error, 'auth/invalid-credential');
     currentUserCache = wrapUser(out.data.user, out.data.session);
+    notifyAuthListeners(currentUserCache);
     return { user: currentUserCache };
   };
   AuthCompat.prototype.createUserWithEmailAndPassword = async function(email, password) {
@@ -411,6 +459,7 @@
         throw compatAuthError(signedIn.error, 'auth/invalid-credential');
       }
       currentUserCache = wrapUser(signedIn.data.user, signedIn.data.session);
+      notifyAuthListeners(currentUserCache);
       return { user: currentUserCache };
     }
     try {
@@ -431,6 +480,7 @@
       if (out.error) throw compatAuthError(out.error, 'auth/email-already-in-use');
       if (out.data && out.data.session) {
         currentUserCache = wrapUser(out.data.user, out.data.session);
+        notifyAuthListeners(currentUserCache);
         return { user: currentUserCache };
       }
       return finishWithPasswordSignIn();
