@@ -332,7 +332,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 </style>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260702-bulk-save"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260703-auth-fix"></script>
 <script>
 const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
@@ -1439,7 +1439,11 @@ window.launchDashboard = async function launchDashboard(){
       // Email user — create Supabase account then save profile
       const cred = await firebase.auth().createUserWithEmailAndPassword(state.email, state.password);
       const uid = cred.user.uid;
-      await cred.user.updateProfile({ displayName: state.fname + ' ' + state.lname });
+      try {
+        await cred.user.updateProfile({ displayName: state.fname + ' ' + state.lname });
+      } catch(profileErr) {
+        console.warn('Profile metadata update skipped:', profileErr);
+      }
       const trialEnd = new Date();
       trialEnd.setDate(trialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(uid).set({

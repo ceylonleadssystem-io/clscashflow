@@ -164,10 +164,16 @@
         var client = await getClient();
         var name = profile.displayName || profile.name || this.displayName || '';
         var avatar = profile.photoURL || this.photoURL || '';
-        var out = await client.auth.updateUser({ data: { full_name: name, name: name, avatar_url: avatar } });
-        if (out.error) throw out.error;
         this.displayName = name;
         this.photoURL = avatar;
+        var session = await client.auth.getSession();
+        if (!session || !session.data || !session.data.session) return;
+        var out = await client.auth.updateUser({ data: { full_name: name, name: name, avatar_url: avatar } });
+        if (out.error) {
+          var msg = String(out.error.message || '').toLowerCase();
+          if (msg.indexOf('auth session missing') >= 0 || msg.indexOf('session') >= 0) return;
+          throw out.error;
+        }
       }
     };
   }
@@ -380,10 +386,37 @@
   };
   AuthCompat.prototype.createUserWithEmailAndPassword = async function(email, password) {
     var client = await getClient();
-    var out = await client.auth.signUp({ email: email, password: password });
-    if (out.error) throw compatAuthError(out.error, 'auth/email-already-in-use');
-    currentUserCache = out.data.session ? wrapUser(out.data.user, out.data.session) : wrapUser(out.data.user, null);
-    return { user: currentUserCache };
+    async function finishWithPasswordSignIn(existingError) {
+      var signedIn = await client.auth.signInWithPassword({ email: email, password: password });
+      if (signedIn.error) {
+        if (existingError) throw compatAuthError(existingError, 'auth/email-already-in-use');
+        throw compatAuthError(signedIn.error, 'auth/invalid-credential');
+      }
+      currentUserCache = wrapUser(signedIn.data.user, signedIn.data.session);
+      return { user: currentUserCache };
+    }
+    try {
+      var res = await fetch('/.netlify/functions/supabase-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      var json = await res.json().catch(function() { return {}; });
+      if (res.ok && json.ok) return finishWithPasswordSignIn();
+      var err = new Error(json.error || 'Could not create account.');
+      err.code = json.code || '';
+      if (res.status === 409 || err.code === 'auth/email-already-in-use') return finishWithPasswordSignIn(err);
+      throw err;
+    } catch (fnErr) {
+      if (String(fnErr && fnErr.code || '') === 'auth/email-already-in-use') return finishWithPasswordSignIn(fnErr);
+      var out = await client.auth.signUp({ email: email, password: password });
+      if (out.error) throw compatAuthError(out.error, 'auth/email-already-in-use');
+      if (out.data && out.data.session) {
+        currentUserCache = wrapUser(out.data.user, out.data.session);
+        return { user: currentUserCache };
+      }
+      return finishWithPasswordSignIn();
+    }
   };
   AuthCompat.prototype.sendPasswordResetEmail = async function(email, settings) {
     var client = await getClient();
