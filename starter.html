@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260703-auth-fix"></script>
-<script src="assets/platform.js?v=20260702-fast-ui"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260703-session-fix"></script>
+<script src="assets/platform.js?v=20260703-session-fix"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1295,7 +1295,10 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
   _signedInUid = user.uid;
   _uid = user.uid;
   try {
-    const profileDoc = await _db.collection('users').doc(_signedInUid).get();
+    let profileDoc = await _db.collection('users').doc(_signedInUid).get();
+    if (!profileDoc.exists && window.clsEnsureUserProfile) {
+      profileDoc = await window.clsEnsureUserProfile(user, _db, { plan: 'studio' });
+    }
     if (!profileDoc.exists) { window.location.href = 'signin.html'; return; }
     _profile = profileDoc.data();
     if (_profile.ownerUid) _uid = _profile.ownerUid;

@@ -105,6 +105,41 @@
     return 'website';
   }
 
+  window.clsEnsureUserProfile = window.clsEnsureUserProfile || async function(user, db, opts) {
+    opts = opts || {};
+    if (!user || !user.uid || !db || typeof db.collection !== 'function') return null;
+    var ref = db.collection('users').doc(user.uid);
+    var snap = await ref.get();
+    if (snap && snap.exists) return snap;
+
+    var plan = normalizePlan(opts.plan || rememberedPlan() || 'solo') || 'solo';
+    var trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 15);
+    var email = plainText(user.email || '', 240);
+    var fallbackName = email ? email.split('@')[0] : 'User';
+    var name = plainText(user.displayName || fallbackName, 180);
+    var stamp = window.firebase && firebase.firestore && firebase.firestore.FieldValue
+      ? firebase.firestore.FieldValue.serverTimestamp()
+      : new Date().toISOString();
+    await ref.set({
+      name: name,
+      email: email,
+      role: 'owner',
+      plan: plan,
+      currentPlan: plan,
+      lastPlan: plan,
+      planPrice: (PLAN_DETAILS[plan] && PLAN_DETAILS[plan].price) || 3500,
+      trialStart: new Date().toISOString(),
+      trialEnd: trialEnd.toISOString(),
+      paid: false,
+      onboardingComplete: false,
+      recoveredProfile: true,
+      createdAt: stamp,
+      updatedAt: stamp
+    }, { merge: true });
+    return ref.get();
+  };
+
   function newId(prefix) {
     var randomPart = '';
     try {

@@ -4,6 +4,7 @@
   var SUPABASE_URL = 'https://iudcinvfqbdzaptnnzqg.supabase.co';
   var PUBLIC_SITE_ORIGIN = 'https://ceylonrylabs.io';
   var supabaseClient = null;
+  var clientPromise = null;
   var configPromise = null;
   var apps = [];
   var authListeners = [];
@@ -123,21 +124,38 @@
 
   async function getClient() {
     if (supabaseClient) return supabaseClient;
-    var cfg = await loadConfig();
-    SUPABASE_URL = cfg.url || SUPABASE_URL;
-    if (!window.supabase || !window.supabase.createClient) {
-      throw new Error('Supabase browser library did not load.');
-    }
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, cfg.anonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    if (clientPromise) return clientPromise;
+    clientPromise = (async function initSupabaseClient() {
+      var cfg = await loadConfig();
+      SUPABASE_URL = cfg.url || SUPABASE_URL;
+      if (!window.supabase || !window.supabase.createClient) {
+        throw new Error('Supabase browser library did not load.');
+      }
+      if (window.__CLS_SUPABASE_CLIENT) {
+        supabaseClient = window.__CLS_SUPABASE_CLIENT;
+      } else {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, cfg.anonKey, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: 'cls-cashflow-auth'
+          }
+        });
+        window.__CLS_SUPABASE_CLIENT = supabaseClient;
+        supabaseClient.auth.onAuthStateChange(function(_event, session) {
+          currentUserCache = session && session.user ? wrapUser(session.user, session) : null;
+          authListeners.slice().forEach(function(cb) { try { cb(currentUserCache); } catch (e) {} });
+        });
+      }
+      await refreshCurrentUserFromSession(false);
+      watchOAuthSessionReady();
+      return supabaseClient;
+    })().catch(function(err) {
+      clientPromise = null;
+      throw err;
     });
-    supabaseClient.auth.onAuthStateChange(function(_event, session) {
-      currentUserCache = session && session.user ? wrapUser(session.user, session) : null;
-      authListeners.slice().forEach(function(cb) { try { cb(currentUserCache); } catch (e) {} });
-    });
-    await refreshCurrentUserFromSession(false);
-    watchOAuthSessionReady();
-    return supabaseClient;
+    return clientPromise;
   }
 
   async function accessToken() {

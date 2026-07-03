@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260703-auth-fix"></script>
-<script src="assets/platform.js?v=20260702-fast-ui"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260703-session-fix"></script>
+<script src="assets/platform.js?v=20260703-session-fix"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -3444,6 +3444,9 @@ _fauth.onAuthStateChanged(async function(user) {
   _uid = user.uid;
   try {
     var profDoc = await _fdb.collection('users').doc(_signedInUid).get();
+    if (!profDoc.exists && window.clsEnsureUserProfile) {
+      profDoc = await window.clsEnsureUserProfile(user, _fdb, { plan: 'business' });
+    }
     if (!profDoc.exists) { window.location.href = 'signin.html'; return; }
     _profile = profDoc.data();
     if (_profile.ownerUid) _uid = _profile.ownerUid;

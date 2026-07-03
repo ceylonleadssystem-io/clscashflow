@@ -10,12 +10,12 @@
 
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260703-auth-fix"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260703-session-fix"></script>
 <script>
 const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 </script>
-<script src="assets/platform.js?v=20260702-fast-ui"></script>
+<script src="assets/platform.js?v=20260703-session-fix"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -295,7 +295,12 @@ async function redirectToDashboard(user) {
     if (inviteToken && inviteOwner) {
       await acceptInvite(user);
     }
-    const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+    let doc = await firebase.firestore().collection('users').doc(user.uid).get();
+    if (!doc.exists && window.clsEnsureUserProfile) {
+      doc = await window.clsEnsureUserProfile(user, firebase.firestore(), {
+        plan: localStorage.getItem('cls-current-plan') || localStorage.getItem('cls-last-plan') || 'solo'
+      });
+    }
     if (doc.exists) {
       const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
       const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
