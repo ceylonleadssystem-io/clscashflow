@@ -44,7 +44,7 @@ exports.handler = async function handler(event) {
   });
 
   const planLabels = { solo: 'Solo', studio: 'Studio', business: 'Business' };
-  const planPrices = { solo: '3,500', studio: '5,500', business: '8,500' };
+  const planPrices = { solo: '36,000', studio: '60,000', business: '94,800' };
   const planLabel  = planLabels[plan] || 'Solo';
   const planPrice  = planPrices[plan] || '3,500';
   const loginUrl   = 'https://ceylonrylabscashflow.netlify.app/signin.html';
@@ -63,7 +63,7 @@ exports.handler = async function handler(event) {
     'Email:  ' + to + '\n' +
     'Login:  ' + loginUrl + '\n\n' +
     '--- YOUR PLAN ---\n' +
-    planLabel + ' Plan (LKR ' + planPrice + '/month)\n' +
+    planLabel + ' Plan (LKR ' + planPrice + '/year)\n' +
     '15-day free trial — no payment required until: ' + trialEndFmt + '\n\n' +
     'After your trial ends, you will be prompted to enter your payment details to continue using the system.\n\n' +
     'If you have any questions, reply to this email or contact us on WhatsApp.\n\n' +
@@ -96,7 +96,7 @@ exports.handler = async function handler(event) {
           // Trial box
           '<div style="background:#FAF7F2;border:1px solid #E3D9C4;border-left:3px solid #B8922A;padding:20px 24px;margin-bottom:24px">' +
             '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:12px">Your Plan & Trial</div>' +
-            '<p style="margin:0 0 8px;font-size:14px"><strong>' + esc(planLabel) + ' Plan</strong> — LKR ' + esc(planPrice) + '/month</p>' +
+            '<p style="margin:0 0 8px;font-size:14px"><strong>' + esc(planLabel) + ' Plan</strong> — LKR ' + esc(planPrice) + '/year</p>' +
             '<p style="margin:0;font-size:13px;color:#6B6258">✓ 15-day free trial · No payment required now<br>✓ Trial ends: <strong style="color:#1a1714">' + esc(trialEndFmt) + '</strong></p>' +
           '</div>' +
 

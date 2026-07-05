@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-danger-zone"></script>
-<script src="assets/platform.js?v=20260705-danger-zone"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
+<script src="assets/platform.js?v=20260705-payable"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -301,7 +301,7 @@ tr:hover td{background:var(--bg3)}
 .tpl-card.sel{border-color:var(--rose);background:var(--white)}
 .tpl-prev{height:50px;width:100%;display:flex;align-items:center;justify-content:center}
 .tpl-name{font-size:.56rem;letter-spacing:.06em;text-transform:uppercase;color:var(--black);font-weight:600;padding:.28rem .2rem;background:var(--white);border-top:1px solid var(--border)}
-.settings-template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:.55rem 0 .9rem}
+.settings-template-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.6rem;margin:.55rem 0 .9rem}
 .settings-template-card{border:2px solid var(--border);background:var(--bg);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .16s;text-align:center}
 .settings-template-card:hover{border-color:var(--gold);transform:translateY(-1px)}
 .settings-template-card.sel{border-color:var(--black);background:var(--white)}
@@ -622,7 +622,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="tb-right">
       <span class="tb-date" id="tb-date"></span>
       <span class="growth-trial-pill" id="growth-trial-pill" style="display:none"></span>
-      <span class="tb-badge">Business · Unlimited Users · LKR 8,500/mo</span>
+      <span class="tb-badge">Business · Unlimited Users · LKR 94,800/yr</span>
     </div>
   </div>
   <div class="content">
@@ -836,6 +836,10 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="fg"><label>Logo Alignment</label><select class="fi fsel" id="s-logo-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>
                 <div class="fg"><label>Logo Size</label><select class="fi fsel" id="s-logo-size"><option value="S">Small</option><option value="M">Medium</option><option value="L">Large</option></select></div>
               </div>
+              <div class="frow" style="margin-top:.85rem;margin-bottom:0">
+                <div class="fg"><label>Logo Horizontal Position <span id="s-logo-x-label">8%</span></label><input class="fi" id="s-logo-x" type="range" min="0" max="100" step="1"></div>
+                <div class="fg"><label>Logo Vertical Position <span id="s-logo-y-label">5%</span></label><input class="fi" id="s-logo-y" type="range" min="0" max="24" step="1"></div>
+              </div>
             </div>
           </div>
           <div class="card">
@@ -851,7 +855,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
           <div class="plan-box">
             <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
             <div class="plan-name">Business Plan ✨</div>
-            <div class="plan-price">LKR 8,500 / month</div>
+            <div class="plan-price">LKR 94,800 / year</div>
+            <div style="font-size:.62rem;color:rgba(255,255,255,.52);margin-top:.15rem">LKR 8,500/mo package value</div>
             <div class="plan-tagline">Built for growing SMEs · unlimited users</div>
             <div class="growth-trial-box" id="growth-trial-status">Your Business trial status will appear here.</div>
             <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Studio, plus:</div>
@@ -988,7 +993,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,logoAlign:'left',logoSize:'M',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1
 };
 
@@ -1376,6 +1381,8 @@ function mapStudioSettings(src) {
   out.monthlyReport = src.monthlyReport === true || out.monthlyReport === true;
   out.logoAlign = src.logoAlign || out.logoAlign || 'left';
   out.logoSize = src.logoSize || out.logoSize || 'M';
+  out.logoX = src.logoX != null ? toNum(src.logoX) : (out.logoX != null ? out.logoX : 8);
+  out.logoY = src.logoY != null ? toNum(src.logoY) : (out.logoY != null ? out.logoY : 5);
   out.defaultTpl = normalizeBusinessTemplate(src.defaultTpl != null ? src.defaultTpl : out.defaultTpl);
   out.vatRate = toNum(src.vatRate != null ? src.vatRate : out.vatRate || 15);
   out.baseCurrency = safeCurrency(src.baseCurrency || out.baseCurrency || 'LKR');
@@ -2373,17 +2380,10 @@ function renderInsights() {
 }
 
 // ===================== INVOICE MODAL =====================
-var TPLS = [
-  {name:'Classic', bg:'#1a1714', fg:'#B8922A', accent:'#B8922A', dark:'#2C1F14', layout:'header'},
-  {name:'Prestige', bg:'linear-gradient(135deg,#B8922A,#D4A840)', fg:'#fff', accent:'#D4A840', dark:'#5B4419', layout:'gold'},
-  {name:'Modern', bg:'#F7F5F0', fg:'#1a1714', accent:'#4F46E5', dark:'#172033', layout:'line'},
-  {name:'Dark Pro', bg:'#111', fg:'#B8922A', accent:'#B8922A', dark:'#111111', layout:'darkside'},
-  {name:'Minimal', bg:'#fff', fg:'#1a1714', accent:'#222222', dark:'#222222', layout:'minimal'},
-  {name:'Split Pro', bg:'#1a1714', fg:'#fff', accent:'#B8922A', dark:'#1A1714', layout:'split'},
-  {name:'Ceylon Gold', bg:'linear-gradient(135deg,#D4A840,#7A6010)', fg:'#fff', accent:'#B8922A', dark:'#7A6010', layout:'ceylon'},
-  {name:'Corporate', bg:'#1e5b8a', fg:'#fff', accent:'#1E5B8A', dark:'#113B5E', layout:'corporate'},
-  {name:'Bold Block', bg:'#B8922A', fg:'#fff', accent:'#B8922A', dark:'#2C1F14', layout:'bold'},
-  {name:'Signature', bg:'#FAFAF8', fg:'#B8922A', accent:'#B8922A', dark:'#4A3B2A', layout:'signature'}
+var TPLS = window.clsInvoiceTemplates || [
+  {name:'Furniture Pop', accent:'#ef92d8', dark:'#3156e8', paper:'#f6ecdd', layout:'pop'},
+  {name:'Orange Studio', accent:'#f16f4f', dark:'#181511', paper:'#f5f0d8', layout:'orange'},
+  {name:'Modern Mono', accent:'#1f2a24', dark:'#1f2a24', paper:'#fbfaf7', layout:'mono'}
 ];
 
 function invoiceTheme(idx) {
@@ -2391,6 +2391,7 @@ function invoiceTheme(idx) {
 }
 
 function templateMini(theme) {
+  if (window.clsInvoiceMiniPreview) return window.clsInvoiceMiniPreview(theme);
   var dark = theme.layout === 'darkside' || theme.layout === 'split' || theme.layout === 'header' || theme.layout === 'corporate';
   var side = theme.layout === 'split' || theme.layout === 'darkside';
   var cls = 'tpl-mini' + (dark ? ' dark' : '') + (side ? ' side' : '') + (theme.layout === 'split' ? ' split' : '');
@@ -2410,6 +2411,18 @@ function jsArg(v) {
   return escHtml(JSON.stringify(String(v == null ? '' : v)));
 }
 
+function logoXForAlign(align) {
+  return align === 'right' ? 92 : (align === 'center' ? 50 : 8);
+}
+function updateBusinessLogoPositionLabels() {
+  var x = document.getElementById('s-logo-x');
+  var y = document.getElementById('s-logo-y');
+  var xl = document.getElementById('s-logo-x-label');
+  var yl = document.getElementById('s-logo-y-label');
+  if (xl && x) xl.textContent = String(x.value || 8) + '%';
+  if (yl && y) yl.textContent = String(y.value || 5) + '%';
+}
+
 function collectSettingsDraft() {
   function val(id, fallback) {
     var el = document.getElementById(id);
@@ -2426,6 +2439,8 @@ function collectSettingsDraft() {
     defaultTpl: normalizeBusinessTemplate(val('s-default-tpl', D.settings.defaultTpl)),
     logoAlign: val('s-logo-align', D.settings.logoAlign) || D.settings.logoAlign || 'left',
     logoSize: val('s-logo-size', D.settings.logoSize) || D.settings.logoSize || 'M',
+    logoX: toNum(val('s-logo-x', D.settings.logoX != null ? D.settings.logoX : 8)),
+    logoY: toNum(val('s-logo-y', D.settings.logoY != null ? D.settings.logoY : 5)),
     logo: D.settings.logo || ''
   };
 }
@@ -2459,7 +2474,9 @@ function renderSettingsInvoicePreview() {
   var tpl = invoiceTheme(s.defaultTpl);
   var logoWidth = s.logoSize === 'L' ? '112px' : (s.logoSize === 'S' ? '58px' : '84px');
   var logoHeight = s.logoSize === 'L' ? '54px' : (s.logoSize === 'S' ? '34px' : '44px');
-  var logoMargin = s.logoAlign === 'center' ? '0 auto .45rem' : (s.logoAlign === 'right' ? '0 0 .45rem auto' : '0 auto .45rem 0');
+  var logoX = Math.max(0, Math.min(100, s.logoX != null ? s.logoX : logoXForAlign(s.logoAlign)));
+  var logoY = Math.max(0, Math.min(24, s.logoY != null ? s.logoY : 5));
+  var logoTransform = logoX > 75 ? 'translateX(-100%)' : (logoX > 35 && logoX < 65 ? 'translateX(-50%)' : 'none');
   var logo = s.logo ? '<img src="' + s.logo + '" alt="Logo">' : 'Logo';
   var darkHeader = tpl.layout === 'header' || tpl.layout === 'corporate';
   var goldHeader = tpl.layout === 'gold' || tpl.layout === 'ceylon';
@@ -2471,10 +2488,10 @@ function renderSettingsInvoicePreview() {
   box.innerHTML =
     '<div style="background:' + paperBg + ';border:1px solid var(--border);padding:1.1rem;box-shadow:0 12px 32px rgba(44,31,20,.06)">' +
       '<div style="height:' + (tpl.layout === 'signature' ? '5px' : '4px') + ';background:' + tpl.accent + ';margin-bottom:1rem"></div>' +
-      '<div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;background:' + headerBg + ';color:' + headerColor + ';padding:' + (darkHeader || goldHeader ? '.85rem' : '0 0 .8rem') + ';border-bottom:' + (darkHeader || goldHeader ? '0' : '2px solid ' + tableBorder) + '">' +
+      '<div style="position:relative;min-height:5.2rem;display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;background:' + headerBg + ';color:' + headerColor + ';padding:' + (darkHeader || goldHeader ? '.85rem' : '0 0 .8rem') + ';border-bottom:' + (darkHeader || goldHeader ? '0' : '2px solid ' + tableBorder) + '">' +
+        '<div class="preview-logo-box" style="position:absolute;left:' + logoX + '%;top:' + logoY + '%;transform:' + logoTransform + ';width:' + logoWidth + ';height:' + logoHeight + ';background:#fff;z-index:2">' + logo + '</div>' +
         '<div style="flex:1;text-align:' + escHtml(s.logoAlign) + '">' +
-          '<div class="preview-logo-box" style="width:' + logoWidth + ';height:' + logoHeight + ';margin:' + logoMargin + ';background:#fff">' + logo + '</div>' +
-          '<div class="preview-v" style="color:inherit">' + escHtml(s.biz) + '</div>' +
+          '<div class="preview-v" style="color:inherit;margin-top:3.2rem">' + escHtml(s.biz) + '</div>' +
           '<div class="preview-m" style="color:inherit;opacity:.78">' + escHtml(s.email) + '</div>' +
         '</div>' +
         '<div style="text-align:right"><div class="preview-title" style="color:inherit">Invoice</div><div class="preview-number" style="color:inherit;opacity:.78">INV-0001</div><div class="preview-m" style="color:inherit;opacity:.72">VAT: ' + escHtml(s.vat) + '</div></div>' +
@@ -2492,13 +2509,25 @@ function renderSettingsInvoicePreview() {
 }
 
 function bindSettingsPreviewInputs() {
-  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-logo-align','s-logo-size'].forEach(function(id) {
+  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el || el.dataset.previewBound) return;
     el.dataset.previewBound = '1';
-    el.addEventListener('input', renderSettingsInvoicePreview);
-    el.addEventListener('change', renderSettingsInvoicePreview);
+    el.addEventListener('input', function() {
+      if (id === 's-logo-x' || id === 's-logo-y') updateBusinessLogoPositionLabels();
+      renderSettingsInvoicePreview();
+    });
+    el.addEventListener('change', function() {
+      if (id === 's-logo-align') {
+        var x = document.getElementById('s-logo-x');
+        if (x) x.value = logoXForAlign(el.value || 'left');
+        updateBusinessLogoPositionLabels();
+      }
+      if (id === 's-logo-x' || id === 's-logo-y') updateBusinessLogoPositionLabels();
+      renderSettingsInvoicePreview();
+    });
   });
+  updateBusinessLogoPositionLabels();
 }
 
 window.openInvMo = function openInvMo() {
@@ -2993,7 +3022,8 @@ function buildBusinessInvoiceSharePdfFile(inv) {
   if (inv.disc) { y += 18; doc.text('Discount', 360, y); doc.text('- ' + money(inv.disc), 455, y); }
   y += 24; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Grand Total', 360, y); doc.text(money(inv.total), 455, y);
   y += 44; doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text('Notes', x, y);
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(text(inv.notes || s.footer || 'Thank you for your business.', w), x, y + 16);
+  var shareNotes = [inv.notes, s.footer].filter(Boolean).join('\n\n') || 'Thank you for your business.';
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(text(shareNotes, w), x, y + 16);
   doc.setFontSize(8); doc.setTextColor(120,112,104); doc.text('Invoice generated by Business Cashflow System - CeylonryLabs.io', x, 780);
   var blob = doc.output('blob');
   return new File([blob], invoicePdfFileNameBusiness(inv), {type:'application/pdf'});
@@ -3054,12 +3084,16 @@ window.saveSettings = function saveSettings() {
   var defaultTplEl = document.getElementById('s-default-tpl');
   var logoAlignEl = document.getElementById('s-logo-align');
   var logoSizeEl = document.getElementById('s-logo-size');
+  var logoXEl = document.getElementById('s-logo-x');
+  var logoYEl = document.getElementById('s-logo-y');
   if (vatRateEl) {
     D.settings.vatRate = parseFloat(vatRateEl.value);
     if (isNaN(D.settings.vatRate)) D.settings.vatRate = 15;
   }
   if (logoAlignEl) D.settings.logoAlign = logoAlignEl.value || 'left';
   if (logoSizeEl) D.settings.logoSize = logoSizeEl.value || 'M';
+  if (logoXEl) D.settings.logoX = toNum(logoXEl.value);
+  if (logoYEl) D.settings.logoY = toNum(logoYEl.value);
   if (defaultTplEl) {
     D.settings.defaultTpl = normalizeBusinessTemplate(defaultTplEl.value);
     D.invoices.forEach(function(inv) { inv.tpl = D.settings.defaultTpl; });
@@ -3112,7 +3146,7 @@ function previewLogo(input) {
   reader.readAsDataURL(input.files[0]);
 }
 
-// ===================== PRINT (10 TEMPLATES) =====================
+// ===================== PRINT (SHARED INVOICE TEMPLATES) =====================
 function invoiceLogoMarkup(settings) {
   var size = settings.logoSize === 'L' ? 96 : settings.logoSize === 'S' ? 54 : 74;
   if (settings.logo) return '<img class="inv-logo-img" src="' + settings.logo + '" style="max-width:' + size + 'px;max-height:' + Math.round(size * .55) + 'px" alt="Logo">';
@@ -3143,6 +3177,14 @@ function invoiceTotalsMarkup(inv) {
 
 function buildInvoicePrintHtml(inv) {
   var s = D.settings;
+  if (window.clsBuildInvoicePrintHtml) {
+    return window.clsBuildInvoicePrintHtml({
+      inv: inv,
+      settings: s,
+      templateIndex: normalizeBusinessTemplate(s.defaultTpl),
+      systemName: 'Business Cashflow System'
+    });
+  }
   var theme = invoiceTheme(s.defaultTpl);
   var cls = 'tpl-' + theme.layout;
   var logo = invoiceLogoMarkup(s);
@@ -3223,6 +3265,7 @@ function writeBusinessBackup(version, serverSaved) {
   var nextVersion = Math.max(Number(version || Date.now()), _dataVersion || 0);
   _dataVersion = nextVersion;
   try {
+    localStorage.setItem('cls-business-last-uid', String(_uid));
     localStorage.setItem(businessBackupKey(_uid), JSON.stringify(currentBusinessSnapshot(nextVersion, serverSaved)));
   } catch (e) {
     console.warn('Business local backup skipped:', e);
@@ -3262,6 +3305,17 @@ function restoreBusinessBackupPreview() {
   return applyBusinessBackup(backup, false);
 }
 
+function restoreBusinessLastBackupPreview() {
+  var uid = _uid || _signedInUid || '';
+  try {
+    uid = uid || localStorage.getItem('cls-business-last-uid') || localStorage.getItem('cls-plan-uid') || '';
+  } catch (e) {}
+  if (!uid) return false;
+  var backup = readBusinessBackup(uid);
+  if (!backup || !backup.data) return false;
+  return applyBusinessBackup(backup, false);
+}
+
 function restoreBusinessBackupIfNewer(serverVersion) {
   var backup = readBusinessBackup(_uid);
   if (!backup || !backup.data) return false;
@@ -3269,6 +3323,10 @@ function restoreBusinessBackupIfNewer(serverVersion) {
   if (!backupVersion || backupVersion <= Number(serverVersion || 0)) return false;
   applyBusinessBackup(backup, true);
   return backup.serverSaved === true ? 'saved' : 'unsaved';
+}
+
+if (restoreBusinessLastBackupPreview()) {
+  renderDashboard();
 }
 
 // Save all D data to Supabase
@@ -3450,10 +3508,12 @@ window.showPaywall = function showPaywall(profile) {
     return;
   }
   var plan = (profile && profile.plan) || 'business';
-  var prices = { solo: 3500, studio: 5500, business: 8500, starter: 5500, growth: 8500, premium: 8500 };
+  var prices = { solo: 36000, studio: 60000, business: 94800, starter: 60000, growth: 94800, premium: 94800 };
+  var monthlyPrices = { solo: 3500, studio: 5500, business: 8500, starter: 5500, growth: 8500, premium: 8500 };
   var price = prices[plan] || 8500;
+  var monthlyPrice = monthlyPrices[plan] || 8500;
   var planName = plan.charAt(0).toUpperCase() + plan.slice(1);
-  var waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month).\n\nName: ' + ((profile && profile.name) || '') + '\nEmail: ' + ((profile && profile.email) || ''));
+  var waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/year, package value LKR ' + monthlyPrice.toLocaleString() + '/mo).\n\nName: ' + ((profile && profile.name) || '') + '\nEmail: ' + ((profile && profile.email) || ''));
   var waNum = '94778815628';
   if (document.getElementById('cls-paywall')) return;
   var ov = document.createElement('div');
@@ -3464,8 +3524,8 @@ window.showPaywall = function showPaywall(profile) {
     '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2rem;font-weight:300;color:#1a1714;margin-bottom:.5rem">Your free trial has ended</div>' +
     '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 15-day free trial of <strong>CLS ' + planName + '</strong> has expired.</div>' +
     '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
-    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
-    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · Billed monthly</div></div>' +
+    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/year</span></div>' +
+    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · package value LKR ' + monthlyPrice.toLocaleString() + '/mo</div></div>' +
     '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">💬 Activate via WhatsApp →</a>' +
     '<button onclick="window.clsSignOut()" style="width:100%;background:transparent;border:1px solid rgba(184,146,42,.3);color:#6B6258;padding:.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +
     '<div style="font-size:.68rem;color:#A8A29A;margin-top:1.25rem">Your data is safe and will be here when you reactivate.</div></div>';
@@ -3503,6 +3563,8 @@ _fauth.onAuthStateChanged(async function(user) {
     if (_profile.vat) D.settings.vat = _profile.vat;
     if (_profile.footer) D.settings.footer = _profile.footer;
     if (_profile.name) D.settings.user = _profile.name;
+    if (_profile.logoX !== undefined && _profile.logoX !== null) D.settings.logoX = Number(_profile.logoX);
+    if (_profile.logoY !== undefined && _profile.logoY !== null) D.settings.logoY = Number(_profile.logoY);
 
     if (restoreBusinessBackupPreview()) renderDashboard();
     await loadData(_uid);
@@ -3541,6 +3603,11 @@ _fauth.onAuthStateChanged(async function(user) {
     if (logoAlignField) logoAlignField.value = s.logoAlign || 'left';
     var logoSizeField = document.getElementById('s-logo-size');
     if (logoSizeField) logoSizeField.value = s.logoSize || 'M';
+    var logoXField = document.getElementById('s-logo-x');
+    if (logoXField) logoXField.value = s.logoX != null ? s.logoX : logoXForAlign(s.logoAlign || 'left');
+    var logoYField = document.getElementById('s-logo-y');
+    if (logoYField) logoYField.value = s.logoY != null ? s.logoY : 5;
+    updateBusinessLogoPositionLabels();
     ensureCurrencySettings();
     var baseCurrencyField = document.getElementById('s-base-currency');
     if (baseCurrencyField) baseCurrencyField.value = reportingCurrency();

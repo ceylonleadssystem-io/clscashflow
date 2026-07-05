@@ -18,6 +18,7 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify/functions/send-welcome.js` - welcome email function
 - `netlify/functions/payable-create-checkout.js` - server-side Payable checkout creator
 - `netlify/functions/payable-webhook.js` - server-side Payable payment confirmation handler
+- `netlify/functions/payable-status.js` - payment return/status checker for signed-in users
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
 - `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
@@ -91,9 +92,15 @@ Give Payable this callback URL after you choose `PAYABLE_WEBHOOK_SECRET`:
 
 The 15-day trial is controlled by each user's `trialEnd` value in Supabase. After it ends, the dashboards require payment unless the user profile has `paid: true`. The Payable webhook sets `paid: true`, `subscriptionStatus: active`, and the selected plan after a verified paid callback.
 
+Plan checkout amounts are annual:
+
+- Solo: `LKR 36,000`
+- Studio: `LKR 60,000`
+- Business: `LKR 94,800`
+
 If Payable checkout is not ready yet, the expired-trial paywall creates a manual payment request token in the `paymentRequests` document path. The admin panel shows those tokens so the team can manually send an invoice, mark the request as invoiced, mark it paid, or close it.
 
-The Direct API flow first calls Payable auth with `base64(businessKey:businessToken)`, then creates the checkout session using `merchantKey`, `invoiceId`, `checkValue`, `returnUrl`, `originDomain`, and `webhookUrl`. Payable returns `paymentPage`, which the app uses as the customer redirect URL.
+The Direct API flow first calls Payable auth with `base64(businessKey:businessToken)`, then creates the checkout session using `merchantKey`, `invoiceId`, `checkValue`, `returnUrl`, `originDomain`, and `webhookUrl`. Payable returns `paymentPage`, which the app uses as the customer redirect URL. After the customer returns to `payable-return.html`, the page polls `netlify/functions/payable-status.js` until the Payable webhook marks the payment as paid.
 
 ## Team Invites
 

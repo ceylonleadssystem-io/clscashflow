@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="assets/platform.js?v=20260705-danger-zone"></script>
+<script src="assets/platform.js?v=20260705-payable"></script>
 <style>
 :root{
   --sand:#F3EADF;
@@ -424,8 +424,8 @@ a{color:inherit}
               <button type="button" data-currency="usd" aria-pressed="false">International - USD</button>
             </div>
             <div class="segmented" role="group" aria-label="Billing cycle">
-              <button type="button" class="active" data-cycle="monthly" aria-pressed="true">Monthly</button>
-              <button type="button" data-cycle="annual" aria-pressed="false">Annual <span class="save-badge">Save 2 Months</span></button>
+              <button type="button" data-cycle="monthly" aria-pressed="false">Monthly</button>
+              <button type="button" class="active" data-cycle="annual" aria-pressed="true">Annual <span class="save-badge">Save 2 Months</span></button>
             </div>
             <div class="locale-note" id="price-locale-note">Detected you're outside Sri Lanka - prices shown in USD.</div>
           </div>
@@ -690,7 +690,7 @@ a{color:inherit}
       }
     }
   };
-  const pricingState = { currency: 'lkr', cycle: 'monthly' };
+  const pricingState = { currency: 'lkr', cycle: 'annual' };
   const note = document.getElementById('price-locale-note');
 
   function setActive(selector, key, value) {

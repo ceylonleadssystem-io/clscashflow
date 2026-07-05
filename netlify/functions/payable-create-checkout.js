@@ -115,8 +115,22 @@ function findCheckoutUrl(result) {
 function publicPayablePayload(payload) {
   const copy = Object.assign({}, payload);
   delete copy.checkValue;
+  delete copy.merchantToken;
   if (copy.webhookUrl) {
     copy.webhookUrl = String(copy.webhookUrl).replace(/([?&]secret=)[^&]*/i, '$1redacted');
+  }
+  return copy;
+}
+
+function publicPayableAuthResponse(response) {
+  if (!response || typeof response !== 'object') return response || {};
+  const copy = Object.assign({}, response);
+  delete copy.accessToken;
+  delete copy.access_token;
+  if (copy.data && typeof copy.data === 'object') {
+    copy.data = Object.assign({}, copy.data);
+    delete copy.data.accessToken;
+    delete copy.data.access_token;
   }
   return copy;
 }
@@ -164,9 +178,9 @@ async function obtainPayableAccessToken(authUrl, businessKey, businessToken, ori
 }
 
 const PLANS = {
-  solo: { name: 'Solo', price: 3500 },
-  studio: { name: 'Studio', price: 5500 },
-  business: { name: 'Business', price: 8500 }
+  solo: { name: 'Solo', monthlyPrice: 3500, price: 36000 },
+  studio: { name: 'Studio', monthlyPrice: 5500, price: 60000 },
+  business: { name: 'Business', monthlyPrice: 8500, price: 94800 }
 };
 
 exports.handler = async function handler(event) {
@@ -230,7 +244,9 @@ exports.handler = async function handler(event) {
     plan,
     planName: planInfo.name,
     amount,
+    monthlyAmount: planInfo.monthlyPrice,
     currency: currencyCode,
+    billingCycle: 'annual',
     status: 'pending',
     billingProvider: 'payable',
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -249,13 +265,15 @@ exports.handler = async function handler(event) {
 
   const payablePayload = {
     merchantKey,
+    merchantToken,
     currencyCode,
     checkValue: payableCheckValue(merchantKey, sessionId, amountText, currencyCode, merchantToken),
     invoiceId: sessionId,
     paymentType: Number(process.env.PAYABLE_PAYMENT_TYPE || 1),
     amount: amountText,
-    orderDescription: 'CLS ' + planInfo.name + ' Plan - Monthly Subscription',
+    orderDescription: 'CLS ' + planInfo.name + ' Plan - Annual Subscription',
     logoUrl,
+    refererUrl: originDomain,
     returnUrl,
     webhookUrl,
     originDomain,
@@ -266,7 +284,7 @@ exports.handler = async function handler(event) {
     customerEmail: email,
     billingAddressStreet: clean(body.billingAddressStreet || 'Online Payment', 120),
     billingAddressCity: clean(body.billingAddressCity || 'Colombo', 80),
-    billingAddressCountry: clean(body.billingAddressCountry || 'LKA', 8),
+    billingAddressCountry: clean(body.billingAddressCountry || 'LK', 8),
     billingAddressPostcodeZip: clean(body.billingAddressPostcodeZip || '00100', 20)
   };
 
@@ -288,7 +306,7 @@ exports.handler = async function handler(event) {
     if (!res.ok) {
       await sessionRef.set({
         status: 'checkout_failed',
-        payableAuthResponse,
+        payableAuthResponse: publicPayableAuthResponse(payableAuthResponse),
         payableStatusCode: res.status,
         payableResponse,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -307,7 +325,7 @@ exports.handler = async function handler(event) {
   const redirect = findCheckoutUrl(payableResponse);
   await sessionRef.set({
     status: redirect ? 'checkout_created' : 'checkout_missing_url',
-    payableAuthResponse,
+    payableAuthResponse: publicPayableAuthResponse(payableAuthResponse),
     payableRequest: publicPayablePayload(payablePayload),
     payableResponse,
     checkoutUrl: redirect || '',

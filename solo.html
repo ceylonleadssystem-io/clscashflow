@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-danger-zone"></script>
-<script src="assets/platform.js?v=20260705-danger-zone"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
+<script src="assets/platform.js?v=20260705-payable"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -164,7 +164,7 @@ tr:hover td{background:var(--bg3)}
 .inv-total-row.grand .itl,.inv-total-row.grand .itr{color:var(--black);font-family:var(--font-d);font-size:1.05rem;font-weight:500;border-top:1px solid var(--border);padding-top:.3rem;margin-top:.1rem}
 
 /* Template picker in invoice modal */
-.tpl-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:.85rem}
+.tpl-picker{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.65rem;margin-bottom:.85rem}
 .tpl-pick-card{border:2px solid var(--border);padding:.75rem .65rem;cursor:pointer;transition:all .2s;text-align:center;background:var(--bg)}
 .tpl-pick-card:hover{border-color:var(--border-acc)}
 .tpl-pick-card.selected{border-color:var(--black);background:var(--white)}
@@ -173,6 +173,15 @@ tr:hover td{background:var(--bg3)}
 .tpl-picker.locked .tpl-pick-card.selected{opacity:1;border-color:var(--black);background:var(--white)}
 .tpl-pick-preview{height:48px;width:100%;margin-bottom:.4rem;overflow:hidden;border:1px solid rgba(0,0,0,.07)}
 .tpl-pick-name{font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--black);font-weight:600}
+.tpl-mini{height:58px;width:100%;display:grid;grid-template-columns:1fr 1.15fr;gap:.32rem;padding:.45rem;background:#fff;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.06);margin-bottom:.45rem}
+.tpl-mini:before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--tpl-accent,#B8922A)}
+.tpl-mini.dark{background:#19140f;color:#fff}
+.tpl-mini.side:before{right:auto;bottom:0;width:10px;height:auto}
+.tpl-mini .tm-logo{width:32px;height:20px;border:1px solid rgba(0,0,0,.1);background:rgba(184,146,42,.16)}
+.tpl-mini.dark .tm-logo{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.12)}
+.tpl-mini .tm-lines span{display:block;height:3px;background:rgba(44,31,20,.16);margin:3px 0}
+.tpl-mini.dark .tm-lines span{background:rgba(255,255,255,.32)}
+.tpl-mini .tm-total{position:absolute;right:.45rem;bottom:.35rem;width:48px;height:9px;background:var(--tpl-accent,#B8922A)}
 .template-helper{font-size:.72rem;color:var(--muted);line-height:1.6;margin:.35rem 0 .75rem}
 .template-helper strong{color:var(--black)}
 
@@ -719,23 +728,15 @@ document.addEventListener('click',function(e){
             <button class="size-btn active" data-size="M" data-cls-fn="setLogoSize" data-cls-arg="M" data-cls-this="1">Medium</button>
             <button class="size-btn" data-size="L" data-cls-fn="setLogoSize" data-cls-arg="L" data-cls-this="1">Large</button>
           </div>
+          <div class="f-section" style="margin-top:1rem">Logo Position on Invoice</div>
+          <div class="f-row">
+            <div class="f-group"><label>Horizontal Position <span id="logo-x-label">8%</span></label><input class="f-input" type="range" id="set-logo-x" min="0" max="100" step="1" oninput="setLogoPosition()"></div>
+            <div class="f-group"><label>Vertical Position <span id="logo-y-label">5%</span></label><input class="f-input" type="range" id="set-logo-y" min="0" max="24" step="1" oninput="setLogoPosition()"></div>
+          </div>
           <div class="f-section" style="margin-top:1rem">Default Invoice Template</div>
           <input type="hidden" id="set-default-tpl" value="0">
           <div class="template-helper">All invoice PDFs, email previews, WhatsApp PDF previews, and newly saved invoices use this one template.</div>
-          <div class="tpl-picker" id="settings-template-picker">
-            <div class="tpl-pick-card" data-tpl-card="settings" data-tpl="0" data-cls-fn="selectDefaultInvoiceTemplate" data-cls-arg="0" data-cls-this="1">
-              <div class="tpl-pick-preview"><div style="background:#B8922A;height:14px;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-              <div class="tpl-pick-name">Brand Gold</div>
-            </div>
-            <div class="tpl-pick-card" data-tpl-card="settings" data-tpl="1" data-cls-fn="selectDefaultInvoiceTemplate" data-cls-arg="1" data-cls-this="1">
-              <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #4F46E5;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-              <div class="tpl-pick-name">Indigo Modern</div>
-            </div>
-            <div class="tpl-pick-card" data-tpl-card="settings" data-tpl="2" data-cls-fn="selectDefaultInvoiceTemplate" data-cls-arg="2" data-cls-this="1">
-              <div class="tpl-pick-preview"><div style="border-top:3px solid #1F2937;padding-top:2px;width:100%"></div><div style="padding:2px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-              <div class="tpl-pick-name">Charcoal Mono</div>
-            </div>
-          </div>
+          <div class="tpl-picker" id="settings-template-picker"></div>
           <div class="f-section">Business Details</div>
           <div class="f-row">
             <div class="f-group"><label>Business Name *</label><input class="f-input" id="set-bizname" placeholder="Your Business Name"></div>
@@ -763,7 +764,7 @@ document.addEventListener('click',function(e){
       <div style="margin-top:1rem;max-width:640px">
         <div class="table-header"><div class="table-title">Billing</div><button class="btn-act" data-cls-fn="openStudioUpgrade">Upgrade</button></div>
         <div style="padding:1rem">
-          <strong>Solo Plan</strong> — LKR 3,500/mo &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
+          <strong>Solo Plan</strong> — LKR 36,000/year <span style="color:var(--muted);font-size:.78rem">(LKR 3,500/mo package value)</span> &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
           <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
           <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Solo with Payable</button>
           <button class="btn-act" data-cls-fn="openStudioUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Studio</button>
@@ -953,21 +954,8 @@ document.addEventListener('click',function(e){
         <button class="btn-act-outline" style="flex-shrink:0;padding:.65rem 1rem;height:42px" data-cls-fn="closeAndOpenClient">+ New Customer</button>
       </div>
       <div class="f-section" style="margin-top:0">Invoice Template</div>
-      <div class="template-helper">Using Settings default: <strong id="inv-default-tpl-name">Brand Gold</strong>. Change it in Settings to apply one template to all invoices.</div>
-      <div class="tpl-picker locked" id="invoice-template-preview">
-        <div class="tpl-pick-card selected" data-tpl-card="invoice" data-tpl="0">
-          <div class="tpl-pick-preview"><div style="background:#B8922A;height:14px;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Brand Gold</div>
-        </div>
-        <div class="tpl-pick-card" data-tpl-card="invoice" data-tpl="1">
-          <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #4F46E5;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Indigo Modern</div>
-        </div>
-        <div class="tpl-pick-card" data-tpl-card="invoice" data-tpl="2">
-          <div class="tpl-pick-preview"><div style="border-top:3px solid #1F2937;padding-top:2px;width:100%"></div><div style="padding:2px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Charcoal Mono</div>
-        </div>
-      </div>
+      <div class="template-helper">Using Settings default: <strong id="inv-default-tpl-name">Furniture Pop</strong>. Change it in Settings to apply one template to all invoices.</div>
+      <div class="tpl-picker locked" id="invoice-template-preview"></div>
       <div class="f-section">Customer Details</div>
       <div class="f-row">
         <div class="f-group"><label>Customer Name *</label><input class="f-input" id="i-client" placeholder="Customer or business name"></div>
@@ -1081,7 +1069,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',defaultTpl:0,vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -1110,6 +1098,7 @@ function writeDBBackup(version, serverSaved) {
   const nextVersion = Math.max(Number(version || Date.now()), _dataVersion || 0);
   _dataVersion = nextVersion;
   try {
+    localStorage.setItem('cls-solo-last-uid', String(_uid));
     localStorage.setItem(dbBackupKey(_uid), JSON.stringify({
       version: nextVersion,
       serverSaved: serverSaved === true,
@@ -1148,6 +1137,17 @@ function applyDBBackup(backup, updateVersion) {
 
 function restoreDBBackupPreview() {
   const backup = readDBBackup(_uid);
+  if (!backup || !backup.data) return false;
+  return applyDBBackup(backup, false);
+}
+
+function restoreDBLastBackupPreview() {
+  let uid = _uid || _signedInUid || '';
+  try {
+    uid = uid || localStorage.getItem('cls-solo-last-uid') || localStorage.getItem('cls-plan-uid') || '';
+  } catch(e) {}
+  if (!uid) return false;
+  const backup = readDBBackup(uid);
   if (!backup || !backup.data) return false;
   return applyDBBackup(backup, false);
 }
@@ -1332,6 +1332,8 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     if (_profile.vat) DB.settings.vat = _profile.vat;
     if (_profile.footer) DB.settings.footer = _profile.footer;
     if (_profile.logo) DB.settings.logo = _profile.logo;
+    if (_profile.logoX !== undefined && _profile.logoX !== null) DB.settings.logoX = Number(_profile.logoX);
+    if (_profile.logoY !== undefined && _profile.logoY !== null) DB.settings.logoY = Number(_profile.logoY);
     if (_profile.defaultTaxRate !== undefined && _profile.defaultTaxRate !== '') {
       const rate = parseFloat(_profile.defaultTaxRate);
       if (!isNaN(rate)) DB.settings.vatRate = rate;
@@ -1453,7 +1455,9 @@ window.openStudioUpgrade = async function openStudioUpgrade(){
       currentPlan:'studio',
       lastPlan:'studio',
       requestedPlan:'studio',
-      planPrice:5500,
+      planPrice:60000,
+      planMonthlyPrice:5500,
+      billingCycle:'annual',
       upgradedFrom:'solo',
       upgradedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -1979,7 +1983,8 @@ function resetInvoiceModal(){
 }
 function normalizeTemplateIdx(idx){
   const n=parseInt(idx,10);
-  return Number.isFinite(n)&&n>=0&&n<3?n:0;
+  const max=(typeof tplDefs!=='undefined'&&tplDefs.length)?tplDefs.length:3;
+  return Number.isFinite(n)&&n>=0&&n<max?n:0;
 }
 function getDefaultInvoiceTemplate(){
   return normalizeTemplateIdx(DB.settings&&DB.settings.defaultTpl);
@@ -1990,11 +1995,24 @@ function templateName(idx){
 function syncTemplatePickers(idx){
   const tpl=normalizeTemplateIdx(idx);
   selectedTpl=tpl;
+  renderInvoiceTemplateCards(tpl);
   document.querySelectorAll('[data-tpl-card]').forEach(function(card){
     card.classList.toggle('selected',normalizeTemplateIdx(card.getAttribute('data-tpl'))===tpl);
+    card.classList.toggle('sel',normalizeTemplateIdx(card.getAttribute('data-tpl'))===tpl);
   });
   const modalName=document.getElementById('inv-default-tpl-name');
   if(modalName)modalName.textContent=templateName(tpl);
+}
+function renderInvoiceTemplateCards(tpl){
+  tpl=normalizeTemplateIdx(tpl);
+  const settingsGrid=document.getElementById('settings-template-picker');
+  if(settingsGrid&&window.clsInvoiceTemplateCards){
+    settingsGrid.innerHTML=window.clsInvoiceTemplateCards(tpl,{group:'settings',fn:'selectDefaultInvoiceTemplate'});
+  }
+  const invoiceGrid=document.getElementById('invoice-template-preview');
+  if(invoiceGrid&&window.clsInvoiceTemplateCards){
+    invoiceGrid.innerHTML=window.clsInvoiceTemplateCards(tpl,{group:'invoice',locked:true});
+  }
 }
 function setInvoiceTemplate(idx){
   syncTemplatePickers(idx);
@@ -2360,6 +2378,7 @@ function loadSettings(){
   syncTemplatePickers(tpl);
   loadLogoAlign();
   loadLogoSize();
+  loadLogoPosition();
   renderTrialStatus();
 }
 window.saveSettings = function saveSettings(){
@@ -2378,6 +2397,9 @@ window.saveSettings = function saveSettings(){
   DB.settings.u2=document.getElementById('set-u2').value.trim();
   DB.settings.logoAlign=(document.querySelector('.align-btn.active')?document.querySelector('.align-btn.active').dataset.align:null)||'left';
   DB.settings.logoSize=(document.querySelector('.size-btn.active')?document.querySelector('.size-btn.active').dataset.size:null)||'M';
+  var logoX=document.getElementById('set-logo-x'),logoY=document.getElementById('set-logo-y');
+  DB.settings.logoX=logoX?Number(logoX.value||8):8;
+  DB.settings.logoY=logoY?Number(logoY.value||5):5;
   var tplInput=document.getElementById('set-default-tpl');DB.settings.defaultTpl=normalizeTemplateIdx(tplInput?tplInput.value:DB.settings.defaultTpl);
   setInvoiceTemplate(DB.settings.defaultTpl);
   DB.invoices.forEach(function(inv){inv.tpl=DB.settings.defaultTpl;});
@@ -2405,10 +2427,10 @@ window.previewSettingsLogo = function previewSettingsLogo(input){
 // ════════════════════════════════
 // INVOICE PDF PRINTING
 // ════════════════════════════════
-const tplDefs=[
-  {name:'Brand Gold',accent:'#B8922A',style:'classic'},
-  {name:'Indigo Modern',accent:'#4F46E5',style:'minimal'},
-  {name:'Charcoal Mono',accent:'#1F2937',style:'executive'},
+const tplDefs=window.clsInvoiceTemplates||[
+  {name:'Furniture Pop',accent:'#ef92d8',style:'pop'},
+  {name:'Orange Studio',accent:'#f16f4f',style:'orange'},
+  {name:'Modern Mono',accent:'#1f2a24',style:'mono'}
 ];
 function buildInvoiceEmailHTML(inv){
   const s=DB.settings;
@@ -2496,7 +2518,7 @@ function buildInvoiceEmailHTML(inv){
   +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px"><tr>'
   +'<td style="vertical-align:top;width:55%">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">Notes</div>'
-    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr(inv.notes||s.footer||'Thank you for your business.')+'</div>'
+    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr([inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.')+'</div>'
   +'</td>'
   +'<td style="vertical-align:top;text-align:right">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">'+esc(s.bizName||'Your Business')+'</div>'
@@ -2512,6 +2534,9 @@ function buildInvoiceEmailHTML(inv){
   +'</div></div>';
 }
 function buildInvPrintHTML(inv,tplIdx){
+  if(window.clsBuildInvoicePrintHtml){
+    return window.clsBuildInvoicePrintHtml({inv:inv,settings:DB.settings,templateIndex:getDefaultInvoiceTemplate(),systemName:'Solo Invoice Control System'});
+  }
   tplIdx=getDefaultInvoiceTemplate();
   const t=tplDefs[tplIdx]||tplDefs[0];const s=DB.settings;const ac=t.accent;
   // Logo alignment + size (S / M / L)
@@ -2835,8 +2860,12 @@ window.fillClientFromSel = function fillClientFromSel(){
 // ════════════════════════════════
 window.setLogoAlign = function setLogoAlign(align,btn){
   DB.settings.logoAlign=align;
+  DB.settings.logoX=logoXForAlign(align);
   document.querySelectorAll('.align-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn)btn.classList.add('active');
+  var x=document.getElementById('set-logo-x');
+  if(x)x.value=DB.settings.logoX;
+  updateLogoPositionLabels();
   saveDB(); // save immediately so invoices pick it up
 }
 function loadLogoAlign(){
@@ -2845,10 +2874,32 @@ function loadLogoAlign(){
     b.classList.toggle('active',b.dataset&&b.dataset.align===align);
   });
 }
+function logoXForAlign(align){
+  return align==='right'?92:(align==='center'?50:8);
+}
+function updateLogoPositionLabels(){
+  var x=document.getElementById('set-logo-x'),y=document.getElementById('set-logo-y');
+  var xl=document.getElementById('logo-x-label'),yl=document.getElementById('logo-y-label');
+  if(xl&&x)xl.textContent=String(x.value||8)+'%';
+  if(yl&&y)yl.textContent=String(y.value||5)+'%';
+}
+window.setLogoPosition = function setLogoPosition(){
+  var x=document.getElementById('set-logo-x'),y=document.getElementById('set-logo-y');
+  DB.settings.logoX=x?Number(x.value||8):8;
+  DB.settings.logoY=y?Number(y.value||5):5;
+  updateLogoPositionLabels();
+  saveDB();
+}
+function loadLogoPosition(){
+  var x=document.getElementById('set-logo-x'),y=document.getElementById('set-logo-y');
+  if(x)x.value=DB.settings.logoX!=null?DB.settings.logoX:logoXForAlign(DB.settings.logoAlign||'left');
+  if(y)y.value=DB.settings.logoY!=null?DB.settings.logoY:5;
+  updateLogoPositionLabels();
+}
 window.setLogoSize = function setLogoSize(size,btn){
   DB.settings.logoSize=size;
   document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn)btn.classList.add('active');
   saveDB();
 }
 function loadLogoSize(){
@@ -2936,7 +2987,7 @@ window.emailInvoice = async function emailInvoice(num){
         cur:cur, amount:inv.amount, sub:sub,
         disc:inv.disc||0, vat:inv.vat||0, vatRate:inv.vatRate||0,
         lines:(inv.lines||[]).map(l=>({desc:l.desc||'',qty:l.qty||1,price:l.price||0,total:(l.total!=null?l.total:inv.amount)})),
-        notes:inv.notes||s.footer||'Thank you for your business.'
+        notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.'
       })
     });
     const out=await res.json().catch(()=>({}));
@@ -2955,7 +3006,7 @@ window.waInvoice = function waInvoice(num){
     '📅 Date: '+fmtD(inv.date)+'\n'+
     '⏰ Due: '+fmtD(inv.due)+'\n'+
     '💰 Amount: *LKR '+inv.amount.toLocaleString()+'*\n\n'+
-    (inv.notes||s.footer||'Thank you for your business! 🙏')+'\n\n'+
+    ([inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business! 🙏')+'\n\n'+
     '_'+(s.bizName||'Your Business')+' · Powered by CeylonryLabs.io_'
   );
   const phone=invoiceContactPhone(inv);
@@ -3127,6 +3178,8 @@ function seedDemoData(){
     logoAlign:'left',
     logoSize:'M',
     defaultTpl:0,
+    logoX:8,
+    logoY:5,
     vatRate:15,
     ejsKey:'',
     ejsService:'',
@@ -3176,6 +3229,7 @@ window.clsSignOut = function clsSignOut() {
 }
 
 if(DEMO_MODE) initDemoMode();
+else if (restoreDBLastBackupPreview()) init();
 
 // Paywall overlay
 window.showPaywall = function showPaywall(profile) {
@@ -3184,10 +3238,12 @@ window.showPaywall = function showPaywall(profile) {
     return;
   }
   const plan = (profile && profile.plan) || 'solo';
-  const prices = { solo: 3500, studio: 5500, business: 8500, starter: 5500, growth: 8500, premium: 8500 };
-  const price = prices[plan] || 3500;
+  const prices = { solo: 36000, studio: 60000, business: 94800, starter: 60000, growth: 94800, premium: 94800 };
+  const monthlyPrices = { solo: 3500, studio: 5500, business: 8500, starter: 5500, growth: 8500, premium: 8500 };
+  const price = prices[plan] || 36000;
+  const monthlyPrice = monthlyPrices[plan] || 3500;
   const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
-  const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));
+  const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/year, package value LKR ' + monthlyPrice.toLocaleString() + '/mo). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));
   const waNum = '94778815628'; // ← replace
   if (document.getElementById('cls-paywall')) return;
   var ov = document.createElement('div');
@@ -3199,8 +3255,8 @@ window.showPaywall = function showPaywall(profile) {
     '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 15-day free trial of <strong>CLS ' + planName + '</strong> has expired.<br>Activate your plan to keep your dashboard and data.</div>' +
     '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
       '<div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:.35rem">Your Plan</div>' +
-      '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
-      '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · Billed monthly</div>' +
+    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/year</span></div>' +
+    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · package value LKR ' + monthlyPrice.toLocaleString() + '/mo</div>' +
     '</div>' +
     '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">💬 Activate via WhatsApp →</a>' +
     '<button data-cls-fn="clsSignOut" style="width:100%;background:transparent;border:1px solid rgba(184,146,42,.3);color:#6B6258;padding:.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +
@@ -3329,7 +3385,8 @@ function buildInvoiceSharePdfFile(inv, systemName){
   if(inv.disc){y+=18;doc.text('Discount',360,y);doc.text(String(inv.disc)+'%',455,y);}
   y+=24;doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('Grand Total',360,y);doc.text(money(inv.amount),455,y);
   y+=44;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Notes',x,y);
-  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(text(inv.notes||s.footer||'Thank you for your business.',w),x,y+16);
+  var shareNotes=[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.';
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(text(shareNotes,w),x,y+16);
   doc.setFontSize(8);doc.setTextColor(120,112,104);doc.text('Invoice generated by '+systemName+' - CeylonryLabs.io',x,780);
   var blob=doc.output('blob');
   return new File([blob],invoicePdfFileName(inv),{type:'application/pdf'});

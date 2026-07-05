@@ -17,6 +17,9 @@ PAYABLE_CHECKOUT_URL=https://sandboxipgpayment.payable.lk/ipg/sandbox/direct-api
 PAYABLE_ORIGIN_DOMAIN=https://www.ceylonrylabs.io
 PAYABLE_PAYMENT_TYPE=1
 
+# Annual subscription charges used by the app:
+# Solo LKR 36,000, Studio LKR 60,000, Business LKR 94,800
+
 # Payable credentials
 # API Integration Details -> Merchant Key / Merchant ID
 PAYABLE_MERCHANT_ID=PASTE_MERCHANT_ID_HERE

@@ -7,12 +7,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
   <style>
     :root{--black:#1a1714;--gold:#B8922A;--cream:#F7F5F0;--muted:#6B6258;--border:#E2DDD4}
     *{box-sizing:border-box}
     body{margin:0;min-height:100vh;background:var(--cream);color:var(--black);font-family:"DM Sans",Arial,sans-serif;display:grid;place-items:center;padding:24px}
     .wrap{width:min(560px,100%);background:#fff;border:1px solid var(--border);padding:44px 38px;text-align:center;box-shadow:0 24px 80px rgba(26,23,20,.08)}
     .mark{width:54px;height:54px;border-radius:50%;background:rgba(184,146,42,.12);border:1px solid rgba(184,146,42,.35);display:grid;place-items:center;margin:0 auto 18px;color:var(--gold);font-size:26px}
+    .mark.ok{background:rgba(26,158,92,.12);border-color:rgba(26,158,92,.35);color:#1a9e5c}
+    .mark.err{background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.28);color:#c0392b}
     h1{font-family:"Cormorant Garamond",Georgia,serif;font-size:36px;font-weight:300;line-height:1.05;margin:0 0 12px}
     p{margin:0;color:var(--muted);font-size:14px;line-height:1.75}
     .note{background:#FAF7F2;border:1px solid var(--border);padding:16px;margin:24px 0;text-align:left}
@@ -26,11 +30,11 @@
 </head>
 <body>
   <main class="wrap">
-    <div class="mark">✓</div>
-    <h1>Payment Submitted</h1>
-    <p>Thanks. Payable will now confirm the payment with CLS CashFlow. Your dashboard unlocks automatically once the secure confirmation reaches us.</p>
+    <div class="mark" id="status-mark">…</div>
+    <h1 id="status-title">Checking Payment</h1>
+    <p id="status-copy">Thanks. We are checking the PAYable confirmation and will unlock your dashboard as soon as it reaches CLS CashFlow.</p>
     <div class="note">
-      <p>If your account is not active immediately, wait a moment and sign in again. If Payable is still being configured, use WhatsApp support and share your payment reference.</p>
+      <p id="status-note">This can take a few seconds while PAYable sends the secure webhook. Keep this page open, or open your dashboard and refresh shortly.</p>
     </div>
     <div class="actions">
       <a class="primary" id="dashboard-link" href="signin.html">Go to Dashboard</a>
@@ -49,6 +53,68 @@
       var session = params.get('session') || params.get('order_id') || params.get('reference') || '';
       var meta = document.getElementById('session-meta');
       if (meta && session) meta.textContent = 'Reference: ' + session;
+      var title = document.getElementById('status-title');
+      var copy = document.getElementById('status-copy');
+      var note = document.getElementById('status-note');
+      var mark = document.getElementById('status-mark');
+
+      function setState(kind, heading, message, extra) {
+        if (title) title.textContent = heading;
+        if (copy) copy.textContent = message;
+        if (note) note.textContent = extra || '';
+        if (mark) {
+          mark.className = 'mark ' + (kind || '');
+          mark.textContent = kind === 'ok' ? '✓' : kind === 'err' ? '!' : '…';
+        }
+      }
+
+      async function waitForUser() {
+        try {
+          firebase.initializeApp({});
+          var auth = firebase.auth();
+          if (auth && typeof auth.waitForCurrentUser === 'function') {
+            return await auth.waitForCurrentUser(5000);
+          }
+          return auth.currentUser || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      async function checkStatus(user) {
+        if (!session) {
+          setState('err', 'Missing Reference', 'PAYable returned without a payment reference.', 'Open WhatsApp support and share your payment receipt.');
+          return;
+        }
+        if (!user || !user.getIdToken) {
+          setState('err', 'Please Sign In', 'We need your signed-in session to verify this payment safely.', 'Sign in again, then open this page from the payment redirect if needed.');
+          if (link) link.href = 'signin.html';
+          return;
+        }
+        var token = await user.getIdToken();
+        for (var i = 0; i < 12; i += 1) {
+          var res = await fetch('/.netlify/functions/payable-status?session=' + encodeURIComponent(session), {
+            headers: { Authorization: 'Bearer ' + token }
+          });
+          var json = await res.json().catch(function() { return {}; });
+          if (res.ok && json.ok) {
+            if (json.dashboard && link) link.href = json.dashboard;
+            if (json.paid) {
+              setState('ok', 'Payment Confirmed', 'Your CLS CashFlow account is active. You can continue to your dashboard now.', json.subscriptionCurrentPeriodEnd ? 'Active until ' + new Date(json.subscriptionCurrentPeriodEnd).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) + '.' : 'Thank you for your payment.');
+              return;
+            }
+            setState('', 'Waiting for PAYable', 'Payment reference found. We are waiting for PAYable to send the final paid confirmation.', 'Status: ' + (json.status || 'pending') + '. This page checks automatically.');
+          } else if (res.status === 404) {
+            setState('', 'Preparing Confirmation', 'Your payment page returned before the local session became visible.', 'Still checking automatically...');
+          } else {
+            setState('err', 'Could Not Verify Yet', json.error || 'The payment status could not be checked yet.', 'Try the dashboard, or contact WhatsApp support with the reference.');
+          }
+          await new Promise(function(resolve) { setTimeout(resolve, 2500); });
+        }
+        setState('', 'Still Processing', 'PAYable has not sent the final confirmation yet.', 'Open your dashboard and refresh in a minute, or contact WhatsApp support with this reference.');
+      }
+
+      waitForUser().then(checkStatus);
     })();
   </script>
 </body>

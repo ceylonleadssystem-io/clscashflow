@@ -13,8 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-danger-zone"></script>
-<script src="assets/platform.js?v=20260705-danger-zone"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
+<script src="assets/platform.js?v=20260705-payable"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1702,12 +1702,10 @@ function renderCohort() {
 // ═══════════════════════════════════════════════════════════
 // INVOICE MODAL
 // ═══════════════════════════════════════════════════════════
-var TPLS=[
-  {name:'Classic',bg:'#15110D',fg:'#C9A84C'},{name:'Prestige',bg:'linear-gradient(135deg,#C9A84C,#E8C46A)',fg:'#15110D'},
-  {name:'Modern',bg:'#FAF7F2',fg:'#1E1209'},{name:'Dark Pro',bg:'#0a0806',fg:'#C9A84C'},
-  {name:'Minimal',bg:'#fff',fg:'#1E1209'},{name:'Split Pro',bg:'#1E1209',fg:'#fff'},
-  {name:'Ceylon Gold',bg:'linear-gradient(135deg,#E8C46A,#8A6C1A)',fg:'#fff'},{name:'Corporate',bg:'#1e5b8a',fg:'#fff'},
-  {name:'Bold Block',bg:'#C9A84C',fg:'#15110D'},{name:'Signature',bg:'#FAF7F2',fg:'#C9A84C'}
+var TPLS=window.clsInvoiceTemplates||[
+  {name:'Furniture Pop',accent:'#ef92d8',dark:'#3156e8',paper:'#f6ecdd',layout:'pop'},
+  {name:'Orange Studio',accent:'#f16f4f',dark:'#181511',paper:'#f5f0d8',layout:'orange'},
+  {name:'Modern Mono',accent:'#1f2a24',dark:'#1f2a24',paper:'#fbfaf7',layout:'mono'}
 ];
 window.openInvMo = function openInvMo() {
   selTpl=0; buildTplPicker();
@@ -1720,7 +1718,9 @@ window.openInvMo = function openInvMo() {
 }
 function buildTplPicker() {
   document.getElementById('tpl-grid').innerHTML=TPLS.map(function(t,i){
-    return '<div class="tpl-card'+(i===selTpl?' sel':'')+'" onclick="selTpl='+i+';buildTplPicker()"><div class="tpl-prev" style="background:'+t.bg+'"><span style="font-size:.54rem;font-weight:700;letter-spacing:.1em;color:'+t.fg+';text-transform:uppercase">'+t.name+'</span></div><div class="tpl-name">'+t.name+'</div></div>';
+    var bg=t.paper||'#fff';
+    var color=t.dark||'#1E1209';
+    return '<div class="tpl-card'+(i===selTpl?' sel':'')+'" onclick="selTpl='+i+';buildTplPicker()"><div class="tpl-prev" style="background:'+bg+';border-top:5px solid '+(t.accent||'#C9A84C')+'"><span style="font-size:.54rem;font-weight:700;letter-spacing:.1em;color:'+color+';text-transform:uppercase">'+t.name+'</span></div><div class="tpl-name">'+t.name+'</div></div>';
   }).join('');
 }
 window.addLi = function addLi() {
@@ -1852,6 +1852,11 @@ function previewLogo(input) {
 window.printInv = function printInv(id) {
   var inv=D.invoices.find(function(i){return i.id===id;});if(!inv)return;
   var s=D.settings;
+  if(window.clsBuildInvoicePrintHtml){
+    document.getElementById('print-inv').innerHTML=window.clsBuildInvoicePrintHtml({inv:inv,settings:s,templateIndex:inv.tpl||0,systemName:'Premium Cashflow System'});
+    window.print();
+    return;
+  }
   var logo=s.logo?'<img src="'+s.logo+'" style="max-height:44px;margin-bottom:6px;display:block">':'';
   var rows=inv.items.map(function(it){return '<tr style="border-bottom:1px solid #eee"><td style="padding:9px 12px">'+it.desc+'</td><td style="padding:9px 12px;text-align:center">'+it.qty+'</td><td style="padding:9px 12px;text-align:right;font-family:monospace">LKR '+fmtN(it.price)+'</td><td style="padding:9px 12px;text-align:right;font-family:monospace;font-weight:600">LKR '+fmtN(it.qty*it.price)+'</td></tr>';}).join('');
   var html='<div style="font-family:Georgia,serif;max-width:750px;margin:0 auto;padding:0"><div style="background:#15110D;color:#fff;padding:30px 36px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center">'+logo+'<div><div style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#C9A84C">Premium Invoice</div><div style="font-size:20px;font-weight:300;color:#fff;margin-top:4px">'+s.biz+'</div></div><div style="text-align:right"><div style="font-size:20px;font-weight:700;color:#C9A84C">'+inv.id+'</div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:6px">Date: '+inv.date+'<br>Due: '+inv.due+'</div></div></div><div style="padding:0 36px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px"><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#aaa;margin-bottom:8px">From</div><strong>'+s.biz+'</strong><div style="font-size:12px;color:#666;margin-top:4px">'+s.addr+'<br>'+s.email+'<br>'+s.vat+'</div></div><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#aaa;margin-bottom:8px">Bill To</div><strong>'+inv.client+'</strong><div style="font-size:12px;color:#666;margin-top:4px">'+inv.caddr+'</div></div></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#15110D;color:#fff"><th style="padding:10px 12px;text-align:left;font-size:11px">Description</th><th style="padding:10px 12px;text-align:center;font-size:11px">Qty</th><th style="padding:10px 12px;text-align:right;font-size:11px">Unit Price</th><th style="padding:10px 12px;text-align:right;font-size:11px">Total</th></tr></thead><tbody>'+rows+'</tbody></table><div style="text-align:right;margin-top:12px;margin-bottom:28px"><div style="background:linear-gradient(135deg,#C9A84C,#E8C46A);color:#15110D;display:inline-block;padding:12px 22px;font-size:15px;font-weight:700;font-family:monospace">TOTAL: LKR '+fmtN(inv.total)+'</div></div>'+(inv.notes?'<div style="color:#888;font-size:11px;border-top:1px solid #eee;padding-top:14px;margin-bottom:20px">'+inv.notes+'</div>':'')+'<div style="background:#f5f0e8;padding:12px 16px;font-size:11px;color:#888;text-align:center">'+s.footer+'</div></div></div>';

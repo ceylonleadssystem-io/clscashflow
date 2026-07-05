@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-danger-zone"></script>
-<script src="assets/platform.js?v=20260705-danger-zone"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
+<script src="assets/platform.js?v=20260705-payable"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -823,19 +823,19 @@ document.addEventListener('click',function(e){
         </div>
         <button class="btn-act-outline" style="flex-shrink:0;padding:.65rem 1rem;height:42px" data-cls-fn="closeAndOpenClient">+ New Client</button>
       </div>
-      <div class="f-section" style="margin-top:0">Invoice Template (3 available on Starter)</div>
+      <div class="f-section" style="margin-top:0">Invoice Template</div>
       <div class="tpl-picker">
         <div class="tpl-pick-card selected" onclick="selectInvTpl(0,this)">
-          <div class="tpl-pick-preview"><div style="background:#B8922A;height:14px;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Brand Gold</div>
+          <div class="tpl-pick-preview"><div style="background:#ef92d8;height:14px;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
+          <div class="tpl-pick-name">Furniture Pop</div>
         </div>
         <div class="tpl-pick-card" onclick="selectInvTpl(1,this)">
-          <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #4F46E5;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Indigo Modern</div>
+          <div class="tpl-pick-preview"><div style="height:14px;border-bottom:2px solid #f16f4f;width:100%"></div><div style="padding:3px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
+          <div class="tpl-pick-name">Orange Studio</div>
         </div>
         <div class="tpl-pick-card" onclick="selectInvTpl(2,this)">
           <div class="tpl-pick-preview"><div style="border-top:3px solid #1F2937;padding-top:2px;width:100%"></div><div style="padding:2px 4px"><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;margin-bottom:2px"></div><div style="height:3px;background:rgba(0,0,0,.1);border-radius:1px;width:60%"></div></div></div>
-          <div class="tpl-pick-name">Charcoal Mono</div>
+          <div class="tpl-pick-name">Modern Mono</div>
         </div>
       </div>
       <div class="f-section">Client Details</div>
@@ -2078,10 +2078,10 @@ window.previewSettingsLogo = function previewSettingsLogo(input){
 // ════════════════════════════════
 // INVOICE PDF PRINTING
 // ════════════════════════════════
-const tplDefs=[
-  {name:'Brand Gold',accent:'#B8922A',style:'classic'},
-  {name:'Indigo Modern',accent:'#4F46E5',style:'minimal'},
-  {name:'Charcoal Mono',accent:'#1F2937',style:'executive'},
+const tplDefs=window.clsInvoiceTemplates||[
+  {name:'Furniture Pop',accent:'#ef92d8',style:'pop'},
+  {name:'Orange Studio',accent:'#f16f4f',style:'orange'},
+  {name:'Modern Mono',accent:'#1f2a24',style:'mono'},
 ];
 function buildInvoiceEmailHTML(inv){
   const s=DB.settings;
@@ -2185,6 +2185,9 @@ function buildInvoiceEmailHTML(inv){
   +'</div></div>';
 }
 function buildInvPrintHTML(inv,tplIdx){
+  if(window.clsBuildInvoicePrintHtml){
+    return window.clsBuildInvoicePrintHtml({inv:inv,settings:DB.settings,templateIndex:tplIdx,systemName:'Studio Invoice Control System'});
+  }
   const t=tplDefs[tplIdx]||tplDefs[0];const s=DB.settings;const ac=t.accent;
   // Logo alignment + size (S / M / L)
   const align=s.logoAlign||'left';

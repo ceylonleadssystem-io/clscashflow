@@ -195,9 +195,9 @@ function readBody(event) {
 }
 
 const PLAN_DETAILS = {
-  solo: { name: 'Solo', price: 3500 },
-  studio: { name: 'Studio', price: 5500 },
-  business: { name: 'Business', price: 8500 }
+  solo: { name: 'Solo', price: 36000, monthlyPrice: 3500 },
+  studio: { name: 'Studio', price: 60000, monthlyPrice: 5500 },
+  business: { name: 'Business', price: 94800, monthlyPrice: 8500 }
 };
 
 function normalizePlan(plan) {
@@ -340,7 +340,9 @@ function userUpdateForAction(admin, updateType) {
       currentPlan: 'solo',
       lastPlan: 'solo',
       requestedPlan: 'solo',
-      planPrice: 3500,
+      planPrice: 36000,
+      planMonthlyPrice: 3500,
+      billingCycle: 'annual',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
       updatedAt: stamp
@@ -352,7 +354,9 @@ function userUpdateForAction(admin, updateType) {
       currentPlan: 'studio',
       lastPlan: 'studio',
       requestedPlan: 'studio',
-      planPrice: 5500,
+      planPrice: 60000,
+      planMonthlyPrice: 5500,
+      billingCycle: 'annual',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
       updatedAt: stamp
@@ -364,7 +368,9 @@ function userUpdateForAction(admin, updateType) {
       currentPlan: 'business',
       lastPlan: 'business',
       requestedPlan: 'business',
-      planPrice: 8500,
+      planPrice: 94800,
+      planMonthlyPrice: 8500,
+      billingCycle: 'annual',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
       updatedAt: stamp
@@ -645,7 +651,8 @@ exports.handler = async function handler(event) {
           '',
           trialLine,
           'Package: ' + planInfo.name + ' Plan',
-          'Amount: LKR ' + Number(planInfo.price).toLocaleString('en-US') + '/month',
+          'Amount: LKR ' + Number(planInfo.price).toLocaleString('en-US') + '/year',
+          'Package value: LKR ' + Number(planInfo.monthlyPrice || 0).toLocaleString('en-US') + '/month',
           'Payment request token: ' + token,
           '',
           'Our team can send the manual invoice for this package. Reply here if you want us to resend details or confirm payment.'

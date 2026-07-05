@@ -1,9 +1,16 @@
-function headers() {
-  return {
+function headers(cacheOk) {
+  const base = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS'
   };
+  if (cacheOk) {
+    base['Cache-Control'] = 'public, max-age=3600, stale-while-revalidate=86400';
+    base['Netlify-CDN-Cache-Control'] = 'public, durable, max-age=3600, stale-while-revalidate=86400';
+  } else {
+    base['Cache-Control'] = 'no-store';
+  }
+  return base;
 }
 
 exports.handler = async function handler(event) {
@@ -18,5 +25,5 @@ exports.handler = async function handler(event) {
     return { statusCode: 500, headers: headers(), body: JSON.stringify({ ok: false, error: 'SUPABASE_ANON_KEY is not configured in Netlify.' }) };
   }
 
-  return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, url, anonKey }) };
+  return { statusCode: 200, headers: headers(true), body: JSON.stringify({ ok: true, url, anonKey }) };
 };

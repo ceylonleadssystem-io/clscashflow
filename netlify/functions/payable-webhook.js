@@ -130,6 +130,10 @@ function isPaid(body) {
     || firstValue(parts.data, ['paid', 'success', 'approved'])
     || firstValue(parts.body, ['paid', 'success', 'approved']);
   if (boolValue === true || String(boolValue).toLowerCase() === 'true') return true;
+  const statusCode = firstValue(parts.payment, ['statusCode', 'status_code'])
+    || firstValue(parts.data, ['statusCode', 'status_code'])
+    || firstValue(parts.body, ['statusCode', 'status_code']);
+  if (String(statusCode).trim() === '1') return true;
   const status = statusFrom(body);
   return ['paid', 'success', 'successful', 'completed', 'settled', 'approved', 'authorized', 'captured'].includes(status);
 }
@@ -179,9 +183,9 @@ function normalizePlan(plan) {
 }
 
 const PLANS = {
-  solo: { name: 'Solo', price: 3500 },
-  studio: { name: 'Studio', price: 5500 },
-  business: { name: 'Business', price: 8500 }
+  solo: { name: 'Solo', monthlyPrice: 3500, price: 36000 },
+  studio: { name: 'Studio', monthlyPrice: 5500, price: 60000 },
+  business: { name: 'Business', monthlyPrice: 8500, price: 94800 }
 };
 
 exports.handler = async function handler(event) {
@@ -254,7 +258,7 @@ exports.handler = async function handler(event) {
   const planInfo = PLANS[plan] || PLANS.solo;
   const now = new Date();
   const periodEnd = new Date(now);
-  periodEnd.setMonth(periodEnd.getMonth() + 1);
+  periodEnd.setFullYear(periodEnd.getFullYear() + 1);
 
   await db.collection('users').doc(uid).set({
     paid: true,
@@ -263,6 +267,8 @@ exports.handler = async function handler(event) {
     lastPlan: plan,
     planName: planInfo.name,
     planPrice: planInfo.price,
+    planMonthlyPrice: planInfo.monthlyPrice,
+    billingCycle: 'annual',
     subscriptionStatus: 'active',
     subscriptionProvider: 'payable',
     billingProvider: 'payable',
@@ -280,7 +286,9 @@ exports.handler = async function handler(event) {
     plan,
     planName: planInfo.name,
     amount,
+    monthlyAmount: planInfo.monthlyPrice,
     currency: saved.currency || parts.payment.payableCurrency || parts.payment.currency || parts.data.payableCurrency || parts.data.currency || parts.body.payableCurrency || parts.body.currency || 'LKR',
+    billingCycle: 'annual',
     status: 'paid',
     paidAt: admin.firestore.FieldValue.serverTimestamp(),
     rawStatus,

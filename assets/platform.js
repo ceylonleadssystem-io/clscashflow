@@ -3,11 +3,12 @@
   var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
   var PLAN_DETAILS = {
-    solo: { name: 'Solo', price: 3500, file: 'solo.html' },
-    studio: { name: 'Studio', price: 5500, file: 'starter.html' },
-    business: { name: 'Business', price: 8500, file: 'growth.html' }
+    solo: { name: 'Solo', monthlyPrice: 3500, price: 36000, file: 'solo.html' },
+    studio: { name: 'Studio', monthlyPrice: 5500, price: 60000, file: 'starter.html' },
+    business: { name: 'Business', monthlyPrice: 8500, price: 94800, file: 'growth.html' }
   };
   var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
+  var BILLING_ID = 'cls-billing-widget';
   var SUPPORT_ID = 'cls-support-widget';
   var DANGER_ID = 'cls-danger-zone-widget';
   var scriptLoads = {};
@@ -129,7 +130,9 @@
       plan: plan,
       currentPlan: plan,
       lastPlan: plan,
-      planPrice: (PLAN_DETAILS[plan] && PLAN_DETAILS[plan].price) || 3500,
+      planPrice: (PLAN_DETAILS[plan] && PLAN_DETAILS[plan].price) || 36000,
+      planMonthlyPrice: (PLAN_DETAILS[plan] && PLAN_DETAILS[plan].monthlyPrice) || 3500,
+      billingCycle: 'annual',
       trialStart: new Date().toISOString(),
       trialEnd: trialEnd.toISOString(),
       paid: false,
@@ -305,10 +308,185 @@
     return 'LKR ' + Number(n || 0).toLocaleString();
   }
 
+  function planAnnualLine(details) {
+    details = details || PLAN_DETAILS.solo;
+    return money(details.price) + ' billed yearly';
+  }
+
+  function planMonthlyLine(details) {
+    details = details || PLAN_DETAILS.solo;
+    return 'Package value: ' + money(details.monthlyPrice || 0) + '/mo';
+  }
+
   function plainText(value, max) {
     value = String(value == null ? '' : value).trim();
     return max && value.length > max ? value.slice(0, max) : value;
   }
+
+  var INVOICE_TEMPLATES = [
+    { name: 'Furniture Pop', accent: '#ef92d8', dark: '#315ee8', paper: '#fbeddc', layout: 'pop' },
+    { name: 'Orange Studio', accent: '#f16f4f', dark: '#171615', paper: '#fff8dc', layout: 'orange' },
+    { name: 'Modern Mono', accent: '#1f2a24', dark: '#1f2a24', paper: '#fffdf8', layout: 'mono' },
+    { name: 'Professional Script', accent: '#9b948c', dark: '#26211d', paper: '#fbf8f1', layout: 'script' },
+    { name: 'Freelancer Wave', accent: '#3f4542', dark: '#191919', paper: '#ffffff', layout: 'wave' },
+    { name: 'Editorial Serif', accent: '#111111', dark: '#111111', paper: '#f8f8f0', layout: 'editorial' },
+    { name: 'Agency Clean', accent: '#111111', dark: '#111111', paper: '#fff1ec', layout: 'agency' },
+    { name: 'Cafe Blue', accent: '#2046d9', dark: '#2046d9', paper: '#fffbe7', layout: 'cafe' },
+    { name: 'Corporate Green', accent: '#84b735', dark: '#243449', paper: '#ffffff', layout: 'green' },
+    { name: 'Yellow Corporate', accent: '#f4c400', dark: '#404042', paper: '#ffffff', layout: 'yellow' },
+    { name: 'Pin Box', accent: '#111111', dark: '#111111', paper: '#f5f5f5', layout: 'pinbox' },
+    { name: 'Kazuma Minimal', accent: '#3f4348', dark: '#3f4348', paper: '#ffffff', layout: 'kazuma' },
+    { name: 'Architect Blue', accent: '#4263b4', dark: '#4263b4', paper: '#ffffff', layout: 'architect' }
+  ];
+
+  function invoiceTemplate(idx) {
+    idx = parseInt(idx, 10);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= INVOICE_TEMPLATES.length) idx = 0;
+    return INVOICE_TEMPLATES[idx];
+  }
+
+  function clampNumber(value, min, max, fallback) {
+    value = Number(value);
+    if (!Number.isFinite(value)) value = fallback;
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function invoiceEscape(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+
+  function invoiceBreaks(value) {
+    return invoiceEscape(value).replace(/\n/g, '<br>');
+  }
+
+  function invoiceMoney(cur, value) {
+    return String(cur || 'LKR') + ' ' + Number(value || 0).toLocaleString('en', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  function humanDate(value) {
+    if (!value) return '';
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return invoiceEscape(value);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function normalizeInvoiceSettings(settings) {
+    settings = settings || {};
+    var biz = settings.bizName || settings.biz || settings.businessName || 'Your Business';
+    var email = settings.email || settings.invoiceEmail || '';
+    var footer = settings.footer || 'Thank you for your business.';
+    var align = settings.logoAlign || 'left';
+    var defaultX = align === 'right' ? 88 : (align === 'center' ? 50 : 8);
+    return {
+      biz: biz,
+      user: settings.username || settings.user || '',
+      addr: settings.addr || settings.address || '',
+      email: email,
+      vat: settings.vat || '',
+      footer: footer,
+      logo: settings.logo || '',
+      logoAlign: align,
+      logoSize: settings.logoSize || 'M',
+      logoX: clampNumber(settings.logoX, 0, 100, defaultX),
+      logoY: clampNumber(settings.logoY, 0, 100, 5)
+    };
+  }
+
+  function invoiceLineItems(inv) {
+    var lines = inv && (inv.lines || inv.items) || [];
+    if (!lines.length && inv) lines = [{ desc: 'Invoice total', qty: 1, price: inv.amount || inv.total || 0, total: inv.amount || inv.total || 0 }];
+    return lines.map(function(line) {
+      var qty = Number(line.qty || 1) || 1;
+      var price = Number(line.price || 0) || 0;
+      var total = line.total != null ? Number(line.total || 0) : qty * price;
+      return { desc: line.desc || line.description || 'Service or product', qty: qty, price: price, total: total };
+    });
+  }
+
+  function invoiceLogoOverlay(settings) {
+    if (!settings.logo) return '';
+    var width = settings.logoSize === 'L' ? 132 : (settings.logoSize === 'S' ? 58 : 92);
+    var transform = settings.logoX > 75 ? 'translateX(-100%)' : (settings.logoX > 35 && settings.logoX < 65 ? 'translateX(-50%)' : 'none');
+    return '<img class="invoice-free-logo" src="' + invoiceEscape(settings.logo) + '" alt="Logo" style="left:' + settings.logoX + '%;top:' + settings.logoY + '%;width:' + width + 'px;transform:' + transform + '">';
+  }
+
+  function invoiceTemplateClass(layout) {
+    return String(layout || 'pop').replace(/[^a-z0-9_-]/gi, '').toLowerCase();
+  }
+
+  window.clsInvoiceTemplates = INVOICE_TEMPLATES;
+  window.clsNormalizeInvoiceTemplate = function(idx) {
+    idx = parseInt(idx, 10);
+    return Number.isFinite(idx) && idx >= 0 && idx < INVOICE_TEMPLATES.length ? idx : 0;
+  };
+  window.clsInvoiceTemplateName = function(idx) {
+    return invoiceTemplate(idx).name;
+  };
+  window.clsInvoiceMiniPreview = function(theme) {
+    theme = theme || INVOICE_TEMPLATES[0];
+    var dark = ['orange', 'green', 'yellow'].indexOf(theme.layout) !== -1;
+    var side = ['pinbox', 'kazuma', 'architect'].indexOf(theme.layout) !== -1;
+    return '<div class="tpl-mini' + (dark ? ' dark' : '') + (side ? ' side' : '') + '" style="--tpl-accent:' + theme.accent + ';background:' + (dark ? theme.dark : theme.paper || '#fff') + '">' +
+      '<div class="tm-logo"></div>' +
+      '<div class="tm-lines"><span style="width:75%"></span><span style="width:54%"></span><span style="width:90%"></span></div>' +
+      '<div class="tm-total"></div>' +
+    '</div>';
+  };
+  window.clsInvoiceTemplateCards = function(active, opts) {
+    opts = opts || {};
+    active = window.clsNormalizeInvoiceTemplate(active);
+    var cardClass = opts.cardClass || 'tpl-pick-card';
+    var nameClass = opts.nameClass || 'tpl-pick-name';
+    var locked = opts.locked === true;
+    var fn = opts.fn || 'selectDefaultInvoiceTemplate';
+    return INVOICE_TEMPLATES.map(function(theme, i) {
+      var attrs = ' data-tpl-card="' + invoiceEscape(opts.group || (locked ? 'invoice' : 'settings')) + '" data-tpl="' + i + '"';
+      if (!locked) attrs += ' data-cls-fn="' + invoiceEscape(fn) + '" data-cls-arg="' + i + '" data-cls-this="1"';
+      return '<div class="' + cardClass + (i === active ? ' selected sel' : '') + '"' + attrs + '>' +
+        window.clsInvoiceMiniPreview(theme) +
+        '<div class="' + nameClass + '">' + invoiceEscape(theme.name) + '</div>' +
+      '</div>';
+    }).join('');
+  };
+  window.clsBuildInvoicePrintHtml = function(opts) {
+    opts = opts || {};
+    var inv = opts.inv || {};
+    var s = normalizeInvoiceSettings(opts.settings || {});
+    var idx = window.clsNormalizeInvoiceTemplate(opts.templateIndex != null ? opts.templateIndex : inv.tpl);
+    var theme = invoiceTemplate(idx);
+    var cur = inv.cur || inv.currency || 'LKR';
+    var lines = invoiceLineItems(inv);
+    var sub = lines.reduce(function(sum, line) { return sum + (line.total || 0); }, 0) || Number(inv.sub || inv.amount || inv.total || 0) || 0;
+    var disc = Number(inv.disc || inv.discount || 0) || 0;
+    var discAmount = disc > 0 && disc <= 100 ? sub * disc / 100 : disc;
+    var vat = Number(inv.vat || inv.tax || 0) || 0;
+    var total = Number(inv.amount || inv.total || (sub - discAmount + vat)) || 0;
+    var balance = Math.max(0, total - Number(inv.paidAmount || inv.paid || 0));
+    var status = inv.status || (balance <= 0 ? 'paid' : 'unpaid');
+    var note = inv.notes || '';
+    var footer = s.footer || 'Thank you for your business.';
+    var rows = lines.map(function(line, i) {
+      return '<tr><td><span class="item-no">' + String(i + 1).padStart(2, '0') + '</span><span class="desc">' + invoiceBreaks(line.desc) + '</span></td><td>' + line.qty + '</td><td>' + invoiceMoney(cur, line.price) + '</td><td>' + invoiceMoney(cur, line.total) + '</td></tr>';
+    }).join('');
+    var logo = invoiceLogoOverlay(s);
+    var title = inv.num || inv.id || 'PREVIEW';
+    var cssLayout = invoiceTemplateClass(theme.layout);
+    var systemName = opts.systemName || 'Cashflow System';
+    return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceEscape(title) + '</title><style>' +
+      '@page{size:A4;margin:0}*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{font-family:Arial,Helvetica,sans-serif;background:#ece8df;color:#17130f}.invoice-page{width:210mm;min-height:297mm;margin:0 auto;background:' + theme.paper + ';position:relative;padding:20mm 18mm 15mm;overflow:hidden;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--paper:' + theme.paper + ';--line:rgba(23,19,15,.18)}.invoice-main{position:relative;z-index:1;min-height:262mm;display:flex;flex-direction:column}.invoice-free-logo{position:absolute;max-height:95px;object-fit:contain;z-index:3}.invoice-head{display:grid;grid-template-columns:1fr 220px;gap:32px;align-items:start;margin-bottom:26px;padding-top:34px}.brand-name{font-family:Georgia,serif;font-size:29px;font-weight:700;line-height:1.05}.brand-small,.meta,.party-detail,.note-body,.permanent-footer{white-space:pre-line;color:#6d6258;font-size:12px;line-height:1.65}.invoice-title{text-align:right}.invoice-title h1{font-size:46px;letter-spacing:6px;text-transform:uppercase;color:var(--dark);line-height:1}.invoice-title .num{font-size:14px;font-weight:700;margin-top:8px;color:var(--accent)}.meta{margin-top:13px}.meta span{display:inline-block;width:70px;color:#9b8f82}.parties{display:grid;grid-template-columns:1fr 1fr 150px;gap:24px;margin:22px 0 28px}.label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:8px}.party-name{font-size:16px;font-weight:800;margin-bottom:5px}.status-pill{display:inline-block;border:1px solid var(--line);padding:7px 10px;border-radius:999px;text-transform:capitalize;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:10px}.invoice-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:22px}.invoice-table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:12px 10px;border-bottom:2px solid var(--dark)}.invoice-table th:nth-child(1){width:52%}.invoice-table th:nth-child(2){width:12%}.invoice-table th:nth-child(3),.invoice-table th:nth-child(4){width:18%}.invoice-table th:nth-child(n+2),.invoice-table td:nth-child(n+2){text-align:right}.invoice-table td{padding:13px 10px;border-bottom:1px solid var(--line);vertical-align:top;font-size:12px}.invoice-table .desc{white-space:pre-line;font-weight:700;line-height:1.45}.item-no{display:inline-block;margin-right:10px;color:var(--accent);font-weight:800}.invoice-bottom{display:grid;grid-template-columns:1fr 305px;gap:38px;margin-top:10px}.note-card{border-left:4px solid var(--accent);padding-left:16px}.note-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin-bottom:8px;color:var(--dark)}.totals{border-top:1px solid var(--line);padding-top:10px}.totals .row{display:flex;justify-content:space-between;gap:18px;padding:7px 0;font-size:12px;color:#5e554c}.totals b{color:#17130f}.grand{margin-top:10px;background:var(--dark);color:#fff!important;padding:17px 18px!important;align-items:center}.grand span{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800}.grand b{font-size:20px;color:#fff!important}.footer-zone{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:end}.permanent-footer{text-align:right}.powered{grid-column:1/-1;text-align:center;font-size:10px;letter-spacing:.08em;color:#aaa097;padding-top:10px}.powered b{color:var(--accent)}.tpl-pop .invoice-title h1{color:var(--dark)}.tpl-pop .invoice-table th,.tpl-pop .grand{background:var(--accent);color:var(--dark);border:0}.invoice-page.tpl-pop:before{content:"";position:absolute;left:0;right:0;top:0;height:42mm;background:rgba(239,146,216,.18)}.tpl-orange .invoice-head{background:var(--dark);color:#fff;margin:-20mm -18mm 24px;padding:22mm 18mm 18mm;border-radius:0 0 26px 0}.tpl-orange .brand-small,.tpl-orange .meta,.tpl-orange .meta span{color:rgba(255,255,255,.72)}.tpl-orange .invoice-title h1,.tpl-orange .invoice-title .num{color:#fff}.tpl-orange .grand,.tpl-orange .invoice-table th{background:var(--accent);border:0;color:#111}.tpl-mono .invoice-title h1{background:var(--dark);color:#fff;border-radius:0 999px 999px 0;padding:10px 20px;letter-spacing:3px}.tpl-script .invoice-title h1{font-family:Georgia,serif;font-style:italic;text-transform:none;letter-spacing:1px;font-size:58px}.tpl-script.invoice-page{border:1px solid var(--line)}.invoice-page.tpl-wave:after{content:"";position:absolute;left:-20mm;right:-20mm;bottom:-24mm;height:70mm;background:linear-gradient(160deg,#d8dadd 0 45%,#3f4542 46% 100%);z-index:0}.tpl-editorial .invoice-title h1,.tpl-agency .invoice-title h1{font-family:Georgia,serif;text-transform:none;letter-spacing:0}.tpl-cafe .invoice-title h1{font-size:58px;color:var(--accent)}.tpl-cafe .invoice-table th,.tpl-cafe .invoice-table td{border:1px solid var(--accent)}.tpl-green .invoice-head,.tpl-yellow .invoice-head{background:var(--dark);color:#fff;margin:-20mm -18mm 24px;padding:18mm}.tpl-green .invoice-title h1,.tpl-yellow .invoice-title h1,.tpl-green .invoice-title .num,.tpl-yellow .invoice-title .num{color:#fff}.tpl-green .brand-small,.tpl-yellow .brand-small,.tpl-green .meta,.tpl-yellow .meta,.tpl-green .meta span,.tpl-yellow .meta span{color:rgba(255,255,255,.7)}.tpl-green .invoice-table th{background:var(--accent);border:0}.tpl-yellow .invoice-table th{background:var(--accent);border:0}.tpl-pinbox .invoice-table th,.tpl-pinbox .invoice-table td{border-color:#111}.tpl-pinbox .invoice-title h1{letter-spacing:8px;text-transform:none}.tpl-kazuma .invoice-head{border-top:34px solid var(--dark);padding-top:20px}.tpl-kazuma .grand{background:linear-gradient(90deg,var(--dark),#6d7378)}.invoice-page.tpl-architect:before{content:"";position:absolute;left:0;right:0;top:0;height:38mm;background:var(--accent);z-index:0}.tpl-architect .invoice-head{padding-top:14mm;color:#111}.tpl-architect .invoice-title h1{color:#111}@media print{body{background:#fff}.invoice-page{margin:0;width:210mm;min-height:297mm;box-shadow:none}.invoice-free-logo{max-height:26mm}}' +
+      '</style></head><body><div class="invoice-page tpl-' + cssLayout + '">' + logo + '<main class="invoice-main">' +
+      '<section class="invoice-head"><div><div class="brand-name">' + invoiceEscape(s.biz) + '</div><div class="brand-small">' + invoiceBreaks(s.addr) + (s.email ? '<br>' + invoiceEscape(s.email) : '') + (s.vat ? '<br>VAT: ' + invoiceEscape(s.vat) : '') + '</div></div><div class="invoice-title"><h1>Invoice</h1><div class="num">' + invoiceEscape(title) + '</div><div class="meta"><div><span>Date:</span>' + humanDate(inv.date) + '</div><div><span>Due:</span>' + humanDate(inv.due) + '</div><div><span>Terms:</span>' + invoiceEscape(inv.terms || 'Net 30') + '</div></div></div></section>' +
+      '<section class="parties"><div><div class="label">From</div><div class="party-name">' + invoiceEscape(s.biz) + '</div><div class="party-detail">' + invoiceBreaks(s.addr) + '<br>' + invoiceEscape(s.email) + '</div></div><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="party-detail">' + invoiceBreaks(inv.caddr || '') + (inv.cemail ? '<br>' + invoiceEscape(inv.cemail) : '') + (inv.cphone ? '<br>' + invoiceEscape(inv.cphone) : '') + '</div></div><div><div class="label">Status</div><div class="status-pill">' + invoiceEscape(status) + '</div><div class="party-detail">Balance due<br><b>' + invoiceMoney(cur, balance) + '</b></div></div></section>' +
+      '<table class="invoice-table"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<section class="invoice-bottom"><div class="note-card"><div class="note-title">Invoice Notes</div><div class="note-body">' + (note ? invoiceBreaks(note) : 'No special notes for this invoice.') + '</div></div><div class="totals"><div class="row"><span>Subtotal</span><b>' + invoiceMoney(cur, sub) + '</b></div>' + (discAmount ? '<div class="row"><span>Discount</span><b>- ' + invoiceMoney(cur, discAmount) + '</b></div>' : '') + (vat ? '<div class="row"><span>Tax / VAT</span><b>' + invoiceMoney(cur, vat) + '</b></div>' : '') + '<div class="row grand"><span>Total due</span><b>' + invoiceMoney(cur, total) + '</b></div></div></section>' +
+      '<section class="footer-zone"><div><div class="label">Payment / Contact</div><div class="party-detail">' + invoiceEscape(s.biz) + '<br>' + invoiceBreaks(s.addr) + '<br>' + invoiceEscape(s.email) + '</div></div><div class="permanent-footer">' + invoiceBreaks(footer) + '</div><div class="powered">Invoice generated with <b>' + invoiceEscape(systemName) + ' by Ceylonry Labs.io</b></div></section>' +
+      '</main></div></body></html>';
+  };
 
   function fieldTimestamp() {
     try {
@@ -392,7 +570,7 @@
     var user = getAuthUser();
     var msg = encodeURIComponent(
       'Hi CeylonryLabs! I would like to activate my ' + details.name +
-      ' Plan (' + money(details.price) + '/month).' +
+      ' Plan (' + planAnnualLine(details) + ', ' + planMonthlyLine(details) + ').' +
       '\n\nName: ' + profileName(profile, user) +
       '\nEmail: ' + profileEmail(profile, user)
     );
@@ -430,6 +608,7 @@
           plan: plan,
           amount: details.price,
           currency: 'LKR',
+          billingCycle: 'annual',
           uid: user.uid,
           email: profileEmail(profile, user),
           name: profileName(profile, user),
@@ -490,6 +669,8 @@
       plan: plan,
       planName: details.name,
       amount: details.price,
+      monthlyAmount: details.monthlyPrice || 0,
+      billingCycle: 'annual',
       currency: 'LKR',
       trialEnd: trialEnd && !isNaN(trialEnd.getTime()) ? trialEnd.toISOString() : '',
       status: 'pending',
@@ -503,6 +684,8 @@
       paymentRequestStatus: 'pending',
       paymentRequestPlan: plan,
       paymentRequestAmount: details.price,
+      paymentRequestMonthlyAmount: details.monthlyPrice || 0,
+      billingCycle: 'annual',
       manualPaymentStatus: 'payment-requested',
       updatedAt: fieldTimestamp()
     };
@@ -553,8 +736,8 @@
         '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2rem;font-weight:300;margin-bottom:.55rem">Payment required</div>' +
         '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">' + trialText + '<br>Activate your <strong>CLS ' + details.name + '</strong> subscription to continue using your dashboard and data.</div>' +
         '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.25);padding:1.45rem;margin-bottom:1.5rem">' +
-          '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.price) + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
-          '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · Monthly subscription</div>' +
+          '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.price) + '<span style="font-size:1rem;color:#6B6258">/year</span></div>' +
+          '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · ' + planMonthlyLine(details) + '</div>' +
         '</div>' +
         '<div id="cls-payment-request-token" style="background:#fff8ea;border:1px solid rgba(184,146,42,.28);padding:.8rem 1rem;margin:-.5rem 0 1rem;color:#6B6258;font-size:.74rem;line-height:1.55">Creating a manual payment request for admin...</div>' +
         '<button id="cls-payable-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay with Payable</button>' +
@@ -894,6 +1077,72 @@
     });
     var doc = await db.collection('supportTickets').add(payload);
     return doc.id;
+  }
+
+  function injectBillingCardStyle() {
+    if (document.getElementById('cls-billing-card-style')) return;
+    var style = document.createElement('style');
+    style.id = 'cls-billing-card-style';
+    style.textContent =
+      '#cls-billing-widget{margin-top:1rem;border:1px solid #DED7CC;background:#fff;border-left:3px solid #1a9e5c;padding:1rem 1.1rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814}' +
+      '#cls-billing-widget .cls-billing-top{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center}' +
+      '#cls-billing-widget .cls-billing-kicker{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:#1a9e5c;font-weight:800;margin-bottom:.2rem}' +
+      '#cls-billing-widget .cls-billing-title{font-family:Cormorant Garamond,Georgia,serif;font-size:1.25rem;line-height:1.1;margin-bottom:.15rem;color:#1C1814}' +
+      '#cls-billing-widget .cls-billing-copy{font-size:.76rem;line-height:1.55;color:#6B6258;max-width:640px}' +
+      '#cls-billing-widget .cls-billing-price{font-family:Cormorant Garamond,Georgia,serif;font-size:1.8rem;line-height:1;color:#1C1814;margin-top:.65rem}' +
+      '#cls-billing-widget .cls-billing-sub{font-size:.7rem;color:#6B6258;margin-top:.25rem}' +
+      '#cls-billing-widget .cls-billing-actions{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}' +
+      '#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-wa{border:0;background:#1C1814;color:#fff;padding:.72rem 1rem;font-family:inherit;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:nowrap}' +
+      '#cls-billing-widget .cls-billing-wa{background:#fff;color:#1C1814;border:1px solid rgba(184,146,42,.35)}' +
+      '#cls-billing-widget .cls-billing-pay:hover{background:#1a9e5c}' +
+      '#cls-billing-widget .cls-billing-wa:hover{border-color:#B8922A;color:#B8922A}' +
+      '#cls-billing-widget .cls-billing-status{margin-top:.8rem;font-size:.72rem;color:#6B6258;line-height:1.5}' +
+      '@media(max-width:760px){#cls-billing-widget .cls-billing-top{grid-template-columns:1fr}#cls-billing-widget .cls-billing-actions{justify-content:stretch}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-wa{width:100%}}' +
+      '@media print{#cls-billing-widget{display:none!important}}';
+    document.head.appendChild(style);
+  }
+
+  function mountBillingWidget() {
+    if (document.getElementById(BILLING_ID)) return;
+    if (!isPortalPath()) return;
+    var settingsView = document.getElementById('view-settings');
+    if (!settingsView) {
+      setTimeout(mountBillingWidget, 700);
+      return;
+    }
+    injectBillingCardStyle();
+    var plan = normalizePlan((window._profile && (window._profile.currentPlan || window._profile.plan)) || planFromPath() || rememberedPlan()) || 'solo';
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var profile = window._profile || {};
+    var paid = window.clsIsProfilePaid(profile);
+    var periodEnd = profile.subscriptionCurrentPeriodEnd ? new Date(profile.subscriptionCurrentPeriodEnd) : null;
+    var periodCopy = periodEnd && !isNaN(periodEnd.getTime())
+      ? 'Active until ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
+      : (paid ? 'Your paid subscription is active.' : 'You can activate before or after the trial ends.');
+    var wrap = document.createElement('div');
+    wrap.id = BILLING_ID;
+    wrap.innerHTML =
+      '<div class="cls-billing-top">' +
+        '<div>' +
+          '<div class="cls-billing-kicker">Billing</div>' +
+          '<div class="cls-billing-title">Pay with PAYable</div>' +
+          '<div class="cls-billing-copy">Secure annual subscription payment for your CLS ' + escapeHtml(details.name) + ' account. PAYable returns here after payment, then the webhook activates your account in Supabase.</div>' +
+          '<div class="cls-billing-price">' + escapeHtml(money(details.price)) + '<span style="font-size:.9rem;color:#6B6258"> / year</span></div>' +
+          '<div class="cls-billing-sub">' + escapeHtml(planMonthlyLine(details)) + ' · ' + escapeHtml(periodCopy) + '</div>' +
+        '</div>' +
+        '<div class="cls-billing-actions">' +
+          '<button type="button" class="cls-billing-pay" data-billing-pay>Pay annual</button>' +
+          '<button type="button" class="cls-billing-wa" data-billing-wa>WhatsApp</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cls-billing-status" data-billing-status>Payment is processed through PAYable. No card details touch this website.</div>';
+    settingsView.appendChild(wrap);
+    wrap.querySelector('[data-billing-pay]').addEventListener('click', function() {
+      window.clsStartPayableCheckout(plan, { profile: window._profile || profile, button: this });
+    });
+    wrap.querySelector('[data-billing-wa]').addEventListener('click', function() {
+      window.clsOpenPlanWhatsApp(plan, window._profile || profile);
+    });
   }
 
 	  function injectSupportCardStyle() {
@@ -1618,6 +1867,7 @@
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);
     afterFirstPaint(trackVisit, 5000);
+    afterFirstPaint(mountBillingWidget, 2300);
     afterFirstPaint(mountDangerZoneWidget, 2800);
     afterFirstPaint(mountSupportWidget, 3500);
   }
