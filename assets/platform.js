@@ -9,6 +9,7 @@
   };
   var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
   var SUPPORT_ID = 'cls-support-widget';
+  var DANGER_ID = 'cls-danger-zone-widget';
   var scriptLoads = {};
 
   function nowIso() {
@@ -940,6 +941,39 @@
 	    document.head.appendChild(style);
 	  }
 
+  function injectDangerZoneStyle() {
+    if (document.getElementById('cls-danger-zone-style')) return;
+    var style = document.createElement('style');
+    style.id = 'cls-danger-zone-style';
+    style.textContent =
+      '#cls-danger-zone-widget{margin-top:1rem;border:1px solid #efc8c3;background:#fff;border-left:3px solid #c0392b;padding:1rem 1.1rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814}' +
+      '#cls-danger-zone-widget .cls-danger-top{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center}' +
+      '#cls-danger-zone-widget .cls-danger-kicker,.cls-danger-modal .cls-danger-kicker{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:#c0392b;font-weight:800;margin-bottom:.2rem}' +
+      '#cls-danger-zone-widget .cls-danger-title,.cls-danger-modal .cls-danger-title{font-family:Cormorant Garamond,Georgia,serif;font-size:1.28rem;line-height:1.1;margin-bottom:.18rem;color:#1C1814}' +
+      '#cls-danger-zone-widget .cls-danger-copy,.cls-danger-modal .cls-danger-copy{font-size:.76rem;line-height:1.58;color:#6B6258;max-width:680px}' +
+      '#cls-danger-zone-widget .cls-danger-actions{display:flex;gap:.65rem;flex-wrap:wrap;justify-content:flex-end}' +
+      '#cls-danger-zone-widget .cls-danger-btn,.cls-danger-modal .cls-danger-btn{border:1px solid #c0392b;background:#fff;color:#c0392b;padding:.72rem .9rem;font-family:inherit;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:nowrap}' +
+      '#cls-danger-zone-widget .cls-danger-btn.fill,.cls-danger-modal .cls-danger-btn.fill{background:#c0392b;color:#fff}' +
+      '#cls-danger-zone-widget .cls-danger-btn:hover,.cls-danger-modal .cls-danger-btn:hover{background:#1C1814;border-color:#1C1814;color:#fff}' +
+      '.cls-danger-modal{position:fixed;inset:0;z-index:10000;background:rgba(28,24,20,.74);display:flex;align-items:center;justify-content:center;padding:1.2rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814}' +
+      '.cls-danger-dialog{width:min(620px,100%);background:#fff;border:1px solid #efc8c3;box-shadow:0 24px 70px rgba(0,0,0,.25)}' +
+      '.cls-danger-head{padding:1.25rem 1.35rem;border-bottom:1px solid #E7DFD2;display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}' +
+      '.cls-danger-close{border:0;background:transparent;color:#6B6258;font-size:1.45rem;line-height:1;cursor:pointer}' +
+      '.cls-danger-body{padding:1.25rem 1.35rem;display:grid;gap:.85rem}' +
+      '.cls-danger-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}' +
+      '.cls-danger-step{height:4px;background:#eadfd3}.cls-danger-step.active{background:#c0392b}' +
+      '.cls-danger-modal label{display:block;font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:#6B6258;font-weight:800;margin-bottom:.35rem}' +
+      '.cls-danger-modal select,.cls-danger-modal textarea,.cls-danger-modal input{width:100%;border:1px solid #DCD4C8;background:#F7F5F0;padding:.78rem .85rem;font-family:inherit;font-size:.82rem;color:#1C1814;outline:none;border-radius:0}' +
+      '.cls-danger-modal textarea{min-height:130px;resize:vertical;line-height:1.5}' +
+      '.cls-danger-modal select:focus,.cls-danger-modal textarea:focus,.cls-danger-modal input:focus{border-color:#c0392b;background:#fff}' +
+      '.cls-danger-confirm{border:1px solid #efc8c3;background:#fff8f7;padding:.85rem;color:#6B6258;font-size:.76rem;line-height:1.55}' +
+      '.cls-danger-status{font-size:.74rem;color:#6B6258;min-height:1.2rem}' +
+      '.cls-danger-foot{padding:1rem 1.35rem;border-top:1px solid #E7DFD2;display:flex;justify-content:space-between;gap:.75rem;align-items:center}' +
+      '@media(max-width:760px){#cls-danger-zone-widget .cls-danger-top{grid-template-columns:1fr}#cls-danger-zone-widget .cls-danger-actions{justify-content:stretch}#cls-danger-zone-widget .cls-danger-btn,.cls-danger-modal .cls-danger-btn{width:100%}.cls-danger-foot{display:grid}.cls-danger-steps{grid-template-columns:1fr 1fr 1fr}}' +
+      '@media print{#cls-danger-zone-widget,.cls-danger-modal{display:none!important}}';
+    document.head.appendChild(style);
+  }
+
   function ticketTime(row) {
     var t = row && row.data || {};
     var raw = t.utcAt || t.createdAt || t.updatedAt || '';
@@ -1195,6 +1229,231 @@
     subscribeChat(wrap);
   }
 
+  function dangerActionName(action) {
+    return action === 'deleteAccount' ? 'Delete Account' : 'Reset Data';
+  }
+
+  function dangerConfirmPhrase(action) {
+    return action === 'deleteAccount' ? 'DELETE ACCOUNT' : 'RESET DATA';
+  }
+
+  function dangerReasons(action) {
+    if (action === 'deleteAccount') {
+      return [
+        'Too expensive',
+        'Missing a feature I need',
+        'Too slow or unreliable',
+        'Moving to another system',
+        'Business closed or paused',
+        'Created by mistake',
+        'Other'
+      ];
+    }
+    return [
+      'Testing with a clean account',
+      'Imported wrong data',
+      'Data conflict or duplicate records',
+      'Starting a new business file',
+      'Performance feels slow',
+      'Other'
+    ];
+  }
+
+  function dangerReasonOptions(action, selected) {
+    return '<option value="">Choose a reason</option>' + dangerReasons(action).map(function(reason) {
+      return '<option value="' + escapeHtml(reason) + '"' + (reason === selected ? ' selected' : '') + '>' + escapeHtml(reason) + '</option>';
+    }).join('');
+  }
+
+  function dangerStepBody(flow) {
+    if (flow.step === 1) {
+      return '<label>Reason</label>' +
+        '<select data-danger-reason>' + dangerReasonOptions(flow.action, flow.reasonCategory) + '</select>' +
+        '<div class="cls-danger-copy">This is saved for the admin backlog before any account action runs.</div>';
+    }
+    if (flow.step === 2) {
+      return '<label>What happened?</label>' +
+        '<textarea data-danger-details placeholder="Tell us what went wrong or what you are trying to clean up.">' + escapeHtml(flow.reasonDetails) + '</textarea>' +
+        '<label>What would have helped?</label>' +
+        '<textarea data-danger-improvement placeholder="Optional: mention the missing feature, support issue, speed issue, or expectation.">' + escapeHtml(flow.improvementRequest) + '</textarea>';
+    }
+    var phrase = dangerConfirmPhrase(flow.action);
+    var actionCopy = flow.action === 'deleteAccount'
+      ? 'This deletes your login account and removes your saved workspace records. This cannot be undone from the app.'
+      : 'This keeps your login, plan, billing status, and business profile, but clears invoices, transactions, expenses, customers, suppliers, payables, and edit logs.';
+    return '<div class="cls-danger-confirm">' + escapeHtml(actionCopy) + '</div>' +
+      '<label>Type ' + escapeHtml(phrase) + '</label>' +
+      '<input data-danger-confirm autocomplete="off" value="' + escapeHtml(flow.confirmText) + '" placeholder="' + escapeHtml(phrase) + '">';
+  }
+
+  function readDangerStep(flow, modal) {
+    var reason = modal.querySelector('[data-danger-reason]');
+    var details = modal.querySelector('[data-danger-details]');
+    var improvement = modal.querySelector('[data-danger-improvement]');
+    var confirm = modal.querySelector('[data-danger-confirm]');
+    if (reason) flow.reasonCategory = cleanString(reason.value, 160).trim();
+    if (details) flow.reasonDetails = cleanString(details.value, 3000).trim();
+    if (improvement) flow.improvementRequest = cleanString(improvement.value, 2000).trim();
+    if (confirm) flow.confirmText = cleanString(confirm.value, 80).trim();
+  }
+
+  function dangerValidation(flow) {
+    if (flow.step === 1 && !flow.reasonCategory) return 'Please choose a reason.';
+    if (flow.step === 2 && cleanString(flow.reasonDetails, 3000).trim().length < 12) return 'Please add a little more detail.';
+    if (flow.step === 3 && flow.confirmText.toUpperCase() !== dangerConfirmPhrase(flow.action)) return 'Type ' + dangerConfirmPhrase(flow.action) + ' to confirm.';
+    return '';
+  }
+
+  function clearAccountLocalBackups(uid, ownerUid) {
+    try {
+      var ids = [uid, ownerUid].filter(Boolean);
+      var prefixes = ['cls-solo-data-backup:', 'cls-starter-data-backup:', 'cls-business-data-backup:'];
+      ids.forEach(function(id) {
+        prefixes.forEach(function(prefix) { localStorage.removeItem(prefix + id); });
+      });
+      localStorage.removeItem('cls-solo-backup');
+      localStorage.removeItem('cls-starter-backup');
+      localStorage.removeItem('cls-solo-demo-backup');
+      localStorage.removeItem('cls-starter-demo-backup');
+    } catch (e) {}
+  }
+
+  async function submitDangerAction(flow) {
+    var user = getAuthUser();
+    if (!user || !user.getIdToken) throw new Error('Please sign in again.');
+    var token = await user.getIdToken();
+    var res = await fetch('/.netlify/functions/account-danger-zone', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        action: flow.action,
+        plan: planFromPath() || rememberedPlan(),
+        reasonCategory: flow.reasonCategory,
+        reasonDetails: flow.reasonDetails,
+        improvementRequest: flow.improvementRequest,
+        confirmText: flow.confirmText,
+        page: location.href,
+        userAgent: navigator.userAgent || ''
+      })
+    });
+    var json = await res.json().catch(function() { return {}; });
+    if (!res.ok || json.ok === false) throw new Error(json.error || 'Could not complete account action.');
+    return json;
+  }
+
+  function openDangerFlow(action) {
+    injectDangerZoneStyle();
+    var existing = document.querySelector('.cls-danger-modal');
+    if (existing) existing.remove();
+    var flow = {
+      action: action,
+      step: 1,
+      reasonCategory: '',
+      reasonDetails: '',
+      improvementRequest: '',
+      confirmText: ''
+    };
+    var modal = document.createElement('div');
+    modal.className = 'cls-danger-modal';
+    document.body.appendChild(modal);
+
+    function close() {
+      modal.remove();
+    }
+
+    function setStatus(message, isError) {
+      var node = modal.querySelector('[data-danger-status]');
+      if (node) {
+        node.textContent = message || '';
+        node.style.color = isError ? '#c0392b' : '#6B6258';
+      }
+    }
+
+    function render() {
+      var title = dangerActionName(flow.action);
+      modal.innerHTML =
+        '<div class="cls-danger-dialog" role="dialog" aria-modal="true" aria-label="' + escapeHtml(title) + '">' +
+          '<div class="cls-danger-head"><div><div class="cls-danger-kicker">Danger Zone</div><div class="cls-danger-title">' + escapeHtml(title) + '</div><div class="cls-danger-copy">Step ' + flow.step + ' of 3</div></div><button type="button" class="cls-danger-close" data-danger-close aria-label="Close">x</button></div>' +
+          '<div class="cls-danger-body"><div class="cls-danger-steps"><div class="cls-danger-step active"></div><div class="cls-danger-step' + (flow.step >= 2 ? ' active' : '') + '"></div><div class="cls-danger-step' + (flow.step >= 3 ? ' active' : '') + '"></div></div>' + dangerStepBody(flow) + '<div class="cls-danger-status" data-danger-status></div></div>' +
+          '<div class="cls-danger-foot"><button type="button" class="cls-danger-btn" data-danger-back>' + (flow.step === 1 ? 'Cancel' : 'Back') + '</button><button type="button" class="cls-danger-btn fill" data-danger-next>' + (flow.step === 3 ? title : 'Continue') + '</button></div>' +
+        '</div>';
+      modal.querySelector('[data-danger-close]').addEventListener('click', close);
+      modal.querySelector('[data-danger-back]').addEventListener('click', function() {
+        readDangerStep(flow, modal);
+        if (flow.step === 1) close();
+        else {
+          flow.step -= 1;
+          render();
+        }
+      });
+      modal.querySelector('[data-danger-next]').addEventListener('click', async function(ev) {
+        readDangerStep(flow, modal);
+        var error = dangerValidation(flow);
+        if (error) {
+          setStatus(error, true);
+          return;
+        }
+        if (flow.step < 3) {
+          flow.step += 1;
+          render();
+          return;
+        }
+        var btn = ev.currentTarget;
+        btn.disabled = true;
+        btn.textContent = 'Working...';
+        setStatus('Saving feedback and processing request...', false);
+        try {
+          var result = await submitDangerAction(flow);
+          var user = getAuthUser();
+          clearAccountLocalBackups(user && user.uid, result.ownerUid);
+          if (flow.action === 'resetData') {
+            setStatus('Data reset. Reloading your clean workspace...', false);
+            setTimeout(function() { location.reload(); }, 900);
+          } else {
+            setStatus('Account deleted. Signing out...', false);
+            try {
+              if (window.firebase && firebase.auth) await firebase.auth().signOut();
+            } catch (e) {}
+            setTimeout(function() { location.href = 'signin.html?account=deleted'; }, 700);
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = dangerActionName(flow.action);
+          setStatus(err.message || 'Could not complete account action.', true);
+        }
+      });
+    }
+
+    render();
+  }
+
+  function mountDangerZoneWidget() {
+    if (document.getElementById(DANGER_ID)) return;
+    if (!isPortalPath()) return;
+    var settingsView = document.getElementById('view-settings');
+    if (!settingsView) {
+      setTimeout(mountDangerZoneWidget, 700);
+      return;
+    }
+    injectDangerZoneStyle();
+    var wrap = document.createElement('div');
+    wrap.id = DANGER_ID;
+    wrap.innerHTML =
+      '<div class="cls-danger-top">' +
+        '<div><div class="cls-danger-kicker">Danger Zone</div><div class="cls-danger-title">Account Controls</div><div class="cls-danger-copy">Reset clears operational records while keeping your account. Delete removes the login account after feedback is saved.</div></div>' +
+        '<div class="cls-danger-actions"><button type="button" class="cls-danger-btn" data-danger-action="resetData">Reset Data</button><button type="button" class="cls-danger-btn fill" data-danger-action="deleteAccount">Delete Account</button></div>' +
+      '</div>';
+    settingsView.appendChild(wrap);
+    wrap.addEventListener('click', function(ev) {
+      var btn = ev.target.closest('[data-danger-action]');
+      if (!btn) return;
+      openDangerFlow(btn.getAttribute('data-danger-action'));
+    });
+  }
+
 	  function mountSupportWidget() {
     if (document.getElementById(SUPPORT_ID)) return;
     if (/ceylonry-admin\.html/i.test(location.pathname)) return;
@@ -1359,6 +1618,7 @@
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);
     afterFirstPaint(trackVisit, 5000);
+    afterFirstPaint(mountDangerZoneWidget, 2800);
     afterFirstPaint(mountSupportWidget, 3500);
   }
 

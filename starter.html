@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-data-quiet"></script>
-<script src="assets/platform.js?v=20260705-data-quiet"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260705-danger-zone"></script>
+<script src="assets/platform.js?v=20260705-danger-zone"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1140,15 +1140,27 @@ function normalizeLoadedDBCollections() {
   DB.editBacklog.sort((a,b) => new Date(b.editedAt||0) - new Date(a.editedAt||0));
 }
 
+function applyDBBackup(backup, updateVersion) {
+  if (!backup || !backup.data) return false;
+  Object.assign(DB, backup.data);
+  if (updateVersion) _dataVersion = Math.max(_dataVersion || 0, Number(backup.version || 0) || 0);
+  normalizeLoadedDBCollections();
+  return true;
+}
+
+function restoreDBBackupPreview() {
+  const backup = readDBBackup(_uid);
+  if (!backup || !backup.data) return false;
+  return applyDBBackup(backup, false);
+}
+
 function restoreDBBackupIfNewer(serverVersion) {
   const backup = readDBBackup(_uid);
   if (!backup || !backup.data) return false;
   const backupVersion = Number(backup.version || 0);
   if (!backupVersion || backupVersion <= Number(serverVersion || 0)) return false;
-  Object.assign(DB, backup.data);
-  _dataVersion = backupVersion;
-  normalizeLoadedDBCollections();
-  return true;
+  applyDBBackup(backup, true);
+  return backup.serverSaved === true ? 'saved' : 'unsaved';
 }
 
 // Supabase save — writes a single collection array
@@ -1285,7 +1297,7 @@ async function loadDB() {
     DB.clients.list = results[4].docs.map(d => d.data());
     DB.suppliers.list = results[5].docs.map(d => d.data());
     normalizeLoadedDBCollections();
-    if (restoreDBBackupIfNewer(serverVersion)) setTimeout(function(){ saveDB(); }, 500);
+    if (restoreDBBackupIfNewer(serverVersion) === 'unsaved') setTimeout(function(){ saveDB(); }, 500);
   } catch(e) { console.error('loadDB error:', e); }
 }
 
@@ -1331,6 +1343,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     if (_profile.settings) Object.assign(DB.settings, _profile.settings);
 
     // Load data then render
+    if (restoreDBBackupPreview()) init();
     await loadDB();
     init();
     enforcePermissions();

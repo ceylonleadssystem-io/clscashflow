@@ -38,6 +38,10 @@ function safeEqual(a, b) {
   return aBuf.length === bBuf.length && crypto.timingSafeEqual(aBuf, bBuf);
 }
 
+function sha512Upper(value) {
+  return crypto.createHash('sha512').update(String(value || ''), 'utf8').digest('hex').toUpperCase();
+}
+
 function authCandidates(event) {
   const auth = header(event.headers, 'authorization');
   const bearer = auth.match(/^Bearer\s+(.+)$/i);
@@ -106,17 +110,17 @@ function webhookData(body) {
 
 function sessionIdFrom(body) {
   const parts = webhookData(body);
-  return clean(firstValue(parts.meta, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference']), 140)
-    || clean(firstValue(parts.payment, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
-    || clean(firstValue(parts.data, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
-    || clean(firstValue(parts.body, ['sessionId', 'session_id', 'orderId', 'order_id', 'reference', 'payment_reference']), 140);
+  return clean(firstValue(parts.meta, ['sessionId', 'session_id', 'invoiceId', 'invoice_id', 'invoiceNo', 'invoice_no', 'orderId', 'order_id', 'reference']), 140)
+    || clean(firstValue(parts.payment, ['sessionId', 'session_id', 'invoiceId', 'invoice_id', 'invoiceNo', 'invoice_no', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
+    || clean(firstValue(parts.data, ['sessionId', 'session_id', 'invoiceId', 'invoice_id', 'invoiceNo', 'invoice_no', 'orderId', 'order_id', 'reference', 'payment_reference']), 140)
+    || clean(firstValue(parts.body, ['sessionId', 'session_id', 'invoiceId', 'invoice_id', 'invoiceNo', 'invoice_no', 'orderId', 'order_id', 'reference', 'payment_reference']), 140);
 }
 
 function statusFrom(body) {
   const parts = webhookData(body);
-  const status = firstValue(parts.payment, ['status', 'payment_status', 'transaction_status', 'state', 'result'])
-    || firstValue(parts.data, ['status', 'payment_status', 'transaction_status', 'state', 'result'])
-    || firstValue(parts.body, ['status', 'payment_status', 'transaction_status', 'state', 'result', 'event']);
+  const status = firstValue(parts.payment, ['statusMessage', 'status_message', 'status', 'statusCode', 'status_code', 'payment_status', 'transaction_status', 'state', 'result'])
+    || firstValue(parts.data, ['statusMessage', 'status_message', 'status', 'statusCode', 'status_code', 'payment_status', 'transaction_status', 'state', 'result'])
+    || firstValue(parts.body, ['statusMessage', 'status_message', 'status', 'statusCode', 'status_code', 'payment_status', 'transaction_status', 'state', 'result', 'event']);
   return clean(status, 80).toLowerCase();
 }
 
@@ -128,6 +132,43 @@ function isPaid(body) {
   if (boolValue === true || String(boolValue).toLowerCase() === 'true') return true;
   const status = statusFrom(body);
   return ['paid', 'success', 'successful', 'completed', 'settled', 'approved', 'authorized', 'captured'].includes(status);
+}
+
+function payableWebhookCheck(body) {
+  const parts = webhookData(body);
+  const token = process.env.PAYABLE_MERCHANT_TOKEN || '';
+  const supplied = clean(firstValue(parts.payment, ['checkValue', 'check_value'])
+    || firstValue(parts.data, ['checkValue', 'check_value'])
+    || firstValue(parts.body, ['checkValue', 'check_value']), 200);
+  if (!token || !supplied) return { ok: true, skipped: true };
+  const merchantKey = clean(firstValue(parts.payment, ['merchantKey', 'merchant_key'])
+    || firstValue(parts.data, ['merchantKey', 'merchant_key'])
+    || firstValue(parts.body, ['merchantKey', 'merchant_key'])
+    || process.env.PAYABLE_MERCHANT_KEY
+    || process.env.PAYABLE_MERCHANT_ID, 120);
+  const payableOrderId = clean(firstValue(parts.payment, ['payableOrderId', 'payable_order_id'])
+    || firstValue(parts.data, ['payableOrderId', 'payable_order_id'])
+    || firstValue(parts.body, ['payableOrderId', 'payable_order_id']), 160);
+  const payableTransactionId = clean(firstValue(parts.payment, ['payableTransactionId', 'payable_transaction_id', 'transaction_id', 'payment_id'])
+    || firstValue(parts.data, ['payableTransactionId', 'payable_transaction_id', 'transaction_id', 'payment_id'])
+    || firstValue(parts.body, ['payableTransactionId', 'payable_transaction_id', 'transaction_id', 'payment_id']), 160);
+  const payableAmount = clean(firstValue(parts.payment, ['payableAmount', 'payable_amount', 'amount'])
+    || firstValue(parts.data, ['payableAmount', 'payable_amount', 'amount'])
+    || firstValue(parts.body, ['payableAmount', 'payable_amount', 'amount']), 40);
+  const currency = clean(firstValue(parts.payment, ['payableCurrency', 'payable_currency', 'currencyCode', 'currency_code', 'currency'])
+    || firstValue(parts.data, ['payableCurrency', 'payable_currency', 'currencyCode', 'currency_code', 'currency'])
+    || firstValue(parts.body, ['payableCurrency', 'payable_currency', 'currencyCode', 'currency_code', 'currency']), 8);
+  const invoiceNo = clean(firstValue(parts.payment, ['invoiceNo', 'invoice_no', 'invoiceId', 'invoice_id'])
+    || firstValue(parts.data, ['invoiceNo', 'invoice_no', 'invoiceId', 'invoice_id'])
+    || firstValue(parts.body, ['invoiceNo', 'invoice_no', 'invoiceId', 'invoice_id']), 140);
+  const statusCode = clean(firstValue(parts.payment, ['statusCode', 'status_code'])
+    || firstValue(parts.data, ['statusCode', 'status_code'])
+    || firstValue(parts.body, ['statusCode', 'status_code']), 40);
+  if (!merchantKey || !payableOrderId || !payableTransactionId || !payableAmount || !currency || !invoiceNo || !statusCode) {
+    return { ok: true, skipped: true };
+  }
+  const expected = sha512Upper([merchantKey, payableOrderId, payableTransactionId, payableAmount, currency, invoiceNo, statusCode, sha512Upper(token)].join('|'));
+  return safeEqual(expected, supplied) ? { ok: true } : { ok: false };
 }
 
 function normalizePlan(plan) {
@@ -162,6 +203,10 @@ exports.handler = async function handler(event) {
   }
 
   const body = parseBody(event);
+  const payableCheck = payableWebhookCheck(body);
+  if (!payableCheck.ok) {
+    return { statusCode: 401, headers: headers(), body: JSON.stringify({ ok: false, Status: 401, error: 'Payable checkValue verification failed.' }) };
+  }
   const sessionId = sessionIdFrom(body);
   if (!sessionId) {
     return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Missing Payable session/order reference.' }) };
@@ -176,10 +221,13 @@ exports.handler = async function handler(event) {
   const rawStatus = statusFrom(body) || (paid ? 'paid' : 'received');
   const plan = normalizePlan(saved.plan || parts.meta.plan || parts.payment.plan || parts.data.plan || parts.body.plan) || 'solo';
   const uid = clean(saved.uid || parts.meta.uid || parts.payment.uid || parts.data.uid || parts.body.uid, 160);
-  const amount = Number(saved.amount || parts.payment.amount || parts.data.amount || parts.body.amount || PLANS[plan].price || 0);
-  const transactionId = clean(firstValue(parts.payment, ['id', 'transaction_id', 'payment_id'])
-    || firstValue(parts.data, ['id', 'transaction_id', 'payment_id'])
-    || firstValue(parts.body, ['id', 'transaction_id', 'payment_id']), 160);
+  const amount = Number(saved.amount || parts.payment.payableAmount || parts.payment.amount || parts.data.payableAmount || parts.data.amount || parts.body.payableAmount || parts.body.amount || PLANS[plan].price || 0);
+  const transactionId = clean(firstValue(parts.payment, ['payableTransactionId', 'payable_transaction_id', 'id', 'transaction_id', 'payment_id'])
+    || firstValue(parts.data, ['payableTransactionId', 'payable_transaction_id', 'id', 'transaction_id', 'payment_id'])
+    || firstValue(parts.body, ['payableTransactionId', 'payable_transaction_id', 'id', 'transaction_id', 'payment_id']), 160);
+  const payableOrderId = clean(firstValue(parts.payment, ['payableOrderId', 'payable_order_id'])
+    || firstValue(parts.data, ['payableOrderId', 'payable_order_id'])
+    || firstValue(parts.body, ['payableOrderId', 'payable_order_id']), 160);
 
   await paymentRef.set({
     uid: uid || saved.uid || '',
@@ -188,6 +236,7 @@ exports.handler = async function handler(event) {
     currency: saved.currency || parts.payment.currency || parts.data.currency || parts.body.currency || 'LKR',
     status: paid ? 'paid' : rawStatus,
     payableStatus: rawStatus,
+    payableOrderId,
     payableTransactionId: transactionId,
     webhookPayload: body,
     webhookReceivedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -195,11 +244,11 @@ exports.handler = async function handler(event) {
   }, { merge: true });
 
   if (!paid) {
-    return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, paid: false, status: rawStatus }) };
+    return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, Status: 200, paid: false, status: rawStatus }) };
   }
 
   if (!uid) {
-    return { statusCode: 202, headers: headers(), body: JSON.stringify({ ok: true, paid: true, warning: 'Payment recorded, but no user id was found.' }) };
+    return { statusCode: 202, headers: headers(), body: JSON.stringify({ ok: true, Status: 202, paid: true, warning: 'Payment recorded, but no user id was found.' }) };
   }
 
   const planInfo = PLANS[plan] || PLANS.solo;
@@ -231,12 +280,12 @@ exports.handler = async function handler(event) {
     plan,
     planName: planInfo.name,
     amount,
-    currency: saved.currency || parts.payment.currency || parts.data.currency || parts.body.currency || 'LKR',
+    currency: saved.currency || parts.payment.payableCurrency || parts.payment.currency || parts.data.payableCurrency || parts.data.currency || parts.body.payableCurrency || parts.body.currency || 'LKR',
     status: 'paid',
     paidAt: admin.firestore.FieldValue.serverTimestamp(),
     rawStatus,
     createdAt: admin.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 
-  return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, paid: true, uid, plan }) };
+  return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, Status: 200, paid: true, uid, plan }) };
 };

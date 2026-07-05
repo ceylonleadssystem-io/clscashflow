@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-data-quiet"></script>
-<script src="assets/platform.js?v=20260705-data-quiet"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260705-danger-zone"></script>
+<script src="assets/platform.js?v=20260705-danger-zone"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -3239,11 +3239,9 @@ function readBusinessBackup(uid) {
   }
 }
 
-function restoreBusinessBackupIfNewer(serverVersion) {
-  var backup = readBusinessBackup(_uid);
+function applyBusinessBackup(backup, updateVersion) {
   if (!backup || !backup.data) return false;
   var backupVersion = Number(backup.version || 0);
-  if (!backupVersion || backupVersion <= Number(serverVersion || 0)) return false;
   D.settings = Object.assign({}, D.settings, backup.data.settings || {});
   D._nextInvId = backup.data.nextInvId || D._nextInvId || 1;
   D.txns = backup.data.txns || backup.data.transactions || [];
@@ -3253,9 +3251,24 @@ function restoreBusinessBackupIfNewer(serverVersion) {
   D.suppliers = backup.data.suppliers || [];
   D.payables = backup.data.payables || [];
   D.editLog = backup.data.editLog || [];
-  _dataVersion = backupVersion;
+  if (updateVersion) _dataVersion = Math.max(_dataVersion || 0, backupVersion || 0);
   normalizeBusinessData();
   return true;
+}
+
+function restoreBusinessBackupPreview() {
+  var backup = readBusinessBackup(_uid);
+  if (!backup || !backup.data) return false;
+  return applyBusinessBackup(backup, false);
+}
+
+function restoreBusinessBackupIfNewer(serverVersion) {
+  var backup = readBusinessBackup(_uid);
+  if (!backup || !backup.data) return false;
+  var backupVersion = Number(backup.version || 0);
+  if (!backupVersion || backupVersion <= Number(serverVersion || 0)) return false;
+  applyBusinessBackup(backup, true);
+  return backup.serverSaved === true ? 'saved' : 'unsaved';
 }
 
 // Save all D data to Supabase
@@ -3405,7 +3418,8 @@ async function loadData(uid) {
       D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
     }
     normalizeBusinessData();
-    if (restoreBusinessBackupIfNewer(serverVersion)) {
+    var restoreStatus = restoreBusinessBackupIfNewer(serverVersion);
+    if (restoreStatus === 'unsaved') {
       showToast('Recovered latest local changes. Syncing in background...', 'ok');
       setTimeout(function() { saveData(); }, 500);
     }
@@ -3490,6 +3504,7 @@ _fauth.onAuthStateChanged(async function(user) {
     if (_profile.footer) D.settings.footer = _profile.footer;
     if (_profile.name) D.settings.user = _profile.name;
 
+    if (restoreBusinessBackupPreview()) renderDashboard();
     await loadData(_uid);
     var importedFromStudio = await consumeStudioUpgradeSnapshot();
     var resetFreshBusinessOps = false;

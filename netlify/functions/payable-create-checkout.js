@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { firebaseAdminFacade } = require('../lib/supabase');
 
 async function getAdmin() {
@@ -27,6 +28,46 @@ function normalizePlan(plan) {
   plan = String(plan || '').toLowerCase();
   plan = aliases[plan] || plan;
   return Object.prototype.hasOwnProperty.call(PLANS, plan) ? plan : 'solo';
+}
+
+function payableEnv() {
+  return String(process.env.PAYABLE_ENV || 'sandbox').toLowerCase() === 'live' ? 'live' : 'sandbox';
+}
+
+function payableAuthUrl() {
+  if (process.env.PAYABLE_AUTH_URL) return process.env.PAYABLE_AUTH_URL;
+  return payableEnv() === 'live'
+    ? 'https://ipgpayment.payable.lk/ipg/auth/direct-api'
+    : 'https://sandboxipgpayment.payable.lk/ipg/auth/direct-api';
+}
+
+function payableCheckoutUrl() {
+  if (process.env.PAYABLE_CHECKOUT_URL || process.env.PAYABLE_API_URL) return process.env.PAYABLE_CHECKOUT_URL || process.env.PAYABLE_API_URL;
+  return payableEnv() === 'live'
+    ? 'https://ipgpayment.payable.lk/ipg/pro/direct-api'
+    : 'https://sandboxipgpayment.payable.lk/ipg/sandbox/direct-api';
+}
+
+function sha512Upper(value) {
+  return crypto.createHash('sha512').update(String(value || ''), 'utf8').digest('hex').toUpperCase();
+}
+
+function payableAmount(value) {
+  return Number(value || 0).toFixed(2);
+}
+
+function payableCheckValue(merchantKey, invoiceId, amount, currencyCode, merchantToken) {
+  return sha512Upper([merchantKey, invoiceId, amount, currencyCode, sha512Upper(merchantToken)].join('|'));
+}
+
+function splitName(name, email) {
+  name = clean(name, 180);
+  if (!name && email) name = String(email).split('@')[0].replace(/[._-]+/g, ' ');
+  const parts = name.split(/\s+/).filter(Boolean);
+  return {
+    firstName: clean(parts.shift() || 'Customer', 80),
+    lastName: clean(parts.join(' ') || 'User', 100)
+  };
 }
 
 function siteUrl(event) {
@@ -60,6 +101,8 @@ function findCheckoutUrl(result) {
   if (!result || typeof result !== 'object') return '';
   return result.checkoutUrl
     || result.checkout_url
+    || result.paymentPage
+    || result.payment_page
     || result.paymentUrl
     || result.payment_url
     || result.redirectUrl
@@ -71,14 +114,53 @@ function findCheckoutUrl(result) {
 
 function publicPayablePayload(payload) {
   const copy = Object.assign({}, payload);
-  delete copy.business_token;
-  delete copy.businessToken;
-  delete copy.merchant_token;
-  delete copy.merchantToken;
-  if (copy.webhook_url) {
-    copy.webhook_url = String(copy.webhook_url).replace(/([?&]secret=)[^&]*/i, '$1redacted');
+  delete copy.checkValue;
+  if (copy.webhookUrl) {
+    copy.webhookUrl = String(copy.webhookUrl).replace(/([?&]secret=)[^&]*/i, '$1redacted');
   }
   return copy;
+}
+
+async function readJsonResponse(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text || '{}');
+  } catch (parseErr) {
+    return { raw: text };
+  }
+}
+
+async function obtainPayableAccessToken(authUrl, businessKey, businessToken, originDomain) {
+  const authBody = {
+    grant_type: 'client_credentials',
+    originDomain
+  };
+  const basicToken = Buffer.from(businessKey + ':' + businessToken).toString('base64');
+  async function request(authorization) {
+    const res = await fetch(authUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': authorization
+      },
+      body: JSON.stringify(authBody)
+    });
+    return { res, json: await readJsonResponse(res) };
+  }
+
+  let out = await request(basicToken);
+  if (!out.res.ok && out.res.status === 401) {
+    out = await request('Basic ' + basicToken);
+  }
+  const accessToken = out.json && (out.json.accessToken || out.json.access_token || (out.json.data && (out.json.data.accessToken || out.json.data.access_token)));
+  if (!out.res.ok || !accessToken) {
+    const err = new Error('Payable auth request failed.');
+    err.status = out.res.status;
+    err.response = out.json;
+    throw err;
+  }
+  return { accessToken, response: out.json };
 }
 
 const PLANS = {
@@ -128,11 +210,16 @@ exports.handler = async function handler(event) {
   const baseUrl = siteUrl(event);
   const sessionId = 'cls-' + plan + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
   const amount = planInfo.price;
-  const checkoutUrl = process.env.PAYABLE_CHECKOUT_URL || process.env.PAYABLE_API_URL || '';
+  const amountText = payableAmount(amount);
+  const currencyCode = 'LKR';
+  const authUrl = payableAuthUrl();
+  const checkoutUrl = payableCheckoutUrl();
+  const originDomain = clean(process.env.PAYABLE_ORIGIN_DOMAIN || baseUrl, 900);
   const returnBase = clean(body.returnUrl, 900) || (baseUrl + '/payable-return.html');
   const returnUrl = appendQuery(returnBase, { plan, session: sessionId });
   const cancelUrl = clean(body.cancelUrl, 900) || (baseUrl + '/' + (plan === 'business' ? 'growth.html' : plan === 'studio' ? 'starter.html' : 'solo.html'));
   const webhookUrl = payableWebhookUrl(baseUrl);
+  const logoUrl = clean(process.env.PAYABLE_LOGO_URL || (baseUrl + '/assets/mrs-gamage-cashflow.png'), 900);
 
   const db = admin.firestore();
   const sessionRef = db.collection('payablePayments').doc(sessionId);
@@ -143,76 +230,65 @@ exports.handler = async function handler(event) {
     plan,
     planName: planInfo.name,
     amount,
-    currency: 'LKR',
+    currency: currencyCode,
     status: 'pending',
     billingProvider: 'payable',
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
 
-  if (!checkoutUrl) {
-    return {
-      statusCode: 501,
-      headers: headers(),
-      body: JSON.stringify({
-        ok: false,
-        sessionId,
-        error: 'Payable checkout endpoint is not configured. Add PAYABLE_CHECKOUT_URL in Netlify after Payable gives you the API endpoint.'
-      })
-    };
-  }
-
   const businessKey = process.env.PAYABLE_BUSINESS_KEY || '';
   const businessToken = process.env.PAYABLE_BUSINESS_TOKEN || '';
-  const merchantId = process.env.PAYABLE_MERCHANT_ID || '';
+  const merchantKey = process.env.PAYABLE_MERCHANT_KEY || process.env.PAYABLE_MERCHANT_ID || '';
   const merchantToken = process.env.PAYABLE_MERCHANT_TOKEN || '';
-  const authToken = merchantToken || businessToken;
-  if (!businessKey || !businessToken || !merchantId || !merchantToken) {
+  if (!businessKey || !businessToken || !merchantKey || !merchantToken) {
     return { statusCode: 500, headers: headers(), body: JSON.stringify({ ok: false, error: 'Payable credentials are missing in Netlify environment variables.' }) };
   }
+  const customer = splitName(name, email);
+  const phone = clean(body.phone || decoded.phone || '0770000000', 20);
 
   const payablePayload = {
-    merchant_id: merchantId,
-    merchant_token: merchantToken,
-    business_key: businessKey,
-    business_token: businessToken,
-    order_id: sessionId,
-    reference: sessionId,
-    amount,
-    currency: 'LKR',
-    description: 'CLS ' + planInfo.name + ' Plan - Monthly Subscription',
-    customer_name: name,
-    customer_email: email,
-    return_url: returnUrl,
-    cancel_url: cancelUrl,
-    webhook_url: webhookUrl,
-    metadata: { uid, plan, sessionId }
+    merchantKey,
+    currencyCode,
+    checkValue: payableCheckValue(merchantKey, sessionId, amountText, currencyCode, merchantToken),
+    invoiceId: sessionId,
+    paymentType: Number(process.env.PAYABLE_PAYMENT_TYPE || 1),
+    amount: amountText,
+    orderDescription: 'CLS ' + planInfo.name + ' Plan - Monthly Subscription',
+    logoUrl,
+    returnUrl,
+    webhookUrl,
+    originDomain,
+    cancelUrl,
+    customerFirstName: customer.firstName,
+    customerLastName: customer.lastName,
+    customerMobilePhone: phone,
+    customerEmail: email,
+    billingAddressStreet: clean(body.billingAddressStreet || 'Online Payment', 120),
+    billingAddressCity: clean(body.billingAddressCity || 'Colombo', 80),
+    billingAddressCountry: clean(body.billingAddressCountry || 'LKA', 8),
+    billingAddressPostcodeZip: clean(body.billingAddressPostcodeZip || '00100', 20)
   };
 
   let payableResponse;
+  let payableAuthResponse;
   try {
+    const auth = await obtainPayableAccessToken(authUrl, businessKey, businessToken, originDomain);
+    payableAuthResponse = auth.response;
     const res = await fetch(checkoutUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ' + authToken,
-        'X-Merchant-ID': merchantId,
-        'X-Merchant-Token': merchantToken,
-        'X-Business-Key': businessKey,
-        'X-Business-Token': businessToken
+        'Authorization': 'Bearer ' + auth.accessToken
       },
       body: JSON.stringify(payablePayload)
     });
-    const text = await res.text();
-    try {
-      payableResponse = JSON.parse(text || '{}');
-    } catch (parseErr) {
-      payableResponse = { raw: text };
-    }
+    payableResponse = await readJsonResponse(res);
     if (!res.ok) {
       await sessionRef.set({
         status: 'checkout_failed',
+        payableAuthResponse,
         payableStatusCode: res.status,
         payableResponse,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -231,6 +307,7 @@ exports.handler = async function handler(event) {
   const redirect = findCheckoutUrl(payableResponse);
   await sessionRef.set({
     status: redirect ? 'checkout_created' : 'checkout_missing_url',
+    payableAuthResponse,
     payableRequest: publicPayablePayload(payablePayload),
     payableResponse,
     checkoutUrl: redirect || '',

@@ -72,11 +72,16 @@ Payable credentials must be added only in Netlify environment variables. Do not 
 
 Required for Payable checkout:
 
-- `PAYABLE_MERCHANT_ID` - from Payable Settings -> API Integration
+- `PAYABLE_ENV` - `sandbox` while testing, `live` after Payable production approval
+- `PAYABLE_AUTH_URL` - Direct API auth endpoint
+- `PAYABLE_CHECKOUT_URL` - Direct payment API endpoint
+- `PAYABLE_MERCHANT_ID` - from Payable Settings -> API Integration; used as Direct API `merchantKey` unless `PAYABLE_MERCHANT_KEY` is set
+- `PAYABLE_MERCHANT_KEY` - optional alias if Payable gives a separate Merchant Key
 - `PAYABLE_MERCHANT_TOKEN` - from Payable Settings -> API Integration
 - `PAYABLE_BUSINESS_KEY` - from Payable Settings -> Business Integration
 - `PAYABLE_BUSINESS_TOKEN` - from Payable Settings -> Business Integration
-- `PAYABLE_CHECKOUT_URL` - the checkout/session API endpoint Payable gives you
+- `PAYABLE_ORIGIN_DOMAIN` - your approved HTTPS site origin, for example `https://www.ceylonrylabs.io`
+- `PAYABLE_PAYMENT_TYPE` - `1` for one-time payment
 - `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
 - `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
 
@@ -88,7 +93,7 @@ The 15-day trial is controlled by each user's `trialEnd` value in Supabase. Afte
 
 If Payable checkout is not ready yet, the expired-trial paywall creates a manual payment request token in the `paymentRequests` document path. The admin panel shows those tokens so the team can manually send an invoice, mark the request as invoiced, mark it paid, or close it.
 
-The Payable API field names may need one final adjustment once Payable sends the exact checkout documentation. The integration is centralized in `netlify/functions/payable-create-checkout.js`, so that mapping can be changed without touching the dashboards.
+The Direct API flow first calls Payable auth with `base64(businessKey:businessToken)`, then creates the checkout session using `merchantKey`, `invoiceId`, `checkValue`, `returnUrl`, `originDomain`, and `webhookUrl`. Payable returns `paymentPage`, which the app uses as the customer redirect URL.
 
 ## Team Invites
 
