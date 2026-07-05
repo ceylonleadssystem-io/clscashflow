@@ -132,8 +132,8 @@ exports.handler = async function handler(event) {
       const sampleData = sample.data && typeof sample.data === 'object' ? sample.data : {};
       const allowed = await canWrite(path, sampleId, sampleData, user);
       if (!allowed) return { statusCode: 403, headers: headers(), body: JSON.stringify({ ok: false, error: 'Not allowed.' }) };
-      const savedDocs = await replaceCollection(path, docs);
-      return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, docs: savedDocs }) };
+      const saved = await replaceCollection(path, docs);
+      return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, saved }) };
     }
 
     if (action === 'replaceWorkspace') {

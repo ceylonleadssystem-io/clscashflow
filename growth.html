@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260703-refresh-hold"></script>
-<script src="assets/platform.js?v=20260703-refresh-hold"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260705-data-quiet"></script>
+<script src="assets/platform.js?v=20260705-data-quiet"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1188,6 +1188,24 @@ window.openTxnMo = function openTxnMo() {
   resetTxnForm();
   window.openMo('mo-txn');
 }
+window.openSupplierPayment = function openSupplierPayment(supplierId, amount, ref) {
+  var supplier = D.suppliers.find(function(s) { return String(s.id) === String(supplierId) || String(s.name) === String(supplierId); });
+  var name = supplier ? supplier.name : String(supplierId || '');
+  if (!name) { showToast('Supplier not found.', 'err'); return; }
+  window.openMo('mo-txn');
+  setFieldValue('t-type', 'out');
+  setFieldValue('t-date', today());
+  setFieldValue('t-desc', 'Supplier payment - ' + name);
+  setFieldValue('t-cat', 'Supplier Payment');
+  setFieldValue('t-purpose', 'Supplier Payment');
+  setFieldValue('t-paidto', name);
+  setFieldValue('t-amt', amount || '');
+  setFieldValue('t-ref', ref || '');
+  setFieldValue('t-currency', 'LKR');
+  setFieldValue('t-rate', 1);
+  window.updateTxnTypeUI();
+  window.updateTxnCurrencyPreview();
+}
 window.openMo = function openMo(id) {
   if (id === 'mo-exp' || id === 'mo-txn') populateSupplierOptions();
   if (id === 'mo-txn') {
@@ -2202,7 +2220,7 @@ function renderDebt() {
   }).join('') || emptyState('No money outstanding', 'Unpaid invoices will appear here when customers still owe you.', 'Create Invoice', 'window.openInvMo()');
 
   document.getElementById('pay-list').innerHTML = D.payables.map(function(p) {
-    return '<div class="debt-row"><div><div class="debt-name">' + p.supplier + '</div><div class="debt-days">Due in ' + p.days + ' days · ' + p.ref + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><button class="bsm bsmgr" style="margin-top:.25rem" onclick="window.showToast(\'Payment scheduled!\', \'ok\')">Schedule</button></div></div>';
+    return '<div class="debt-row"><div><div class="debt-name">' + escHtml(p.supplier) + '</div><div class="debt-days">Due in ' + escHtml(p.days) + ' days · ' + escHtml(p.ref) + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><button class="bsm bsmgr" style="margin-top:.25rem" onclick="window.openSupplierPayment(' + jsArg(p.supplier) + ',' + toNum(p.amount) + ',' + jsArg(p.ref || '') + ')">Pay</button></div></div>';
   }).join('') || emptyState('No supplier payments due', 'Future payable tracking will appear here as supplier payments are scheduled.', 'Add Supplier', "window.openMo('mo-sup')");
 }
 
@@ -2224,7 +2242,7 @@ window.filterSup = function filterSup(v, el) {
 function renderSupTable(f) {
   var rows = f === 'all' ? D.suppliers : D.suppliers.filter(function(s) { return s.status === f; });
   document.getElementById('sup-body').innerHTML = rows.map(function(s) {
-    return '<tr><td style="font-weight:600">' + s.name + '</td><td><span class="pill psu" style="font-size:.55rem">' + s.cat + '</span></td><td style="font-size:.78rem">' + s.contact + ' · ' + s.phone + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + s.status + '</span></td><td class="tr"><button class="bsm bsmwa" onclick="window.showToast(\'WhatsApp opened for ' + s.name + '\', \'ok\')">💬 WA</button></td></tr>';
+    return '<tr><td style="font-weight:600">' + escHtml(s.name) + '</td><td><span class="pill psu" style="font-size:.55rem">' + escHtml(s.cat) + '</span></td><td style="font-size:.78rem">' + escHtml(s.contact) + ' · ' + escHtml(s.phone) + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + escHtml(s.status) + '</span></td><td class="tr"><button class="bsm bsmgr" onclick="window.openSupplierPayment(' + jsArg(s.id) + ')">Pay</button> <button class="bsm bsmwa" onclick="window.showToast(' + jsArg('WhatsApp opened for ' + s.name) + ',' + jsArg('ok') + ')">💬 WA</button></td></tr>';
   }).join('') || emptyRow(6, 'No suppliers yet', 'Add suppliers to link expenses and supplier payments to real vendors.', 'Add Supplier', "window.openMo('mo-sup')");
 }
 
@@ -2387,6 +2405,9 @@ function escHtml(v) {
   return String(v == null ? '' : v).replace(/[&<>"']/g, function(ch) {
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
   });
+}
+function jsArg(v) {
+  return escHtml(JSON.stringify(String(v == null ? '' : v)));
 }
 
 function collectSettingsDraft() {

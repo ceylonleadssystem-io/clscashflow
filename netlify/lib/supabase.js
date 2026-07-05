@@ -339,9 +339,10 @@ async function replaceCollection(path, docs) {
     if (error) throw error;
   }
 
-  return rows.map(function(row) {
-    return { id: row.id, data: row.data };
-  });
+  return {
+    count: rows.length,
+    deleted: obsolete.length
+  };
 }
 
 async function replaceWorkspace(path, id, data, collections) {
@@ -352,13 +353,20 @@ async function replaceWorkspace(path, id, data, collections) {
   const savedProfile = await upsertDocument(path, id, data, true);
   const basePath = path + '/' + id + '/';
   const savedCollections = {};
+  let savedCount = 0;
   for (const name of Object.keys(collections)) {
     const collectionName = clean(name, 120);
     if (!collectionName) continue;
     const docs = Array.isArray(collections[name]) ? collections[name] : [];
-    savedCollections[collectionName] = await replaceCollection(basePath + collectionName, docs);
+    const result = await replaceCollection(basePath + collectionName, docs);
+    savedCollections[collectionName] = result;
+    savedCount += result && typeof result.count === 'number' ? result.count : docs.length;
   }
-  return { profile: savedProfile, collections: savedCollections };
+  return {
+    profile: { id: savedProfile.id },
+    collections: savedCollections,
+    count: savedCount
+  };
 }
 
 function newId(prefix) {

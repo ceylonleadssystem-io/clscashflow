@@ -23,7 +23,10 @@
     });
   }
 
-  function setCurrentUser(user, notify) {
+  function setCurrentUser(user, notify, forceNotify) {
+    var previousUid = currentUserCache && currentUserCache.uid ? currentUserCache.uid : '';
+    var nextUid = user && user.uid ? user.uid : '';
+    var changed = previousUid !== nextUid;
     currentUserCache = user || null;
     authStateVersion += 1;
     if (user) {
@@ -31,7 +34,7 @@
       window.__CLS_LAST_AUTH_UID = user.uid || '';
       window.__CLS_LAST_AUTH_AT = lastAuthSuccessAt;
     }
-    if (notify) notifyAuthListeners(currentUserCache);
+    if (notify && (forceNotify || changed)) notifyAuthListeners(currentUserCache);
     return currentUserCache;
   }
 
@@ -138,9 +141,9 @@
           scheduleVerifiedSignedOut(30000);
           return;
         }
-        setCurrentUser(null, true);
+        setCurrentUser(null, true, true);
       }).catch(function() {
-        if (!currentUserCache) setCurrentUser(null, true);
+        if (!currentUserCache) setCurrentUser(null, true, true);
       });
     }, delayMs || 2500);
   }
@@ -307,7 +310,7 @@
           if (explicitSignOutInProgress) {
             explicitSignOutInProgress = false;
             clearSessionBackup();
-            setCurrentUser(null, true);
+            setCurrentUser(null, true, true);
             return;
           }
           scheduleVerifiedSignedOut();
@@ -596,7 +599,7 @@
     var out = await client.auth.signInWithPassword({ email: email, password: password });
     if (out.error) throw compatAuthError(out.error, 'auth/invalid-credential');
     persistSessionBackup(out.data.session);
-    var user = setCurrentUser(wrapUser(out.data.user, out.data.session), true);
+    var user = setCurrentUser(wrapUser(out.data.user, out.data.session), true, true);
     return { user: user };
   };
   AuthCompat.prototype.createUserWithEmailAndPassword = async function(email, password) {
@@ -608,7 +611,7 @@
         throw compatAuthError(signedIn.error, 'auth/invalid-credential');
       }
       persistSessionBackup(signedIn.data.session);
-      var user = setCurrentUser(wrapUser(signedIn.data.user, signedIn.data.session), true);
+      var user = setCurrentUser(wrapUser(signedIn.data.user, signedIn.data.session), true, true);
       return { user: user };
     }
     try {
@@ -629,7 +632,7 @@
       if (out.error) throw compatAuthError(out.error, 'auth/email-already-in-use');
       if (out.data && out.data.session) {
         persistSessionBackup(out.data.session);
-        var createdUser = setCurrentUser(wrapUser(out.data.user, out.data.session), true);
+        var createdUser = setCurrentUser(wrapUser(out.data.user, out.data.session), true, true);
         return { user: createdUser };
       }
       return finishWithPasswordSignIn();
@@ -645,7 +648,7 @@
     explicitSignOutInProgress = true;
     clearSessionBackup();
     await client.auth.signOut();
-    setCurrentUser(null, true);
+    setCurrentUser(null, true, true);
   };
   AuthCompat.prototype.signInWithPopup = async function(provider) {
     var client = await getClient();

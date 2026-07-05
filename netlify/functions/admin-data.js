@@ -36,6 +36,27 @@ function serialize(value) {
   return value;
 }
 
+function stripLargeAdminFields(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data || {};
+  const out = Object.assign({}, data);
+  ['logo', 'logoData', 'businessLogo', 'invoiceLogo', 'signature', 'signatureData', 'profileImage', 'avatar'].forEach(function(key) {
+    if (typeof out[key] === 'string' && out[key].length > 1000) delete out[key];
+  });
+  if (out.settings && typeof out.settings === 'object' && !Array.isArray(out.settings)) {
+    out.settings = Object.assign({}, out.settings);
+    ['logo', 'logoData', 'businessLogo', 'invoiceLogo', 'signature', 'signatureData'].forEach(function(key) {
+      if (typeof out.settings[key] === 'string' && out.settings[key].length > 1000) delete out.settings[key];
+    });
+  }
+  return out;
+}
+
+function slimRows(rows) {
+  return (rows || []).map(function(row) {
+    return { id: row.id, data: stripLargeAdminFields(row.data || {}) };
+  });
+}
+
 async function verifyAdmin(admin, event) {
   const header = event.headers.authorization || event.headers.Authorization || '';
   const match = String(header).match(/^Bearer\s+(.+)$/i);
@@ -70,13 +91,13 @@ async function readCollection(db, name, orderField, limit) {
 }
 
 async function readChats(db) {
-  const threads = await readCollection(db, 'chatThreads', 'lastMessageAt', 300);
+  const threads = await readCollection(db, 'chatThreads', 'lastMessageAt', 50);
   await Promise.all(threads.map(async function(row) {
     try {
-      const snap = await db.collection('chatThreads').doc(row.id).collection('messages').orderBy('createdAt', 'asc').limit(80).get();
+      const snap = await db.collection('chatThreads').doc(row.id).collection('messages').orderBy('createdAt', 'desc').limit(20).get();
       row.data.messages = snap.docs.map(function(doc) {
         return { id: doc.id, data: serialize(doc.data() || {}) };
-      });
+      }).reverse();
     } catch (err) {
       row.data.messages = [];
     }
@@ -688,11 +709,11 @@ exports.handler = async function handler(event) {
       return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown admin action.' }) };
     }
 
-    const users = await readCollection(db, 'users', 'createdAt', 500);
-    const visits = await readCollection(db, 'platformVisits', 'createdAt', 500);
-    const tickets = await readCollection(db, 'supportTickets', 'createdAt', 300);
+    const users = await readCollection(db, 'users', 'createdAt', 300);
+    const visits = await readCollection(db, 'platformVisits', 'createdAt', 200);
+    const tickets = await readCollection(db, 'supportTickets', 'createdAt', 160);
     await ensureExpiredTrialPaymentRequests(admin, db, users);
-    const paymentRequests = await readCollection(db, 'paymentRequests', 'createdAt', 300);
+    const paymentRequests = await readCollection(db, 'paymentRequests', 'createdAt', 160);
     const chats = await readChats(db);
     const stats = buildStats(users, visits, tickets, paymentRequests, chats);
 
@@ -713,7 +734,15 @@ exports.handler = async function handler(event) {
     return {
       statusCode: 200,
       headers: headers(),
-      body: JSON.stringify({ ok: true, users, visits, tickets, paymentRequests, chats, stats })
+      body: JSON.stringify({
+        ok: true,
+        users: slimRows(users),
+        visits: slimRows(visits),
+        tickets: slimRows(tickets),
+        paymentRequests: slimRows(paymentRequests),
+        chats: slimRows(chats),
+        stats
+      })
     };
   } catch (err) {
     return {
