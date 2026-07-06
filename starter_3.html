@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
-<script src="assets/platform.js?v=20260705-payable"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
+<script src="assets/platform.js?v=20260706-qa-customers"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -620,7 +620,7 @@ document.addEventListener('click',function(e){
             <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
           </div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15" style="max-width:200px"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the default on new invoices. You can still change it per invoice (B2B rates can differ).</div></div>
-          <div class="f-group" style="margin-bottom:.85rem"><label>Invoice Footer Message</label><input class="f-input" id="set-footer" placeholder="Thank you for your business. Payment due within 30 days."></div>
+          <div class="f-group" style="margin-bottom:.85rem"><label>Invoice Footer Message</label><input class="f-input" id="set-footer" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
           <div class="f-section" style="margin-top:.75rem">Users (Up to 2)</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
             <div class="f-group"><label>User 1 Email (You)</label><input class="f-input" id="set-u1" placeholder="you@email.com"></div>
@@ -950,7 +950,7 @@ let _trialEnd = null;
 let _isPaid = false;
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -2049,7 +2049,7 @@ window.saveSettings = function saveSettings(){
   DB.settings.ejsKey=ejsKeyEl?(ejsKeyEl.value||'').trim():(DB.settings.ejsKey||'');
   DB.settings.ejsService=ejsServiceEl?(ejsServiceEl.value||'').trim():(DB.settings.ejsService||'');
   DB.settings.ejsTemplate=ejsTemplateEl?(ejsTemplateEl.value||'').trim():(DB.settings.ejsTemplate||'');
-  DB.settings.footer=document.getElementById('set-footer').value.trim();
+  DB.settings.footer=document.getElementById('set-footer').value.trim()||'Invoice by Cashflow System - Ceylonry Labs.io';
   DB.settings.u1=document.getElementById('set-u1').value.trim();
   DB.settings.u2=document.getElementById('set-u2').value.trim();
   DB.settings.logoAlign=(document.querySelector('.align-btn.active')?document.querySelector('.align-btn.active').dataset.align:null)||'left';
@@ -2169,7 +2169,7 @@ function buildInvoiceEmailHTML(inv){
   +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px"><tr>'
   +'<td style="vertical-align:top;width:55%">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">Notes</div>'
-    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr(inv.notes||s.footer||'Thank you for your business.')+'</div>'
+    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr(inv.notes||s.footer||'Invoice by Cashflow System - Ceylonry Labs.io')+'</div>'
   +'</td>'
   +'<td style="vertical-align:top;text-align:right">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">'+esc(s.bizName||'Your Business')+'</div>'
@@ -2272,7 +2272,7 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
 </div>
 <table><thead><tr><th class="d">Description</th><th class="c">Qty</th><th class="r">Unit Price</th><th class="r">Amount</th></tr></thead><tbody>${linesHTML}</tbody></table>
 <div class="bottom">
-  <div class="notes"><div class="notes-h">Notes</div><div class="notes-b">${inv.notes||s.footer||'Thank you for your business.'}</div></div>
+  <div class="notes"><div class="notes-h">Notes</div><div class="notes-b">${inv.notes||s.footer||'Invoice by Cashflow System - Ceylonry Labs.io'}</div></div>
   <div class="totals">
     <div class="trow"><span>Subtotal</span><span>${cur} ${fmtP(sub)}</span></div>
     ${disc>0?`<div class="trow"><span>Discount (${disc}%)</span><span>− ${cur} ${fmtP(sub-afterDisc)}</span></div>`:''}
@@ -2280,7 +2280,7 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
     <div class="grand"><span class="g-l">Total Due</span><span class="g-v">${cur} ${fmtP(grand)}</span></div>
   </div>
 </div>
-<div class="footer"><div><strong>${s.bizName||'Your Business'}</strong><br>${s.addr||''}</div><div style="text-align:right;max-width:280px">${s.footer||'Thank you for your business.'}</div></div>
+<div class="footer"><div><strong>${s.bizName||'Your Business'}</strong><br>${s.addr||''}</div><div style="text-align:right;max-width:280px">${s.footer||'Invoice by Cashflow System - Ceylonry Labs.io'}</div></div>
 <div class="powered">Invoice generated by Cashflow System - <b>CeylonryLabs.io</b></div>
 </div></body></html>`;
 }
@@ -2545,7 +2545,7 @@ window.emailInvoice = async function emailInvoice(num){
         cur:cur, amount:inv.amount, sub:sub,
         disc:inv.disc||0, vat:inv.vat||0, vatRate:inv.vatRate||0,
         lines:(inv.lines||[]).map(l=>({desc:l.desc||'',qty:l.qty||1,price:l.price||0,total:(l.total!=null?l.total:inv.amount)})),
-        notes:inv.notes||s.footer||'Thank you for your business.'
+        notes:inv.notes||s.footer||'Invoice by Cashflow System - Ceylonry Labs.io'
       })
     });
     const out=await res.json().catch(()=>({}));
@@ -2564,7 +2564,7 @@ window.waInvoice = function waInvoice(num){
     '📅 Date: '+fmtD(inv.date)+'\n'+
     '⏰ Due: '+fmtD(inv.due)+'\n'+
     '💰 Amount: *LKR '+inv.amount.toLocaleString()+'*\n\n'+
-    (inv.notes||s.footer||'Thank you for your business! 🙏')+'\n\n'+
+    (inv.notes||s.footer||'Invoice by Cashflow System - Ceylonry Labs.io')+'\n\n'+
     '_'+(s.bizName||'Your Business')+' · Powered by CeylonryLabs.io_'
   );
   const phone=inv.cphone?inv.cphone.replace(/[^0-9]/g,''):'';

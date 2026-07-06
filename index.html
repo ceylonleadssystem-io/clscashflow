@@ -424,8 +424,8 @@ a{color:inherit}
               <button type="button" data-currency="usd" aria-pressed="false">International - USD</button>
             </div>
             <div class="segmented" role="group" aria-label="Billing cycle">
-              <button type="button" data-cycle="monthly" aria-pressed="false">Monthly</button>
-              <button type="button" class="active" data-cycle="annual" aria-pressed="true">Annual <span class="save-badge">Save 2 Months</span></button>
+              <button type="button" class="active" data-cycle="monthly" aria-pressed="true">Monthly</button>
+              <button type="button" data-cycle="annual" aria-pressed="false">Annual <span class="save-badge">Save 2 Months</span></button>
             </div>
             <div class="locale-note" id="price-locale-note">Detected you're outside Sri Lanka - prices shown in USD.</div>
           </div>
@@ -690,7 +690,7 @@ a{color:inherit}
       }
     }
   };
-  const pricingState = { currency: 'lkr', cycle: 'annual' };
+  const pricingState = { currency: 'lkr', cycle: 'monthly' };
   const note = document.getElementById('price-locale-note');
 
   function setActive(selector, key, value) {

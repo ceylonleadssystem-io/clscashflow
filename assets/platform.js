@@ -11,6 +11,7 @@
   var BILLING_ID = 'cls-billing-widget';
   var SUPPORT_ID = 'cls-support-widget';
   var DANGER_ID = 'cls-danger-zone-widget';
+  var DEFAULT_INVOICE_FOOTER = 'Invoice by Cashflow System - Ceylonry Labs.io';
   var scriptLoads = {};
 
   function nowIso() {
@@ -379,7 +380,7 @@
     settings = settings || {};
     var biz = settings.bizName || settings.biz || settings.businessName || 'Your Business';
     var email = settings.email || settings.invoiceEmail || '';
-    var footer = settings.footer || 'Thank you for your business.';
+    var footer = settings.footer || DEFAULT_INVOICE_FOOTER;
     var align = settings.logoAlign || 'left';
     var defaultX = align === 'right' ? 88 : (align === 'center' ? 50 : 8);
     return {
@@ -469,7 +470,7 @@
     var balance = Math.max(0, total - Number(inv.paidAmount || inv.paid || 0));
     var status = inv.status || (balance <= 0 ? 'paid' : 'unpaid');
     var note = inv.notes || '';
-    var footer = s.footer || 'Thank you for your business.';
+    var footer = s.footer || DEFAULT_INVOICE_FOOTER;
     var rows = lines.map(function(line, i) {
       return '<tr><td><span class="item-no">' + String(i + 1).padStart(2, '0') + '</span><span class="desc">' + invoiceBreaks(line.desc) + '</span></td><td>' + line.qty + '</td><td>' + invoiceMoney(cur, line.price) + '</td><td>' + invoiceMoney(cur, line.total) + '</td></tr>';
     }).join('');
@@ -484,7 +485,7 @@
       '<section class="parties"><div><div class="label">From</div><div class="party-name">' + invoiceEscape(s.biz) + '</div><div class="party-detail">' + invoiceBreaks(s.addr) + '<br>' + invoiceEscape(s.email) + '</div></div><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="party-detail">' + invoiceBreaks(inv.caddr || '') + (inv.cemail ? '<br>' + invoiceEscape(inv.cemail) : '') + (inv.cphone ? '<br>' + invoiceEscape(inv.cphone) : '') + '</div></div><div><div class="label">Status</div><div class="status-pill">' + invoiceEscape(status) + '</div><div class="party-detail">Balance due<br><b>' + invoiceMoney(cur, balance) + '</b></div></div></section>' +
       '<table class="invoice-table"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<section class="invoice-bottom"><div class="note-card"><div class="note-title">Invoice Notes</div><div class="note-body">' + (note ? invoiceBreaks(note) : 'No special notes for this invoice.') + '</div></div><div class="totals"><div class="row"><span>Subtotal</span><b>' + invoiceMoney(cur, sub) + '</b></div>' + (discAmount ? '<div class="row"><span>Discount</span><b>- ' + invoiceMoney(cur, discAmount) + '</b></div>' : '') + (vat ? '<div class="row"><span>Tax / VAT</span><b>' + invoiceMoney(cur, vat) + '</b></div>' : '') + '<div class="row grand"><span>Total due</span><b>' + invoiceMoney(cur, total) + '</b></div></div></section>' +
-      '<section class="footer-zone"><div><div class="label">Payment / Contact</div><div class="party-detail">' + invoiceEscape(s.biz) + '<br>' + invoiceBreaks(s.addr) + '<br>' + invoiceEscape(s.email) + '</div></div><div class="permanent-footer">' + invoiceBreaks(footer) + '</div><div class="powered">Invoice generated with <b>' + invoiceEscape(systemName) + ' by Ceylonry Labs.io</b></div></section>' +
+      '<section class="footer-zone"><div><div class="label">Payment / Contact</div><div class="party-detail">' + invoiceEscape(s.biz) + '<br>' + invoiceBreaks(s.addr) + '<br>' + invoiceEscape(s.email) + '</div></div><div class="permanent-footer">' + invoiceBreaks(footer) + '</div><div class="powered"><b>' + DEFAULT_INVOICE_FOOTER + '</b></div></section>' +
       '</main></div></body></html>';
   };
 

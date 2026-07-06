@@ -108,6 +108,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .tier-name{font-family:var(--font-d);font-size:1.2rem;font-weight:400;color:var(--text);margin-bottom:.2rem}
 .tier-price{font-size:.72rem;color:var(--gold);margin-bottom:.5rem;font-weight:600}
 .tier-features{font-size:.68rem;color:var(--muted);line-height:1.7;text-align:left}
+.plan-price-note{font-size:.72rem;line-height:1.5;color:var(--muted);margin-top:-.65rem;margin-bottom:1.15rem}
 .tier-card.recommended{box-shadow:0 0 0 2px rgba(184,146,42,.18)}
 .tier-card.recommended::after{content:'Suggested';position:absolute;right:.65rem;top:.65rem;font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .plan-reco{background:var(--bg3);border:1px solid var(--border2);border-left:3px solid var(--gold);padding:1rem 1.1rem;margin:.25rem 0 1rem}
@@ -332,12 +333,12 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 </style>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
 <script>
 const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 </script>
-<script src="assets/platform.js?v=20260705-payable"></script>
+<script src="assets/platform.js?v=20260706-qa-customers"></script>
 </head>
 <body>
 
@@ -415,24 +416,25 @@ firebase.initializeApp(firebaseConfig);
           <div class="plan-reco-label">Suggested plan</div>
           <div class="plan-reco-title" id="plan-suggestion-title">Choose a primary use</div>
           <div class="plan-reco-copy" id="plan-suggestion-copy">Once you pick what you need first, we will suggest the best fit. You can still choose any package.</div>
-          <div class="plan-price-line" id="plan-suggestion-price">Solo LKR 36,000/yr · Studio LKR 60,000/yr · Business LKR 94,800/yr</div>
+          <div class="plan-price-line" id="plan-suggestion-price">Solo LKR 3,500/mo · Studio LKR 5,500/mo · Business LKR 8,500/mo</div>
         </div>
         <div class="ob-field" style="margin-bottom:.6rem"><label>Your package choice *</label></div>
         <div class="tier-cards">
           <div class="tier-card" data-tier="solo" onclick="window.selectTier('solo',this,true)">
-            <div class="tier-name">Solo</div><div class="tier-price">LKR 36,000 / year</div>
+            <div class="tier-name">Solo</div><div class="tier-price">LKR 3,500 / mo</div>
             <div class="tier-features">• 1 user<br>• Up to 30 customers<br>• Professional invoices<br>• Basic reports</div>
           </div>
           <div class="tier-card" data-tier="studio" onclick="window.selectTier('studio',this,true)">
             <div class="tier-badge">Most Popular</div>
-            <div class="tier-name">Studio</div><div class="tier-price">LKR 60,000 / year</div>
+            <div class="tier-name">Studio</div><div class="tier-price">LKR 5,500 / mo</div>
             <div class="tier-features">• Up to 5 users<br>• Up to 100 customers<br>• Quotes & recurring invoices<br>• Expenses and cashflow</div>
           </div>
           <div class="tier-card" data-tier="business" onclick="window.selectTier('business',this,true)">
-            <div class="tier-name">Business</div><div class="tier-price">LKR 94,800 / year</div>
+            <div class="tier-name">Business</div><div class="tier-price">LKR 8,500 / mo</div>
             <div class="tier-features">• Unlimited users<br>• Unlimited customers<br>• AI insights & forecast<br>• Advanced reports</div>
           </div>
         </div>
+        <div class="plan-price-note">Annual billing appears only when activating after the 15-day free trial.</div>
         <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(2)">← Back</button><button class="btn-next" onclick="window.nextStep(2)">Continue →</button></div>
       </div>
 
@@ -504,7 +506,7 @@ firebase.initializeApp(firebaseConfig);
           <div class="ob-field"><label>VAT / Tax Number</label><input class="ob-input" id="s4-vat" placeholder="Optional"></div>
           <div class="ob-field"><label>Default VAT / Tax Rate</label><input class="ob-input" type="number" min="0" max="100" id="s4-taxrate" placeholder="15"></div>
         </div>
-        <div class="ob-field"><label>Invoice Footer Message</label><input class="ob-input" id="s4-footer" placeholder="Thank you for your business. Payment due within 30 days."></div>
+        <div class="ob-field"><label>Invoice Footer Message</label><input class="ob-input" id="s4-footer" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
         <div class="ob-field" style="margin-top:.75rem"><label id="tpl-label">Invoice Template</label></div>
         <div class="tpl-grid-wrap"><div class="tpl-grid" id="tpl-grid"></div></div>
         <div class="invoice-preview-card">
@@ -549,7 +551,7 @@ firebase.initializeApp(firebaseConfig);
             <div class="invoice-preview-bottom">
               <div>
                 <div class="invoice-preview-notes-title">Notes</div>
-                <div class="invoice-preview-notes-body" id="invoice-preview-footer">Thank you for your business.</div>
+                <div class="invoice-preview-notes-body" id="invoice-preview-footer">Invoice by Cashflow System - Ceylonry Labs.io</div>
               </div>
               <div>
                 <div class="invoice-preview-total-line"><span>Subtotal</span><span id="invoice-preview-subtotal">LKR 120,000.00</span></div>
@@ -794,6 +796,7 @@ const allTemplates = window.clsInvoiceTemplates || [
 ];
 
 function normalizeTplIdx(idx){
+  if(window.clsNormalizeInvoiceTemplate) return window.clsNormalizeInvoiceTemplate(idx);
   const n=parseInt(idx,10);
   return Number.isFinite(n)&&n>=0&&n<allTemplates.length?n:0;
 }
@@ -837,7 +840,7 @@ function updateInvoicePreview(){
   const customer=getFieldValue('s2-client-name','Sample Customer');
   const customerEmail=getFieldValue('s2-client-email','accounts@customer.lk');
   const customerPhone=getFieldValue('s2-client-phone','');
-  const footer=getFieldValue('s4-footer','Thank you for your business.');
+  const footer=getFieldValue('s4-footer','Invoice by Cashflow System - Ceylonry Labs.io');
   const taxRate=Math.max(0,parseFloat(getFieldValue('s4-taxrate','15'))||0);
   const subtotal=120000;
   const tax=subtotal*taxRate/100;
@@ -1038,7 +1041,7 @@ function saveStepData(step){
     state.invEmail=document.getElementById('s4-email').value;
     state.vat=document.getElementById('s4-vat').value;
     state.taxRate=document.getElementById('s4-taxrate').value;
-    state.footer=document.getElementById('s4-footer').value;
+    state.footer=document.getElementById('s4-footer').value.trim() || 'Invoice by Cashflow System - Ceylonry Labs.io';
     var clientName=document.getElementById('s2-client-name').value.trim();
     state.firstClient=clientName?{
       id:Date.now(),
@@ -1075,9 +1078,9 @@ function saveStepData(step){
 
 // ── CHOICES + PLAN RECOMMENDATION ──
 const planInfo = {
-  solo:{name:'Solo',price:'LKR 36,000 / year',templates:3,reason:'Best for one owner who needs professional invoices, customers, payment tracking, PDF, email, WhatsApp, and basic reports.'},
-  studio:{name:'Studio',price:'LKR 60,000 / year',templates:3,reason:'Best for small teams that need quotes, recurring invoices, reminders, expenses, cashflow, multi-currency, and stronger branding.'},
-  business:{name:'Business',price:'LKR 94,800 / year',templates:3,reason:'Best when you need unlimited users, AI insights, forecasting, advanced reports, role permissions, priority support, and integrations.'}
+  solo:{name:'Solo',price:'LKR 3,500 / mo',templates:3,reason:'Best for one owner who needs professional invoices, customers, payment tracking, PDF, email, WhatsApp, and basic reports.'},
+  studio:{name:'Studio',price:'LKR 5,500 / mo',templates:3,reason:'Best for small teams that need quotes, recurring invoices, reminders, expenses, cashflow, multi-currency, and stronger branding.'},
+  business:{name:'Business',price:'LKR 8,500 / mo',templates:3,reason:'Best when you need unlimited users, AI insights, forecasting, advanced reports, role permissions, priority support, and integrations.'}
 };
 function getSuggestedTier(){
   const selected=[...document.querySelectorAll('#use-cases .ob-choice.selected')];
@@ -1105,7 +1108,7 @@ function renderPlanRecommendation(){
   const price=document.getElementById('plan-suggestion-price');
   if(title) title.textContent=selectedCount ? `${info.name} looks right for you.` : 'Choose a primary use';
   if(copy) copy.textContent=selectedCount ? info.reason + ' You can still select any plan below.' : 'Once you pick what you need first, we will suggest the best fit. You can still choose any package.';
-  if(price) price.textContent=selectedCount ? info.price : 'Solo LKR 36,000/yr · Studio LKR 60,000/yr · Business LKR 94,800/yr';
+  if(price) price.textContent=selectedCount ? info.price : 'Solo LKR 3,500/mo · Studio LKR 5,500/mo · Business LKR 8,500/mo';
   syncRecommendedBadges();
   if(selectedCount && !state.planTouched){
     const card=document.querySelector(`.tier-card[data-tier="${state.suggestedTier}"]`);
@@ -1226,7 +1229,7 @@ window.toggleChannel = function toggleChannel(ch,el){
 
 // ── SUCCESS ──
 function buildSuccess(){
-  const tierLabels={solo:'Solo — LKR 36,000/yr',studio:'Studio — LKR 60,000/yr',business:'Business — LKR 94,800/yr'};
+  const tierLabels={solo:'Solo — LKR 3,500/mo',studio:'Studio — LKR 5,500/mo',business:'Business — LKR 8,500/mo'};
   const tplName=allTemplates[normalizeTplIdx(state.selectedTemplate)]?.name||'Furniture Pop';
   const suggested=tierLabels[state.suggestedTier]||tierLabels.solo;
   const selected=tierLabels[state.tier]||state.tier;
@@ -1289,7 +1292,7 @@ function buildInvoiceSettingsPayload(){
     addr: state.addr || '',
     email: state.invEmail || '',
     vat: state.vat || '',
-    footer: state.footer || 'Thank you for your business.',
+    footer: state.footer || 'Invoice by Cashflow System - Ceylonry Labs.io',
     logo: state.logo || '',
     logoAlign: 'left',
     logoSize: 'M',
@@ -1394,7 +1397,7 @@ window.launchDashboard = async function launchDashboard(){
         addr: state.addr || '',
         vat: state.vat || '',
         defaultTaxRate: state.taxRate || '',
-        footer: state.footer || '',
+        footer: state.footer || 'Invoice by Cashflow System - Ceylonry Labs.io',
         logo: state.logo || '',
         plan: selectedPlan,
         currentPlan: selectedPlan,
@@ -1402,6 +1405,8 @@ window.launchDashboard = async function launchDashboard(){
         planPrice: prices[selectedPlan] || 36000,
         planMonthlyPrice: monthlyPrices[selectedPlan] || 3500,
         billingCycle: 'annual',
+        nextInvNum: 1,
+        nextInvId: 1,
         trialStart: new Date().toISOString(),
         trialEnd: googleTrialEnd.toISOString(),
         paid: false,
@@ -1457,7 +1462,7 @@ window.launchDashboard = async function launchDashboard(){
         addr: state.addr || '',
         vat: state.vat || '',
         defaultTaxRate: state.taxRate || '',
-        footer: state.footer || '',
+        footer: state.footer || 'Invoice by Cashflow System - Ceylonry Labs.io',
         logo: state.logo || '',
         plan: state.tier || 'solo',
         currentPlan: state.tier || 'solo',
@@ -1465,6 +1470,8 @@ window.launchDashboard = async function launchDashboard(){
         planPrice: prices[state.tier] || 36000,
         planMonthlyPrice: monthlyPrices[state.tier] || 3500,
         billingCycle: 'annual',
+        nextInvNum: 1,
+        nextInvId: 1,
         trialStart: new Date().toISOString(),
         trialEnd: trialEnd.toISOString(),
         paid: false,

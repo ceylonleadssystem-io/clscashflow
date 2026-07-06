@@ -14,8 +14,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260705-payable"></script>
-<script src="assets/platform.js?v=20260705-payable"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
+<script src="assets/platform.js?v=20260706-qa-customers"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -28,7 +28,8 @@
   --sb:252px;--r:5px;
   --fd:'Cormorant Garamond',serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);overflow:hidden}
+html,body{height:100%;max-width:100%;background:var(--bg);color:var(--text);font-family:var(--fb);overflow:hidden}
+img,canvas,svg,video{max-width:100%}
 
 /* SIDEBAR */
 #sb{position:fixed;top:0;left:0;width:var(--sb);height:100vh;background:var(--white);border-right:2px solid var(--black);display:flex;flex-direction:column;z-index:100}
@@ -75,14 +76,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .g-tour-foot{padding:1rem 1.45rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.75rem}
 
 /* MAIN */
-#main{position:absolute;top:0;left:var(--sb);right:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#main{position:absolute;top:0;left:var(--sb);right:0;height:100vh;max-width:calc(100vw - var(--sb));display:flex;flex-direction:column;overflow:hidden}
 .topbar{background:var(--white);border-bottom:2px solid var(--black);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .pg-title{font-family:var(--fd);font-size:1.35rem;font-weight:400;color:var(--black)}
 .pg-sub{font-size:.67rem;color:var(--muted);margin-top:.04rem}
 .tb-right{display:flex;align-items:center;gap:.7rem}
 .tb-date{font-size:.69rem;color:var(--muted)}
 .tb-badge{font-size:.57rem;letter-spacing:.14em;text-transform:uppercase;background:var(--bg3);border:1px solid var(--bacc);color:var(--gold);padding:.21rem .68rem;border-radius:2px}
-.content{flex:1;overflow-y:auto;padding:1.75rem 2.1rem;background:var(--bg)}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;min-width:0;padding:1.75rem 2.1rem;background:var(--bg)}
 
 /* VIEWS */
 .view{display:none}.view.active{display:block}
@@ -215,7 +216,7 @@ tr:hover td{background:var(--bg3)}
 .bsmwa{background:#25D366;color:#fff}.bsmwa:hover{background:#1eb851}
 .bsmdel{background:transparent;border:1px solid rgba(192,57,43,.35);color:var(--red)}.bsmdel:hover{background:var(--red);color:#fff}
 .bsmem{background:#168A62;color:#fff}.bsmem:hover{background:#116A4C}
-.invoice-table{min-width:1260px;table-layout:fixed}
+.invoice-table{min-width:980px;table-layout:fixed}
 .invoice-table th:nth-child(1),.invoice-table td:nth-child(1){width:165px}
 .invoice-table th:nth-child(2),.invoice-table td:nth-child(2){width:155px}
 .invoice-table th:nth-child(3),.invoice-table td:nth-child(3){width:112px}
@@ -426,6 +427,25 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 .pay-pend{font-size:.63rem;color:var(--red);margin-top:.08rem}
 
 /* SETTINGS */
+.settings-page-head{max-width:1120px;margin:0 auto 1rem;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:end}
+.settings-eyebrow{font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:800;margin-bottom:.2rem}
+.settings-head-title{font-family:var(--fd);font-size:1.68rem;font-weight:400;color:var(--black);line-height:1}
+.settings-head-copy{font-size:.75rem;color:var(--muted);line-height:1.55;margin-top:.35rem;max-width:660px}
+.settings-tabs{display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end}
+.settings-tabs span{border:1px solid var(--border);background:var(--white);border-radius:999px;padding:.42rem .72rem;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.settings-tabs span:first-child{background:var(--black);border-color:var(--black);color:#fff}
+#view-settings{max-width:1120px;margin:0 auto}
+#view-settings .settings-layout{align-items:start}
+#view-settings .card{border-radius:8px;box-shadow:0 8px 26px rgba(44,31,20,.035)}
+#view-settings .card-head{position:static;background:var(--white);border-bottom:1px solid var(--border);padding:1rem 1.2rem}
+#view-settings .card-title{font-family:var(--fb);font-size:.86rem;font-weight:800;letter-spacing:0}
+#view-settings .fsec{display:flex;align-items:center;gap:.55rem;border-bottom:0;margin:1.2rem 0 .8rem;padding:0;font-size:.56rem;color:var(--gold)}
+#view-settings .fsec::after{content:"";height:1px;background:var(--border);flex:1}
+#view-settings .settings-template-grid{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
+#view-settings .settings-preview-wrap{border-radius:8px;background:linear-gradient(180deg,#fff,var(--bg));padding:1rem}
+#view-settings .plan-box{border-radius:8px;box-shadow:0 10px 30px rgba(44,31,20,.12)}
+#view-settings .btn{border-radius:999px}
+#view-settings #cls-billing-widget,#view-settings #cls-support-widget,#view-settings #cls-danger-zone-widget{border-radius:8px;max-width:none!important}
 .plan-box{background:var(--black);color:#fff;border-radius:var(--r);padding:1.45rem;margin-bottom:1.1rem}
 .plan-name{font-family:var(--fd);font-size:1.8rem;font-weight:300;margin-bottom:.12rem}
 .plan-price{font-size:.76rem;opacity:.45;margin-bottom:.9rem}
@@ -515,14 +535,14 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .nav-item.on{border-left:0;border-top-color:var(--rose);background:var(--bg3)}
   .nav-icon{width:auto;font-size:1rem}
   .nav-badge{position:absolute;right:.28rem;top:.18rem;margin:0}
-  #main{left:0;height:100dvh}
-  .topbar{padding:.8rem .9rem;align-items:flex-start;gap:.65rem}
+  #main{left:0;height:100dvh;max-width:100vw}
+  .topbar{padding:.8rem .9rem;align-items:flex-start;gap:.65rem;min-width:0}
   .pg-title{font-size:1.28rem;line-height:1.05}
   .pg-sub{font-size:.66rem;line-height:1.35;max-width:210px}
   .tb-right{align-items:flex-end;gap:.45rem;flex-direction:column}
   .tb-date{display:none}
   .tb-badge,.growth-trial-pill{font-size:.52rem;padding:.2rem .55rem}
-  .content{padding:.9rem .75rem 6.1rem;overscroll-behavior:contain;overflow-x:hidden}
+  .content{width:100%;max-width:100vw;padding:.9rem .75rem 6.1rem;overscroll-behavior:contain;overflow-x:hidden}
   .greeting,.db-greeting,.growth-start{display:grid;grid-template-columns:1fr;gap:.7rem;padding:1rem}
   .greet-h,.db-greet-h{font-size:1.28rem}
   .kpi-row,.db-kpi-row,.gm-strip,.gm-row2{grid-template-columns:1fr!important;gap:.62rem}
@@ -542,6 +562,26 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .card-actions{width:100%;display:grid;grid-template-columns:1fr;gap:.5rem}
   .card table:not(.invoice-table){min-width:720px}
   .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .settings-page-head{grid-template-columns:1fr;align-items:start;margin-bottom:.8rem}
+  .settings-tabs{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:.2rem;scrollbar-width:none}
+  .settings-tabs::-webkit-scrollbar{display:none}
+  .settings-tabs span{white-space:nowrap;flex:0 0 auto}
+  #view-settings .card{overflow:hidden}
+  #view-settings .settings-preview-wrap{padding:.8rem}
+  .invoice-table{min-width:0!important;width:100%;display:block}
+  .invoice-table thead{display:none}
+  .invoice-table tbody,.invoice-table tr,.invoice-table td{display:block;width:100%}
+  .invoice-table tr{margin:.8rem 0;border:1px solid var(--border);background:var(--white);border-radius:var(--r);overflow:hidden}
+  .invoice-table td{display:flex;justify-content:space-between;gap:1rem;text-align:right!important;border-bottom:1px solid var(--border);white-space:normal}
+  .invoice-table td::before{font-size:.53rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:left}
+  .invoice-table td:nth-child(1)::before{content:"Invoice"}
+  .invoice-table td:nth-child(2)::before{content:"Customer"}
+  .invoice-table td:nth-child(3)::before{content:"Sent"}
+  .invoice-table td:nth-child(4)::before{content:"Due"}
+  .invoice-table td:nth-child(5)::before{content:"Status"}
+  .invoice-table td:nth-child(6)::before{content:"Payment"}
+  .invoice-table td:nth-child(7)::before{content:"Total"}
+  .invoice-table td:nth-child(8)::before{content:"Actions"}
   th{font-size:.53rem;padding:.55rem .8rem}
   td{font-size:.76rem;padding:.62rem .8rem}
   .btn,.bsm{min-height:38px;display:inline-flex;align-items:center;justify-content:center}
@@ -622,7 +662,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="tb-right">
       <span class="tb-date" id="tb-date"></span>
       <span class="growth-trial-pill" id="growth-trial-pill" style="display:none"></span>
-      <span class="tb-badge">Business · Unlimited Users · LKR 94,800/yr</span>
+      <span class="tb-badge">Business · Unlimited Users · LKR 8,500/mo</span>
     </div>
   </div>
   <div class="content">
@@ -794,7 +834,15 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 
     <!-- SETTINGS -->
     <div class="view" id="view-settings">
-      <div class="g2">
+      <div class="settings-page-head">
+        <div>
+          <div class="settings-eyebrow">Business Settings</div>
+          <div class="settings-head-title">Settings & Billing</div>
+          <div class="settings-head-copy">Manage business details, invoice defaults, saved footer text, billing, team access, and account controls without leaving the page.</div>
+        </div>
+        <div class="settings-tabs"><span>Profile</span><span>Invoices</span><span>Billing</span><span>Team</span><span>Security</span></div>
+      </div>
+      <div class="g2 settings-layout">
         <div>
           <div class="card" style="margin-bottom:1.2rem">
             <div class="card-head"><span class="card-title">My Business Details</span><button class="btn bd" onclick="window.saveSettings()">Save Changes</button></div>
@@ -803,7 +851,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="frow"><div class="fg"><label>Business Name</label><input class="fi" id="s-biz" type="text" placeholder="Your business name"></div><div class="fg"><label>Your Name</label><input class="fi" id="s-user" type="text" placeholder="Your full name"></div></div>
               <div class="fg"><label>Business Address</label><input class="fi" id="s-addr" type="text" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
               <div class="frow"><div class="fg"><label>Your Email</label><input class="fi" id="s-email" type="email" placeholder="you@yourbusiness.lk"></div><div class="fg"><label>VAT / Tax Number (if any)</label><input class="fi" id="s-vat" type="text" placeholder="Optional"></div></div>
-              <div class="fg"><label>Invoice Footer Message</label><input class="fi" id="s-footer" type="text" placeholder="e.g. Thank you for your business!"></div>
+              <div class="fg"><label>Invoice Footer Message</label><input class="fi" id="s-footer" type="text" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
               <div class="frow">
                 <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
                 <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
@@ -855,8 +903,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
           <div class="plan-box">
             <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
             <div class="plan-name">Business Plan ✨</div>
-            <div class="plan-price">LKR 94,800 / year</div>
-            <div style="font-size:.62rem;color:rgba(255,255,255,.52);margin-top:.15rem">LKR 8,500/mo package value</div>
+            <div class="plan-price">LKR 8,500 / mo</div>
+            <div style="font-size:.62rem;color:rgba(255,255,255,.52);margin-top:.15rem">Annual activation appears after the 15-day trial</div>
             <div class="plan-tagline">Built for growing SMEs · unlimited users</div>
             <div class="growth-trial-box" id="growth-trial-status">Your Business trial status will appear here.</div>
             <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Studio, plus:</div>
@@ -993,7 +1041,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1
 };
 
@@ -1376,7 +1424,7 @@ function mapStudioSettings(src) {
   out.addr = src.addr || src.address || out.addr || '';
   out.email = src.email || src.invEmail || src.invoiceEmail || out.email || '';
   out.vat = src.vat || src.taxNo || out.vat || '';
-  out.footer = src.footer || out.footer || 'Thank you for your business.';
+  out.footer = src.footer || out.footer || 'Invoice by Cashflow System - Ceylonry Labs.io';
   out.logo = src.logo || out.logo || '';
   out.monthlyReport = src.monthlyReport === true || out.monthlyReport === true;
   out.logoAlign = src.logoAlign || out.logoAlign || 'left';
@@ -1580,7 +1628,7 @@ function normalizeBusinessData() {
     return {id:String(e.id || e._id || ('E' + Date.now() + i)), date:e.date || today(), desc:e.desc || e.description || 'Expense', vendor:e.vendor || e.supplierName || e.supplier || '', cat:e.cat || e.category || 'Other', amount:toNum(e.amount), supplierId:e.supplierId || '', purpose:e.purpose || 'Operating Expense', ref:e.ref || e.reference || '', slipName:e.slipName || '', method:e.method || '', sourceTxnId:e.sourceTxnId || ''};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   D.invoices = (D.invoices || []).map(function(inv, i) {
-    var id = inv.id || inv.num || ('INV-' + String(i + 1).padStart(3,'0'));
+    var id = inv.id || inv.num || ('INV-' + String(i + 1).padStart(4,'0'));
     var items = (inv.items || inv.lines || []).map(function(it) {
       var qty = toNum(it.qty || it.units || 1) || 1;
       var total = toNum(it.total);
@@ -1604,7 +1652,7 @@ function normalizeBusinessData() {
     var m = String(inv.id || '').match(/(\d+)$/);
     return m ? Math.max(max, Number(m[1])) : max;
   }, 0);
-  D._nextInvId = Math.max(toNum(D._nextInvId) || 1, maxInvNo + 1);
+  D._nextInvId = maxInvNo ? Math.max(toNum(D._nextInvId) || 1, maxInvNo + 1) : 1;
   D.clients = (D.clients || []).map(function(c, i) {
     return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || c.name || 'Customer', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
   });
@@ -2434,7 +2482,7 @@ function collectSettingsDraft() {
     addr: val('s-addr', D.settings.addr) || D.settings.addr || 'Business address',
     email: val('s-email', D.settings.email) || D.settings.email || 'invoices@yourbusiness.lk',
     vat: val('s-vat', D.settings.vat) || D.settings.vat || 'Optional',
-    footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Thank you for your business.',
+    footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Invoice by Cashflow System - Ceylonry Labs.io',
     vatRate: toNum(val('s-vatrate', D.settings.vatRate)),
     defaultTpl: normalizeBusinessTemplate(val('s-default-tpl', D.settings.defaultTpl)),
     logoAlign: val('s-logo-align', D.settings.logoAlign) || D.settings.logoAlign || 'left',
@@ -2504,7 +2552,7 @@ function renderSettingsInvoicePreview() {
       '<div class="preview-table-row"><div>Service or product</div><div>1</div><div>LKR 100,000</div><div>LKR 100,000</div></div>' +
       '<div class="preview-m" style="margin-top:.75rem;white-space:pre-line">' + escHtml(s.footer) + '</div>' +
       '<div class="preview-total" style="background:' + totalBg + ';color:#fff"><span>Total Due</span><span>LKR 100,000</span></div>' +
-      '<div class="preview-m" style="text-align:center;margin-top:.75rem;font-size:.5rem">Invoice generated with Cashflow System by Ceylonry Labs.io</div>' +
+      '<div class="preview-m" style="text-align:center;margin-top:.75rem;font-size:.5rem">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
     '</div>';
 }
 
@@ -2619,7 +2667,8 @@ window.saveInv = function saveInv() {
     existing.paidAmount = existing.paid;
     existing.status = existing.paid >= existing.total ? 'paid' : (existing.paid > 0 ? 'partial' : invoiceStatus(existing));
   } else {
-    id = 'INV-' + String(D._nextInvId || (D.invoices.length + 1)).padStart(3,'0');
+    normalizeBusinessData();
+    id = 'INV-' + String(D._nextInvId || (D.invoices.length + 1)).padStart(4,'0');
     D._nextInvId = (D._nextInvId || (D.invoices.length + 1)) + 1;
     D.invoices.unshift(Object.assign({id:id,num:id,status:'unpaid',paid:0,paidAmount:0}, payload));
   }
@@ -2686,7 +2735,7 @@ window.emailInv = function emailInv(id) {
   var email = inv.cemail || (c ? c.email : '');
   if (!email) { showToast('No customer email saved for this invoice.', 'err'); return; }
   var subject = encodeURIComponent('Invoice ' + inv.id + ' from ' + D.settings.biz);
-  var body = encodeURIComponent('Dear ' + inv.client + ',\n\nPlease find your invoice details below.\n\nInvoice: ' + inv.id + '\nAmount due: ' + fmt(invoiceBalance(inv)) + '\nDue date: ' + inv.due + '\n\nYou can reply to this email for any questions.\n\nThank you,\n' + D.settings.biz + '\n\nInvoice generated with Cashflow System by Ceylonry Labs.io');
+  var body = encodeURIComponent('Dear ' + inv.client + ',\n\nPlease find your invoice details below.\n\nInvoice: ' + inv.id + '\nAmount due: ' + fmt(invoiceBalance(inv)) + '\nDue date: ' + inv.due + '\n\nYou can reply to this email for any questions.\n\nThank you,\n' + D.settings.biz + '\n\nInvoice by Cashflow System - Ceylonry Labs.io');
   window.location.href = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
 }
 
@@ -3022,7 +3071,7 @@ function buildBusinessInvoiceSharePdfFile(inv) {
   if (inv.disc) { y += 18; doc.text('Discount', 360, y); doc.text('- ' + money(inv.disc), 455, y); }
   y += 24; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Grand Total', 360, y); doc.text(money(inv.total), 455, y);
   y += 44; doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text('Notes', x, y);
-  var shareNotes = [inv.notes, s.footer].filter(Boolean).join('\n\n') || 'Thank you for your business.';
+  var shareNotes = [inv.notes, s.footer].filter(Boolean).join('\n\n') || 'Invoice by Cashflow System - Ceylonry Labs.io';
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(text(shareNotes, w), x, y + 16);
   doc.setFontSize(8); doc.setTextColor(120,112,104); doc.text('Invoice generated by Business Cashflow System - CeylonryLabs.io', x, 780);
   var blob = doc.output('blob');
@@ -3079,7 +3128,7 @@ window.saveSettings = function saveSettings() {
   D.settings.addr = document.getElementById('s-addr').value;
   D.settings.email = document.getElementById('s-email').value;
   D.settings.vat = document.getElementById('s-vat').value;
-  D.settings.footer = document.getElementById('s-footer').value;
+  D.settings.footer = document.getElementById('s-footer').value || 'Invoice by Cashflow System - Ceylonry Labs.io';
   var vatRateEl = document.getElementById('s-vatrate');
   var defaultTplEl = document.getElementById('s-default-tpl');
   var logoAlignEl = document.getElementById('s-logo-align');
@@ -3204,8 +3253,8 @@ function buildInvoicePrintHtml(inv) {
       '</section>' +
       '<section class="inv-parties"><div><div class="inv-label">From</div><div class="inv-name">' + escHtml(s.biz || '') + '</div><div class="inv-small">' + escHtml(s.addr || '') + '<br>' + escHtml(s.email || '') + '</div></div><div><div class="inv-label">Bill To</div><div class="inv-name">' + escHtml(inv.client || '') + '</div><div class="inv-small">' + escHtml(inv.caddr || '') + '<br>' + escHtml(inv.cemail || '') + '</div></div><div><div class="inv-label">Status</div><div class="inv-status">' + escHtml(status) + '</div><div class="inv-small">Balance due<br><b>LKR ' + fmtN(balance) + '</b></div></div></section>' +
       '<table class="inv-table"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<section class="inv-bottom"><div><div class="inv-note-label">Notes</div><div class="inv-note">' + escHtml(inv.notes || s.footer || 'Thank you for your business.') + '</div></div>' + totals + '</section>' +
-      '<div class="inv-brand-foot">Invoice generated with <b>Cashflow System by Ceylonry Labs.io</b></div>' +
+      '<section class="inv-bottom"><div><div class="inv-note-label">Notes</div><div class="inv-note">' + escHtml(inv.notes || s.footer || 'Invoice by Cashflow System - Ceylonry Labs.io') + '</div></div>' + totals + '</section>' +
+      '<div class="inv-brand-foot"><b>Invoice by Cashflow System - Ceylonry Labs.io</b></div>' +
     '</main></div>';
 }
 
