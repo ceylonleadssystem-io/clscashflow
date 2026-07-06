@@ -86,7 +86,7 @@ img,canvas,svg,video{max-width:100%}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;min-width:0;padding:1.75rem 2.1rem;background:var(--bg)}
 
 /* VIEWS */
-.view{display:none}.view.active{display:block}
+.view{display:none;min-width:0;max-width:100%}.view.active{display:block}
 
 /* GREETING */
 .greeting{background:linear-gradient(135deg,var(--black),#3d2a1a);color:#fff;border-radius:var(--r);padding:1.25rem 1.6rem;margin-bottom:1.4rem;display:flex;align-items:center;justify-content:space-between}
@@ -153,19 +153,19 @@ img,canvas,svg,video{max-width:100%}
 /* ====== END DASHBOARD ====== */
 
 /* CARDS */
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.2rem;overflow:hidden}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.2rem;overflow:hidden;min-width:0;max-width:100%}
 .card-head{display:flex;align-items:center;justify-content:space-between;padding:.88rem 1.3rem;border-bottom:1px solid var(--border);gap:.5rem;flex-wrap:wrap}
 .card-title{font-family:var(--fd);font-size:1.05rem;font-weight:400;color:var(--black)}
 .card-actions{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
 
 /* GRID LAYOUTS */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-bottom:1.2rem}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.2rem}
-.g2c{display:grid;grid-template-columns:2fr 1fr;gap:1.1rem;margin-bottom:1.2rem}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.1rem;margin-bottom:1.2rem;min-width:0;max-width:100%}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-bottom:1.2rem;min-width:0;max-width:100%}
+.g2c{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:1.1rem;margin-bottom:1.2rem;min-width:0;max-width:100%}
 
 /* TABLES */
 table{width:100%;border-collapse:collapse}
-.table-wrap{width:100%;overflow-x:auto}
+.table-wrap{width:100%;min-width:0;overflow-x:hidden}
 th{font-size:.57rem;letter-spacing:.13em;text-transform:uppercase;color:#fff;padding:.6rem 1.2rem;text-align:left;background:var(--black);white-space:nowrap;font-weight:500}
 td{padding:.7rem 1.2rem;font-size:.81rem;color:var(--muted);border-bottom:1px solid var(--border);vertical-align:middle}
 td:first-child{color:var(--text)}
@@ -216,25 +216,26 @@ tr:hover td{background:var(--bg3)}
 .bsmwa{background:#25D366;color:#fff}.bsmwa:hover{background:#1eb851}
 .bsmdel{background:transparent;border:1px solid rgba(192,57,43,.35);color:var(--red)}.bsmdel:hover{background:var(--red);color:#fff}
 .bsmem{background:#168A62;color:#fff}.bsmem:hover{background:#116A4C}
-.invoice-table{min-width:980px;table-layout:fixed}
-.invoice-table th:nth-child(1),.invoice-table td:nth-child(1){width:165px}
-.invoice-table th:nth-child(2),.invoice-table td:nth-child(2){width:155px}
-.invoice-table th:nth-child(3),.invoice-table td:nth-child(3){width:112px}
-.invoice-table th:nth-child(4),.invoice-table td:nth-child(4){width:112px}
-.invoice-table th:nth-child(5),.invoice-table td:nth-child(5){width:110px}
-.invoice-table th:nth-child(6),.invoice-table td:nth-child(6){width:170px}
-.invoice-table th:nth-child(7),.invoice-table td:nth-child(7){width:175px}
-.invoice-table th:nth-child(8),.invoice-table td:nth-child(8){width:285px}
-.invoice-table td{height:70px}
+.invoice-table{min-width:0;width:100%;table-layout:auto}
+.invoice-table th,.invoice-table td{padding:.58rem .72rem;white-space:normal}
+.invoice-table th:nth-child(1),.invoice-table td:nth-child(1){width:12%}
+.invoice-table th:nth-child(2),.invoice-table td:nth-child(2){width:13%}
+.invoice-table th:nth-child(3),.invoice-table td:nth-child(3){width:9%}
+.invoice-table th:nth-child(4),.invoice-table td:nth-child(4){width:10%}
+.invoice-table th:nth-child(5),.invoice-table td:nth-child(5){width:9%}
+.invoice-table th:nth-child(6),.invoice-table td:nth-child(6){width:14%}
+.invoice-table th:nth-child(7),.invoice-table td:nth-child(7){width:11%}
+.invoice-table th:nth-child(8),.invoice-table td:nth-child(8){width:22%}
+.invoice-table td{min-height:64px;height:auto}
 .invoice-customer{font-weight:600;color:var(--muted);line-height:1.28;word-break:break-word}
 .invoice-amount{font-family:var(--fm);font-weight:700;color:var(--gold);white-space:nowrap;letter-spacing:0;text-align:right;font-size:.76rem;line-height:1.2}
-.invoice-actions{display:grid;grid-template-columns:repeat(3,74px);gap:.38rem;justify-content:end;align-items:center}
+.invoice-actions{display:grid;grid-template-columns:repeat(2,minmax(58px,1fr));gap:.34rem;justify-content:end;align-items:center;max-width:176px;margin-left:auto}
 .invoice-actions .bsm,.invoice-actions .pill{height:32px;min-width:0;width:100%;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center;border-radius:4px}
-.invoice-actions .bsm{font-size:.56rem;letter-spacing:.08em}
+.invoice-actions .bsm{font-size:.52rem;letter-spacing:.06em}
 .invoice-actions .pill{font-size:.54rem}
 .invoice-actions .action-wide{grid-column:span 2}
-.invoice-pay{min-width:145px}
-.invoice-pay .pay-wrap{gap:.45rem}
+.invoice-pay{min-width:0}
+.invoice-pay .pay-wrap{gap:.45rem;flex-wrap:wrap}
 .invoice-pay .pay-bar{min-width:76px}
 .invoice-pay .pay-pend{line-height:1.25}
 
@@ -427,22 +428,28 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 .pay-pend{font-size:.63rem;color:var(--red);margin-top:.08rem}
 
 /* SETTINGS */
-.settings-page-head{max-width:1120px;margin:0 auto 1rem;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:end}
+.settings-page-head{width:100%;max-width:1120px;margin:0 auto 1rem;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:end}
 .settings-eyebrow{font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:800;margin-bottom:.2rem}
 .settings-head-title{font-family:var(--fd);font-size:1.68rem;font-weight:400;color:var(--black);line-height:1}
 .settings-head-copy{font-size:.75rem;color:var(--muted);line-height:1.55;margin-top:.35rem;max-width:660px}
-.settings-tabs{display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end}
-.settings-tabs span{border:1px solid var(--border);background:var(--white);border-radius:999px;padding:.42rem .72rem;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
-.settings-tabs span:first-child{background:var(--black);border-color:var(--black);color:#fff}
-#view-settings{max-width:1120px;margin:0 auto}
-#view-settings .settings-layout{align-items:start}
+.settings-tabs{display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.settings-tabs button{border:1px solid var(--border);background:var(--white);border-radius:999px;padding:.42rem .72rem;font-family:var(--fb);font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;cursor:pointer;transition:all .16s;white-space:nowrap}
+.settings-tabs button:hover{border-color:var(--gold);color:var(--gold)}
+.settings-tabs button.active{background:var(--black);border-color:var(--black);color:#fff}
+.settings-tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#view-settings{width:100%;max-width:1120px;margin:0 auto;min-width:0}
+#view-settings .settings-layout{align-items:start;grid-template-columns:minmax(0,1.08fr) minmax(300px,.82fr);min-width:0}
+#view-settings .settings-layout>div{min-width:0}
+#view-settings .settings-section,#view-settings .settings-anchor{scroll-margin-top:1rem}
 #view-settings .card{border-radius:8px;box-shadow:0 8px 26px rgba(44,31,20,.035)}
 #view-settings .card-head{position:static;background:var(--white);border-bottom:1px solid var(--border);padding:1rem 1.2rem}
 #view-settings .card-title{font-family:var(--fb);font-size:.86rem;font-weight:800;letter-spacing:0}
 #view-settings .fsec{display:flex;align-items:center;gap:.55rem;border-bottom:0;margin:1.2rem 0 .8rem;padding:0;font-size:.56rem;color:var(--gold)}
 #view-settings .fsec::after{content:"";height:1px;background:var(--border);flex:1}
-#view-settings .settings-template-grid{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
+#view-settings .settings-template-grid{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}
 #view-settings .settings-preview-wrap{border-radius:8px;background:linear-gradient(180deg,#fff,var(--bg));padding:1rem}
+#view-settings .settings-invoice-preview{max-width:100%;overflow:hidden}
+#view-settings .settings-invoice-preview *{max-width:100%;min-width:0}
 #view-settings .plan-box{border-radius:8px;box-shadow:0 10px 30px rgba(44,31,20,.12)}
 #view-settings .btn{border-radius:999px}
 #view-settings #cls-billing-widget,#view-settings #cls-support-widget,#view-settings #cls-danger-zone-widget{border-radius:8px;max-width:none!important}
@@ -556,18 +563,21 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .db-ch-wrap-sm,.ch-wrap-sm{height:180px}
   .sumbar,.sumbar.c2,.sumbar.c3,.sumbar.c4,.payment-metrics,.plan-list,.settings-template-grid,.tpl-grid{grid-template-columns:1fr!important}
   .sum-i{padding:.85rem 1rem}
-  .card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .card{overflow:hidden}
   .card-head,.db-tcard-head{align-items:flex-start;gap:.75rem;flex-direction:column;padding:.85rem 1rem;position:sticky;left:0;background:var(--white);z-index:1}
   .card-title,.db-tcard-title{font-size:1rem}
   .card-actions{width:100%;display:grid;grid-template-columns:1fr;gap:.5rem}
-  .card table:not(.invoice-table){min-width:720px}
-  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .card table:not(.invoice-table){min-width:0;table-layout:auto}
+  .card table:not(.invoice-table) th,.card table:not(.invoice-table) td{white-space:normal;overflow-wrap:anywhere}
+  .table-wrap{overflow-x:hidden;-webkit-overflow-scrolling:touch}
   .settings-page-head{grid-template-columns:1fr;align-items:start;margin-bottom:.8rem}
-  .settings-tabs{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:.2rem;scrollbar-width:none}
-  .settings-tabs::-webkit-scrollbar{display:none}
-  .settings-tabs span{white-space:nowrap;flex:0 0 auto}
+  .settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;overflow:visible;flex-wrap:wrap;padding-bottom:0}
+  .settings-tabs button{width:100%;white-space:normal;min-height:38px;line-height:1.2;padding:.45rem .5rem}
+  #view-settings{max-width:100%}
+  #view-settings .settings-layout{grid-template-columns:1fr!important;gap:.85rem}
   #view-settings .card{overflow:hidden}
   #view-settings .settings-preview-wrap{padding:.8rem}
+  #view-settings .settings-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .invoice-table{min-width:0!important;width:100%;display:block}
   .invoice-table thead{display:none}
   .invoice-table tbody,.invoice-table tr,.invoice-table td{display:block;width:100%}
@@ -604,9 +614,15 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .g-tour-foot{display:grid;grid-template-columns:1fr;gap:.55rem}
   .toast{left:.75rem;right:.75rem;bottom:5.4rem;max-width:none}
 }
+@media(min-width:761px) and (max-width:1120px){
+  #view-settings .settings-layout{grid-template-columns:1fr!important}
+  .settings-page-head{grid-template-columns:1fr;align-items:start}
+  .settings-tabs{justify-content:flex-start}
+}
 @media(max-width:360px){
   .nav-item{min-width:70px;flex-basis:70px}
   .pg-sub{max-width:180px}
+  .settings-tabs{grid-template-columns:1fr}
 }
 @media print{body>*:not(#print-inv){display:none!important}#print-inv{display:block!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 #print-inv{display:none}
@@ -840,11 +856,17 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
           <div class="settings-head-title">Settings & Billing</div>
           <div class="settings-head-copy">Manage business details, invoice defaults, saved footer text, billing, team access, and account controls without leaving the page.</div>
         </div>
-        <div class="settings-tabs"><span>Profile</span><span>Invoices</span><span>Billing</span><span>Team</span><span>Security</span></div>
+        <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+          <button type="button" class="active" data-settings-tab="profile" onclick="window.showSettingsTab('profile')">Profile</button>
+          <button type="button" data-settings-tab="invoices" onclick="window.showSettingsTab('invoices')">Invoices</button>
+          <button type="button" data-settings-tab="billing" onclick="window.showSettingsTab('billing')">Billing</button>
+          <button type="button" data-settings-tab="team" onclick="window.showSettingsTab('team')">Team</button>
+          <button type="button" data-settings-tab="security" onclick="window.showSettingsTab('security')">Security</button>
+        </div>
       </div>
       <div class="g2 settings-layout">
         <div>
-          <div class="card" style="margin-bottom:1.2rem">
+          <div class="card settings-section" id="settings-profile" data-settings-section="profile" style="margin-bottom:1.2rem">
             <div class="card-head"><span class="card-title">My Business Details</span><button class="btn bd" onclick="window.saveSettings()">Save Changes</button></div>
             <div style="padding:1.35rem">
               <div class="fsec">Business Information</div>
@@ -856,6 +878,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
                 <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
               </div>
+              <div class="settings-anchor" id="settings-invoices" data-settings-section="invoices"></div>
               <div class="frow">
                 <div class="fg"><label>Invoice Number Prefix</label><input class="fi" id="s-invoice-prefix" type="text" maxlength="14" placeholder="INV"><div class="template-helper">New invoices will use this prefix, for example INV-0001.</div></div>
                 <div class="fg"><label>Invoice Font</label><select class="fi fsel" id="s-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
@@ -905,7 +928,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
           </div>
         </div>
         <div>
-          <div class="plan-box">
+          <div class="plan-box settings-section" id="settings-billing" data-settings-section="billing">
             <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
             <div class="plan-name">Business Plan ✨</div>
             <div class="plan-price">LKR 8,500 / mo</div>
@@ -932,7 +955,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
             <button onclick="window.goBackToStudio(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Studio</button>
             <button onclick="window.showToast('Priority support is included with Business.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Priority Support</button>
           </div>
-          <div class="card">
+          <div class="card settings-section" id="settings-team" data-settings-section="team">
             <div class="card-head"><span class="card-title">Team Access (unlimited)</span><a class="btn bd" href="access-admin.html?plan=business&return=growth.html">Manage Users</a></div>
             <div style="padding:1.3rem">
               <div style="font-size:.74rem;color:var(--muted);margin-bottom:.85rem;line-height:1.55">Create invite links and assign roles in Manage Users. Business allows unlimited users.</div>
@@ -944,6 +967,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
           </div>
         </div>
       </div>
+      <div class="settings-anchor" id="settings-security" data-settings-section="security" aria-hidden="true"></div>
     </div>
 
   </div>
@@ -1809,6 +1833,44 @@ var RENDERERS = {
   team: renderTeamAccess
 };
 
+var SETTINGS_TARGETS = {
+  profile: ['settings-profile'],
+  invoices: ['settings-invoices'],
+  billing: ['settings-billing', 'cls-billing-widget'],
+  team: ['settings-team'],
+  security: ['cls-danger-zone-widget', 'settings-security', 'cls-support-widget']
+};
+
+function getSettingsTarget(tab) {
+  var ids = SETTINGS_TARGETS[tab] || SETTINGS_TARGETS.profile;
+  for (var i = 0; i < ids.length; i++) {
+    var el = document.getElementById(ids[i]);
+    if (el) return el;
+  }
+  return document.getElementById('settings-profile');
+}
+
+window.showSettingsTab = function showSettingsTab(tab, opts) {
+  tab = SETTINGS_TARGETS[tab] ? tab : 'profile';
+  window._settingsActiveTab = tab;
+  document.querySelectorAll('[data-settings-tab]').forEach(function(btn) {
+    var active = btn.getAttribute('data-settings-tab') === tab;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  if (opts && opts.noScroll) return;
+  var target = getSettingsTarget(tab);
+  var content = document.querySelector('.content');
+  if (!target) return;
+  if (content && content.contains(target)) {
+    var contentTop = content.getBoundingClientRect().top;
+    var top = target.getBoundingClientRect().top - contentTop + content.scrollTop - 12;
+    content.scrollTo({ top: Math.max(0, top), behavior: opts && opts.instant ? 'auto' : 'smooth' });
+    return;
+  }
+  target.scrollIntoView({ behavior: opts && opts.instant ? 'auto' : 'smooth', block: 'start' });
+};
+
 window.goTo = function clsGoTo(id) {
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
   var view = document.getElementById('view-' + id);
@@ -1826,6 +1888,11 @@ window.goTo = function clsGoTo(id) {
   }
 
   if (RENDERERS[id]) RENDERERS[id]();
+  if (id === 'settings' && window.showSettingsTab) {
+    setTimeout(function() {
+      window.showSettingsTab(window._settingsActiveTab || 'profile', { noScroll: true });
+    }, 0);
+  }
 }
 window.clsGoTo = window.goTo;
 
