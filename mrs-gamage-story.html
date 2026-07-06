@@ -44,16 +44,16 @@ a{color:inherit}
 .nav-cta{justify-self:end;display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap}
 .nav-cta .pill{padding:10px 16px;font-size:13px;white-space:nowrap;line-height:1}
 .hero{padding:44px 0 24px}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:52px;align-items:center;min-width:0}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,440px);gap:48px;align-items:center;min-width:0}
 .hero h1{font-size:clamp(44px,5.4vw,72px);margin:0}
 .hero p{color:var(--muted);font-size:19px;line-height:1.7;max-width:720px;margin:26px 0 0}
 .hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
-.brand-portrait{background:var(--card);border:1px solid var(--line);border-radius:36px;padding:20px;box-shadow:0 30px 90px color-mix(in srgb,var(--brown) 11%,transparent);max-width:340px}
-.brand-portrait img{border-radius:28px}
+.brand-portrait{background:var(--card);border:1px solid var(--line);border-radius:36px;padding:20px;box-shadow:0 30px 90px color-mix(in srgb,var(--brown) 11%,transparent);max-width:440px}
+.brand-portrait img{border-radius:28px;aspect-ratio:4/5;width:100%;object-fit:cover}
 .story-band{padding:36px 0 54px}
-.story-card{background:var(--card);border:1px solid var(--line);border-radius:36px;padding:56px;display:grid;grid-template-columns:.42fr 1fr;gap:58px}
+.story-card{background:var(--card);border:1px solid var(--line);border-radius:36px;padding:48px;display:grid;grid-template-columns:minmax(220px,.34fr) minmax(0,1fr);gap:42px}
 .story-card h2,.split-card h2,.movement h2,.form-head h2{font-size:clamp(38px,5vw,68px);margin:0}
-.story-copy{color:var(--muted);font-size:18px;line-height:1.78}
+.story-copy{color:var(--muted);font-size:18px;line-height:1.72;max-width:760px}
 .story-copy p{margin:0 0 20px}
 .story-list{display:grid;gap:6px;margin:22px 0;color:var(--brown);font-weight:500}
 .quote-line{font-family:var(--serif);font-size:32px;line-height:1.12;color:var(--brown);letter-spacing:-.4px;margin-top:28px}

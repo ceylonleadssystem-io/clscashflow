@@ -438,9 +438,12 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 .settings-tabs button.active{background:var(--black);border-color:var(--black);color:#fff}
 .settings-tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #view-settings{width:100%;max-width:1120px;margin:0 auto;min-width:0}
-#view-settings .settings-layout{align-items:start;grid-template-columns:minmax(0,1.08fr) minmax(300px,.82fr);min-width:0}
-#view-settings .settings-layout>div{min-width:0}
-#view-settings .settings-section,#view-settings .settings-anchor{scroll-margin-top:1rem}
+.settings-panels{width:100%;max-width:1120px;margin:0 auto;min-width:0}
+.settings-panel{display:none;min-width:0;max-width:100%}
+.settings-panel.active{display:block}
+.settings-panel-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(300px,.82fr);gap:1.1rem;align-items:start;min-width:0}
+.settings-panel-grid>div{min-width:0}
+.settings-widget-stack{display:grid;gap:1rem;min-width:0}
 #view-settings .card{border-radius:8px;box-shadow:0 8px 26px rgba(44,31,20,.035)}
 #view-settings .card-head{position:static;background:var(--white);border-bottom:1px solid var(--border);padding:1rem 1.2rem}
 #view-settings .card-title{font-family:var(--fb);font-size:.86rem;font-weight:800;letter-spacing:0}
@@ -574,7 +577,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;overflow:visible;flex-wrap:wrap;padding-bottom:0}
   .settings-tabs button{width:100%;white-space:normal;min-height:38px;line-height:1.2;padding:.45rem .5rem}
   #view-settings{max-width:100%}
-  #view-settings .settings-layout{grid-template-columns:1fr!important;gap:.85rem}
+  .settings-panel-grid{grid-template-columns:1fr!important;gap:.85rem}
   #view-settings .card{overflow:hidden}
   #view-settings .settings-preview-wrap{padding:.8rem}
   #view-settings .settings-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
@@ -615,7 +618,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .toast{left:.75rem;right:.75rem;bottom:5.4rem;max-width:none}
 }
 @media(min-width:761px) and (max-width:1120px){
-  #view-settings .settings-layout{grid-template-columns:1fr!important}
+  .settings-panel-grid{grid-template-columns:1fr!important}
   .settings-page-head{grid-template-columns:1fr;align-items:start}
   .settings-tabs{justify-content:flex-start}
 }
@@ -864,26 +867,15 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
           <button type="button" data-settings-tab="security" onclick="window.showSettingsTab('security')">Security</button>
         </div>
       </div>
-      <div class="g2 settings-layout">
-        <div>
-          <div class="card settings-section" id="settings-profile" data-settings-section="profile" style="margin-bottom:1.2rem">
+      <div class="settings-panels">
+        <section class="settings-panel active" id="settings-profile" data-settings-panel="profile">
+          <div class="card">
             <div class="card-head"><span class="card-title">My Business Details</span><button class="btn bd" onclick="window.saveSettings()">Save Changes</button></div>
             <div style="padding:1.35rem">
               <div class="fsec">Business Information</div>
               <div class="frow"><div class="fg"><label>Business Name</label><input class="fi" id="s-biz" type="text" placeholder="Your business name"></div><div class="fg"><label>Your Name</label><input class="fi" id="s-user" type="text" placeholder="Your full name"></div></div>
               <div class="fg"><label>Business Address</label><input class="fi" id="s-addr" type="text" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
               <div class="frow"><div class="fg"><label>Your Email</label><input class="fi" id="s-email" type="email" placeholder="you@yourbusiness.lk"></div><div class="fg"><label>VAT / Tax Number (if any)</label><input class="fi" id="s-vat" type="text" placeholder="Optional"></div></div>
-              <div class="fg"><label>Notes</label><input class="fi" id="s-footer" type="text" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
-              <div class="frow">
-                <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
-                <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
-              </div>
-              <div class="settings-anchor" id="settings-invoices" data-settings-section="invoices"></div>
-              <div class="frow">
-                <div class="fg"><label>Invoice Number Prefix</label><input class="fi" id="s-invoice-prefix" type="text" maxlength="14" placeholder="INV"><div class="template-helper">New invoices will use this prefix, for example INV-0001.</div></div>
-                <div class="fg"><label>Invoice Font</label><select class="fi fsel" id="s-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
-              </div>
-              <div class="fg"><label>Template View</label><select class="fi fsel" id="s-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select><div class="template-helper">Switch the structure and mood of every invoice while keeping your selected template colour.</div></div>
               <div class="fsec">Business Currency</div>
               <div class="frow">
                 <div class="fg"><label>Revenue Entry Default</label><select class="fi fsel" id="s-revenue-currency"><option value="LKR">LKR — Sri Lankan Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — British Pound</option></select></div>
@@ -893,10 +885,30 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="fg"><label>USD to LKR</label><input class="fi" id="s-rate-usd" type="number" min="0" step="0.01" placeholder="300"></div>
                 <div class="fg"><label>EUR to LKR</label><input class="fi" id="s-rate-eur" type="number" min="0" step="0.01" placeholder="325"></div>
               </div>
-              <div class="frow">
-                <div class="fg"><label>GBP to LKR</label><input class="fi" id="s-rate-gbp" type="number" min="0" step="0.01" placeholder="380"></div>
-                <div class="fg"><label>Conversion Note</label><div class="conversion-preview">Business stores transactions in LKR for reports, while each entry keeps the currency you actually earned or spent.</div></div>
+              <div class="frow" style="margin-bottom:0">
+                <div class="fg" style="margin-bottom:0"><label>GBP to LKR</label><input class="fi" id="s-rate-gbp" type="number" min="0" step="0.01" placeholder="380"></div>
+                <div class="fg" style="margin-bottom:0"><label>Conversion Note</label><div class="conversion-preview">Business stores transactions in LKR for reports, while each entry keeps the currency you actually earned or spent.</div></div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-panel" id="settings-invoices" data-settings-panel="invoices" hidden>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Invoice Defaults & Templates</span><button class="btn bd" onclick="window.saveSettings()">Save Changes</button></div>
+            <div style="padding:1.35rem">
+              <div class="fsec">Invoice Defaults</div>
+              <div class="fg"><label>Notes</label><input class="fi" id="s-footer" type="text" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
+              <div class="frow">
+                <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
+                <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
+              </div>
+              <div class="frow">
+                <div class="fg"><label>Invoice Number Prefix</label><input class="fi" id="s-invoice-prefix" type="text" maxlength="14" placeholder="INV"><div class="template-helper">New invoices will use this prefix, for example INV-0001.</div></div>
+                <div class="fg"><label>Invoice Font</label><select class="fi fsel" id="s-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
+              </div>
+              <div class="fg"><label>Template View</label><select class="fi fsel" id="s-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select><div class="template-helper">Switch the structure and mood of every invoice while keeping your selected template colour.</div></div>
+              <div class="fsec">Template Library</div>
               <div class="settings-template-grid" id="settings-template-grid"></div>
               <div class="settings-preview-wrap">
                 <div class="settings-preview-label">Invoice Preview</div>
@@ -918,45 +930,44 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               </div>
             </div>
           </div>
+        </section>
+
+        <section class="settings-panel" id="settings-billing" data-settings-panel="billing" hidden>
+          <div class="settings-panel-grid">
+            <div class="plan-box">
+              <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
+              <div class="plan-name">Business Plan ✨</div>
+              <div class="plan-price">LKR 8,500 / mo</div>
+              <div style="font-size:.62rem;color:rgba(255,255,255,.52);margin-top:.15rem">Annual activation appears after the 15-day trial</div>
+              <div class="plan-tagline">Built for growing SMEs · unlimited users</div>
+              <div class="growth-trial-box" id="growth-trial-status">Your Business trial status will appear here.</div>
+              <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Studio, plus:</div>
+              <div class="plan-list">
+                <div class="plan-item"><span class="plan-item-check">✓</span>Money In &amp; Out</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Expense Tracking</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Supplier Management</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Who Owes Me</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Business Reports</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Basic Business Insights</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Monthly Email Reports</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Priority Support</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Unlimited Users</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>VAT / Tax Support</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>More Invoice Templates</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Manual Payment Reminders</div>
+              </div>
+              <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business with Payable</button>
+              <button onclick="window.startBusinessTour()" style="margin-top:.5rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Business Tour</button>
+              <button onclick="window.goBackToStudio(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Studio</button>
+              <button onclick="window.showToast('Priority support is included with Business.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Priority Support</button>
+            </div>
+            <div id="settings-billing-widgets" class="settings-widget-stack"></div>
+          </div>
+        </section>
+
+        <section class="settings-panel" id="settings-team" data-settings-panel="team" hidden>
           <div class="card">
-            <div class="card-head"><span class="card-title">Notification Preferences 🔔</span></div>
-            <div style="padding:.5rem 1.3rem">
-              <div class="notif-item"><div><div class="notif-title">Monthly Email Report</div><div class="notif-desc">Prepare a basic monthly business summary for email.</div></div><label class="tog"><input type="checkbox" id="s-monthly-report"><span class="tog-sl"></span></label></div>
-              <div class="notif-item"><div><div class="notif-title">Manual Payment Reminders</div><div class="notif-desc">Use the reminder buttons in Invoices and Who Owes Me. Automated reminder schedules can be connected as integrations are enabled.</div></div><span class="pill pse">Manual</span></div>
-              <div class="notif-item"><div><div class="notif-title">Automatic WhatsApp / SMS Follow-ups</div><div class="notif-desc">Advanced automation can be connected as integrations are enabled.</div></div><span class="pill pdr">Future</span></div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div class="plan-box settings-section" id="settings-billing" data-settings-section="billing">
-            <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
-            <div class="plan-name">Business Plan ✨</div>
-            <div class="plan-price">LKR 8,500 / mo</div>
-            <div style="font-size:.62rem;color:rgba(255,255,255,.52);margin-top:.15rem">Annual activation appears after the 15-day trial</div>
-            <div class="plan-tagline">Built for growing SMEs · unlimited users</div>
-            <div class="growth-trial-box" id="growth-trial-status">Your Business trial status will appear here.</div>
-            <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Studio, plus:</div>
-            <div class="plan-list">
-              <div class="plan-item"><span class="plan-item-check">✓</span>Money In &amp; Out</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Expense Tracking</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Supplier Management</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Who Owes Me</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Business Reports</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Basic Business Insights</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Monthly Email Reports</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Priority Support</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Unlimited Users</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>VAT / Tax Support</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>More Invoice Templates</div>
-              <div class="plan-item"><span class="plan-item-check">✓</span>Manual Payment Reminders</div>
-            </div>
-            <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business with Payable</button>
-            <button onclick="window.startBusinessTour()" style="margin-top:.5rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Business Tour</button>
-            <button onclick="window.goBackToStudio(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Studio</button>
-            <button onclick="window.showToast('Priority support is included with Business.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Priority Support</button>
-          </div>
-          <div class="card settings-section" id="settings-team" data-settings-section="team">
-            <div class="card-head"><span class="card-title">Team Access (unlimited)</span><a class="btn bd" href="access-admin.html?plan=business&return=growth.html">Manage Users</a></div>
+            <div class="card-head"><span class="card-title">Team Access (unlimited)</span><div class="card-actions"><a class="btn bd" href="access-admin.html?plan=business&return=growth.html">Manage Users</a><button class="btn bo" onclick="window.saveSettings()">Save Changes</button></div></div>
             <div style="padding:1.3rem">
               <div style="font-size:.74rem;color:var(--muted);margin-bottom:.85rem;line-height:1.55">Create invite links and assign roles in Manage Users. Business allows unlimited users.</div>
               <div class="frow"><div class="fg"><label>User 1 — You</label><input class="fi" id="s-u1" type="email" placeholder="your@email.com"></div><div class="fg"><label>User 2</label><input class="fi" id="s-u2" type="email" placeholder="user2@email.com"></div></div>
@@ -965,9 +976,20 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="frow" style="margin-bottom:0"><div class="fg" style="margin-bottom:0"><label>User 7</label><input class="fi" id="s-u7" type="email" placeholder="user7@email.com"></div><div class="fg" style="margin-bottom:0"><label>User 8</label><input class="fi" id="s-u8" type="email" placeholder="user8@email.com"></div></div>
             </div>
           </div>
-        </div>
+        </section>
+
+        <section class="settings-panel" id="settings-security" data-settings-panel="security" hidden>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Notification Preferences</span><button class="btn bd" onclick="window.saveSettings()">Save Changes</button></div>
+            <div style="padding:.5rem 1.3rem">
+              <div class="notif-item"><div><div class="notif-title">Monthly Email Report</div><div class="notif-desc">Prepare a basic monthly business summary for email.</div></div><label class="tog"><input type="checkbox" id="s-monthly-report"><span class="tog-sl"></span></label></div>
+              <div class="notif-item"><div><div class="notif-title">Manual Payment Reminders</div><div class="notif-desc">Use the reminder buttons in Invoices and Who Owes Me. Automated reminder schedules can be connected as integrations are enabled.</div></div><span class="pill pse">Manual</span></div>
+              <div class="notif-item"><div><div class="notif-title">Automatic WhatsApp / SMS Follow-ups</div><div class="notif-desc">Advanced automation can be connected as integrations are enabled.</div></div><span class="pill pdr">Future</span></div>
+            </div>
+          </div>
+          <div id="settings-security-widgets" class="settings-widget-stack"></div>
+        </section>
       </div>
-      <div class="settings-anchor" id="settings-security" data-settings-section="security" aria-hidden="true"></div>
     </div>
 
   </div>
@@ -1022,7 +1044,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="fg" style="margin-bottom:0"><label>Note to Customer (optional)</label><textarea class="fi fi-textarea" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></textarea></div>
       <div class="inv-totals" id="inv-totals"></div>
     </div>
-    <div class="frow" style="margin-top:.88rem"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="number" id="inv-disc" value="0" oninput="calcTotals()"></div></div>
+    <div class="frow" style="margin-top:.88rem"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" min="0" max="100" step="0.01" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="number" id="inv-disc" value="0" min="0" step="0.01" oninput="calcTotals()"></div></div>
   </div>
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-inv')">Cancel</button><button class="btn bd" id="inv-save-btn" onclick="window.saveInv()">Create Invoice ✓</button></div>
 </div></div>
@@ -1038,7 +1060,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   <div class="mo-bd">
     <input type="hidden" id="cli-id">
     <div class="frow"><div class="fg"><label>Customer Name</label><input class="fi" id="c-name" placeholder="Customer full name"></div><div class="fg"><label>Business Name</label><input class="fi" id="c-biz" placeholder="Customer business name"></div></div>
-    <div class="frow"><div class="fg"><label>Email</label><input class="fi" type="email" id="c-email" placeholder="customer@business.lk"></div><div class="fg"><label>Phone / WhatsApp</label><input class="fi" type="tel" id="c-phone" placeholder="+94 77 000 0000"></div></div>
+    <div class="frow"><div class="fg"><label>Email</label><input class="fi" type="email" id="c-email" placeholder="customer@business.lk"></div><div class="fg"><label>Phone / WhatsApp *</label><input class="fi" type="tel" id="c-phone" placeholder="+94 77 000 0000" inputmode="tel" minlength="7" maxlength="24" required></div></div>
     <div class="fg"><label>Address</label><input class="fi" id="c-addr" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
     <div class="frow"><div class="fg"><label>Payment Terms</label><select class="fi fsel" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>Pay on Receipt</option></select></div><div class="fg"><label>Notes (optional)</label><input class="fi" id="c-notes" placeholder="VIP customer, prefers WhatsApp..."></div></div>
   </div>
@@ -1538,16 +1560,55 @@ function mapStudioSupplier(s, i) {
 }
 function addDerivedPaymentTransactions(txns, invoices) {
   var seenRefs = {};
-  txns.forEach(function(t) {
+  var norm = function(v) { return String(v || '').trim().toLowerCase().replace(/\s+/g, ''); };
+  var baseRef = function(ref) { return String(ref || '').split('·')[0].trim(); };
+  var markRef = function(ref) {
+    ref = String(ref || '').trim();
+    if (ref) {
+      seenRefs[ref] = true;
+      seenRefs[norm(ref)] = true;
+      var base = baseRef(ref);
+      if (base) {
+        seenRefs[base] = true;
+        seenRefs[norm(base)] = true;
+      }
+    }
+  };
+  var seenPaymentRows = {};
+  txns = (txns || []).filter(function(t) {
+    if (!t) return false;
     var ref = String(t.ref || '').trim();
-    if (ref) seenRefs[ref] = true;
+    var paymentLike = t.type !== 'out' && (String(t.cat || '').toLowerCase() === 'invoice payment' || String(t.source || '').toLowerCase() === 'invoice-payment');
+    if (paymentLike) {
+      var key = [norm(baseRef(ref) || ref || t.desc || ''), toNum(t.amount).toFixed(2), String(t.date || ''), norm(t.cat || '')].join('|');
+      if (seenPaymentRows[key]) return false;
+      seenPaymentRows[key] = true;
+    }
+    markRef(ref);
+    return true;
   });
-  invoices.forEach(function(inv) {
+  (invoices || []).forEach(function(inv) {
     var id = String(inv.id || inv.num || '');
     var paid = toNum(inv.paid || inv.paidAmount);
-    if (!id || paid <= 0 || seenRefs[id]) return;
-    txns.unshift({id:'T-' + id, date:inv.date || today(), desc:'Payment received - ' + inv.client, type:'in', cat:'Invoice Payment', amount:paid, sourceAmount:paid, sourceCurrency:'LKR', exchangeRate:1, ref:id});
+    if (!id || paid <= 0 || seenRefs[id] || seenRefs[norm(id)]) return;
+    var clientKey = norm(inv.client || '');
+    var matchingPaid = 0;
+    var hasMatchingPayment = txns.some(function(t) {
+      if (!t || t.type === 'out') return false;
+      var text = norm([t.ref, t.desc, t.cat, t.source].join(' '));
+      var match = text.indexOf(norm(id)) > -1 || (clientKey && text.indexOf(clientKey) > -1 && /invoice|payment/.test(text));
+      if (match) matchingPaid += toNum(t.amount);
+      return match && Math.abs(toNum(t.amount) - paid) <= 0.01;
+    });
+    if (!hasMatchingPayment && Math.abs(matchingPaid - paid) <= 0.01) hasMatchingPayment = true;
+    if (hasMatchingPayment) {
+      seenRefs[id] = true;
+      seenRefs[norm(id)] = true;
+      return;
+    }
+    txns.unshift({id:'T-' + id, date:inv.date || today(), desc:'Payment received - ' + inv.client, type:'in', cat:'Invoice Payment', amount:paid, sourceAmount:paid, sourceCurrency:'LKR', exchangeRate:1, ref:id, source:'invoice-payment'});
     seenRefs[id] = true;
+    seenRefs[norm(id)] = true;
   });
   return txns;
 }
@@ -1833,42 +1894,29 @@ var RENDERERS = {
   team: renderTeamAccess
 };
 
-var SETTINGS_TARGETS = {
-  profile: ['settings-profile'],
-  invoices: ['settings-invoices'],
-  billing: ['settings-billing', 'cls-billing-widget'],
-  team: ['settings-team'],
-  security: ['cls-danger-zone-widget', 'settings-security', 'cls-support-widget']
-};
-
-function getSettingsTarget(tab) {
-  var ids = SETTINGS_TARGETS[tab] || SETTINGS_TARGETS.profile;
-  for (var i = 0; i < ids.length; i++) {
-    var el = document.getElementById(ids[i]);
-    if (el) return el;
-  }
-  return document.getElementById('settings-profile');
-}
+var SETTINGS_TABS = ['profile', 'invoices', 'billing', 'team', 'security'];
 
 window.showSettingsTab = function showSettingsTab(tab, opts) {
-  tab = SETTINGS_TARGETS[tab] ? tab : 'profile';
+  tab = SETTINGS_TABS.indexOf(tab) >= 0 ? tab : 'profile';
   window._settingsActiveTab = tab;
   document.querySelectorAll('[data-settings-tab]').forEach(function(btn) {
     var active = btn.getAttribute('data-settings-tab') === tab;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
+  document.querySelectorAll('[data-settings-panel]').forEach(function(panel) {
+    var active = panel.getAttribute('data-settings-panel') === tab;
+    panel.classList.toggle('active', active);
+    panel.hidden = !active;
+  });
   if (opts && opts.noScroll) return;
-  var target = getSettingsTarget(tab);
   var content = document.querySelector('.content');
-  if (!target) return;
-  if (content && content.contains(target)) {
+  var head = document.querySelector('#view-settings .settings-page-head');
+  if (content && head && content.contains(head)) {
     var contentTop = content.getBoundingClientRect().top;
-    var top = target.getBoundingClientRect().top - contentTop + content.scrollTop - 12;
+    var top = head.getBoundingClientRect().top - contentTop + content.scrollTop - 8;
     content.scrollTo({ top: Math.max(0, top), behavior: opts && opts.instant ? 'auto' : 'smooth' });
-    return;
   }
-  target.scrollIntoView({ behavior: opts && opts.instant ? 'auto' : 'smooth', block: 'start' });
 };
 
 window.goTo = function clsGoTo(id) {
@@ -2006,6 +2054,20 @@ function safePhone(phone) {
   return String(phone || '').replace(/\D/g, '');
 }
 
+function isValidBusinessEmail(value) {
+  value = String(value || '').trim();
+  if (!value) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+}
+
+function isValidBusinessPhone(value, required) {
+  value = String(value || '').trim();
+  if (!value) return !required;
+  if (!/^\+?[\d\s().-]+$/.test(value)) return false;
+  var digits = safePhone(value);
+  return digits.length >= 7 && digits.length <= 15;
+}
+
 function transactionPurposeLabel(t) {
   if (!t) return '';
   if (t.purpose) return t.purpose;
@@ -2136,7 +2198,7 @@ function renderDashboardInvoiceControls() {
       var dueText = item.days > 0 ? 'Overdue ' + item.days + ' day' + (item.days === 1 ? '' : 's') : (item.days === 0 ? 'Due today' : 'Due in ' + Math.abs(item.days) + ' day' + (Math.abs(item.days) === 1 ? '' : 's'));
       return '<div class="reminder-row">' +
         '<div class="reminder-main"><div class="reminder-title">' + escHtml(inv.client) + ' · ' + escHtml(inv.id) + '</div><div class="reminder-meta' + (item.days > 0 ? ' overdue' : '') + '">' + dueText + ' · ' + escHtml(inv.due || '') + ' · ' + fmt(item.balance) + '</div></div>' +
-        '<div class="reminder-actions"><button class="bsm bsmwa" onclick="window.waRemind(\'' + escHtml(inv.id) + '\')">WA</button><button class="bsm bsmem" onclick="window.emailInv(\'' + escHtml(inv.id) + '\')">Email</button><button class="bsm bsmgr" onclick="window.openPayMo(\'' + escHtml(inv.id) + '\')">Pay</button></div>' +
+        '<div class="reminder-actions"><button class="bsm bsmwa" onclick="window.waRemind(\'' + escHtml(inv.id) + '\')">WA</button><button class="bsm bsmem" onclick="window.emailInv(\'' + escHtml(inv.id) + '\')">Email</button><button class="bsm bsmgr" onclick="window.openPayMo(\'' + escHtml(inv.id) + '\')">Record Payment</button></div>' +
       '</div>';
     }).join('') : emptyState('No due reminders', 'Unpaid and overdue invoices will appear here automatically.', 'Create Invoice', 'window.openInvMo()');
   }
@@ -2299,7 +2361,7 @@ function renderInvoices() {
       '<button class="bsm bsmwa" onclick="window.waInvoiceWithPDF(\'' + safeId + '\')">WA</button>' +
       '<button class="bsm bsmo" onclick="window.editInv(\'' + safeId + '\')">Edit</button>' +
       '<button class="bsm bsmdel" onclick="window.deleteInv(\'' + safeId + '\')">Delete</button>' +
-      (displayStatus !== 'paid' ? '<button class="bsm bsmgr" onclick="window.openPayMo(\'' + safeId + '\')">Pay</button>' : '<span class="pill pi">Settled</span>');
+      (displayStatus !== 'paid' ? '<button class="bsm bsmgr" onclick="window.openPayMo(\'' + safeId + '\')">Record Payment</button>' : '<span class="pill pi">Settled</span>');
     return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
   }).join('') || emptyRow(8, 'No invoices yet', 'Create a Business invoice with VAT support, payment tracking, and reminder tools.', 'Create Invoice', 'window.openInvMo()');
   refreshInvoiceNotifications();
@@ -2346,7 +2408,7 @@ function renderDebt() {
   document.getElementById('recv-list').innerHTML = rows.map(function(item) {
     var inv = item.inv;
     var overdue = item.days > 0;
-    return '<div class="debt-row clean"><div><div class="debt-name">' + escHtml(inv.client) + '</div><div class="debt-inv">' + escHtml(inv.id) + ' · Due ' + escHtml(formatDateHuman(inv.due)) + '</div><span class="debt-age-tag ' + (overdue ? 'overdue' : '') + '">' + dueLabel(item.days) + '</span></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.86rem;font-weight:700;color:var(--green)">' + fmt(item.balance) + '</div><div class="debt-actions"><button class="bsm bsmwa" onclick="window.waRemind(\'' + escHtml(inv.id) + '\')">WA Reminder</button><button class="bsm bsmem" onclick="window.emailInv(\'' + escHtml(inv.id) + '\')">Email</button><button class="bsm bsmgr" onclick="window.openPayMo(\'' + escHtml(inv.id) + '\')">Pay</button></div></div></div>';
+    return '<div class="debt-row clean"><div><div class="debt-name">' + escHtml(inv.client) + '</div><div class="debt-inv">' + escHtml(inv.id) + ' · Due ' + escHtml(formatDateHuman(inv.due)) + '</div><span class="debt-age-tag ' + (overdue ? 'overdue' : '') + '">' + dueLabel(item.days) + '</span></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.86rem;font-weight:700;color:var(--green)">' + fmt(item.balance) + '</div><div class="debt-actions"><button class="bsm bsmwa" onclick="window.waRemind(\'' + escHtml(inv.id) + '\')">WA Reminder</button><button class="bsm bsmem" onclick="window.emailInv(\'' + escHtml(inv.id) + '\')">Email</button><button class="bsm bsmgr" onclick="window.openPayMo(\'' + escHtml(inv.id) + '\')">Record Payment</button></div></div></div>';
   }).join('') || emptyState('No money outstanding', 'Unpaid invoices will appear here when customers still owe you.', 'Create Invoice', 'window.openInvMo()');
 
   document.getElementById('pay-list').innerHTML = D.payables.map(function(p) {
@@ -2740,18 +2802,34 @@ function calcTotals() {
 window.saveInv = function saveInv() {
   var client = document.getElementById('inv-cli').value.trim();
   if (!client) { showToast('Please enter a customer name', 'err'); return; }
+  var cemail = document.getElementById('inv-cemail').value.trim();
+  var cphone = document.getElementById('inv-cphone').value.trim();
+  if (!isValidBusinessEmail(cemail)) { showToast('Please enter a valid customer email address.', 'err'); return; }
+  if (!isValidBusinessPhone(cphone, false)) { showToast('Please enter a valid customer phone number.', 'err'); return; }
   var items = [];
+  var invalidLine = false;
   document.querySelectorAll('#li-body tr').forEach(function(row) {
     var desc = row.querySelector('[data-role="desc"]');
     var qty = row.querySelector('[data-role="qty"]');
     var price = row.querySelector('[data-role="price"]');
     var lineDesc = desc ? desc.value.trim() : '';
+    var lineQty = qty ? Number(qty.value || 1) : 1;
     var linePrice = price ? Number(price.value || 0) : 0;
-    if (lineDesc || linePrice) items.push({desc:lineDesc || 'Service or product', qty:Number(qty ? qty.value : 1) || 1, price:linePrice});
+    if (!isFinite(lineQty) || lineQty <= 0 || !isFinite(linePrice) || linePrice < 0) {
+      invalidLine = true;
+      return;
+    }
+    if (lineDesc || linePrice) items.push({desc:lineDesc || 'Service or product', qty:lineQty, price:linePrice});
   });
+  if (invalidLine) { showToast('Invoice quantities must be above 0 and prices cannot be negative.', 'err'); return; }
   if (!items.length) { showToast('Please add at least one item', 'err'); return; }
+  var vatRate = Number(document.getElementById('inv-vat').value || 0);
+  var discount = Number(document.getElementById('inv-disc').value || 0);
+  if (!isFinite(vatRate) || vatRate < 0 || vatRate > 100) { showToast('VAT / tax rate must be between 0 and 100.', 'err'); return; }
+  if (!isFinite(discount) || discount < 0) { showToast('Discount cannot be negative.', 'err'); return; }
   var t = calcTotals();
-  var payload = {client:client,cemail:document.getElementById('inv-cemail').value.trim(),cphone:document.getElementById('inv-cphone').value.trim(),caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:Number(document.getElementById('inv-vat').value||0),disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
+  if (!isFinite(t.sub) || !isFinite(t.total) || t.sub < 0 || t.total < 0) { showToast('Invoice total cannot be negative.', 'err'); return; }
+  var payload = {client:client,cemail:cemail,cphone:cphone,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:vatRate,disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
   syncCustomerFromInvoicePayload(payload);
   var id = editInvId;
   if (id) {
@@ -2862,8 +2940,9 @@ window.confirmPay = function confirmPay() {
   var inv = D.invoices.find(function(i) { return i.id === payInvId; });
   if (!inv) return;
   var amt = Number(document.getElementById('pm-amt').value||0);
-  if (!amt) { showToast('Please enter an amount', 'err'); return; }
+  if (!isFinite(amt) || amt <= 0) { showToast('Please enter a payment amount above zero.', 'err'); return; }
   var balance = invoiceBalance(inv);
+  if (balance <= 0) { showToast('This invoice is already fully paid.', 'err'); return; }
   amt = Math.min(amt, balance);
   var method = document.getElementById('pm-method').value;
   var payDate = document.getElementById('pm-date').value || today();
@@ -3067,9 +3146,12 @@ window.editClient = function editClient(id) { openCliMo(id); }
 window.saveClient = function saveClient() {
   var name = document.getElementById('c-name').value.trim();
   var phone = document.getElementById('c-phone').value.trim();
+  var email = document.getElementById('c-email').value.trim();
   if (!name || !phone) { showToast('Name and phone number are required', 'err'); return; }
+  if (!isValidBusinessPhone(phone, true)) { showToast('Please enter a valid customer phone number.', 'err'); return; }
+  if (!isValidBusinessEmail(email)) { showToast('Please enter a valid customer email address.', 'err'); return; }
   var id = document.getElementById('cli-id').value;
-  var obj = {id:id||'C'+Date.now(), name:name, biz:document.getElementById('c-biz').value, email:document.getElementById('c-email').value, phone:phone, addr:document.getElementById('c-addr').value, terms:document.getElementById('c-terms').value, notes:document.getElementById('c-notes').value};
+  var obj = {id:id||'C'+Date.now(), name:name, biz:document.getElementById('c-biz').value.trim(), email:email.toLowerCase(), phone:phone, addr:document.getElementById('c-addr').value, terms:document.getElementById('c-terms').value, notes:document.getElementById('c-notes').value};
   var before = null;
   if (id) { var idx = D.clients.findIndex(function(c) { return c.id===id; }); if (idx > -1) { before = Object.assign({}, D.clients[idx]); D.clients[idx] = obj; } }
   else D.clients.push(obj);

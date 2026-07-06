@@ -1190,7 +1190,7 @@
         '</div>' +
       '</div>' +
       '<div class="cls-billing-status" data-billing-status>Payment is processed through PAYable. No card details touch this website.</div>';
-    settingsView.appendChild(wrap);
+    (document.getElementById('settings-billing-widgets') || settingsView).appendChild(wrap);
     wrap.querySelector('[data-billing-pay]').addEventListener('click', function() {
       window.clsStartPayableCheckout(plan, { profile: window._profile || profile, button: this });
     });
@@ -1749,7 +1749,7 @@
         '<div><div class="cls-danger-kicker">Danger Zone</div><div class="cls-danger-title">Account Controls</div><div class="cls-danger-copy">Reset clears operational records while keeping your account. Delete removes the login account after feedback is saved.</div></div>' +
         '<div class="cls-danger-actions"><button type="button" class="cls-danger-btn" data-danger-action="resetData">Reset Data</button><button type="button" class="cls-danger-btn fill" data-danger-action="deleteAccount">Delete Account</button></div>' +
       '</div>';
-    settingsView.appendChild(wrap);
+    (document.getElementById('settings-security-widgets') || settingsView).appendChild(wrap);
     wrap.addEventListener('click', function(ev) {
       var btn = ev.target.closest('[data-danger-action]');
       if (!btn) return;
@@ -1801,7 +1801,7 @@
 	        '<div class="cls-ticket-head"><div><div class="cls-support-kicker">My tickets</div><div class="cls-support-copy">Track open, in progress, and closed support tickets.</div></div><button type="button" class="cls-ticket-refresh" data-refresh-tickets>Refresh</button></div>' +
 	        '<div data-ticket-list><div class="cls-sp-status">Loading tickets...</div></div>' +
 	      '</div>';
-    settingsView.appendChild(wrap);
+    (document.getElementById('settings-security-widgets') || settingsView).appendChild(wrap);
 
     var supportActivityLoaded = false;
     function loadSupportActivity() {

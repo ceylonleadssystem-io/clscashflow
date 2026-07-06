@@ -325,8 +325,15 @@ body.is-admin .admin-only{display:flex}
 .settings-head-title{font-family:var(--font-d);font-size:1.65rem;font-weight:400;color:var(--black);line-height:1}
 .settings-head-copy{font-size:.76rem;color:var(--muted);line-height:1.55;margin-top:.35rem;max-width:620px}
 .settings-tabs{display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end}
-.settings-tabs span{border:1px solid var(--border);background:var(--white);padding:.42rem .72rem;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
-.settings-tabs span:first-child{background:var(--black);border-color:var(--black);color:#fff}
+.settings-tabs button{border:1px solid var(--border);background:var(--white);padding:.42rem .72rem;font-family:var(--font-b);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;cursor:pointer}
+.settings-tabs button.active{background:var(--black);border-color:var(--black);color:#fff}
+.settings-tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.settings-panels{display:grid;gap:1rem;min-width:0}
+.settings-panel{display:block;min-width:0;max-width:100%}
+.settings-panel[hidden]{display:none!important}
+.settings-panel-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.64fr);gap:1rem;align-items:start}
+.settings-panel-grid>*{min-width:0}
+.settings-widget-stack{display:grid;gap:1rem}
 #view-settings{max-width:1060px;margin:0 auto}
 #view-settings .trial-card,#view-settings .settings-helper,#view-settings .table-card[style*="max-width"],#view-settings>div[style*="max-width"]{max-width:none!important}
 #view-settings .trial-card,#view-settings .settings-helper,#view-settings .table-card,#view-settings>div[style*="max-width"]{border:1px solid var(--border);background:var(--white);box-shadow:0 8px 26px rgba(26,23,20,.035)}
@@ -415,7 +422,8 @@ body.is-admin .admin-only{display:flex}
   .settings-page-head{grid-template-columns:1fr;align-items:start;margin-bottom:.8rem}
   .settings-tabs{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:.2rem;scrollbar-width:none}
   .settings-tabs::-webkit-scrollbar{display:none}
-  .settings-tabs span{white-space:nowrap;flex:0 0 auto}
+  .settings-tabs button{white-space:nowrap;flex:0 0 auto}
+  .settings-panel-grid{grid-template-columns:1fr}
   .settings-helper{grid-template-columns:1fr!important;max-width:none}
   .settings-helper .btn-act-outline{width:100%}
   .trial-card,.table-card[style*="max-width"],.settings-helper{max-width:none!important}
@@ -742,90 +750,117 @@ document.addEventListener('click',function(e){
           <div class="settings-head-title">Settings</div>
           <div class="settings-head-copy">Manage your invoice profile, saved notes, plan billing, and account controls in one calm place.</div>
         </div>
-        <div class="settings-tabs"><span>Profile</span><span>Invoices</span><span>Billing</span><span>Support</span></div>
-      </div>
-      <div class="trial-card" id="settings-trial-card">
-        <div class="trial-card-title">Free Trial</div>
-        <div class="trial-card-body" id="settings-trial-status">Your trial status will appear here.</div>
-      </div>
-      <div class="settings-helper">
-        <div>
-          <div class="settings-helper-title">Quick System Tour</div>
-          <div class="settings-helper-text">A short walkthrough for the Solo Invoice Control System: dashboard, invoices, customers, reports, settings, and billing.</div>
+        <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+          <button type="button" class="active" data-account-tab="profile" onclick="window.showAccountSettingsTab('profile')">Profile</button>
+          <button type="button" data-account-tab="invoices" onclick="window.showAccountSettingsTab('invoices')">Invoices</button>
+          <button type="button" data-account-tab="billing" onclick="window.showAccountSettingsTab('billing')">Billing</button>
+          <button type="button" data-account-tab="support" onclick="window.showAccountSettingsTab('support')">Support</button>
         </div>
-        <button class="btn-act-outline" data-cls-fn="startSystemTour">Start Tour</button>
       </div>
-      <div class="table-card" style="max-width:640px">
-        <div class="table-header"><div class="table-title">Business Profile</div><button class="btn-act" data-cls-fn="saveSettings">Save Changes</button></div>
-        <div style="padding:1.35rem">
-          <div class="f-section">Business Logo</div>
-          <div class="logo-area" data-cls-fn="triggerLogoUpload" id="logo-area">
-            <img id="settings-logo-preview" class="logo-area-preview" style="display:none" src="" alt="">
-            <div id="logo-upload-placeholder">
-              <div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
-              <div class="logo-area-label">Upload your business logo</div>
-              <div class="logo-area-hint">PNG or JPG · Max 2MB · Appears on all invoices</div>
+      <div class="settings-panels">
+        <section class="settings-panel" data-account-panel="profile">
+          <div class="trial-card" id="settings-trial-card">
+            <div class="trial-card-title">Free Trial</div>
+            <div class="trial-card-body" id="settings-trial-status">Your trial status will appear here.</div>
+          </div>
+          <div class="settings-helper">
+            <div>
+              <div class="settings-helper-title">Quick System Tour</div>
+              <div class="settings-helper-text">A short walkthrough for the Solo Invoice Control System: dashboard, invoices, customers, reports, settings, and billing.</div>
             </div>
-            <input type="file" id="settings-logo" accept="image/*" style="display:none" onchange="previewSettingsLogo(this)">
+            <button class="btn-act-outline" data-cls-fn="startSystemTour">Start Tour</button>
           </div>
-          <div class="f-section" style="margin-top:1rem">Logo Alignment on Invoice</div>
-          <div class="align-btns" id="align-btns">
-            <button class="align-btn active" data-align="left" data-cls-fn="setLogoAlign" data-cls-arg="left" data-cls-this="1">◧ Left</button>
-            <button class="align-btn" data-align="center" data-cls-fn="setLogoAlign" data-cls-arg="center" data-cls-this="1">◫ Center</button>
-            <button class="align-btn" data-align="right" data-cls-fn="setLogoAlign" data-cls-arg="right" data-cls-this="1">◨ Right</button>
+          <div class="table-card">
+            <div class="table-header"><div class="table-title">Business Profile</div><button class="btn-act" data-cls-fn="saveSettings">Save Changes</button></div>
+            <div style="padding:1.35rem">
+              <div class="f-section">Business Logo</div>
+              <div class="logo-area" data-cls-fn="triggerLogoUpload" onclick="window.triggerLogoUpload&&window.triggerLogoUpload()" id="logo-area">
+                <img id="settings-logo-preview" class="logo-area-preview" style="display:none" src="" alt="">
+                <div id="logo-upload-placeholder">
+                  <div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
+                  <div class="logo-area-label">Upload your business logo</div>
+                  <div class="logo-area-hint">PNG or JPG · Max 2MB · Appears on all invoices</div>
+                </div>
+                <input type="file" id="settings-logo" accept="image/*" style="display:none" onchange="previewSettingsLogo(this)">
+              </div>
+              <div class="f-section" style="margin-top:1rem">Business Details</div>
+              <div class="f-row">
+                <div class="f-group"><label>Business Name *</label><input class="f-input" id="set-bizname" placeholder="Your Business Name"></div>
+                <div class="f-group"><label>Your Name</label><input class="f-input" id="set-username" placeholder="Your full name"></div>
+              </div>
+              <div class="f-group full" style="margin-bottom:.85rem"><label>Business Address</label><input class="f-input" id="set-addr" placeholder="42 Galle Road, Colombo 03"></div>
+              <div class="f-row">
+                <div class="f-group"><label>Invoice Email</label><input class="f-input" type="email" id="set-email" placeholder="invoices@business.com"></div>
+                <div class="f-group"><label>User 1 Email (You)</label><input class="f-input" id="set-u1" placeholder="you@email.com"></div>
+              </div>
+              <div class="f-group solo-hidden" style="display:none"><label>User 2 Email</label><input class="f-input" id="set-u2" placeholder="colleague@email.com"></div>
+            </div>
           </div>
-          <div class="f-section" style="margin-top:1rem">Logo Size on Invoice</div>
-          <div class="align-btns" id="size-btns">
-            <button class="size-btn" data-size="S" data-cls-fn="setLogoSize" data-cls-arg="S" data-cls-this="1">Small</button>
-            <button class="size-btn active" data-size="M" data-cls-fn="setLogoSize" data-cls-arg="M" data-cls-this="1">Medium</button>
-            <button class="size-btn" data-size="L" data-cls-fn="setLogoSize" data-cls-arg="L" data-cls-this="1">Large</button>
+        </section>
+
+        <section class="settings-panel" data-account-panel="invoices" hidden>
+          <div class="table-card">
+            <div class="table-header"><div class="table-title">Invoice Defaults</div><button class="btn-act" data-cls-fn="saveSettings">Save Changes</button></div>
+            <div style="padding:1.35rem">
+              <div class="f-section">Logo Placement</div>
+              <div class="align-btns" id="align-btns">
+                <button class="align-btn active" data-align="left" data-cls-fn="setLogoAlign" data-cls-arg="left" data-cls-this="1">◧ Left</button>
+                <button class="align-btn" data-align="center" data-cls-fn="setLogoAlign" data-cls-arg="center" data-cls-this="1">◫ Center</button>
+                <button class="align-btn" data-align="right" data-cls-fn="setLogoAlign" data-cls-arg="right" data-cls-this="1">◨ Right</button>
+              </div>
+              <div class="f-section" style="margin-top:1rem">Logo Size on Invoice</div>
+              <div class="align-btns" id="size-btns">
+                <button class="size-btn" data-size="S" data-cls-fn="setLogoSize" data-cls-arg="S" data-cls-this="1">Small</button>
+                <button class="size-btn active" data-size="M" data-cls-fn="setLogoSize" data-cls-arg="M" data-cls-this="1">Medium</button>
+                <button class="size-btn" data-size="L" data-cls-fn="setLogoSize" data-cls-arg="L" data-cls-this="1">Large</button>
+              </div>
+              <div class="f-section" style="margin-top:1rem">Logo Position on Invoice</div>
+              <div class="f-row">
+                <div class="f-group"><label>Horizontal Position <span id="logo-x-label">8%</span></label><input class="f-input" type="range" id="set-logo-x" min="0" max="100" step="1" oninput="setLogoPosition()"></div>
+                <div class="f-group"><label>Vertical Position <span id="logo-y-label">5%</span></label><input class="f-input" type="range" id="set-logo-y" min="0" max="24" step="1" oninput="setLogoPosition()"></div>
+              </div>
+              <div class="f-section" style="margin-top:1rem">Template Library</div>
+              <input type="hidden" id="set-default-tpl" value="0">
+              <div class="template-helper">All invoice PDFs, email previews, WhatsApp PDF previews, and newly saved invoices use this one template.</div>
+              <div class="tpl-picker" id="settings-template-picker"></div>
+              <div class="f-row" style="margin-top:1rem">
+                <div class="f-group"><label>Invoice Number Prefix</label><input class="f-input" id="set-invoice-prefix" maxlength="14" placeholder="INV"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">New invoices will use this prefix, for example INV-0001.</div></div>
+                <div class="f-group"><label>Invoice Font</label><select class="f-input f-select" id="set-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
+              </div>
+              <div class="f-row">
+                <div class="f-group"><label>Template View</label><select class="f-input f-select" id="set-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select></div>
+                <div class="f-group"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15"></div>
+              </div>
+              <div class="f-row">
+                <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
+                <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
+              </div>
+            </div>
           </div>
-          <div class="f-section" style="margin-top:1rem">Logo Position on Invoice</div>
-          <div class="f-row">
-            <div class="f-group"><label>Horizontal Position <span id="logo-x-label">8%</span></label><input class="f-input" type="range" id="set-logo-x" min="0" max="100" step="1" oninput="setLogoPosition()"></div>
-            <div class="f-group"><label>Vertical Position <span id="logo-y-label">5%</span></label><input class="f-input" type="range" id="set-logo-y" min="0" max="24" step="1" oninput="setLogoPosition()"></div>
+        </section>
+
+        <section class="settings-panel" data-account-panel="billing" hidden>
+          <div class="settings-panel-grid">
+            <div class="table-card">
+              <div class="table-header"><div class="table-title">Solo Billing</div><button class="btn-act" data-cls-fn="openStudioUpgrade">Upgrade</button></div>
+              <div style="padding:1rem">
+                <strong>Solo Plan</strong> — LKR 3,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
+                <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
+                <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Solo with Payable</button>
+                <button class="btn-act" data-cls-fn="openStudioUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Studio</button>
+              </div>
+            </div>
+            <div class="table-card">
+              <div class="table-header"><div class="table-title">Solo Limits</div></div>
+              <div style="padding:1rem;font-size:.85rem;color:var(--muted);line-height:1.8">Solo includes 1 user and up to 30 customers. Upgrade to Studio for team access, 100 customers, quotes, recurring invoices, automatic reminders, expenses, and cashflow tools.</div>
+            </div>
           </div>
-          <div class="f-section" style="margin-top:1rem">Default Invoice Template</div>
-          <input type="hidden" id="set-default-tpl" value="0">
-          <div class="template-helper">All invoice PDFs, email previews, WhatsApp PDF previews, and newly saved invoices use this one template.</div>
-          <div class="tpl-picker" id="settings-template-picker"></div>
-          <div class="f-row" style="margin-top:1rem">
-            <div class="f-group"><label>Invoice Number Prefix</label><input class="f-input" id="set-invoice-prefix" maxlength="14" placeholder="INV"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">New invoices will use this prefix, for example INV-0001.</div></div>
-            <div class="f-group"><label>Invoice Font</label><select class="f-input f-select" id="set-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
-          </div>
-          <div class="f-group full" style="margin-bottom:.85rem"><label>Template View</label><select class="f-input f-select" id="set-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Changes the structure and mood of every invoice while keeping your selected template colour.</div></div>
-          <div class="f-section">Business Details</div>
-          <div class="f-row">
-            <div class="f-group"><label>Business Name *</label><input class="f-input" id="set-bizname" placeholder="Your Business Name"></div>
-            <div class="f-group"><label>Your Name</label><input class="f-input" id="set-username" placeholder="Your full name"></div>
-          </div>
-          <div class="f-group full" style="margin-bottom:.85rem"><label>Business Address</label><input class="f-input" id="set-addr" placeholder="42 Galle Road, Colombo 03"></div>
-          <div class="f-row">
-            <div class="f-group"><label>Invoice Email</label><input class="f-input" type="email" id="set-email" placeholder="invoices@business.com"></div>
-            <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
-          </div>
-          <div class="f-group" style="margin-bottom:.85rem"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15" style="max-width:200px"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the default on new invoices. You can still change it per invoice (B2B rates can differ).</div></div>
-          <div class="f-group" style="margin-bottom:.85rem"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
-          <div class="f-section" style="margin-top:.75rem">Solo user</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
-            <div class="f-group"><label>User 1 Email (You)</label><input class="f-input" id="set-u1" placeholder="you@email.com"></div>
-            <div class="f-group solo-hidden"><label>User 2 Email (Optional)</label><input class="f-input" id="set-u2" placeholder="colleague@email.com"></div>
-          </div>
-        </div>
-      </div>
-    
-      <div style="margin-top:1.5rem;max-width:640px">
-        <div class="table-header"><div class="table-title">Solo Limits</div><button class="btn-act" data-cls-fn="openStudioUpgrade">Upgrade</button></div>
-        <div style="padding:1rem;font-size:.85rem;color:var(--muted);line-height:1.8">Solo includes 1 user and up to 30 customers. Upgrade to Studio for team access, 100 customers, quotes, recurring invoices, automatic reminders, expenses, and cashflow tools.</div>
-      </div>
-      <div style="margin-top:1rem;max-width:640px">
-        <div class="table-header"><div class="table-title">Billing</div><button class="btn-act" data-cls-fn="openStudioUpgrade">Upgrade</button></div>
-        <div style="padding:1rem">
-          <strong>Solo Plan</strong> — LKR 3,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
-          <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
-          <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Solo with Payable</button>
-          <button class="btn-act" data-cls-fn="openStudioUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Studio</button>
-        </div>
+          <div id="settings-billing-widgets" class="settings-widget-stack" style="margin-top:1rem"></div>
+        </section>
+
+        <section class="settings-panel" data-account-panel="support" hidden>
+          <div id="settings-security-widgets" class="settings-widget-stack"></div>
+        </section>
       </div>
     </div>
 
@@ -1777,7 +1812,7 @@ function renderDashboardReminders(unpaid,todayMs){
       <div class="reminder-actions">
         <button class="btn-sm btn-sm-wa" data-cls-fn="waDueReminder" data-cls-arg="${escHTML(inv.num)}">WA</button>
         ${inv.cemail?`<button class="btn-sm btn-sm-green" data-cls-fn="emailInvoice" data-cls-arg="${escHTML(inv.num)}">Email</button>`:''}
-        <button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${escHTML(inv.num)}">Pay</button>
+        <button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${escHTML(inv.num)}">Record Payment</button>
       </div>
     </div>`;
   }).join('');
@@ -2200,7 +2235,7 @@ function renderInvoices(){
         <button class="btn-sm btn-sm-wa" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send via WhatsApp">💬 WA</button>
         <button class="btn-sm btn-sm-out" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit</button>
         <button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button>
-        ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">💳 Pay</button>`:'<span style="font-size:.65rem;color:var(--green)">✓ Settled</span>'}
+        ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">Record Payment</button>`:'<span style="font-size:.65rem;color:var(--green)">✓ Settled</span>'}
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
   refreshInvoiceNotifications();
@@ -2457,12 +2492,29 @@ function renderTeamAccess(){
 // ════════════════════════════════
 // SETTINGS
 // ════════════════════════════════
+let currentAccountSettingsTab = 'profile';
+window.showAccountSettingsTab = function showAccountSettingsTab(tab){
+  const allowed=['profile','invoices','billing','team','support'];
+  tab=allowed.indexOf(tab)>-1?tab:'profile';
+  currentAccountSettingsTab=tab;
+  document.querySelectorAll('[data-account-tab]').forEach(btn=>{
+    const active=btn.getAttribute('data-account-tab')===tab;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-selected',active?'true':'false');
+  });
+  document.querySelectorAll('[data-account-panel]').forEach(panel=>{
+    panel.hidden=panel.getAttribute('data-account-panel')!==tab;
+  });
+};
 function loadSettings(){
   const s=DB.settings;
   ['bizname','username','addr','email','vat','footer','u1','u2'].forEach(k=>{const el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('bizname','bizName').replace('username','username')]||s[k]||'';});
   document.getElementById('set-bizname').value=s.bizName||'';
   document.getElementById('set-username').value=s.username||'';
-  if(s.logo){const img=document.getElementById('settings-logo-preview');img.src=s.logo;img.style.display='block';document.getElementById('logo-upload-placeholder').style.display='none';}
+  const settingsLogo=document.getElementById('settings-logo-preview');
+  const settingsLogoPlaceholder=document.getElementById('logo-upload-placeholder');
+  if(s.logo&&settingsLogo){settingsLogo.src=s.logo;settingsLogo.style.display='block';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='none';}
+  else if(settingsLogo){settingsLogo.src='';settingsLogo.style.display='none';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='block';}
   var vr=document.getElementById('set-vatrate');if(vr)vr.value=(s.vatRate!=null?s.vatRate:15);
   ['ejskey','ejsservice','ejstemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('ejskey','ejsKey').replace('ejsservice','ejsService').replace('ejstemplate','ejsTemplate')]||'';});
   var tpl=normalizeTemplateIdx(s.defaultTpl);
@@ -2475,6 +2527,7 @@ function loadSettings(){
   loadLogoSize();
   loadLogoPosition();
   renderTrialStatus();
+  window.showAccountSettingsTab(currentAccountSettingsTab);
 }
 window.saveSettings = function saveSettings(){
   DB.settings.bizName=document.getElementById('set-bizname').value.trim()||'My Business';

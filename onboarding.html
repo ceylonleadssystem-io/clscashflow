@@ -1300,11 +1300,15 @@ window.bookShowAround = function bookShowAround(){
 }
 
 function showAroundPayload(){
+  const timezone=(Intl.DateTimeFormat().resolvedOptions()||{}).timeZone||'Asia/Colombo';
+  const localTime=new Date().toLocaleString('en-LK',{dateStyle:'medium',timeStyle:'short',timeZoneName:'short'});
   return {
     showAroundPreference: state.showAround || 'not-needed',
     showAroundBooked: state.showAround === 'booked',
     showAroundUrl: SHOW_AROUND_URL,
     customerSuccessManager: 'Sasuni',
+    showAroundTimezone: timezone,
+    showAroundLocalTime: localTime,
     showAroundUpdatedAt: new Date().toISOString()
   };
 }

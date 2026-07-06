@@ -160,11 +160,11 @@ a{color:inherit}
 .image-head{display:grid;grid-template-columns:minmax(0,.82fr) minmax(300px,.55fr);gap:56px;align-items:end;margin-bottom:32px}
 .image-head h2{font-size:clamp(44px,5.6vw,78px);margin:0}
 .image-head p{margin:0;color:var(--muted);font-size:18px;line-height:1.65}
-.photo-wrap{border-radius:26px;overflow:hidden;background:#C2CAA8;padding:18px;display:grid;grid-template-columns:1.15fr .85fr .85fr;gap:18px;box-shadow:0 30px 80px rgba(42,28,19,.10)}
-.photo-card{position:relative;min-height:390px;border-radius:18px;overflow:hidden;background:var(--paper);border:1px solid rgba(42,28,19,.08);margin:0}
+.photo-wrap{border-radius:26px;overflow:hidden;background:#C2CAA8;padding:18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;box-shadow:0 30px 80px rgba(42,28,19,.10)}
+.photo-card{position:relative;min-height:0;aspect-ratio:4/5;border-radius:18px;overflow:hidden;background:var(--paper);border:1px solid rgba(42,28,19,.08);margin:0}
 .photo-card img{width:100%;height:100%;object-fit:cover;transition:transform .8s ease}
 .photo-card:hover img{transform:scale(1.03)}
-.photo-card:first-child{min-height:500px}
+.photo-card:first-child{min-height:0}
 .photo-label{position:absolute;left:16px;right:16px;bottom:16px;background:rgba(255,252,247,.94);border:1px solid rgba(42,28,19,.08);border-radius:16px;padding:13px 15px;color:var(--muted);font-size:13px;backdrop-filter:blur(10px)}
 .photo-label strong{display:block;color:var(--ink);font-family:var(--serif);font-size:22px;font-weight:500;line-height:1.1;letter-spacing:-.02em;margin-bottom:4px}
 .photo-label span{display:block;line-height:1.45}
@@ -223,7 +223,7 @@ a{color:inherit}
   .price-card.featured{transform:none}
   .feature-grid{grid-template-columns:repeat(2,1fr)}
   .photo-wrap{grid-template-columns:1fr}
-  .photo-card,.photo-card:first-child{min-height:340px}
+  .photo-card,.photo-card:first-child{aspect-ratio:16/11;min-height:0}
   .footer-grid{grid-template-columns:1fr 1fr;gap:42px}
 }
 @media(max-width:900px){
@@ -611,9 +611,9 @@ a{color:inherit}
         <div class="footer-col">
           <h3>Company</h3>
           <a href="mrs-gamage-story.html">Our story</a>
-          <a href="#features">Mission</a>
-          <a href="mrs-gamage-story.html">Share your story</a>
-          <a href="#contact">Contact</a>
+          <a href="mrs-gamage-story.html#mission">Mission</a>
+          <a href="mrs-gamage-story.html#movement">Share your story</a>
+          <a href="mailto:hello@ceylonrylabs.io">Contact</a>
         </div>
         <div class="footer-col">
           <h3>Resources</h3>

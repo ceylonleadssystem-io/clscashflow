@@ -422,7 +422,11 @@ function userTasks(user, latestVisit, tickets, paymentRequests, chats){
     if (!user.paid && days != null && days < 0) tasks.push({ cls: 'bad', text: 'Trial expired - payment or pause decision needed.' });
     else if (!user.paid && days != null && days <= 3) tasks.push({ cls: '', text: 'Trial ending soon - send upgrade/payment reminder.' });
     else if (!user.paid && days == null) tasks.push({ cls: '', text: 'Trial end missing - check onboarding record.' });
-    if (user.raw.showAroundBooked === true) tasks.push({ cls: '', text: 'Show-around requested - confirm Sasuni Cal.com booking and follow up.' });
+    if (user.raw.showAroundBooked === true) {
+      var showAroundZone = user.raw.showAroundTimezone || 'timezone not captured';
+      var showAroundLocal = user.raw.showAroundLocalTime ? ' Local time noted: ' + user.raw.showAroundLocalTime + '.' : '';
+      tasks.push({ cls: '', text: 'Show-around requested - confirm Sasuni Cal.com booking and follow up. Customer timezone: ' + showAroundZone + '.' + showAroundLocal });
+    }
     if (!user.raw.name && !user.raw.displayName) tasks.push({ cls: '', text: 'Profile name missing - ask user to complete business profile.' });
     if (user.raw.onboardingComplete === false || /onboarding/i.test(user.lastPath || '')) tasks.push({ cls: '', text: 'Onboarding may be incomplete - check setup progress.' });
     if (lastSeenAge == null) tasks.push({ cls: '', text: 'No activity tracked yet - confirm account setup.' });
