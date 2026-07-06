@@ -174,6 +174,14 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .invoice-preview-page[data-style="classic"] .invoice-preview-notes-title{color:var(--preview-accent)}
 .invoice-preview-page[data-style="minimal"] .invoice-preview-total-box{background:#15110d}
 .invoice-preview-page[data-style="executive"] .invoice-preview-table th{border-bottom-color:#1f2937}
+.invoice-preview-page[data-view="classic"]{box-shadow:inset 0 0 0 9px rgba(255,255,255,.45),0 14px 35px rgba(74,59,42,.08)}
+.invoice-preview-page[data-view="olden"]{background:#fbf3e5;border:3px double rgba(74,59,42,.35)}
+.invoice-preview-page[data-view="olden"] .invoice-preview-title-block div{text-transform:none;letter-spacing:.04em;font-style:italic}
+.invoice-preview-page[data-view="minimal"]{background:#fff;box-shadow:none}
+.invoice-preview-page[data-view="minimal"] .invoice-preview-logo,.invoice-preview-page[data-view="minimal"] .invoice-preview-notes-title{border-left:0}
+.invoice-preview-page[data-view="bold"] .invoice-preview-head{border-left:6px solid var(--preview-accent);padding-left:1rem}
+.invoice-preview-page[data-view="bold"] .invoice-preview-title-block div{font-weight:900;font-size:1.55rem}
+.invoice-preview-page[data-view="bold"] .invoice-preview-table th{background:#15110d;color:#fff;border-bottom:0}
 
 /* Logo upload */
 .logo-upload-area{border:2px dashed var(--border2);padding:1.5rem;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:.85rem;position:relative;background:var(--bg2)}
@@ -506,7 +514,12 @@ firebase.initializeApp(firebaseConfig);
           <div class="ob-field"><label>VAT / Tax Number</label><input class="ob-input" id="s4-vat" placeholder="Optional"></div>
           <div class="ob-field"><label>Default VAT / Tax Rate</label><input class="ob-input" type="number" min="0" max="100" id="s4-taxrate" placeholder="15"></div>
         </div>
-        <div class="ob-field"><label>Invoice Footer Message</label><input class="ob-input" id="s4-footer" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
+        <div class="ob-field"><label>Notes</label><input class="ob-input" id="s4-footer" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Invoice Number Prefix</label><input class="ob-input" id="s4-prefix" maxlength="14" placeholder="INV"></div>
+          <div class="ob-field"><label>Invoice Font</label><select class="ob-input ob-select" id="s4-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
+        </div>
+        <div class="ob-field"><label>Template View</label><select class="ob-input ob-select" id="s4-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select></div>
         <div class="ob-field" style="margin-top:.75rem"><label id="tpl-label">Invoice Template</label></div>
         <div class="tpl-grid-wrap"><div class="tpl-grid" id="tpl-grid"></div></div>
         <div class="invoice-preview-card">
@@ -523,7 +536,7 @@ firebase.initializeApp(firebaseConfig);
               </div>
               <div class="invoice-preview-title-block">
                 <div>INVOICE</div>
-                <span>INV-0001</span>
+                <span id="invoice-preview-number">INV-0001</span>
               </div>
             </div>
             <div class="invoice-preview-rule"></div>
@@ -781,7 +794,7 @@ const state = {
   fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',
   bizName:'',industry:'',tier:'',suggestedTier:'solo',planTouched:false,useCases:[],firstClient:null,expLevel:'',
   setupTasks:{profile:true,payroll:false,notifications:false},
-  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',selectedTemplate:0,
+  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',selectedTemplate:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',
   empCount:0,employees:[],payFreq:'Monthly',
   channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:'',
   showAround:'not-needed',showAroundUrl:'https://cal.com/cashflowsystem/show-around',customerSuccessManager:'Sasuni'
@@ -832,8 +845,14 @@ function updateInvoicePreview(){
   const page=document.getElementById('invoice-preview-page');
   if(!page) return;
   const tpl=allTemplates[normalizeTplIdx(state.selectedTemplate)]||allTemplates[0];
+  const prefix=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(getFieldValue('s4-prefix',state.invoicePrefix||'INV')):String(getFieldValue('s4-prefix',state.invoicePrefix||'INV')).trim().toUpperCase().replace(/[^A-Z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,14))||'INV';
+  const font=document.getElementById('s4-font')?.value||state.invoiceFont||'classic';
+  const view=document.getElementById('s4-view')?.value||state.invoiceView||'modern';
+  const previewNo=window.clsFormatInvoiceNumber?window.clsFormatInvoiceNumber(prefix,1):`${prefix}-0001`;
   page.style.setProperty('--preview-accent',tpl.accent||tpl.hex||'#B8922A');
   page.dataset.style=tpl.layout||tpl.style||'pop';
+  page.dataset.view=view;
+  page.style.fontFamily=window.clsInvoiceFontCss?window.clsInvoiceFontCss(font):'Georgia, "Times New Roman", serif';
   const biz=getFieldValue('s4-bizname','Your Business');
   const email=getFieldValue('s4-email',state.email||'invoices@yourbusiness.com');
   const addr=getFieldValue('s4-addr','Business address');
@@ -858,6 +877,7 @@ function updateInvoicePreview(){
   setText('invoice-preview-customer',customer);
   setText('invoice-preview-customer-detail',[customerEmail,customerPhone].filter(Boolean).join(' · ')||'accounts@customer.lk');
   setText('invoice-preview-footer',footer);
+  setText('invoice-preview-number',previewNo);
   setText('invoice-preview-date',previewDate(today));
   setText('invoice-preview-due',previewDate(due));
   setText('invoice-preview-unit',previewMoney(subtotal));
@@ -869,7 +889,7 @@ function updateInvoicePreview(){
   if(taxRow) taxRow.style.display=taxRate>0?'flex':'none';
 }
 function bindInvoicePreviewInputs(){
-  ['s4-bizname','s4-email','s4-addr','s4-footer','s4-taxrate','s2-client-name','s2-client-email','s2-client-phone'].forEach(id=>{
+  ['s4-bizname','s4-email','s4-addr','s4-footer','s4-taxrate','s4-prefix','s4-font','s4-view','s2-client-name','s2-client-email','s2-client-phone'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){el.addEventListener('input',updateInvoicePreview);el.addEventListener('change',updateInvoicePreview);}
   });
@@ -992,11 +1012,13 @@ function validateStep(step){
     const biz=document.getElementById('s4-bizname').value.trim();
     const invEmail=document.getElementById('s4-email').value.trim();
     const footer=document.getElementById('s4-footer').value.trim();
+    const prefix=document.getElementById('s4-prefix').value.trim();
     if(!biz) return showStepError(3,'Please enter your business name.',['s4-bizname']);
     if(!isEmail(invEmail)) return showStepError(3,'Please enter a valid invoice email, or leave it blank.',['s4-email']);
     if(!isEmail(document.getElementById('s2-client-email').value.trim())) return showStepError(3,'Please enter a valid first customer email, or leave it blank.',['s2-client-email']);
     if(!isPhone(document.getElementById('s2-client-phone').value.trim())) return showStepError(3,'Please enter a valid first customer phone number, or leave it blank.',['s2-client-phone']);
-    if(footer.length>180) return showStepError(3,'Please keep the invoice footer under 180 characters.',['s4-footer']);
+    if(footer.length>180) return showStepError(3,'Please keep the notes under 180 characters.',['s4-footer']);
+    if(prefix && !(window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(prefix) : prefix.replace(/[^A-Za-z0-9-]/g,''))) return showStepError(3,'Please use letters, numbers, or hyphens for the invoice prefix.',['s4-prefix']);
   }
   if(step===5){
     if(!state.setupTasks.payroll) return true;
@@ -1042,6 +1064,9 @@ function saveStepData(step){
     state.vat=document.getElementById('s4-vat').value;
     state.taxRate=document.getElementById('s4-taxrate').value;
     state.footer=document.getElementById('s4-footer').value.trim() || 'Invoice by Cashflow System - Ceylonry Labs.io';
+    state.invoicePrefix=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(document.getElementById('s4-prefix').value):document.getElementById('s4-prefix').value.trim())||'INV';
+    state.invoiceFont=document.getElementById('s4-font').value || 'classic';
+    state.invoiceView=document.getElementById('s4-view').value || 'modern';
     var clientName=document.getElementById('s2-client-name').value.trim();
     state.firstClient=clientName?{
       id:Date.now(),
@@ -1299,6 +1324,9 @@ function buildInvoiceSettingsPayload(){
     logoX: 8,
     logoY: 5,
     defaultTpl: normalizeTplIdx(state.selectedTemplate),
+    invoicePrefix: state.invoicePrefix || 'INV',
+    invoiceFont: state.invoiceFont || 'classic',
+    invoiceView: state.invoiceView || 'modern',
     vatRate: Number.isFinite(rate) ? rate : 15
   };
 }
@@ -1411,6 +1439,9 @@ window.launchDashboard = async function launchDashboard(){
         trialEnd: googleTrialEnd.toISOString(),
         paid: false,
         selectedTemplate: normalizeTplIdx(state.selectedTemplate),
+        invoicePrefix: state.invoicePrefix || 'INV',
+        invoiceFont: state.invoiceFont || 'classic',
+        invoiceView: state.invoiceView || 'modern',
         settings: buildInvoiceSettingsPayload(),
         payFreq: state.payFreq,
         employees: state.employees,
@@ -1476,6 +1507,9 @@ window.launchDashboard = async function launchDashboard(){
         trialEnd: trialEnd.toISOString(),
         paid: false,
         selectedTemplate: normalizeTplIdx(state.selectedTemplate),
+        invoicePrefix: state.invoicePrefix || 'INV',
+        invoiceFont: state.invoiceFont || 'classic',
+        invoiceView: state.invoiceView || 'modern',
         settings: buildInvoiceSettingsPayload(),
         payFreq: state.payFreq,
         employees: state.employees,

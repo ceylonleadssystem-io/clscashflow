@@ -740,7 +740,7 @@ document.addEventListener('click',function(e){
         <div>
           <div class="settings-eyebrow">Account Settings</div>
           <div class="settings-head-title">Settings</div>
-          <div class="settings-head-copy">Manage your invoice profile, saved invoice footer, plan billing, and account controls in one calm place.</div>
+          <div class="settings-head-copy">Manage your invoice profile, saved notes, plan billing, and account controls in one calm place.</div>
         </div>
         <div class="settings-tabs"><span>Profile</span><span>Invoices</span><span>Billing</span><span>Support</span></div>
       </div>
@@ -789,6 +789,11 @@ document.addEventListener('click',function(e){
           <input type="hidden" id="set-default-tpl" value="0">
           <div class="template-helper">All invoice PDFs, email previews, WhatsApp PDF previews, and newly saved invoices use this one template.</div>
           <div class="tpl-picker" id="settings-template-picker"></div>
+          <div class="f-row" style="margin-top:1rem">
+            <div class="f-group"><label>Invoice Number Prefix</label><input class="f-input" id="set-invoice-prefix" maxlength="14" placeholder="INV"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">New invoices will use this prefix, for example INV-0001.</div></div>
+            <div class="f-group"><label>Invoice Font</label><select class="f-input f-select" id="set-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
+          </div>
+          <div class="f-group full" style="margin-bottom:.85rem"><label>Template View</label><select class="f-input f-select" id="set-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Changes the structure and mood of every invoice while keeping your selected template colour.</div></div>
           <div class="f-section">Business Details</div>
           <div class="f-row">
             <div class="f-group"><label>Business Name *</label><input class="f-input" id="set-bizname" placeholder="Your Business Name"></div>
@@ -800,7 +805,7 @@ document.addEventListener('click',function(e){
             <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
           </div>
           <div class="f-group" style="margin-bottom:.85rem"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15" style="max-width:200px"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the default on new invoices. You can still change it per invoice (B2B rates can differ).</div></div>
-          <div class="f-group" style="margin-bottom:.85rem"><label>Invoice Footer Message</label><input class="f-input" id="set-footer" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
+          <div class="f-group" style="margin-bottom:.85rem"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
           <div class="f-section" style="margin-top:.75rem">Solo user</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
             <div class="f-group"><label>User 1 Email (You)</label><input class="f-input" id="set-u1" placeholder="you@email.com"></div>
@@ -1121,7 +1126,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,ejsKey:'',ejsService:'',ejsTemplate:''},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'',ejsService:'',ejsTemplate:''},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -1530,7 +1535,7 @@ const tourSteps=[
   {view:'invoices',title:'Invoices',body:'<p>Create, send, and collect invoices from one register.</p><div class="tour-list"><div><strong>Raise invoice:</strong> choose customer, items, VAT, terms, and template.</div><div><strong>Email or WhatsApp:</strong> share the invoice directly with the customer.</div><div><strong>Record payment:</strong> full or partial payments update outstanding balances.</div></div>'},
   {view:'clients',title:'Customers',body:'<p>Customers are reusable billing records for invoices.</p><div class="tour-list"><div><strong>Save details:</strong> name, business, email, WhatsApp, billing address, notes, and terms.</div><div><strong>Create faster:</strong> start a new invoice from a customer card.</div></div>'},
   {view:'reports',title:'Reports',body:'<p>Reports are based only on invoices and payments.</p><div class="tour-list"><div><strong>Review:</strong> invoice summary, paid vs unpaid, outstanding, overdue, and customer-wise totals.</div><div><strong>Export:</strong> download a clean invoice report PDF.</div></div>'},
-  {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, default invoice template, footer message, logo alignment, and logo size.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
+  {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, default invoice template, notes, logo alignment, and logo size.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
 ];
 let tourIndex=0;
 function tourStorageKey(){return 'cls-solo-tour-seen-'+(_signedInUid||_uid||'local');}
@@ -1863,13 +1868,19 @@ function isValidRequiredPhone(value){
   return /^[+0-9 ()-]{7,24}$/.test(value) && digits.length>=7 && digits.length<=15;
 }
 function invoiceNumberValue(inv){
-  const m=String((inv&&inv.num)||(inv&&inv.id)||'').match(/INV-\s*(\d+)/i);
+  const m=String((inv&&inv.num)||(inv&&inv.id)||'').match(/(\d+)$/);
   return m?parseInt(m[1],10):0;
 }
 function refreshNextInvoiceNumber(){
   const max=(DB.invoices||[]).reduce((a,inv)=>Math.max(a,invoiceNumberValue(inv)),0);
   DB.nextInvNum=max?Math.max(Number(DB.nextInvNum)||1,max+1):1;
   return DB.nextInvNum;
+}
+function invoicePrefix(){
+  return (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(DB.settings.invoicePrefix) : String(DB.settings.invoicePrefix || 'INV').trim().toUpperCase().replace(/[^A-Z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,14)) || 'INV';
+}
+function formatInvoiceNumber(num){
+  return (window.clsFormatInvoiceNumber ? window.clsFormatInvoiceNumber(invoicePrefix(), num) : invoicePrefix() + '-' + String(Number(num || 1) || 1).padStart(4,'0'));
 }
 function getFilterRange(prefix){
   const fromEl=document.getElementById(prefix+'-from');
@@ -2164,7 +2175,7 @@ window.saveInvoice = function saveInvoice(){
     return;
   }
   refreshNextInvoiceNumber();
-  const num='INV-'+String(DB.nextInvNum).padStart(4,'0');DB.nextInvNum++;
+  const num=formatInvoiceNumber(DB.nextInvNum);DB.nextInvNum++;
   DB.invoices.unshift({num,client:d.client,cemail:d.cemail,caddr:d.caddr,cphone:d.cphone,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,paidAmount:0,status:'unpaid',tpl:d.tpl,notes:d.notes,id:Date.now()});
   saveDB();renderInvoices();closeModal('inv-modal');
 }
@@ -2456,6 +2467,9 @@ function loadSettings(){
   ['ejskey','ejsservice','ejstemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('ejskey','ejsKey').replace('ejsservice','ejsService').replace('ejstemplate','ejsTemplate')]||'';});
   var tpl=normalizeTemplateIdx(s.defaultTpl);
   var tplInput=document.getElementById('set-default-tpl');if(tplInput)tplInput.value=String(tpl);
+  var prefixEl=document.getElementById('set-invoice-prefix');if(prefixEl)prefixEl.value=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(s.invoicePrefix):s.invoicePrefix)||'INV';
+  var fontEl=document.getElementById('set-invoice-font');if(fontEl)fontEl.value=s.invoiceFont||'classic';
+  var viewEl=document.getElementById('set-invoice-view');if(viewEl)viewEl.value=s.invoiceView||'modern';
   syncTemplatePickers(tpl);
   loadLogoAlign();
   loadLogoSize();
@@ -2482,6 +2496,9 @@ window.saveSettings = function saveSettings(){
   DB.settings.logoX=logoX?Number(logoX.value||8):8;
   DB.settings.logoY=logoY?Number(logoY.value||5):5;
   var tplInput=document.getElementById('set-default-tpl');DB.settings.defaultTpl=normalizeTemplateIdx(tplInput?tplInput.value:DB.settings.defaultTpl);
+  var prefixEl=document.getElementById('set-invoice-prefix');DB.settings.invoicePrefix=window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(prefixEl&&prefixEl.value):((prefixEl&&prefixEl.value)||'INV');
+  var fontEl=document.getElementById('set-invoice-font');DB.settings.invoiceFont=fontEl&&fontEl.value?fontEl.value:'classic';
+  var viewEl=document.getElementById('set-invoice-view');DB.settings.invoiceView=viewEl&&viewEl.value?viewEl.value:'modern';
   setInvoiceTemplate(DB.settings.defaultTpl);
   DB.invoices.forEach(function(inv){inv.tpl=DB.settings.defaultTpl;});
   saveDB();applySettings();alert('✓ Settings saved successfully. All invoices will use the '+templateName(DB.settings.defaultTpl)+' template.');
@@ -2731,7 +2748,7 @@ window.viewPrintInvoice = function viewPrintInvoice(num){
   const finalHTML=printHTML.slice(0,bodyPos+6)+downloadBar+printHTML.slice(bodyPos+6);
   w.document.write(finalHTML);w.document.close();
 }
-window.printInvoiceFromModal = function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a customer name first.');return;}const fakeInv={num:'PREVIEW',client:d.client,cemail:d.cemail,caddr:d.caddr,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,getDefaultInvoiceTemplate()));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
+window.printInvoiceFromModal = function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a customer name first.');return;}const fakeInv={num:formatInvoiceNumber(DB.nextInvNum||1),client:d.client,cemail:d.cemail,caddr:d.caddr,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,getDefaultInvoiceTemplate()));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
 
 
 // ════════════════════════════════

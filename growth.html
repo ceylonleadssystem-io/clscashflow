@@ -851,11 +851,16 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="frow"><div class="fg"><label>Business Name</label><input class="fi" id="s-biz" type="text" placeholder="Your business name"></div><div class="fg"><label>Your Name</label><input class="fi" id="s-user" type="text" placeholder="Your full name"></div></div>
               <div class="fg"><label>Business Address</label><input class="fi" id="s-addr" type="text" placeholder="e.g. 42 Galle Road, Colombo 03"></div>
               <div class="frow"><div class="fg"><label>Your Email</label><input class="fi" id="s-email" type="email" placeholder="you@yourbusiness.lk"></div><div class="fg"><label>VAT / Tax Number (if any)</label><input class="fi" id="s-vat" type="text" placeholder="Optional"></div></div>
-              <div class="fg"><label>Invoice Footer Message</label><input class="fi" id="s-footer" type="text" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
+              <div class="fg"><label>Notes</label><input class="fi" id="s-footer" type="text" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
               <div class="frow">
                 <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
                 <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
               </div>
+              <div class="frow">
+                <div class="fg"><label>Invoice Number Prefix</label><input class="fi" id="s-invoice-prefix" type="text" maxlength="14" placeholder="INV"><div class="template-helper">New invoices will use this prefix, for example INV-0001.</div></div>
+                <div class="fg"><label>Invoice Font</label><select class="fi fsel" id="s-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
+              </div>
+              <div class="fg"><label>Template View</label><select class="fi fsel" id="s-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select><div class="template-helper">Switch the structure and mood of every invoice while keeping your selected template colour.</div></div>
               <div class="fsec">Business Currency</div>
               <div class="frow">
                 <div class="fg"><label>Revenue Entry Default</label><select class="fi fsel" id="s-revenue-currency"><option value="LKR">LKR — Sri Lankan Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — British Pound</option></select></div>
@@ -1041,7 +1046,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1
 };
 
@@ -1130,7 +1135,7 @@ var growthTourSteps = [
   {view:'suppliers',title:'Suppliers',body:'<p>Track supplier contacts, status, categories, and total spend.</p><div class="g-tour-list"><div><strong>Suppliers:</strong> name, contact, category, active/inactive status.</div><div><strong>Reports:</strong> supplier spend can be exported from reports.</div></div>'},
   {view:'reports',title:'Reports',body:'<p>Business reports are business reports, not advanced analytics.</p><div class="g-tour-list"><div><strong>Included:</strong> income vs expenses, profit, customer revenue, supplier spend, outstanding and overdue invoices.</div><div><strong>Export:</strong> PDF and CSV/Excel style downloads.</div></div>'},
   {view:'team',title:'Team Access',body:'<p>Business supports unlimited users with simple roles.</p><div class="g-tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> invoices, customers, money in/out, and expenses.</div><div><strong>Accountant:</strong> finance views only, with settings and team management hidden.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
-  {view:'settings',title:'Settings & Billing',body:'<p>Manage your business profile and Business plan basics.</p><div class="g-tour-list"><div><strong>Business:</strong> logo, address, invoice email, VAT/tax number and invoice footer.</div><div><strong>Notifications:</strong> monthly email report preference and reminder settings stay here as integrations expand.</div></div>'}
+  {view:'settings',title:'Settings & Billing',body:'<p>Manage your business profile and Business plan basics.</p><div class="g-tour-list"><div><strong>Business:</strong> logo, address, invoice email, VAT/tax number and invoice notes.</div><div><strong>Notifications:</strong> monthly email report preference and reminder settings stay here as integrations expand.</div></div>'}
 ];
 var growthTourIndex = 0;
 function renderBusinessTourStep() {
@@ -1432,6 +1437,9 @@ function mapStudioSettings(src) {
   out.logoX = src.logoX != null ? toNum(src.logoX) : (out.logoX != null ? out.logoX : 8);
   out.logoY = src.logoY != null ? toNum(src.logoY) : (out.logoY != null ? out.logoY : 5);
   out.defaultTpl = normalizeBusinessTemplate(src.defaultTpl != null ? src.defaultTpl : out.defaultTpl);
+  out.invoicePrefix = (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(src.invoicePrefix || src.prefix || out.invoicePrefix) : (src.invoicePrefix || src.prefix || out.invoicePrefix || 'INV')) || 'INV';
+  out.invoiceFont = src.invoiceFont || src.font || out.invoiceFont || 'classic';
+  out.invoiceView = src.invoiceView || src.templateView || src.view || out.invoiceView || 'modern';
   out.vatRate = toNum(src.vatRate != null ? src.vatRate : out.vatRate || 15);
   out.baseCurrency = safeCurrency(src.baseCurrency || out.baseCurrency || 'LKR');
   out.revenueDefaultCurrency = safeCurrency(src.revenueDefaultCurrency || src.defaultRevenueCurrency || out.revenueDefaultCurrency || out.baseCurrency || 'LKR');
@@ -2462,6 +2470,15 @@ function jsArg(v) {
 function logoXForAlign(align) {
   return align === 'right' ? 92 : (align === 'center' ? 50 : 8);
 }
+function businessInvoicePrefix() {
+  var raw = D.settings && D.settings.invoicePrefix;
+  if (window.clsSanitizeInvoicePrefix) return window.clsSanitizeInvoicePrefix(raw || 'INV') || 'INV';
+  return String(raw || 'INV').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 14) || 'INV';
+}
+function formatBusinessInvoiceNumber(num) {
+  if (window.clsFormatInvoiceNumber) return window.clsFormatInvoiceNumber(businessInvoicePrefix(), num);
+  return businessInvoicePrefix() + '-' + String(Number(num || 1) || 1).padStart(4, '0');
+}
 function updateBusinessLogoPositionLabels() {
   var x = document.getElementById('s-logo-x');
   var y = document.getElementById('s-logo-y');
@@ -2485,6 +2502,9 @@ function collectSettingsDraft() {
     footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Invoice by Cashflow System - Ceylonry Labs.io',
     vatRate: toNum(val('s-vatrate', D.settings.vatRate)),
     defaultTpl: normalizeBusinessTemplate(val('s-default-tpl', D.settings.defaultTpl)),
+    invoicePrefix: (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(val('s-invoice-prefix', D.settings.invoicePrefix) || 'INV') : String(val('s-invoice-prefix', D.settings.invoicePrefix) || 'INV').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 14)) || 'INV',
+    invoiceFont: val('s-invoice-font', D.settings.invoiceFont) || D.settings.invoiceFont || 'classic',
+    invoiceView: val('s-invoice-view', D.settings.invoiceView) || D.settings.invoiceView || 'modern',
     logoAlign: val('s-logo-align', D.settings.logoAlign) || D.settings.logoAlign || 'left',
     logoSize: val('s-logo-size', D.settings.logoSize) || D.settings.logoSize || 'M',
     logoX: toNum(val('s-logo-x', D.settings.logoX != null ? D.settings.logoX : 8)),
@@ -2520,6 +2540,9 @@ function renderSettingsInvoicePreview() {
   if (!box) return;
   var s = collectSettingsDraft();
   var tpl = invoiceTheme(s.defaultTpl);
+  var fontCss = window.clsInvoiceFontCss ? window.clsInvoiceFontCss(s.invoiceFont) : 'Georgia, "Times New Roman", serif';
+  var viewName = window.clsInvoiceViewName ? window.clsInvoiceViewName(s.invoiceView) : String(s.invoiceView || 'Modern');
+  var previewNo = window.clsFormatInvoiceNumber ? window.clsFormatInvoiceNumber(s.invoicePrefix, 1) : s.invoicePrefix + '-0001';
   var logoWidth = s.logoSize === 'L' ? '112px' : (s.logoSize === 'S' ? '58px' : '84px');
   var logoHeight = s.logoSize === 'L' ? '54px' : (s.logoSize === 'S' ? '34px' : '44px');
   var logoX = Math.max(0, Math.min(100, s.logoX != null ? s.logoX : logoXForAlign(s.logoAlign)));
@@ -2533,8 +2556,13 @@ function renderSettingsInvoicePreview() {
   var tableBorder = tpl.layout === 'minimal' || tpl.layout === 'signature' ? tpl.accent : tpl.dark;
   var totalBg = tpl.layout === 'gold' || tpl.layout === 'ceylon' || tpl.layout === 'bold' ? tpl.accent : tpl.dark;
   var paperBg = tpl.layout === 'signature' || tpl.layout === 'split' || tpl.layout === 'darkside' ? '#FDFAF4' : '#fff';
+  if (s.invoiceView === 'olden') paperBg = '#fbf3e5';
+  if (s.invoiceView === 'minimal') paperBg = '#fff';
+  var previewBorder = s.invoiceView === 'olden' ? '3px double rgba(74,59,42,.35)' : '1px solid var(--border)';
+  var previewPad = s.invoiceView === 'bold' ? '1.25rem' : '1.1rem';
   box.innerHTML =
-    '<div style="background:' + paperBg + ';border:1px solid var(--border);padding:1.1rem;box-shadow:0 12px 32px rgba(44,31,20,.06)">' +
+    '<div style="background:' + paperBg + ';border:' + previewBorder + ';padding:' + previewPad + ';box-shadow:0 12px 32px rgba(44,31,20,.06);font-family:' + fontCss + '">' +
+      '<div style="display:flex;justify-content:space-between;gap:.6rem;align-items:center;margin-bottom:.55rem"><div class="preview-m" style="font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)">Template view</div><div class="preview-m" style="font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)">' + escHtml(viewName) + '</div></div>' +
       '<div style="height:' + (tpl.layout === 'signature' ? '5px' : '4px') + ';background:' + tpl.accent + ';margin-bottom:1rem"></div>' +
       '<div style="position:relative;min-height:5.2rem;display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;background:' + headerBg + ';color:' + headerColor + ';padding:' + (darkHeader || goldHeader ? '.85rem' : '0 0 .8rem') + ';border-bottom:' + (darkHeader || goldHeader ? '0' : '2px solid ' + tableBorder) + '">' +
         '<div class="preview-logo-box" style="position:absolute;left:' + logoX + '%;top:' + logoY + '%;transform:' + logoTransform + ';width:' + logoWidth + ';height:' + logoHeight + ';background:#fff;z-index:2">' + logo + '</div>' +
@@ -2542,7 +2570,7 @@ function renderSettingsInvoicePreview() {
           '<div class="preview-v" style="color:inherit;margin-top:3.2rem">' + escHtml(s.biz) + '</div>' +
           '<div class="preview-m" style="color:inherit;opacity:.78">' + escHtml(s.email) + '</div>' +
         '</div>' +
-        '<div style="text-align:right"><div class="preview-title" style="color:inherit">Invoice</div><div class="preview-number" style="color:inherit;opacity:.78">INV-0001</div><div class="preview-m" style="color:inherit;opacity:.72">VAT: ' + escHtml(s.vat) + '</div></div>' +
+        '<div style="text-align:right"><div class="preview-title" style="color:inherit">Invoice</div><div class="preview-number" style="color:inherit;opacity:.78">' + escHtml(previewNo) + '</div><div class="preview-m" style="color:inherit;opacity:.72">VAT: ' + escHtml(s.vat) + '</div></div>' +
       '</div>' +
       '<div class="preview-columns" style="margin-top:1.1rem">' +
         '<div><div class="preview-k">From</div><div class="preview-v">' + escHtml(s.biz) + '</div><div class="preview-m">' + escHtml(s.addr) + '</div></div>' +
@@ -2557,7 +2585,7 @@ function renderSettingsInvoicePreview() {
 }
 
 function bindSettingsPreviewInputs() {
-  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
+  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el || el.dataset.previewBound) return;
     el.dataset.previewBound = '1';
@@ -2668,7 +2696,7 @@ window.saveInv = function saveInv() {
     existing.status = existing.paid >= existing.total ? 'paid' : (existing.paid > 0 ? 'partial' : invoiceStatus(existing));
   } else {
     normalizeBusinessData();
-    id = 'INV-' + String(D._nextInvId || (D.invoices.length + 1)).padStart(4,'0');
+    id = formatBusinessInvoiceNumber(D._nextInvId || (D.invoices.length + 1));
     D._nextInvId = (D._nextInvId || (D.invoices.length + 1)) + 1;
     D.invoices.unshift(Object.assign({id:id,num:id,status:'unpaid',paid:0,paidAmount:0}, payload));
   }
@@ -3131,6 +3159,9 @@ window.saveSettings = function saveSettings() {
   D.settings.footer = document.getElementById('s-footer').value || 'Invoice by Cashflow System - Ceylonry Labs.io';
   var vatRateEl = document.getElementById('s-vatrate');
   var defaultTplEl = document.getElementById('s-default-tpl');
+  var prefixEl = document.getElementById('s-invoice-prefix');
+  var fontEl = document.getElementById('s-invoice-font');
+  var viewEl = document.getElementById('s-invoice-view');
   var logoAlignEl = document.getElementById('s-logo-align');
   var logoSizeEl = document.getElementById('s-logo-size');
   var logoXEl = document.getElementById('s-logo-x');
@@ -3147,6 +3178,9 @@ window.saveSettings = function saveSettings() {
     D.settings.defaultTpl = normalizeBusinessTemplate(defaultTplEl.value);
     D.invoices.forEach(function(inv) { inv.tpl = D.settings.defaultTpl; });
   }
+  if (prefixEl) D.settings.invoicePrefix = (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(prefixEl.value) : prefixEl.value) || 'INV';
+  if (fontEl) D.settings.invoiceFont = fontEl.value || 'classic';
+  if (viewEl) D.settings.invoiceView = viewEl.value || 'modern';
   var baseCurrencyEl = document.getElementById('s-base-currency');
   var revenueCurrencyEl = document.getElementById('s-revenue-currency');
   if (baseCurrencyEl) D.settings.baseCurrency = safeCurrency(baseCurrencyEl.value);
@@ -3648,6 +3682,12 @@ _fauth.onAuthStateChanged(async function(user) {
     if (vatRateField) vatRateField.value = s.vatRate != null ? s.vatRate : 15;
     var defaultTplField = document.getElementById('s-default-tpl');
     if (defaultTplField) defaultTplField.value = normalizeBusinessTemplate(s.defaultTpl);
+    var invoicePrefixField = document.getElementById('s-invoice-prefix');
+    if (invoicePrefixField) invoicePrefixField.value = (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(s.invoicePrefix) : s.invoicePrefix) || 'INV';
+    var invoiceFontField = document.getElementById('s-invoice-font');
+    if (invoiceFontField) invoiceFontField.value = s.invoiceFont || 'classic';
+    var invoiceViewField = document.getElementById('s-invoice-view');
+    if (invoiceViewField) invoiceViewField.value = s.invoiceView || 'modern';
     var logoAlignField = document.getElementById('s-logo-align');
     if (logoAlignField) logoAlignField.value = s.logoAlign || 'left';
     var logoSizeField = document.getElementById('s-logo-size');
