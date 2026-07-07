@@ -1299,9 +1299,27 @@ window.bookShowAround = function bookShowAround(){
   window.open(SHOW_AROUND_URL,'_blank','noopener');
 }
 
+function safeShowAroundLocalTime(timezone){
+  const now = new Date();
+  try{
+    return new Intl.DateTimeFormat('en-LK',{
+      year:'numeric',
+      month:'short',
+      day:'2-digit',
+      hour:'2-digit',
+      minute:'2-digit',
+      timeZone: timezone || 'Asia/Colombo',
+      timeZoneName:'short'
+    }).format(now);
+  }catch(_){
+    try{return now.toLocaleString('en-LK');}catch(__){return now.toISOString();}
+  }
+}
+
 function showAroundPayload(){
-  const timezone=(Intl.DateTimeFormat().resolvedOptions()||{}).timeZone||'Asia/Colombo';
-  const localTime=new Date().toLocaleString('en-LK',{dateStyle:'medium',timeStyle:'short',timeZoneName:'short'});
+  let timezone='Asia/Colombo';
+  try{timezone=(Intl.DateTimeFormat().resolvedOptions()||{}).timeZone||timezone;}catch(_){}
+  const localTime=safeShowAroundLocalTime(timezone);
   return {
     showAroundPreference: state.showAround || 'not-needed',
     showAroundBooked: state.showAround === 'booked',
