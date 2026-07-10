@@ -1539,21 +1539,22 @@
     var style = document.createElement('style');
     style.id = 'cls-billing-card-style';
     style.textContent =
-      '#cls-billing-widget{margin-top:1rem;border:1px solid #DED7CC;background:#fff;border-left:3px solid #1a9e5c;padding:1rem 1.1rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814}' +
-      '#cls-billing-widget .cls-billing-top{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center}' +
+      '#cls-billing-widget{margin-top:1rem;border:1px solid #DED7CC;background:#fff;border-left:3px solid #1a9e5c;padding:1.35rem 1.45rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814;min-width:0}' +
+      '#cls-billing-widget .cls-billing-top{display:grid;grid-template-columns:1fr;gap:1.05rem;align-items:start}' +
       '#cls-billing-widget .cls-billing-kicker{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:#1a9e5c;font-weight:800;margin-bottom:.2rem}' +
-      '#cls-billing-widget .cls-billing-title{font-family:Cormorant Garamond,Georgia,serif;font-size:1.25rem;line-height:1.1;margin-bottom:.15rem;color:#1C1814}' +
-      '#cls-billing-widget .cls-billing-copy{font-size:.76rem;line-height:1.55;color:#6B6258;max-width:640px}' +
-      '#cls-billing-widget .cls-billing-price{font-family:Cormorant Garamond,Georgia,serif;font-size:1.8rem;line-height:1;color:#1C1814;margin-top:.65rem}' +
-      '#cls-billing-widget .cls-billing-sub{font-size:.7rem;color:#6B6258;margin-top:.25rem}' +
-      '#cls-billing-widget .cls-billing-actions{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}' +
-      '#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{border:0;background:#1C1814;color:#fff;padding:.72rem 1rem;font-family:inherit;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:nowrap}' +
+      '#cls-billing-widget .cls-billing-title{font-family:Cormorant Garamond,Georgia,serif;font-size:1.7rem;line-height:1.08;margin-bottom:.35rem;color:#1C1814}' +
+      '#cls-billing-widget .cls-billing-copy{font-size:.82rem;line-height:1.65;color:#6B6258;max-width:none}' +
+      '#cls-billing-widget .cls-billing-price{font-family:Cormorant Garamond,Georgia,serif;font-size:2.15rem;line-height:1;color:#1C1814;margin-top:1rem}' +
+      '#cls-billing-widget .cls-billing-sub{font-size:.76rem;color:#6B6258;margin-top:.35rem;line-height:1.45}' +
+      '#cls-billing-widget .cls-billing-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;align-items:stretch;width:100%}' +
+      '#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{border:0;background:#1C1814;color:#fff;padding:.82rem .9rem;font-family:inherit;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:normal;min-height:44px;text-align:center}' +
       '#cls-billing-widget .cls-billing-monthly{background:#B8922A;color:#fff}' +
-      '#cls-billing-widget .cls-billing-wa{background:#fff;color:#1C1814;border:1px solid rgba(184,146,42,.35)}' +
+      '#cls-billing-widget .cls-billing-wa{background:#fff;color:#1C1814;border:1px solid rgba(184,146,42,.35);grid-column:1/-1}' +
       '#cls-billing-widget .cls-billing-pay:hover,#cls-billing-widget .cls-billing-monthly:hover{background:#1a9e5c}' +
       '#cls-billing-widget .cls-billing-wa:hover{border-color:#B8922A;color:#B8922A}' +
-      '#cls-billing-widget .cls-billing-status{margin-top:.8rem;font-size:.72rem;color:#6B6258;line-height:1.5}' +
-      '@media(max-width:760px){#cls-billing-widget .cls-billing-top{grid-template-columns:1fr}#cls-billing-widget .cls-billing-actions{justify-content:stretch}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
+      '#cls-billing-widget .cls-billing-status{margin-top:1rem;padding-top:.9rem;border-top:1px solid #E7DFD2;font-size:.74rem;color:#6B6258;line-height:1.5}' +
+      '@media(min-width:1180px){#settings-billing-widgets #cls-billing-widget{padding:1.5rem 1.65rem}}' +
+      '@media(max-width:760px){#cls-billing-widget{padding:1.1rem}#cls-billing-widget .cls-billing-actions{grid-template-columns:1fr}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
       '@media print{#cls-billing-widget{display:none!important}}';
     document.head.appendChild(style);
   }
