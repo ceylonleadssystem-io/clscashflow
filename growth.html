@@ -321,7 +321,8 @@ tr:hover td{background:var(--bg3)}
 .tpl-mini .tm-total{position:absolute;right:.42rem;bottom:.35rem;width:48px;height:9px;background:var(--tpl-accent,#B8922A)}
 .settings-preview-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:.85rem;margin-top:.65rem}
 .settings-preview-label{font-size:.54rem;letter-spacing:.17em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.55rem}
-.settings-invoice-preview{background:#fff;border:1px solid var(--border);box-shadow:0 8px 22px rgba(44,31,20,.08);padding:1rem;min-height:265px;border-radius:4px}
+.settings-invoice-preview{background:#fff;border:1px solid var(--border);box-shadow:0 8px 22px rgba(44,31,20,.08);padding:0;min-height:520px;border-radius:4px;overflow:hidden}
+.cls-invoice-preview-frame{width:100%;height:min(780px,82vh);border:0;display:block;background:#fff}
 .preview-invoice-top{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;border-bottom:2px solid var(--black);padding-bottom:.75rem;margin-bottom:.85rem}
 .preview-logo-box{width:80px;height:42px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:.56rem;color:var(--dim);overflow:hidden;background:#fff}
 .preview-logo-box img{max-width:100%;max-height:100%;object-fit:contain}
@@ -452,7 +453,6 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 #view-settings .settings-template-grid{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}
 #view-settings .settings-preview-wrap{border-radius:8px;background:linear-gradient(180deg,#fff,var(--bg));padding:1rem}
 #view-settings .settings-invoice-preview{max-width:100%;overflow:hidden}
-#view-settings .settings-invoice-preview *{max-width:100%;min-width:0}
 #view-settings .plan-box{border-radius:8px;box-shadow:0 10px 30px rgba(44,31,20,.12)}
 #view-settings .btn{border-radius:999px}
 #view-settings #cls-billing-widget,#view-settings #cls-support-widget,#view-settings #cls-danger-zone-widget{border-radius:8px;max-width:none!important}
@@ -985,7 +985,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="plan-item"><span class="plan-item-check">✓</span>More Invoice Templates</div>
                 <div class="plan-item"><span class="plan-item-check">✓</span>Manual Payment Reminders</div>
               </div>
-              <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business with Payable</button>
+              <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business with Genie</button>
               <button onclick="window.startBusinessTour()" style="margin-top:.5rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Business Tour</button>
               <button onclick="window.goBackToStudio(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Studio</button>
               <button onclick="window.showToast('Priority support is included with Business.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Priority Support</button>
@@ -1250,9 +1250,13 @@ function maybeStartBusinessTour() {
     setTimeout(function() { window.startBusinessTour(); }, 900);
   }
 }
-window.goBackToStudio = async function goBackToStudio(btn) {
-  if (!_signedInUid) { alert('Please sign in again before switching plans.'); return; }
-  if (!confirm('Switch back to Studio? Your Business data stays saved, but Business-only tools will be hidden.')) return;
+	window.goBackToStudio = async function goBackToStudio(btn) {
+	  if (!_signedInUid) { alert('Please sign in again before switching plans.'); return; }
+	  if (window.clsIsProfilePaid && window.clsIsProfilePaid(_profile)) {
+	    await window.clsRequestPlanChange('studio', _profile || {}, { uid: _signedInUid, db: _fdb, source: 'business-downgrade-button' });
+	    return;
+	  }
+	  if (!confirm('Switch back to Studio? Your Business data stays saved, but Business-only tools will be hidden.')) return;
   var oldText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Switching...'; }
   try {
@@ -2861,49 +2865,41 @@ function renderSettingsInvoicePreview() {
   var box = document.getElementById('settings-invoice-preview');
   if (!box) return;
   var s = collectSettingsDraft();
-  var tpl = invoiceTheme(s.defaultTpl);
-  var fontCss = window.clsInvoiceFontCss ? window.clsInvoiceFontCss(s.invoiceFont) : 'Georgia, "Times New Roman", serif';
-  var viewName = window.clsInvoiceViewName ? window.clsInvoiceViewName(s.invoiceView) : String(s.invoiceView || 'Modern');
+  if (!window.clsBuildInvoicePreviewFrame) {
+    box.innerHTML = '<div style="padding:1rem;color:var(--muted)">Invoice preview is loading. Please try again in a moment.</div>';
+    return;
+  }
+  var baseDate = new Date();
+  var dueDate = new Date(baseDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  var isoDate = function(d) { return d.toISOString().slice(0, 10); };
   var previewNo = window.clsFormatInvoiceNumber ? window.clsFormatInvoiceNumber(s.invoicePrefix, 1) : s.invoicePrefix + '-0001';
-  var logoWidth = s.logoSize === 'L' ? '112px' : (s.logoSize === 'S' ? '58px' : '84px');
-  var logoHeight = s.logoSize === 'L' ? '54px' : (s.logoSize === 'S' ? '34px' : '44px');
-  var logoX = Math.max(0, Math.min(100, s.logoX != null ? s.logoX : logoXForAlign(s.logoAlign)));
-  var logoY = Math.max(0, Math.min(24, s.logoY != null ? s.logoY : 5));
-  var logoTransform = logoX > 75 ? 'translateX(-100%)' : (logoX > 35 && logoX < 65 ? 'translateX(-50%)' : 'none');
-  var logo = s.logo ? '<img src="' + s.logo + '" alt="Logo">' : 'Logo';
-  var darkHeader = tpl.layout === 'header' || tpl.layout === 'corporate';
-  var goldHeader = tpl.layout === 'gold' || tpl.layout === 'ceylon';
-  var headerBg = darkHeader ? tpl.dark : (goldHeader ? tpl.accent : '#fff');
-  var headerColor = darkHeader || goldHeader ? '#fff' : '#1a1714';
-  var tableBorder = tpl.layout === 'minimal' || tpl.layout === 'signature' ? tpl.accent : tpl.dark;
-  var totalBg = tpl.layout === 'gold' || tpl.layout === 'ceylon' || tpl.layout === 'bold' ? tpl.accent : tpl.dark;
-  var paperBg = tpl.layout === 'signature' || tpl.layout === 'split' || tpl.layout === 'darkside' ? '#FDFAF4' : '#fff';
-  if (s.invoiceView === 'olden') paperBg = '#fbf3e5';
-  if (s.invoiceView === 'minimal') paperBg = '#fff';
-  var previewBorder = s.invoiceView === 'olden' ? '3px double rgba(74,59,42,.35)' : '1px solid var(--border)';
-  var previewPad = s.invoiceView === 'bold' ? '1.25rem' : '1.1rem';
-  box.innerHTML =
-    '<div style="background:' + paperBg + ';border:' + previewBorder + ';padding:' + previewPad + ';box-shadow:0 12px 32px rgba(44,31,20,.06);font-family:' + fontCss + '">' +
-      '<div style="display:flex;justify-content:space-between;gap:.6rem;align-items:center;margin-bottom:.55rem"><div class="preview-m" style="font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)">Template view</div><div class="preview-m" style="font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)">' + escHtml(viewName) + '</div></div>' +
-      '<div style="height:' + (tpl.layout === 'signature' ? '5px' : '4px') + ';background:' + tpl.accent + ';margin-bottom:1rem"></div>' +
-      '<div style="position:relative;min-height:5.2rem;display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;background:' + headerBg + ';color:' + headerColor + ';padding:' + (darkHeader || goldHeader ? '.85rem' : '0 0 .8rem') + ';border-bottom:' + (darkHeader || goldHeader ? '0' : '2px solid ' + tableBorder) + '">' +
-        '<div class="preview-logo-box" style="position:absolute;left:' + logoX + '%;top:' + logoY + '%;transform:' + logoTransform + ';width:' + logoWidth + ';height:' + logoHeight + ';background:#fff;z-index:2">' + logo + '</div>' +
-        '<div style="flex:1;text-align:' + escHtml(s.logoAlign) + '">' +
-          '<div class="preview-v" style="color:inherit;margin-top:3.2rem">' + escHtml(s.biz) + '</div>' +
-          '<div class="preview-m" style="color:inherit;opacity:.78">' + escHtml(s.email) + '</div>' +
-        '</div>' +
-        '<div style="text-align:right"><div class="preview-title" style="color:inherit">Invoice</div><div class="preview-number" style="color:inherit;opacity:.78">' + escHtml(previewNo) + '</div><div class="preview-m" style="color:inherit;opacity:.72">VAT: ' + escHtml(s.vat) + '</div></div>' +
-      '</div>' +
-      '<div class="preview-columns" style="margin-top:1.1rem">' +
-        '<div><div class="preview-k">From</div><div class="preview-v">' + escHtml(s.biz) + '</div><div class="preview-m">' + escHtml(s.addr) + '</div></div>' +
-        '<div><div class="preview-k">Bill To</div><div class="preview-v">Sample Customer</div><div class="preview-m">Customer billing address</div></div>' +
-      '</div>' +
-      '<div class="preview-table-head" style="background:transparent;color:#1a1714;border-bottom:2px solid ' + tableBorder + ';margin-top:1rem"><div>Description</div><div>Qty</div><div>Price</div><div>Amount</div></div>' +
-      '<div class="preview-table-row"><div>Service or product</div><div>1</div><div>LKR 100,000</div><div>LKR 100,000</div></div>' +
-      '<div class="preview-m" style="margin-top:.75rem;white-space:pre-line">' + escHtml(s.footer) + '</div>' +
-      '<div class="preview-total" style="background:' + totalBg + ';color:#fff"><span>Total Due</span><span>LKR 100,000</span></div>' +
-      '<div class="preview-m" style="text-align:center;margin-top:.75rem;font-size:.5rem">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
-    '</div>';
+  var sampleInvoice = {
+    id: previewNo,
+    num: previewNo,
+    client: 'Sample Customer',
+    caddr: 'Customer billing address',
+    cemail: 'accounts@customer.lk',
+    cphone: '',
+    date: isoDate(baseDate),
+    due: isoDate(dueDate),
+    terms: 'Net 30',
+    cur: 'LKR',
+    lines: [{ desc: 'Service or product', qty: 1, price: 100000, total: 100000 }],
+    sub: 100000,
+    vat: 0,
+    disc: 0,
+    total: 100000,
+    amount: 100000,
+    paidAmount: 0,
+    status: 'unpaid',
+    notes: s.footer
+  };
+  box.innerHTML = window.clsBuildInvoicePreviewFrame({
+    inv: sampleInvoice,
+    settings: s,
+    templateIndex: normalizeBusinessTemplate(s.defaultTpl),
+    systemName: 'Business Cashflow System'
+  });
 }
 
 function bindSettingsPreviewInputs() {

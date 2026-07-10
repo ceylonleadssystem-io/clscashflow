@@ -109,7 +109,7 @@
     <section class="section" data-admin-section="payments">
       <div class="section-head"><h2>Payment Requests</h2><span class="muted">Tokens created automatically when trials expire</span></div>
       <div class="table-wrap"><table class="table">
-        <thead><tr><th>Status</th><th>Token</th><th>User</th><th>Plan</th><th>Amount</th><th>Trial End</th><th>Created UTC</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Status</th><th>Token</th><th>User</th><th>Plan</th><th>Amount</th><th>Payment Link</th><th>Trial End</th><th>Created UTC</th><th>Actions</th></tr></thead>
         <tbody id="payment-requests-body"></tbody>
       </table></div>
     </section>
@@ -264,7 +264,7 @@ function statusPill(status){
 }
 function requestStatusPill(status){
   status = String(status || 'pending').toLowerCase();
-  var cls = status === 'paid' ? 'ok' : (status === 'closed' ? '' : (status === 'invoiced' ? 'warn' : 'bad'));
+  var cls = status === 'paid' ? 'ok' : (status === 'closed' ? '' : ((status === 'invoiced' || status === 'link-sent') ? 'warn' : 'bad'));
   return '<span class="pill '+cls+'">'+esc(status)+'</span>';
 }
 function paymentPill(u){
@@ -565,6 +565,8 @@ function renderVisits(visits, stats){
 var paymentRequestCache = {};
 function paymentRequestMessage(row){
   var r = (row && row.data) || {};
+  var payLink = r.customPaymentLink || r.paymentCustomPayLink || r.paymentLink || r.monthlyPayLink || r.defaultMonthlyPayLink || '';
+  var expires = r.paymentLinkExpiresAt || r.customPaymentLinkExpiresAt || '';
   return [
     'CLS Cashflow manual payment request',
     '',
@@ -573,6 +575,8 @@ function paymentRequestMessage(row){
     'Email: ' + (r.email || ''),
     'Plan: ' + (r.planName || r.plan || ''),
     'Amount: ' + money(r.amount) + '/month',
+    'Payment link: ' + (payLink || 'No custom link set'),
+    'Link expires: ' + (expires ? shortDate(expires) : 'Default link'),
     'Trial ended: ' + (shortDate(r.trialEnd) || ''),
     '',
     'Please send the payment invoice for this subscription and mark the account paid after payment is received.'
@@ -584,21 +588,26 @@ function renderPaymentRequests(paymentRequests, stats){
   paymentRequestCache = {};
   $('kpi-payment-requests').textContent = fmtInt(stats.openPaymentRequestsTotal == null ? paymentRequests.length : stats.openPaymentRequestsTotal);
   $('payment-requests-body').innerHTML = paymentRequests.map(function(row){
-    var r = row.data || {};
-    paymentRequestCache[row.id] = row;
-    var status = String(r.status || 'pending').toLowerCase();
-    var closed = status === 'paid' || status === 'closed';
-    var actions = '<div class="actions"><button class="btn" data-copy-payment-request="'+esc(row.id)+'">Copy</button>';
+	    var r = row.data || {};
+	    paymentRequestCache[row.id] = row;
+	    var status = String(r.status || 'pending').toLowerCase();
+	    var closed = status === 'paid' || status === 'closed';
+	    var payLink = r.customPaymentLink || r.paymentCustomPayLink || r.paymentLink || r.monthlyPayLink || r.defaultMonthlyPayLink || '';
+	    var linkExpiry = r.paymentLinkExpiresAt || r.customPaymentLinkExpiresAt || '';
+	    var linkHtml = payLink
+	      ? '<a href="'+esc(payLink)+'" target="_blank" rel="noopener">Open</a><br><span class="muted">'+esc(linkExpiry ? 'Expires '+shortDate(linkExpiry) : 'Default link')+'</span>'
+	      : '<span class="muted">No link</span>';
+	    var actions = '<div class="actions"><button class="btn" data-copy-payment-request="'+esc(row.id)+'">Copy</button><button class="btn" data-payment-link="'+esc(row.id)+'">Set link</button>';
     if (!closed) {
       actions += '<button class="btn" data-payment-request="'+esc(row.id)+'" data-payment-status="invoiced">Invoice sent</button>' +
         '<button class="btn gold" data-payment-request="'+esc(row.id)+'" data-payment-status="paid">Mark paid</button>' +
         '<button class="btn red" data-payment-request="'+esc(row.id)+'" data-payment-status="closed">Close</button>';
     } else {
       actions += '<span class="pill ok">'+esc(status)+'</span>';
-    }
-    actions += '</div>';
-    return '<tr><td>'+requestStatusPill(status)+'</td><td><span class="token">'+esc(r.token || row.id)+'</span></td><td>'+esc(r.name || r.businessName || '')+'<br><span class="muted">'+esc(r.email || '')+'</span></td><td>'+planPill(r.plan)+'</td><td>'+esc(money(r.amount))+'</td><td>'+esc(shortDate(r.trialEnd))+'</td><td>'+esc(r.createdAtUtc || fmtDate(r.createdAt))+'</td><td>'+actions+'</td></tr>';
-  }).join('') || '<tr><td colspan="8" class="muted">No expired-trial payment requests yet.</td></tr>';
+	    }
+	    actions += '</div>';
+	    return '<tr><td>'+requestStatusPill(status)+'</td><td><span class="token">'+esc(r.token || row.id)+'</span></td><td>'+esc(r.name || r.businessName || '')+'<br><span class="muted">'+esc(r.email || '')+'</span></td><td>'+planPill(r.plan)+'</td><td>'+esc(money(r.amount))+'</td><td>'+linkHtml+'</td><td>'+esc(shortDate(r.trialEnd))+'</td><td>'+esc(r.createdAtUtc || fmtDate(r.createdAt))+'</td><td>'+actions+'</td></tr>';
+	  }).join('') || '<tr><td colspan="9" class="muted">No expired-trial payment requests yet.</td></tr>';
 }
 
 function chatMessageMs(data){
@@ -724,7 +733,7 @@ async function loadAdminData(opts){
     if (!adminHasRendered || opts.forceLoading) {
       renderEmpty('users-body', 11, 'Loading users...');
       renderEmpty('visits-body', 10, 'Loading visits...');
-      renderEmpty('payment-requests-body', 8, 'Loading payment requests...');
+      renderEmpty('payment-requests-body', 9, 'Loading payment requests...');
       renderEmpty('tickets-body', 8, 'Loading tickets...');
       $('chats-body').innerHTML = '<div class="card muted">Loading Mrs. Gamage chats...</div>';
       $('user-breakdown').innerHTML = '<div class="card muted">Loading per-user breakdown...</div>';
@@ -740,7 +749,7 @@ async function loadAdminData(opts){
       if (serverErr && (serverErr.status === 401 || serverErr.status === 403 || window.__CLS_ALLOW_ADMIN_BROWSER_FALLBACK !== true)) {
         renderEmpty('users-body', 11, 'Could not load users. Admin function: '+adminFunctionError);
         renderEmpty('visits-body', 10, 'Could not load visits. Admin function: '+adminFunctionError);
-        renderEmpty('payment-requests-body', 8, 'Could not load payment requests. Admin function: '+adminFunctionError);
+        renderEmpty('payment-requests-body', 9, 'Could not load payment requests. Admin function: '+adminFunctionError);
         renderEmpty('tickets-body', 8, 'Could not load tickets. Admin function: '+adminFunctionError);
         $('chats-body').innerHTML = '<div class="card muted">Could not load Mrs. Gamage chats. Admin function: '+esc(adminFunctionError)+'</div>';
         $('user-breakdown').innerHTML = '<div class="card muted">Could not build the per-user breakdown because the admin server function could not load.</div>';
@@ -780,7 +789,7 @@ async function loadAdminData(opts){
       requestsSnap.forEach(function(d){ paymentRequests.push({ id:d.id, data:d.data() || {} }); });
     } catch (e) {
       paymentRequestsLoaded = false;
-      renderEmpty('payment-requests-body', 8, 'Could not load payment requests. Admin function: '+adminFunctionError+' Check the Supabase schema and Netlify environment variables.');
+      renderEmpty('payment-requests-body', 9, 'Could not load payment requests. Admin function: '+adminFunctionError+' Check the Supabase schema and Netlify environment variables.');
     }
 
     try {
@@ -861,11 +870,21 @@ async function updatePaymentRequest(id, status){
       var userPayload = status === 'paid'
         ? adminUserUpdatePayload('markPaid')
         : { paymentRequestStatus: status, paymentRequestToken: request.token || id, updatedAt: stamp };
-      if (status === 'paid') {
-        userPayload.paymentRequestStatus = 'paid';
-        userPayload.paymentRequestToken = request.token || id;
-        userPayload.paymentRequestPaidAt = stamp;
-      }
+	      if (status === 'paid') {
+	        userPayload.paymentRequestStatus = 'paid';
+	        userPayload.paymentRequestToken = request.token || id;
+	        userPayload.paymentRequestPaidAt = stamp;
+	        if (request.plan) {
+	          userPayload.plan = request.plan;
+	          userPayload.currentPlan = request.plan;
+	          userPayload.lockedPlan = request.plan;
+	          userPayload.planLocked = true;
+	          userPayload.planLockedAt = stamp;
+	          userPayload.planPrice = request.annualAmount || userPayload.planPrice;
+	          userPayload.planMonthlyPrice = request.monthlyAmount || request.amount || userPayload.planMonthlyPrice;
+	          userPayload.billingCycle = request.billingCycle || 'monthly';
+	        }
+	      }
       await db.collection('users').doc(String(request.uid)).set(userPayload, { merge: true });
     }
   }
@@ -881,6 +900,63 @@ async function copyPaymentRequest(id){
   } else {
     window.prompt('Copy this payment request:', text);
   }
+}
+
+function normalizePaymentCycle(value){
+  value = String(value || '').trim().toLowerCase();
+  if (value === 'annual' || value === 'yearly') return 'annual';
+  if (value === 'any' || value === 'both') return 'any';
+  return 'monthly';
+}
+
+async function setPaymentRequestLink(id){
+  var row = paymentRequestCache[id];
+  if (!row) throw new Error('Payment request is not loaded yet.');
+  var request = row.data || {};
+  var existing = request.customPaymentLink || request.paymentCustomPayLink || request.paymentLink || request.monthlyPayLink || '';
+  var url = window.prompt('Paste the fresh Genie payment link. It will expire in 7 days.', existing || 'https://paylink.geniebiz.lk/');
+  if (url == null) return;
+  url = String(url || '').trim();
+  if (!/^https?:\/\//i.test(url)) throw new Error('Payment link must start with http:// or https://');
+  var cycle = normalizePaymentCycle(window.prompt('Which payment cycle is this link for? Type monthly, annual, or any.', request.paymentLinkCycle || request.billingCycle || 'monthly'));
+  try {
+    await fetchAdminFunction({ action: 'setPaymentRequestLink', id: id, url: url, cycle: cycle });
+  } catch (serverErr) {
+    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    var expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    var payload = {
+      paymentLink: url,
+      customPaymentLink: url,
+      paymentCustomPayLink: url,
+      paymentLinkCycle: cycle,
+      paymentLinkExpiresAt: expiresAt,
+      paymentLinkUpdatedAt: stamp,
+      paymentLinkUpdatedAtUtc: new Date().toISOString(),
+      paymentLinkUpdatedBy: 'platform_admin',
+      status: request.status === 'paid' || request.status === 'closed' ? request.status : 'link-sent',
+      updatedAt: stamp,
+      updatedBy: 'platform_admin'
+    };
+    if (cycle === 'monthly' || cycle === 'any') payload.monthlyPayLink = url;
+    if (cycle === 'annual' || cycle === 'any') payload.annualPayLink = url;
+    await db.collection('paymentRequests').doc(id).set(payload, { merge: true });
+    if (request.uid) {
+      var userPayload = {
+        paymentLink: url,
+        customPaymentLink: url,
+        paymentCustomPayLink: url,
+        paymentLinkCycle: cycle,
+        paymentLinkExpiresAt: expiresAt,
+        paymentRequestStatus: payload.status,
+        paymentRequestToken: request.token || id,
+        updatedAt: stamp
+      };
+      if (cycle === 'monthly' || cycle === 'any') userPayload.paymentMonthlyPayLink = url;
+      if (cycle === 'annual' || cycle === 'any') userPayload.paymentAnnualPayLink = url;
+      await db.collection('users').doc(String(request.uid)).set(userPayload, { merge: true });
+    }
+  }
+  await loadAdminData({ forceLoading: true });
 }
 
 async function replyChat(id, message){
@@ -949,11 +1025,11 @@ function adminUserUpdatePayload(updateType){
   var stamp = firebase.firestore.FieldValue.serverTimestamp();
   if (updateType === 'pause') return { accountPaused:true, paid:false, subscriptionStatus:'paused', manualPaymentStatus:'paused', pausedAt:stamp, pausedBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'unpause') return { accountPaused:false, subscriptionStatus:'active', manualPaymentStatus:'unpaused', unpausedAt:stamp, unpausedBy:'platform_admin', updatedAt:stamp };
-  if (updateType === 'markPaid') return { paid:true, accountPaused:false, subscriptionStatus:'manual-paid', manualPaymentStatus:'paid', paidManually:true, manualPaidAt:stamp, lastManualPaymentAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
-  if (updateType === 'markUnpaid') return { paid:false, subscriptionStatus:'manual-unpaid', manualPaymentStatus:'unpaid', paidManually:false, manualUnpaidAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
-  if (updateType === 'setPlanSolo') return { plan:'solo', currentPlan:'solo', lastPlan:'solo', requestedPlan:'solo', planPrice:3500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
-  if (updateType === 'setPlanStudio') return { plan:'studio', currentPlan:'studio', lastPlan:'studio', requestedPlan:'studio', planPrice:5500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
-  if (updateType === 'setPlanBusiness') return { plan:'business', currentPlan:'business', lastPlan:'business', requestedPlan:'business', planPrice:8500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
+  if (updateType === 'markPaid') return { paid:true, accountPaused:false, subscriptionStatus:'manual-paid', manualPaymentStatus:'paid', paidManually:true, planLocked:true, planLockedAt:stamp, manualPaidAt:stamp, lastManualPaymentAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
+  if (updateType === 'markUnpaid') return { paid:false, planLocked:false, subscriptionStatus:'manual-unpaid', manualPaymentStatus:'unpaid', paidManually:false, manualUnpaidAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
+  if (updateType === 'setPlanSolo') return { plan:'solo', currentPlan:'solo', lastPlan:'solo', requestedPlan:'solo', planPrice:36000, planMonthlyPrice:3500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
+  if (updateType === 'setPlanStudio') return { plan:'studio', currentPlan:'studio', lastPlan:'studio', requestedPlan:'studio', planPrice:60000, planMonthlyPrice:5500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
+  if (updateType === 'setPlanBusiness') return { plan:'business', currentPlan:'business', lastPlan:'business', requestedPlan:'business', planPrice:94800, planMonthlyPrice:8500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
   if (updateType === 'deleteUser') return { role:'removed', accountStatus:'deleted', deleted:true, accountPaused:true, paid:false, subscriptionStatus:'deleted', manualPaymentStatus:'deleted', deletedAt:stamp, deletedBy:'platform_admin', updatedAt:stamp };
   return null;
 }
@@ -1064,12 +1140,17 @@ document.addEventListener('click', function(ev){
     updateTicket(ticketBtn.getAttribute('data-ticket'), ticketBtn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
     return;
   }
-  var copyRequestBtn = ev.target.closest('[data-copy-payment-request]');
-  if (copyRequestBtn) {
-    copyPaymentRequest(copyRequestBtn.getAttribute('data-copy-payment-request')).catch(function(e){ alert(e.message); });
-    return;
-  }
-  var requestBtn = ev.target.closest('[data-payment-request]');
+	  var copyRequestBtn = ev.target.closest('[data-copy-payment-request]');
+	  if (copyRequestBtn) {
+	    copyPaymentRequest(copyRequestBtn.getAttribute('data-copy-payment-request')).catch(function(e){ alert(e.message); });
+	    return;
+	  }
+	  var paymentLinkBtn = ev.target.closest('[data-payment-link]');
+	  if (paymentLinkBtn) {
+	    setPaymentRequestLink(paymentLinkBtn.getAttribute('data-payment-link')).catch(function(e){ alert(e.message); });
+	    return;
+	  }
+	  var requestBtn = ev.target.closest('[data-payment-request]');
   if (requestBtn) {
     var reqStatus = requestBtn.getAttribute('data-payment-status');
     var confirmLabels = { invoiced:'mark this payment request as invoice sent', paid:'mark this payment request as paid and activate the account', closed:'close this payment request' };

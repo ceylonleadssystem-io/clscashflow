@@ -2725,11 +2725,24 @@ window.clsSignOut = function clsSignOut() {
 
 // Paywall overlay
 window.showPaywall = function showPaywall(profile) {
+  if (window.clsRenderSubscriptionPaywall) {
+    window.clsRenderSubscriptionPaywall(profile, { plan: 'studio' });
+    return;
+  }
   const plan = (profile && profile.plan) || 'starter';
-  const prices = { starter: 5500, growth: 12500, premium: 28500 };
-  const price = prices[plan] || 5500;
-  const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
-  const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/month). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));
+  const normalizedPlan = ({ starter: 'studio', growth: 'business', premium: 'business' }[plan] || plan || 'studio');
+  const prices = { solo: 36000, studio: 60000, business: 94800 };
+  const monthlyPrices = { solo: 3500, studio: 5500, business: 8500 };
+  const genieLinks = {
+    solo: 'https://paylink.geniebiz.lk/JgLRmPDlzb',
+    studio: 'https://paylink.geniebiz.lk/eoqQAbG61x',
+    business: 'https://paylink.geniebiz.lk/DmwLnMeMwJ'
+  };
+  const price = prices[normalizedPlan] || 60000;
+  const monthlyPrice = monthlyPrices[normalizedPlan] || 5500;
+  const genieLink = genieLinks[normalizedPlan] || genieLinks.studio;
+  const planName = normalizedPlan.charAt(0).toUpperCase() + normalizedPlan.slice(1);
+  const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (monthly package LKR ' + monthlyPrice.toLocaleString() + '/mo, annual payment LKR ' + price.toLocaleString() + '). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));
   const waNum = '94778815628'; // ← replace
   if (document.getElementById('cls-paywall')) return;
   var ov = document.createElement('div');
@@ -2741,10 +2754,11 @@ window.showPaywall = function showPaywall(profile) {
     '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 15-day free trial of <strong>CLS ' + planName + '</strong> has expired.<br>Activate your plan to keep your dashboard and data.</div>' +
     '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
       '<div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:.35rem">Your Plan</div>' +
-      '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/month</span></div>' +
-      '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · Billed monthly</div>' +
+      '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + monthlyPrice.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/mo</span></div>' +
+      '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · annual option LKR ' + price.toLocaleString() + '</div>' +
     '</div>' +
-    '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">💬 Activate via WhatsApp →</a>' +
+    '<a href="' + genieLink + '" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">Pay monthly with Genie →</a>' +
+    '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#fff;color:#6B6258;border:1px solid rgba(184,146,42,.35);padding:.85rem;text-decoration:none;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">Activate via WhatsApp →</a>' +
     '<button data-cls-fn="clsSignOut" style="width:100%;background:transparent;border:1px solid rgba(184,146,42,.3);color:#6B6258;padding:.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +
     '<div style="font-size:.68rem;color:#A8A29A;margin-top:1.25rem">Your data is safe and will be here when you reactivate.</div>' +
   '</div>';

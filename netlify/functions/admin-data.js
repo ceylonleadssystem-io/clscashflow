@@ -195,9 +195,27 @@ function readBody(event) {
 }
 
 const PLAN_DETAILS = {
-  solo: { name: 'Solo', price: 36000, monthlyPrice: 3500 },
-  studio: { name: 'Studio', price: 60000, monthlyPrice: 5500 },
-  business: { name: 'Business', price: 94800, monthlyPrice: 8500 }
+  solo: {
+    name: 'Solo',
+    price: 36000,
+    monthlyPrice: 3500,
+    monthlyPayLink: 'https://paylink.geniebiz.lk/JgLRmPDlzb',
+    annualPayLink: 'https://paylink.geniebiz.lk/r9Qm3Plxa2'
+  },
+  studio: {
+    name: 'Studio',
+    price: 60000,
+    monthlyPrice: 5500,
+    monthlyPayLink: 'https://paylink.geniebiz.lk/eoqQAbG61x',
+    annualPayLink: 'https://paylink.geniebiz.lk/yjELmYAPOJ'
+  },
+  business: {
+    name: 'Business',
+    price: 94800,
+    monthlyPrice: 8500,
+    monthlyPayLink: 'https://paylink.geniebiz.lk/DmwLnMeMwJ',
+    annualPayLink: 'https://paylink.geniebiz.lk/rZN6y8VLoq'
+  }
 };
 
 function normalizePlan(plan) {
@@ -205,6 +223,36 @@ function normalizePlan(plan) {
   plan = String(plan || '').toLowerCase();
   plan = aliases[plan] || plan;
   return Object.prototype.hasOwnProperty.call(PLAN_DETAILS, plan) ? plan : 'solo';
+}
+
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(String(value || '').trim());
+}
+
+function normalizePaymentCycle(value) {
+  value = String(value || '').trim().toLowerCase();
+  if (value === 'annual' || value === 'yearly') return 'annual';
+  if (value === 'any' || value === 'both') return 'any';
+  return 'monthly';
+}
+
+function paymentLinkForProfile(profile, plan, cycle) {
+  profile = profile || {};
+  plan = normalizePlan(plan);
+  cycle = normalizePaymentCycle(cycle);
+  if (cycle === 'any') cycle = 'monthly';
+	  const details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+	  const expiresAt = parseTime(profile.paymentLinkExpiresAt || profile.customPaymentLinkExpiresAt);
+	  const rawCycle = String(profile.paymentLinkCycle || profile.customPaymentLinkCycle || '').trim().toLowerCase();
+	  const linkCycle = rawCycle ? normalizePaymentCycle(rawCycle) : '';
+	  const defaultLink = cycle === 'annual' ? details.annualPayLink : details.monthlyPayLink;
+	  const otherDefaultLink = cycle === 'annual' ? details.monthlyPayLink : details.annualPayLink;
+	  let direct = profile.paymentCustomPayLink || profile.customPaymentLink || profile.paymentLink || '';
+	  if ((!expiresAt || expiresAt > Date.now()) && (!linkCycle || linkCycle === cycle || linkCycle === 'any') && isHttpUrl(direct)) {
+	    direct = String(direct).trim();
+	    if (linkCycle || direct === defaultLink || direct !== otherDefaultLink) return direct;
+	  }
+  return cycle === 'annual' ? details.annualPayLink : details.monthlyPayLink;
 }
 
 function parseTime(value) {
@@ -246,9 +294,11 @@ async function ensureExpiredTrialPaymentRequests(admin, db, users) {
     const trialEndMs = parseTime(data.trialEnd);
     if (!trialEndMs || trialEndMs >= now) return;
 
-    const plan = normalizePlan(data.currentPlan || data.plan || data.lastPlan);
-    const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
-    const token = String(data.paymentRequestToken || '').trim() || makePaymentRequestToken(row.id, plan);
+	    const plan = normalizePlan(data.currentPlan || data.plan || data.lastPlan);
+	    const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+	    const monthlyPayLink = paymentLinkForProfile(data, plan, 'monthly');
+	    const annualPayLink = paymentLinkForProfile(data, plan, 'annual');
+	    const token = String(data.paymentRequestToken || '').trim() || makePaymentRequestToken(row.id, plan);
     const ref = db.collection('paymentRequests').doc(token);
     const snap = await ref.get();
     if (!snap.exists) {
@@ -261,8 +311,18 @@ async function ensureExpiredTrialPaymentRequests(admin, db, users) {
         businessName: data.bizName || data.invoiceBiz || data.businessName || '',
         plan,
         planName: planInfo.name,
-        amount: planInfo.price,
-        currency: 'LKR',
+	        amount: planInfo.monthlyPrice,
+	        monthlyAmount: planInfo.monthlyPrice,
+	        annualAmount: planInfo.price,
+	        monthlyPayLink,
+	        annualPayLink,
+	        defaultMonthlyPayLink: planInfo.monthlyPayLink,
+	        defaultAnnualPayLink: planInfo.annualPayLink,
+	        paymentLink: monthlyPayLink,
+	        paymentLinkCycle: 'monthly',
+	        paymentProvider: 'genie',
+	        billingCycle: 'monthly',
+	        currency: 'LKR',
         trialEnd: data.trialEnd || '',
         status: 'pending',
         source: 'admin-expired-trial-sweep',
@@ -277,10 +337,18 @@ async function ensureExpiredTrialPaymentRequests(admin, db, users) {
     if (!data.paymentRequestToken || !data.paymentRequestStatus) {
       await db.collection('users').doc(row.id).set({
         paymentRequestToken: token,
-        paymentRequestStatus: snap.exists ? ((snap.data() || {}).status || 'pending') : 'pending',
-        paymentRequestPlan: plan,
-        paymentRequestAmount: planInfo.price,
-        manualPaymentStatus: 'payment-requested',
+	        paymentRequestStatus: snap.exists ? ((snap.data() || {}).status || 'pending') : 'pending',
+	        paymentRequestPlan: plan,
+	        paymentRequestAmount: planInfo.monthlyPrice,
+	        paymentRequestMonthlyAmount: planInfo.monthlyPrice,
+	        paymentRequestAnnualAmount: planInfo.price,
+	        paymentProvider: 'genie',
+	        paymentMonthlyPayLink: monthlyPayLink,
+	        paymentAnnualPayLink: annualPayLink,
+	      paymentLink: monthlyPayLink,
+	      paymentLinkCycle: 'monthly',
+	      billingCycle: 'monthly',
+	        manualPaymentStatus: 'payment-requested',
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
@@ -314,10 +382,12 @@ function userUpdateForAction(admin, updateType) {
     return {
       paid: true,
       accountPaused: false,
-      subscriptionStatus: 'manual-paid',
-      manualPaymentStatus: 'paid',
-      paidManually: true,
-      manualPaidAt: stamp,
+	      subscriptionStatus: 'manual-paid',
+	      manualPaymentStatus: 'paid',
+	      paidManually: true,
+	      planLocked: true,
+	      planLockedAt: stamp,
+	      manualPaidAt: stamp,
       lastManualPaymentAt: stamp,
       manualPaymentBy: 'platform_admin',
       updatedAt: stamp
@@ -325,8 +395,9 @@ function userUpdateForAction(admin, updateType) {
   }
   if (updateType === 'markUnpaid') {
     return {
-      paid: false,
-      subscriptionStatus: 'manual-unpaid',
+	      paid: false,
+	      planLocked: false,
+	      subscriptionStatus: 'manual-unpaid',
       manualPaymentStatus: 'unpaid',
       paidManually: false,
       manualUnpaidAt: stamp,
@@ -540,17 +611,73 @@ exports.handler = async function handler(event) {
                 paymentRequestToken: request.token || id,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
               };
-          if (status === 'paid') {
-            userUpdate.paymentRequestStatus = 'paid';
-            userUpdate.paymentRequestToken = request.token || id;
-            userUpdate.paymentRequestPaidAt = admin.firestore.FieldValue.serverTimestamp();
-          }
+	          if (status === 'paid') {
+	            userUpdate.paymentRequestStatus = 'paid';
+	            userUpdate.paymentRequestToken = request.token || id;
+	            userUpdate.paymentRequestPaidAt = admin.firestore.FieldValue.serverTimestamp();
+	            if (request.plan) {
+	              userUpdate.plan = request.plan;
+	              userUpdate.currentPlan = request.plan;
+	              userUpdate.lockedPlan = request.plan;
+	              userUpdate.planLocked = true;
+	              userUpdate.planLockedAt = admin.firestore.FieldValue.serverTimestamp();
+	              userUpdate.planPrice = request.annualAmount || userUpdate.planPrice;
+	              userUpdate.planMonthlyPrice = request.monthlyAmount || request.amount || userUpdate.planMonthlyPrice;
+	              userUpdate.billingCycle = request.billingCycle || 'monthly';
+	            }
+	          }
           await db.collection('users').doc(String(request.uid)).set(userUpdate, { merge: true });
         }
-        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
-      }
+	        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+	      }
 
-      if (action === 'replyChat') {
+	      if (action === 'setPaymentRequestLink') {
+	        const id = String(body.id || '').trim();
+	        const url = String(body.url || '').trim();
+	        const cycle = normalizePaymentCycle(body.cycle || 'monthly');
+	        if (!id || !isHttpUrl(url)) {
+	          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid payment link update.' }) };
+	        }
+	        const stamp = admin.firestore.FieldValue.serverTimestamp();
+	        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+	        const ref = db.collection('paymentRequests').doc(id);
+	        const snap = await ref.get();
+	        const request = snap.exists ? (snap.data() || {}) : {};
+	        const update = {
+	          paymentLink: url,
+	          customPaymentLink: url,
+	          paymentCustomPayLink: url,
+	          paymentLinkCycle: cycle,
+	          paymentLinkExpiresAt: expiresAt,
+	          paymentLinkUpdatedAt: stamp,
+	          paymentLinkUpdatedAtUtc: new Date().toISOString(),
+	          paymentLinkUpdatedBy: 'platform_admin',
+	          status: request.status === 'paid' || request.status === 'closed' ? request.status : 'link-sent',
+	          updatedAt: stamp,
+	          updatedBy: 'platform_admin'
+	        };
+	        if (cycle === 'monthly' || cycle === 'any') update.monthlyPayLink = url;
+	        if (cycle === 'annual' || cycle === 'any') update.annualPayLink = url;
+	        await ref.set(update, { merge: true });
+	        if (request.uid) {
+	          const userUpdate = {
+	            paymentLink: url,
+	            customPaymentLink: url,
+	            paymentCustomPayLink: url,
+	            paymentLinkCycle: cycle,
+	            paymentLinkExpiresAt: expiresAt,
+	            paymentRequestStatus: update.status,
+	            paymentRequestToken: request.token || id,
+	            updatedAt: stamp
+	          };
+	          if (cycle === 'monthly' || cycle === 'any') userUpdate.paymentMonthlyPayLink = url;
+	          if (cycle === 'annual' || cycle === 'any') userUpdate.paymentAnnualPayLink = url;
+	          await db.collection('users').doc(String(request.uid)).set(userUpdate, { merge: true });
+	        }
+	        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, expiresAt }) };
+	      }
+
+	      if (action === 'replyChat') {
         const id = String(body.id || body.threadId || '').trim();
         const message = String(body.message || '').trim();
         if (!id || !message || message.length > 1200) {
@@ -612,10 +739,12 @@ exports.handler = async function handler(event) {
           return { statusCode: 404, headers: headers(), body: JSON.stringify({ ok: false, error: 'Could not match this chat to a user account.' }) };
         }
 
-        const profile = userDoc.data || {};
-        const plan = normalizePlan(profile.currentPlan || profile.plan || profile.lastPlan || thread.plan);
-        const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
-        const token = String(profile.paymentRequestToken || '').trim() || makePaymentRequestToken(userDoc.id, plan);
+	        const profile = userDoc.data || {};
+	        const plan = normalizePlan(profile.currentPlan || profile.plan || profile.lastPlan || thread.plan);
+	        const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+	        const monthlyPayLink = paymentLinkForProfile(profile, plan, 'monthly');
+	        const annualPayLink = paymentLinkForProfile(profile, plan, 'annual');
+	        const token = String(profile.paymentRequestToken || '').trim() || makePaymentRequestToken(userDoc.id, plan);
         const requestRef = db.collection('paymentRequests').doc(token);
         const requestSnap = await requestRef.get();
         const requestPayload = {
@@ -625,10 +754,20 @@ exports.handler = async function handler(event) {
           name: profile.name || profile.displayName || thread.name || thread.displayName || '',
           email: String(profile.email || thread.email || '').toLowerCase(),
           businessName: profile.bizName || profile.invoiceBiz || profile.businessName || '',
-          plan,
-          planName: planInfo.name,
-          amount: planInfo.price,
-          currency: 'LKR',
+	          plan,
+	          planName: planInfo.name,
+	          amount: planInfo.monthlyPrice,
+	          monthlyAmount: planInfo.monthlyPrice,
+	          annualAmount: planInfo.price,
+	          monthlyPayLink,
+	          annualPayLink,
+	          defaultMonthlyPayLink: planInfo.monthlyPayLink,
+	          defaultAnnualPayLink: planInfo.annualPayLink,
+	          paymentLink: monthlyPayLink,
+	          paymentLinkCycle: 'monthly',
+	          paymentProvider: 'genie',
+	          billingCycle: 'monthly',
+	          currency: 'LKR',
           trialEnd: profile.trialEnd || '',
           status: 'invoiced',
           source: 'admin-chat-payment-request',
@@ -649,11 +788,12 @@ exports.handler = async function handler(event) {
         const message = [
           'Hi ' + (profile.name || thread.name || 'there') + ',',
           '',
-          trialLine,
-          'Package: ' + planInfo.name + ' Plan',
-          'Amount: LKR ' + Number(planInfo.price).toLocaleString('en-US') + '/year',
-          'Package value: LKR ' + Number(planInfo.monthlyPrice || 0).toLocaleString('en-US') + '/month',
-          'Payment request token: ' + token,
+	          trialLine,
+	          'Package: ' + planInfo.name + ' Plan',
+	          'Amount: LKR ' + Number(planInfo.monthlyPrice || 0).toLocaleString('en-US') + '/month',
+	          'Annual option: LKR ' + Number(planInfo.price || 0).toLocaleString('en-US') + '/year',
+	          'Genie link: ' + monthlyPayLink,
+	          'Payment request token: ' + token,
           '',
           'Our team can send the manual invoice for this package. Reply here if you want us to resend details or confirm payment.'
         ].join('\n');
@@ -681,14 +821,22 @@ exports.handler = async function handler(event) {
           updatedAtUtc: now
         }, { merge: true });
         await db.collection('users').doc(userDoc.id).set({
-          paymentRequestToken: token,
-          paymentRequestStatus: 'invoiced',
-          paymentRequestPlan: plan,
-          paymentRequestAmount: planInfo.price,
-          manualPaymentStatus: 'payment-requested',
+	          paymentRequestToken: token,
+	          paymentRequestStatus: 'invoiced',
+	          paymentRequestPlan: plan,
+	          paymentRequestAmount: planInfo.monthlyPrice,
+	          paymentRequestMonthlyAmount: planInfo.monthlyPrice,
+	          paymentRequestAnnualAmount: planInfo.price,
+	          paymentProvider: 'genie',
+	          paymentMonthlyPayLink: monthlyPayLink,
+	          paymentAnnualPayLink: annualPayLink,
+	          paymentLink: monthlyPayLink,
+	          paymentLinkCycle: 'monthly',
+	          billingCycle: 'monthly',
+	          manualPaymentStatus: 'payment-requested',
           updatedAt: stamp
         }, { merge: true });
-        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, token, plan, amount: planInfo.price }) };
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, token, plan, amount: planInfo.monthlyPrice }) };
       }
 
       if (action === 'updateChat') {

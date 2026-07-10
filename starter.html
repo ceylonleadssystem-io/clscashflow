@@ -844,7 +844,7 @@ document.addEventListener('click',function(e){
               <div style="padding:1rem">
                 <strong>Studio Plan</strong> — LKR 5,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
                 <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
-                <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio with Payable</button>
+                <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio with Genie</button>
                 <button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Business</button>
                 <button class="btn-act" data-cls-fn="goBackToSolo" data-cls-this="true" style="background:#fff;color:var(--muted);margin-left:.45rem;border:1px solid var(--border)">Back to Solo</button>
               </div>
@@ -1534,11 +1534,16 @@ function renderTrialStatus(){
 }
 window.openBusinessUpgrade = async function openBusinessUpgrade(){
   if(!_signedInUid){alert('Please sign in again before upgrading.');return;}
-  const btn=document.activeElement&&document.activeElement.matches('button,a')?document.activeElement:null;
-  const oldText=btn?btn.textContent:'';
-  if(btn){btn.disabled=true;btn.textContent='Upgrading...';}
-  try{
-    await saveDB();
+	  const btn=document.activeElement&&document.activeElement.matches('button,a')?document.activeElement:null;
+	  const oldText=btn?btn.textContent:'';
+	  if(btn){btn.disabled=true;btn.textContent='Upgrading...';}
+	  try{
+	    if(window.clsIsProfilePaid&&window.clsIsProfilePaid(_profile)){
+	      await window.clsRequestPlanChange('business',_profile||{}, {uid:_signedInUid, db:_db, source:'studio-upgrade-button'});
+	      if(btn){btn.disabled=false;btn.textContent=oldText;}
+	      return;
+	    }
+	    await saveDB();
     try{
       localStorage.setItem('cls-starter-growth-snapshot',JSON.stringify({
         ownerUid:_uid,
@@ -1570,10 +1575,14 @@ window.openBusinessUpgrade = async function openBusinessUpgrade(){
     alert('Could not upgrade to Business right now. Please try again.');
     if(btn){btn.disabled=false;btn.textContent=oldText;}
   }
-};
-window.goBackToSolo = async function goBackToSolo(btn){
-  if(!_signedInUid){alert('Please sign in again before switching plans.');return;}
-  if(!confirm('Switch back to Solo? Your Studio data stays saved, but Studio-only tools will be hidden.')) return;
+	};
+	window.goBackToSolo = async function goBackToSolo(btn){
+	  if(!_signedInUid){alert('Please sign in again before switching plans.');return;}
+	  if(window.clsIsProfilePaid&&window.clsIsProfilePaid(_profile)){
+	    await window.clsRequestPlanChange('solo',_profile||{}, {uid:_signedInUid, db:_db, source:'studio-downgrade-button'});
+	    return;
+	  }
+	  if(!confirm('Switch back to Solo? Your Studio data stays saved, but Studio-only tools will be hidden.')) return;
   const oldText=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='Switching...';}
   try{

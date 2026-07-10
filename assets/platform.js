@@ -3,9 +3,30 @@
   var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
   var PLAN_DETAILS = {
-    solo: { name: 'Solo', monthlyPrice: 3500, price: 36000, file: 'solo.html' },
-    studio: { name: 'Studio', monthlyPrice: 5500, price: 60000, file: 'starter.html' },
-    business: { name: 'Business', monthlyPrice: 8500, price: 94800, file: 'growth.html' }
+    solo: {
+      name: 'Solo',
+      monthlyPrice: 3500,
+      price: 36000,
+      file: 'solo.html',
+      monthlyPayLink: 'https://paylink.geniebiz.lk/JgLRmPDlzb',
+      annualPayLink: 'https://paylink.geniebiz.lk/r9Qm3Plxa2'
+    },
+    studio: {
+      name: 'Studio',
+      monthlyPrice: 5500,
+      price: 60000,
+      file: 'starter.html',
+      monthlyPayLink: 'https://paylink.geniebiz.lk/eoqQAbG61x',
+      annualPayLink: 'https://paylink.geniebiz.lk/yjELmYAPOJ'
+    },
+    business: {
+      name: 'Business',
+      monthlyPrice: 8500,
+      price: 94800,
+      file: 'growth.html',
+      monthlyPayLink: 'https://paylink.geniebiz.lk/DmwLnMeMwJ',
+      annualPayLink: 'https://paylink.geniebiz.lk/rZN6y8VLoq'
+    }
   };
   var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
   var BILLING_ID = 'cls-billing-widget';
@@ -210,6 +231,21 @@
   window.clsPlanFiles = PLAN_FILES;
   window.clsPlanDetails = PLAN_DETAILS;
 
+  function isProfilePaidRecord(profile) {
+    profile = profile || {};
+    var status = String(profile.subscriptionStatus || '').toLowerCase();
+    return profile.paid === true || status === 'active' || status === 'manual-paid';
+  }
+
+  function paidLockedPlan(profile) {
+    if (!isProfilePaidRecord(profile)) return '';
+    return normalizePlan(profile.lockedPlan)
+      || normalizePlan(profile.currentPlan)
+      || normalizePlan(profile.plan)
+      || normalizePlan(profile.lastPlan)
+      || '';
+  }
+
   window.clsRememberPlan = async function clsRememberPlan(plan, uid, db) {
     plan = normalizePlan(plan);
     if (!plan) return plan;
@@ -222,6 +258,26 @@
 
     db = getFirestore(db);
     if (!uid || !db) return plan;
+
+    try {
+      var existingSnap = await db.collection('users').doc(uid).get();
+      var existingProfile = existingSnap && existingSnap.exists ? (existingSnap.data() || {}) : {};
+      var lockedPlan = paidLockedPlan(existingProfile);
+      if (lockedPlan && lockedPlan !== plan) {
+        safeSet('cls-last-plan', lockedPlan);
+        safeSet('cls-current-plan', lockedPlan);
+        if (typeof window.clsRequestPlanChange === 'function') {
+          window.clsRequestPlanChange(plan, existingProfile, {
+            uid: uid,
+            db: db,
+            source: 'paid-plan-lock'
+          }).catch(function(e) { console.warn('Plan change request could not be recorded:', e); });
+        }
+        return lockedPlan;
+      }
+    } catch (e) {
+      console.warn('Paid plan lock check skipped:', e);
+    }
 
     var update = {
       currentPlan: plan,
@@ -268,8 +324,19 @@
     opts = opts || {};
     expectedPlan = normalizePlan(expectedPlan) || 'solo';
     var accountPlan = profilePlan(profile);
-    if (accountPlan && accountPlan !== expectedPlan) {
-      var dest = window.clsPlanFileFor(accountPlan);
+    var lockedPlan = paidLockedPlan(profile);
+    var routePlan = lockedPlan || accountPlan;
+    if (routePlan && routePlan !== expectedPlan) {
+      safeSet('cls-last-plan', routePlan);
+      safeSet('cls-current-plan', routePlan);
+      if (lockedPlan && typeof window.clsRequestPlanChange === 'function') {
+        await window.clsRequestPlanChange(expectedPlan, profile, {
+          uid: opts.uid,
+          db: opts.db,
+          source: 'paid-plan-access-block'
+        });
+      }
+      var dest = window.clsPlanFileFor(routePlan);
       var current = (location.pathname || '').split('/').pop() || 'index.html';
       if (current !== dest) window.location.replace(dest);
       return false;
@@ -578,9 +645,9 @@
     var css = '@page{size:A4;margin:0}' +
       '*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}' +
       'html,body{width:210mm;min-height:297mm;background:#fff;color:#18130f;font-family:' + bodyFont + '}' +
-      'body{margin:0}.invoice-page{width:210mm;height:297mm;overflow:hidden;margin:0 auto;background:var(--paper);color:#18130f;padding:18mm 18mm 12mm;display:flex;flex-direction:column;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--paper:' + (theme.paper || '#fff') + ';--line:rgba(24,19,15,.16);font-family:' + bodyFont + '}' +
-      '.brand-rule{height:4px;background:var(--accent);margin-bottom:14mm}.invoice-head{display:grid;grid-template-columns:minmax(0,1fr) 64mm;gap:12mm;align-items:start;margin-bottom:13mm;border-bottom:2px solid var(--dark);padding-bottom:9mm}.brand{text-align:' + (s.logoAlign === 'right' ? 'right' : (s.logoAlign === 'center' ? 'center' : 'left')) + '}.logo-img{display:inline-block;object-fit:contain;margin-bottom:5mm}.logo-box{display:inline-flex;width:28mm;height:16mm;border:1px dashed var(--line);align-items:center;justify-content:center;font-size:9px;letter-spacing:3px;color:#9b9188;margin-bottom:5mm}.biz-name{font-family:' + titleFont + ';font-size:24px;line-height:1.15;font-weight:800;color:#111}.muted{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line;word-break:break-word}.invoice-title{text-align:right}.invoice-title h1{font-family:' + titleFont + ';font-size:36px;line-height:1;text-transform:uppercase;letter-spacing:5px;color:#111}.invoice-title .num{margin-top:4mm;font-size:12px;font-weight:800;letter-spacing:.04em}.invoice-title .meta{margin-top:5mm;font-size:10.5px;line-height:1.7;color:#6e635a}.parties{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18mm;padding:0 0 8mm;margin-bottom:8mm}.label{font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:3mm}.party-name{font-size:14px;font-weight:800;line-height:1.25;margin-bottom:2mm}.items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8mm}.items th{background:transparent;color:#18130f;border-bottom:2px solid var(--dark);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:0 10px 7px}.items th:nth-child(1){width:49%}.items th:nth-child(2){width:10%}.items th:nth-child(3){width:20%}.items th:nth-child(4){width:21%}.items th:nth-child(n+2),.items td:nth-child(n+2){text-align:right}.items td{border-bottom:1px solid var(--line);padding:9px 10px;font-size:10.5px;line-height:1.35;vertical-align:top;word-break:break-word}.line-no{display:inline-block;min-width:18px;margin-right:7px;font-weight:800;color:var(--accent)}.line-desc{font-weight:650}.money-row{display:flex;justify-content:space-between;gap:10mm;border-bottom:1px solid var(--line);padding:6px 0;font-size:10.5px;color:#594f47}.money-row b{color:#111;font-variant-numeric:tabular-nums}.invoice-bottom{display:grid;grid-template-columns:minmax(0,1fr) 74mm;gap:14mm;align-items:start;margin-top:8mm;padding-top:0}.notes{padding-left:0;min-height:22mm}.note-text{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line}.totals{border-top:1px solid var(--line);padding-top:2mm}.grand{margin-top:4mm;background:var(--dark);color:#fff!important;border:0;padding:11px 13px;align-items:center}.grand span{font-size:8.5px;letter-spacing:2.8px;text-transform:uppercase;font-weight:800}.grand b{font-size:17px;color:#fff}.powered{margin-top:auto;padding-top:7mm;text-align:center;font-size:9px;letter-spacing:.04em;color:#7d736a}.powered b{color:#18130f}.view-classic .invoice-title h1,.view-olden .invoice-title h1{text-transform:none;letter-spacing:0}.view-olden{--paper:#fbf4e8}.view-olden .brand-rule{height:6px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.view-minimal{--paper:#fff}.view-minimal .brand-rule,.view-minimal .grand{background:#111}.view-bold .brand-rule{background:var(--dark)}.tpl-pop .grand{background:var(--accent);color:#1b1713}.tpl-green .grand,.tpl-yellow .grand{background:var(--accent);color:#111}.tpl-green .grand b,.tpl-yellow .grand b,.tpl-pop .grand b{color:#111}@media print{html,body{background:#fff}.invoice-page{box-shadow:none;margin:0}}';
-    css += '.invoice-page{padding:12mm 12mm 10mm!important}.brand-rule{height:5px!important;margin-bottom:10mm!important}.invoice-head{grid-template-columns:minmax(0,1fr) 70mm!important;gap:10mm!important;margin-bottom:10mm!important;padding-bottom:8mm!important}.logo-img{margin-bottom:4mm!important}.logo-box{width:34mm!important;height:21mm!important;margin-bottom:4mm!important}.biz-name{font-size:29px!important}.muted{font-size:12px!important;line-height:1.5!important}.invoice-title h1{font-size:48px!important;letter-spacing:6px!important}.invoice-title .num{font-size:14px!important;margin-top:5mm!important}.invoice-title .meta{font-size:12px!important;line-height:1.65!important}.parties{gap:16mm!important;padding-bottom:8mm!important;margin-bottom:8mm!important}.label{font-size:9.5px!important;margin-bottom:3.5mm!important}.party-name{font-size:17px!important}.items{margin-bottom:8mm!important}.items th{font-size:9.5px!important;padding:0 9px 8px!important}.items td{font-size:12.5px!important;padding:10px 9px!important}.line-no{min-width:22px!important;margin-right:8px!important}.invoice-bottom{grid-template-columns:minmax(0,1fr) 82mm!important;gap:12mm!important;margin-top:9mm!important}.notes{min-height:20mm!important}.note-text,.money-row{font-size:12px!important}.grand{padding:13px 15px!important}.grand b{font-size:22px!important}.powered{margin-top:10mm!important;padding-top:5mm!important;font-size:10px!important}@media print{.invoice-page{padding:12mm 12mm 10mm!important}}';
+      'body{margin:0}.invoice-page{width:210mm;min-height:297mm;overflow:visible;margin:0 auto;background:var(--paper);color:#18130f;padding:18mm 18mm 12mm;display:flex;flex-direction:column;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--paper:' + (theme.paper || '#fff') + ';--line:rgba(24,19,15,.16);font-family:' + bodyFont + '}' +
+      '.brand-rule{height:4px;background:var(--accent);margin-bottom:14mm}.invoice-head{display:grid;grid-template-columns:minmax(0,1fr) 64mm;gap:12mm;align-items:start;margin-bottom:13mm;border-bottom:2px solid var(--dark);padding-bottom:9mm}.brand{text-align:' + (s.logoAlign === 'right' ? 'right' : (s.logoAlign === 'center' ? 'center' : 'left')) + '}.logo-img{display:inline-block;object-fit:contain;margin-bottom:5mm}.logo-box{display:inline-flex;width:28mm;height:16mm;border:1px dashed var(--line);align-items:center;justify-content:center;font-size:9px;letter-spacing:3px;color:#9b9188;margin-bottom:5mm}.biz-name{font-family:' + titleFont + ';font-size:24px;line-height:1.15;font-weight:800;color:#111}.muted{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line;word-break:break-word}.invoice-title{text-align:right}.invoice-title h1{font-family:' + titleFont + ';font-size:36px;line-height:1;text-transform:uppercase;letter-spacing:5px;color:#111}.invoice-title .num{margin-top:4mm;font-size:12px;font-weight:800;letter-spacing:.04em}.invoice-title .meta{margin-top:5mm;font-size:10.5px;line-height:1.7;color:#6e635a}.parties{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18mm;padding:0 0 8mm;margin-bottom:8mm}.label{font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:3mm}.party-name{font-size:14px;font-weight:800;line-height:1.25;margin-bottom:2mm}.items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8mm}.items th{background:transparent;color:#18130f;border-bottom:2px solid var(--dark);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:0 10px 7px}.items th:nth-child(1){width:49%}.items th:nth-child(2){width:10%}.items th:nth-child(3){width:20%}.items th:nth-child(4){width:21%}.items th:nth-child(n+2),.items td:nth-child(n+2){text-align:right}.items td{border-bottom:1px solid var(--line);padding:9px 10px;font-size:10.5px;line-height:1.35;vertical-align:top;word-break:break-word}.line-no{display:inline-block;min-width:18px;margin-right:7px;font-weight:800;color:var(--accent)}.line-desc{font-weight:650}.money-row{display:flex;justify-content:space-between;gap:10mm;border-bottom:1px solid var(--line);padding:6px 0;font-size:10.5px;color:#594f47}.money-row b{color:#111;font-variant-numeric:tabular-nums}.invoice-bottom{display:grid;grid-template-columns:minmax(0,1fr) 74mm;gap:14mm;align-items:start;margin-top:auto;padding-top:0}.notes{padding-left:0;min-height:22mm}.note-text{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line}.totals{border-top:1px solid var(--line);padding-top:2mm}.grand{margin-top:4mm;background:var(--dark);color:#fff!important;border:0;padding:11px 13px;align-items:center}.grand span{font-size:8.5px;letter-spacing:2.8px;text-transform:uppercase;font-weight:800}.grand b{font-size:17px;color:#fff}.powered{margin-top:8mm;padding-top:7mm;text-align:center;font-size:9px;letter-spacing:.04em;color:#7d736a}.powered b{color:#18130f}.view-classic .invoice-title h1,.view-olden .invoice-title h1{text-transform:none;letter-spacing:0}.view-olden{--paper:#fbf4e8}.view-olden .brand-rule{height:6px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.view-minimal{--paper:#fff}.view-minimal .brand-rule,.view-minimal .grand{background:#111}.view-bold .brand-rule{background:var(--dark)}.tpl-pop .grand{background:var(--accent);color:#1b1713}.tpl-green .grand,.tpl-yellow .grand{background:var(--accent);color:#111}.tpl-green .grand b,.tpl-yellow .grand b,.tpl-pop .grand b{color:#111}@media print{html,body{background:#fff}.invoice-page{box-shadow:none;margin:0;min-height:297mm;height:auto}}';
+    css += '.invoice-page{padding:10mm 10mm 9mm!important}.brand-rule{height:5px!important;margin-bottom:10mm!important}.invoice-head{grid-template-columns:minmax(0,1fr) 70mm!important;gap:10mm!important;margin-bottom:10mm!important;padding-bottom:8mm!important}.logo-img{margin-bottom:4mm!important}.logo-box{width:34mm!important;height:21mm!important;margin-bottom:4mm!important}.biz-name{font-size:31px!important}.muted{font-size:12.5px!important;line-height:1.5!important}.invoice-title h1{font-size:52px!important;letter-spacing:6px!important}.invoice-title .num{font-size:14px!important;margin-top:5mm!important}.invoice-title .meta{font-size:12.5px!important;line-height:1.65!important}.parties{gap:16mm!important;padding-bottom:8mm!important;margin-bottom:8mm!important}.label{font-size:9.5px!important;margin-bottom:3.5mm!important}.party-name{font-size:17.5px!important}.items{margin-bottom:6mm!important}.items th{font-size:9.5px!important;padding:0 9px 8px!important}.items td{font-size:13px!important;padding:10px 9px!important}.line-no{min-width:22px!important;margin-right:8px!important}.invoice-bottom{grid-template-columns:minmax(0,1fr) 84mm!important;gap:12mm!important;margin-top:auto!important}.notes{min-height:20mm!important}.note-text,.money-row{font-size:12px!important}.grand{padding:13px 15px!important}.grand b{font-size:22px!important}.powered{margin-top:8mm!important;padding-top:5mm!important;font-size:10px!important}@media print{.invoice-page{padding:10mm 10mm 9mm!important;min-height:297mm!important;height:auto!important}}';
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceEscape(title) + '</title><style>' + css + '</style></head><body>' +
       '<div class="invoice-page tpl-' + cssLayout + ' view-' + view + '"><div class="brand-rule"></div>' +
       '<section class="invoice-head"><div class="brand">' + logo + '<div class="biz-name">' + invoiceEscape(s.biz) + '</div><div class="muted">' + invoiceBreaks(s.addr) + (s.email ? '<br>' + invoiceEscape(s.email) : '') + (s.vat ? '<br>VAT: ' + invoiceEscape(s.vat) : '') + '</div></div><div class="invoice-title"><h1>Invoice</h1><div class="num">' + invoiceEscape(title) + '</div><div class="meta"><div>Date: ' + humanDate(inv.date) + '</div><div>Due: ' + humanDate(inv.due) + '</div><div>Terms: ' + invoiceEscape(inv.terms || 'Net 30') + '</div></div></div></section>' +
@@ -588,6 +655,13 @@
       '<table class="items"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<section class="invoice-bottom"><div class="notes"><div class="label">Notes</div><div class="note-text">' + invoiceBreaks(note) + '</div></div><div class="totals"><div class="money-row"><span>Subtotal</span><b>' + invoiceMoney(cur, sub) + '</b></div>' + (discAmount ? '<div class="money-row"><span>Discount</span><b>- ' + invoiceMoney(cur, discAmount) + '</b></div>' : '') + (vat ? '<div class="money-row"><span>Tax / VAT</span><b>' + invoiceMoney(cur, vat) + '</b></div>' : '') + '<div class="money-row grand"><span>Total due</span><b>' + invoiceMoney(cur, total) + '</b></div></div></section>' +
       '<div class="powered"><b>' + DEFAULT_INVOICE_FOOTER + '</b></div></div></body></html>';
+  };
+
+  window.clsBuildInvoicePreviewFrame = function(opts) {
+    opts = opts || {};
+    var html = window.clsBuildInvoicePrintHtml(opts);
+    html = html.replace('</style>', '@media screen{html,body{width:100%;min-height:100%;background:#f7f3ed}.invoice-page{margin:0 auto!important;box-shadow:0 12px 32px rgba(44,31,20,.12)}}</style>');
+    return '<iframe class="cls-invoice-preview-frame" title="Invoice preview" loading="lazy" srcdoc="' + invoiceEscape(html) + '"></iframe>';
   };
 
   function fieldTimestamp() {
@@ -645,10 +719,10 @@
   });
 
   window.clsIsProfilePaid = function clsIsProfilePaid(profile) {
-    profile = profile || {};
-    var status = String(profile.subscriptionStatus || '').toLowerCase();
-    return profile.paid === true || status === 'active' || status === 'manual-paid';
+    return isProfilePaidRecord(profile);
   };
+
+  window.clsPaidLockedPlan = paidLockedPlan;
 
   window.clsIsAccountPaused = function clsIsAccountPaused(profile) {
     profile = profile || {};
@@ -666,6 +740,139 @@
     return (profile && profile.email) || (user && user.email) || '';
   }
 
+  function dateMs(value) {
+    if (!value) return 0;
+    if (value && typeof value.toDate === 'function') return value.toDate().getTime();
+    var ms = Date.parse(value);
+    return Number.isFinite(ms) ? ms : 0;
+  }
+
+  function isHttpUrl(value) {
+    return /^https?:\/\//i.test(String(value || '').trim());
+  }
+
+  function customPaymentLink(profile, plan, cycle) {
+    profile = profile || {};
+    plan = normalizePlan(plan) || bestPlan(profile, plan);
+    cycle = cycle === 'monthly' ? 'monthly' : 'annual';
+	    var expiresAt = dateMs(profile.paymentLinkExpiresAt || profile.customPaymentLinkExpiresAt);
+	    if (expiresAt && expiresAt <= Date.now()) return '';
+	    var linkCycle = String(profile.paymentLinkCycle || profile.customPaymentLinkCycle || '').toLowerCase();
+	    if (linkCycle && linkCycle !== cycle && linkCycle !== 'any') return '';
+	    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+	    var defaultLink = cycle === 'monthly' ? details.monthlyPayLink : details.annualPayLink;
+	    var otherDefaultLink = cycle === 'monthly' ? details.annualPayLink : details.monthlyPayLink;
+	    var direct = profile.paymentCustomPayLink || profile.customPaymentLink || profile.paymentLink || '';
+	    if (isHttpUrl(direct)) {
+	      direct = String(direct).trim();
+	      if (linkCycle || direct === defaultLink || direct !== otherDefaultLink) return direct;
+	    }
+	    var keyed = cycle === 'monthly'
+	      ? (profile.paymentMonthlyPayLink || profile.monthlyPayLink || '')
+	      : (profile.paymentAnnualPayLink || profile.annualPayLink || '');
+	    if (isHttpUrl(keyed) && keyed !== defaultLink) return String(keyed).trim();
+    return '';
+  }
+
+  function paymentLinkFor(profile, plan, cycle) {
+    plan = bestPlan(profile, plan);
+    cycle = cycle === 'monthly' ? 'monthly' : 'annual';
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    return customPaymentLink(profile, plan, cycle) || planPaymentLink(details, cycle);
+  }
+
+  window.clsPaymentLinkFor = paymentLinkFor;
+
+  window.clsRequestPlanChange = async function clsRequestPlanChange(targetPlan, profile, opts) {
+    opts = opts || {};
+    profile = profile || window._profile || {};
+    targetPlan = normalizePlan(targetPlan);
+    if (!targetPlan) return null;
+    var currentPlan = paidLockedPlan(profile) || bestPlan(profile, opts.currentPlan);
+    if (currentPlan === targetPlan) return null;
+    var user = getAuthUser();
+    var uid = opts.uid || (user && user.uid) || profile.uid || profile.ownerUid || '';
+    var db = getFirestore(opts.db);
+    var details = PLAN_DETAILS[targetPlan] || PLAN_DETAILS.solo;
+    var currentDetails = PLAN_DETAILS[currentPlan] || PLAN_DETAILS.solo;
+    var direction = planRank(targetPlan) > planRank(currentPlan) ? 'upgrade' : 'plan change';
+    var message = 'Plan ' + direction + ' request\n\n' +
+      'Current plan: ' + currentDetails.name + '\n' +
+      'Requested plan: ' + details.name + '\n' +
+      'Name: ' + (profileName(profile, user) || 'Customer') + '\n' +
+      'Email: ' + (profileEmail(profile, user) || '') + '\n' +
+      'Page: ' + location.href;
+    var payload = {
+      uid: uid,
+      ownerUid: plainText(profile.ownerUid || uid, 160),
+      name: plainText(profileName(profile, user), 180),
+      email: plainText(profileEmail(profile, user), 180).toLowerCase(),
+      currentPlan: currentPlan,
+      requestedPlan: targetPlan,
+      requestedPlanName: details.name,
+      requestType: direction,
+      status: 'open',
+      notifyEmail: 'hello@ceylonrylabs.io',
+      source: opts.source || 'customer-plan-change',
+      page: location.href,
+      message: message,
+      updatedAt: fieldTimestamp(),
+      updatedAtUtc: nowIso()
+    };
+    var requestId = 'plan-change-' + (uid || 'guest') + '-' + targetPlan;
+    var sentKey = 'cls-plan-change-request-' + requestId;
+    var alreadySent = safeGet(sentKey);
+    try {
+      if (db && uid) {
+        var ref = db.collection('upgradeRequests').doc(requestId);
+        var snap = await ref.get();
+        if (!snap.exists) {
+          payload.createdAt = fieldTimestamp();
+          payload.createdAtUtc = nowIso();
+        }
+        await ref.set(payload, { merge: true });
+      }
+      if (!alreadySent || Date.now() - Number(alreadySent || 0) > 86400000) {
+        try {
+          await fetch('/.netlify/functions/submit-ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: payload.name || 'Customer',
+              email: payload.email,
+              type: 'Plan upgrade request',
+              priority: 'High',
+              message: message,
+              page: location.href,
+              uid: uid,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+              utcAt: nowIso()
+            })
+          });
+        } catch (e) {
+          if (db && uid) {
+            await db.collection('supportTickets').add(Object.assign({}, payload, {
+              type: 'Plan upgrade request',
+              priority: 'High',
+              createdAt: fieldTimestamp()
+            }));
+          }
+        }
+        safeSet(sentKey, String(Date.now()));
+      }
+      if (opts.silent !== true) {
+        alert('Your ' + direction + ' request has been sent to CeylonryLabs. Your current paid plan stays active until the team confirms the change.');
+      }
+      return payload;
+    } catch (e) {
+      console.warn('Plan change request failed:', e);
+      if (opts.silent !== true) {
+        alert('Could not send the request automatically. Please email hello@ceylonrylabs.io with your requested plan.');
+      }
+      throw e;
+    }
+  };
+
   window.clsOpenPlanWhatsApp = function clsOpenPlanWhatsApp(plan, profile) {
     plan = bestPlan(profile, plan);
     var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
@@ -679,11 +886,43 @@
     window.open('https://wa.me/94778815628?text=' + msg, '_blank');
   };
 
+  function planPaymentLink(details, cycle) {
+    details = details || PLAN_DETAILS.solo;
+    return cycle === 'monthly' ? details.monthlyPayLink : details.annualPayLink;
+  }
+
+  window.clsOpenGeniePayment = function clsOpenGeniePayment(plan, cycle, opts) {
+    opts = opts || {};
+    var profile = opts.profile || window._profile || null;
+    plan = bestPlan(profile, plan || opts.plan);
+    cycle = cycle === 'monthly' ? 'monthly' : 'annual';
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var url = paymentLinkFor(profile, plan, cycle);
+    var btn = opts.button || (document.activeElement && document.activeElement.tagName ? document.activeElement : null);
+    if (!url) {
+      window.clsOpenPlanWhatsApp(plan, profile);
+      return;
+    }
+    if (btn && 'disabled' in btn) {
+      btn.disabled = true;
+      btn.textContent = 'Opening Genie...';
+    }
+    window.location.href = url;
+  };
+
   window.clsStartPayableCheckout = async function clsStartPayableCheckout(plan, opts) {
     opts = opts || {};
     var profile = opts.profile || window._profile || null;
     plan = bestPlan(profile, plan || opts.plan);
     var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var monthlyPayLink = paymentLinkFor(profile, plan, 'monthly');
+    var annualPayLink = paymentLinkFor(profile, plan, 'annual');
+    var customPayLink = customPaymentLink(profile, plan, 'monthly') || customPaymentLink(profile, plan, 'annual');
+    var paymentLinkExpiresAt = plainText(profile.paymentLinkExpiresAt || profile.customPaymentLinkExpiresAt || '', 80);
+    if (!opts.forcePayable && details.annualPayLink) {
+      window.clsOpenGeniePayment(plan, 'annual', opts);
+      return;
+    }
     var user = getAuthUser();
     if (!user || !user.getIdToken) {
       alert('Please sign in again before starting payment.');
@@ -695,7 +934,7 @@
     var oldText = btn && 'textContent' in btn ? btn.textContent : '';
     if (btn && 'disabled' in btn) {
       btn.disabled = true;
-      btn.textContent = 'Opening Payable...';
+      btn.textContent = 'Opening payment...';
     }
 
     try {
@@ -720,15 +959,15 @@
       });
       var out = await res.json().catch(function() { return {}; });
       if (!res.ok || !out.ok) {
-        throw new Error(out.error || 'Could not start Payable checkout.');
+        throw new Error(out.error || 'Could not start checkout.');
       }
       if (!out.checkoutUrl) {
-        throw new Error('Payable did not return a checkout URL.');
+        throw new Error('Payment provider did not return a checkout URL.');
       }
       window.location.href = out.checkoutUrl;
     } catch (e) {
-      console.error('Payable checkout error:', e);
-      alert((e && e.message ? e.message : 'Could not start Payable checkout.') + '\n\nYou can still activate through WhatsApp while Payable is being configured.');
+      console.error('Checkout error:', e);
+      alert((e && e.message ? e.message : 'Could not start checkout.') + '\n\nYou can still activate through WhatsApp while payment is being configured.');
       window.clsOpenPlanWhatsApp(plan, profile);
       if (btn && 'disabled' in btn) {
         btn.disabled = false;
@@ -770,13 +1009,23 @@
       businessName: plainText(profile.bizName || profile.invoiceBiz || profile.businessName || '', 180),
       plan: plan,
       planName: details.name,
-      amount: details.price,
+      amount: details.monthlyPrice || 0,
       monthlyAmount: details.monthlyPrice || 0,
-      billingCycle: 'annual',
+      annualAmount: details.price,
+      monthlyPayLink: monthlyPayLink || '',
+      annualPayLink: annualPayLink || '',
+      defaultMonthlyPayLink: details.monthlyPayLink || '',
+      defaultAnnualPayLink: details.annualPayLink || '',
+	      paymentLink: monthlyPayLink || '',
+	      customPaymentLink: customPayLink || '',
+	      paymentLinkCycle: 'monthly',
+	      paymentLinkExpiresAt: paymentLinkExpiresAt,
+      paymentProvider: 'genie',
+      billingCycle: 'monthly',
       currency: 'LKR',
       trialEnd: trialEnd && !isNaN(trialEnd.getTime()) ? trialEnd.toISOString() : '',
       status: 'pending',
-      source: 'trial-expired',
+      source: opts.source || 'trial-expired',
       page: location.pathname,
       updatedAt: fieldTimestamp(),
       updatedAtUtc: nowIso()
@@ -785,9 +1034,17 @@
       paymentRequestToken: token,
       paymentRequestStatus: 'pending',
       paymentRequestPlan: plan,
-      paymentRequestAmount: details.price,
+      paymentRequestAmount: details.monthlyPrice || 0,
       paymentRequestMonthlyAmount: details.monthlyPrice || 0,
-      billingCycle: 'annual',
+      paymentRequestAnnualAmount: details.price,
+      paymentProvider: 'genie',
+      paymentMonthlyPayLink: monthlyPayLink || '',
+      paymentAnnualPayLink: annualPayLink || '',
+	      paymentLink: monthlyPayLink || '',
+	      customPaymentLink: customPayLink || '',
+	      paymentLinkCycle: 'monthly',
+	      paymentLinkExpiresAt: paymentLinkExpiresAt,
+      billingCycle: 'monthly',
       manualPaymentStatus: 'payment-requested',
       updatedAt: fieldTimestamp()
     };
@@ -810,15 +1067,15 @@
       profile.paymentRequestToken = token;
       profile.paymentRequestStatus = userUpdate.paymentRequestStatus;
       profile.paymentRequestPlan = plan;
-      profile.paymentRequestAmount = details.price;
+      profile.paymentRequestAmount = details.monthlyPrice || 0;
       return request;
     } catch (e) {
       console.warn('Payment request token could not be saved:', e);
-      return { token: token, plan: plan, planName: details.name, amount: details.price, unsaved: true };
+      return { token: token, plan: plan, planName: details.name, amount: details.monthlyPrice || 0, unsaved: true };
     }
   };
 
-  window.clsRenderSubscriptionPaywall = function clsRenderSubscriptionPaywall(profile, opts) {
+	  window.clsRenderSubscriptionPaywall = function clsRenderSubscriptionPaywall(profile, opts) {
     opts = opts || {};
     if (document.getElementById('cls-paywall')) return;
     profile = profile || {};
@@ -836,13 +1093,13 @@
     ov.innerHTML =
       '<div style="background:#fff;max-width:540px;width:100%;padding:3rem;text-align:center;color:#1a1714;">' +
         '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2rem;font-weight:300;margin-bottom:.55rem">Payment required</div>' +
-        '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">' + trialText + '<br>Activate your <strong>CLS ' + details.name + '</strong> subscription to continue using your dashboard and data.</div>' +
+        '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">' + trialText + '<br>Pay your <strong>CLS ' + details.name + '</strong> monthly package through Genie to continue using your dashboard and data.</div>' +
         '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.25);padding:1.45rem;margin-bottom:1.5rem">' +
-          '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.price) + '<span style="font-size:1rem;color:#6B6258">/year</span></div>' +
-          '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · ' + planMonthlyLine(details) + '</div>' +
+          '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.monthlyPrice) + '<span style="font-size:1rem;color:#6B6258">/mo</span></div>' +
+          '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · annual option ' + money(details.price) + '</div>' +
         '</div>' +
         '<div id="cls-payment-request-token" style="background:#fff8ea;border:1px solid rgba(184,146,42,.28);padding:.8rem 1rem;margin:-.5rem 0 1rem;color:#6B6258;font-size:.74rem;line-height:1.55">Creating a manual payment request for admin...</div>' +
-        '<button id="cls-payable-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay with Payable</button>' +
+        '<button id="cls-genie-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay monthly with Genie</button>' +
         '<button id="cls-wa-action" type="button" style="display:block;width:100%;background:#fff;color:#6B6258;border:1px solid rgba(184,146,42,.35);padding:.85rem;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;font-family:inherit">Activate via WhatsApp</button>' +
         '<button onclick="window.clsSignOut&&window.clsSignOut()" type="button" style="margin-top:1rem;background:transparent;border:0;color:#A8A29A;font-size:.72rem;cursor:pointer;font-family:inherit">Sign out</button>' +
         '<div style="font-size:.68rem;color:#A8A29A;margin-top:1rem">Your data stays saved while payment is completed.</div>' +
@@ -857,11 +1114,107 @@
         tokenEl.textContent = 'Admin will be able to review this expired trial from the payment request list.';
       }
     });
-    document.getElementById('cls-payable-action').addEventListener('click', function() {
-      window.clsStartPayableCheckout(plan, { profile: profile, button: this });
+    document.getElementById('cls-genie-action').addEventListener('click', function() {
+      window.clsOpenGeniePayment(plan, 'monthly', { profile: profile, button: this });
     });
     document.getElementById('cls-wa-action').addEventListener('click', function() {
       window.clsOpenPlanWhatsApp(plan, profile || { email: user && user.email });
+    });
+	  };
+
+  function trialStartForPrompt(profile) {
+    profile = profile || {};
+    var start = dateMs(profile.trialStart || profile.trialStartedAt || profile.createdAt || profile.createdAtUtc);
+    if (start) return start;
+    var end = dateMs(profile.trialEnd || profile.trialEndsAt);
+    return end ? end - (10 * 24 * 60 * 60 * 1000) : 0;
+  }
+
+  function injectTrialPromptStyle() {
+    if (document.getElementById('cls-trial-day5-style')) return;
+    var style = document.createElement('style');
+    style.id = 'cls-trial-day5-style';
+    style.textContent =
+      '#cls-trial-day5-prompt{position:fixed;inset:0;background:rgba(26,23,20,.42);backdrop-filter:blur(5px);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1.25rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814}' +
+      '#cls-trial-day5-prompt .cls-trial-card{position:relative;max-width:560px;width:100%;background:#fff;border:1px solid #DED7CC;box-shadow:0 24px 80px rgba(26,23,20,.24);padding:2.15rem}' +
+      '#cls-trial-day5-prompt .cls-trial-close{position:absolute;right:.9rem;top:.85rem;width:34px;height:34px;border:1px solid #DED7CC;background:#fff;color:#1C1814;font-size:1.2rem;line-height:1;cursor:pointer}' +
+      '#cls-trial-day5-prompt .cls-trial-kicker{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:#B8922A;font-weight:800;margin-bottom:.35rem}' +
+      '#cls-trial-day5-prompt .cls-trial-title{font-family:Cormorant Garamond,Georgia,serif;font-size:2.05rem;line-height:1.05;margin:0 2rem .7rem 0;font-weight:400}' +
+      '#cls-trial-day5-prompt .cls-trial-copy{font-size:.9rem;line-height:1.7;color:#6B6258;margin-bottom:1.15rem}' +
+      '#cls-trial-day5-prompt .cls-trial-price{border:1px solid rgba(184,146,42,.25);background:#F7F5F0;padding:1rem;margin-bottom:1rem;display:flex;justify-content:space-between;gap:.8rem;align-items:center;flex-wrap:wrap}' +
+      '#cls-trial-day5-prompt .cls-trial-price strong{font-family:Cormorant Garamond,Georgia,serif;font-size:1.65rem;font-weight:500;color:#1C1814}' +
+      '#cls-trial-day5-prompt .cls-trial-actions{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:1rem}' +
+      '#cls-trial-day5-prompt button{font-family:inherit}' +
+      '#cls-trial-day5-prompt .cls-trial-primary{border:0;background:#1C1814;color:#fff;padding:.95rem 1rem;font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer}' +
+      '#cls-trial-day5-prompt .cls-trial-secondary{border:1px solid rgba(184,146,42,.35);background:#fff;color:#6B6258;padding:.95rem 1rem;font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer}' +
+      '#cls-trial-day5-prompt .cls-trial-status{font-size:.68rem;color:#8B8176;line-height:1.5;margin-top:.85rem}' +
+      '@media(max-width:640px){#cls-trial-day5-prompt{align-items:flex-end;padding:.8rem}#cls-trial-day5-prompt .cls-trial-card{padding:1.55rem}#cls-trial-day5-prompt .cls-trial-actions{grid-template-columns:1fr}#cls-trial-day5-prompt .cls-trial-title{font-size:1.7rem}}' +
+      '@media print{#cls-trial-day5-prompt{display:none!important}}';
+    document.head.appendChild(style);
+  }
+
+  function dismissTrialPrompt(key) {
+    safeSet(key, new Date().toISOString().slice(0, 10));
+    var prompt = document.getElementById('cls-trial-day5-prompt');
+    if (prompt && prompt.parentNode) prompt.parentNode.removeChild(prompt);
+  }
+
+  window.clsMaybeShowDay5PaymentPrompt = function clsMaybeShowDay5PaymentPrompt(profile, opts) {
+    opts = opts || {};
+    if (!isPortalPath()) return;
+    if (document.getElementById('cls-paywall') || document.getElementById('cls-trial-day5-prompt')) return;
+    profile = profile || window._profile || {};
+    if ((!profile || !Object.keys(profile).length) && (opts.retries || 0) < 12) {
+      setTimeout(function() {
+        window.clsMaybeShowDay5PaymentPrompt(window._profile, { retries: (opts.retries || 0) + 1 });
+      }, 1200);
+      return;
+    }
+    if (window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile)) return;
+    var start = trialStartForPrompt(profile);
+    var trialEndMs = dateMs(profile.trialEnd || profile.trialEndsAt);
+    if (!start) return;
+    var day5 = start + (5 * 24 * 60 * 60 * 1000);
+    if (Date.now() < day5 || (trialEndMs && Date.now() > trialEndMs)) return;
+    var user = getAuthUser();
+    var plan = bestPlan(profile, opts.plan || planFromPath());
+    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var key = 'cls-day5-payment-prompt-' + ((user && user.uid) || profile.email || plan);
+    if (safeGet(key) === new Date().toISOString().slice(0, 10)) return;
+
+    injectTrialPromptStyle();
+    var ov = document.createElement('div');
+    ov.id = 'cls-trial-day5-prompt';
+    ov.innerHTML =
+      '<div class="cls-trial-card" role="dialog" aria-modal="true" aria-labelledby="cls-trial-day5-title">' +
+        '<button type="button" class="cls-trial-close" aria-label="Close">×</button>' +
+        '<div class="cls-trial-kicker">Day 5 check-in</div>' +
+        '<h2 id="cls-trial-day5-title" class="cls-trial-title">Are you happy with the system?</h2>' +
+        '<div class="cls-trial-copy">If so, shall we proceed to the paid version? Your 15-day trial remains active, but activating now keeps your account uninterrupted after the trial.</div>' +
+        '<div class="cls-trial-price"><span>' + escapeHtml(details.name) + ' monthly package</span><strong>' + escapeHtml(money(details.monthlyPrice || 0)) + '<span style="font-family:inherit;font-size:.9rem;color:#6B6258"> / mo</span></strong></div>' +
+        '<div class="cls-trial-actions">' +
+          '<button type="button" class="cls-trial-primary" data-trial-pay-monthly>Pay monthly</button>' +
+          '<button type="button" class="cls-trial-secondary" data-trial-pay-annual>Annual option</button>' +
+        '</div>' +
+        '<button type="button" class="cls-trial-secondary" data-trial-later style="width:100%;margin-top:.7rem">Not now</button>' +
+        '<div class="cls-trial-status" data-trial-status>We will create an admin payment request so support can follow up if the Genie link expires.</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+
+    window.clsEnsurePaymentRequest(profile, { plan: plan, force: true, source: 'trial-day-5' }).then(function(req) {
+      var status = ov.querySelector('[data-trial-status]');
+      if (status && req && req.token) status.textContent = 'Payment request token: ' + req.token + '. Admin can update the Genie link from the admin panel if it expires.';
+    }).catch(function() {});
+
+    ov.querySelector('.cls-trial-close').addEventListener('click', function() { dismissTrialPrompt(key); });
+    ov.querySelector('[data-trial-later]').addEventListener('click', function() { dismissTrialPrompt(key); });
+    ov.querySelector('[data-trial-pay-monthly]').addEventListener('click', function() {
+      safeSet(key, new Date().toISOString().slice(0, 10));
+      window.clsOpenGeniePayment(plan, 'monthly', { profile: profile, button: this });
+    });
+    ov.querySelector('[data-trial-pay-annual]').addEventListener('click', function() {
+      safeSet(key, new Date().toISOString().slice(0, 10));
+      window.clsOpenGeniePayment(plan, 'annual', { profile: profile, button: this });
     });
   };
 
@@ -1194,12 +1547,13 @@
       '#cls-billing-widget .cls-billing-price{font-family:Cormorant Garamond,Georgia,serif;font-size:1.8rem;line-height:1;color:#1C1814;margin-top:.65rem}' +
       '#cls-billing-widget .cls-billing-sub{font-size:.7rem;color:#6B6258;margin-top:.25rem}' +
       '#cls-billing-widget .cls-billing-actions{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}' +
-      '#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-wa{border:0;background:#1C1814;color:#fff;padding:.72rem 1rem;font-family:inherit;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:nowrap}' +
+      '#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{border:0;background:#1C1814;color:#fff;padding:.72rem 1rem;font-family:inherit;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:nowrap}' +
+      '#cls-billing-widget .cls-billing-monthly{background:#B8922A;color:#fff}' +
       '#cls-billing-widget .cls-billing-wa{background:#fff;color:#1C1814;border:1px solid rgba(184,146,42,.35)}' +
-      '#cls-billing-widget .cls-billing-pay:hover{background:#1a9e5c}' +
+      '#cls-billing-widget .cls-billing-pay:hover,#cls-billing-widget .cls-billing-monthly:hover{background:#1a9e5c}' +
       '#cls-billing-widget .cls-billing-wa:hover{border-color:#B8922A;color:#B8922A}' +
       '#cls-billing-widget .cls-billing-status{margin-top:.8rem;font-size:.72rem;color:#6B6258;line-height:1.5}' +
-      '@media(max-width:760px){#cls-billing-widget .cls-billing-top{grid-template-columns:1fr}#cls-billing-widget .cls-billing-actions{justify-content:stretch}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-wa{width:100%}}' +
+      '@media(max-width:760px){#cls-billing-widget .cls-billing-top{grid-template-columns:1fr}#cls-billing-widget .cls-billing-actions{justify-content:stretch}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
       '@media print{#cls-billing-widget{display:none!important}}';
     document.head.appendChild(style);
   }
@@ -1213,38 +1567,57 @@
       return;
     }
     injectBillingCardStyle();
-    var plan = normalizePlan((window._profile && (window._profile.currentPlan || window._profile.plan)) || planFromPath() || rememberedPlan()) || 'solo';
-    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
-    var profile = window._profile || {};
-    var paid = window.clsIsProfilePaid(profile);
-    var periodEnd = profile.subscriptionCurrentPeriodEnd ? new Date(profile.subscriptionCurrentPeriodEnd) : null;
-    var periodCopy = periodEnd && !isNaN(periodEnd.getTime())
-      ? 'Active until ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
-      : (paid ? 'Your paid subscription is active.' : 'You can activate before or after the trial ends.');
-    var wrap = document.createElement('div');
-    wrap.id = BILLING_ID;
-    wrap.innerHTML =
-      '<div class="cls-billing-top">' +
-        '<div>' +
-          '<div class="cls-billing-kicker">Billing</div>' +
-          '<div class="cls-billing-title">Pay with PAYable</div>' +
-          '<div class="cls-billing-copy">Secure subscription payment for your CLS ' + escapeHtml(details.name) + ' account. PAYable returns here after payment, then the webhook activates your account in Supabase.</div>' +
-          '<div class="cls-billing-price">' + escapeHtml(money(details.monthlyPrice || 0)) + '<span style="font-size:.9rem;color:#6B6258"> / mo</span></div>' +
-          '<div class="cls-billing-sub">Annual payment: ' + escapeHtml(money(details.price)) + ' · ' + escapeHtml(periodCopy) + '</div>' +
-        '</div>' +
-        '<div class="cls-billing-actions">' +
-          '<button type="button" class="cls-billing-pay" data-billing-pay>Pay annual</button>' +
-          '<button type="button" class="cls-billing-wa" data-billing-wa>WhatsApp</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="cls-billing-status" data-billing-status>Payment is processed through PAYable. No card details touch this website.</div>';
-    (document.getElementById('settings-billing-widgets') || settingsView).appendChild(wrap);
-    wrap.querySelector('[data-billing-pay]').addEventListener('click', function() {
-      window.clsStartPayableCheckout(plan, { profile: window._profile || profile, button: this });
-    });
-    wrap.querySelector('[data-billing-wa]').addEventListener('click', function() {
-      window.clsOpenPlanWhatsApp(plan, window._profile || profile);
-    });
+	    var plan = normalizePlan((window._profile && (window._profile.currentPlan || window._profile.lockedPlan || window._profile.plan)) || planFromPath() || rememberedPlan()) || 'solo';
+	    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+	    var profile = window._profile || {};
+	    var paid = window.clsIsProfilePaid(profile);
+	    var nextPlan = plan === 'solo' ? 'studio' : (plan === 'studio' ? 'business' : '');
+	    var nextDetails = nextPlan ? (PLAN_DETAILS[nextPlan] || PLAN_DETAILS.business) : null;
+	    var periodEnd = profile.subscriptionCurrentPeriodEnd ? new Date(profile.subscriptionCurrentPeriodEnd) : null;
+	    var periodCopy = periodEnd && !isNaN(periodEnd.getTime())
+	      ? 'Active until ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
+	      : (paid ? 'Your paid subscription is active.' : 'You can activate before or after the trial ends.');
+	    var title = paid ? 'Billing locked to ' + details.name : 'Pay with Genie';
+	    var copy = paid
+	      ? 'Paid accounts stay on the active plan to protect billing and data access. To change plans, submit an upgrade request and CeylonryLabs will process it manually.'
+	      : 'Secure Genie payment links for your CLS ' + details.name + ' account. Use monthly after the free trial or choose annual payment from here.';
+	    var actionHtml = paid
+	      ? (nextPlan
+	        ? '<button type="button" class="cls-billing-pay" data-billing-request="' + escapeHtml(nextPlan) + '">Request ' + escapeHtml(nextDetails.name) + '</button><button type="button" class="cls-billing-wa" data-billing-wa>Contact support</button>'
+	        : '<button type="button" class="cls-billing-wa" data-billing-wa>Contact support</button>')
+	      : '<button type="button" class="cls-billing-monthly" data-billing-monthly>Pay monthly</button><button type="button" class="cls-billing-pay" data-billing-pay>Pay annual</button><button type="button" class="cls-billing-wa" data-billing-wa>WhatsApp</button>';
+	    var wrap = document.createElement('div');
+	    wrap.id = BILLING_ID;
+	    wrap.innerHTML =
+	      '<div class="cls-billing-top">' +
+	        '<div>' +
+	          '<div class="cls-billing-kicker">Billing</div>' +
+	          '<div class="cls-billing-title">' + escapeHtml(title) + '</div>' +
+	          '<div class="cls-billing-copy">' + escapeHtml(copy) + '</div>' +
+	          '<div class="cls-billing-price">' + escapeHtml(money(details.monthlyPrice || 0)) + '<span style="font-size:.9rem;color:#6B6258"> / mo</span></div>' +
+	          '<div class="cls-billing-sub">Annual payment: ' + escapeHtml(money(details.price)) + ' · ' + escapeHtml(periodCopy) + '</div>' +
+	        '</div>' +
+	        '<div class="cls-billing-actions">' + actionHtml + '</div>' +
+	      '</div>' +
+	      '<div class="cls-billing-status" data-billing-status>' + (paid ? 'Plan changes are sent to hello@ceylonrylabs.io as a request.' : 'Payment is processed through Genie. No card details touch this website.') + '</div>';
+	    (document.getElementById('settings-billing-widgets') || settingsView).appendChild(wrap);
+	    var monthlyBtn = wrap.querySelector('[data-billing-monthly]');
+	    var annualBtn = wrap.querySelector('[data-billing-pay]');
+	    var requestBtn = wrap.querySelector('[data-billing-request]');
+	    var waBtn = wrap.querySelector('[data-billing-wa]');
+	    if (monthlyBtn) monthlyBtn.addEventListener('click', function() {
+	      window.clsOpenGeniePayment(plan, 'monthly', { profile: window._profile || profile, button: this });
+	    });
+	    if (annualBtn) annualBtn.addEventListener('click', function() {
+	      window.clsOpenGeniePayment(plan, 'annual', { profile: window._profile || profile, button: this });
+	    });
+	    if (requestBtn) requestBtn.addEventListener('click', function() {
+	      var target = this.getAttribute('data-billing-request');
+	      window.clsRequestPlanChange(target, window._profile || profile, { source: 'settings-billing-widget' });
+	    });
+	    if (waBtn) waBtn.addEventListener('click', function() {
+	      window.clsOpenPlanWhatsApp(plan, window._profile || profile);
+	    });
   }
 
 	  function injectSupportCardStyle() {
@@ -1968,11 +2341,14 @@
   function boot() {
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);
-    afterFirstPaint(trackVisit, 5000);
-    afterFirstPaint(mountBillingWidget, 2300);
-    afterFirstPaint(mountDangerZoneWidget, 2800);
-    afterFirstPaint(mountSupportWidget, 3500);
-  }
+	    afterFirstPaint(trackVisit, 5000);
+	    afterFirstPaint(mountBillingWidget, 2300);
+	    afterFirstPaint(mountDangerZoneWidget, 2800);
+	    afterFirstPaint(mountSupportWidget, 3500);
+	    afterFirstPaint(function() {
+	      window.clsMaybeShowDay5PaymentPrompt(window._profile, { retries: 0 });
+	    }, 4200);
+	  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
