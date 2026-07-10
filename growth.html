@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
-<script src="assets/platform.js?v=20260706-qa-customers"></script>
+<script src="assets/platform.js?v=20260710-invoice-pdf-clean"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -216,28 +216,28 @@ tr:hover td{background:var(--bg3)}
 .bsmwa{background:#25D366;color:#fff}.bsmwa:hover{background:#1eb851}
 .bsmdel{background:transparent;border:1px solid rgba(192,57,43,.35);color:var(--red)}.bsmdel:hover{background:var(--red);color:#fff}
 .bsmem{background:#168A62;color:#fff}.bsmem:hover{background:#116A4C}
-.invoice-table{min-width:0;width:100%;table-layout:auto}
-.invoice-table th,.invoice-table td{padding:.58rem .72rem;white-space:normal}
-.invoice-table th:nth-child(1),.invoice-table td:nth-child(1){width:12%}
-.invoice-table th:nth-child(2),.invoice-table td:nth-child(2){width:13%}
+.invoice-table{min-width:0;width:100%;table-layout:fixed}
+.invoice-table th,.invoice-table td{padding:.72rem .76rem;white-space:normal;vertical-align:top}
+.invoice-table th:nth-child(1),.invoice-table td:nth-child(1){width:10%}
+.invoice-table th:nth-child(2),.invoice-table td:nth-child(2){width:16%}
 .invoice-table th:nth-child(3),.invoice-table td:nth-child(3){width:9%}
-.invoice-table th:nth-child(4),.invoice-table td:nth-child(4){width:10%}
-.invoice-table th:nth-child(5),.invoice-table td:nth-child(5){width:9%}
-.invoice-table th:nth-child(6),.invoice-table td:nth-child(6){width:14%}
-.invoice-table th:nth-child(7),.invoice-table td:nth-child(7){width:11%}
-.invoice-table th:nth-child(8),.invoice-table td:nth-child(8){width:22%}
-.invoice-table td{min-height:64px;height:auto}
-.invoice-customer{font-weight:600;color:var(--muted);line-height:1.28;word-break:break-word}
-.invoice-amount{font-family:var(--fm);font-weight:700;color:var(--gold);white-space:nowrap;letter-spacing:0;text-align:right;font-size:.76rem;line-height:1.2}
-.invoice-actions{display:grid;grid-template-columns:repeat(2,minmax(58px,1fr));gap:.34rem;justify-content:end;align-items:center;max-width:176px;margin-left:auto}
-.invoice-actions .bsm,.invoice-actions .pill{height:32px;min-width:0;width:100%;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center;border-radius:4px}
-.invoice-actions .bsm{font-size:.52rem;letter-spacing:.06em}
+.invoice-table th:nth-child(4),.invoice-table td:nth-child(4){width:9%}
+.invoice-table th:nth-child(5),.invoice-table td:nth-child(5){width:8%}
+.invoice-table th:nth-child(6),.invoice-table td:nth-child(6){width:15%}
+.invoice-table th:nth-child(7),.invoice-table td:nth-child(7){width:13%}
+.invoice-table th:nth-child(8),.invoice-table td:nth-child(8){width:20%}
+.invoice-table td{height:auto}
+.invoice-customer{font-weight:700;color:var(--muted);line-height:1.25;word-break:break-word}
+.invoice-amount{display:block;font-family:var(--fm);font-weight:800;color:var(--gold);white-space:nowrap;letter-spacing:0;text-align:right;font-size:.82rem;line-height:1.25}
+.invoice-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.32rem;justify-content:end;align-items:center;max-width:226px;margin-left:auto}
+.invoice-actions .bsm,.invoice-actions .pill{height:31px;min-width:0;width:100%;padding:0 .36rem;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.invoice-actions .bsm{font-size:.5rem;letter-spacing:.05em}
 .invoice-actions .pill{font-size:.54rem}
-.invoice-actions .action-wide{grid-column:span 2}
+.invoice-actions .action-wide{grid-column:span 1}
 .invoice-pay{min-width:0}
 .invoice-pay .pay-wrap{gap:.45rem;flex-wrap:wrap}
-.invoice-pay .pay-bar{min-width:76px}
-.invoice-pay .pay-pend{line-height:1.25}
+.invoice-pay .pay-bar{min-width:72px}
+.invoice-pay .pay-pend{line-height:1.25;font-size:.6rem}
 
 /* FORM */
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
@@ -478,6 +478,11 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 .notif-item:last-child{border-bottom:none}
 .notif-title{font-size:.82rem;font-weight:600;color:var(--text)}
 .notif-desc{font-size:.67rem;color:var(--muted);margin-top:.06rem}
+.team-member-list{display:grid;gap:.55rem}
+.team-member-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.7rem;align-items:center;border:1px solid var(--border);background:var(--bg);border-radius:8px;padding:.72rem .85rem}
+.team-member-email{font-size:.78rem;font-weight:800;color:var(--black);overflow-wrap:anywhere}
+.team-member-meta{font-size:.63rem;color:var(--muted);margin-top:.12rem}
+.team-member-empty{border:1px dashed var(--border);background:var(--bg);border-radius:8px;padding:.9rem;color:var(--muted);font-size:.74rem;line-height:1.45}
 
 /* HELP */
 .help{font-size:.72rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.62rem .88rem;margin-bottom:.85rem;line-height:1.55}
@@ -598,7 +603,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   th{font-size:.53rem;padding:.55rem .8rem}
   td{font-size:.76rem;padding:.62rem .8rem}
   .btn,.bsm{min-height:38px;display:inline-flex;align-items:center;justify-content:center}
-  .invoice-actions{grid-template-columns:repeat(2,74px);justify-content:start}
+  .invoice-actions{grid-template-columns:repeat(2,minmax(78px,1fr));justify-content:start;max-width:100%;width:100%}
+  .invoice-actions .bsm,.invoice-actions .pill{height:36px}
   .filter-bar{padding:.7rem 1rem 0;position:sticky;left:0;background:var(--white)}
   .mo{align-items:flex-end;padding:.5rem}
   .mob{max-width:none!important;width:100%;max-height:94dvh;border-radius:10px 10px 0 0;overflow:auto}
@@ -667,6 +673,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="nav-item" data-view="insights"><span class="nav-icon">💡</span>Business Insights</div>
     <div class="nav-item" data-view="team"><span class="nav-icon">🔐</span>Team Access</div>
     <div class="sb-sec">Account</div>
+    <div class="nav-item" data-view="backlog"><span class="nav-icon">🗂️</span>Admin Backlog</div>
     <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</div>
   </div>
   <div class="sb-foot">
@@ -834,6 +841,16 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       </div>
     </div>
 
+    <!-- ADMIN BACKLOG -->
+    <div class="view" id="view-backlog">
+      <div class="help"><b>Admin Backlog</b> — A record of edits, deletions, supplier changes, and admin-level account actions.</div>
+      <div class="sumbar c3" id="backlog-sum"></div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Recent Admin Activity</span><button class="btn bo" onclick="window.exportCSV('backlog')">↓ Download</button></div>
+        <table><thead><tr><th>Date</th><th>Action</th><th>Item</th><th>Before</th><th>After</th><th>By</th></tr></thead><tbody id="backlog-body"></tbody></table>
+      </div>
+    </div>
+
     <!-- REPORTS -->
     <div class="view" id="view-reports">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;flex-wrap:wrap;gap:.5rem">
@@ -910,7 +927,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
             <div class="card-head"><span class="card-title">Invoice Defaults & Templates</span><button class="btn bd" onclick="window.saveSettings()">Save Changes</button></div>
             <div style="padding:1.35rem">
               <div class="fsec">Invoice Defaults</div>
-              <div class="fg"><label>Notes</label><input class="fi" id="s-footer" type="text" placeholder="Invoice by Cashflow System - Ceylonry Labs.io"></div>
+              <div class="fg"><label>Notes</label><input class="fi" id="s-footer" type="text" placeholder="Thank you for your business."></div>
               <div class="frow">
                 <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
                 <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
@@ -986,6 +1003,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="frow"><div class="fg"><label>User 3</label><input class="fi" id="s-u3" type="email" placeholder="user3@email.com"></div><div class="fg"><label>User 4</label><input class="fi" id="s-u4" type="email" placeholder="user4@email.com"></div></div>
               <div class="frow"><div class="fg"><label>User 5</label><input class="fi" id="s-u5" type="email" placeholder="user5@email.com"></div><div class="fg"><label>User 6</label><input class="fi" id="s-u6" type="email" placeholder="user6@email.com"></div></div>
               <div class="frow" style="margin-bottom:0"><div class="fg" style="margin-bottom:0"><label>User 7</label><input class="fi" id="s-u7" type="email" placeholder="user7@email.com"></div><div class="fg" style="margin-bottom:0"><label>User 8</label><input class="fi" id="s-u8" type="email" placeholder="user8@email.com"></div></div>
+              <div class="fsec">Authorized Team</div>
+              <div id="settings-team-list" class="team-member-list"></div>
             </div>
           </div>
         </section>
@@ -1022,7 +1041,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
         <div class="fg"><label>Money Out Purpose</label><select class="fi fsel" id="t-purpose"><option>Operating Expense</option><option>Supplier Payment</option><option>Asset Purchase</option><option>Loan / Finance Payment</option><option>Owner Drawing</option><option>Tax / VAT Payment</option><option>Other Money Out</option></select></div>
         <div class="fg"><label>Paid To</label><input class="fi" id="t-paidto" list="supplier-options" placeholder="Supplier, vendor, person, or bank"></div>
       </div>
-      <div class="fg" style="margin-bottom:0"><label>Payment Slip / Receipt (optional)</label><input class="fi" type="file" id="t-slip" accept="image/*,.pdf"><div class="form-note">Money Out entries are also saved in Expenses so your dashboard and reports stay correct.</div></div>
+      <div class="fg" style="margin-bottom:0"><label>Payment Slip / Receipt (optional)</label><input class="fi" type="file" id="t-slip" accept="image/*,.pdf"><div class="form-note" id="t-slip-current" hidden></div><div class="form-note">Money Out entries are also saved in Expenses so your dashboard and reports stay correct.</div></div>
     </div>
     <div class="fg" style="margin-bottom:0"><label>Reference (optional)</label><input class="fi" id="t-ref" placeholder="e.g. Invoice #001, Cheque #123"></div>
   </div>
@@ -1079,13 +1098,19 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-client')">Cancel</button><button class="btn bd" onclick="window.saveClient()">Save Customer</button></div>
 </div></div>
 
-<div class="mo" id="mo-sup"><div class="mob" style="max-width:460px">
-  <div class="mo-hd"><span class="mo-title">Add a Supplier</span><button class="mo-x" onclick="window.closeMo('mo-sup')">×</button></div>
+<div class="mo" id="mo-sup"><div class="mob" style="max-width:520px">
+  <div class="mo-hd"><span class="mo-title" id="sup-mo-title">Add a Supplier</span><button class="mo-x" onclick="window.closeMo('mo-sup')">×</button></div>
   <div class="mo-bd">
+    <input type="hidden" id="sp-id">
     <div class="frow"><div class="fg"><label>Supplier Name</label><input class="fi" id="sp-name" placeholder="Supplier company name"></div><div class="fg"><label>What do they supply?</label><select class="fi fsel" id="sp-cat"><option>Packaging</option><option>Raw Materials</option><option>Technology</option><option>Stationery</option><option>Logistics</option><option>Maintenance</option><option>Other</option></select></div></div>
     <div class="frow"><div class="fg"><label>Contact Person</label><input class="fi" id="sp-contact" placeholder="Contact name"></div><div class="fg"><label>Phone</label><input class="fi" id="sp-phone" placeholder="+94 71 000 0000"></div></div>
+    <div class="frow"><div class="fg"><label>Email (optional)</label><input class="fi" type="email" id="sp-email" placeholder="supplier@business.lk"></div><div class="fg"><label>Status</label><select class="fi fsel" id="sp-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div>
+    <div class="fg"><label>Address (optional)</label><input class="fi" id="sp-addr" placeholder="Supplier address"></div>
+    <div class="fsec">Payable Reminder</div>
+    <div class="frow"><div class="fg"><label>Amount You Owe (LKR)</label><input class="fi" type="number" min="0" step="0.01" id="sp-payable-amount" placeholder="0.00"></div><div class="fg"><label>Due In Days</label><input class="fi" type="number" min="0" step="1" id="sp-payable-days" placeholder="7"></div></div>
+    <div class="fg" style="margin-bottom:0"><label>Reference / Reminder Note</label><input class="fi" id="sp-payable-ref" placeholder="e.g. July packaging balance"></div>
   </div>
-  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-sup')">Cancel</button><button class="btn bd" onclick="window.addSup()">Save Supplier</button></div>
+  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-sup')">Cancel</button><button class="btn bd" id="sup-save-btn" onclick="window.addSup()">Save Supplier</button></div>
 </div></div>
 
 <div id="print-inv"></div>
@@ -1104,7 +1129,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1
 };
 
@@ -1267,6 +1292,18 @@ function setFieldValue(id, value) {
   var el = document.getElementById(id);
   if (el) el.value = value == null ? '' : value;
 }
+function setTxnSlipCurrent(name) {
+  var el = document.getElementById('t-slip-current');
+  if (!el) return;
+  name = String(name || '').trim();
+  if (name) {
+    el.hidden = false;
+    el.textContent = 'Current attachment: ' + name + '. Upload a new file only if you want to replace it.';
+  } else {
+    el.hidden = true;
+    el.textContent = '';
+  }
+}
 function resetTxnForm() {
   setFieldValue('t-edit-id', '');
   setFieldValue('t-date', today());
@@ -1281,6 +1318,7 @@ function resetTxnForm() {
   setFieldValue('t-rate', exchangeRateToLkr(defaultRevenueCurrency()));
   var slip = document.getElementById('t-slip');
   if (slip) slip.value = '';
+  setTxnSlipCurrent('');
   var title = document.getElementById('txn-modal-title');
   var saveBtn = document.getElementById('txn-save-btn');
   if (title) title.textContent = 'Add a Transaction';
@@ -1322,6 +1360,47 @@ window.openSupplierPayment = function openSupplierPayment(supplierId, amount, re
   window.updateTxnTypeUI();
   window.updateTxnCurrencyPreview();
 }
+function resetSupplierForm() {
+  setFieldValue('sp-id', '');
+  setFieldValue('sp-name', '');
+  setFieldValue('sp-contact', '');
+  setFieldValue('sp-phone', '');
+  setFieldValue('sp-email', '');
+  setFieldValue('sp-addr', '');
+  setFieldValue('sp-payable-amount', '');
+  setFieldValue('sp-payable-days', '');
+  setFieldValue('sp-payable-ref', '');
+  setFieldValue('sp-cat', 'Packaging');
+  setFieldValue('sp-status', 'active');
+  var title = document.getElementById('sup-mo-title');
+  var btn = document.getElementById('sup-save-btn');
+  if (title) title.textContent = 'Add a Supplier';
+  if (btn) btn.textContent = 'Save Supplier';
+}
+window.openSupMo = function openSupMo(id) {
+  resetSupplierForm();
+  if (id) {
+    var s = D.suppliers.find(function(item) { return String(item.id) === String(id); });
+    if (s) {
+      setFieldValue('sp-id', s.id);
+      setFieldValue('sp-name', s.name);
+      setFieldValue('sp-cat', s.cat || 'Other');
+      setFieldValue('sp-contact', s.contact || '');
+      setFieldValue('sp-phone', s.phone || '');
+      setFieldValue('sp-email', s.email || '');
+      setFieldValue('sp-addr', s.addr || '');
+      setFieldValue('sp-status', s.status || 'active');
+      setFieldValue('sp-payable-amount', toNum(s.payableAmount) || '');
+      setFieldValue('sp-payable-days', toNum(s.payableDays) || '');
+      setFieldValue('sp-payable-ref', s.payableRef || '');
+      var title = document.getElementById('sup-mo-title');
+      var btn = document.getElementById('sup-save-btn');
+      if (title) title.textContent = 'Edit Supplier';
+      if (btn) btn.textContent = 'Save Supplier';
+    }
+  }
+  window.openMo('mo-sup');
+}
 window.openMo = function openMo(id) {
   if (id === 'mo-exp' || id === 'mo-txn') populateSupplierOptions();
   if (id === 'mo-txn') {
@@ -1335,6 +1414,7 @@ window.openMo = function openMo(id) {
     var ed = document.getElementById('e-date');
     if (ed && !ed.value) ed.value = today();
   }
+  if (id === 'mo-sup' && !document.getElementById('sp-id').value) resetSupplierForm();
   document.getElementById(id).classList.add('open');
 }
 window.closeMo = function closeMo(id) { document.getElementById(id).classList.remove('open'); }
@@ -1487,7 +1567,8 @@ function mapStudioSettings(src) {
   out.addr = src.addr || src.address || out.addr || '';
   out.email = src.email || src.invEmail || src.invoiceEmail || out.email || '';
   out.vat = src.vat || src.taxNo || out.vat || '';
-  out.footer = src.footer || out.footer || 'Invoice by Cashflow System - Ceylonry Labs.io';
+  out.footer = src.footer || out.footer || 'Thank you for your business.';
+  if (out.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') out.footer = 'Thank you for your business.';
   out.logo = src.logo || out.logo || '';
   out.monthlyReport = src.monthlyReport === true || out.monthlyReport === true;
   out.logoAlign = src.logoAlign || out.logoAlign || 'left';
@@ -1568,7 +1649,7 @@ function mapStudioCustomer(c, i) {
 }
 function mapStudioSupplier(s, i) {
   s = s || {};
-  return {id:String(s.id || s._id || ('SP' + Date.now() + i)), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', ytd:toNum(s.ytd || s.totalSpend), status:s.status || 'active', email:s.email || '', addr:s.addr || s.address || ''};
+  return {id:String(s.id || s._id || ('SP' + Date.now() + i)), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', ytd:toNum(s.ytd || s.totalSpend), status:s.status || 'active', email:s.email || '', addr:s.addr || s.address || '', payableAmount:toNum(s.payableAmount || s.payable || s.amountOwed), payableDays:toNum(s.payableDays || s.days), payableRef:s.payableRef || s.ref || ''};
 }
 function addDerivedPaymentTransactions(txns, invoices) {
   var seenRefs = {};
@@ -1767,10 +1848,10 @@ function normalizeBusinessData() {
     return {id:String(s.id || ('S' + Date.now() + i)), name:name, role:s.role || 'Team member', ini:ini, col:s.col || '#B8922A', sal:toNum(s.sal || s.salary), paid:s.paid === true, rev:toNum(s.rev), invs:toNum(s.invs)};
   });
   D.suppliers = (D.suppliers || []).map(function(s, i) {
-    return {id:String(s.id || s._id || ('SP' + Date.now() + i)), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', ytd:toNum(s.ytd), status:s.status || 'active', email:s.email || '', addr:s.addr || ''};
+    return {id:String(s.id || s._id || ('SP' + Date.now() + i)), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', ytd:toNum(s.ytd), status:s.status || 'active', email:s.email || '', addr:s.addr || '', payableAmount:toNum(s.payableAmount || s.payable || s.amountOwed), payableDays:toNum(s.payableDays || s.days), payableRef:s.payableRef || s.ref || ''};
   });
   D.payables = (D.payables || []).map(function(p, i) {
-    return {id:String(p.id || ('P' + Date.now() + i)), supplier:p.supplier || p.vendor || 'Supplier', amount:toNum(p.amount), days:toNum(p.days), ref:p.ref || p.reference || ''};
+    return {id:String(p.id || ('P' + Date.now() + i)), supplierId:p.supplierId || '', supplier:p.supplier || p.vendor || 'Supplier', amount:toNum(p.amount), days:toNum(p.days), ref:p.ref || p.reference || ''};
   });
   D.autos = (D.autos || []).map(function(a) { a.fired = toNum(a.fired); a.active = a.active === true; return a; });
   syncBusinessComputedData();
@@ -1793,9 +1874,25 @@ function syncBusinessComputedData() {
   var supplierNames = D.suppliers.map(function(s) { return s.name; });
   Object.keys(spend).forEach(function(name) {
     if (supplierNames.indexOf(name) < 0) {
-      D.suppliers.push({id:'SP' + Date.now() + supplierNames.length, name:name, cat:'Other', contact:'', phone:'', ytd:spend[name], status:'active', email:'', addr:''});
+      D.suppliers.push({id:'SP' + Date.now() + supplierNames.length, name:name, cat:'Other', contact:'', phone:'', ytd:spend[name], status:'active', email:'', addr:'', payableAmount:0, payableDays:0, payableRef:''});
       supplierNames.push(name);
     }
+  });
+  var existingPayables = D.payables || [];
+  existingPayables.forEach(function(p) {
+    var supplier = D.suppliers.find(function(s) {
+      return String(s.id) === String(p.supplierId || '') || String(s.name || '').toLowerCase() === String(p.supplier || '').toLowerCase();
+    });
+    if (supplier && toNum(p.amount) > 0 && toNum(supplier.payableAmount) <= 0) {
+      supplier.payableAmount = toNum(p.amount);
+      supplier.payableDays = toNum(p.days);
+      supplier.payableRef = p.ref || '';
+    }
+  });
+  D.payables = D.suppliers.filter(function(s) {
+    return toNum(s.payableAmount) > 0;
+  }).map(function(s) {
+    return {id:'PAY-' + s.id, supplierId:s.id, supplier:s.name, amount:toNum(s.payableAmount), days:toNum(s.payableDays), ref:s.payableRef || 'Supplier payable'};
   });
 }
 
@@ -1819,9 +1916,22 @@ window.exportCSV = function exportCSV(type) {
     D.invoices.forEach(function(i) { rows.push([i.id,i.client,i.date,i.due,i.status,i.total,i.paid,toNum(i.total)-toNum(i.paid)]); });
     name = 'business-invoices.csv';
   } else if (type === 'suppliers') {
-    rows = [['Supplier','Type','Contact','Phone','Total Spend','Status']];
-    D.suppliers.forEach(function(s) { rows.push([s.name,s.cat,s.contact,s.phone,s.ytd,s.status]); });
+    rows = [['Supplier','Type','Contact','Phone','Email','Total Spend','Payable Amount','Due In Days','Reference','Status']];
+    D.suppliers.forEach(function(s) { rows.push([s.name,s.cat,s.contact,s.phone,s.email,s.ytd,s.payableAmount,s.payableDays,s.payableRef,s.status]); });
     name = 'business-suppliers.csv';
+  } else if (type === 'backlog') {
+    rows = [['Date','Type','Item','Previous','Next','By']];
+    (D.editLog || []).forEach(function(r) {
+      rows.push([
+        r.date || (r.editedAt ? String(r.editedAt).slice(0,10) : ''),
+        r.type || r.kind || 'Change',
+        r.item || r.itemId || r.label || '',
+        typeof r.previous === 'string' ? r.previous : JSON.stringify(r.before || r.previous || ''),
+        typeof r.next === 'string' ? r.next : JSON.stringify(r.after || r.next || ''),
+        r.by || r.editedBy || D.settings.user || 'Admin'
+      ]);
+    });
+    name = 'business-admin-backlog.csv';
   } else if (type === 'reports') {
     rows = [['Report','Name','Value']];
     var inc = D.txns.filter(function(t){return t.type==='in';}).reduce(function(a,t){return a+t.amount;},0);
@@ -1863,9 +1973,19 @@ window.exportReportPDF = function exportReportPDF() {
     '<div class="print-report"><div class="print-report-top"><div><div class="print-report-brand">' + escHtml(D.settings.biz || 'Your Business') + '</div><div class="print-report-sub">' + escHtml(D.settings.addr || 'Business — Cashflow & Operations Control') + '</div></div><div style="text-align:right"><div class="print-report-label">Business Report</div><div class="print-report-date">' + escHtml(formatDateHuman(today())) + '</div><div class="print-report-sub">Cashflow &amp; Operations Control</div></div></div>' +
     clone.innerHTML +
     '<div class="print-report-foot">Report generated with Cashflow System by Ceylonry Labs.io</div></div>';
+  var oldTitle = document.title;
+  document.title = 'business-report-' + today();
   setTimeout(function() {
+    var cleaned = false;
+    function cleanupPrintReport() {
+      if (cleaned) return;
+      cleaned = true;
+      print.innerHTML = '';
+      document.title = oldTitle;
+    }
+    window.addEventListener('afterprint', cleanupPrintReport, {once:true});
     window.print();
-    setTimeout(function(){ print.innerHTML = ''; }, 700);
+    setTimeout(cleanupPrintReport, 3000);
   }, 250);
 }
 
@@ -1890,6 +2010,7 @@ var PAGE_META = {
   reports: ['Reports', 'Business reports, exports, and monthly report support'],
   insights: ['Business Insights', 'Basic cashflow and operations checks'],
   team: ['Team Access', 'Business roles for unlimited users'],
+  backlog: ['Admin Backlog', 'Audit trail for admin changes and data cleanup'],
   settings: ['Settings', 'Your business details, plan and account management']
 };
 
@@ -1903,7 +2024,8 @@ var RENDERERS = {
   suppliers: renderSuppliers,
   reports: renderReports,
   insights: renderInsights,
-  team: renderTeamAccess
+  team: renderTeamAccess,
+  backlog: renderBacklog
 };
 
 var SETTINGS_TABS = ['profile', 'invoices', 'billing', 'team', 'security'];
@@ -2159,7 +2281,7 @@ function ensureSupplierFromName(name, cat, amt) {
   if (!name) return null;
   var supplier = D.suppliers.find(function(s) { return String(s.name || '').toLowerCase() === name.toLowerCase(); });
   if (!supplier) {
-    supplier = {id:'SP' + Date.now(), name:name, cat:cat || 'Other', contact:'', phone:'', ytd:0, status:'active', email:'', addr:''};
+    supplier = {id:'SP' + Date.now(), name:name, cat:cat || 'Other', contact:'', phone:'', ytd:0, status:'active', email:'', addr:'', payableAmount:0, payableDays:0, payableRef:''};
     D.suppliers.push(supplier);
   }
   supplier.ytd = toNum(supplier.ytd) + toNum(amt);
@@ -2184,6 +2306,18 @@ function invoiceReminderRows() {
   }).sort(function(a,b) {
     return b.days - a.days || new Date(a.inv.due || a.inv.date) - new Date(b.inv.due || b.inv.date);
   });
+}
+
+function showDueTodayLoginReminder() {
+  var dueToday = invoiceReminderRows().filter(function(item) { return item.days === 0; });
+  if (!dueToday.length) return;
+  var key = 'cls-business-due-today:' + String(_uid || _signedInUid || 'user') + ':' + today();
+  try {
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+  } catch (e) {}
+  var total = dueToday.reduce(function(sum, item) { return sum + item.balance; }, 0);
+  showToast(dueToday.length + ' invoice' + (dueToday.length === 1 ? ' is' : 's are') + ' due today · ' + fmt(total), 'ok');
 }
 
 function invoiceAgingBuckets() {
@@ -2373,7 +2507,7 @@ function renderInvoices() {
       '<button class="bsm bsmwa" onclick="window.waInvoiceWithPDF(\'' + safeId + '\')">WA</button>' +
       '<button class="bsm bsmo" onclick="window.editInv(\'' + safeId + '\')">Edit</button>' +
       '<button class="bsm bsmdel" onclick="window.deleteInv(\'' + safeId + '\')">Delete</button>' +
-      (displayStatus !== 'paid' ? '<button class="bsm bsmgr" onclick="window.openPayMo(\'' + safeId + '\')">Record Payment</button>' : '<span class="pill pi">Settled</span>');
+      (displayStatus !== 'paid' ? '<button class="bsm bsmgr" title="Record payment" onclick="window.openPayMo(\'' + safeId + '\')">Pay</button>' : '<span class="pill pi">Settled</span>');
     return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
   }).join('') || emptyRow(8, 'No invoices yet', 'Create a Business invoice with VAT support, payment tracking, and reminder tools.', 'Create Invoice', 'window.openInvMo()');
   refreshInvoiceNotifications();
@@ -2389,7 +2523,7 @@ function renderClients() {
     var invs = D.invoices.filter(function(i) { return i.client === c.biz; });
     var tot = invs.reduce(function(a,i) { return a+i.total; }, 0);
     var ini = c.name.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2);
-    return '<div class="cli-card"><div class="cli-av">' + ini + '</div><div class="cli-name">' + c.name + '</div><div class="cli-biz">' + c.biz + '</div><div class="cli-det">' + (c.email ? '✉ ' + c.email + '<br>' : '') + '📱 ' + c.phone + (c.addr ? '<br>📍 ' + c.addr : '') + '</div><div class="sumbar c2" style="margin:.75rem 0"><div class="sum-i"><div class="sum-lbl">Invoices</div><div class="sum-val">' + invs.length + '</div></div><div class="sum-i"><div class="sum-lbl">Total Billed</div><div class="sum-val">' + fmtS(tot) + '</div></div></div><div class="cli-acts"><button class="bsm bsmwa" onclick="window.open(\'https://wa.me/\'+\'' + c.phone.replace(/\D/g,'') + '\')">💬 WA</button><button class="bsm bsmo" onclick="window.editClient(\'' + c.id + '\')">Edit</button></div></div>';
+    return '<div class="cli-card"><div class="cli-av">' + ini + '</div><div class="cli-name">' + escHtml(c.name) + '</div><div class="cli-biz">' + escHtml(c.biz) + '</div><div class="cli-det">' + (c.email ? '✉ ' + escHtml(c.email) + '<br>' : '') + '📱 ' + escHtml(c.phone) + (c.addr ? '<br>📍 ' + escHtml(c.addr) : '') + '</div><div class="sumbar c2" style="margin:.75rem 0"><div class="sum-i"><div class="sum-lbl">Invoices</div><div class="sum-val">' + invs.length + '</div></div><div class="sum-i"><div class="sum-lbl">Total Billed</div><div class="sum-val">' + fmtS(tot) + '</div></div></div><div class="cli-acts"><button class="bsm bsmwa" onclick="window.open(' + jsArg('https://wa.me/' + c.phone.replace(/\D/g,'')) + ')">💬 WA</button><button class="bsm bsmo" onclick="window.editClient(' + jsArg(c.id) + ')">Edit</button><button class="bsm bsmdel" onclick="window.deleteClient(' + jsArg(c.id) + ')">Delete</button></div></div>';
   }).join('') || '<div class="empty-wide">' + emptyState('No customers yet', 'Add customers once, then use them for invoices, WhatsApp follow-ups, and revenue reporting.', 'Add Customer', 'window.openCliMo()') + '</div>';
 }
 
@@ -2424,16 +2558,17 @@ function renderDebt() {
   }).join('') || emptyState('No money outstanding', 'Unpaid invoices will appear here when customers still owe you.', 'Create Invoice', 'window.openInvMo()');
 
   document.getElementById('pay-list').innerHTML = D.payables.map(function(p) {
-    return '<div class="debt-row"><div><div class="debt-name">' + escHtml(p.supplier) + '</div><div class="debt-days">Due in ' + escHtml(p.days) + ' days · ' + escHtml(p.ref) + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><button class="bsm bsmgr" style="margin-top:.25rem" onclick="window.openSupplierPayment(' + jsArg(p.supplier) + ',' + toNum(p.amount) + ',' + jsArg(p.ref || '') + ')">Pay</button></div></div>';
+    return '<div class="debt-row"><div><div class="debt-name">' + escHtml(p.supplier) + '</div><div class="debt-days">Due in ' + escHtml(p.days) + ' days · ' + escHtml(p.ref) + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><button class="bsm bsmgr" style="margin-top:.25rem" onclick="window.openSupplierPayment(' + jsArg(p.supplierId || p.supplier) + ',' + toNum(p.amount) + ',' + jsArg(p.ref || '') + ')">Pay</button></div></div>';
   }).join('') || emptyState('No supplier payments due', 'Future payable tracking will appear here as supplier payments are scheduled.', 'Add Supplier', "window.openMo('mo-sup')");
 }
 
 function renderSuppliers() {
   var ytd = D.suppliers.reduce(function(a,s) { return a+s.ytd; }, 0);
+  var owed = D.suppliers.reduce(function(a,s) { return a + toNum(s.payableAmount); }, 0);
   document.getElementById('sup-sum').innerHTML =
     sumItem('Total Suppliers', D.suppliers.length + '') +
     sumItem('Active', D.suppliers.filter(function(s) { return s.status==='active'; }).length + '', 'var(--green)') +
-    sumItem('Total Spent (YTD)', fmtS(ytd));
+    sumItem('Supplier Payables', fmtS(owed), owed > 0 ? 'var(--red)' : 'var(--green)');
   renderSupTable('all');
 }
 
@@ -2446,21 +2581,67 @@ window.filterSup = function filterSup(v, el) {
 function renderSupTable(f) {
   var rows = f === 'all' ? D.suppliers : D.suppliers.filter(function(s) { return s.status === f; });
   document.getElementById('sup-body').innerHTML = rows.map(function(s) {
-    return '<tr><td style="font-weight:600">' + escHtml(s.name) + '</td><td><span class="pill psu" style="font-size:.55rem">' + escHtml(s.cat) + '</span></td><td style="font-size:.78rem">' + escHtml(s.contact) + ' · ' + escHtml(s.phone) + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + escHtml(s.status) + '</span></td><td class="tr"><button class="bsm bsmgr" onclick="window.openSupplierPayment(' + jsArg(s.id) + ')">Pay</button> <button class="bsm bsmwa" onclick="window.showToast(' + jsArg('WhatsApp opened for ' + s.name) + ',' + jsArg('ok') + ')">💬 WA</button></td></tr>';
-  }).join('') || emptyRow(6, 'No suppliers yet', 'Add suppliers to link expenses and supplier payments to real vendors.', 'Add Supplier', "window.openMo('mo-sup')");
+    var contact = [s.contact, s.phone, s.email].filter(Boolean).join(' · ') || 'No contact saved';
+    var payable = toNum(s.payableAmount) > 0 ? '<div class="form-note" style="margin-top:.25rem;color:var(--red)">Payable: ' + fmt(s.payableAmount) + ' · due in ' + toNum(s.payableDays) + ' days</div>' : '';
+    return '<tr><td style="font-weight:600">' + escHtml(s.name) + payable + '</td><td><span class="pill psu" style="font-size:.55rem">' + escHtml(s.cat) + '</span></td><td style="font-size:.78rem">' + escHtml(contact) + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + escHtml(s.status) + '</span></td><td class="tr"><button class="bsm bsmgr" onclick="window.openSupplierPayment(' + jsArg(s.id) + ',' + toNum(s.payableAmount) + ',' + jsArg(s.payableRef || '') + ')">Pay</button> <button class="bsm bsmo" onclick="window.openSupMo(' + jsArg(s.id) + ')">Edit</button> <button class="bsm bsmdel" onclick="window.deleteSupplier(' + jsArg(s.id) + ')">Delete</button></td></tr>';
+  }).join('') || emptyRow(6, 'No suppliers yet', 'Add suppliers to link expenses and supplier payments to real vendors.', 'Add Supplier', "window.openSupMo()");
+}
+
+function currentAuthorizedTeamMembers() {
+  var seen = {};
+  var rows = [];
+  function add(email, role, status) {
+    email = String(email || '').trim();
+    if (!email || seen[email.toLowerCase()]) return;
+    seen[email.toLowerCase()] = true;
+    rows.push({email:email, role:role || 'Authorized user', status:status || 'Active'});
+  }
+  add((_profile && _profile.email) || D.settings.u1 || D.settings.email, 'Owner/Admin', 'Active');
+  for (var i = 1; i <= 8; i++) {
+    add(D.settings['u' + i], i === 1 ? 'Owner/Admin' : 'Team member', i === 1 ? 'Active' : 'Authorized');
+  }
+  return rows;
+}
+
+function renderSettingsTeamList() {
+  var box = document.getElementById('settings-team-list');
+  if (!box) return;
+  var members = currentAuthorizedTeamMembers();
+  box.innerHTML = members.length ? members.map(function(member) {
+    return '<div class="team-member-row"><div><div class="team-member-email">' + escHtml(member.email) + '</div><div class="team-member-meta">' + escHtml(member.role) + '</div></div><span class="pill pi">' + escHtml(member.status) + '</span></div>';
+  }).join('') : '<div class="team-member-empty">No team members are saved yet. Add emails above or use Manage Users to create invite links.</div>';
 }
 
 function renderTeamAccess() {
+  var members = currentAuthorizedTeamMembers();
   document.getElementById('team-sum').innerHTML =
-    sumItem('Business Users', 'Unlimited') +
+    sumItem('Authorized Users', members.length + '') +
     sumItem('Roles', 'Owner / Staff / Accountant / View Only', 'var(--gold)') +
     sumItem('Permissions', 'Basic', 'var(--green)');
 
   document.getElementById('team-body').innerHTML =
+    members.map(function(member) {
+      return '<tr><td><strong>' + escHtml(member.email) + '</strong></td><td>' + escHtml(member.role) + ' · ' + escHtml(member.status) + '</td><td class="tr">Active</td></tr>';
+    }).join('') +
     '<tr><td><strong>Owner/Admin</strong></td><td>Full access to dashboard, money in/out, expenses, invoices, customers, who owes me, suppliers, reports, insights, team access, and settings.</td><td class="tr">Unlimited</td></tr>' +
     '<tr><td><strong>Staff</strong></td><td>Invoices, customers, money in/out, and expenses. No settings or team management.</td><td class="tr">Unlimited</td></tr>' +
     '<tr><td><strong>Accountant</strong></td><td>Access dashboard, money in/out, expenses, invoices, customers, who owes me, suppliers, reports, and insights. No account settings or team management.</td><td class="tr">Unlimited</td></tr>' +
     '<tr><td><strong>View Only</strong></td><td>Dashboard and reports only. No editing, payment recording, exports, or reminders.</td><td class="tr">Unlimited</td></tr>';
+  renderSettingsTeamList();
+}
+
+function renderBacklog() {
+  var rows = (D.editLog || []).slice().sort(function(a,b) {
+    return String(b.date || b.editedAt || '').localeCompare(String(a.date || a.editedAt || ''));
+  });
+  var deletes = rows.filter(function(r) { return /delete|deleted/i.test(r.type || r.kind || ''); }).length;
+  document.getElementById('backlog-sum').innerHTML =
+    sumItem('Logged Changes', rows.length + '') +
+    sumItem('Deleted Records', deletes + '', deletes ? 'var(--red)' : 'var(--green)') +
+    sumItem('Latest Entry', rows[0] ? escHtml(rows[0].date || rows[0].editedAt || '-') : '-');
+  document.getElementById('backlog-body').innerHTML = rows.map(function(r) {
+    return '<tr><td>' + escHtml(r.date || (r.editedAt ? r.editedAt.slice(0,10) : '')) + '</td><td><span class="pill psu">' + escHtml(r.type || r.kind || 'Change') + '</span></td><td>' + escHtml(r.item || r.itemId || r.label || '') + '</td><td>' + escHtml(typeof r.previous === 'string' ? r.previous : JSON.stringify(r.before || r.previous || '')) + '</td><td>' + escHtml(typeof r.next === 'string' ? r.next : JSON.stringify(r.after || r.next || '')) + '</td><td>' + escHtml(r.by || r.editedBy || D.settings.user || 'Admin') + '</td></tr>';
+  }).join('') || emptyRow(6, 'No backlog entries yet', 'Customer, supplier, invoice, and account actions will appear here.', '', '');
 }
 
 function renderReports() {
@@ -2640,7 +2821,7 @@ function collectSettingsDraft() {
     addr: val('s-addr', D.settings.addr) || D.settings.addr || 'Business address',
     email: val('s-email', D.settings.email) || D.settings.email || 'invoices@yourbusiness.lk',
     vat: val('s-vat', D.settings.vat) || D.settings.vat || 'Optional',
-    footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Invoice by Cashflow System - Ceylonry Labs.io',
+    footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Thank you for your business.',
     vatRate: toNum(val('s-vatrate', D.settings.vatRate)),
     defaultTpl: normalizeBusinessTemplate(val('s-default-tpl', D.settings.defaultTpl)),
     invoicePrefix: (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(val('s-invoice-prefix', D.settings.invoicePrefix) || 'INV') : String(val('s-invoice-prefix', D.settings.invoicePrefix) || 'INV').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 14)) || 'INV',
@@ -2816,8 +2997,8 @@ window.saveInv = function saveInv() {
   if (!client) { showToast('Please enter a customer name', 'err'); return; }
   var cemail = document.getElementById('inv-cemail').value.trim();
   var cphone = document.getElementById('inv-cphone').value.trim();
-  if (!isValidBusinessEmail(cemail)) { showToast('Please enter a valid customer email address.', 'err'); return; }
-  if (!isValidBusinessPhone(cphone, false)) { showToast('Please enter a valid customer phone number.', 'err'); return; }
+  if (!cemail || !isValidBusinessEmail(cemail)) { showToast('Please enter a valid customer email address.', 'err'); return; }
+  if (!isValidBusinessPhone(cphone, true)) { showToast('Please enter a valid customer phone number.', 'err'); return; }
   var items = [];
   var invalidLine = false;
   document.querySelectorAll('#li-body tr').forEach(function(row) {
@@ -3096,6 +3277,7 @@ window.editTxn = function editTxn(id) {
   setFieldValue('t-paidto', t.paidTo || '');
   var slip = document.getElementById('t-slip');
   if (slip) slip.value = '';
+  setTxnSlipCurrent(t.slipName || '');
   var title = document.getElementById('txn-modal-title');
   var saveBtn = document.getElementById('txn-save-btn');
   if (title) title.textContent = 'Edit Transaction';
@@ -3178,14 +3360,80 @@ window.saveClient = function saveClient() {
   saveData();
 }
 
+window.deleteClient = function deleteClient(id) {
+  var c = D.clients.find(function(item) { return String(item.id) === String(id); });
+  if (!c) { showToast('Customer not found.', 'err'); return; }
+  var openInvoices = D.invoices.filter(function(inv) { return String(inv.client || '').toLowerCase() === String(c.biz || c.name || '').toLowerCase() && invoiceBalance(inv) > 0.01; });
+  var msg = openInvoices.length ? 'This customer has ' + openInvoices.length + ' unpaid invoice(s). Delete the customer record only?' : 'Delete this customer record? Existing invoices will remain.';
+  if (!confirm(msg)) return;
+  D.clients = D.clients.filter(function(item) { return String(item.id) !== String(id); });
+  D.editLog = D.editLog || [];
+  D.editLog.unshift({date:today(), item:c.biz || c.name, type:'Customer deleted', previous:c.email || c.phone || 'Saved customer', next:'Deleted', by:D.settings.user || 'Admin', reason:'Deleted from Customers'});
+  renderClients();
+  renderInvoices();
+  renderDashboard();
+  showToast('Customer deleted.', 'ok');
+  saveData();
+}
+
 window.addSup = function addSup() {
   var name = document.getElementById('sp-name').value.trim();
   if (!name) { showToast('Supplier name is required', 'err'); return; }
   D.settings.growthOpsStarted = true;
-  D.suppliers.push({id:'SP'+Date.now(), name:name, cat:document.getElementById('sp-cat').value, contact:document.getElementById('sp-contact').value, phone:document.getElementById('sp-phone').value, ytd:0, status:'active', email:'', addr:''});
+  var id = document.getElementById('sp-id').value;
+  var obj = {
+    id:id || 'SP' + Date.now(),
+    name:name,
+    cat:document.getElementById('sp-cat').value,
+    contact:document.getElementById('sp-contact').value.trim(),
+    phone:document.getElementById('sp-phone').value.trim(),
+    email:document.getElementById('sp-email').value.trim().toLowerCase(),
+    addr:document.getElementById('sp-addr').value.trim(),
+    status:document.getElementById('sp-status').value || 'active',
+    payableAmount:toNum(document.getElementById('sp-payable-amount').value),
+    payableDays:toNum(document.getElementById('sp-payable-days').value),
+    payableRef:document.getElementById('sp-payable-ref').value.trim(),
+    ytd:0
+  };
+  if (obj.email && !isValidBusinessEmail(obj.email)) { showToast('Please enter a valid supplier email address.', 'err'); return; }
+  if (obj.phone && !isValidBusinessPhone(obj.phone, false)) { showToast('Please enter a valid supplier phone number.', 'err'); return; }
+  var before = null;
+  if (id) {
+    var idx = D.suppliers.findIndex(function(s) { return String(s.id) === String(id); });
+    if (idx > -1) {
+      before = Object.assign({}, D.suppliers[idx]);
+      obj.ytd = toNum(D.suppliers[idx].ytd);
+      D.suppliers[idx] = obj;
+    }
+  } else {
+    D.suppliers.push(obj);
+  }
+  if (before || !id) {
+    D.editLog = D.editLog || [];
+    D.editLog.unshift({date:today(), item:obj.name, type:before ? 'Supplier updated' : 'Supplier added', previous:before ? (before.name + ' · ' + fmt(before.payableAmount || 0)) : 'New supplier', next:obj.name + ' · ' + fmt(obj.payableAmount || 0), by:D.settings.user || 'Admin', reason:'Supplier management'});
+  }
   closeMo('mo-sup');
+  syncBusinessComputedData();
   renderSuppliers();
-  showToast('Supplier added!', 'ok');
+  renderDebt();
+  renderDashboard();
+  showToast(id ? 'Supplier updated!' : 'Supplier added!', 'ok');
+  saveData();
+}
+
+window.deleteSupplier = function deleteSupplier(id) {
+  var s = D.suppliers.find(function(item) { return String(item.id) === String(id); });
+  if (!s) { showToast('Supplier not found.', 'err'); return; }
+  if (!confirm('Delete supplier "' + s.name + '"? Existing expense records will remain.')) return;
+  D.suppliers = D.suppliers.filter(function(item) { return String(item.id) !== String(id); });
+  D.payables = D.payables.filter(function(p) { return String(p.supplierId || '') !== String(id) && String(p.supplier || '').toLowerCase() !== String(s.name || '').toLowerCase(); });
+  D.editLog = D.editLog || [];
+  D.editLog.unshift({date:today(), item:s.name, type:'Supplier deleted', previous:fmt(s.payableAmount || 0), next:'Deleted', by:D.settings.user || 'Admin', reason:'Deleted from Suppliers'});
+  syncBusinessComputedData();
+  renderSuppliers();
+  renderDebt();
+  renderDashboard();
+  showToast('Supplier deleted.', 'ok');
   saveData();
 }
 
@@ -3206,7 +3454,12 @@ function invoiceWaTextBusiness(inv, withFile) {
     + 'Invoice generated by Business Cashflow System - CeylonryLabs.io';
 }
 function invoicePdfFileNameBusiness(inv) {
-  return String((inv && inv.id) || 'invoice').replace(/[^a-z0-9_-]+/gi, '-') + '.pdf';
+  var parts = [
+    (inv && (inv.id || inv.num)) || 'invoice',
+    inv && inv.client,
+    inv && (inv.date || today())
+  ].filter(Boolean);
+  return parts.join('-').replace(/[^a-z0-9_-]+/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '.pdf';
 }
 function buildBusinessInvoiceSharePdfFile(inv) {
   if (!window.jspdf || !window.jspdf.jsPDF) return null;
@@ -3317,7 +3570,8 @@ window.saveSettings = function saveSettings() {
   D.settings.addr = document.getElementById('s-addr').value;
   D.settings.email = document.getElementById('s-email').value;
   D.settings.vat = document.getElementById('s-vat').value;
-  D.settings.footer = document.getElementById('s-footer').value || 'Invoice by Cashflow System - Ceylonry Labs.io';
+  D.settings.footer = document.getElementById('s-footer').value || 'Thank you for your business.';
+  if (D.settings.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') D.settings.footer = 'Thank you for your business.';
   var vatRateEl = document.getElementById('s-vatrate');
   var defaultTplEl = document.getElementById('s-default-tpl');
   var prefixEl = document.getElementById('s-invoice-prefix');
@@ -3366,6 +3620,7 @@ window.saveSettings = function saveSettings() {
   document.getElementById('sb-av').textContent = ini;
   renderSettingsTemplatePicker();
   renderSettingsInvoicePreview();
+  renderSettingsTeamList();
   renderDashboard();
   renderCashflow();
   renderReports();
@@ -3436,9 +3691,11 @@ function buildInvoicePrintHtml(inv) {
   var totals = invoiceTotalsMarkup(inv);
   var status = invoiceStatus(inv);
   var balance = invoiceBalance(inv);
+  var noteText = String(inv.notes || s.footer || '').trim();
+  if (!noteText || noteText === 'Invoice by Cashflow System - Ceylonry Labs.io') noteText = 'Thank you for your business.';
   return '<style>' +
     '@page{size:A4;margin:0}@media print{#print-inv{display:block!important;background:#fff;color:#1d1712}.inv-page{box-shadow:none!important}}.inv-page{width:794px;min-height:1123px;margin:0 auto;background:#fff;position:relative;font-family:Arial,Helvetica,sans-serif;padding:70px 76px 58px;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--muted:#6F6353;--line:#E8DED2;--paper:#FFFFFF;color:#1d1712;box-sizing:border-box}.inv-page *{box-sizing:border-box}.inv-main{position:relative;z-index:1}.inv-top-rule{height:5px;background:var(--accent);margin-bottom:46px}.inv-hero{display:grid;grid-template-columns:1fr 270px;gap:52px;align-items:start;margin-bottom:58px}.inv-logo-img{display:block;object-fit:contain;margin-bottom:16px}.inv-logo-text{font-family:Georgia,serif;font-size:26px;line-height:1.05;margin-bottom:14px;color:inherit}.inv-business{font-family:Georgia,serif;font-size:29px;font-weight:700;color:inherit;margin-bottom:8px}.inv-small{font-size:12px;line-height:1.65;color:var(--muted);white-space:pre-line}.inv-title{text-align:right}.inv-title h1{font-size:46px;letter-spacing:9px;text-transform:uppercase;margin:0 0 12px;color:var(--dark);line-height:1}.inv-title b{font-size:15px;color:#1d1712}.inv-meta{font-size:12px;line-height:1.9;color:var(--muted);margin-top:24px}.inv-meta span{display:inline-block;width:58px;color:#A89A8B}.inv-parties{display:grid;grid-template-columns:1fr 1fr 170px;gap:36px;margin-bottom:70px}.inv-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:12px}.inv-name{font-size:17px;font-weight:800;color:#111;margin-bottom:7px;line-height:1.35}.inv-status{display:inline-flex;align-items:center;border:1px solid var(--line);padding:7px 10px;border-radius:999px;text-transform:capitalize;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:10px}.inv-table{width:100%;border-collapse:collapse;margin-bottom:30px;table-layout:fixed}.inv-table th{border-bottom:3px solid var(--dark);color:#1d1712;background:transparent;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:0 14px 13px;text-align:left}.inv-table th:nth-child(1){width:54%}.inv-table th:nth-child(2){width:12%}.inv-table th:nth-child(3){width:17%}.inv-table th:nth-child(4){width:17%}.inv-table th:nth-child(n+2),.inv-table td:nth-child(n+2){text-align:right}.inv-table td{padding:17px 14px;border-bottom:1px solid var(--line);font-size:13px;color:#111;vertical-align:top}.inv-desc{white-space:pre-line;line-height:1.45;font-weight:700;word-break:break-word}.inv-table td:nth-child(n+2){font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500}.inv-bottom{display:grid;grid-template-columns:1fr 330px;gap:48px;align-items:start;margin-top:18px}.inv-note-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin-bottom:12px;color:var(--dark)}.inv-note{font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line}.inv-totals-print{border-top:1px solid var(--line);padding-top:14px}.inv-totals-print>div{display:flex;justify-content:space-between;gap:24px;font-size:13px;padding:8px 0;color:#55483e}.inv-totals-print b{font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;color:#111}.inv-grand{background:var(--dark);color:#fff!important;margin-top:14px;padding:20px 22px!important;align-items:center}.inv-grand span{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800}.inv-grand b{font-size:21px;color:#fff!important}.inv-brand-foot{position:absolute;left:76px;right:76px;bottom:42px;border-top:1px solid var(--line);padding-top:14px;text-align:center;font-size:10px;letter-spacing:.08em;color:#A89A8B}.inv-brand-foot b{color:#1d1712}.tpl-gold .inv-top-rule,.tpl-ceylon .inv-top-rule,.tpl-bold .inv-top-rule{height:9px;background:linear-gradient(90deg,var(--accent),#D8B456,var(--accent))}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:var(--dark);color:#fff;padding:34px;margin:-18px 0 54px}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:#fff}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:rgba(255,255,255,.75)}.tpl-line .inv-top-rule{height:4px;background:var(--accent)}.tpl-line .inv-title h1{color:var(--accent)}.tpl-minimal .inv-top-rule{height:3px;background:#111}.tpl-minimal .inv-title h1{letter-spacing:6px;color:#111}.tpl-minimal .inv-grand{background:#111}.tpl-darkside,.tpl-split{background:#FDF9F2}.tpl-darkside .inv-top-rule,.tpl-split .inv-top-rule{height:6px;background:#111}.tpl-darkside .inv-title h1,.tpl-split .inv-title h1{color:#111}.tpl-corporate{--accent:#1E5B8A;--dark:#113B5E}.tpl-bold .inv-title{border:3px solid var(--accent);padding:22px 24px}.tpl-bold .inv-title h1{color:var(--accent)}.tpl-signature{background:#FDFAF4;font-family:Georgia,serif}.tpl-signature .inv-top-rule{height:8px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.tpl-signature .inv-table th{border-bottom-color:var(--accent);font-family:Arial,Helvetica,sans-serif}.tpl-signature .inv-grand{background:#4A3B2A}' +
-    '.inv-page{padding:62px 72px 52px!important;overflow:hidden!important}.inv-main{min-height:1000px!important;display:flex!important;flex-direction:column!important}.inv-top-rule{margin-bottom:38px!important}.inv-hero{grid-template-columns:minmax(0,1fr) 285px!important;gap:46px!important;margin-bottom:46px!important}.inv-title h1{font-size:42px!important;letter-spacing:8px!important}.inv-business{font-size:28px!important}.inv-parties{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 170px!important;gap:34px!important;margin-bottom:50px!important}.inv-table{margin-bottom:22px!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-table th{padding:0 12px 12px!important}.inv-table td{padding:15px 12px!important}.inv-bottom{grid-template-columns:minmax(0,1fr) 325px!important;gap:52px!important;margin-top:8px!important;align-items:start!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-totals-print{padding-top:12px!important}.inv-totals-print>div{padding:8px 0!important}.inv-grand{display:flex!important;justify-content:space-between!important;gap:18px!important;white-space:nowrap!important;min-height:62px!important;max-width:100%!important;padding:18px 22px!important}.inv-grand b{font-size:21px!important}.inv-brand-foot{position:static!important;margin-top:auto!important;border-top:1px solid var(--line)!important;padding-top:15px!important;text-align:center!important;font-size:10px!important;line-height:1.4!important;color:#A89A8B!important}.inv-brand-foot b{color:#1d1712!important}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:transparent!important;color:#1d1712!important;padding:0!important;margin:-4px 0 46px!important}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:var(--dark)!important}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:var(--muted)!important}.tpl-darkside,.tpl-split{background:#fff!important}.tpl-bold .inv-title{border:0!important;padding:0!important}.tpl-bold .inv-title h1{color:var(--accent)!important}@media print{.inv-page{width:210mm!important;min-height:297mm!important;padding:16mm 18mm 12mm!important;overflow:hidden!important}.inv-main{min-height:269mm!important;display:flex!important;flex-direction:column!important}.inv-brand-foot{margin-top:auto!important}}' +
+    '.inv-page{padding:62px 72px 52px!important;overflow:hidden!important}.inv-main{min-height:0!important;display:block!important}.inv-top-rule{margin-bottom:28px!important}.inv-hero{grid-template-columns:minmax(0,1fr) 285px!important;gap:46px!important;margin-bottom:30px!important}.inv-title h1{font-size:42px!important;letter-spacing:8px!important}.inv-business{font-size:28px!important}.inv-parties{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 170px!important;gap:34px!important;margin-bottom:30px!important}.inv-table{margin-bottom:18px!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-table th{padding:0 12px 12px!important}.inv-table td{padding:15px 12px!important}.inv-bottom{grid-template-columns:minmax(0,1fr) 325px!important;gap:40px!important;margin-top:8px!important;align-items:start!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-totals-print{padding-top:12px!important}.inv-totals-print>div{padding:8px 0!important}.inv-grand{display:flex!important;justify-content:space-between!important;gap:18px!important;white-space:nowrap!important;min-height:62px!important;max-width:100%!important;padding:18px 22px!important}.inv-grand b{font-size:21px!important}.inv-brand-foot{position:static!important;margin-top:18px!important;border-top:1px solid var(--line)!important;padding-top:15px!important;text-align:center!important;font-size:10px!important;line-height:1.4!important;color:#A89A8B!important}.inv-brand-foot b{color:#1d1712!important}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:transparent!important;color:#1d1712!important;padding:0!important;margin:-4px 0 30px!important}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:var(--dark)!important}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:var(--muted)!important}.tpl-darkside,.tpl-split{background:#fff!important}.tpl-bold .inv-title{border:0!important;padding:0!important}.tpl-bold .inv-title h1{color:var(--accent)!important}@media print{.inv-page{width:210mm!important;min-height:297mm!important;padding:16mm 18mm 12mm!important;overflow:hidden!important}.inv-main{min-height:0!important;display:block!important}.inv-brand-foot{margin-top:18px!important}}' +
     '</style>' +
     '<div class="inv-page ' + cls + '"><main class="inv-main">' +
       '<div class="inv-top-rule"></div>' +
@@ -3448,7 +3705,7 @@ function buildInvoicePrintHtml(inv) {
       '</section>' +
       '<section class="inv-parties"><div><div class="inv-label">From</div><div class="inv-name">' + escHtml(s.biz || '') + '</div><div class="inv-small">' + escHtml(s.addr || '') + '<br>' + escHtml(s.email || '') + '</div></div><div><div class="inv-label">Bill To</div><div class="inv-name">' + escHtml(inv.client || '') + '</div><div class="inv-small">' + escHtml(inv.caddr || '') + '<br>' + escHtml(inv.cemail || '') + '</div></div><div><div class="inv-label">Status</div><div class="inv-status">' + escHtml(status) + '</div><div class="inv-small">Balance due<br><b>LKR ' + fmtN(balance) + '</b></div></div></section>' +
       '<table class="inv-table"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<section class="inv-bottom"><div><div class="inv-note-label">Notes</div><div class="inv-note">' + escHtml(inv.notes || s.footer || 'Invoice by Cashflow System - Ceylonry Labs.io') + '</div></div>' + totals + '</section>' +
+      '<section class="inv-bottom"><div><div class="inv-note-label">Notes</div><div class="inv-note">' + escHtml(noteText) + '</div></div>' + totals + '</section>' +
       '<div class="inv-brand-foot"><b>Invoice by Cashflow System - Ceylonry Labs.io</b></div>' +
     '</main></div>';
 }
@@ -3457,7 +3714,18 @@ window.printInv = function printInv(id) {
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
   document.getElementById('print-inv').innerHTML = buildInvoicePrintHtml(inv);
+  var oldTitle = document.title;
+  document.title = invoicePdfFileNameBusiness(inv).replace(/\.pdf$/i, '');
+  var cleaned = false;
+  function cleanupInvoicePrint() {
+    if (cleaned) return;
+    cleaned = true;
+    document.getElementById('print-inv').innerHTML = '';
+    document.title = oldTitle;
+  }
+  window.addEventListener('afterprint', cleanupInvoicePrint, {once:true});
   window.print();
+  setTimeout(cleanupInvoicePrint, 3000);
 }
 
 // ===================== FIREBASE + AUTH =====================
@@ -3729,6 +3997,7 @@ async function loadData(uid) {
 }
 
 window.clsSignOut = function clsSignOut() {
+  if (!confirm('Sign out of Cashflow Business?')) return;
   try {
     localStorage.removeItem('cls-growth-tour-pending');
   } catch (e) {}
@@ -3757,7 +4026,7 @@ window.showPaywall = function showPaywall(profile) {
   var price = prices[plan] || 8500;
   var monthlyPrice = monthlyPrices[plan] || 8500;
   var planName = plan.charAt(0).toUpperCase() + plan.slice(1);
-  var waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (LKR ' + price.toLocaleString() + '/year, package value LKR ' + monthlyPrice.toLocaleString() + '/mo).\n\nName: ' + ((profile && profile.name) || '') + '\nEmail: ' + ((profile && profile.email) || ''));
+  var waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (monthly package LKR ' + monthlyPrice.toLocaleString() + '/mo, annual payment LKR ' + price.toLocaleString() + ').\n\nName: ' + ((profile && profile.name) || '') + '\nEmail: ' + ((profile && profile.email) || ''));
   var waNum = '94778815628';
   if (document.getElementById('cls-paywall')) return;
   var ov = document.createElement('div');
@@ -3768,8 +4037,8 @@ window.showPaywall = function showPaywall(profile) {
     '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2rem;font-weight:300;color:#1a1714;margin-bottom:.5rem">Your free trial has ended</div>' +
     '<div style="font-size:.85rem;color:#6B6258;margin-bottom:2rem;line-height:1.7">Your 15-day free trial of <strong>CLS ' + planName + '</strong> has expired.</div>' +
     '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
-    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + price.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/year</span></div>' +
-    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · package value LKR ' + monthlyPrice.toLocaleString() + '/mo</div></div>' +
+    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + monthlyPrice.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/mo</span></div>' +
+    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · annual payment LKR ' + price.toLocaleString() + '</div></div>' +
     '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">💬 Activate via WhatsApp →</a>' +
     '<button onclick="window.clsSignOut()" style="width:100%;background:transparent;border:1px solid rgba(184,146,42,.3);color:#6B6258;padding:.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +
     '<div style="font-size:.68rem;color:#A8A29A;margin-top:1.25rem">Your data is safe and will be here when you reactivate.</div></div>';
@@ -3881,11 +4150,13 @@ _fauth.onAuthStateChanged(async function(user) {
     if (monthlyReport) monthlyReport.checked = !!s.monthlyReport;
     renderSettingsTemplatePicker();
     renderSettingsInvoicePreview();
+    renderSettingsTeamList();
     bindSettingsPreviewInputs();
     ['t-date','e-date'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = today(); });
     renderDashboard();
     renderBusinessTrialStatus();
     enforcePermissions();
+    showDueTodayLoginReminder();
     if (new URLSearchParams(window.location.search).get('upgraded') === 'business') {
       showToast(importedFromStudio ? 'Business unlocked with your Studio data.' : 'Business unlocked. Your trial time continues here.', 'ok');
     }

@@ -15,7 +15,7 @@
 const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 </script>
-<script src="assets/platform.js?v=20260706-qa-customers"></script>
+<script src="assets/platform.js?v=20260710-invoice-pdf-clean"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -239,6 +239,16 @@ async function bootstrapPlatformAdmin(email, pass) {
 
 let authRedirectInProgress = false;
 
+function isPasswordRecoveryReturn() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+  return /type=recovery|recovery_token=/.test(hash + search);
+}
+
+if (isPasswordRecoveryReturn()) {
+  window.location.replace('reset-password.html' + window.location.search + window.location.hash);
+}
+
 function hasOAuthReturnParams() {
   const hash = window.location.hash || '';
   const search = window.location.search || '';
@@ -317,6 +327,21 @@ async function redirectToDashboard(user) {
         const ownerDoc = await firebase.firestore().collection('users').doc(data.ownerUid).get();
         const owner = ownerDoc.exists ? ownerDoc.data() : {};
         const ownerPlan = firstPlan(owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, plan, 'solo');
+        if (ownerPlan === 'solo') {
+          await firebase.firestore().collection('users').doc(user.uid).set({
+            plan: 'solo',
+            currentPlan: 'solo',
+            lastPlan: 'solo',
+            teamAccessRevoked: true,
+            accessRevokedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          await firebase.auth().signOut();
+          authRedirectInProgress = false;
+          const btn = document.getElementById('sign-btn');
+          if (btn) { btn.textContent = 'Sign In →'; btn.disabled = false; }
+          showErr('Team access is no longer available because the account owner is on the Solo plan. Ask the owner to upgrade or send a new invite.');
+          return;
+        }
         if (planFiles[ownerPlan] && ownerPlan !== plan) {
           plan = ownerPlan;
           await firebase.firestore().collection('users').doc(user.uid).set({
@@ -384,6 +409,9 @@ async function acceptInvite(user) {
     return planFiles[mapped] ? mapped : '';
   };
   const ownerPlan = [owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, 'solo'].map(normalizePlan).find(Boolean) || 'solo';
+  if (ownerPlan === 'solo') {
+    throw new Error('This invite is no longer active because the owner is on the Solo plan.');
+  }
   await firebase.firestore().collection('users').doc(user.uid).set({
     name: user.displayName || inviteRecord.name || '',
     email: user.email || inviteRecord.email || '',

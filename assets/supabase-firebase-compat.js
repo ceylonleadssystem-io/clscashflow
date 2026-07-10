@@ -640,7 +640,7 @@
   };
   AuthCompat.prototype.sendPasswordResetEmail = async function(email, settings) {
     var client = await getClient();
-    var out = await client.auth.resetPasswordForEmail(email, { redirectTo: settings && settings.url ? settings.url : authRedirectUrl('/signin.html', '') });
+    var out = await client.auth.resetPasswordForEmail(email, { redirectTo: settings && settings.url ? settings.url : authRedirectUrl('/reset-password.html', '') });
     if (out.error) throw compatAuthError(out.error);
   };
   AuthCompat.prototype.signOut = async function() {
