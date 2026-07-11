@@ -15,7 +15,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
-<script src="assets/platform.js?v=20260711-emailjs-recipient"></script>
+<script src="assets/platform.js?v=20260711-emailjs-receipts"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -840,7 +840,7 @@ document.addEventListener('click',function(e){
                 <div class="f-group"><label>EmailJS Public Key</label><input class="f-input" id="set-ejskey" placeholder="public_..."></div>
                 <div class="f-group"><label>EmailJS Service ID</label><input class="f-input" id="set-ejsservice" placeholder="service_..."></div>
               </div>
-              <div class="f-group full" style="margin-bottom:0"><label>Payment Reminder Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Use {{{message_html}}} in the EmailJS template body.</div></div>
+              <div class="f-group full" style="margin-bottom:0"><label>Invoice Email Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Use {{{message_html}}} in the EmailJS template body for reminders and paid receipts.</div></div>
             </div>
           </div>
         </section>
@@ -2431,17 +2431,56 @@ window.openPayModal = function openPayModal(num){
 }
 window.setPayType = function setPayType(type){payType=type;document.getElementById('pbt-full').classList.toggle('active',type==='full');document.getElementById('pbt-part').classList.toggle('active',type==='partial');if(type==='full'&&currentPayInv){const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);document.getElementById('pm-amount').value=bal.toLocaleString();}updatePayRemain();}
 window.updatePayRemain = function updatePayRemain(){if(!currentPayInv)return;const entered=parseAmt(document.getElementById('pm-amount').value);const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);const rem=bal-entered;const alert=document.getElementById('pm-remain-alert');if(rem>0&&entered>0){alert.style.display='block';document.getElementById('pm-remain-amt').textContent=fmtAmt(rem);}else{alert.style.display='none';}}
-window.recordPayment = function recordPayment(){
+window.recordPayment = async function recordPayment(){
   if(!currentPayInv)return;const amount=parseAmt(document.getElementById('pm-amount').value);const date=document.getElementById('pm-date').value;const method=document.getElementById('pm-method').value;const ref=document.getElementById('pm-ref').value;
   if(!amount||amount<=0){alert('Please enter a payment amount.');return;}
   const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);
   if(amount>bal+0.01){alert('Amount exceeds the remaining balance of '+fmtAmt(bal)+'.');return;}
   const idx=DB.invoices.findIndex(i=>i.num===currentPayInv.num);
   const before=idx>-1?snapshotForLog(DB.invoices[idx]):snapshotForLog(currentPayInv);
-  if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;const newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';}
+  let updatedInv=currentPayInv;let newBal=bal-amount;
+  if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';updatedInv=DB.invoices[idx];}
   DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),id:Date.now()});
   if(idx>-1)addEditBacklog('payment',currentPayInv.num,currentPayInv.num+' · '+currentPayInv.client,'Payment recorded'+(ref?' · '+ref:''),before,snapshotForLog(DB.invoices[idx]));
   saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('pay-modal');
+  const receiptEmail=invoiceContactEmail(updatedInv);
+  const shouldSendReceipt=newBal<=0.01&&receiptEmail&&!updatedInv.paymentReceiptSentAt&&window.clsSendPaymentReceiptEmail;
+  if(shouldSendReceipt){
+    const s=DB.settings;
+    try{
+      await window.clsSendPaymentReceiptEmail({
+        to:receiptEmail,
+        customerName:updatedInv.client||'Customer',
+        invoiceNumber:updatedInv.num||'',
+        businessName:s.bizName||'Your Business',
+        businessEmail:s.email||'',
+        businessAddress:s.addr||'',
+        invoiceDate:fmtD(updatedInv.date),
+        dueDate:fmtD(updatedInv.due),
+        terms:updatedInv.terms||'Net 30',
+        currency:updatedInv.cur||'LKR',
+        paymentAmount:amount,
+        paidTotal:updatedInv.paidAmount||0,
+        remainingBalance:Math.max(0,newBal),
+        invoiceTotal:updatedInv.amount||0,
+        amountDue:Math.max(0,newBal),
+        paymentDate:fmtD(date),
+        paymentRawDate:date,
+        paymentMethod:method,
+        paymentReference:ref,
+        status:updatedInv.status,
+        notes:[updatedInv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
+        settings:s,
+        lines:(updatedInv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
+      });
+      updatedInv.paymentReceiptSentAt=new Date().toISOString();
+      saveDB();
+      alert('Payment recorded and receipt emailed to '+receiptEmail+'.');
+    }catch(e){
+      console.error('Payment receipt email error:',e);
+      alert('Payment recorded, but the receipt email could not be sent: '+((e&&e.message)||'Check EmailJS settings.'));
+    }
+  }
 }
 
 // ════════════════════════════════

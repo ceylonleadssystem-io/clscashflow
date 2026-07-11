@@ -480,8 +480,26 @@
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  function paymentReminderEmailHtml(opts) {
+  function paymentEmailLineRows(lines, cur, invoiceTotal) {
+    lines = lines || [];
+    if (!lines.length) lines = [{ desc: 'Invoice total', qty: 1, price: invoiceTotal, total: invoiceTotal }];
+    return lines.map(function(line) {
+      line = line || {};
+      var qty = Number(line.qty || 1) || 1;
+      var price = Number(line.price || line.unitPrice || 0) || 0;
+      var total = line.total != null ? Number(line.total || 0) : qty * price;
+      return '<tr>' +
+        '<td style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;font-weight:700;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
+        '<td align="center" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(qty) + '</td>' +
+        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
+        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;font-weight:700;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function paymentEmailHtml(opts, kind) {
     opts = opts || {};
+    kind = kind === 'receipt' ? 'receipt' : 'reminder';
     var cur = opts.currency || 'LKR';
     var invoiceNo = opts.invoiceNumber || opts.invoiceNo || opts.num || opts.id || '';
     var businessName = opts.businessName || opts.bizName || 'Your Business';
@@ -492,46 +510,62 @@
     var dueDate = opts.dueDate || humanDate(opts.due);
     var amountDue = opts.amountDue != null ? Number(opts.amountDue || 0) : Number(opts.invoiceTotal || opts.total || opts.amount || 0);
     var invoiceTotal = opts.invoiceTotal != null ? Number(opts.invoiceTotal || 0) : amountDue;
+    var paymentAmount = opts.paymentAmount != null ? Number(opts.paymentAmount || 0) : Number(opts.amountPaid || 0);
+    var paidTotal = opts.paidTotal != null ? Number(opts.paidTotal || 0) : Number(opts.totalPaid || opts.paid || paymentAmount || 0);
+    var remainingBalance = opts.remainingBalance != null ? Number(opts.remainingBalance || 0) : amountDue;
     var status = opts.status || (amountDue <= 0 ? 'paid' : 'unpaid');
     var notes = opts.notes || 'Thank you for your business.';
     var lines = opts.lines || opts.items || [];
-    if (!lines.length) lines = [{ desc: 'Invoice total', qty: 1, price: invoiceTotal, total: invoiceTotal }];
-    var rows = lines.map(function(line) {
-      line = line || {};
-      var qty = Number(line.qty || 1) || 1;
-      var price = Number(line.price || line.unitPrice || 0) || 0;
-      var total = line.total != null ? Number(line.total || 0) : qty * price;
-      return '<tr>' +
-        '<td style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
-        '<td align="center" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(qty) + '</td>' +
-        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
-        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;font-weight:700;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
-      '</tr>';
-    }).join('');
+    var rows = paymentEmailLineRows(lines, cur, invoiceTotal);
+    var payLink = opts.payLink || opts.paymentLink || opts.checkoutUrl || '';
+    var isReceipt = kind === 'receipt';
+    var title = isReceipt ? 'Payment received' : 'Invoice payment reminder';
+    var eyebrow = isReceipt ? 'Thank you for your payment' : 'Payment overdue';
+    var lead = isReceipt
+      ? 'Thank you. We have received your payment for invoice <strong>' + invoiceEscape(invoiceNo) + '</strong>.'
+      : 'This is a payment reminder for invoice <strong>' + invoiceEscape(invoiceNo) + '</strong>. The current amount outstanding is <strong>' + invoiceEscape(invoiceMoney(cur, amountDue)) + '</strong>.';
+    var amountLabel = isReceipt ? 'Amount paid' : 'Amount outstanding';
+    var amountValue = isReceipt ? (paymentAmount || paidTotal || invoiceTotal) : amountDue;
+    var detailRows = isReceipt
+      ? '<tr><td style="padding:12px 14px;color:#6f6258;">Payment date</td><td align="right" style="padding:12px 14px;font-weight:700;">' + invoiceEscape(opts.paymentDate || humanDate(opts.date) || '-') + '</td></tr>' +
+        '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Payment method</td><td align="right" style="padding:12px 14px;font-weight:700;border-top:1px solid #eadfce;">' + invoiceEscape(opts.paymentMethod || '-') + '</td></tr>' +
+        '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Remaining balance</td><td align="right" style="padding:12px 14px;font-weight:700;border-top:1px solid #eadfce;">' + invoiceEscape(invoiceMoney(cur, remainingBalance)) + '</td></tr>'
+      : '<tr><td style="padding:12px 14px;color:#6f6258;">Invoice date</td><td align="right" style="padding:12px 14px;font-weight:700;">' + invoiceEscape(invoiceDate || '-') + '</td></tr>' +
+        '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Due date</td><td align="right" style="padding:12px 14px;font-weight:700;border-top:1px solid #eadfce;">' + invoiceEscape(dueDate || '-') + '</td></tr>' +
+        '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Status</td><td align="right" style="padding:12px 14px;font-weight:700;text-transform:capitalize;border-top:1px solid #eadfce;">' + invoiceEscape(status) + '</td></tr>';
+    var ctaHtml = (!isReceipt && payLink) ? '<div style="text-align:center;margin:24px 0 6px;"><a href="' + invoiceEscape(payLink) + '" style="display:inline-block;background:#2d2117;color:#fff;text-decoration:none;padding:14px 28px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-radius:4px;">Pay now</a></div>' : '';
+    var closingNote = isReceipt
+      ? (remainingBalance <= 0.01 ? 'This invoice is now fully settled.' : 'A remaining balance is still open on this invoice.')
+      : 'If you have already made this payment, please reply with the payment reference so we can update the invoice.';
     return '<div style="margin:0;background:#f7f2ea;padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
-      '<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;">' +
-        '<div style="background:#2d2117;color:#fff;padding:28px 32px;">' +
-          '<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d3ac3d;">Payment reminder</div>' +
-          '<h1 style="margin:10px 0 4px;font-size:28px;line-height:1.2;">Invoice ' + invoiceEscape(invoiceNo) + '</h1>' +
-          '<div style="font-size:14px;color:#eadfce;">' + invoiceEscape(businessName) + '</div>' +
+      '<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;">' +
+        '<div style="padding:22px 32px;border-bottom:1px solid #eadfce;background:#fff;">' +
+          '<div style="font-family:Georgia,serif;font-size:26px;color:#2d2117;">Ceylonry<span style="color:#b8922a;">Labs</span>.io</div>' +
+          '<div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#8b7c6f;margin-top:4px;">Cashflow System</div>' +
+        '</div>' +
+        '<div style="background:#2d2117;color:#fff;padding:34px 32px;text-align:center;">' +
+          '<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d3ac3d;">' + invoiceEscape(eyebrow) + '</div>' +
+          '<h1 style="margin:12px 0 8px;font-size:32px;line-height:1.2;">' + invoiceEscape(title) + '</h1>' +
+          '<div style="font-size:15px;color:#eadfce;">Invoice ' + invoiceEscape(invoiceNo) + '</div>' +
         '</div>' +
         '<div style="padding:30px 32px;">' +
           '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Hi ' + invoiceEscape(customerName) + ',</p>' +
-          '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;">This is a payment reminder for invoice <strong>' + invoiceEscape(invoiceNo) + '</strong>. The current amount due is <strong>' + invoiceEscape(invoiceMoney(cur, amountDue)) + '</strong>.</p>' +
-          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 24px;background:#f7f2ea;border:1px solid #eadfce;">' +
-            '<tr><td style="padding:12px 14px;color:#6f6258;">Invoice date</td><td align="right" style="padding:12px 14px;font-weight:700;">' + invoiceEscape(invoiceDate || '-') + '</td></tr>' +
-            '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Due date</td><td align="right" style="padding:12px 14px;font-weight:700;border-top:1px solid #eadfce;">' + invoiceEscape(dueDate || '-') + '</td></tr>' +
-            '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Status</td><td align="right" style="padding:12px 14px;font-weight:700;text-transform:capitalize;border-top:1px solid #eadfce;">' + invoiceEscape(status) + '</td></tr>' +
-          '</table>' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;">' + lead + '</p>' +
+          '<div style="background:#fbf7f0;border:1px solid #eadfce;border-radius:8px;text-align:center;padding:24px 18px;margin:0 0 24px;">' +
+            '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8b7c6f;margin-bottom:8px;">' + invoiceEscape(amountLabel) + '</div>' +
+            '<div style="font-size:34px;line-height:1.1;font-weight:800;color:#2d2117;">' + invoiceEscape(invoiceMoney(cur, amountValue)) + '</div>' +
+          '</div>' +
+          ctaHtml +
+          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 24px;background:#f7f2ea;border:1px solid #eadfce;">' + detailRows + '</table>' +
           '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 24px;">' +
             '<thead><tr style="background:#2d2117;color:#fff;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;">' +
               '<th align="left" style="padding:12px 10px;">Description</th><th align="center" style="padding:12px 10px;">Qty</th><th align="right" style="padding:12px 10px;">Price</th><th align="right" style="padding:12px 10px;">Amount</th>' +
             '</tr></thead><tbody>' + rows + '</tbody>' +
           '</table>' +
           '<div style="text-align:right;margin-bottom:24px;">' +
-            '<div style="display:inline-block;min-width:260px;background:#2d2117;color:#fff;padding:16px 20px;font-size:18px;font-weight:700;">Total due: ' + invoiceEscape(invoiceMoney(cur, amountDue)) + '</div>' +
+            '<div style="display:inline-block;min-width:260px;background:#2d2117;color:#fff;padding:16px 20px;font-size:18px;font-weight:700;">Invoice total: ' + invoiceEscape(invoiceMoney(cur, invoiceTotal)) + '</div>' +
           '</div>' +
-          '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(notes) + '</div>' +
+          '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(closingNote + '\n\n' + notes) + '</div>' +
           '<p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#6f6258;">' + invoiceEscape(businessName) + '<br>' + invoiceEscape(businessAddress) + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
         '</div>' +
         '<div style="padding:16px 32px;border-top:1px solid #eadfce;text-align:center;font-size:12px;color:#8b7c6f;">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
@@ -539,8 +573,20 @@
     '</div>';
   }
 
+  function paymentReminderEmailHtml(opts) {
+    return paymentEmailHtml(opts, 'reminder');
+  }
+
+  function paymentReceiptEmailHtml(opts) {
+    return paymentEmailHtml(opts, 'receipt');
+  }
+
   window.clsBuildPaymentReminderEmailHtml = function(opts) {
     return paymentReminderEmailHtml(opts || {});
+  };
+
+  window.clsBuildPaymentReceiptEmailHtml = function(opts) {
+    return paymentReceiptEmailHtml(opts || {});
   };
 
   function emailJsErrorMessage(err) {
@@ -587,11 +633,16 @@
     if (!publicKey || !templateId) {
       throw new Error('EmailJS Public Key or Payment Reminder Template ID is missing.');
     }
+    var emailKind = opts.kind || opts.emailType || opts.type || 'reminder';
+    var isReceipt = emailKind === 'receipt' || emailKind === 'paid' || emailKind === 'payment-received';
     var cur = opts.currency || 'LKR';
     var invoiceNo = opts.invoiceNumber || opts.invoiceNo || opts.num || opts.id || '';
     var businessName = opts.businessName || opts.bizName || 'Your Business';
     var customerName = opts.customerName || opts.clientName || opts.client || 'Customer';
     var amountDue = opts.amountDue != null ? Number(opts.amountDue || 0) : Number(opts.invoiceTotal || opts.total || opts.amount || 0);
+    var paymentAmount = opts.paymentAmount != null ? Number(opts.paymentAmount || 0) : Number(opts.amountPaid || 0);
+    var paidTotal = opts.paidTotal != null ? Number(opts.paidTotal || 0) : Number(opts.totalPaid || opts.paid || paymentAmount || 0);
+    var remainingBalance = opts.remainingBalance != null ? Number(opts.remainingBalance || 0) : amountDue;
     var lines = opts.lines || opts.items || [];
     var itemRows = lines.map(function(line) {
       line = line || {};
@@ -615,8 +666,8 @@
       name: customerName,
       from_name: businessName,
       reply_to: opts.businessEmail || settings.email || '',
-      subject: opts.subject || ('Payment reminder: Invoice ' + invoiceNo + ' from ' + businessName + ' - ' + invoiceMoney(cur, amountDue)),
-      message_html: paymentReminderEmailHtml(opts),
+      subject: opts.subject || (isReceipt ? ('Payment received: Invoice ' + invoiceNo + ' from ' + businessName) : ('Payment reminder: Invoice ' + invoiceNo + ' from ' + businessName + ' - ' + invoiceMoney(cur, amountDue))),
+      message_html: isReceipt ? paymentReceiptEmailHtml(opts) : paymentReminderEmailHtml(opts),
       business_name: businessName,
       business_address: opts.businessAddress || settings.addr || settings.address || '',
       client_name: customerName,
@@ -626,6 +677,13 @@
       terms: opts.terms || 'Net 30',
       total_due: invoiceMoney(cur, amountDue),
       outstanding_amount: invoiceMoney(cur, amountDue),
+      payment_amount: invoiceMoney(cur, paymentAmount),
+      paid_total: invoiceMoney(cur, paidTotal),
+      remaining_balance: invoiceMoney(cur, remainingBalance),
+      payment_date: opts.paymentDate || humanDate(opts.paymentRawDate || opts.date),
+      payment_method: opts.paymentMethod || '',
+      payment_reference: opts.paymentReference || opts.paymentRef || '',
+      pay_link: opts.payLink || opts.paymentLink || opts.checkoutUrl || '',
       payment_status: opts.status || (amountDue <= 0 ? 'paid' : 'unpaid'),
       notes: opts.notes || '',
       items_html: itemRows
@@ -648,7 +706,7 @@
     try {
       return await sendEmailJsViaFunction(params, config);
     } catch (fnErr) {
-      var msg = emailJsErrorMessage(browserError) || emailJsErrorMessage(fnErr) || 'Could not send payment reminder.';
+      var msg = emailJsErrorMessage(browserError) || emailJsErrorMessage(fnErr) || 'Could not send invoice email.';
       if (/recipient|recipients|address is empty/i.test(msg)) {
         msg += ' In EmailJS, set the template To Email field to {{to_email}} or {{user_email}}.';
       }
@@ -656,6 +714,14 @@
       if (fnMsg && fnMsg !== msg) msg += ' Function fallback: ' + fnMsg;
       throw new Error(msg);
     }
+  };
+
+  window.clsSendPaymentReceiptEmail = function(opts) {
+    var payload = {};
+    opts = opts || {};
+    Object.keys(opts).forEach(function(k) { payload[k] = opts[k]; });
+    payload.kind = 'receipt';
+    return window.clsSendPaymentReminderEmail(payload);
   };
 
   function normalizeInvoiceSettings(settings) {

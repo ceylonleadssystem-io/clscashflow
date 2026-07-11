@@ -1,7 +1,8 @@
 <!-- =========================================================
-  CeylonryLabs.io - EmailJS Payment Reminder Template (SIMPLE)
-  The payment reminder email is built inside your app and sent as
-  one HTML variable, so your EmailJS template just needs the line below.
+  CeylonryLabs.io - EmailJS Invoice Email Template (SIMPLE)
+  Payment reminders and payment-received thank-you emails are built
+  inside the app and sent as one HTML variable. Keep this EmailJS
+  template clean: it only needs to render message_html.
 
   HOW TO SET UP (one time):
   1. In EmailJS, create a template.
@@ -19,5 +20,10 @@
         Subject   : {{subject}}
   5. Save, copy the Template ID, and paste it (with your Service ID
      and Public Key) into your app: Settings > Invoices > EmailJS Payment Reminder.
+
+  IMPORTANT:
+  - Do not paste the EmailJS private key in the app or GitHub.
+  - If browser sending is blocked, add EMAILJS_PRIVATE_KEY only in Netlify
+    environment variables for the server fallback.
   ========================================================= -->
 {{{message_html}}}

@@ -34,7 +34,7 @@ exports.handler = async function handler(event) {
   const privateKey = process.env.EMAILJS_PRIVATE_KEY || process.env.EMAILJS_ACCESS_TOKEN || '';
 
   if (!params.to_email) {
-    return json(400, { ok: false, error: 'Missing to_email for payment reminder' });
+    return json(400, { ok: false, error: 'Missing to_email for invoice email' });
   }
   if (!serviceId || !templateId || !publicKey) {
     return json(500, { ok: false, error: 'EmailJS service ID, template ID, or public key is missing' });
