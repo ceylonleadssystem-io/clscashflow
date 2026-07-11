@@ -480,6 +480,117 @@
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  function paymentReminderEmailHtml(opts) {
+    opts = opts || {};
+    var cur = opts.currency || 'LKR';
+    var invoiceNo = opts.invoiceNumber || opts.invoiceNo || opts.num || opts.id || '';
+    var businessName = opts.businessName || opts.bizName || 'Your Business';
+    var businessEmail = opts.businessEmail || opts.replyTo || '';
+    var businessAddress = opts.businessAddress || opts.addr || '';
+    var customerName = opts.customerName || opts.clientName || opts.client || 'Customer';
+    var invoiceDate = opts.invoiceDate || humanDate(opts.date);
+    var dueDate = opts.dueDate || humanDate(opts.due);
+    var amountDue = opts.amountDue != null ? Number(opts.amountDue || 0) : Number(opts.invoiceTotal || opts.total || opts.amount || 0);
+    var invoiceTotal = opts.invoiceTotal != null ? Number(opts.invoiceTotal || 0) : amountDue;
+    var status = opts.status || (amountDue <= 0 ? 'paid' : 'unpaid');
+    var notes = opts.notes || 'Thank you for your business.';
+    var lines = opts.lines || opts.items || [];
+    if (!lines.length) lines = [{ desc: 'Invoice total', qty: 1, price: invoiceTotal, total: invoiceTotal }];
+    var rows = lines.map(function(line) {
+      line = line || {};
+      var qty = Number(line.qty || 1) || 1;
+      var price = Number(line.price || line.unitPrice || 0) || 0;
+      var total = line.total != null ? Number(line.total || 0) : qty * price;
+      return '<tr>' +
+        '<td style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
+        '<td align="center" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(qty) + '</td>' +
+        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
+        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;font-weight:700;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
+      '</tr>';
+    }).join('');
+    return '<div style="margin:0;background:#f7f2ea;padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
+      '<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;">' +
+        '<div style="background:#2d2117;color:#fff;padding:28px 32px;">' +
+          '<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d3ac3d;">Payment reminder</div>' +
+          '<h1 style="margin:10px 0 4px;font-size:28px;line-height:1.2;">Invoice ' + invoiceEscape(invoiceNo) + '</h1>' +
+          '<div style="font-size:14px;color:#eadfce;">' + invoiceEscape(businessName) + '</div>' +
+        '</div>' +
+        '<div style="padding:30px 32px;">' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Hi ' + invoiceEscape(customerName) + ',</p>' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;">This is a payment reminder for invoice <strong>' + invoiceEscape(invoiceNo) + '</strong>. The current amount due is <strong>' + invoiceEscape(invoiceMoney(cur, amountDue)) + '</strong>.</p>' +
+          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 24px;background:#f7f2ea;border:1px solid #eadfce;">' +
+            '<tr><td style="padding:12px 14px;color:#6f6258;">Invoice date</td><td align="right" style="padding:12px 14px;font-weight:700;">' + invoiceEscape(invoiceDate || '-') + '</td></tr>' +
+            '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Due date</td><td align="right" style="padding:12px 14px;font-weight:700;border-top:1px solid #eadfce;">' + invoiceEscape(dueDate || '-') + '</td></tr>' +
+            '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Status</td><td align="right" style="padding:12px 14px;font-weight:700;text-transform:capitalize;border-top:1px solid #eadfce;">' + invoiceEscape(status) + '</td></tr>' +
+          '</table>' +
+          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 24px;">' +
+            '<thead><tr style="background:#2d2117;color:#fff;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;">' +
+              '<th align="left" style="padding:12px 10px;">Description</th><th align="center" style="padding:12px 10px;">Qty</th><th align="right" style="padding:12px 10px;">Price</th><th align="right" style="padding:12px 10px;">Amount</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody>' +
+          '</table>' +
+          '<div style="text-align:right;margin-bottom:24px;">' +
+            '<div style="display:inline-block;min-width:260px;background:#2d2117;color:#fff;padding:16px 20px;font-size:18px;font-weight:700;">Total due: ' + invoiceEscape(invoiceMoney(cur, amountDue)) + '</div>' +
+          '</div>' +
+          '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(notes) + '</div>' +
+          '<p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#6f6258;">' + invoiceEscape(businessName) + '<br>' + invoiceEscape(businessAddress) + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
+        '</div>' +
+        '<div style="padding:16px 32px;border-top:1px solid #eadfce;text-align:center;font-size:12px;color:#8b7c6f;">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  window.clsBuildPaymentReminderEmailHtml = function(opts) {
+    return paymentReminderEmailHtml(opts || {});
+  };
+
+  window.clsSendPaymentReminderEmail = async function(opts) {
+    opts = opts || {};
+    var settings = opts.settings || {};
+    var to = String(opts.to || opts.toEmail || '').trim();
+    if (!to) throw new Error('No customer email saved for this invoice.');
+    if (!settings.ejsKey || !settings.ejsService || !settings.ejsTemplate) {
+      throw new Error('EmailJS is not configured. Add Public Key, Service ID, and Payment Reminder Template ID in Settings.');
+    }
+    if (!window.emailjs || typeof window.emailjs.send !== 'function') {
+      throw new Error('EmailJS did not load. Refresh the page and try again.');
+    }
+    var cur = opts.currency || 'LKR';
+    var invoiceNo = opts.invoiceNumber || opts.invoiceNo || opts.num || opts.id || '';
+    var businessName = opts.businessName || opts.bizName || 'Your Business';
+    var customerName = opts.customerName || opts.clientName || opts.client || 'Customer';
+    var amountDue = opts.amountDue != null ? Number(opts.amountDue || 0) : Number(opts.invoiceTotal || opts.total || opts.amount || 0);
+    var lines = opts.lines || opts.items || [];
+    var itemRows = lines.map(function(line) {
+      line = line || {};
+      var qty = Number(line.qty || 1) || 1;
+      var price = Number(line.price || line.unitPrice || 0) || 0;
+      var total = line.total != null ? Number(line.total || 0) : qty * price;
+      return '<tr><td>' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td><td>' + invoiceEscape(qty) + '</td><td>' + invoiceEscape(invoiceMoney(cur, price)) + '</td><td>' + invoiceEscape(invoiceMoney(cur, total)) + '</td></tr>';
+    }).join('');
+    var params = {
+      to_email: to,
+      to_name: customerName,
+      from_name: businessName,
+      reply_to: opts.businessEmail || settings.email || '',
+      subject: opts.subject || ('Payment reminder: Invoice ' + invoiceNo + ' from ' + businessName + ' - ' + invoiceMoney(cur, amountDue)),
+      message_html: paymentReminderEmailHtml(opts),
+      business_name: businessName,
+      business_address: opts.businessAddress || settings.addr || settings.address || '',
+      client_name: customerName,
+      invoice_no: invoiceNo,
+      invoice_date: opts.invoiceDate || humanDate(opts.date),
+      due_date: opts.dueDate || humanDate(opts.due),
+      terms: opts.terms || 'Net 30',
+      total_due: invoiceMoney(cur, amountDue),
+      outstanding_amount: invoiceMoney(cur, amountDue),
+      payment_status: opts.status || (amountDue <= 0 ? 'paid' : 'unpaid'),
+      notes: opts.notes || '',
+      items_html: itemRows
+    };
+    await window.emailjs.send(settings.ejsService, settings.ejsTemplate, params, { publicKey: settings.ejsKey });
+    return true;
+  };
+
   function normalizeInvoiceSettings(settings) {
     settings = settings || {};
     var biz = settings.bizName || settings.biz || settings.businessName || 'Your Business';

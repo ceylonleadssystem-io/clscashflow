@@ -15,7 +15,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
-<script src="assets/platform.js?v=20260710-invoice-pdf-clean"></script>
+<script src="assets/platform.js?v=20260711-emailjs-reminders"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -835,6 +835,12 @@ document.addEventListener('click',function(e){
                 <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
                 <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
               </div>
+              <div class="f-section" style="margin-top:1rem">EmailJS Payment Reminder</div>
+              <div class="f-row">
+                <div class="f-group"><label>EmailJS Public Key</label><input class="f-input" id="set-ejskey" placeholder="public_..."></div>
+                <div class="f-group"><label>EmailJS Service ID</label><input class="f-input" id="set-ejsservice" placeholder="service_..."></div>
+              </div>
+              <div class="f-group full" style="margin-bottom:0"><label>Payment Reminder Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Use {{{message_html}}} in the EmailJS template body.</div></div>
             </div>
           </div>
         </section>
@@ -3084,84 +3090,35 @@ window.emailInvoice = async function emailInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
   const email=invoiceContactEmail(inv);
   if(!email){alert('This customer has no email address. Open the customer or invoice and add the customer email first.');return;}
+  if(!confirm('Send payment reminder for invoice '+inv.num+' to '+email+'?'))return;
   const s=DB.settings;
   const cur=inv.cur||'LKR';
-  const fmtM=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const sub=(inv.lines||[]).reduce((a,l)=>a+(l.total||0),0)||inv.amount;
-
-  // ── Path 1: custom browser email service, if configured behind the scenes ──
-  if(s.ejsKey&&s.ejsService&&s.ejsTemplate&&window.emailjs){
-    if(!confirm('Email invoice '+inv.num+' to '+email+'?'))return;
-    const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const itemRows=(inv.lines&&inv.lines.length?inv.lines:[{desc:'Invoice total',qty:1,price:inv.amount,total:inv.amount}]).map(l=>
-      '<tr>'
-        +'<td style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;">'+esc(l.desc||'Invoice item')+'</td>'
-        +'<td align="right" style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;">'+cur+' '+fmtM(l.price||0)+'</td>'
-        +'<td align="center" style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;">'+(l.qty||1)+'</td>'
-        +'<td align="right" style="border-bottom:1px solid #ddd;padding:10px 8px;color:#333;font-weight:700;">'+cur+' '+fmtM(l.total!=null?l.total:((l.qty||1)*(l.price||0)))+'</td>'
-      +'</tr>'
-    ).join('');
-    const businessName=s.bizName||'Your Business';
-    const businessEmail=s.email||inv.cemail;
-    const businessPhone=s.phone||s.bizPhone||s.businessPhone||'';
-    const businessWebsite=s.website||s.businessWebsite||'';
-    const paymentBank=s.paymentBank||s.bankAccount||s.bank||'';
-    const terms=inv.terms||'Net 30';
-    const taxAmount=inv.vat||0;
-    const params={
-      to_email:email, to_name:inv.client||'Customer',
-      from_name:businessName, reply_to:businessEmail,
-      subject:'Invoice '+inv.num+' from '+businessName+' — '+cur+' '+fmtM(inv.amount),
-      message_html: buildInvoiceEmailHTML(inv),
-      business_name:businessName,
-      business_address:s.addr||'',
-      business_phone:businessPhone,
-      business_website:businessWebsite,
-      client_name:inv.client||'Customer',
-      client_address:inv.caddr||'',
-      client_phone:inv.cphone||'',
-      invoice_no:inv.num||'',
-      invoice_date:fmtD(inv.date),
-      total_due:cur+' '+fmtM(inv.amount),
-      items_html:itemRows,
-      payment_bank:paymentBank,
-      terms:terms,
-      subtotal:cur+' '+fmtM(sub),
-      tax_amount:cur+' '+fmtM(taxAmount),
-      grand_total:cur+' '+fmtM(inv.amount),
-      signature_name:s.username||businessName
-    };
-    try{
-      await emailjs.send(s.ejsService, s.ejsTemplate, params, {publicKey:s.ejsKey});
-      alert('✓ Invoice '+inv.num+' emailed to '+email+'.');
-    }catch(e){
-      console.error('Email service error:',e);
-      const reason=(e&&(e.text||e.message))||'Please contact support if this keeps happening.';
-      alert('Could not send the email:\n\n'+reason);
-    }
-    return;
-  }
-
-  // ── Path 2: built-in Netlify SMTP function (fallback) ──
-  if(!confirm('Email invoice '+inv.num+' to '+email+'?'))return;
-  const accent=(tplDefs[getDefaultInvoiceTemplate()]||tplDefs[0]).accent;
+  const amountDue=typeof invoiceBalance==='function'?invoiceBalance(inv):(inv.amount||0);
   try{
-    const res=await fetch('/.netlify/functions/send-invoice',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        to:email, clientName:inv.client||'', bizName:s.bizName||'Your Business',
-        bizEmail:s.email||'', bizAddr:s.addr||'', accent:accent,
-        invNum:inv.num, date:fmtD(inv.date), due:fmtD(inv.due), terms:inv.terms||'Net 30',
-        cur:cur, amount:inv.amount, sub:sub,
-        disc:inv.disc||0, vat:inv.vat||0, vatRate:inv.vatRate||0,
-        lines:(inv.lines||[]).map(l=>({desc:l.desc||'',qty:l.qty||1,price:l.price||0,total:(l.total!=null?l.total:inv.amount)})),
-        notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Invoice by Cashflow System - Ceylonry Labs.io'
-      })
+    if(!window.clsSendPaymentReminderEmail) throw new Error('Payment reminder email sender is not available. Refresh the page and try again.');
+    await window.clsSendPaymentReminderEmail({
+      to:email,
+      customerName:inv.client||'Customer',
+      invoiceNumber:inv.num||'',
+      businessName:s.bizName||'Your Business',
+      businessEmail:s.email||'',
+      businessAddress:s.addr||'',
+      invoiceDate:fmtD(inv.date),
+      dueDate:fmtD(inv.due),
+      terms:inv.terms||'Net 30',
+      currency:cur,
+      amountDue:amountDue,
+      invoiceTotal:inv.amount||amountDue,
+      status:amountDue<=0?'paid':(inv.status||'unpaid'),
+      notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
+      settings:s,
+      lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
-    const out=await res.json().catch(()=>({}));
-    if(res.ok&&out.ok){alert('✓ Invoice '+inv.num+' emailed to '+email+'.');}
-    else{alert('Could not send the email. Please try again or contact support.\n\n'+(out.error||''));}
-  }catch(e){console.error('emailInvoice error:',e);alert('Could not reach the email service. Please try again or contact support.');}
+    alert('Payment reminder sent to '+email+'.');
+  }catch(e){
+    console.error('Payment reminder email error:',e);
+    alert((e&&e.message)||'Could not send the payment reminder. Check EmailJS settings and try again.');
+  }
 }
 
 window.waInvoice = function waInvoice(num){

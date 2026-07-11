@@ -12,10 +12,11 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
-<script src="assets/platform.js?v=20260710-invoice-pdf-clean"></script>
+<script src="assets/platform.js?v=20260711-emailjs-reminders"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -928,6 +929,12 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
             <div style="padding:1.35rem">
               <div class="fsec">Invoice Defaults</div>
               <div class="fg"><label>Notes</label><input class="fi" id="s-footer" type="text" placeholder="Thank you for your business."></div>
+              <div class="fsec">EmailJS Payment Reminder</div>
+              <div class="frow">
+                <div class="fg"><label>EmailJS Public Key</label><input class="fi" id="s-ejskey" type="text" placeholder="public_..."></div>
+                <div class="fg"><label>EmailJS Service ID</label><input class="fi" id="s-ejsservice" type="text" placeholder="service_..."></div>
+              </div>
+              <div class="fg"><label>Payment Reminder Template ID</label><input class="fi" id="s-ejstemplate" type="text" placeholder="template_..."><div class="template-helper">Use {{{message_html}}} in the EmailJS template body.</div></div>
               <div class="frow">
                 <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
                 <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
@@ -1129,7 +1136,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'',ejsService:'',ejsTemplate:'',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1
 };
 
@@ -1583,6 +1590,9 @@ function mapStudioSettings(src) {
   out.invoicePrefix = (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(src.invoicePrefix || src.prefix || out.invoicePrefix) : (src.invoicePrefix || src.prefix || out.invoicePrefix || 'INV')) || 'INV';
   out.invoiceFont = src.invoiceFont || src.font || out.invoiceFont || 'classic';
   out.invoiceView = src.invoiceView || src.templateView || src.view || out.invoiceView || 'modern';
+  out.ejsKey = src.ejsKey || src.emailjsKey || out.ejsKey || '';
+  out.ejsService = src.ejsService || src.emailjsService || out.ejsService || '';
+  out.ejsTemplate = src.ejsTemplate || src.emailjsTemplate || out.ejsTemplate || '';
   out.vatRate = toNum(src.vatRate != null ? src.vatRate : out.vatRate || 15);
   out.baseCurrency = safeCurrency(src.baseCurrency || out.baseCurrency || 'LKR');
   out.revenueDefaultCurrency = safeCurrency(src.revenueDefaultCurrency || src.defaultRevenueCurrency || out.revenueDefaultCurrency || out.baseCurrency || 'LKR');
@@ -2826,6 +2836,9 @@ function collectSettingsDraft() {
     email: val('s-email', D.settings.email) || D.settings.email || 'invoices@yourbusiness.lk',
     vat: val('s-vat', D.settings.vat) || D.settings.vat || 'Optional',
     footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Thank you for your business.',
+    ejsKey: val('s-ejskey', D.settings.ejsKey) || D.settings.ejsKey || '',
+    ejsService: val('s-ejsservice', D.settings.ejsService) || D.settings.ejsService || '',
+    ejsTemplate: val('s-ejstemplate', D.settings.ejsTemplate) || D.settings.ejsTemplate || '',
     vatRate: toNum(val('s-vatrate', D.settings.vatRate)),
     defaultTpl: normalizeBusinessTemplate(val('s-default-tpl', D.settings.defaultTpl)),
     invoicePrefix: (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(val('s-invoice-prefix', D.settings.invoicePrefix) || 'INV') : String(val('s-invoice-prefix', D.settings.invoicePrefix) || 'INV').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 14)) || 'INV',
@@ -2903,7 +2916,7 @@ function renderSettingsInvoicePreview() {
 }
 
 function bindSettingsPreviewInputs() {
-  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
+  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-ejskey','s-ejsservice','s-ejstemplate','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el || el.dataset.previewBound) return;
     el.dataset.previewBound = '1';
@@ -3090,15 +3103,45 @@ window.deleteInv = function deleteInv(id) {
   saveData();
 }
 
-window.emailInv = function emailInv(id) {
+window.emailInv = async function emailInv(id) {
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
   var c = findInvoiceCustomer(inv);
   var email = inv.cemail || (c ? c.email : '');
   if (!email) { showToast('No customer email saved for this invoice.', 'err'); return; }
-  var subject = encodeURIComponent('Invoice ' + inv.id + ' from ' + D.settings.biz);
-  var body = encodeURIComponent('Dear ' + inv.client + ',\n\nPlease find your invoice details below.\n\nInvoice: ' + inv.id + '\nAmount due: ' + fmt(invoiceBalance(inv)) + '\nDue date: ' + inv.due + '\n\nYou can reply to this email for any questions.\n\nThank you,\n' + D.settings.biz + '\n\nInvoice by Cashflow System - Ceylonry Labs.io');
-  window.location.href = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
+  if (!confirm('Send payment reminder for invoice ' + inv.id + ' to ' + email + '?')) return;
+  var balance = invoiceBalance(inv);
+  try {
+    if (!window.clsSendPaymentReminderEmail) throw new Error('Payment reminder email sender is not available. Refresh the page and try again.');
+    await window.clsSendPaymentReminderEmail({
+      to: email,
+      customerName: inv.client || 'Customer',
+      invoiceNumber: inv.id || '',
+      businessName: D.settings.biz || 'Your Business',
+      businessEmail: D.settings.email || '',
+      businessAddress: D.settings.addr || '',
+      invoiceDate: formatDateHuman(inv.date),
+      dueDate: formatDateHuman(inv.due),
+      terms: inv.terms || 'Net 30',
+      currency: 'LKR',
+      amountDue: balance,
+      invoiceTotal: toNum(inv.total || inv.amount || balance),
+      status: balance <= 0 ? 'paid' : (invoiceStatus(inv) || inv.status || 'unpaid'),
+      notes: [inv.notes, D.settings.footer].filter(Boolean).join('\n\n') || 'Thank you for your business.',
+      settings: D.settings,
+      lines: (inv.items || inv.lines || []).map(function(line) {
+        line = line || {};
+        var qty = toNum(line.qty || 1) || 1;
+        var price = toNum(line.price || line.unitPrice || 0);
+        var total = line.total != null ? toNum(line.total) : qty * price;
+        return { desc: line.desc || line.description || 'Invoice item', qty: qty, price: price, total: total };
+      })
+    });
+    showToast('Payment reminder emailed to ' + email + '.', 'ok');
+  } catch (e) {
+    console.error('Payment reminder email error:', e);
+    showToast((e && e.message) || 'Could not send the payment reminder. Check EmailJS settings and try again.', 'err');
+  }
 }
 
 // ===================== PAYMENT MODAL =====================
@@ -3573,6 +3616,9 @@ window.saveSettings = function saveSettings() {
   var prefixEl = document.getElementById('s-invoice-prefix');
   var fontEl = document.getElementById('s-invoice-font');
   var viewEl = document.getElementById('s-invoice-view');
+  var ejsKeyEl = document.getElementById('s-ejskey');
+  var ejsServiceEl = document.getElementById('s-ejsservice');
+  var ejsTemplateEl = document.getElementById('s-ejstemplate');
   var logoAlignEl = document.getElementById('s-logo-align');
   var logoSizeEl = document.getElementById('s-logo-size');
   var logoXEl = document.getElementById('s-logo-x');
@@ -3592,6 +3638,9 @@ window.saveSettings = function saveSettings() {
   if (prefixEl) D.settings.invoicePrefix = (window.clsSanitizeInvoicePrefix ? window.clsSanitizeInvoicePrefix(prefixEl.value) : prefixEl.value) || 'INV';
   if (fontEl) D.settings.invoiceFont = fontEl.value || 'classic';
   if (viewEl) D.settings.invoiceView = viewEl.value || 'modern';
+  D.settings.ejsKey = ejsKeyEl ? (ejsKeyEl.value || '').trim() : (D.settings.ejsKey || '');
+  D.settings.ejsService = ejsServiceEl ? (ejsServiceEl.value || '').trim() : (D.settings.ejsService || '');
+  D.settings.ejsTemplate = ejsTemplateEl ? (ejsTemplateEl.value || '').trim() : (D.settings.ejsTemplate || '');
   var baseCurrencyEl = document.getElementById('s-base-currency');
   var revenueCurrencyEl = document.getElementById('s-revenue-currency');
   if (baseCurrencyEl) D.settings.baseCurrency = safeCurrency(baseCurrencyEl.value);
@@ -4103,7 +4152,7 @@ _fauth.onAuthStateChanged(async function(user) {
     var ini = (accountName || 'U').split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
     document.getElementById('sb-av').textContent = ini;
     var s = D.settings;
-    [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
+    [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer],['s-ejskey',s.ejsKey],['s-ejsservice',s.ejsService],['s-ejstemplate',s.ejsTemplate]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
     var vatRateField = document.getElementById('s-vatrate');
     if (vatRateField) vatRateField.value = s.vatRate != null ? s.vatRate : 15;
     var defaultTplField = document.getElementById('s-default-tpl');
