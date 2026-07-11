@@ -548,8 +548,17 @@
     var settings = opts.settings || {};
     var to = String(opts.to || opts.toEmail || '').trim();
     if (!to) throw new Error('No customer email saved for this invoice.');
-    if (!settings.ejsKey || !settings.ejsService || !settings.ejsTemplate) {
-      throw new Error('EmailJS is not configured. Add Public Key, Service ID, and Payment Reminder Template ID in Settings.');
+    var publicKey = settings.ejsKey || window.CLS_EMAILJS_PUBLIC_KEY || 'gCD6W70FKqiN2ATlp';
+    var serviceId = settings.ejsService || window.CLS_EMAILJS_SERVICE_ID || 'service_uneb8lv';
+    var templateId = settings.ejsTemplate || window.CLS_EMAILJS_TEMPLATE_ID || 'template_5xb3yer';
+    if (!serviceId) {
+      throw new Error('EmailJS Service ID is missing. Open EmailJS > Email Services and copy the Service ID that starts with service_.');
+    }
+    if (!/^service_/i.test(String(serviceId))) {
+      throw new Error('EmailJS Service ID looks wrong. It should start with service_. Do not paste the secret/private key into this field.');
+    }
+    if (!publicKey || !templateId) {
+      throw new Error('EmailJS Public Key or Payment Reminder Template ID is missing.');
     }
     if (!window.emailjs || typeof window.emailjs.send !== 'function') {
       throw new Error('EmailJS did not load. Refresh the page and try again.');
@@ -587,7 +596,7 @@
       notes: opts.notes || '',
       items_html: itemRows
     };
-    await window.emailjs.send(settings.ejsService, settings.ejsTemplate, params, { publicKey: settings.ejsKey });
+    await window.emailjs.send(serviceId, templateId, params, { publicKey: publicKey });
     return true;
   };
 
