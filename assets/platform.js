@@ -602,7 +602,17 @@
     }).join('');
     var params = {
       to_email: to,
+      user_email: to,
+      email: to,
+      customer_email: to,
+      recipient_email: to,
+      receiver_email: to,
+      to: to,
+      toEmail: to,
       to_name: customerName,
+      user_name: customerName,
+      customer_name: customerName,
+      name: customerName,
       from_name: businessName,
       reply_to: opts.businessEmail || settings.email || '',
       subject: opts.subject || ('Payment reminder: Invoice ' + invoiceNo + ' from ' + businessName + ' - ' + invoiceMoney(cur, amountDue)),
@@ -639,6 +649,9 @@
       return await sendEmailJsViaFunction(params, config);
     } catch (fnErr) {
       var msg = emailJsErrorMessage(browserError) || emailJsErrorMessage(fnErr) || 'Could not send payment reminder.';
+      if (/recipient|recipients|address is empty/i.test(msg)) {
+        msg += ' In EmailJS, set the template To Email field to {{to_email}} or {{user_email}}.';
+      }
       var fnMsg = emailJsErrorMessage(fnErr);
       if (fnMsg && fnMsg !== msg) msg += ' Function fallback: ' + fnMsg;
       throw new Error(msg);
