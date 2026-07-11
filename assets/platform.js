@@ -543,6 +543,33 @@
     return paymentReminderEmailHtml(opts || {});
   };
 
+  function emailJsErrorMessage(err) {
+    if (!err) return '';
+    if (typeof err === 'string') return err;
+    var parts = [];
+    if (err.status) parts.push('EmailJS ' + err.status);
+    if (err.text) parts.push(err.text);
+    if (err.message && parts.indexOf(err.message) === -1) parts.push(err.message);
+    if (err.error) parts.push(typeof err.error === 'string' ? err.error : JSON.stringify(err.error));
+    return parts.filter(Boolean).join(': ');
+  }
+
+  async function sendEmailJsViaFunction(params, config) {
+    if (!window.fetch) throw new Error('EmailJS browser send failed and fetch is unavailable.');
+    var res = await fetch('/.netlify/functions/emailjs-reminder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ params: params, config: config })
+    });
+    var text = await res.text();
+    var data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { error: text }; }
+    if (!res.ok || data.ok === false) {
+      throw new Error(data.error || data.message || text || ('EmailJS function failed with HTTP ' + res.status));
+    }
+    return true;
+  }
+
   window.clsSendPaymentReminderEmail = async function(opts) {
     opts = opts || {};
     var settings = opts.settings || {};
@@ -559,9 +586,6 @@
     }
     if (!publicKey || !templateId) {
       throw new Error('EmailJS Public Key or Payment Reminder Template ID is missing.');
-    }
-    if (!window.emailjs || typeof window.emailjs.send !== 'function') {
-      throw new Error('EmailJS did not load. Refresh the page and try again.');
     }
     var cur = opts.currency || 'LKR';
     var invoiceNo = opts.invoiceNumber || opts.invoiceNo || opts.num || opts.id || '';
@@ -596,8 +620,29 @@
       notes: opts.notes || '',
       items_html: itemRows
     };
-    await window.emailjs.send(serviceId, templateId, params, { publicKey: publicKey });
-    return true;
+    var config = { publicKey: publicKey, serviceId: serviceId, templateId: templateId };
+    var browserError = null;
+    try {
+      if (!window.emailjs || typeof window.emailjs.send !== 'function') {
+        throw new Error('EmailJS browser SDK did not load.');
+      }
+      if (typeof window.emailjs.init === 'function') {
+        window.emailjs.init({ publicKey: publicKey });
+      }
+      await window.emailjs.send(serviceId, templateId, params, { publicKey: publicKey });
+      return true;
+    } catch (err) {
+      browserError = err;
+      console.error('EmailJS browser send failed:', err);
+    }
+    try {
+      return await sendEmailJsViaFunction(params, config);
+    } catch (fnErr) {
+      var msg = emailJsErrorMessage(browserError) || emailJsErrorMessage(fnErr) || 'Could not send payment reminder.';
+      var fnMsg = emailJsErrorMessage(fnErr);
+      if (fnMsg && fnMsg !== msg) msg += ' Function fallback: ' + fnMsg;
+      throw new Error(msg);
+    }
   };
 
   function normalizeInvoiceSettings(settings) {

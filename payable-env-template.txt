@@ -56,3 +56,11 @@ SMTP_FROM=
 BUSINESS_OWNER_EMAIL=hello@ceylonrylabs.io
 SUPPORT_TO=hello@ceylonrylabs.io
 STORY_SUBMISSION_TO=hello@ceylonrylabs.io
+
+# EmailJS payment reminder emails
+# Public key, service ID, and template ID are safe client config.
+# Keep the private key only in Netlify environment variables.
+EMAILJS_PUBLIC_KEY=gCD6W70FKqiN2ATlp
+EMAILJS_SERVICE_ID=service_uneb8lv
+EMAILJS_TEMPLATE_ID=template_5xb3yer
+EMAILJS_PRIVATE_KEY=PASTE_EMAILJS_PRIVATE_KEY_IN_NETLIFY_ONLY
