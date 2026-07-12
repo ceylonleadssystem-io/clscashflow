@@ -673,7 +673,7 @@
     var publicKey = settings.ejsKey || window.CLS_EMAILJS_PUBLIC_KEY || 'gCD6W70FKqiN2ATlp';
     var serviceId = settings.ejsService || window.CLS_EMAILJS_SERVICE_ID || 'service_uneb8lv';
     var reminderTemplateId = settings.ejsTemplate || window.CLS_EMAILJS_TEMPLATE_ID || 'template_5xb3yer';
-    var receiptTemplateId = settings.ejsReceiptTemplate || settings.ejsPaidTemplate || window.CLS_EMAILJS_RECEIPT_TEMPLATE_ID || reminderTemplateId;
+    var receiptTemplateId = settings.ejsReceiptTemplate || settings.ejsPaidTemplate || window.CLS_EMAILJS_RECEIPT_TEMPLATE_ID || 'template_avm444n';
     var templateId = isReceipt ? receiptTemplateId : reminderTemplateId;
     if (!serviceId) {
       throw new Error('EmailJS Service ID is missing. Open EmailJS > Email Services and copy the Service ID that starts with service_.');
