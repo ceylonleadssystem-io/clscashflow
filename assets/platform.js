@@ -578,7 +578,54 @@
   }
 
   function paymentReceiptEmailHtml(opts) {
-    return paymentEmailHtml(opts, 'receipt');
+    opts = opts || {};
+    var cur = opts.currency || 'LKR';
+    var invoiceNo = opts.invoiceNumber || opts.invoiceNo || opts.num || opts.id || '';
+    var businessName = opts.businessName || opts.bizName || 'Your Business';
+    var businessEmail = opts.businessEmail || opts.replyTo || '';
+    var businessAddress = opts.businessAddress || opts.addr || '';
+    var customerName = opts.customerName || opts.clientName || opts.client || 'Customer';
+    var invoiceTotal = opts.invoiceTotal != null ? Number(opts.invoiceTotal || 0) : Number(opts.total || opts.amount || 0);
+    var paymentAmount = opts.paymentAmount != null ? Number(opts.paymentAmount || 0) : Number(opts.amountPaid || opts.paidTotal || invoiceTotal || 0);
+    var paidTotal = opts.paidTotal != null ? Number(opts.paidTotal || 0) : Number(opts.totalPaid || opts.paid || paymentAmount || 0);
+    var remainingBalance = opts.remainingBalance != null ? Number(opts.remainingBalance || 0) : Math.max(0, invoiceTotal - paidTotal);
+    var paymentDate = opts.paymentDate || humanDate(opts.paymentRawDate || opts.date) || humanDate(new Date());
+    var paymentMethod = opts.paymentMethod || 'Payment recorded';
+    var paymentReference = opts.paymentReference || opts.paymentRef || '';
+    var statusLine = remainingBalance <= 0.01
+      ? 'This invoice is now fully settled. Thank you for your payment.'
+      : 'A remaining balance is still open on this invoice.';
+    return '<div style="margin:0;background:#f7f2ea;padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
+      '<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;">' +
+        '<div style="background:#2d2117;color:#fff;padding:24px 30px;">' +
+          '<div style="font-family:Georgia,serif;font-size:28px;line-height:1.2;">Ceylonry<span style="color:#b8922a;">Labs</span>.io</div>' +
+          '<div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#d9d0c4;margin-top:7px;">Cashflow System</div>' +
+        '</div>' +
+        '<div style="padding:30px;">' +
+          '<div style="background:#f7f2ea;border-left:5px solid #20a366;border-radius:6px;padding:22px;text-align:center;margin-bottom:24px;">' +
+            '<div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#20a366;font-weight:800;margin-bottom:8px;">Payment Received</div>' +
+            '<div style="font-family:Georgia,serif;font-size:32px;line-height:1.2;color:#2d2117;">Thank you</div>' +
+            '<div style="color:#6f6258;margin-top:8px;">Invoice ' + invoiceEscape(invoiceNo) + '</div>' +
+          '</div>' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Dear ' + invoiceEscape(customerName) + ',</p>' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;color:#6f6258;">' + invoiceEscape(statusLine) + '</p>' +
+          '<div style="border:1px solid #eadfce;border-radius:8px;padding:24px;text-align:center;margin-bottom:22px;">' +
+            '<div style="font-size:13px;color:#8b7c6f;margin-bottom:8px;">Payment amount</div>' +
+            '<div style="font-family:Georgia,serif;font-size:34px;font-weight:800;color:#2d2117;">' + invoiceEscape(invoiceMoney(cur, paymentAmount || paidTotal || invoiceTotal)) + '</div>' +
+          '</div>' +
+          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-bottom:22px;">' +
+            '<tr><td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Invoice</td><td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(invoiceNo) + '</td></tr>' +
+            '<tr><td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Payment date</td><td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(paymentDate || '-') + '</td></tr>' +
+            '<tr><td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Payment method</td><td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(paymentMethod || '-') + '</td></tr>' +
+            (paymentReference ? '<tr><td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Reference</td><td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(paymentReference) + '</td></tr>' : '') +
+            '<tr><td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Paid total</td><td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(invoiceMoney(cur, paidTotal || paymentAmount || invoiceTotal)) + '</td></tr>' +
+            '<tr><td style="border-top:1px solid #eadfce;border-bottom:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Remaining balance</td><td align="right" style="border-top:1px solid #eadfce;border-bottom:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(invoiceMoney(cur, remainingBalance)) + '</td></tr>' +
+          '</table>' +
+          '<p style="font-size:14px;line-height:1.6;margin:0;color:#6f6258;">Regards,<br><strong style="color:#2d2117;">' + invoiceEscape(businessName) + '</strong>' + (businessAddress ? '<br>' + invoiceEscape(businessAddress) : '') + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
+        '</div>' +
+        '<div style="padding:16px 30px;background:#f7f2ea;text-align:center;font-size:13px;color:#8b7c6f;">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
+      '</div>' +
+    '</div>';
   }
 
   window.clsBuildPaymentReminderEmailHtml = function(opts) {
@@ -621,9 +668,13 @@
     var settings = opts.settings || {};
     var to = String(opts.to || opts.toEmail || '').trim();
     if (!to) throw new Error('No customer email saved for this invoice.');
+    var emailKind = opts.kind || opts.emailType || opts.type || 'reminder';
+    var isReceipt = emailKind === 'receipt' || emailKind === 'paid' || emailKind === 'payment-received';
     var publicKey = settings.ejsKey || window.CLS_EMAILJS_PUBLIC_KEY || 'gCD6W70FKqiN2ATlp';
     var serviceId = settings.ejsService || window.CLS_EMAILJS_SERVICE_ID || 'service_uneb8lv';
-    var templateId = settings.ejsTemplate || window.CLS_EMAILJS_TEMPLATE_ID || 'template_5xb3yer';
+    var reminderTemplateId = settings.ejsTemplate || window.CLS_EMAILJS_TEMPLATE_ID || 'template_5xb3yer';
+    var receiptTemplateId = settings.ejsReceiptTemplate || settings.ejsPaidTemplate || window.CLS_EMAILJS_RECEIPT_TEMPLATE_ID || reminderTemplateId;
+    var templateId = isReceipt ? receiptTemplateId : reminderTemplateId;
     if (!serviceId) {
       throw new Error('EmailJS Service ID is missing. Open EmailJS > Email Services and copy the Service ID that starts with service_.');
     }
@@ -631,10 +682,8 @@
       throw new Error('EmailJS Service ID looks wrong. It should start with service_. Do not paste the secret/private key into this field.');
     }
     if (!publicKey || !templateId) {
-      throw new Error('EmailJS Public Key or Payment Reminder Template ID is missing.');
+      throw new Error('EmailJS Public Key or ' + (isReceipt ? 'Paid Receipt Template ID' : 'Payment Reminder Template ID') + ' is missing.');
     }
-    var emailKind = opts.kind || opts.emailType || opts.type || 'reminder';
-    var isReceipt = emailKind === 'receipt' || emailKind === 'paid' || emailKind === 'payment-received';
     var cur = opts.currency || 'LKR';
     var invoiceNo = opts.invoiceNumber || opts.invoiceNo || opts.num || opts.id || '';
     var businessName = opts.businessName || opts.bizName || 'Your Business';

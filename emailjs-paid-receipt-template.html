@@ -1,0 +1,88 @@
+<div style="margin:0;padding:28px;background:#f7f2ea;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;margin:0 auto;background:#ffffff;border:1px solid #e5d9c8;border-collapse:collapse;">
+    <tr>
+      <td style="background:#2d2117;color:#ffffff;padding:24px 30px;">
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;">
+          Ceylonry<span style="color:#b8922a;">Labs</span>.io
+        </div>
+        <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#d9d0c4;margin-top:7px;">
+          Cashflow System
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:30px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f2ea;border-left:5px solid #20a366;border-radius:6px;margin-bottom:24px;">
+          <tr>
+            <td style="padding:22px;text-align:center;">
+              <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#20a366;font-weight:800;margin-bottom:8px;">
+                Payment Received
+              </div>
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.2;color:#2d2117;">
+                Thank you
+              </div>
+              <div style="color:#6f6258;margin-top:8px;">
+                Invoice {{invoice_no}}
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <p style="font-size:16px;line-height:1.6;margin:0 0 18px;">
+          Dear {{client_name}},
+        </p>
+        <p style="font-size:16px;line-height:1.6;margin:0 0 22px;color:#6f6258;">
+          We have received your payment for invoice <strong>{{invoice_no}}</strong>. This confirmation has been sent for your records.
+        </p>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #eadfce;border-collapse:collapse;margin-bottom:22px;">
+          <tr>
+            <td style="padding:24px;text-align:center;">
+              <div style="font-size:13px;color:#8b7c6f;margin-bottom:8px;">
+                Payment amount
+              </div>
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:800;color:#2d2117;">
+                {{payment_amount}}
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-bottom:22px;">
+          <tr>
+            <td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Invoice</td>
+            <td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">{{invoice_no}}</td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Payment date</td>
+            <td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">{{payment_date}}</td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Payment method</td>
+            <td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">{{payment_method}}</td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Paid total</td>
+            <td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">{{paid_total}}</td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #eadfce;border-bottom:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Remaining balance</td>
+            <td align="right" style="border-top:1px solid #eadfce;border-bottom:1px solid #eadfce;padding:12px 0;font-weight:800;">{{remaining_balance}}</td>
+          </tr>
+        </table>
+
+        <p style="font-size:14px;line-height:1.6;margin:0;color:#6f6258;">
+          Regards,<br>
+          <strong style="color:#2d2117;">{{business_name}}</strong><br>
+          {{business_address}}<br>
+          {{reply_to}}
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 30px;background:#f7f2ea;text-align:center;font-size:13px;color:#8b7c6f;">
+        Invoice by Cashflow System - Ceylonry Labs.io
+      </td>
+    </tr>
+  </table>
+</div>

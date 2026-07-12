@@ -15,7 +15,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
-<script src="assets/platform.js?v=20260711-emailjs-receipts"></script>
+<script src="assets/platform.js?v=20260712-paid-receipts"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -835,12 +835,15 @@ document.addEventListener('click',function(e){
                 <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
                 <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
               </div>
-              <div class="f-section" style="margin-top:1rem">EmailJS Payment Reminder</div>
+              <div class="f-section" style="margin-top:1rem">EmailJS Invoice Emails</div>
               <div class="f-row">
                 <div class="f-group"><label>EmailJS Public Key</label><input class="f-input" id="set-ejskey" placeholder="public_..."></div>
                 <div class="f-group"><label>EmailJS Service ID</label><input class="f-input" id="set-ejsservice" placeholder="service_..."></div>
               </div>
-              <div class="f-group full" style="margin-bottom:0"><label>Invoice Email Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Use {{{message_html}}} in the EmailJS template body for reminders and paid receipts.</div></div>
+              <div class="f-row" style="margin-bottom:0">
+                <div class="f-group"><label>Payment Reminder Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Use {{{message_html}}} in the overdue reminder template body.</div></div>
+                <div class="f-group"><label>Paid Receipt Template ID</label><input class="f-input" id="set-ejsreceipttemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Optional shorter email for paid invoices. Leave blank to reuse the reminder template.</div></div>
+              </div>
             </div>
           </div>
         </section>
@@ -1167,7 +1170,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer'},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:''},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -1473,7 +1476,7 @@ function enforcePermissions(){
   if(_profile.role==='viewer'){
     document.querySelectorAll('[data-nav="invoices"],[data-nav="clients"],[data-nav="team"],[data-nav="backlog"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
     document.querySelectorAll('button[onclick*="add"],button[onclick*="save"],button[onclick*="delete"],button[onclick*="record"],button[onclick*="openModal"],button[onclick*="openClientModal"],button[onclick*="openSupplierModal"],button[onclick*="openInvoiceModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
-    document.querySelectorAll('button[data-cls-fn^="add"],button[data-cls-fn^="save"],button[data-cls-fn^="openEdit"],button[data-cls-fn^="openDelete"],button[data-cls-fn^="confirmDelete"],button[data-cls-fn^="record"],button[data-cls-fn^="wa"],button[data-cls-fn="emailInvoice"],button[data-cls-fn="openPayModal"],button[data-cls-fn="openModal"],button[data-cls-fn="openInvoiceModal"],button[data-cls-fn="openInvoiceEditModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
+    document.querySelectorAll('button[data-cls-fn^="add"],button[data-cls-fn^="save"],button[data-cls-fn^="openEdit"],button[data-cls-fn^="openDelete"],button[data-cls-fn^="confirmDelete"],button[data-cls-fn^="record"],button[data-cls-fn^="wa"],button[data-cls-fn="emailInvoice"],button[data-cls-fn="emailPaidReceipt"],button[data-cls-fn="openPayModal"],button[data-cls-fn="openModal"],button[data-cls-fn="openInvoiceModal"],button[data-cls-fn="openInvoiceEditModal"]').forEach(function(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Viewer role: read-only access';});
   }
   if(_profile.role==='accountant'){
     document.querySelectorAll('[data-nav="team"],[data-nav="settings"]').forEach(function(el){el.style.display='none';});
@@ -2253,7 +2256,7 @@ function renderInvoices(){
         <button class="btn-sm btn-sm-wa" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send via WhatsApp">💬 WA</button>
         <button class="btn-sm btn-sm-out" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit</button>
         <button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button>
-        ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">Record Payment</button>`:'<span style="font-size:.65rem;color:var(--green)">✓ Settled</span>'}
+        ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">Record Payment</button>`:`<button class="btn-sm btn-sm-green" data-cls-fn="emailPaidReceipt" data-cls-arg="${inv.num}" title="Send paid receipt">✓ Receipt</button><span style="font-size:.65rem;color:var(--green)">✓ Settled</span>`}
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
   refreshInvoiceNotifications();
@@ -2431,56 +2434,19 @@ window.openPayModal = function openPayModal(num){
 }
 window.setPayType = function setPayType(type){payType=type;document.getElementById('pbt-full').classList.toggle('active',type==='full');document.getElementById('pbt-part').classList.toggle('active',type==='partial');if(type==='full'&&currentPayInv){const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);document.getElementById('pm-amount').value=bal.toLocaleString();}updatePayRemain();}
 window.updatePayRemain = function updatePayRemain(){if(!currentPayInv)return;const entered=parseAmt(document.getElementById('pm-amount').value);const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);const rem=bal-entered;const alert=document.getElementById('pm-remain-alert');if(rem>0&&entered>0){alert.style.display='block';document.getElementById('pm-remain-amt').textContent=fmtAmt(rem);}else{alert.style.display='none';}}
-window.recordPayment = async function recordPayment(){
+window.recordPayment = function recordPayment(){
   if(!currentPayInv)return;const amount=parseAmt(document.getElementById('pm-amount').value);const date=document.getElementById('pm-date').value;const method=document.getElementById('pm-method').value;const ref=document.getElementById('pm-ref').value;
   if(!amount||amount<=0){alert('Please enter a payment amount.');return;}
   const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);
   if(amount>bal+0.01){alert('Amount exceeds the remaining balance of '+fmtAmt(bal)+'.');return;}
   const idx=DB.invoices.findIndex(i=>i.num===currentPayInv.num);
   const before=idx>-1?snapshotForLog(DB.invoices[idx]):snapshotForLog(currentPayInv);
-  let updatedInv=currentPayInv;let newBal=bal-amount;
-  if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';updatedInv=DB.invoices[idx];}
+  let newBal=bal-amount;
+  if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';}
   DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),id:Date.now()});
   if(idx>-1)addEditBacklog('payment',currentPayInv.num,currentPayInv.num+' · '+currentPayInv.client,'Payment recorded'+(ref?' · '+ref:''),before,snapshotForLog(DB.invoices[idx]));
   saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('pay-modal');
-  const receiptEmail=invoiceContactEmail(updatedInv);
-  const shouldSendReceipt=newBal<=0.01&&receiptEmail&&!updatedInv.paymentReceiptSentAt&&window.clsSendPaymentReceiptEmail;
-  if(shouldSendReceipt){
-    const s=DB.settings;
-    try{
-      await window.clsSendPaymentReceiptEmail({
-        to:receiptEmail,
-        customerName:updatedInv.client||'Customer',
-        invoiceNumber:updatedInv.num||'',
-        businessName:s.bizName||'Your Business',
-        businessEmail:s.email||'',
-        businessAddress:s.addr||'',
-        invoiceDate:fmtD(updatedInv.date),
-        dueDate:fmtD(updatedInv.due),
-        terms:updatedInv.terms||'Net 30',
-        currency:updatedInv.cur||'LKR',
-        paymentAmount:amount,
-        paidTotal:updatedInv.paidAmount||0,
-        remainingBalance:Math.max(0,newBal),
-        invoiceTotal:updatedInv.amount||0,
-        amountDue:Math.max(0,newBal),
-        paymentDate:fmtD(date),
-        paymentRawDate:date,
-        paymentMethod:method,
-        paymentReference:ref,
-        status:updatedInv.status,
-        notes:[updatedInv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
-        settings:s,
-        lines:(updatedInv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
-      });
-      updatedInv.paymentReceiptSentAt=new Date().toISOString();
-      saveDB();
-      alert('Payment recorded and receipt emailed to '+receiptEmail+'.');
-    }catch(e){
-      console.error('Payment receipt email error:',e);
-      alert('Payment recorded, but the receipt email could not be sent: '+((e&&e.message)||'Check EmailJS settings.'));
-    }
-  }
+  alert('Payment recorded. Use Receipt on the paid invoice if the customer needs a confirmation email.');
 }
 
 // ════════════════════════════════
@@ -2573,7 +2539,7 @@ function loadSettings(){
   if(s.logo&&settingsLogo){settingsLogo.src=s.logo;settingsLogo.style.display='block';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='none';}
   else if(settingsLogo){settingsLogo.src='';settingsLogo.style.display='none';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='block';}
   var vr=document.getElementById('set-vatrate');if(vr)vr.value=(s.vatRate!=null?s.vatRate:15);
-  ['ejskey','ejsservice','ejstemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('ejskey','ejsKey').replace('ejsservice','ejsService').replace('ejstemplate','ejsTemplate')]||'';});
+  ['ejskey','ejsservice','ejstemplate','ejsreceipttemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(!el)return;var prop={ejskey:'ejsKey',ejsservice:'ejsService',ejstemplate:'ejsTemplate',ejsreceipttemplate:'ejsReceiptTemplate'}[k];el.value=s[prop]||'';});
   var tpl=normalizeTemplateIdx(s.defaultTpl);
   var tplInput=document.getElementById('set-default-tpl');if(tplInput)tplInput.value=String(tpl);
   var prefixEl=document.getElementById('set-invoice-prefix');if(prefixEl)prefixEl.value=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(s.invoicePrefix):s.invoicePrefix)||'INV';
@@ -2593,10 +2559,11 @@ window.saveSettings = function saveSettings(){
   DB.settings.email=document.getElementById('set-email').value.trim();
   DB.settings.vat=document.getElementById('set-vat').value.trim();
   var vrIn=document.getElementById('set-vatrate');DB.settings.vatRate=vrIn?(parseFloat(vrIn.value)):15;if(isNaN(DB.settings.vatRate))DB.settings.vatRate=15;
-  var ejsKeyEl=document.getElementById('set-ejskey'),ejsServiceEl=document.getElementById('set-ejsservice'),ejsTemplateEl=document.getElementById('set-ejstemplate');
+  var ejsKeyEl=document.getElementById('set-ejskey'),ejsServiceEl=document.getElementById('set-ejsservice'),ejsTemplateEl=document.getElementById('set-ejstemplate'),ejsReceiptTemplateEl=document.getElementById('set-ejsreceipttemplate');
   DB.settings.ejsKey=ejsKeyEl?(ejsKeyEl.value||'').trim():(DB.settings.ejsKey||'');
   DB.settings.ejsService=ejsServiceEl?(ejsServiceEl.value||'').trim():(DB.settings.ejsService||'');
   DB.settings.ejsTemplate=ejsTemplateEl?(ejsTemplateEl.value||'').trim():(DB.settings.ejsTemplate||'');
+  DB.settings.ejsReceiptTemplate=ejsReceiptTemplateEl?(ejsReceiptTemplateEl.value||'').trim():(DB.settings.ejsReceiptTemplate||'');
   DB.settings.footer=document.getElementById('set-footer').value.trim()||'Invoice by Cashflow System - Ceylonry Labs.io';
   DB.settings.u1=document.getElementById('set-u1').value.trim();
   DB.settings.u2=document.getElementById('set-u2').value.trim();
@@ -3160,6 +3127,49 @@ window.emailInvoice = async function emailInvoice(num){
   }
 }
 
+window.emailPaidReceipt = async function emailPaidReceipt(num){
+  const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
+  const email=invoiceContactEmail(inv);
+  if(!email){alert('This customer has no email address. Open the customer or invoice and add the customer email first.');return;}
+  const s=DB.settings;
+  const cur=inv.cur||'LKR';
+  const balance=typeof invoiceBalance==='function'?invoiceBalance(inv):Math.max(0,(inv.amount||0)-(inv.paidAmount||0));
+  if(balance>0.01&&!confirm('This invoice still has '+fmtAmt(balance)+' outstanding. Send a paid receipt anyway?'))return;
+  if(!confirm('Send paid receipt for invoice '+inv.num+' to '+email+'?'))return;
+  const paidTotal=inv.paidAmount||inv.amount||0;
+  try{
+    if(!window.clsSendPaymentReceiptEmail) throw new Error('Paid receipt email sender is not available. Refresh the page and try again.');
+    await window.clsSendPaymentReceiptEmail({
+      to:email,
+      customerName:inv.client||'Customer',
+      invoiceNumber:inv.num||'',
+      businessName:s.bizName||'Your Business',
+      businessEmail:s.email||'',
+      businessAddress:s.addr||'',
+      invoiceDate:fmtD(inv.date),
+      dueDate:fmtD(inv.due),
+      terms:inv.terms||'Net 30',
+      currency:cur,
+      paymentAmount:paidTotal,
+      paidTotal:paidTotal,
+      remainingBalance:Math.max(0,balance),
+      invoiceTotal:inv.amount||0,
+      amountDue:Math.max(0,balance),
+      paymentDate:fmtD(new Date()),
+      status:inv.status||'paid',
+      notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
+      settings:s,
+      lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
+    });
+    inv.paymentReceiptSentAt=new Date().toISOString();
+    saveDB();renderInvoices();
+    alert('Paid receipt sent to '+email+'.');
+  }catch(e){
+    console.error('Paid receipt email error:',e);
+    alert((e&&e.message)||'Could not send the paid receipt. Check EmailJS settings and try again.');
+  }
+}
+
 window.waInvoice = function waInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
   const s=DB.settings;
@@ -3347,7 +3357,8 @@ function seedDemoData(){
     vatRate:15,
     ejsKey:'gCD6W70FKqiN2ATlp',
     ejsService:'service_uneb8lv',
-    ejsTemplate:'template_5xb3yer'
+    ejsTemplate:'template_5xb3yer',
+    ejsReceiptTemplate:''
   };
   DB.clients={nextId:5,list:[
     {id:1,name:'Kasun Perera',biz:'Kasun Perera',email:'accounts@kasun.lk',phone:'+94 77 123 4567',addr:'Colombo 05',notes:'Regular monthly customer'},
