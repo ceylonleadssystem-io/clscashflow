@@ -6,6 +6,23 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 
 let serviceClient;
+const PERMISSION_CACHE_TTL_MS = 10000;
+const adminCache = new Map();
+const teamAccessCache = new Map();
+
+function cachedPermission(cache, key) {
+  const item = cache.get(key);
+  if (!item || Date.now() - item.savedAt > PERMISSION_CACHE_TTL_MS) {
+    cache.delete(key);
+    return { hit: false, value: null };
+  }
+  return { hit: true, value: item.value };
+}
+
+function rememberPermission(cache, key, value) {
+  cache.set(key, { value, savedAt: Date.now() });
+  return value;
+}
 
 function headers(extra) {
   return Object.assign({
@@ -377,8 +394,10 @@ async function isAdmin(user) {
   const email = clean(user && user.email, 240).toLowerCase();
   if (email === ADMIN_EMAIL) return true;
   if (!user || !user.id) return false;
+  const cached = cachedPermission(adminCache, user.id);
+  if (cached.hit) return cached.value;
   const profile = await getDocument('users', user.id).catch(function() { return null; });
-  return !!(profile && profile.data && profile.data.adminAccess === true);
+  return rememberPermission(adminCache, user.id, !!(profile && profile.data && profile.data.adminAccess === true));
 }
 
 function rowBelongsToUser(row, user) {
@@ -404,27 +423,31 @@ async function teamAccessFor(ownerUid, user) {
   ownerUid = clean(ownerUid, 240);
   const email = clean(user && user.email, 240).toLowerCase();
   if (!ownerUid || !email) return null;
+  const cacheKey = ownerUid + '|' + email;
+  const cached = cachedPermission(teamAccessCache, cacheKey);
+  if (cached.hit) return cached.value;
   const invites = await queryDocuments('users/' + ownerUid + '/team', {
     filters: [{ field: 'email', op: '==', value: email }],
     fetchLimit: 100
   }).catch(function() { return []; });
-  return invites.find(function(row) {
+  const access = invites.find(function(row) {
     const data = row.data || {};
     return clean(data.status || 'active', 80).toLowerCase() !== 'suspended';
   }) || null;
+  return rememberPermission(teamAccessCache, cacheKey, access);
 }
 
 async function canRead(row, user) {
-  if (await isAdmin(user)) return true;
   if (rowBelongsToUser(row, user)) return true;
+  if (await isAdmin(user)) return true;
   const ownerUid = workspaceOwnerFrom(row.path, row.id);
   if (ownerUid && await teamAccessFor(ownerUid, user)) return true;
   return false;
 }
 
 async function canWrite(path, id, data, user) {
-  if (await isAdmin(user)) return true;
   if (rowBelongsToUser({ path, id, data: data || {} }, user)) return true;
+  if (await isAdmin(user)) return true;
   const existing = await getDocument(path, id).catch(function() { return null; });
   if (existing && rowBelongsToUser({ path, id, data: existing.data || {} }, user)) return true;
   const ownerUid = workspaceOwnerFrom(path, id);

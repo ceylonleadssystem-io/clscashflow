@@ -9,13 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://iudcinvfqbdzaptnnzqg.supabase.co" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- Supabase compatibility SDK -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
-<script src="assets/platform.js?v=20260712-paid-receipts"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
+<script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
+<script src="assets/platform.js?v=20260712-performance"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -3596,6 +3595,9 @@ function buildInvoiceSharePdfFile(inv, systemName){
 }
 async function nativeShareInvoicePdf(inv, systemName){
   if(!navigator.share||!navigator.canShare||typeof File==='undefined')return false;
+  if((!window.jspdf||!window.jspdf.jsPDF)&&window.clsLoadScriptOnce){
+    try{await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','cls-jspdf');}catch(e){return false;}
+  }
   var file=buildInvoiceSharePdfFile(inv,systemName);
   if(!file||!navigator.canShare({files:[file]}))return false;
   try{

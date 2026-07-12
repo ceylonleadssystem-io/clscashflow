@@ -20,3 +20,20 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Versioned application assets can stay in the browser cache between portal
+# pages. Netlify purges its edge cache on each deploy, while query-string
+# versions in the HTML move browsers to updated JavaScript immediately.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=31536000, immutable"
+
+# A short browser cache makes switching Solo, Studio, and Business feel
+# immediate without leaving users on stale HTML after an update.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=60, stale-while-revalidate=300"
+    Netlify-CDN-Cache-Control = "public, durable, max-age=3600, stale-while-revalidate=86400"

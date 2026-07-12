@@ -216,14 +216,14 @@
           try {
             var auth = window.firebase && firebase.auth ? firebase.auth() : null;
             if (auth && typeof auth.waitForCurrentUser === 'function') {
-              user = await auth.waitForCurrentUser(4500);
+              user = await auth.waitForCurrentUser(1200);
             }
           } catch (e) {}
         }
         pendingSigninRedirect = null;
         if (!user) window.location.href = 'signin.html';
         resolve(user || null);
-      }, delayMs || 900);
+      }, delayMs || 250);
     });
     return pendingSigninRedirect;
   };
@@ -365,10 +365,10 @@
       if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
         update.lastSeenAt = firebase.firestore.FieldValue.serverTimestamp();
       }
-      await db.collection('users').doc(uid).set(update, { merge: true });
-    } catch (e) {
-      console.warn('Plan access check update skipped:', e);
-    }
+      db.collection('users').doc(uid).set(update, { merge: true }).catch(function(e) {
+        console.warn('Plan access check update skipped:', e);
+      });
+    } catch (e) {}
     return true;
   };
 
@@ -740,6 +740,9 @@
     var config = { publicKey: publicKey, serviceId: serviceId, templateId: templateId };
     var browserError = null;
     try {
+      if ((!window.emailjs || typeof window.emailjs.send !== 'function') && window.clsLoadScriptOnce) {
+        await window.clsLoadScriptOnce('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js', 'cls-emailjs');
+      }
       if (!window.emailjs || typeof window.emailjs.send !== 'function') {
         throw new Error('EmailJS browser SDK did not load.');
       }
@@ -2632,9 +2635,25 @@
 	    });
 	  }
 
-  function boot() {
+  function prefetchPortalPages() {
+    if (!isPortalPath()) return;
+    var current = (location.pathname || '').split('/').pop() || '';
+    Object.keys(PLAN_FILES).forEach(function(plan) {
+      var href = PLAN_FILES[plan];
+      if (!href || href === current || document.querySelector('link[data-cls-prefetch="' + href + '"]')) return;
+      var link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'document';
+      link.href = href;
+      link.setAttribute('data-cls-prefetch', href);
+      document.head.appendChild(link);
+    });
+  }
+
+	  function boot() {
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);
+	    afterFirstPaint(prefetchPortalPages, 1400);
 	    afterFirstPaint(trackVisit, 5000);
 	    afterFirstPaint(mountBillingWidget, 2300);
 	    afterFirstPaint(mountDangerZoneWidget, 2800);

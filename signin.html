@@ -6,16 +6,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CeylonryLabs.io — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://iudcinvfqbdzaptnnzqg.supabase.co" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <!-- Supabase compatibility SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260706-qa-customers"></script>
-<script>
-const firebaseConfig = {};
-firebase.initializeApp(firebaseConfig);
-</script>
-<script src="assets/platform.js?v=20260710-invoice-pdf-clean"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
+<script defer src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -191,6 +190,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+firebase.initializeApp({});
 var inviteParams = new URLSearchParams(window.location.search);
 var inviteToken = inviteParams.get('invite') || '';
 var inviteOwner = inviteParams.get('owner') || '';
@@ -238,6 +239,74 @@ async function bootstrapPlatformAdmin(email, pass) {
 }
 
 let authRedirectInProgress = false;
+const SIGNIN_PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
+const SIGNIN_PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
+const SIGNIN_PROFILE_TIMEOUT_MS = 1800;
+const SIGNIN_OWNER_TIMEOUT_MS = 1200;
+
+function normalizeDashboardPlan(value) {
+  const raw = String(value || '').toLowerCase();
+  const mapped = SIGNIN_PLAN_ALIASES[raw] || raw;
+  return SIGNIN_PLAN_FILES[mapped] ? mapped : '';
+}
+function firstDashboardPlan(...values) {
+  return values.map(normalizeDashboardPlan).find(Boolean) || '';
+}
+function rememberPlanLocal(plan) {
+  if (!SIGNIN_PLAN_FILES[plan]) return;
+  try {
+    localStorage.setItem('cls-current-plan', plan);
+    localStorage.setItem('cls-last-plan', plan);
+  } catch (e) {}
+}
+async function ensureSigninUserProfile(user) {
+  const plan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo') || 'solo';
+  const trialEnd = new Date();
+  trialEnd.setDate(trialEnd.getDate() + 15);
+  const profile = {
+    name: user.displayName || String(user.email || '').split('@')[0] || 'User',
+    email: user.email || '',
+    role: 'owner',
+    plan: plan,
+    currentPlan: plan,
+    lastPlan: plan,
+    planPrice: plan === 'business' ? 94800 : (plan === 'studio' ? 60000 : 36000),
+    planMonthlyPrice: plan === 'business' ? 8500 : (plan === 'studio' ? 5500 : 3500),
+    billingCycle: 'annual',
+    trialStart: new Date().toISOString(),
+    trialEnd: trialEnd.toISOString(),
+    paid: false,
+    onboardingComplete: false,
+    recoveredProfile: true,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  await firebase.firestore().collection('users').doc(user.uid).set(profile, { merge: true });
+  return { exists: true, data: function() { return profile; } };
+}
+function localDashboardDest() {
+  const plan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo') || 'solo';
+  return SIGNIN_PLAN_FILES[plan] || 'solo.html';
+}
+function withRouteTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise(function(_, reject) {
+    timer = setTimeout(function() { reject(new Error(label || 'Route lookup timed out.')); }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(function() {
+    clearTimeout(timer);
+  });
+}
+function resetSignButton() {
+  const btn = document.getElementById('sign-btn');
+  if (btn) {
+    btn.textContent = 'Sign In →';
+    btn.disabled = false;
+  }
+}
+function openDashboard(dest) {
+  window.location.replace(dest || localDashboardDest());
+}
 
 function isPasswordRecoveryReturn() {
   const hash = window.location.hash || '';
@@ -257,8 +326,24 @@ function hasOAuthReturnParams() {
 
 async function routeSignedInUser(user) {
   if (!user || authRedirectInProgress) return;
+  if (!inviteToken && !inviteOwner && !isPlatformAdminEmail(user.email)) {
+    try {
+      const cachedUid = localStorage.getItem('cls-plan-uid') || '';
+      const cachedPlan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'));
+      if (cachedUid === user.uid && SIGNIN_PLAN_FILES[cachedPlan]) {
+        authRedirectInProgress = true;
+        openDashboard(SIGNIN_PLAN_FILES[cachedPlan]);
+        return;
+      }
+    } catch (e) {}
+  }
   authRedirectInProgress = true;
-  await redirectToDashboard(user);
+  try {
+    await redirectToDashboard(user);
+  } catch (e) {
+    authRedirectInProgress = false;
+    throw e;
+  }
 }
 
 function watchOAuthReturnSession() {
@@ -299,75 +384,96 @@ async function redirectToDashboard(user) {
   try {
     if (isPlatformAdminEmail(user && user.email)) {
       await ensurePlatformAdminProfile(user, false);
-      window.location.href = 'ceylonry-admin.html';
+      openDashboard('ceylonry-admin.html');
       return;
     }
     if (inviteToken && inviteOwner) {
       await acceptInvite(user);
     }
-    let doc = await firebase.firestore().collection('users').doc(user.uid).get();
-    if (!doc.exists && window.clsEnsureUserProfile) {
-      doc = await window.clsEnsureUserProfile(user, firebase.firestore(), {
-        plan: localStorage.getItem('cls-current-plan') || localStorage.getItem('cls-last-plan') || 'solo'
-      });
+    let doc = await withRouteTimeout(
+      firebase.firestore().collection('users').doc(user.uid).get(),
+      SIGNIN_PROFILE_TIMEOUT_MS,
+      'Profile lookup timed out.'
+    );
+    if (!doc.exists) {
+      doc = await withRouteTimeout(
+        ensureSigninUserProfile(user),
+        SIGNIN_PROFILE_TIMEOUT_MS,
+        'Profile creation timed out.'
+      );
     }
     if (doc.exists) {
-      const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
-      const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
-      const normalizePlan = value => {
-        const raw = String(value || '').toLowerCase();
-        const mapped = planAliases[raw] || raw;
-        return planFiles[mapped] ? mapped : '';
-      };
-      const firstPlan = (...values) => values.map(normalizePlan).find(Boolean) || '';
-      const data = doc.data();
-      let plan = firstPlan(data.currentPlan, data.plan, data.requestedPlan, data.lastPlan);
+      const data = doc.data() || {};
+      let plan = firstDashboardPlan(data.currentPlan, data.plan, data.requestedPlan, data.lastPlan);
 
       if (data.ownerUid) {
-        const ownerDoc = await firebase.firestore().collection('users').doc(data.ownerUid).get();
-        const owner = ownerDoc.exists ? ownerDoc.data() : {};
-        const ownerPlan = firstPlan(owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, plan, 'solo');
-        if (ownerPlan === 'solo') {
-          await firebase.firestore().collection('users').doc(user.uid).set({
-            plan: 'solo',
-            currentPlan: 'solo',
-            lastPlan: 'solo',
-            teamAccessRevoked: true,
-            accessRevokedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-          await firebase.auth().signOut();
-          authRedirectInProgress = false;
-          const btn = document.getElementById('sign-btn');
-          if (btn) { btn.textContent = 'Sign In →'; btn.disabled = false; }
-          showErr('Team access is no longer available because the account owner is on the Solo plan. Ask the owner to upgrade or send a new invite.');
-          return;
-        }
-        if (planFiles[ownerPlan] && ownerPlan !== plan) {
-          plan = ownerPlan;
-          await firebase.firestore().collection('users').doc(user.uid).set({
-            plan: ownerPlan,
-            currentPlan: ownerPlan,
-            lastPlan: ownerPlan,
-            trialStart: owner.trialStart || data.trialStart || null,
-            trialEnd: owner.trialEnd || data.trialEnd || null,
-            paid: owner.paid === true
-          }, { merge: true });
+        const ownerDoc = await withRouteTimeout(
+          firebase.firestore().collection('users').doc(data.ownerUid).get(),
+          SIGNIN_OWNER_TIMEOUT_MS,
+          'Owner lookup timed out.'
+        ).catch(function(err) {
+          console.warn('Owner lookup skipped after sign-in:', err);
+          return null;
+        });
+        if (ownerDoc && ownerDoc.exists) {
+          const owner = ownerDoc.data() || {};
+          const ownerPlan = firstDashboardPlan(owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, plan, 'solo');
+          if (ownerPlan === 'solo') {
+            await firebase.firestore().collection('users').doc(user.uid).set({
+              plan: 'solo',
+              currentPlan: 'solo',
+              lastPlan: 'solo',
+              teamAccessRevoked: true,
+              accessRevokedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            await firebase.auth().signOut();
+            authRedirectInProgress = false;
+            resetSignButton();
+            showErr('Team access is no longer available because the account owner is on the Solo plan. Ask the owner to upgrade or send a new invite.');
+            return;
+          }
+          if (SIGNIN_PLAN_FILES[ownerPlan] && ownerPlan !== plan) {
+            plan = ownerPlan;
+            firebase.firestore().collection('users').doc(user.uid).set({
+              plan: ownerPlan,
+              currentPlan: ownerPlan,
+              lastPlan: ownerPlan,
+              trialStart: owner.trialStart || data.trialStart || null,
+              trialEnd: owner.trialEnd || data.trialEnd || null,
+              paid: owner.paid === true
+            }, { merge: true }).catch(function(err) {
+              console.warn('Plan sync skipped after sign-in:', err);
+            });
+          }
         }
       }
 
-      if (!planFiles[plan]) {
-        plan = firstPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo');
+      if (!SIGNIN_PLAN_FILES[plan]) {
+        plan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo');
       }
-      if (!planFiles[plan]) plan = 'solo';
-      if (window.clsRememberPlan) await window.clsRememberPlan(plan, user.uid, firebase.firestore());
-      const dest = planFiles[plan] || 'solo.html';
-      window.location.href = dest;
-    } else {
-      // Profile not found — send to onboarding
-      window.location.href = 'onboarding.html';
+      if (!SIGNIN_PLAN_FILES[plan]) plan = 'solo';
+      rememberPlanLocal(plan);
+      openDashboard(SIGNIN_PLAN_FILES[plan]);
+      return;
     }
+
+    openDashboard('onboarding.html');
   } catch(e) {
     console.error(e);
+    if (inviteToken && inviteOwner) {
+      authRedirectInProgress = false;
+      resetSignButton();
+      showErr(e.message || 'Could not accept this invite. Please try again.');
+      return;
+    }
+    showErr('Signed in. Opening your dashboard...');
+    const errEl = document.getElementById('err-msg');
+    if (errEl) {
+      errEl.style.background = 'rgba(26,158,92,.08)';
+      errEl.style.borderColor = 'rgba(26,158,92,.25)';
+      errEl.style.color = 'var(--green)';
+    }
+    openDashboard(localDashboardDest());
   }
 }
 
@@ -476,8 +582,12 @@ window.signIn = async function signIn() {
   btn.textContent = 'Signing in…'; btn.disabled = true;
 
   try {
-    const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
-    await redirectToDashboard(cred.user);
+    const cred = await withRouteTimeout(
+      firebase.auth().signInWithEmailAndPassword(email, pass),
+      12000,
+      'Sign-in is taking too long. Please check your connection and try again.'
+    );
+    await routeSignedInUser(cred.user);
   } catch(err) {
     if (isPlatformAdminEmail(email) && isCredentialError(err.code)) {
       try {
@@ -521,8 +631,15 @@ window.signInGoogle = async function signInGoogle() {
       window.location.href = 'ceylonry-admin.html';
       return;
     }
-    const doc = await firebase.firestore().collection('users').doc(user.uid).get();
-    if (!doc.exists) {
+    const doc = await withRouteTimeout(
+      firebase.firestore().collection('users').doc(user.uid).get(),
+      SIGNIN_PROFILE_TIMEOUT_MS,
+      'Profile lookup timed out.'
+    ).catch(function(err) {
+      console.warn('Google profile lookup skipped:', err);
+      return null;
+    });
+    if (doc && !doc.exists) {
       // New Google user — create profile with Solo plan
       const trialEnd = new Date();
       trialEnd.setDate(trialEnd.getDate() + 15);
@@ -596,6 +713,7 @@ window.sendReset = async function sendReset() {
   }
 }
 loadInvite();
+});
 </script>
 </body>
 </html>

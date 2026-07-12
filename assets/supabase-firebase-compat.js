@@ -2,9 +2,14 @@
   'use strict';
 
   var SUPABASE_URL = 'https://iudcinvfqbdzaptnnzqg.supabase.co';
+  // Supabase publishable keys are designed for browser use. Keeping this here
+  // removes a blocking Netlify Function request from every fresh sign-in.
+  var SUPABASE_ANON_KEY = 'sb_publishable_iAlCvHdHHRLqYNseVJ_tgQ_52rT5ZRr';
   var PUBLIC_SITE_ORIGIN = 'https://ceylonrylabs.io';
   var AUTH_STORAGE_KEY = 'cls-cashflow-auth';
   var SESSION_BACKUP_KEY = 'cls-cashflow-auth-backup';
+  var CONFIG_CACHE_KEY = 'cls-supabase-config-cache-v1';
+  var CONFIG_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7;
   var supabaseClient = null;
   var clientPromise = null;
   var configPromise = null;
@@ -112,12 +117,12 @@
   }
 
   async function confirmMissingSession() {
-    for (var i = 0; i < 4; i += 1) {
+    for (var i = 0; i < 2; i += 1) {
       var user = await sessionUserOnce().catch(function() { return null; });
       if (user) return user;
       user = await restoreSessionFromBackup().catch(function() { return null; });
       if (user) return user;
-      await sleep(450);
+      await sleep(200);
     }
     return null;
   }
@@ -145,7 +150,7 @@
       }).catch(function() {
         if (!currentUserCache) setCurrentUser(null, true, true);
       });
-    }, delayMs || 2500);
+    }, delayMs || 600);
   }
 
   function randomId(prefix) {
@@ -263,14 +268,64 @@
     return out;
   }
 
+  function normalizeConfig(json) {
+    var cfg = json || {};
+    var url = cfg.url || cfg.supabaseUrl || cfg.SUPABASE_URL || SUPABASE_URL;
+    var anonKey = cfg.anonKey || cfg.supabaseAnonKey || cfg.SUPABASE_ANON_KEY || '';
+    if (!url || !anonKey) throw new Error('Supabase config is incomplete.');
+    return { url: url, anonKey: anonKey };
+  }
+
+  function readConfigCache() {
+    try {
+      var raw = localStorage.getItem(CONFIG_CACHE_KEY);
+      if (!raw) return null;
+      var cached = JSON.parse(raw);
+      if (!cached || !cached.url || !cached.anonKey) return null;
+      if (Date.now() - Number(cached.savedAt || 0) > CONFIG_CACHE_TTL_MS) return null;
+      return { url: cached.url, anonKey: cached.anonKey };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeConfigCache(cfg) {
+    try {
+      var clean = normalizeConfig(cfg);
+      localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify({
+        url: clean.url,
+        anonKey: clean.anonKey,
+        savedAt: Date.now()
+      }));
+    } catch (e) {}
+  }
+
+  function fetchRemoteConfig() {
+    return fetch('/.netlify/functions/supabase-config')
+      .then(function(res) {
+        return res.json().then(function(json) {
+          if (!res.ok || !json.ok) throw new Error(json.error || 'Supabase config failed.');
+          var cfg = normalizeConfig(json);
+          writeConfigCache(cfg);
+          return cfg;
+        });
+      });
+  }
+
   async function loadConfig() {
     if (configPromise) return configPromise;
-    configPromise = fetch('/.netlify/functions/supabase-config')
-      .then(function(res) { return res.json().then(function(json) { if (!res.ok || !json.ok) throw new Error(json.error || 'Supabase config failed.'); return json; }); })
-      .catch(function(err) {
-        if (window.CLS_SUPABASE_ANON_KEY) return { url: window.CLS_SUPABASE_URL || SUPABASE_URL, anonKey: window.CLS_SUPABASE_ANON_KEY };
-        throw err;
-      });
+    var cached = readConfigCache();
+    var immediate = cached || normalizeConfig({
+      url: window.CLS_SUPABASE_URL || SUPABASE_URL,
+      anonKey: window.CLS_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY
+    });
+    configPromise = Promise.resolve(immediate);
+    setTimeout(function() {
+      fetchRemoteConfig().then(function(cfg) {
+        SUPABASE_URL = cfg.url || SUPABASE_URL;
+        writeConfigCache(cfg);
+      }).catch(function() {});
+    }, 10000);
     return configPromise;
   }
 
@@ -316,7 +371,11 @@
           scheduleVerifiedSignedOut();
         });
       }
-      await refreshCurrentUserFromSession(false);
+      var initialUser = await refreshCurrentUserFromSession(false);
+      if (!initialUser) {
+        initialUser = await restoreSessionFromBackup().catch(function() { return null; });
+        if (initialUser) setCurrentUser(initialUser, false);
+      }
       watchOAuthSessionReady();
       return supabaseClient;
     })().catch(function(err) {
@@ -579,16 +638,12 @@
   };
   AuthCompat.prototype.onAuthStateChanged = function(cb) {
     authListeners.push(cb);
-    getClient().then(function(client) {
-      return client.auth.getSession();
-    }).then(function(session) {
-      var s = session && session.data && session.data.session;
-      if (s && s.user) {
-        persistSessionBackup(s);
-        setCurrentUser(wrapUser(s.user, s), false);
+    getClient().then(function() {
+      if (currentUserCache) {
         cb(currentUserCache);
+        return;
       }
-      else scheduleVerifiedSignedOut();
+      scheduleVerifiedSignedOut(300);
     }).catch(function() { scheduleVerifiedSignedOut(); });
     return function() {
       authListeners = authListeners.filter(function(item) { return item !== cb; });
