@@ -131,6 +131,48 @@ function sanitizePublicInvoice(invoice, profile) {
   };
 }
 
+function sanitizePublicSnapshot(invoice) {
+  invoice = invoice && typeof invoice === 'object' ? invoice : {};
+  const allowedStatuses = ['paid', 'partial', 'overdue', 'unpaid'];
+  const status = text(invoice.status, 20).toLowerCase();
+  const items = Array.isArray(invoice.items) ? invoice.items.slice(0, 250).map(function(item) {
+    item = item && typeof item === 'object' ? item : {};
+    const quantity = Math.max(0, number(item.quantity));
+    const unitPrice = Math.max(0, number(item.unitPrice));
+    const total = Math.max(0, number(item.total != null ? item.total : quantity * unitPrice));
+    return {
+      description: text(item.description || 'Invoice item', 500),
+      quantity: money(quantity || 1),
+      unitPrice: money(unitPrice),
+      total: money(total || (quantity || 1) * unitPrice)
+    };
+  }) : [];
+  return {
+    businessName: text(invoice.businessName || 'Your Business', 180),
+    businessLogo: safeLogo(invoice.businessLogo),
+    invoiceNumber: text(invoice.invoiceNumber, 120),
+    customerName: text(invoice.customerName || 'Customer', 180),
+    invoiceDate: text(invoice.invoiceDate, 40),
+    dueDate: text(invoice.dueDate, 40),
+    currency: text(invoice.currency || 'LKR', 12).toUpperCase(),
+    items,
+    subtotal: money(Math.max(0, number(invoice.subtotal))),
+    tax: money(Math.max(0, number(invoice.tax))),
+    discount: money(Math.max(0, number(invoice.discount))),
+    total: money(Math.max(0, number(invoice.total))),
+    outstanding: money(Math.max(0, number(invoice.outstanding))),
+    status: allowedStatuses.includes(status) ? status : 'unpaid',
+    updatedAt: text(invoice.updatedAt || new Date().toISOString(), 80)
+  };
+}
+
+function canUseMappedSource(sourceData, token) {
+  sourceData = sourceData && typeof sourceData === 'object' ? sourceData : null;
+  if (!sourceData || sourceData.publicInvoiceActive === false) return false;
+  const sourceToken = text(sourceData.publicToken, 80);
+  return !isValidPublicToken(sourceToken) || sourceToken === token;
+}
+
 function formatAmount(value) {
   return money(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -170,6 +212,8 @@ module.exports = {
   invoiceFinancials,
   invoiceStatus,
   sanitizePublicInvoice,
+  sanitizePublicSnapshot,
+  canUseMappedSource,
   buildReminderMessage,
   assertSourceAccess
 };

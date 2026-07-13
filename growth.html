@@ -264,9 +264,6 @@ tr:hover td{background:var(--bg3)}
 #mo-inv .invoice-mo-body{overflow-y:auto;min-height:0;padding:1rem 1.2rem;overscroll-behavior:contain}
 #mo-inv .invoice-mo-footer{position:static;flex:0 0 auto;padding:.75rem 1.2rem}
 #mo-inv .fsec{margin:.7rem 0 .5rem}
-#mo-inv .invoice-default-template{grid-template-columns:96px minmax(0,1fr);padding:.55rem .7rem;gap:.7rem}
-#mo-inv .invoice-default-template .tpl-mini{height:38px}
-#mo-inv .invoice-default-template p{display:none}
 #mo-inv .business-invoice-fields .fg{margin-bottom:.65rem}
 #mo-inv .frow{gap:.7rem;margin-bottom:.65rem}
 #mo-inv .fi{padding:.56rem .72rem}
@@ -298,10 +295,6 @@ tr:hover td{background:var(--bg3)}
 .fi-textarea{min-height:76px;line-height:1.5;resize:vertical}
 .txn-extra{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--gold);padding:.85rem;border-radius:var(--r);margin-bottom:.85rem}
 .purpose-chip{display:inline-flex;align-items:center;gap:.25rem;border:1px solid var(--border);background:var(--bg3);padding:.15rem .45rem;border-radius:999px;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.invoice-default-template{grid-column:1/-1;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r);padding:.8rem;display:grid;grid-template-columns:120px 1fr;gap:.8rem;align-items:center}
-.invoice-default-template .tpl-card{pointer-events:none}
-.invoice-default-template strong{color:var(--black)}
-.invoice-default-template p{margin:.15rem 0 0;color:var(--muted);font-size:.68rem;line-height:1.5}
 .payment-summary{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;margin-bottom:1rem}
 .payment-title{font-weight:700;color:var(--black);font-size:.86rem;margin-bottom:.38rem}
 .payment-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
@@ -318,7 +311,6 @@ tr:hover td{background:var(--bg3)}
 .itr.grand .tl,.itr.grand .tv{color:var(--black);font-family:var(--fd);font-size:1rem;font-weight:500;border-top:1px solid var(--border);padding-top:.25rem;margin-top:.05rem}
 
 /* TEMPLATE PICKER */
-.tpl-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin-bottom:.85rem}
 .tpl-card{border:2px solid var(--border);cursor:pointer;transition:all .16s;text-align:center;background:var(--bg);overflow:hidden;border-radius:var(--r)}
 .tpl-card:hover{border-color:rgba(193,122,111,.5)}
 .tpl-card.sel{border-color:var(--rose);background:var(--white)}
@@ -590,7 +582,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .db-chart-card,.chart-card,.card,.rep-card,.debt-card,.debt-aging,.auto-card{padding:1rem}
   .db-ch-wrap,.ch-wrap{height:220px}
   .db-ch-wrap-sm,.ch-wrap-sm{height:180px}
-  .sumbar,.sumbar.c2,.sumbar.c3,.sumbar.c4,.payment-metrics,.plan-list,.settings-template-grid,.tpl-grid{grid-template-columns:1fr!important}
+  .sumbar,.sumbar.c2,.sumbar.c3,.sumbar.c4,.payment-metrics,.plan-list,.settings-template-grid{grid-template-columns:1fr!important}
   .sum-i{padding:.85rem 1rem}
   .card{overflow:hidden}
   .card-head,.db-tcard-head{align-items:flex-start;gap:.75rem;flex-direction:column;padding:.85rem 1rem;position:sticky;left:0;background:var(--white);z-index:1}
@@ -658,7 +650,6 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   #mo-inv .invoice-mob{height:94dvh;max-height:94dvh;overflow:hidden}
   #mo-inv .invoice-mo-body{padding:.85rem}
   #mo-inv .business-invoice-closing{grid-template-columns:1fr}
-  #mo-inv .invoice-default-template{grid-template-columns:88px minmax(0,1fr)}
   #mo-inv .litbl{display:block;min-width:0!important;width:100%}
   #mo-inv .litbl thead{display:none}
   #mo-inv .litbl tbody,#mo-inv .litbl tr{display:block;width:100%}
@@ -1112,8 +1103,6 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 <div class="mo" id="mo-inv"><div class="mob invoice-mob">
   <div class="mo-hd"><span class="mo-title" id="inv-mo-title">Create New Invoice</span><button class="mo-x" onclick="window.closeMo('mo-inv')">×</button></div>
   <div class="mo-bd invoice-mo-body">
-    <div class="fsec">Invoice Template</div>
-    <div class="tpl-grid" id="tpl-grid"></div>
     <div class="fsec">Customer &amp; Dates</div>
     <div class="business-invoice-fields">
     <div class="fg"><label>Select Saved Customer</label><select class="fi fsel" id="inv-customer-select" onchange="window.applyInvoiceCustomer(this.value)"></select><div class="form-note">Choose a saved customer to fill details, or type a new customer below.</div></div>
@@ -3043,7 +3032,6 @@ window.openInvMo = function openInvMo() {
   if (title) title.textContent = 'Create New Invoice';
   if (btn) btn.textContent = 'Create Invoice ✓';
   selTpl = normalizeBusinessTemplate(D.settings.defaultTpl);
-  buildTplPicker();
   buildInvoiceCustomerSelect('');
   document.getElementById('inv-date').valueAsDate = new Date();
   var due = new Date(); due.setDate(due.getDate()+30);
@@ -3055,17 +3043,6 @@ window.openInvMo = function openInvMo() {
   addLi();
   calcTotals();
   openMo('mo-inv');
-}
-
-function buildTplPicker() {
-  var grid = document.getElementById('tpl-grid');
-  if (!grid) return;
-  selTpl = normalizeBusinessTemplate(D.settings.defaultTpl);
-  var theme = invoiceTheme(selTpl);
-  grid.innerHTML = '<div class="invoice-default-template">' +
-    '<div class="tpl-card sel">' + templateMini(theme) + '<div class="tpl-name">' + escHtml(theme.name) + '</div></div>' +
-    '<div><strong>Using Settings default: ' + escHtml(theme.name) + '.</strong><p>All Business invoices and PDFs use the template selected in Settings. Change it there once and every invoice follows it.</p></div>' +
-  '</div>';
 }
 
 window.addLi = function addLi(item) {
@@ -3166,7 +3143,6 @@ window.editInv = function editInv(id) {
   var btn = document.getElementById('inv-save-btn');
   if (title) title.textContent = 'Edit Invoice';
   if (btn) btn.textContent = 'Save Invoice ✓';
-  buildTplPicker();
   buildInvoiceCustomerSelect(inv.client);
   document.getElementById('inv-cli').value = inv.client || '';
   document.getElementById('inv-cemail').value = inv.cemail || '';

@@ -7,6 +7,8 @@ const {
   invoiceFinancials,
   invoiceStatus,
   sanitizePublicInvoice,
+  sanitizePublicSnapshot,
+  canUseMappedSource,
   buildReminderMessage,
   assertSourceAccess
 } = require('../netlify/lib/invoice-share');
@@ -98,4 +100,32 @@ test('public sanitizer excludes private invoice and account fields', function() 
   assert.equal(Object.hasOwn(result, 'notes'), false);
   assert.equal(Object.hasOwn(result, 'ownerUid'), false);
   assert.equal(Object.hasOwn(result, 'editorUid'), false);
+});
+
+test('stored public snapshot is re-sanitized before being returned', function() {
+  const result = sanitizePublicSnapshot({
+    businessName: 'Public Business',
+    invoiceNumber: 'INV-0044',
+    customerName: 'Customer',
+    currency: 'lkr',
+    items: [{ description: 'Service', quantity: 1, unitPrice: 1200, total: 1200, privateNote: 'secret' }],
+    total: 1200,
+    outstanding: 1200,
+    ownerUid: 'private-workspace',
+    notes: 'Private bank notes'
+  });
+  assert.equal(result.currency, 'LKR');
+  assert.equal(result.items[0].description, 'Service');
+  assert.equal(Object.hasOwn(result.items[0], 'privateNote'), false);
+  assert.equal(Object.hasOwn(result, 'ownerUid'), false);
+  assert.equal(Object.hasOwn(result, 'notes'), false);
+});
+
+test('mapped source tolerates a missing flag but honors revocation and token replacement', function() {
+  const token = generatePublicToken();
+  const replacement = generatePublicToken();
+  assert.equal(canUseMappedSource({ num: 'INV-1' }, token), true);
+  assert.equal(canUseMappedSource({ publicInvoiceActive: true, publicToken: token }, token), true);
+  assert.equal(canUseMappedSource({ publicInvoiceActive: false, publicToken: token }, token), false);
+  assert.equal(canUseMappedSource({ publicInvoiceActive: true, publicToken: replacement }, token), false);
 });

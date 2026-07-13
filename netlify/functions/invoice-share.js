@@ -125,6 +125,7 @@ exports.handler = async function(event) {
       sourceInvoiceId: invoiceId,
       active: true,
       public: true,
+      invoice: publicInvoice,
       createdAt: invoice.publicToken === token && invoice.publicInvoiceCreatedAt ? invoice.publicInvoiceCreatedAt : now,
       updatedAt: now
     }, true);

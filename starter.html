@@ -239,12 +239,6 @@ body.is-admin .admin-only{display:flex}
 #inv-modal .invoice-modal-body{overflow-y:auto;min-height:0;padding:1rem 1.2rem;overscroll-behavior:contain}
 #inv-modal .invoice-modal-foot{position:static;flex:0 0 auto;padding:.75rem 1.2rem}
 #inv-modal .client-select-bar{padding:.7rem .8rem;margin-bottom:.75rem}
-#inv-modal .invoice-template-summary{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:1rem;align-items:center;border-bottom:1px solid var(--border);padding:0 0 .75rem;margin-bottom:.8rem}
-#inv-modal .invoice-template-summary .f-section{border:0;margin:0 0 .22rem;padding:0}
-#inv-modal .invoice-template-summary .template-helper{margin:0}
-#inv-modal .invoice-template-summary .tpl-picker{display:block;margin:0}
-#inv-modal .invoice-template-summary .tpl-pick-card{padding:.35rem}
-#inv-modal .invoice-template-summary .tpl-mini{height:40px;margin-bottom:.2rem}
 #inv-modal .invoice-form-columns{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:.2rem}
 #inv-modal .invoice-form-panel{min-width:0}
 #inv-modal .invoice-form-panel .f-section{margin:.25rem 0 .6rem}
@@ -494,7 +488,6 @@ body.is-admin .admin-only{display:flex}
 @media(max-width:760px){
   #inv-modal .invoice-modal-box{height:94dvh;max-height:94dvh;overflow:hidden}
   #inv-modal .invoice-modal-body{padding:.85rem}
-  #inv-modal .invoice-template-summary{grid-template-columns:minmax(0,1fr) 108px;gap:.65rem}
   #inv-modal .invoice-form-columns,#inv-modal .invoice-closing-grid{grid-template-columns:1fr}
   #inv-modal .invoice-summary-panel .f-section{text-align:left}
   #inv-modal .li-table{display:block;min-width:0!important;width:100%}
@@ -1107,10 +1100,6 @@ document.addEventListener('click',function(e){
           </select>
         </div>
         <button class="btn-act-outline" style="flex-shrink:0;padding:.65rem 1rem;height:42px" data-cls-fn="closeAndOpenClient">+ New Customer</button>
-      </div>
-      <div class="invoice-template-summary">
-        <div><div class="f-section">Invoice Template</div><div class="template-helper">Default: <strong id="inv-default-tpl-name">Furniture Pop</strong></div></div>
-        <div class="tpl-picker locked" id="invoice-template-preview"></div>
       </div>
       <div class="invoice-form-columns">
       <section class="invoice-form-panel">
@@ -2265,18 +2254,12 @@ function syncTemplatePickers(idx){
     card.classList.toggle('selected',normalizeTemplateIdx(card.getAttribute('data-tpl'))===tpl);
     card.classList.toggle('sel',normalizeTemplateIdx(card.getAttribute('data-tpl'))===tpl);
   });
-  const modalName=document.getElementById('inv-default-tpl-name');
-  if(modalName)modalName.textContent=templateName(tpl);
 }
 function renderInvoiceTemplateCards(tpl){
   tpl=normalizeTemplateIdx(tpl);
   const settingsGrid=document.getElementById('settings-template-picker');
   if(settingsGrid&&window.clsInvoiceTemplateCards){
     settingsGrid.innerHTML=window.clsInvoiceTemplateCards(tpl,{group:'settings',fn:'selectDefaultInvoiceTemplate'});
-  }
-  const invoiceGrid=document.getElementById('invoice-template-preview');
-  if(invoiceGrid&&window.clsInvoiceTemplateCards){
-    invoiceGrid.innerHTML=window.clsInvoiceTemplateCards(tpl,{group:'invoice',locked:true});
   }
 }
 function setInvoiceTemplate(idx){

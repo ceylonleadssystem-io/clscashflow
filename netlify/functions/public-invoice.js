@@ -5,7 +5,9 @@ const {
 } = require('../lib/supabase');
 const {
   isValidPublicToken,
-  sanitizePublicInvoice
+  sanitizePublicInvoice,
+  sanitizePublicSnapshot,
+  canUseMappedSource
 } = require('../lib/invoice-share');
 
 const requests = new Map();
@@ -64,13 +66,22 @@ exports.handler = async function(event) {
       return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
     }
     const source = await getDocument('users/' + ownerUid + '/invoices', sourceInvoiceId);
-    if (!source || source.data.publicInvoiceActive !== true || source.data.publicToken !== token) {
+    if (source && !canUseMappedSource(source.data, token)) {
       return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
     }
-    const profile = await getDocument('users', ownerUid);
+    if (source) {
+      const profile = await getDocument('users', ownerUid);
+      return response(200, {
+        ok: true,
+        invoice: sanitizePublicInvoice(source.data || {}, profile ? profile.data || {} : {})
+      });
+    }
+    if (!shareData.invoice || typeof shareData.invoice !== 'object') {
+      return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
+    }
     return response(200, {
       ok: true,
-      invoice: sanitizePublicInvoice(source.data || {}, profile ? profile.data || {} : {})
+      invoice: sanitizePublicSnapshot(shareData.invoice)
     });
   } catch (error) {
     console.error('public-invoice error', error);
