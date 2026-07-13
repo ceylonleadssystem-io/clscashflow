@@ -1,0 +1,155 @@
+const {
+  clean,
+  headers,
+  getUserFromEvent,
+  getDocument,
+  queryDocuments,
+  upsertDocument,
+  canWrite
+} = require('../lib/supabase');
+const {
+  normalizeWhatsAppNumber,
+  generatePublicToken,
+  isValidPublicToken,
+  sanitizePublicInvoice,
+  buildReminderMessage,
+  assertSourceAccess
+} = require('../lib/invoice-share');
+
+const MISSING_PHONE = 'Please add the customer\u2019s WhatsApp number before sending a reminder.';
+const INVALID_PHONE = 'Please enter a valid WhatsApp number including the country code.';
+
+function response(statusCode, body) {
+  return { statusCode, headers: headers({ 'Cache-Control': 'no-store' }), body: JSON.stringify(body) };
+}
+
+function publicBase(event) {
+  const configured = clean(process.env.PUBLIC_SITE_URL || process.env.URL || process.env.DEPLOY_PRIME_URL, 500);
+  if (configured) return configured.replace(/\/$/, '');
+  const host = clean(event.headers['x-forwarded-host'] || event.headers.host, 300);
+  const proto = clean(event.headers['x-forwarded-proto'] || 'https', 20);
+  return host ? proto + '://' + host : 'https://ceylonrylabs.io';
+}
+
+async function uniqueToken(existingToken, ownerUid, invoiceId) {
+  if (isValidPublicToken(existingToken)) {
+    const existing = await getDocument('publicInvoices', existingToken);
+    if (!existing || (existing.data.ownerUid === ownerUid && existing.data.sourceInvoiceId === invoiceId)) {
+      return existingToken;
+    }
+  }
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const token = generatePublicToken();
+    if (!await getDocument('publicInvoices', token)) return token;
+  }
+  const error = new Error('Could not generate the public invoice link. Please try again.');
+  error.statusCode = 503;
+  throw error;
+}
+
+function customerMatches(invoice, customer) {
+  const invName = clean(invoice.client || invoice.clientName, 180).toLowerCase();
+  const invEmail = clean(invoice.cemail || invoice.email, 240).toLowerCase();
+  const customerNames = [customer.biz, customer.name].map(function(value) { return clean(value, 180).toLowerCase(); });
+  return (invName && customerNames.includes(invName)) ||
+    (invEmail && invEmail === clean(customer.email, 240).toLowerCase());
+}
+
+async function findCustomer(ownerUid, invoice, requestedId) {
+  const path = 'users/' + ownerUid + '/clients';
+  if (requestedId) {
+    const requested = await getDocument(path, clean(requestedId, 240));
+    if (requested && customerMatches(invoice, requested.data || {})) return requested;
+  }
+  const rows = await queryDocuments(path, { fetchLimit: 500 });
+  return rows.find(function(row) { return customerMatches(invoice, row.data || {}); }) || null;
+}
+
+exports.handler = async function(event) {
+  if (event.httpMethod === 'OPTIONS') return response(200, { ok: true });
+  if (event.httpMethod !== 'POST') return response(405, { ok: false, error: 'Method not allowed.' });
+
+  try {
+    const user = await getUserFromEvent(event);
+    if (!user) return response(401, { ok: false, error: 'Please sign in again.' });
+    const body = JSON.parse(event.body || '{}');
+    const ownerUid = clean(body.ownerUid || user.id, 240);
+    const invoiceId = clean(body.invoiceId, 240);
+    if (!/^[0-9a-f-]{36}$/i.test(ownerUid) || !invoiceId) {
+      return response(400, { ok: false, error: 'Could not identify this invoice.' });
+    }
+
+    const invoicePath = 'users/' + ownerUid + '/invoices';
+    const source = await getDocument(invoicePath, invoiceId);
+    if (!source) return response(404, { ok: false, error: 'Invoice not found.' });
+    const allowed = await canWrite(invoicePath, invoiceId, source.data || {}, user);
+    assertSourceAccess(ownerUid, user, allowed);
+
+    const invoice = Object.assign({}, source.data || {});
+    const customer = await findCustomer(ownerUid, invoice, body.customerId).catch(function() { return null; });
+    const rawPhone = invoice.cphone || invoice.phone || (customer && customer.data && customer.data.phone) || '';
+    const phone = normalizeWhatsAppNumber(rawPhone);
+    if (!rawPhone) return response(400, { ok: false, error: MISSING_PHONE, code: 'missing_phone' });
+    if (!phone.ok) return response(400, { ok: false, error: INVALID_PHONE, code: 'invalid_phone' });
+
+    const profileDoc = await getDocument('users', ownerUid);
+    const profile = profileDoc ? profileDoc.data || {} : {};
+    const token = await uniqueToken(invoice.publicToken, ownerUid, invoiceId);
+    const publicUrl = publicBase(event) + '/i/' + token;
+    const now = new Date().toISOString();
+    const publicInvoice = sanitizePublicInvoice(invoice, profile);
+    const priorHistory = Array.isArray(invoice.whatsappReminderHistory) ? invoice.whatsappReminderHistory.slice(-99) : [];
+    const entry = {
+      invoiceId,
+      customerId: customer ? customer.id : '',
+      initiatedBy: user.id,
+      whatsappNumber: phone.number,
+      reminderType: 'manual WhatsApp reminder',
+      publicInvoiceUrl: publicUrl,
+      initiatedAt: now,
+      status: 'WhatsApp opened'
+    };
+    const reminderCount = Math.max(0, Number(invoice.whatsappReminderCount) || 0) + 1;
+    const nextInvoice = Object.assign({}, invoice, {
+      publicToken: token,
+      publicInvoiceActive: true,
+      publicInvoiceUrl: publicUrl,
+      publicInvoiceCreatedAt: invoice.publicInvoiceCreatedAt || now,
+      whatsappReminderCount: reminderCount,
+      lastWhatsappReminderAt: now,
+      whatsappReminderHistory: priorHistory.concat(entry)
+    });
+
+    await upsertDocument('publicInvoices', token, {
+      ownerUid,
+      sourceInvoiceId: invoiceId,
+      active: true,
+      public: true,
+      createdAt: invoice.publicToken === token && invoice.publicInvoiceCreatedAt ? invoice.publicInvoiceCreatedAt : now,
+      updatedAt: now
+    }, true);
+    await upsertDocument(invoicePath, invoiceId, nextInvoice, false);
+
+    const message = buildReminderMessage(publicInvoice, publicUrl);
+    return response(200, {
+      ok: true,
+      publicToken: token,
+      publicInvoiceUrl: publicUrl,
+      publicInvoiceCreatedAt: nextInvoice.publicInvoiceCreatedAt,
+      whatsappNumber: phone.number,
+      message,
+      whatsappUrl: 'https://wa.me/' + phone.number + '?text=' + encodeURIComponent(message),
+      reminderCount,
+      lastReminderAt: now,
+      reminderEntry: entry
+    });
+  } catch (error) {
+    console.error('invoice-share error', error);
+    return response(error.statusCode || 500, {
+      ok: false,
+      error: error.statusCode && error.statusCode < 500
+        ? error.message
+        : 'Could not generate the invoice link. Please try again.'
+    });
+  }
+};

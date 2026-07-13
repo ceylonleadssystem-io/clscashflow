@@ -13,6 +13,11 @@
   to = "/mrs-gamage-story.html"
   status = 200
 
+[[redirects]]
+  from = "/i/:token"
+  to = "/invoice-public.html?token=:token"
+  status = 200
+
 # Standard security headers (no restrictive CSP, so inline scripts keep working)
 [[headers]]
   for = "/*"

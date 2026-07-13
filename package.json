@@ -4,7 +4,8 @@
   "description": "CeylonryLabs.io CashFlow — Solo/Studio/Business SaaS",
   "private": true,
   "scripts": {
-    "build": "echo \"Static Supabase site: no build step required\""
+    "build": "echo \"Static Supabase site: no build step required\"",
+    "test": "node --test tests/*.test.js"
   },
   "engines": {
     "node": ">=20"

@@ -940,10 +940,11 @@
     var titleFont = font.title;
     var css = '@page{size:A4;margin:0}' +
       '*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}' +
-      'html,body{width:210mm;min-height:297mm;background:#fff;color:#18130f;font-family:' + bodyFont + '}' +
-      'body{margin:0}.invoice-page{width:210mm;min-height:297mm;overflow:visible;margin:0 auto;background:var(--paper);color:#18130f;padding:18mm 18mm 12mm;display:flex;flex-direction:column;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--paper:' + (theme.paper || '#fff') + ';--line:rgba(24,19,15,.16);font-family:' + bodyFont + '}' +
+      'html,body{width:210mm;min-height:0;background:#fff;color:#18130f;font-family:' + bodyFont + '}' +
+      'body{margin:0}.invoice-page{width:210mm;min-height:0;overflow:visible;margin:0 auto;background:var(--paper);color:#18130f;padding:11mm 12mm 8mm;display:block;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--paper:' + (theme.paper || '#fff') + ';--line:rgba(24,19,15,.16);font-family:' + bodyFont + '}' +
       '.brand-rule{height:4px;background:var(--accent);margin-bottom:14mm}.invoice-head{display:grid;grid-template-columns:minmax(0,1fr) 64mm;gap:12mm;align-items:start;margin-bottom:13mm;border-bottom:2px solid var(--dark);padding-bottom:9mm}.brand{text-align:' + (s.logoAlign === 'right' ? 'right' : (s.logoAlign === 'center' ? 'center' : 'left')) + '}.logo-img{display:inline-block;object-fit:contain;margin-bottom:5mm}.logo-box{display:inline-flex;width:28mm;height:16mm;border:1px dashed var(--line);align-items:center;justify-content:center;font-size:9px;letter-spacing:3px;color:#9b9188;margin-bottom:5mm}.biz-name{font-family:' + titleFont + ';font-size:24px;line-height:1.15;font-weight:800;color:#111}.muted{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line;word-break:break-word}.invoice-title{text-align:right}.invoice-title h1{font-family:' + titleFont + ';font-size:36px;line-height:1;text-transform:uppercase;letter-spacing:5px;color:#111}.invoice-title .num{margin-top:4mm;font-size:12px;font-weight:800;letter-spacing:.04em}.invoice-title .meta{margin-top:5mm;font-size:10.5px;line-height:1.7;color:#6e635a}.parties{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18mm;padding:0 0 8mm;margin-bottom:8mm}.label{font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:3mm}.party-name{font-size:14px;font-weight:800;line-height:1.25;margin-bottom:2mm}.items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8mm}.items th{background:transparent;color:#18130f;border-bottom:2px solid var(--dark);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:0 10px 7px}.items th:nth-child(1){width:49%}.items th:nth-child(2){width:10%}.items th:nth-child(3){width:20%}.items th:nth-child(4){width:21%}.items th:nth-child(n+2),.items td:nth-child(n+2){text-align:right}.items td{border-bottom:1px solid var(--line);padding:9px 10px;font-size:10.5px;line-height:1.35;vertical-align:top;word-break:break-word}.line-no{display:inline-block;min-width:18px;margin-right:7px;font-weight:800;color:var(--accent)}.line-desc{font-weight:650}.money-row{display:flex;justify-content:space-between;gap:10mm;border-bottom:1px solid var(--line);padding:6px 0;font-size:10.5px;color:#594f47}.money-row b{color:#111;font-variant-numeric:tabular-nums}.invoice-bottom{display:grid;grid-template-columns:minmax(0,1fr) 74mm;gap:14mm;align-items:start;margin-top:auto;padding-top:0}.notes{padding-left:0;min-height:22mm}.note-text{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line}.totals{border-top:1px solid var(--line);padding-top:2mm}.grand{margin-top:4mm;background:var(--dark);color:#fff!important;border:0;padding:11px 13px;align-items:center}.grand span{font-size:8.5px;letter-spacing:2.8px;text-transform:uppercase;font-weight:800}.grand b{font-size:17px;color:#fff}.powered{margin-top:8mm;padding-top:7mm;text-align:center;font-size:9px;letter-spacing:.04em;color:#7d736a}.powered b{color:#18130f}.view-classic .invoice-title h1,.view-olden .invoice-title h1{text-transform:none;letter-spacing:0}.view-olden{--paper:#fbf4e8}.view-olden .brand-rule{height:6px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.view-minimal{--paper:#fff}.view-minimal .brand-rule,.view-minimal .grand{background:#111}.view-bold .brand-rule{background:var(--dark)}.tpl-pop .grand{background:var(--accent);color:#1b1713}.tpl-green .grand,.tpl-yellow .grand{background:var(--accent);color:#111}.tpl-green .grand b,.tpl-yellow .grand b,.tpl-pop .grand b{color:#111}@media print{html,body{background:#fff}.invoice-page{box-shadow:none;margin:0;min-height:297mm;height:auto}}';
-    css += '.invoice-page{padding:10mm 10mm 9mm!important}.brand-rule{height:5px!important;margin-bottom:10mm!important}.invoice-head{grid-template-columns:minmax(0,1fr) 70mm!important;gap:10mm!important;margin-bottom:10mm!important;padding-bottom:8mm!important}.logo-img{margin-bottom:4mm!important}.logo-box{width:34mm!important;height:21mm!important;margin-bottom:4mm!important}.biz-name{font-size:31px!important}.muted{font-size:12.5px!important;line-height:1.5!important}.invoice-title h1{font-size:52px!important;letter-spacing:6px!important}.invoice-title .num{font-size:14px!important;margin-top:5mm!important}.invoice-title .meta{font-size:12.5px!important;line-height:1.65!important}.parties{gap:16mm!important;padding-bottom:8mm!important;margin-bottom:8mm!important}.label{font-size:9.5px!important;margin-bottom:3.5mm!important}.party-name{font-size:17.5px!important}.items{margin-bottom:6mm!important}.items th{font-size:9.5px!important;padding:0 9px 8px!important}.items td{font-size:13px!important;padding:10px 9px!important}.line-no{min-width:22px!important;margin-right:8px!important}.invoice-bottom{grid-template-columns:minmax(0,1fr) 84mm!important;gap:12mm!important;margin-top:auto!important}.notes{min-height:20mm!important}.note-text,.money-row{font-size:12px!important}.grand{padding:13px 15px!important}.grand b{font-size:22px!important}.powered{margin-top:8mm!important;padding-top:5mm!important;font-size:10px!important}@media print{.invoice-page{padding:10mm 10mm 9mm!important;min-height:297mm!important;height:auto!important}}';
+    css += '.invoice-page{padding:11mm 12mm 8mm!important;min-height:0!important;height:auto!important;display:block!important}.brand-rule{height:4px!important;margin-bottom:6mm!important}.invoice-head{grid-template-columns:minmax(0,1fr) 56mm!important;gap:8mm!important;margin-bottom:6mm!important;padding-bottom:5mm!important}.logo-img{max-height:15mm!important;margin-bottom:2.5mm!important}.logo-box{width:26mm!important;height:14mm!important;margin-bottom:2.5mm!important}.biz-name{font-size:22px!important}.muted{font-size:10px!important;line-height:1.4!important}.invoice-title h1{font-size:34px!important;letter-spacing:4px!important}.invoice-title .num{font-size:11px!important;margin-top:3mm!important}.invoice-title .meta{font-size:10px!important;line-height:1.5!important;margin-top:3mm!important}.parties{gap:12mm!important;padding-bottom:5mm!important;margin-bottom:5mm!important}.label{font-size:8px!important;margin-bottom:2mm!important}.party-name{font-size:13px!important;margin-bottom:1.5mm!important}.items{margin-bottom:5mm!important;break-inside:auto!important;page-break-inside:auto!important}.items thead{display:table-header-group}.items tr{break-inside:avoid;page-break-inside:avoid}.items th{font-size:8px!important;padding:0 7px 6px!important}.items td{font-size:10px!important;line-height:1.3!important;padding:7px!important}.line-no{min-width:18px!important;margin-right:6px!important}.invoice-bottom{grid-template-columns:minmax(0,1fr) 68mm!important;gap:10mm!important;margin-top:0!important;break-inside:avoid;page-break-inside:avoid}.notes{min-height:0!important}.note-text,.money-row{font-size:10px!important}.money-row{padding:5px 0!important}.grand{margin-top:3mm!important;padding:9px 11px!important}.grand b{font-size:16px!important}.powered{margin-top:5mm!important;padding-top:3mm!important;font-size:8.5px!important;break-inside:avoid;page-break-inside:avoid}.invoice-head,.parties{break-inside:avoid;page-break-inside:avoid}@media print{html,body{width:210mm!important;min-height:0!important}.invoice-page{width:210mm!important;padding:11mm 12mm 8mm!important;min-height:0!important;height:auto!important;overflow:visible!important}}';
+    css += 'body{background:' + (theme.paper || '#fff') + '!important}@media print{html,body{background:' + (theme.paper || '#fff') + '!important}}';
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceEscape(title) + '</title><style>' + css + '</style></head><body>' +
       '<div class="invoice-page tpl-' + cssLayout + ' view-' + view + '"><div class="brand-rule"></div>' +
       '<section class="invoice-head"><div class="brand">' + logo + '<div class="biz-name">' + invoiceEscape(s.biz) + '</div><div class="muted">' + invoiceBreaks(s.addr) + (s.email ? '<br>' + invoiceEscape(s.email) : '') + (s.vat ? '<br>VAT: ' + invoiceEscape(s.vat) : '') + '</div></div><div class="invoice-title"><h1>Invoice</h1><div class="num">' + invoiceEscape(title) + '</div><div class="meta"><div>Date: ' + humanDate(inv.date) + '</div><div>Due: ' + humanDate(inv.due) + '</div><div>Terms: ' + invoiceEscape(inv.terms || 'Net 30') + '</div></div></div></section>' +
@@ -2634,6 +2635,118 @@
 	      }
 	    });
 	  }
+
+  function normalizeInvoiceWhatsAppNumber(value) {
+    var raw = cleanString(value, 40);
+    if (!raw) return { ok: false, reason: 'missing', number: '' };
+    var hadPlus = /^\s*\+/.test(raw);
+    var hadInternationalPrefix = /^\s*00/.test(raw);
+    var digits = raw.replace(/\D/g, '');
+    if (hadInternationalPrefix && digits.indexOf('00') === 0) digits = digits.slice(2);
+    if (!hadPlus && !hadInternationalPrefix && /^0\d{9}$/.test(digits)) digits = '94' + digits.slice(1);
+    if (!/^\d{8,15}$/.test(digits) || digits.charAt(0) === '0') {
+      return { ok: false, reason: 'invalid', number: '' };
+    }
+    return { ok: true, reason: '', number: digits };
+  }
+
+  function invoiceReminderFinancials(invoice) {
+    invoice = invoice || {};
+    var total = Number(invoice.total != null ? invoice.total : invoice.amount) || 0;
+    var paid = Number(invoice.paid != null ? invoice.paid : invoice.paidAmount) || 0;
+    return { total: total, outstanding: Math.max(0, total - paid) };
+  }
+
+  var invoiceReminderRequests = {};
+
+  window.clsNormalizeInvoiceWhatsAppNumber = normalizeInvoiceWhatsAppNumber;
+
+  window.clsInvoiceReminderMeta = function clsInvoiceReminderMeta(invoice) {
+    invoice = invoice || {};
+    var count = Math.max(0, Number(invoice.whatsappReminderCount) || 0);
+    if (!count) return '';
+    var date = new Date(invoice.lastWhatsappReminderAt || '');
+    var dateText = isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    }).format(date);
+    return (dateText ? 'Last WA ' + dateText + ' · ' : '') + count + ' reminder' + (count === 1 ? '' : 's');
+  };
+
+  window.clsOpenInvoiceWhatsAppReminder = async function clsOpenInvoiceWhatsAppReminder(options) {
+    options = options || {};
+    var invoice = options.invoice || {};
+    var invoiceId = cleanString(options.invoiceId || invoice.num || invoice.id, 240);
+    var phone = normalizeInvoiceWhatsAppNumber(options.phone || invoice.cphone || invoice.phone || '');
+    if (phone.reason === 'missing') {
+      alert('Please add the customer\u2019s WhatsApp number before sending a reminder.');
+      return false;
+    }
+    if (!phone.ok) {
+      alert('Please enter a valid WhatsApp number including the country code.');
+      return false;
+    }
+    var financials = invoiceReminderFinancials(invoice);
+    var isPaid = String(invoice.status || '').toLowerCase() === 'paid' || (financials.total > 0 && financials.outstanding <= 0.01);
+    if (isPaid && !confirm('This invoice is already marked as paid. Do you still want to send it?')) return false;
+    if (!invoiceId || invoiceReminderRequests[invoiceId]) return false;
+
+    var user = getAuthUser();
+    if (!user || typeof user.getIdToken !== 'function') {
+      alert('Please sign in again before sending this reminder.');
+      return false;
+    }
+
+    invoiceReminderRequests[invoiceId] = true;
+    var popup = window.open('', '_blank');
+    if (popup) {
+      try {
+        popup.document.title = 'Opening WhatsApp';
+        popup.document.body.innerHTML = '<p style="font:16px Arial,sans-serif;padding:28px;color:#1a1714">Preparing the secure invoice link...</p>';
+      } catch (e) {}
+    }
+    try {
+      var token = await user.getIdToken();
+      if (!token) throw new Error('Please sign in again before sending this reminder.');
+      var res = await fetch('/.netlify/functions/invoice-share', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          ownerUid: options.ownerUid || user.uid,
+          invoiceId: invoiceId,
+          customerId: options.customerId || '',
+          plan: options.plan || ''
+        })
+      });
+      var json = await res.json().catch(function() { return {}; });
+      if (!res.ok || !json.ok || !json.whatsappUrl) {
+        throw new Error(json.error || 'Could not generate the invoice link. Please try again.');
+      }
+      invoice.publicToken = json.publicToken;
+      invoice.publicInvoiceActive = true;
+      invoice.publicInvoiceUrl = json.publicInvoiceUrl;
+      invoice.publicInvoiceCreatedAt = json.publicInvoiceCreatedAt || invoice.publicInvoiceCreatedAt || json.lastReminderAt;
+      invoice.whatsappReminderCount = json.reminderCount;
+      invoice.lastWhatsappReminderAt = json.lastReminderAt;
+      if (json.reminderEntry) {
+        invoice.whatsappReminderHistory = Array.isArray(invoice.whatsappReminderHistory)
+          ? invoice.whatsappReminderHistory.slice(-99).concat(json.reminderEntry)
+          : [json.reminderEntry];
+      }
+      if (typeof options.onUpdated === 'function') options.onUpdated(invoice, json);
+      if (popup && !popup.closed) popup.location.replace(json.whatsappUrl);
+      else window.location.href = json.whatsappUrl;
+      return true;
+    } catch (error) {
+      if (popup && !popup.closed) popup.close();
+      alert(error && error.message ? error.message : 'Could not generate the invoice link. Please try again.');
+      return false;
+    } finally {
+      delete invoiceReminderRequests[invoiceId];
+    }
+  };
 
   function prefetchPortalPages() {
     if (!isPortalPath()) return;

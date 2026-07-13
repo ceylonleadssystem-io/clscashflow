@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260712-performance"></script>
+<script src="assets/platform.js?v=20260713-invoice-sharing"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -259,6 +259,27 @@ tr:hover td{background:var(--bg3)}
 .mo-x:hover{background:var(--bg3);color:var(--black)}
 .mo-bd{padding:1.35rem}
 .mo-ft{padding:.88rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.6rem;justify-content:flex-end;position:sticky;bottom:0;background:var(--white);border-radius:0 0 8px 8px}
+#mo-inv .invoice-mob{max-width:900px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+#mo-inv .mo-hd{position:static;flex:0 0 auto;padding:.9rem 1.25rem}
+#mo-inv .invoice-mo-body{overflow-y:auto;min-height:0;padding:1rem 1.2rem;overscroll-behavior:contain}
+#mo-inv .invoice-mo-footer{position:static;flex:0 0 auto;padding:.75rem 1.2rem}
+#mo-inv .fsec{margin:.7rem 0 .5rem}
+#mo-inv .invoice-default-template{grid-template-columns:96px minmax(0,1fr);padding:.55rem .7rem;gap:.7rem}
+#mo-inv .invoice-default-template .tpl-mini{height:38px}
+#mo-inv .invoice-default-template p{display:none}
+#mo-inv .business-invoice-fields .fg{margin-bottom:.65rem}
+#mo-inv .frow{gap:.7rem;margin-bottom:.65rem}
+#mo-inv .fi{padding:.56rem .72rem}
+#mo-inv .litbl{margin-bottom:.48rem;table-layout:fixed}
+#mo-inv .litbl th{padding:.36rem .42rem}
+#mo-inv .litbl td{padding:.25rem .3rem}
+#mo-inv .litbl td textarea{min-height:38px;padding:.34rem .4rem}
+#mo-inv .li-add{padding:.4rem;margin-bottom:.55rem}
+#mo-inv .business-invoice-closing{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:1.2rem;align-items:start;margin-top:.35rem}
+#mo-inv .business-invoice-closing .fg{margin-bottom:0}
+#mo-inv .invoice-tax-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.55rem}
+#mo-inv .inv-totals{align-items:stretch;padding-top:.15rem}
+#mo-inv .itr{justify-content:space-between}
 
 /* LINE ITEMS */
 .litbl{width:100%;border-collapse:collapse;margin-bottom:.62rem}
@@ -632,6 +653,27 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .nav-item{min-width:70px;flex-basis:70px}
   .pg-sub{max-width:180px}
   .settings-tabs{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  #mo-inv .invoice-mob{height:94dvh;max-height:94dvh;overflow:hidden}
+  #mo-inv .invoice-mo-body{padding:.85rem}
+  #mo-inv .business-invoice-closing{grid-template-columns:1fr}
+  #mo-inv .invoice-default-template{grid-template-columns:88px minmax(0,1fr)}
+  #mo-inv .litbl{display:block;min-width:0!important;width:100%}
+  #mo-inv .litbl thead{display:none}
+  #mo-inv .litbl tbody,#mo-inv .litbl tr{display:block;width:100%}
+  #mo-inv .litbl tr{position:relative;border:1px solid var(--border);background:var(--white);padding:.5rem;margin-bottom:.55rem}
+  #mo-inv .litbl td{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:.55rem;width:100%;border:0;border-bottom:1px solid var(--border);padding:.42rem .2rem;text-align:left!important}
+  #mo-inv .litbl td:first-child{display:block;padding:.2rem 1.8rem .45rem .2rem}
+  #mo-inv .litbl td:first-child::before,#mo-inv .litbl td:last-child::before{display:none}
+  #mo-inv .litbl td:nth-child(2)::before{content:'Quantity'}
+  #mo-inv .litbl td:nth-child(3)::before{content:'Unit price'}
+  #mo-inv .litbl td:nth-child(4)::before{content:'Line total'}
+  #mo-inv .litbl td::before{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  #mo-inv .litbl td:last-child{position:absolute;top:.35rem;right:.35rem;display:block;width:auto;border:0;padding:0}
+  #mo-inv .litbl td:nth-last-child(2){border-bottom:0}
+  #mo-inv .litbl td input{border:1px solid var(--border);padding:.5rem}
+  #mo-inv .li-tot{text-align:right!important}
 }
 @media print{
   body>*:not(#print-inv){display:none!important}
@@ -1067,26 +1109,30 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-exp')">Cancel</button><button class="btn bd" onclick="window.addExp()">Save Expense</button></div>
 </div></div>
 
-<div class="mo" id="mo-inv"><div class="mob">
+<div class="mo" id="mo-inv"><div class="mob invoice-mob">
   <div class="mo-hd"><span class="mo-title" id="inv-mo-title">Create New Invoice</span><button class="mo-x" onclick="window.closeMo('mo-inv')">×</button></div>
-  <div class="mo-bd">
+  <div class="mo-bd invoice-mo-body">
     <div class="fsec">Invoice Template</div>
     <div class="tpl-grid" id="tpl-grid"></div>
     <div class="fsec">Customer &amp; Dates</div>
+    <div class="business-invoice-fields">
     <div class="fg"><label>Select Saved Customer</label><select class="fi fsel" id="inv-customer-select" onchange="window.applyInvoiceCustomer(this.value)"></select><div class="form-note">Choose a saved customer to fill details, or type a new customer below.</div></div>
     <div class="frow"><div class="fg"><label>Customer Name</label><input class="fi" id="inv-cli" placeholder="Who is this invoice for?"></div><div class="fg"><label>Customer Email</label><input class="fi" type="email" id="inv-cemail" placeholder="customer@email.com"></div></div>
     <div class="frow"><div class="fg"><label>Customer Address</label><textarea class="fi fi-textarea" id="inv-caddr" placeholder="Their billing address"></textarea></div><div class="fg"><label>Customer Phone / WhatsApp</label><input class="fi" id="inv-cphone" placeholder="+94 77 000 0000"></div></div>
     <div class="frow"><div class="fg"><label>Invoice Date</label><input class="fi" type="date" id="inv-date"></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="inv-due"></div></div>
+    </div>
     <div class="fsec">What Are You Billing For?</div>
     <table class="litbl"><thead><tr><th style="width:44%">Description</th><th style="width:12%">Qty</th><th style="width:20%">Unit Price (LKR)</th><th style="width:18%">Total</th><th style="width:6%"></th></tr></thead><tbody id="li-body"></tbody></table>
     <button class="li-add" onclick="window.addLi()">+ Add Another Item</button>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;align-items:start">
+    <div class="business-invoice-closing">
       <div class="fg" style="margin-bottom:0"><label>Note to Customer (optional)</label><textarea class="fi fi-textarea" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></textarea></div>
-      <div class="inv-totals" id="inv-totals"></div>
+      <div>
+        <div class="invoice-tax-grid"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" min="0" max="100" step="0.01" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="number" id="inv-disc" value="0" min="0" step="0.01" oninput="calcTotals()"></div></div>
+        <div class="inv-totals" id="inv-totals"></div>
+      </div>
     </div>
-    <div class="frow" style="margin-top:.88rem"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" min="0" max="100" step="0.01" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="number" id="inv-disc" value="0" min="0" step="0.01" oninput="calcTotals()"></div></div>
   </div>
-  <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-inv')">Cancel</button><button class="btn bd" id="inv-save-btn" onclick="window.saveInv()">Create Invoice ✓</button></div>
+  <div class="mo-ft invoice-mo-footer"><button class="btn bo" onclick="window.closeMo('mo-inv')">Cancel</button><button class="btn bd" id="inv-save-btn" onclick="window.saveInv()">Create Invoice ✓</button></div>
 </div></div>
 
 <div class="mo" id="mo-pay"><div class="mob" style="max-width:440px">
@@ -1251,11 +1297,33 @@ function renderBusinessTourStep() {
 }
 window.startBusinessTour = function startBusinessTour() { growthTourIndex = 0; renderBusinessTourStep(); };
 window.nextBusinessTour = function nextBusinessTour() { growthTourIndex = Math.min(growthTourIndex + 1, growthTourSteps.length - 1); renderBusinessTourStep(); };
-window.skipBusinessTour = function skipBusinessTour() { localStorage.removeItem('cls-growth-tour-pending'); var ov = document.getElementById('growth-tour'); if (ov) ov.remove(); };
-window.finishBusinessTour = function finishBusinessTour() { localStorage.removeItem('cls-growth-tour-pending'); var ov = document.getElementById('growth-tour'); if (ov) ov.remove(); };
+function businessTourStorageKey() { return 'cls-business-tour-seen-' + (_signedInUid || _uid || 'local'); }
+function markBusinessTourSeen() {
+  try {
+    localStorage.setItem(businessTourStorageKey(), '1');
+    localStorage.removeItem('cls-growth-tour-pending');
+  } catch (e) {}
+  if (_profile) _profile.businessTourSeen = true;
+  if (_signedInUid && _fdb) {
+    _fdb.collection('users').doc(_signedInUid).set({
+      businessTourSeen: true,
+      businessTourSeenAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(function(e) { console.warn('Could not sync Business tour status:', e); });
+  }
+}
+window.skipBusinessTour = function skipBusinessTour() { markBusinessTourSeen(); var ov = document.getElementById('growth-tour'); if (ov) ov.remove(); };
+window.finishBusinessTour = function finishBusinessTour() { markBusinessTourSeen(); var ov = document.getElementById('growth-tour'); if (ov) ov.remove(); };
 function maybeStartBusinessTour() {
   var params = new URLSearchParams(window.location.search);
+  var localSeen = localStorage.getItem(businessTourStorageKey()) === '1';
+  var profileSeen = !!(_profile && _profile.businessTourSeen === true);
+  if (localSeen || profileSeen) {
+    if (profileSeen && !localSeen) localStorage.setItem(businessTourStorageKey(), '1');
+    if (localSeen && !profileSeen) markBusinessTourSeen();
+    return;
+  }
   if (localStorage.getItem('cls-growth-tour-pending') || params.get('upgraded') === 'business') {
+    markBusinessTourSeen();
     setTimeout(function() { window.startBusinessTour(); }, 900);
   }
 }
@@ -1648,7 +1716,14 @@ function mapStudioInvoice(inv, i) {
     paid:paid,
     paidAmount:paid,
     tpl:normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),
-    notes:inv.notes || D.settings.footer || ''
+    notes:inv.notes || D.settings.footer || '',
+    publicToken:inv.publicToken || '',
+    publicInvoiceActive:inv.publicInvoiceActive === true,
+    publicInvoiceUrl:inv.publicInvoiceUrl || '',
+    publicInvoiceCreatedAt:inv.publicInvoiceCreatedAt || '',
+    whatsappReminderCount:toNum(inv.whatsappReminderCount),
+    lastWhatsappReminderAt:inv.lastWhatsappReminderAt || '',
+    whatsappReminderHistory:Array.isArray(inv.whatsappReminderHistory) ? inv.whatsappReminderHistory : []
   };
 }
 function mapStudioTransaction(t, i) {
@@ -1848,7 +1923,7 @@ function normalizeBusinessData() {
     var payments = (inv.payments || []).map(function(p, pi) {
       return {id:String(p.id || ('P' + Date.now() + pi)), date:p.date || today(), amount:toNum(p.amount), method:p.method || 'Bank Transfer', ref:p.ref || p.reference || '', slipName:p.slipName || '', note:p.note || ''};
     });
-    return {id:String(id), num:String(id), client:inv.client || inv.clientName || 'Customer', cemail:inv.cemail || inv.email || '', cphone:inv.cphone || inv.phone || '', caddr:inv.caddr || inv.clientAddress || '', date:inv.date || today(), due:inv.due || inv.dueDate || inv.date || today(), terms:inv.terms || 'Net 30', cur:inv.cur || inv.currency || 'LKR', items:items, lines:items, sub:sub, vat:toNum(inv.vat), vatRate:toNum(inv.vatRate), disc:toNum(inv.disc), total:total, amount:total, status:status, paid:paid, paidAmount:paid, tpl:normalizeBusinessTemplate(D.settings.defaultTpl), notes:inv.notes || '', payments:payments};
+    return {id:String(id), num:String(id), client:inv.client || inv.clientName || 'Customer', cemail:inv.cemail || inv.email || '', cphone:inv.cphone || inv.phone || '', caddr:inv.caddr || inv.clientAddress || '', date:inv.date || today(), due:inv.due || inv.dueDate || inv.date || today(), terms:inv.terms || 'Net 30', cur:inv.cur || inv.currency || 'LKR', items:items, lines:items, sub:sub, vat:toNum(inv.vat), vatRate:toNum(inv.vatRate), disc:toNum(inv.disc), total:total, amount:total, status:status, paid:paid, paidAmount:paid, tpl:normalizeBusinessTemplate(D.settings.defaultTpl), notes:inv.notes || '', payments:payments, publicToken:inv.publicToken || '', publicInvoiceActive:inv.publicInvoiceActive === true, publicInvoiceUrl:inv.publicInvoiceUrl || '', publicInvoiceCreatedAt:inv.publicInvoiceCreatedAt || '', whatsappReminderCount:toNum(inv.whatsappReminderCount), lastWhatsappReminderAt:inv.lastWhatsappReminderAt || '', whatsappReminderHistory:Array.isArray(inv.whatsappReminderHistory) ? inv.whatsappReminderHistory : []};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   D.txns = addDerivedPaymentTransactions(D.txns, D.invoices);
   var maxInvNo = D.invoices.reduce(function(max, inv) {
@@ -2178,6 +2253,25 @@ function findInvoiceCustomer(inv) {
     if (invPhone && safePhone(c.phone) === invPhone) return true;
     return false;
   }) || null;
+}
+
+function openSecureBusinessInvoiceWhatsApp(inv) {
+  if (!inv || !window.clsOpenInvoiceWhatsAppReminder) return Promise.resolve(false);
+  var customer = findInvoiceCustomer(inv);
+  return window.clsOpenInvoiceWhatsAppReminder({
+    plan:'business',
+    ownerUid:_uid,
+    invoiceId:inv.id,
+    invoice:inv,
+    phone:inv.cphone || (customer && customer.phone) || '',
+    customerId:customer && customer.id,
+    onUpdated:function() {
+      saveData();
+      renderInvoices();
+      renderDashboard();
+      renderDebt();
+    }
+  });
 }
 
 function findCustomerByName(name) {
@@ -2525,7 +2619,8 @@ function renderInvoices() {
       '<button class="bsm bsmo" onclick="window.editInv(\'' + safeId + '\')">Edit</button>' +
       '<button class="bsm bsmdel" onclick="window.deleteInv(\'' + safeId + '\')">Delete</button>' +
       (displayStatus !== 'paid' ? '<button class="bsm bsmgr" title="Record payment" onclick="window.openPayMo(\'' + safeId + '\')">Pay</button>' : '<button class="bsm bsmem" title="Send paid receipt" onclick="window.emailPaidReceipt(\'' + safeId + '\')">Receipt</button><span class="pill pi">Settled</span>');
-    return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
+    var reminderMeta = window.clsInvoiceReminderMeta ? window.clsInvoiceReminderMeta(i) : '';
+    return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + (reminderMeta ? '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.3rem;white-space:nowrap">' + escHtml(reminderMeta) + '</div>' : '') + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
   }).join('') || emptyRow(8, 'No invoices yet', 'Create a Business invoice with VAT support, payment tracking, and reminder tools.', 'Create Invoice', 'window.openInvMo()');
   refreshInvoiceNotifications();
 }
@@ -3645,28 +3740,13 @@ function openBusinessInvoiceWhatsappFallback(inv) {
 window.waInvoiceWithPDF = async function waInvoiceWithPDF(id) {
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
-  var shared = await nativeShareBusinessInvoicePdf(inv);
-  if (!shared) openBusinessInvoiceWhatsappFallback(inv);
+  return openSecureBusinessInvoiceWhatsApp(inv);
 }
 
 window.waRemind = function waRemind(id) {
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
-  var c = findInvoiceCustomer(inv);
-  var phone = safePhone(inv.cphone || (c ? c.phone : ''));
-  if (!phone) { showToast('No WhatsApp number saved for this customer.', 'err'); return; }
-  var balance = invoiceBalance(inv);
-  var aging = dueLabel(invoiceDueDays(inv));
-  var msg = encodeURIComponent(
-    'Hello ' + inv.client + ',\n\n' +
-    'A kind reminder about invoice ' + inv.id + ' from ' + (D.settings.biz || 'our business') + '.\n\n' +
-    'Amount due: ' + fmt(balance) + '\n' +
-    'Due date: ' + formatDateHuman(inv.due) + '\n' +
-    'Status: ' + aging + '\n\n' +
-    'Please arrange payment when possible. If this has already been paid, kindly send the payment slip or reference so we can update the invoice.\n\n' +
-    'Thank you,\n' + (D.settings.biz || '')
-  );
-  window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
+  return openSecureBusinessInvoiceWhatsApp(inv);
 }
 
 window.saveSettings = function saveSettings() {
@@ -3809,6 +3889,7 @@ function buildInvoicePrintHtml(inv) {
   return '<style>' +
     '@page{size:A4;margin:0}@media print{#print-inv{display:block!important;background:#fff;color:#1d1712}.inv-page{box-shadow:none!important}}.inv-page{width:794px;min-height:1123px;margin:0 auto;background:#fff;position:relative;font-family:Arial,Helvetica,sans-serif;padding:70px 76px 58px;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--muted:#6F6353;--line:#E8DED2;--paper:#FFFFFF;color:#1d1712;box-sizing:border-box}.inv-page *{box-sizing:border-box}.inv-main{position:relative;z-index:1}.inv-top-rule{height:5px;background:var(--accent);margin-bottom:46px}.inv-hero{display:grid;grid-template-columns:1fr 270px;gap:52px;align-items:start;margin-bottom:58px}.inv-logo-img{display:block;object-fit:contain;margin-bottom:16px}.inv-logo-text{font-family:Georgia,serif;font-size:26px;line-height:1.05;margin-bottom:14px;color:inherit}.inv-business{font-family:Georgia,serif;font-size:29px;font-weight:700;color:inherit;margin-bottom:8px}.inv-small{font-size:12px;line-height:1.65;color:var(--muted);white-space:pre-line}.inv-title{text-align:right}.inv-title h1{font-size:46px;letter-spacing:9px;text-transform:uppercase;margin:0 0 12px;color:var(--dark);line-height:1}.inv-title b{font-size:15px;color:#1d1712}.inv-meta{font-size:12px;line-height:1.9;color:var(--muted);margin-top:24px}.inv-meta span{display:inline-block;width:58px;color:#A89A8B}.inv-parties{display:grid;grid-template-columns:1fr 1fr 170px;gap:36px;margin-bottom:70px}.inv-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:12px}.inv-name{font-size:17px;font-weight:800;color:#111;margin-bottom:7px;line-height:1.35}.inv-status{display:inline-flex;align-items:center;border:1px solid var(--line);padding:7px 10px;border-radius:999px;text-transform:capitalize;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:10px}.inv-table{width:100%;border-collapse:collapse;margin-bottom:30px;table-layout:fixed}.inv-table th{border-bottom:3px solid var(--dark);color:#1d1712;background:transparent;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:0 14px 13px;text-align:left}.inv-table th:nth-child(1){width:54%}.inv-table th:nth-child(2){width:12%}.inv-table th:nth-child(3){width:17%}.inv-table th:nth-child(4){width:17%}.inv-table th:nth-child(n+2),.inv-table td:nth-child(n+2){text-align:right}.inv-table td{padding:17px 14px;border-bottom:1px solid var(--line);font-size:13px;color:#111;vertical-align:top}.inv-desc{white-space:pre-line;line-height:1.45;font-weight:700;word-break:break-word}.inv-table td:nth-child(n+2){font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500}.inv-bottom{display:grid;grid-template-columns:1fr 330px;gap:48px;align-items:start;margin-top:18px}.inv-note-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin-bottom:12px;color:var(--dark)}.inv-note{font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line}.inv-totals-print{border-top:1px solid var(--line);padding-top:14px}.inv-totals-print>div{display:flex;justify-content:space-between;gap:24px;font-size:13px;padding:8px 0;color:#55483e}.inv-totals-print b{font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;color:#111}.inv-grand{background:var(--dark);color:#fff!important;margin-top:14px;padding:20px 22px!important;align-items:center}.inv-grand span{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800}.inv-grand b{font-size:21px;color:#fff!important}.inv-brand-foot{position:absolute;left:76px;right:76px;bottom:42px;border-top:1px solid var(--line);padding-top:14px;text-align:center;font-size:10px;letter-spacing:.08em;color:#A89A8B}.inv-brand-foot b{color:#1d1712}.tpl-gold .inv-top-rule,.tpl-ceylon .inv-top-rule,.tpl-bold .inv-top-rule{height:9px;background:linear-gradient(90deg,var(--accent),#D8B456,var(--accent))}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:var(--dark);color:#fff;padding:34px;margin:-18px 0 54px}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:#fff}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:rgba(255,255,255,.75)}.tpl-line .inv-top-rule{height:4px;background:var(--accent)}.tpl-line .inv-title h1{color:var(--accent)}.tpl-minimal .inv-top-rule{height:3px;background:#111}.tpl-minimal .inv-title h1{letter-spacing:6px;color:#111}.tpl-minimal .inv-grand{background:#111}.tpl-darkside,.tpl-split{background:#FDF9F2}.tpl-darkside .inv-top-rule,.tpl-split .inv-top-rule{height:6px;background:#111}.tpl-darkside .inv-title h1,.tpl-split .inv-title h1{color:#111}.tpl-corporate{--accent:#1E5B8A;--dark:#113B5E}.tpl-bold .inv-title{border:3px solid var(--accent);padding:22px 24px}.tpl-bold .inv-title h1{color:var(--accent)}.tpl-signature{background:#FDFAF4;font-family:Georgia,serif}.tpl-signature .inv-top-rule{height:8px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.tpl-signature .inv-table th{border-bottom-color:var(--accent);font-family:Arial,Helvetica,sans-serif}.tpl-signature .inv-grand{background:#4A3B2A}' +
     '.inv-page{padding:62px 72px 52px!important;overflow:hidden!important}.inv-main{min-height:0!important;display:block!important}.inv-top-rule{margin-bottom:28px!important}.inv-hero{grid-template-columns:minmax(0,1fr) 285px!important;gap:46px!important;margin-bottom:30px!important}.inv-title h1{font-size:42px!important;letter-spacing:8px!important}.inv-business{font-size:28px!important}.inv-parties{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 170px!important;gap:34px!important;margin-bottom:30px!important}.inv-table{margin-bottom:18px!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-table th{padding:0 12px 12px!important}.inv-table td{padding:15px 12px!important}.inv-bottom{grid-template-columns:minmax(0,1fr) 325px!important;gap:40px!important;margin-top:8px!important;align-items:start!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-totals-print{padding-top:12px!important}.inv-totals-print>div{padding:8px 0!important}.inv-grand{display:flex!important;justify-content:space-between!important;gap:18px!important;white-space:nowrap!important;min-height:62px!important;max-width:100%!important;padding:18px 22px!important}.inv-grand b{font-size:21px!important}.inv-brand-foot{position:static!important;margin-top:18px!important;border-top:1px solid var(--line)!important;padding-top:15px!important;text-align:center!important;font-size:10px!important;line-height:1.4!important;color:#A89A8B!important}.inv-brand-foot b{color:#1d1712!important}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:transparent!important;color:#1d1712!important;padding:0!important;margin:-4px 0 30px!important}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:var(--dark)!important}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:var(--muted)!important}.tpl-darkside,.tpl-split{background:#fff!important}.tpl-bold .inv-title{border:0!important;padding:0!important}.tpl-bold .inv-title h1{color:var(--accent)!important}@media print{.inv-page{width:210mm!important;min-height:297mm!important;padding:16mm 18mm 12mm!important;overflow:hidden!important}.inv-main{min-height:0!important;display:block!important}.inv-brand-foot{margin-top:18px!important}}' +
+    '.inv-page{min-height:0!important;height:auto!important;padding:46px 50px 34px!important;overflow:visible!important}.inv-main{min-height:0!important;display:block!important}.inv-top-rule{margin-bottom:24px!important}.inv-hero{grid-template-columns:minmax(0,1fr) 250px!important;gap:34px!important;margin-bottom:26px!important}.inv-title h1{font-size:38px!important;letter-spacing:7px!important}.inv-business{font-size:25px!important}.inv-parties{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 145px!important;gap:26px!important;margin-bottom:26px!important}.inv-table{margin-bottom:16px!important;break-inside:auto!important;page-break-inside:auto!important}.inv-table thead{display:table-header-group}.inv-table tr{break-inside:avoid;page-break-inside:avoid}.inv-table th{padding:0 9px 8px!important;font-size:9px!important}.inv-table td{padding:9px!important;font-size:11px!important}.inv-bottom{grid-template-columns:minmax(0,1fr) 285px!important;gap:34px!important;margin-top:7px!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-totals-print{padding-top:9px!important}.inv-totals-print>div{padding:6px 0!important;font-size:11px!important}.inv-grand{min-height:0!important;margin-top:9px!important;padding:13px 15px!important}.inv-grand b{font-size:17px!important}.inv-brand-foot{position:static!important;margin-top:15px!important;padding-top:10px!important;font-size:9px!important;break-inside:avoid!important;page-break-inside:avoid!important}.tpl-header .inv-hero,.tpl-corporate .inv-hero{padding:22px!important;margin:-10px 0 26px!important}.tpl-darkside,.tpl-split{background:#fff!important}@media print{.inv-page{width:210mm!important;min-height:0!important;height:auto!important;padding:11mm 12mm 8mm!important;overflow:visible!important}.inv-main{min-height:0!important;display:block!important}}' +
     '</style>' +
     '<div class="inv-page ' + cls + '"><main class="inv-main">' +
       '<div class="inv-top-rule"></div>' +

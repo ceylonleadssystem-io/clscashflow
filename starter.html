@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260712-performance"></script>
+<script src="assets/platform.js?v=20260713-invoice-sharing"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -234,6 +234,32 @@ body.is-admin .admin-only{display:flex}
 /* Client select in invoice */
 .client-select-bar{background:var(--bg3);border:1px solid var(--border);padding:.9rem 1rem;margin-bottom:1rem;display:flex;align-items:flex-end;gap:.75rem}
 .client-select-bar .f-group{flex:1;margin:0}
+#inv-modal .invoice-modal-box{max-width:900px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+#inv-modal .modal-head{position:static;flex:0 0 auto;padding:.9rem 1.25rem}
+#inv-modal .invoice-modal-body{overflow-y:auto;min-height:0;padding:1rem 1.2rem;overscroll-behavior:contain}
+#inv-modal .invoice-modal-foot{position:static;flex:0 0 auto;padding:.75rem 1.2rem}
+#inv-modal .client-select-bar{padding:.7rem .8rem;margin-bottom:.75rem}
+#inv-modal .invoice-template-summary{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:1rem;align-items:center;border-bottom:1px solid var(--border);padding:0 0 .75rem;margin-bottom:.8rem}
+#inv-modal .invoice-template-summary .f-section{border:0;margin:0 0 .22rem;padding:0}
+#inv-modal .invoice-template-summary .template-helper{margin:0}
+#inv-modal .invoice-template-summary .tpl-picker{display:block;margin:0}
+#inv-modal .invoice-template-summary .tpl-pick-card{padding:.35rem}
+#inv-modal .invoice-template-summary .tpl-mini{height:40px;margin-bottom:.2rem}
+#inv-modal .invoice-form-columns{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:.2rem}
+#inv-modal .invoice-form-panel{min-width:0}
+#inv-modal .invoice-form-panel .f-section{margin:.25rem 0 .6rem}
+#inv-modal .f-row{gap:.7rem;margin-bottom:.7rem}
+#inv-modal .f-input{padding:.58rem .75rem}
+#inv-modal .f-section{margin:.8rem 0 .55rem}
+#inv-modal .li-table{margin-bottom:.5rem;table-layout:fixed}
+#inv-modal .li-table th{padding:.38rem .45rem}
+#inv-modal .li-table td{padding:.28rem .32rem}
+#inv-modal .btn-add-li{margin-bottom:.55rem;padding:.42rem}
+#inv-modal .invoice-closing-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:1.25rem;align-items:start;margin-top:.35rem}
+#inv-modal .invoice-closing-grid .f-section{margin:.25rem 0 .5rem}
+#inv-modal .invoice-summary-panel .f-section{text-align:right}
+#inv-modal .inv-totals{padding-top:.15rem}
+#inv-modal #i-notes{min-height:82px}
 
 /* Payment bar */
 .pay-bar{height:4px;background:var(--bg4);border-radius:2px;flex:1;min-width:40px;overflow:hidden}
@@ -463,6 +489,29 @@ body.is-admin .admin-only{display:flex}
 @media(max-width:360px){
   .sb-item{min-width:70px;flex-basis:70px}
   .page-sub{max-width:180px}
+}
+
+@media(max-width:760px){
+  #inv-modal .invoice-modal-box{height:94dvh;max-height:94dvh;overflow:hidden}
+  #inv-modal .invoice-modal-body{padding:.85rem}
+  #inv-modal .invoice-template-summary{grid-template-columns:minmax(0,1fr) 108px;gap:.65rem}
+  #inv-modal .invoice-form-columns,#inv-modal .invoice-closing-grid{grid-template-columns:1fr}
+  #inv-modal .invoice-summary-panel .f-section{text-align:left}
+  #inv-modal .li-table{display:block;min-width:0!important;width:100%}
+  #inv-modal .li-table thead{display:none}
+  #inv-modal .li-table tbody,#inv-modal .li-table tr{display:block;width:100%}
+  #inv-modal .li-table tr{position:relative;border:1px solid var(--border);background:var(--white);padding:.5rem;margin-bottom:.55rem}
+  #inv-modal .li-table td{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:.55rem;width:100%;border:0;border-bottom:1px solid var(--border);padding:.42rem .2rem;text-align:left!important}
+  #inv-modal .li-table td:first-child{display:block;padding:.2rem 1.8rem .45rem .2rem}
+  #inv-modal .li-table td:first-child::before,#inv-modal .li-table td:last-child::before{display:none}
+  #inv-modal .li-table td:nth-child(2)::before{content:'Quantity'}
+  #inv-modal .li-table td:nth-child(3)::before{content:'Unit price'}
+  #inv-modal .li-table td:nth-child(4)::before{content:'Line total'}
+  #inv-modal .li-table td::before{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  #inv-modal .li-table td:last-child{position:absolute;top:.35rem;right:.35rem;display:block;width:auto;border:0;padding:0}
+  #inv-modal .li-table td:nth-last-child(2){border-bottom:0}
+  #inv-modal .li-table td input{border:1px solid var(--border);padding:.5rem}
+  #inv-modal .li-total-cell{text-align:right!important}
 }
 
 @media print{@page{size:A4;margin:0}html,body{margin:0!important;padding:0!important}body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
@@ -826,10 +875,10 @@ document.addEventListener('click',function(e){
               </div>
               <div class="f-row">
                 <div class="f-group"><label>Template View</label><select class="f-input f-select" id="set-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select></div>
-                <div class="f-group"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15"></div>
+                <div class="f-group"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the percentage on every new invoice.</div></div>
               </div>
               <div class="f-row">
-                <div class="f-group"><label>VAT / Tax Number</label><input class="f-input" id="set-vat" placeholder="Optional"></div>
+                <div class="f-group"><label>VAT / Tax Registration Number</label><input class="f-input" id="set-vat" placeholder="Optional registration number"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Your registration identifier, not the VAT percentage.</div></div>
                 <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
               </div>
               <div class="f-section" style="margin-top:1rem">EmailJS Invoice Emails</div>
@@ -1046,9 +1095,9 @@ document.addEventListener('click',function(e){
 
 <!-- ════ INVOICE MODAL ════ -->
 <div class="modal-overlay" id="inv-modal">
-  <div class="modal-box">
+  <div class="modal-box invoice-modal-box">
     <div class="modal-head"><div class="modal-title" id="inv-modal-title">Raise New Invoice</div><button type="button" class="modal-close" onclick="window.closeModal('inv-modal')" data-cls-fn="closeModal" data-cls-arg="inv-modal">×</button></div>
-    <div class="modal-body">
+    <div class="modal-body invoice-modal-body">
       <input type="hidden" id="i-edit-num">
       <div class="client-select-bar">
         <div class="f-group">
@@ -1059,9 +1108,12 @@ document.addEventListener('click',function(e){
         </div>
         <button class="btn-act-outline" style="flex-shrink:0;padding:.65rem 1rem;height:42px" data-cls-fn="closeAndOpenClient">+ New Customer</button>
       </div>
-      <div class="f-section" style="margin-top:0">Invoice Template</div>
-      <div class="template-helper">Using Settings default: <strong id="inv-default-tpl-name">Furniture Pop</strong>. Change it in Settings to apply one template to all invoices.</div>
-      <div class="tpl-picker locked" id="invoice-template-preview"></div>
+      <div class="invoice-template-summary">
+        <div><div class="f-section">Invoice Template</div><div class="template-helper">Default: <strong id="inv-default-tpl-name">Furniture Pop</strong></div></div>
+        <div class="tpl-picker locked" id="invoice-template-preview"></div>
+      </div>
+      <div class="invoice-form-columns">
+      <section class="invoice-form-panel">
       <div class="f-section">Customer Details</div>
       <div class="f-row">
         <div class="f-group"><label>Customer Name *</label><input class="f-input" id="i-client" placeholder="Customer or business name"></div>
@@ -1071,6 +1123,8 @@ document.addEventListener('click',function(e){
         <div class="f-group"><label>Customer Address</label><input class="f-input" id="i-caddr" placeholder="Customer address"></div>
         <div class="f-group"><label>Customer Phone</label><input class="f-input" id="i-cphone" placeholder="+94 77 000 0000"></div>
       </div>
+      </section>
+      <section class="invoice-form-panel">
       <div class="f-section">Invoice Details</div>
       <div class="f-row">
         <div class="f-group"><label>Invoice Date *</label><input class="f-input" type="date" id="i-date"></div>
@@ -1080,6 +1134,8 @@ document.addEventListener('click',function(e){
         <div class="f-group"><label>Payment Terms</label><select class="f-input f-select" id="i-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>On Receipt</option></select></div>
         <div class="f-group"><label>Currency</label><select class="f-input f-select" id="i-cur"><option>LKR</option><option>USD</option></select></div>
       </div>
+      </section>
+      </div>
       <div class="f-section">Line Items</div>
       <table class="li-table">
         <thead><tr><th style="width:45%">Description</th><th style="width:11%">Qty</th><th style="width:18%">Unit Price</th><th style="width:18%">Total</th><th style="width:8%"></th></tr></thead>
@@ -1088,18 +1144,25 @@ document.addEventListener('click',function(e){
         </tbody>
       </table>
       <button class="btn-add-li" data-cls-fn="addLi">+ Add Line Item</button>
-      <div class="inv-totals">
-        <div class="inv-total-row"><span class="itl">Subtotal</span><span class="itr" id="inv-sub">LKR 0.00</span></div>
-        <div class="inv-total-row"><span class="itl">Discount</span><span class="itr"><input type="number" id="inv-disc" value="0" min="0" max="100" step="0.01" style="width:65px;background:var(--bg);border:1px solid var(--border);padding:.2rem .4rem;color:var(--text);text-align:right;font-family:var(--font-b);font-size:.8rem" oninput="calcInv()"> %</span></div>
-        <div class="inv-total-row"><span class="itl">VAT <input type="number" id="inv-vatrate" value="15" min="0" max="100" step="0.01" style="width:58px;background:var(--bg);border:1px solid var(--border);padding:.2rem .4rem;color:var(--text);text-align:right;font-family:var(--font-b);font-size:.8rem" oninput="calcInv()">%</span><span class="itr"><input type="checkbox" id="inv-vat" onchange="calcInv()" style="cursor:pointer"> Apply</span></div>
-        <div class="inv-total-row grand"><span class="itl">Grand Total</span><span class="itr" id="inv-grand">LKR 0.00</span></div>
+      <div class="invoice-closing-grid">
+        <div>
+          <div class="f-section">Notes</div>
+          <div class="f-group"><textarea class="f-input" id="i-notes" rows="2" placeholder="Payment instructions, bank details, or any additional notes..." style="resize:vertical"></textarea></div>
+          <div class="f-section" id="i-edit-reason-section" style="display:none">Edit Reason</div>
+          <div class="f-group" id="i-edit-reason-wrap" style="display:none"><textarea class="f-input" id="i-edit-reason" rows="3" placeholder="Mention why this invoice is being edited..." style="resize:vertical"></textarea></div>
+        </div>
+        <div class="invoice-summary-panel">
+          <div class="f-section">Invoice Summary</div>
+          <div class="inv-totals">
+            <div class="inv-total-row"><span class="itl">Subtotal</span><span class="itr" id="inv-sub">LKR 0.00</span></div>
+            <div class="inv-total-row"><span class="itl">Discount</span><span class="itr"><input type="number" id="inv-disc" value="0" min="0" max="100" step="0.01" style="width:65px;background:var(--bg);border:1px solid var(--border);padding:.2rem .4rem;color:var(--text);text-align:right;font-family:var(--font-b);font-size:.8rem" oninput="calcInv()"> %</span></div>
+            <div class="inv-total-row"><span class="itl">VAT <input type="number" id="inv-vatrate" value="15" min="0" max="100" step="0.01" style="width:58px;background:var(--bg);border:1px solid var(--border);padding:.2rem .4rem;color:var(--text);text-align:right;font-family:var(--font-b);font-size:.8rem" oninput="calcInv()">%</span><span class="itr"><input type="checkbox" id="inv-vat" onchange="calcInv()" style="cursor:pointer"> Apply</span></div>
+            <div class="inv-total-row grand"><span class="itl">Grand Total</span><span class="itr" id="inv-grand">LKR 0.00</span></div>
+          </div>
+        </div>
       </div>
-      <div class="f-section" style="margin-top:.75rem">Notes</div>
-      <div class="f-group"><textarea class="f-input" id="i-notes" rows="2" placeholder="Payment instructions, bank details, or any additional notes..." style="resize:vertical"></textarea></div>
-      <div class="f-section" id="i-edit-reason-section" style="margin-top:.75rem;display:none">Edit Reason</div>
-      <div class="f-group" id="i-edit-reason-wrap" style="display:none"><textarea class="f-input" id="i-edit-reason" rows="3" placeholder="Mention why this invoice is being edited..." style="resize:vertical"></textarea></div>
     </div>
-    <div class="modal-foot">
+    <div class="modal-foot invoice-modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="inv-modal">Cancel</button>
       <button class="btn-act-outline" data-cls-fn="printInvoiceFromModal">⬇ PDF</button>
       <button class="btn-act" id="inv-save-btn" data-cls-fn="saveInvoice">Save Invoice</button>
@@ -1629,6 +1692,16 @@ const tourSteps=[
 ];
 let tourIndex=0;
 function tourStorageKey(){return 'cls-studio-tour-seen-'+(_signedInUid||_uid||'local');}
+function markSystemTourSeen(){
+  try{localStorage.setItem(tourStorageKey(),'1');}catch(e){}
+  if(_profile)_profile.studioTourSeen=true;
+  if(_signedInUid&&_db){
+    _db.collection('users').doc(_signedInUid).set({
+      studioTourSeen:true,
+      studioTourSeenAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true}).catch(function(e){console.warn('Could not sync Studio tour status:',e);});
+  }
+}
 function openTourView(view){
   const nav=document.querySelector('.sb-item[data-nav="'+view+'"]')||document.querySelector('[data-nav="'+view+'"]');
   if(nav)nav.click();
@@ -1649,14 +1722,23 @@ function renderTourStep(){
 }
 window.startSystemTour=function startSystemTour(){tourIndex=0;renderTourStep();};
 window.nextSystemTour=function nextSystemTour(){tourIndex=Math.min(tourIndex+1,tourSteps.length-1);renderTourStep();};
-window.skipSystemTour=function skipSystemTour(){localStorage.setItem(tourStorageKey(),'1');const ov=document.getElementById('system-tour');if(ov)ov.remove();};
-window.finishSystemTour=function finishSystemTour(){localStorage.setItem(tourStorageKey(),'1');const ov=document.getElementById('system-tour');if(ov)ov.remove();};
+window.skipSystemTour=function skipSystemTour(){markSystemTourSeen();const ov=document.getElementById('system-tour');if(ov)ov.remove();};
+window.finishSystemTour=function finishSystemTour(){markSystemTourSeen();const ov=document.getElementById('system-tour');if(ov)ov.remove();};
 function maybeStartFirstTour(){
   try{
-    if(localStorage.getItem(tourStorageKey()))return;
+    const localSeen=localStorage.getItem(tourStorageKey())==='1';
+    const profileSeen=!!(_profile&&_profile.studioTourSeen===true);
+    if(localSeen||profileSeen){
+      if(profileSeen&&!localSeen)localStorage.setItem(tourStorageKey(),'1');
+      if(localSeen&&!profileSeen)markSystemTourSeen();
+      return;
+    }
     const start=_profile&&_profile.trialStart?new Date(_profile.trialStart):null;
     const isFresh=!start||isNaN(start.getTime())||((Date.now()-start.getTime())/86400000)<=2;
-    if(isFresh)setTimeout(function(){if(!document.getElementById('system-tour'))window.startSystemTour();},900);
+    if(isFresh){
+      markSystemTourSeen();
+      setTimeout(function(){if(!document.getElementById('system-tour'))window.startSystemTour();},900);
+    }
   }catch(e){}
 }
 
@@ -2243,7 +2325,7 @@ function getInvData(){
   const cur=document.getElementById('i-cur').value;let sub=0;const lines=[];
   document.querySelectorAll('#li-body tr').forEach(row=>{const dEl=row.querySelector('.li-desc');const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const desc=(dEl&&dEl.value)||'';const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');if(desc||price>0){lines.push({desc,qty,price,total:qty*price});sub+=qty*price;}});
   const disc=(parseFloat(document.getElementById('inv-disc').value)||0);const afterDisc=sub*(1-disc/100);const vrate=parseFloat(document.getElementById('inv-vatrate').value)||0;const vatApplied=document.getElementById('inv-vat').checked;const vat=vatApplied?afterDisc*vrate/100:0;
-  return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vatApplied?vrate:0,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:getDefaultInvoiceTemplate()};
+  return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vrate,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:getDefaultInvoiceTemplate()};
 }
 window.saveInvoice = function saveInvoice(){
   const d=getInvData();if(!d.client){alert('Please enter a customer name.');return;}
@@ -2289,7 +2371,7 @@ function renderInvoices(){
     const paid=inv.paidAmount||0;const bal=inv.amount-paid;const pct=inv.amount>0?Math.round(paid/inv.amount*100):0;
     const sc=inv.status==='paid'?'pill-paid':inv.status==='overdue'?'pill-overdue':inv.status==='partial'?'pill-partial':'pill-unpaid';
     return`<tr>
-      <td><strong>${inv.num}</strong></td><td>${inv.client}</td><td>${fmtD(inv.date)}</td><td>${fmtD(inv.due)}</td>
+      <td><strong>${inv.num}</strong>${window.clsInvoiceReminderMeta&&window.clsInvoiceReminderMeta(inv)?`<div style="font-size:.62rem;color:var(--muted);margin-top:.3rem;white-space:nowrap">${escHTML(window.clsInvoiceReminderMeta(inv))}</div>`:''}</td><td>${inv.client}</td><td>${fmtD(inv.date)}</td><td>${fmtD(inv.due)}</td>
       <td><span class="pill ${sc}">${inv.status.charAt(0).toUpperCase()+inv.status.slice(1)}</span></td>
       <td><div class="pay-info-wrap"><div class="pay-bar"><div class="pay-bar-fill${inv.status==='partial'?' partial':''}" style="width:${pct}%"></div></div><span style="font-size:.7rem;color:var(--muted)">${pct}%</span></div>${inv.status==='partial'?`<div class="pay-pending">↻ ${fmtAmt(bal)} pending</div>`:''}</td>
       <td style="text-align:right" class="amount-gold"><strong>${fmtAmt(inv.amount)}</strong></td>
@@ -2325,7 +2407,9 @@ window.openInvoiceEditModal=function openInvoiceEditModal(num){
   document.getElementById('i-cur').value=inv.cur||'LKR';
   document.getElementById('inv-disc').value=inv.disc||0;
   document.getElementById('inv-vat').checked=Number(inv.vat||0)>0;
-  document.getElementById('inv-vatrate').value=inv.vatRate||DB.settings.vatRate||15;
+  const savedVatRate=Number(inv.vatRate);
+  const defaultVatRate=Number(DB.settings.vatRate);
+  document.getElementById('inv-vatrate').value=inv.vatRate!=null&&Number.isFinite(savedVatRate)?savedVatRate:(Number.isFinite(defaultVatRate)?defaultVatRate:15);
   document.getElementById('i-notes').value=inv.notes||'';
   setInvoiceTemplate(getDefaultInvoiceTemplate());
   setInvoiceLines(inv.lines&&inv.lines.length?inv.lines:[{desc:'Invoice total',qty:1,price:inv.amount||0,total:inv.amount||0}]);
@@ -2601,7 +2685,10 @@ window.saveSettings = function saveSettings(){
   DB.settings.addr=document.getElementById('set-addr').value.trim();
   DB.settings.email=document.getElementById('set-email').value.trim();
   DB.settings.vat=document.getElementById('set-vat').value.trim();
-  var vrIn=document.getElementById('set-vatrate');DB.settings.vatRate=vrIn?(parseFloat(vrIn.value)):15;if(isNaN(DB.settings.vatRate))DB.settings.vatRate=15;
+  var vrIn=document.getElementById('set-vatrate');
+  var nextVatRate=vrIn?parseFloat(vrIn.value):15;
+  if(!Number.isFinite(nextVatRate)||nextVatRate<0||nextVatRate>100){alert('Default VAT / tax rate must be between 0% and 100%.');if(vrIn)vrIn.focus();return;}
+  DB.settings.vatRate=nextVatRate;
   var ejsKeyEl=document.getElementById('set-ejskey'),ejsServiceEl=document.getElementById('set-ejsservice'),ejsTemplateEl=document.getElementById('set-ejstemplate'),ejsReceiptTemplateEl=document.getElementById('set-ejsreceipttemplate');
   DB.settings.ejsKey=ejsKeyEl?(ejsKeyEl.value||'').trim():(DB.settings.ejsKey||'');
   DB.settings.ejsService=ejsServiceEl?(ejsServiceEl.value||'').trim():(DB.settings.ejsService||'');
@@ -2772,10 +2859,10 @@ function buildInvPrintHTML(inv,tplIdx){
   // Per-template treatment
   const isClassic=t.style==='classic';const isMinimal=t.style==='minimal';const isExec=t.style==='executive';
   const topStyle=isClassic
-    ?`background:${ac};color:#fff;padding:2.6rem 3rem;margin:-3rem -3rem 2.6rem`
+    ?`background:${ac};color:#fff;padding:1.35rem 1.7rem;margin:-2rem -2rem 1.4rem`
     :isExec
-    ?`border-top:5px solid ${ac};padding:2rem 0 1.7rem;margin-bottom:2.4rem;border-bottom:1px solid #ededed`
-    :`padding-bottom:1.9rem;margin-bottom:2.4rem;border-bottom:1px solid #ededed`;
+    ?`border-top:5px solid ${ac};padding:1rem 0 .85rem;margin-bottom:1.35rem;border-bottom:1px solid #ededed`
+    :`padding-bottom:1rem;margin-bottom:1.35rem;border-bottom:1px solid #ededed`;
   const invColor=isClassic?'#fff':isMinimal?'#15110d':ac;
   const nameColor=isClassic?'#fff':'#15110d';
   const addrColor=isClassic?'rgba(255,255,255,.72)':'#8a8378';
@@ -2793,8 +2880,8 @@ function buildInvPrintHTML(inv,tplIdx){
 *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 html,body{margin:0!important;padding:0!important}
 body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#15110d}
-.page{max-width:820px;margin:0 auto;padding:3rem;min-height:100vh}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;${topStyle}}
+.page{width:210mm;max-width:210mm;margin:0 auto;padding:10mm 12mm 8mm;min-height:0}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:1.4rem;${topStyle}}
 .brand{display:flex;flex-direction:column;align-items:${brandAlign};text-align:${textAlign};flex:1}
 .brand img{max-height:${logoH}px;max-width:${Math.round(logoH*3.4)}px;object-fit:contain;margin-bottom:.7rem;display:block}
 .biz-name{font-family:Georgia,'Times New Roman',serif;font-size:1.7rem;font-weight:600;line-height:1.1;color:${nameColor}}
@@ -2805,30 +2892,32 @@ body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#15110d}
 .inv-meta .lbl{color:${metaLabel};letter-spacing:.06em}
 .inv-meta .val{color:${metaVal};font-weight:600;margin-left:.4rem}
 .inv-num-big{font-size:.95rem;font-weight:700;color:${numColor};margin-top:.3rem}
-.parties{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2.4rem}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.35rem}
 .party-label{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:${ac};font-weight:700;margin-bottom:.5rem}
 .party-name{font-size:1.02rem;font-weight:600;margin-bottom:.25rem;color:#15110d}
 .party-detail{font-size:.8rem;color:#6f685e;line-height:1.7}
-table{width:100%;border-collapse:collapse;margin-bottom:1.8rem}
-th{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;padding:.8rem 1rem;text-align:left;font-weight:600;${thStyle}}
+table{width:100%;border-collapse:collapse;margin-bottom:1.1rem}
+thead{display:table-header-group}tr{break-inside:avoid;page-break-inside:avoid}
+th{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;padding:.55rem .7rem;text-align:left;font-weight:600;${thStyle}}
 th.c,td.c{text-align:center}th.r,td.r{text-align:right}
-td{padding:.85rem 1rem;border-bottom:1px solid #f0eee9;font-size:.86rem;color:#3d3a34;vertical-align:top}
+td{padding:.58rem .7rem;border-bottom:1px solid #f0eee9;font-size:.78rem;color:#3d3a34;vertical-align:top}
 td.b{font-weight:600;color:#15110d}
 td .ln{font-weight:600;color:#15110d;white-space:pre-line}
-.bottom{display:flex;justify-content:space-between;gap:2rem;align-items:flex-start;margin-bottom:2.2rem}
+.bottom{display:flex;justify-content:space-between;gap:1.5rem;align-items:flex-start;margin-bottom:1.15rem;break-inside:avoid;page-break-inside:avoid}
 .notes{flex:1;max-width:300px}
 .notes-h{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:${ac};font-weight:700;margin-bottom:.5rem}
 .notes-b{font-size:.78rem;color:#6f685e;line-height:1.7}
 .totals{width:300px;flex-shrink:0}
-.trow{display:flex;justify-content:space-between;padding:.5rem 0;font-size:.84rem;color:#6f685e;border-bottom:1px solid #f0eee9}
+.trow{display:flex;justify-content:space-between;padding:.38rem 0;font-size:.78rem;color:#6f685e;border-bottom:1px solid #f0eee9}
 .trow span:last-child{color:#15110d;font-weight:500}
-.grand{margin-top:.8rem;background:${grandBg};color:#fff;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center}
+.grand{margin-top:.55rem;background:${grandBg};color:#fff;padding:.7rem .9rem;display:flex;justify-content:space-between;align-items:center}
 .grand .g-l{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
-.grand .g-v{font-size:1.4rem;font-weight:700}
-.footer{border-top:1px solid #ededed;padding-top:1.5rem;display:flex;justify-content:space-between;align-items:flex-end;gap:2rem;font-size:.76rem;color:#8a8378}
+.grand .g-v{font-size:1.12rem;font-weight:700}
+.footer{border-top:1px solid #ededed;padding-top:.8rem;display:flex;justify-content:space-between;align-items:flex-end;gap:1.5rem;font-size:.7rem;color:#8a8378;break-inside:avoid;page-break-inside:avoid}
 .footer strong{color:#15110d;font-weight:600}
-.powered{margin-top:1.4rem;padding-top:.85rem;border-top:1px solid #f3f1ec;text-align:center;font-size:.68rem;color:#b3ada3;letter-spacing:.05em}
+.powered{margin-top:.8rem;padding-top:.55rem;border-top:1px solid #f3f1ec;text-align:center;font-size:.64rem;color:#b3ada3;letter-spacing:.05em;break-inside:avoid;page-break-inside:avoid}
 .powered b{color:${ac};font-weight:600}
+@media print{html,body{width:210mm;min-height:0}.page{width:210mm;min-height:0;height:auto;margin:0;padding:10mm 12mm 8mm}}
 </style></head><body><div class="page">
 <div class="top">
   <div class="brand">${s.logo?`<img src="${s.logo}">`:''}<div class="biz-name">${s.bizName||'Your Business'}</div><div class="biz-addr">${s.addr||''}</div></div>
@@ -2844,7 +2933,7 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
   <div class="totals">
     <div class="trow"><span>Subtotal</span><span>${cur} ${fmtP(sub)}</span></div>
     ${disc>0?`<div class="trow"><span>Discount (${disc}%)</span><span>− ${cur} ${fmtP(sub-afterDisc)}</span></div>`:''}
-    ${vat>0?`<div class="trow"><span>VAT (${inv.vatRate||15}%)</span><span>${cur} ${fmtP(vat)}</span></div>`:''}
+    ${vat>0?`<div class="trow"><span>VAT (${inv.vatRate!=null?inv.vatRate:15}%)</span><span>${cur} ${fmtP(vat)}</span></div>`:''}
     <div class="grand"><span class="g-l">Total Due</span><span class="g-v">${cur} ${fmtP(grand)}</span></div>
   </div>
 </div>
@@ -2897,6 +2986,19 @@ function invoiceContactPhone(inv){
 function invoiceContactEmail(inv){
   const c=findClientForInvoice(inv);
   return (inv&&inv.cemail)||(c&&c.email)||'';
+}
+function openSecureInvoiceWhatsApp(inv){
+  if(!inv||!window.clsOpenInvoiceWhatsAppReminder)return Promise.resolve(false);
+  const customer=findClientForInvoice(inv);
+  return window.clsOpenInvoiceWhatsAppReminder({
+    plan:'studio',
+    ownerUid:_uid,
+    invoiceId:String(inv.id||inv.num),
+    invoice:inv,
+    phone:(inv&&inv.cphone)||(customer&&customer.phone)||'',
+    customerId:customer&&customer.id,
+    onUpdated:function(){saveDB();renderInvoices();renderDashboard();}
+  });
 }
 function syncCustomerToOpenInvoices(before,data){
   if(!data||!Array.isArray(DB.invoices))return 0;
@@ -3198,38 +3300,12 @@ window.emailPaidReceipt = async function emailPaidReceipt(num){
 
 window.waInvoice = function waInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
-  const s=DB.settings;
-  const msg=encodeURIComponent(
-    'Hi '+inv.client+', 👋\n\n'+
-    'Here is your invoice from *'+(s.bizName||'Your Business')+'*:\n\n'+
-    '📄 Invoice: *'+inv.num+'*\n'+
-    '📅 Date: '+fmtD(inv.date)+'\n'+
-    '⏰ Due: '+fmtD(inv.due)+'\n'+
-    '💰 Amount: *LKR '+inv.amount.toLocaleString()+'*\n\n'+
-    ([inv.notes,s.footer].filter(Boolean).join('\n\n')||'Invoice by Cashflow System - Ceylonry Labs.io')+'\n\n'+
-    '_'+(s.bizName||'Your Business')+' · Powered by CeylonryLabs.io_'
-  );
-  const phone=invoiceContactPhone(inv);
-  window.open(phone?'https://wa.me/'+phone+'?text='+msg:'https://wa.me/?text='+msg,'_blank');
+  return openSecureInvoiceWhatsApp(inv);
 }
 
 window.waDueReminder = function waDueReminder(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
-  const phone=invoiceContactPhone(inv);
-  if(!phone){alert('This customer has no WhatsApp number. Open the customer or invoice and add the customer phone first.');return;}
-  const s=DB.settings;
-  const bal=invoiceBalance(inv);
-  const todayMs=new Date().setHours(0,0,0,0);
-  const days=Math.floor((invoiceDueMs(inv)-todayMs)/MS_DAY);
-  const dueText=days<0?'overdue by '+Math.abs(days)+' day'+(Math.abs(days)!==1?'s':''):days===0?'due today':'due on '+fmtD(inv.due);
-  const msg=encodeURIComponent(
-    'Hi '+(inv.client||'there')+',\n\n'+
-    'A gentle reminder that invoice '+inv.num+' from '+(s.bizName||'Your Business')+' is '+dueText+'.\n\n'+
-    'Outstanding amount: '+(inv.cur||'LKR')+' '+Math.round(bal).toLocaleString()+'\n'+
-    'Due date: '+fmtD(inv.due)+'\n\n'+
-    'Please let us know once payment is arranged. Thank you.'
-  );
-  window.open('https://wa.me/'+phone+'?text='+msg,'_blank');
+  return openSecureInvoiceWhatsApp(inv);
 }
 
 
@@ -3617,9 +3693,7 @@ function openInvoiceWhatsappFallback(inv, systemName){
 window.waInvoiceWithPDF=async function(num){
   var inv=DB.invoices.find(function(i){return i.num===num;});
   if(!inv)return;
-  var systemName='Studio Invoice Control System';
-  var shared=await nativeShareInvoicePdf(inv,systemName);
-  if(!shared)openInvoiceWhatsappFallback(inv,systemName);
+  return openSecureInvoiceWhatsApp(inv);
 };
 window.toggleExpenseLog=function(type){var t=document.getElementById('expense-log-toggle');if(t)t.style.display=type==='out'?'block':'none';};
 
