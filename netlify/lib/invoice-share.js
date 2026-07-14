@@ -107,6 +107,16 @@ function safeLogo(value) {
   return '';
 }
 
+function choice(value, allowed, fallback) {
+  const selected = text(value, 40).toLowerCase();
+  return allowed.includes(selected) ? selected : fallback;
+}
+
+function bounded(value, min, max, fallback) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback;
+}
+
 function sanitizePublicInvoice(invoice, profile) {
   invoice = invoice || {};
   profile = profile || {};
@@ -115,11 +125,25 @@ function sanitizePublicInvoice(invoice, profile) {
   return {
     businessName: text(settings.bizName || settings.biz || profile.bizName || profile.invoiceBiz || 'Your Business', 180),
     businessLogo: safeLogo(settings.logo || profile.logo),
+    businessAddress: text(settings.addr || profile.addr, 800),
+    businessEmail: text(settings.email || profile.email || profile.invEmail, 220),
+    vatNumber: text(settings.vat || profile.vat, 120),
     invoiceNumber: text(invoice.num || invoice.id, 120),
     customerName: text(invoice.client || invoice.clientName || 'Customer', 180),
+    customerAddress: text(invoice.caddr || invoice.addr, 800),
+    customerEmail: text(invoice.cemail, 220),
+    customerPhone: text(invoice.cphone, 80),
     invoiceDate: text(invoice.date, 40),
     dueDate: text(invoice.due || invoice.dueDate, 40),
+    terms: text(invoice.terms || 'Net 30', 120),
     currency: text(invoice.cur || invoice.currency || 'LKR', 12).toUpperCase(),
+    templateIndex: Math.round(bounded(invoice.tpl != null ? invoice.tpl : settings.defaultTpl, 0, 12, 0)),
+    invoiceFont: choice(settings.invoiceFont, ['classic', 'modern', 'editorial', 'clean', 'mono'], 'classic'),
+    invoiceView: choice(settings.invoiceView, ['modern', 'classic', 'olden', 'minimal', 'bold'], 'modern'),
+    logoAlign: choice(settings.logoAlign, ['left', 'center', 'right'], 'left'),
+    logoSize: choice(settings.logoSize, ['s', 'm', 'l'], 'm').toUpperCase(),
+    logoX: bounded(settings.logoX, 0, 100, 8),
+    logoY: bounded(settings.logoY, 0, 24, 5),
     items: financials.items,
     subtotal: financials.subtotal,
     tax: financials.tax,
@@ -150,11 +174,25 @@ function sanitizePublicSnapshot(invoice) {
   return {
     businessName: text(invoice.businessName || 'Your Business', 180),
     businessLogo: safeLogo(invoice.businessLogo),
+    businessAddress: text(invoice.businessAddress, 800),
+    businessEmail: text(invoice.businessEmail, 220),
+    vatNumber: text(invoice.vatNumber, 120),
     invoiceNumber: text(invoice.invoiceNumber, 120),
     customerName: text(invoice.customerName || 'Customer', 180),
+    customerAddress: text(invoice.customerAddress, 800),
+    customerEmail: text(invoice.customerEmail, 220),
+    customerPhone: text(invoice.customerPhone, 80),
     invoiceDate: text(invoice.invoiceDate, 40),
     dueDate: text(invoice.dueDate, 40),
+    terms: text(invoice.terms || 'Net 30', 120),
     currency: text(invoice.currency || 'LKR', 12).toUpperCase(),
+    templateIndex: Math.round(bounded(invoice.templateIndex, 0, 12, 0)),
+    invoiceFont: choice(invoice.invoiceFont, ['classic', 'modern', 'editorial', 'clean', 'mono'], 'classic'),
+    invoiceView: choice(invoice.invoiceView, ['modern', 'classic', 'olden', 'minimal', 'bold'], 'modern'),
+    logoAlign: choice(invoice.logoAlign, ['left', 'center', 'right'], 'left'),
+    logoSize: choice(invoice.logoSize, ['s', 'm', 'l'], 'm').toUpperCase(),
+    logoX: bounded(invoice.logoX, 0, 100, 8),
+    logoY: bounded(invoice.logoY, 0, 24, 5),
     items,
     subtotal: money(Math.max(0, number(invoice.subtotal))),
     tax: money(Math.max(0, number(invoice.tax))),

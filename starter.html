@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260713-invoice-sharing"></script>
+<script src="assets/platform.js?v=20260714-invoice-suite"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -354,6 +354,10 @@ body.is-admin .admin-only{display:flex}
 .settings-panel[hidden]{display:none!important}
 .settings-panel-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.64fr);gap:1rem;align-items:start}
 .settings-panel-grid>*{min-width:0}
+.settings-preview-wrap{margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)}
+.settings-preview-label{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.7rem}
+.settings-invoice-preview{background:#fff;border:1px solid var(--border);min-height:540px;overflow:hidden}
+.cls-invoice-preview-frame{display:block;width:100%;height:min(780px,82vh);border:0;background:#fff}
 .settings-widget-stack{display:grid;gap:1rem}
 #view-settings{max-width:1060px;margin:0 auto}
 #view-settings .trial-card,#view-settings .settings-helper,#view-settings .table-card[style*="max-width"],#view-settings>div[style*="max-width"]{max-width:none!important}
@@ -671,6 +675,10 @@ document.addEventListener('click',function(e){
         </div>
         <table><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
       </div>
+      <div class="table-card" style="margin-top:1rem">
+        <div class="table-header"><div><div class="table-title">Quotes &amp; Estimates</div><div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">Prepare a document, download it, then convert the accepted version into an invoice.</div></div><div style="display:flex;gap:.5rem"><button class="btn-act-outline" data-cls-fn="openEstimateModal">+ Raise Estimate</button><button class="btn-act" data-cls-fn="openQuoteModal">+ Raise Quote</button></div></div>
+        <table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="quote-table"></tbody></table>
+      </div>
     </div>
 
     <!-- ═ EDIT BACKLOG ═ -->
@@ -817,15 +825,15 @@ document.addEventListener('click',function(e){
             <div class="table-header"><div class="table-title">Business Profile</div><button class="btn-act" data-cls-fn="saveSettings">Save Changes</button></div>
             <div style="padding:1.35rem">
               <div class="f-section">Business Logo</div>
-              <div class="logo-area" data-cls-fn="triggerLogoUpload" onclick="window.triggerLogoUpload&&window.triggerLogoUpload()" id="logo-area">
+              <label class="logo-area" for="settings-logo" id="logo-area">
                 <img id="settings-logo-preview" class="logo-area-preview" style="display:none" src="" alt="">
                 <div id="logo-upload-placeholder">
                   <div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
                   <div class="logo-area-label">Upload your business logo</div>
-                  <div class="logo-area-hint">PNG or JPG · Max 2MB · Appears on all invoices</div>
+                  <div class="logo-area-hint">PNG, JPG, or WebP · Max 5MB · Optimized automatically</div>
                 </div>
                 <input type="file" id="settings-logo" accept="image/*" style="display:none" onchange="previewSettingsLogo(this)">
-              </div>
+              </label>
               <div class="f-section" style="margin-top:1rem">Business Details</div>
               <div class="f-row">
                 <div class="f-group"><label>Business Name *</label><input class="f-input" id="set-bizname" placeholder="Your Business Name"></div>
@@ -874,14 +882,9 @@ document.addEventListener('click',function(e){
                 <div class="f-group"><label>VAT / Tax Registration Number</label><input class="f-input" id="set-vat" placeholder="Optional registration number"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Your registration identifier, not the VAT percentage.</div></div>
                 <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
               </div>
-              <div class="f-section" style="margin-top:1rem">EmailJS Invoice Emails</div>
-              <div class="f-row">
-                <div class="f-group"><label>EmailJS Public Key</label><input class="f-input" id="set-ejskey" placeholder="public_..."></div>
-                <div class="f-group"><label>EmailJS Service ID</label><input class="f-input" id="set-ejsservice" placeholder="service_..."></div>
-              </div>
-              <div class="f-row" style="margin-bottom:0">
-                <div class="f-group"><label>Payment Reminder Template ID</label><input class="f-input" id="set-ejstemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Use {{{message_html}}} in the overdue reminder template body.</div></div>
-                <div class="f-group"><label>Paid Receipt Template ID</label><input class="f-input" id="set-ejsreceipttemplate" placeholder="template_..."><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Optional shorter email for paid invoices. Leave blank to reuse the reminder template.</div></div>
+              <div class="settings-preview-wrap">
+                <div class="settings-preview-label">Invoice Preview</div>
+                <div class="settings-invoice-preview" id="settings-invoice-preview"></div>
               </div>
             </div>
           </div>
@@ -1231,10 +1234,12 @@ var DB = {
   transactions:[],
   expenses:[],
   invoices:[],
+  quotes:[],
   editBacklog:[],
   clients:{list:[],nextId:1},
   suppliers:{list:[],nextId:1},
-  nextInvNum:1
+  nextInvNum:1,
+  nextQuoteNum:1
 };
 
 var _dataVersion = 0;
@@ -1276,10 +1281,12 @@ function readDBBackup(uid) {
 }
 
 function normalizeLoadedDBCollections() {
+  DB.quotes = Array.isArray(DB.quotes) ? DB.quotes : [];
   DB.clients = DB.clients && Array.isArray(DB.clients.list) ? DB.clients : { list: Array.isArray(DB.clients) ? DB.clients : [], nextId: 1 };
   DB.suppliers = DB.suppliers && Array.isArray(DB.suppliers.list) ? DB.suppliers : { list: Array.isArray(DB.suppliers) ? DB.suppliers : [], nextId: 1 };
   (function(){var seen={};DB.clients.list.forEach(function(c,i){if(c.id==null||seen[c.id]){c.id=Date.now()+i;}seen[c.id]=true;});})();
   DB.invoices.sort((a,b) => (b.id||0) - (a.id||0));
+  DB.quotes.sort((a,b) => (b.id||0) - (a.id||0));
   refreshNextInvoiceNumber();
   DB.transactions.sort((a,b) => (b.id||0) - (a.id||0));
   DB.expenses.sort((a,b) => (b.id||0) - (a.id||0));
@@ -1361,11 +1368,13 @@ async function saveDBNow() {
         await userRef.replaceCollections({
           settings: Object.assign({}, savedSettings, { dataVersion: version }),
           nextInvNum: DB.nextInvNum,
+          nextQuoteNum: DB.nextQuoteNum,
           dataVersion: version
         }, {
           transactions: docsFor(DB.transactions),
           expenses: docsFor(DB.expenses),
           invoices: docsFor(DB.invoices),
+          quotes: docsFor(DB.quotes || []),
           editBacklog: docsFor(DB.editBacklog || []),
           clients: docsFor(DB.clients.list || []),
           suppliers: docsFor(DB.suppliers.list || [])
@@ -1378,12 +1387,14 @@ async function saveDBNow() {
     }
     await userRef.set({
       settings: savedSettings,
-      nextInvNum: DB.nextInvNum
+      nextInvNum: DB.nextInvNum,
+      nextQuoteNum: DB.nextQuoteNum
     }, { merge: true });
     await Promise.all([
       saveCollection('transactions', DB.transactions),
       saveCollection('expenses', DB.expenses),
       saveCollection('invoices', DB.invoices),
+      saveCollection('quotes', DB.quotes || []),
       saveCollection('editBacklog', DB.editBacklog || []),
       saveCollection('clients', DB.clients.list || []),
       saveCollection('suppliers', DB.suppliers.list || [])
@@ -1391,6 +1402,7 @@ async function saveDBNow() {
     await userRef.set({
       settings: Object.assign({}, savedSettings, { dataVersion: version }),
       nextInvNum: DB.nextInvNum,
+      nextQuoteNum: DB.nextQuoteNum,
       dataVersion: version
     }, { merge: true });
     writeDBBackup(version, true);
@@ -1433,7 +1445,7 @@ async function loadDB() {
   if (!_uid) return;
   try {
     const userRef = _db.collection('users').doc(_uid);
-    const collections = ['transactions','expenses','invoices','editBacklog','clients','suppliers'];
+    const collections = ['transactions','expenses','invoices','quotes','editBacklog','clients','suppliers'];
     let profileSnap;
     let results;
     if (typeof userRef.getCollections === 'function') {
@@ -1450,9 +1462,10 @@ async function loadDB() {
     DB.transactions = results[0].docs.map(d => d.data());
     DB.expenses = results[1].docs.map(d => d.data());
     DB.invoices = results[2].docs.map(d => d.data());
-    DB.editBacklog = results[3].docs.map(d => d.data());
-    DB.clients.list = results[4].docs.map(d => d.data());
-    DB.suppliers.list = results[5].docs.map(d => d.data());
+    DB.quotes = results[3].docs.map(d => d.data());
+    DB.editBacklog = results[4].docs.map(d => d.data());
+    DB.clients.list = results[5].docs.map(d => d.data());
+    DB.suppliers.list = results[6].docs.map(d => d.data());
     normalizeLoadedDBCollections();
     if (restoreDBBackupIfNewer(serverVersion) === 'unsaved') setTimeout(function(){ saveDB(); }, 500);
   } catch(e) { console.error('loadDB error:', e); }
@@ -1499,6 +1512,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     }
     if (_profile.selectedTemplate !== undefined && _profile.selectedTemplate !== null) DB.settings.defaultTpl = normalizeTemplateIdx(_profile.selectedTemplate);
     if (_profile.nextInvNum) DB.nextInvNum = _profile.nextInvNum;
+    if (_profile.nextQuoteNum) DB.nextQuoteNum = _profile.nextQuoteNum;
     if (_profile.settings) Object.assign(DB.settings, _profile.settings);
 
     // Load data then render
@@ -2210,13 +2224,21 @@ window.addExpense = function addExpense(){
 // ════════════════════════════════
 // INVOICES
 // ════════════════════════════════
-let selectedTpl=0,currentPayInv=null,payType='full';
+let selectedTpl=0,currentPayInv=null,payType='full',documentMode='invoice';
 window.openInvoiceModal = function openInvoiceModal(){
+  documentMode='invoice';
   resetInvoiceModal();populateClientSelect();openModal('inv-modal');
   document.getElementById('i-date').value=todayStr();
   const due=new Date(today);due.setDate(due.getDate()+30);
   document.getElementById('i-due').value=due.toISOString().split('T')[0];
 }
+window.openQuoteModal = function openQuoteModal(){
+  documentMode='quote';resetInvoiceModal();populateClientSelect();
+  const title=document.getElementById('inv-modal-title');if(title)title.textContent='Raise New Quote';
+  const saveBtn=document.getElementById('inv-save-btn');if(saveBtn)saveBtn.textContent='Save Quote';
+  document.getElementById('i-date').value=todayStr();const valid=new Date(today);valid.setDate(valid.getDate()+30);document.getElementById('i-due').value=valid.toISOString().split('T')[0];openModal('inv-modal');
+}
+window.openEstimateModal = function openEstimateModal(){window.openQuoteModal();documentMode='estimate';const title=document.getElementById('inv-modal-title'),btn=document.getElementById('inv-save-btn');if(title)title.textContent='Raise New Estimate';if(btn)btn.textContent='Save Estimate';}
 function resetInvoiceModal(){
   const editNum=document.getElementById('i-edit-num');if(editNum)editNum.value='';
   const title=document.getElementById('inv-modal-title');if(title)title.textContent='Raise New Invoice';
@@ -2275,6 +2297,7 @@ window.selectDefaultInvoiceTemplate = function selectDefaultInvoiceTemplate(idx)
     DB.invoices.forEach(function(inv){inv.tpl=tpl;});
   }
   syncTemplatePickers(tpl);
+  renderSettingsInvoicePreview();
   saveDB();
 }
 window.addLi = function addLi(){const tbody=document.getElementById('li-body');const tr=document.createElement('tr');tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button type="button" class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;tbody.appendChild(tr);}
@@ -2315,6 +2338,11 @@ window.saveInvoice = function saveInvoice(){
   if(!String(d.cemail||'').trim() || !isValidOptionalEmail(d.cemail)) return showInputError('i-cemail','Please enter a valid customer email address.');
   if(!isValidRequiredPhone(d.cphone)) return showInputError('i-cphone','Please enter a valid customer phone number between 7 and 15 digits.');
   const editNum=(document.getElementById('i-edit-num')||{}).value||'';
+  if((documentMode==='quote'||documentMode==='estimate')&&!editNum){
+    DB.quotes=Array.isArray(DB.quotes)?DB.quotes:[];DB.nextQuoteNum=Math.max(1,Number(DB.nextQuoteNum)||1);const type=documentMode,num=(type==='estimate'?'EST-':'QTE-')+String(DB.nextQuoteNum++).padStart(4,'0');
+    DB.quotes.unshift({num:num,client:d.client,cemail:d.cemail,caddr:d.caddr,cphone:d.cphone,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,status:'draft',tpl:d.tpl,notes:d.notes,id:Date.now(),documentType:type});
+    saveDB();renderQuotes();closeModal('inv-modal');documentMode='invoice';return;
+  }
   if(editNum){
     const idx=DB.invoices.findIndex(function(i){return i.num===editNum;});
     if(idx<0){alert('Could not find this invoice to update.');return;}
@@ -2368,9 +2396,19 @@ function renderInvoices(){
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
   refreshInvoiceNotifications();
+  renderQuotes();
 }
 
+function renderQuotes(){
+  const body=document.getElementById('quote-table');if(!body)return;const quotes=Array.isArray(DB.quotes)?DB.quotes:[];
+  body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+fmtAmt(q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" onclick="window.printQuote('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">PDF</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" onclick="window.convertQuoteToInvoice('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" onclick="window.deleteQuote('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates yet.</td></tr>';
+}
+window.printQuote=function printQuote(num){const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q)return;const w=window.open('','_blank','width=900,height=760');w.document.write(window.clsBuildInvoicePrintHtml({inv:q,settings:DB.settings,templateIndex:q.tpl,documentLabel:q.documentType==='estimate'?'Estimate':'Quote'}));w.document.close();w.onload=function(){setTimeout(function(){w.print();},300);};};
+window.convertQuoteToInvoice=function convertQuoteToInvoice(num){const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q||q.status==='converted')return;if(!confirm('Convert '+num+' to an invoice?'))return;refreshNextInvoiceNumber();const invNum=formatInvoiceNumber(DB.nextInvNum++);DB.invoices.unshift(Object.assign({},q,{num:invNum,id:Date.now(),status:'unpaid',paidAmount:0,sourceQuote:num,documentType:'invoice'}));q.status='converted';q.convertedInvoiceNum=invNum;saveDB();renderInvoices();renderDashboard();alert(num+' converted to '+invNum+'.');};
+window.deleteQuote=function deleteQuote(num){if(!confirm('Delete quote '+num+'?'))return;DB.quotes=(DB.quotes||[]).filter(function(q){return q.num!==num;});saveDB();renderQuotes();};
+
 window.openInvoiceEditModal=function openInvoiceEditModal(num){
+  documentMode='invoice';
   const inv=DB.invoices.find(function(i){return i.num===num;});
   if(!inv){alert('Could not find this invoice to edit.');return;}
   resetInvoiceModal();
@@ -2660,6 +2698,8 @@ function loadSettings(){
   loadLogoSize();
   loadLogoPosition();
   renderTrialStatus();
+  bindSettingsInvoicePreview();
+  renderSettingsInvoicePreview();
   window.showAccountSettingsTab(currentAccountSettingsTab);
 }
 window.saveSettings = function saveSettings(){
@@ -2705,12 +2745,34 @@ function applySettings(){
   if(DB.settings.logo){logoWrap.innerHTML=`<img src="${DB.settings.logo}" class="sb-logo-img" alt="">`;}
   else{logoWrap.innerHTML='';}
 }
-window.previewSettingsLogo = function previewSettingsLogo(input){
+window.previewSettingsLogo = async function previewSettingsLogo(input){
   if(!input.files||!input.files[0])return;
-  const reader=new FileReader();
-  reader.onload=e=>{DB.settings.logo=e.target.result;const img=document.getElementById('settings-logo-preview');img.src=e.target.result;img.style.display='block';document.getElementById('logo-upload-placeholder').style.display='none';applySettings();saveDB();};
-  reader.readAsDataURL(input.files[0]);
+  try{
+    DB.settings.logo=window.clsPrepareInvoiceLogo?await window.clsPrepareInvoiceLogo(input.files[0]):'';
+    if(!DB.settings.logo)throw new Error('The logo could not be prepared.');
+    const img=document.getElementById('settings-logo-preview');if(img){img.src=DB.settings.logo;img.style.display='block';}
+    const placeholder=document.getElementById('logo-upload-placeholder');if(placeholder)placeholder.style.display='none';
+    applySettings();renderSettingsInvoicePreview();await saveDB();
+  }catch(err){alert(err&&err.message?err.message:'The logo could not be uploaded.');}
+  finally{input.value='';}
 }
+
+function valueOr(id,fallback){const el=document.getElementById(id);return el&&el.value!==''?el.value:fallback;}
+function invoicePreviewSettings(){
+  const s=Object.assign({},DB.settings);
+  s.bizName=valueOr('set-bizname',s.bizName||'My Business');s.biz=s.bizName;
+  s.addr=valueOr('set-addr',s.addr||'42 Galle Road, Colombo 03');s.email=valueOr('set-email',s.email||'invoices@business.com');
+  s.vat=valueOr('set-vat',s.vat||'');s.footer=valueOr('set-footer',s.footer||'Thank you for your business.');
+  s.defaultTpl=normalizeTemplateIdx(valueOr('set-default-tpl',s.defaultTpl));s.invoiceFont=valueOr('set-invoice-font',s.invoiceFont||'classic');s.invoiceView=valueOr('set-invoice-view',s.invoiceView||'modern');
+  s.logoAlign=DB.settings.logoAlign||'left';s.logoSize=DB.settings.logoSize||'M';return s;
+}
+function renderSettingsInvoicePreview(){
+  const box=document.getElementById('settings-invoice-preview');if(!box||!window.clsBuildInvoicePreviewFrame)return;
+  const s=invoicePreviewSettings(),rate=Number(valueOr('set-vatrate',0))||0,prefix=valueOr('set-invoice-prefix','INV')||'INV';
+  const inv={num:prefix+'-0001',client:'Sample Customer',caddr:'Colombo, Sri Lanka',cemail:'customer@example.com',date:new Date().toISOString().slice(0,10),due:new Date(Date.now()+30*86400000).toISOString().slice(0,10),terms:'Net 30',cur:'LKR',lines:[{desc:'Professional service',qty:1,price:25000,total:25000}],sub:25000,vat:25000*rate/100,total:25000+(25000*rate/100),notes:s.footer,tpl:s.defaultTpl};
+  box.innerHTML=window.clsBuildInvoicePreviewFrame({inv:inv,settings:s,templateIndex:s.defaultTpl});
+}
+function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-email','set-vat','set-footer','set-invoice-prefix','set-invoice-font','set-invoice-view','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
 
 // ════════════════════════════════
 // INVOICE PDF PRINTING
@@ -3157,6 +3219,7 @@ window.setLogoAlign = function setLogoAlign(align,btn){
   var x=document.getElementById('set-logo-x');
   if(x)x.value=DB.settings.logoX;
   updateLogoPositionLabels();
+  renderSettingsInvoicePreview();
   saveDB(); // save immediately so invoices pick it up
 }
 function loadLogoAlign(){
@@ -3179,6 +3242,7 @@ window.setLogoPosition = function setLogoPosition(){
   DB.settings.logoX=x?Number(x.value||8):8;
   DB.settings.logoY=y?Number(y.value||5):5;
   updateLogoPositionLabels();
+  renderSettingsInvoicePreview();
   saveDB();
 }
 function loadLogoPosition(){
@@ -3191,6 +3255,7 @@ window.setLogoSize = function setLogoSize(size,btn){
   DB.settings.logoSize=size;
   document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
+  renderSettingsInvoicePreview();
   saveDB();
 }
 function loadLogoSize(){

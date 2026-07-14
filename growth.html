@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260713-invoice-sharing"></script>
+<script src="assets/platform.js?v=20260714-invoice-suite"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -834,6 +834,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="help"><b>Invoices</b> — Bills you send to customers. Track which are paid, waiting, partial, or overdue. Includes VAT &amp; tax support and manual reminders.</div>
       <div class="sumbar c3" id="inv-sum"></div>
       <div class="card"><div class="card-head"><span class="card-title">All Invoices</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><div class="table-wrap"><table class="invoice-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
+      <div class="card" style="margin-top:1rem"><div class="card-head"><div><span class="card-title">Quotes &amp; Estimates</span><div class="help" style="margin:.25rem 0 0;padding:0;border:0;background:transparent">Prepare a document, download it, and convert the accepted version into an invoice.</div></div><div class="card-actions"><button class="btn bo" onclick="window.openEstimateMo()">+ Estimate</button><button class="btn bd" onclick="window.openQuoteMo()">+ Quote</button></div></div><div class="table-wrap"><table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th class="tr">Total</th><th class="tr">Actions</th></tr></thead><tbody id="quote-body"></tbody></table></div></div>
     </div>
 
     <!-- CUSTOMERS -->
@@ -961,15 +962,6 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
             <div style="padding:1.35rem">
               <div class="fsec">Invoice Defaults</div>
               <div class="fg"><label>Notes</label><input class="fi" id="s-footer" type="text" placeholder="Thank you for your business."></div>
-              <div class="fsec">EmailJS Invoice Emails</div>
-              <div class="frow">
-                <div class="fg"><label>EmailJS Public Key</label><input class="fi" id="s-ejskey" type="text" placeholder="public_..."></div>
-                <div class="fg"><label>EmailJS Service ID</label><input class="fi" id="s-ejsservice" type="text" placeholder="service_..."></div>
-              </div>
-              <div class="frow">
-                <div class="fg"><label>Payment Reminder Template ID</label><input class="fi" id="s-ejstemplate" type="text" placeholder="template_..."><div class="template-helper">Use {{{message_html}}} in the overdue reminder template body.</div></div>
-                <div class="fg"><label>Paid Receipt Template ID</label><input class="fi" id="s-ejsreceipttemplate" type="text" placeholder="template_..."><div class="template-helper">Optional shorter email for paid invoices. Leave blank to reuse the reminder template.</div></div>
-              </div>
               <div class="frow">
                 <div class="fg"><label>Default VAT / Tax Rate (%)</label><input class="fi" id="s-vatrate" type="number" min="0" max="100" step="0.01" placeholder="15"></div>
                 <div class="fg"><label>Default Invoice Template</label><input type="hidden" id="s-default-tpl" value="0"><div class="template-helper">All new invoices and invoice PDFs use this selected theme.</div></div>
@@ -986,11 +978,11 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="settings-invoice-preview" id="settings-invoice-preview"></div>
               </div>
               <div class="fsec">Your Business Logo</div>
-              <div style="border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)" onclick="document.getElementById('logo-inp').click()">
+              <label for="logo-inp" style="display:block;border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)">
                 <img id="logo-prev" style="max-height:46px;display:none;margin:0 auto .45rem;object-fit:contain" src="" alt="">
-                <div id="logo-hint"><div style="font-size:1.3rem;margin-bottom:.3rem">🏢</div><div style="font-size:.79rem;color:var(--muted)">Click to upload your logo</div><div style="font-size:.67rem;color:var(--dim);margin-top:.18rem">PNG or JPG · Max 2MB · Shows on all invoices</div></div>
+                <div id="logo-hint"><div style="font-size:1.3rem;margin-bottom:.3rem">🏢</div><div style="font-size:.79rem;color:var(--muted)">Click to upload your logo</div><div style="font-size:.67rem;color:var(--dim);margin-top:.18rem">PNG, JPG, or WebP · Max 5MB · Optimized automatically</div></div>
                 <input type="file" id="logo-inp" accept="image/*" style="display:none" onchange="previewLogo(this)">
-              </div>
+              </label>
               <div class="frow" style="margin-top:.85rem;margin-bottom:0">
                 <div class="fg"><label>Logo Alignment</label><select class="fi fsel" id="s-logo-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>
                 <div class="fg"><label>Logo Size</label><select class="fi fsel" id="s-logo-size"><option value="S">Small</option><option value="M">Medium</option><option value="L">Large</option></select></div>
@@ -1165,6 +1157,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 var D = {
   txns:[],
   invoices:[],
+  quotes:[],
   exps:[],
   clients:[],
   staff:[],
@@ -1174,11 +1167,12 @@ var D = {
   autos:[],
   editLog:[],
   settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
-  _nextInvId:1
+  _nextInvId:1,
+  _nextQuoteId:1
 };
 
 // ===================== UTILS =====================
-var payInvId = null, editInvId = null, selTpl = 0, CH = {};
+var payInvId = null, editInvId = null, selTpl = 0, CH = {}, businessDocumentMode = 'invoice';
 var chartRenderToken = 0;
 
 function loadChartLibrary() {
@@ -1914,6 +1908,14 @@ function normalizeBusinessData() {
     });
     return {id:String(id), num:String(id), client:inv.client || inv.clientName || 'Customer', cemail:inv.cemail || inv.email || '', cphone:inv.cphone || inv.phone || '', caddr:inv.caddr || inv.clientAddress || '', date:inv.date || today(), due:inv.due || inv.dueDate || inv.date || today(), terms:inv.terms || 'Net 30', cur:inv.cur || inv.currency || 'LKR', items:items, lines:items, sub:sub, vat:toNum(inv.vat), vatRate:toNum(inv.vatRate), disc:toNum(inv.disc), total:total, amount:total, status:status, paid:paid, paidAmount:paid, tpl:normalizeBusinessTemplate(D.settings.defaultTpl), notes:inv.notes || '', payments:payments, publicToken:inv.publicToken || '', publicInvoiceActive:inv.publicInvoiceActive === true, publicInvoiceUrl:inv.publicInvoiceUrl || '', publicInvoiceCreatedAt:inv.publicInvoiceCreatedAt || '', whatsappReminderCount:toNum(inv.whatsappReminderCount), lastWhatsappReminderAt:inv.lastWhatsappReminderAt || '', whatsappReminderHistory:Array.isArray(inv.whatsappReminderHistory) ? inv.whatsappReminderHistory : []};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
+  D.quotes = (D.quotes || []).map(function(q, i) {
+    var id = q.id || q.num || ('QTE-' + String(i + 1).padStart(4,'0'));
+    var items = (q.items || q.lines || []).map(function(it) { var qty=toNum(it.qty||1)||1;return {desc:it.desc||'Quote item',qty:qty,price:toNum(it.price),total:toNum(it.total||qty*toNum(it.price))}; });
+    var sub=toNum(q.sub||items.reduce(function(a,it){return a+it.qty*it.price;},0));var total=toNum(q.total||q.amount||sub);
+    return Object.assign({},q,{id:String(id),num:String(id),items:items,lines:items,sub:sub,total:total,amount:total,status:q.status==='converted'?'converted':'draft',documentType:q.documentType==='estimate'?'estimate':'quote'});
+  }).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
+  var maxQuoteNo=D.quotes.reduce(function(max,q){var m=String(q.id||'').match(/(\d+)$/);return m?Math.max(max,Number(m[1])):max;},0);
+  D._nextQuoteId=maxQuoteNo?Math.max(toNum(D._nextQuoteId)||1,maxQuoteNo+1):1;
   D.txns = addDerivedPaymentTransactions(D.txns, D.invoices);
   var maxInvNo = D.invoices.reduce(function(max, inv) {
     var m = String(inv.id || '').match(/(\d+)$/);
@@ -2612,7 +2614,49 @@ function renderInvoices() {
     return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + (reminderMeta ? '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.3rem;white-space:nowrap">' + escHtml(reminderMeta) + '</div>' : '') + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
   }).join('') || emptyRow(8, 'No invoices yet', 'Create a Business invoice with VAT support, payment tracking, and reminder tools.', 'Create Invoice', 'window.openInvMo()');
   refreshInvoiceNotifications();
+  renderQuotes();
 }
+
+function renderQuotes() {
+  var body = document.getElementById('quote-body');
+  if (!body) return;
+  body.innerHTML = (D.quotes || []).map(function(q) {
+    var safe = String(q.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    var converted = q.status === 'converted';
+    return '<tr><td class="mono gld">' + escHtml(q.id) + '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.2rem">' + (q.documentType === 'estimate' ? 'Estimate' : 'Quote') + '</div></td><td>' + escHtml(q.client || 'Customer') + '</td><td>' + escHtml(formatDateHuman(q.date)) + '</td><td>' + escHtml(formatDateHuman(q.due)) + '</td><td><span class="pill ' + (converted ? 'pp' : 'pdr') + '">' + (converted ? 'Converted' : 'Draft') + '</span></td><td class="tr">' + fmt(q.total) + '</td><td class="tr"><div class="invoice-actions"><button class="bsm" onclick="window.printQuoteBusiness(\'' + safe + '\')">PDF</button>' + (converted ? '<span class="pill pp">' + escHtml(q.convertedInvoiceId || 'Invoice') + '</span>' : '<button class="bsm bsmgr" onclick="window.convertBusinessQuote(\'' + safe + '\')">Convert</button>') + '<button class="bsm bsmdel" onclick="window.deleteBusinessQuote(\'' + safe + '\')">Delete</button></div></td></tr>';
+  }).join('') || emptyRow(7, 'No quotes yet', 'Create a quote or estimate, then convert it when the customer accepts.', 'Create Quote', 'window.openQuoteMo()');
+}
+
+window.printQuoteBusiness = function printQuoteBusiness(id) {
+  var q = (D.quotes || []).find(function(item) { return item.id === id; });
+  if (!q) return;
+  var w = window.open('', '_blank', 'width=900,height=760');
+  w.document.write(window.clsBuildInvoicePrintHtml({inv:q, settings:D.settings, templateIndex:q.tpl, documentLabel:q.documentType === 'estimate' ? 'Estimate' : 'Quote'}));
+  w.document.close();
+  w.onload = function() { setTimeout(function() { w.print(); }, 300); };
+};
+
+window.convertBusinessQuote = function convertBusinessQuote(id) {
+  var q = (D.quotes || []).find(function(item) { return item.id === id; });
+  if (!q || q.status === 'converted' || !confirm('Convert ' + id + ' to an invoice?')) return;
+  var invId = formatBusinessInvoiceNumber(D._nextInvId || 1);
+  D._nextInvId = (D._nextInvId || 1) + 1;
+  D.invoices.unshift(Object.assign({}, q, {id:invId,num:invId,status:'unpaid',paid:0,paidAmount:0,sourceQuote:id,documentType:'invoice'}));
+  q.status = 'converted';
+  q.convertedInvoiceId = invId;
+  syncBusinessComputedData();
+  renderInvoices();
+  renderDashboard();
+  saveData();
+  showToast(id + ' converted to ' + invId + '.', 'ok');
+};
+
+window.deleteBusinessQuote = function deleteBusinessQuote(id) {
+  if (!confirm('Delete quote ' + id + '?')) return;
+  D.quotes = (D.quotes || []).filter(function(q) { return q.id !== id; });
+  renderQuotes();
+  saveData();
+};
 
 function renderClients() {
   document.getElementById('cli-sum').innerHTML =
@@ -3004,7 +3048,7 @@ function renderSettingsInvoicePreview() {
 }
 
 function bindSettingsPreviewInputs() {
-  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-ejskey','s-ejsservice','s-ejstemplate','s-ejsreceipttemplate','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
+  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el || el.dataset.previewBound) return;
     el.dataset.previewBound = '1';
@@ -3026,6 +3070,7 @@ function bindSettingsPreviewInputs() {
 }
 
 window.openInvMo = function openInvMo() {
+  businessDocumentMode = 'invoice';
   editInvId = null;
   var title = document.getElementById('inv-mo-title');
   var btn = document.getElementById('inv-save-btn');
@@ -3044,6 +3089,16 @@ window.openInvMo = function openInvMo() {
   calcTotals();
   openMo('mo-inv');
 }
+
+window.openQuoteMo = function openQuoteMo() {
+  window.openInvMo();
+  businessDocumentMode = 'quote';
+  var title = document.getElementById('inv-mo-title');
+  var btn = document.getElementById('inv-save-btn');
+  if (title) title.textContent = 'Create New Quote';
+  if (btn) btn.textContent = 'Create Quote ✓';
+}
+window.openEstimateMo = function openEstimateMo() { window.openQuoteMo(); businessDocumentMode='estimate'; var title=document.getElementById('inv-mo-title'),btn=document.getElementById('inv-save-btn');if(title)title.textContent='Create New Estimate';if(btn)btn.textContent='Create Estimate ✓'; }
 
 window.addLi = function addLi(item) {
   item = item || {};
@@ -3109,6 +3164,18 @@ window.saveInv = function saveInv() {
   if (!isFinite(t.sub) || !isFinite(t.total) || t.sub < 0 || t.total < 0) { showToast('Invoice total cannot be negative.', 'err'); return; }
   var payload = {client:client,cemail:cemail,cphone:cphone,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:vatRate,disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
   syncCustomerFromInvoicePayload(payload);
+  if ((businessDocumentMode === 'quote' || businessDocumentMode === 'estimate') && !editInvId) {
+    D._nextQuoteId = Math.max(1, toNum(D._nextQuoteId) || 1);
+    var docType = businessDocumentMode;
+    var quoteId = (docType === 'estimate' ? 'EST-' : 'QTE-') + String(D._nextQuoteId++).padStart(4, '0');
+    D.quotes.unshift(Object.assign({id:quoteId,num:quoteId,status:'draft',documentType:docType}, payload));
+    closeMo('mo-inv');
+    businessDocumentMode = 'invoice';
+    renderQuotes();
+    showToast(quoteId + ' saved successfully!', 'ok');
+    saveData();
+    return;
+  }
   var id = editInvId;
   if (id) {
     var existing = D.invoices.find(function(inv) { return inv.id === id; });
@@ -3135,6 +3202,7 @@ window.saveInv = function saveInv() {
 }
 
 window.editInv = function editInv(id) {
+  businessDocumentMode = 'invoice';
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
   editInvId = id;
@@ -3798,20 +3866,22 @@ window.saveSettings = function saveSettings() {
   saveData();
 }
 
-function previewLogo(input) {
+async function previewLogo(input) {
   if (!input.files || !input.files[0]) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    D.settings.logo = e.target.result;
+  try {
+    D.settings.logo = window.clsPrepareInvoiceLogo ? await window.clsPrepareInvoiceLogo(input.files[0]) : '';
+    if (!D.settings.logo) throw new Error('The logo could not be prepared.');
     var prev = document.getElementById('logo-prev');
     var hint = document.getElementById('logo-hint');
-    prev.src = e.target.result;
-    prev.style.display = 'block';
+    if (prev) { prev.src = D.settings.logo; prev.style.display = 'block'; }
     if (hint) hint.style.display = 'none';
     renderSettingsInvoicePreview();
-    saveData();
-  };
-  reader.readAsDataURL(input.files[0]);
+    await saveData();
+  } catch (e) {
+    showToast((e && e.message) || 'The logo could not be uploaded.', 'err');
+  } finally {
+    input.value = '';
+  }
 }
 
 // ===================== PRINT (SHARED INVOICE TEMPLATES) =====================
@@ -4031,6 +4101,7 @@ async function saveDataNow() {
       settings: Object.assign({}, savedSettings, { growthDataVersion: version }),
       nextInvId: D._nextInvId || 1,
       nextInvNum: D._nextInvId || 1,
+      nextQuoteId: D._nextQuoteId || 1,
       bizName: D.settings.biz || '',
       addr: D.settings.addr || '',
       email: D.settings.email || '',
@@ -4039,7 +4110,7 @@ async function saveDataNow() {
       footer: D.settings.footer || '',
       growthDataVersion: version
     };
-    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, payables: D.payables, editLog: D.editLog };
+    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, quotes: D.quotes, clients: D.clients, suppliers: D.suppliers, payables: D.payables, editLog: D.editLog };
     var docsFor = function(arr) {
       return (arr || []).map(function(item, i) {
         var id = item && (item.id || item.num || item._id || (item.itemId && item.date ? item.itemId + '-' + item.date : null)) || i;
@@ -4065,6 +4136,7 @@ async function saveDataNow() {
       settings: savedSettings,
       nextInvId: D._nextInvId || 1,
       nextInvNum: D._nextInvId || 1,
+      nextQuoteId: D._nextQuoteId || 1,
       bizName: D.settings.biz || '',
       addr: D.settings.addr || '',
       email: D.settings.email || '',
@@ -4131,8 +4203,8 @@ function saveData() {
 async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);
-    var cols = ['transactions','expenses','invoices','clients','suppliers','payables','editLog'];
-    var keys = ['txns','exps','invoices','clients','suppliers','payables','editLog'];
+    var cols = ['transactions','expenses','invoices','quotes','clients','suppliers','payables','editLog'];
+    var keys = ['txns','exps','invoices','quotes','clients','suppliers','payables','editLog'];
     var profSnap;
     var snaps;
     if (typeof userRef.getCollections === 'function') {
@@ -4150,6 +4222,7 @@ async function loadData(uid) {
       var profileData = profSnap.data() || {};
       if (profileData.settings) D.settings = mapStudioSettings(profileData.settings);
       if (profileData.nextInvId || profileData.nextInvNum) D._nextInvId = profileData.nextInvId || profileData.nextInvNum;
+      if (profileData.nextQuoteId) D._nextQuoteId = profileData.nextQuoteId;
       serverVersion = Number(profileData.growthDataVersion || 0);
       _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
     }
