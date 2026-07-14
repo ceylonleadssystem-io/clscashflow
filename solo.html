@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260714-converted-share-fix"></script>
+<script src="assets/platform.js?v=20260714-qa-links-mobile"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -199,16 +199,17 @@ tr:hover td{background:var(--bg3)}
 .invoice-status-tab.active{background:var(--black);border-color:var(--black);color:#fff}
 .invoice-status-count{display:inline-grid;place-items:center;min-width:1.35rem;height:1.35rem;padding:0 .28rem;background:var(--bg3);color:var(--text);font-size:.62rem;letter-spacing:0}
 .invoice-status-tab.active .invoice-status-count{background:#fff;color:var(--black)}
-.inv-action-row.clean{display:grid;grid-template-columns:minmax(116px,1fr) repeat(3,34px) 42px;gap:.32rem;align-items:center;min-width:286px}
+.inv-action-row.clean{display:flex;gap:.32rem;align-items:center;min-width:470px;flex-wrap:nowrap}
 .inv-action-row.clean .btn-sm{height:34px;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center}
-.invoice-icon-action{font-size:.78rem!important;letter-spacing:0!important;min-width:34px}
+.inv-action-row.clean .btn-sm:first-child{min-width:116px;flex:1}
+.invoice-icon-action{font-size:.6rem!important;letter-spacing:.04em!important;min-width:64px;gap:.28rem}
 .invoice-more{position:relative;height:34px}
-.invoice-more summary{list-style:none;height:34px;display:grid;place-items:center;border:1px solid var(--border-acc);color:var(--gold);cursor:pointer;font-weight:900;font-size:1rem}
+.invoice-more summary{list-style:none;height:34px;display:flex;align-items:center;justify-content:center;padding:0 .65rem;border:1px solid var(--border-acc);color:var(--gold);cursor:pointer;font-weight:800;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .invoice-more summary::-webkit-details-marker{display:none}
 .invoice-more-menu{position:absolute;right:0;top:38px;z-index:40;width:126px;padding:.35rem;background:#fff;border:1px solid var(--border);box-shadow:0 10px 24px rgba(20,16,12,.14);display:grid;gap:.25rem}
 .invoice-more-menu .btn-sm{width:100%;justify-content:flex-start!important;background:#fff;color:var(--text);border:0}
 .invoice-more-menu .danger{color:var(--red)}
-@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.5rem .2rem;font-size:.53rem;line-height:1.25}.invoice-status-count{flex:0 0 auto}.inv-action-row.clean{min-width:286px}.table-card:has(.invoice-more[open]){overflow:visible!important}}
+@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.5rem .2rem;font-size:.53rem;line-height:1.25}.invoice-status-count{flex:0 0 auto}.inv-action-row.clean{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0;width:100%;flex:1}.inv-action-row.clean .btn-sm:first-child{grid-column:1/-1;width:100%}.invoice-more{width:100%}.table-card:has(.invoice-more[open]){overflow:visible!important}}
 .btn-sm{padding:.28rem .55rem;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-b);cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
 .btn-sm-dark{background:var(--black);color:#fff}
 .btn-sm-dark:hover{background:var(--gold)}
@@ -276,12 +277,13 @@ body.is-admin .admin-only{display:flex}
 .pay-pending{font-size:.68rem;color:var(--red);margin-top:.15rem}
 
 /* Logo upload in settings */
-.logo-area{border:2px dashed var(--border-acc);padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg)}
+.logo-area{display:flex;width:100%;min-width:0;min-height:136px;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;border:2px dashed var(--border-acc);padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fff}
 .logo-area:hover{border-color:var(--gold);background:var(--bg3)}
 .logo-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.logo-area-preview{max-height:92px;max-width:240px;margin:0 auto .5rem;display:block;object-fit:contain}
+.logo-area-preview{width:auto;height:auto;max-height:92px;max-width:min(240px,90%);margin:0 auto .5rem;display:block;object-fit:contain;flex:0 0 auto}
 .logo-area-label{font-size:.78rem;color:var(--muted)}
 .logo-area-hint{font-size:.65rem;color:var(--dim);margin-top:.2rem}
+.logo-area-change{display:none;font-size:.65rem;color:var(--gold);font-weight:700;margin-top:.35rem}
 
 /* ── SUPPLIERS ── */
 .supplier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
@@ -383,7 +385,7 @@ body.is-admin .admin-only{display:flex}
 #view-settings .table-title,#view-settings .trial-card-title,#view-settings .settings-helper-title{font-family:var(--font-b);font-size:.86rem;font-weight:800;letter-spacing:0;color:var(--black)}
 #view-settings .f-section{display:flex;align-items:center;gap:.55rem;border-bottom:0;margin:1.2rem 0 .8rem;padding:0;font-size:.56rem;color:var(--gold)}
 #view-settings .f-section::after{content:"";height:1px;background:var(--border);flex:1}
-#view-settings .logo-area{border-radius:8px;background:linear-gradient(180deg,#fff,var(--bg));min-height:136px}
+#view-settings .logo-area{border-radius:8px;background:#fff;min-height:136px}
 #view-settings .tpl-picker{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
 #view-settings .btn-act,#view-settings .btn-act-outline{border-radius:999px}
 #view-settings #cls-billing-widget,#view-settings #cls-support-widget,#view-settings #cls-danger-zone-widget{border-radius:8px;max-width:none!important}
@@ -479,11 +481,11 @@ body.is-admin .admin-only{display:flex}
   #view-invoices .table-card td:nth-child(6)::before{content:"Payment"}
   #view-invoices .table-card td:nth-child(7)::before{content:"Total"}
   #view-invoices .table-card td:nth-child(8)::before{content:"Actions"}
-  .modal-overlay{align-items:flex-end;padding:.5rem}
-  .modal-box{max-width:none;width:100%;max-height:94dvh;border-radius:10px 10px 0 0;overflow:auto}
-  .modal-head{padding:1rem 1.1rem}
-  .modal-body{padding:1rem}
-  .modal-foot{padding:.8rem 1rem;display:grid;grid-template-columns:1fr;gap:.55rem}
+  .modal-overlay{inset:0 0 74px;align-items:flex-end;padding:.5rem;z-index:650}
+  .modal-box{max-width:none;width:100%;max-height:calc(100dvh - 74px - 1rem);border-radius:10px 10px 0 0;overflow:hidden;display:flex;flex-direction:column}
+  .modal-head{padding:1rem 1.1rem;position:static;flex:0 0 auto}
+  .modal-body{padding:1rem;overflow-y:auto;min-height:0;overscroll-behavior:contain}
+  .modal-foot{position:static;flex:0 0 auto;padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr;gap:.55rem}
   .modal-foot .btn-act,.modal-foot .btn-act-outline{width:100%}
   .f-row,.client-select-bar{display:grid!important;grid-template-columns:1fr!important}
   .client-select-bar{align-items:stretch;padding:.8rem}
@@ -503,7 +505,7 @@ body.is-admin .admin-only{display:flex}
 }
 
 @media(max-width:760px){
-  #inv-modal .invoice-modal-box{height:94dvh;max-height:94dvh;overflow:hidden}
+  #inv-modal .invoice-modal-box{height:calc(100dvh - 74px - 1rem);max-height:calc(100dvh - 74px - 1rem);overflow:hidden}
   #inv-modal .invoice-modal-body{padding:.85rem}
   #inv-modal .invoice-form-columns,#inv-modal .invoice-closing-grid{grid-template-columns:1fr}
   #inv-modal .invoice-summary-panel .f-section{text-align:left}
@@ -843,12 +845,13 @@ document.addEventListener('click',function(e){
             <div style="padding:1.35rem">
               <div class="f-section">Business Logo</div>
               <label class="logo-area" for="settings-logo" id="logo-area">
-                <img id="settings-logo-preview" class="logo-area-preview" style="display:none" src="" alt="">
+                <img id="settings-logo-preview" class="logo-area-preview" style="display:none" src="" alt="Business logo preview">
                 <div id="logo-upload-placeholder">
                   <div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
                   <div class="logo-area-label">Upload your business logo</div>
                   <div class="logo-area-hint">PNG, JPG, or WebP · Max 5MB · Optimized automatically</div>
                 </div>
+                <div id="logo-upload-change" class="logo-area-change">Choose a different logo</div>
                 <input type="file" id="settings-logo" accept="image/*" style="display:none" onchange="previewSettingsLogo(this)">
               </label>
               <div class="f-section" style="margin-top:1rem">Business Details</div>
@@ -2378,10 +2381,10 @@ function renderInvoices(){
       <td style="text-align:right" class="amount-gold"><strong>${fmtAmt(inv.amount)}</strong></td>
       <td><div class="inv-action-row clean">
         ${invoiceRegisterState(inv)==='paid'?`<button class="btn-sm btn-sm-green" data-cls-fn="emailPaidReceipt" data-cls-arg="${inv.num}" title="Send paid receipt">Send receipt</button>`:`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">${invoiceRegisterState(inv)==='partial'?'Add payment':'Record payment'}</button>`}
-        <button class="btn-sm btn-sm-dark invoice-icon-action" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Open PDF" aria-label="Open PDF">↓</button>
-        <button class="btn-sm btn-sm-green invoice-icon-action" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send status-aware email" aria-label="Send email">✉</button>
-        <button class="btn-sm btn-sm-wa invoice-icon-action" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send status-aware WhatsApp message" aria-label="Send WhatsApp message">●</button>
-        <details class="invoice-more"><summary title="More actions" aria-label="More actions">⋯</summary><div class="invoice-more-menu"><button class="btn-sm" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit invoice</button><button class="btn-sm danger" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button></div></details>
+        <button class="btn-sm btn-sm-dark invoice-icon-action" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Open invoice PDF" aria-label="Open invoice PDF">↓ PDF</button>
+        <button class="btn-sm btn-sm-green invoice-icon-action" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send invoice by email" aria-label="Send invoice by email">✉ Email</button>
+        <button class="btn-sm btn-sm-wa invoice-icon-action" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send invoice by WhatsApp" aria-label="Send invoice by WhatsApp">WhatsApp</button>
+        <details class="invoice-more"><summary title="More invoice actions" aria-label="More invoice actions">More</summary><div class="invoice-more-menu"><button class="btn-sm" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit invoice</button><button class="btn-sm danger" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button></div></details>
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
   refreshInvoiceNotifications();
@@ -2692,8 +2695,9 @@ function loadSettings(){
   document.getElementById('set-username').value=s.username||'';
   const settingsLogo=document.getElementById('settings-logo-preview');
   const settingsLogoPlaceholder=document.getElementById('logo-upload-placeholder');
-  if(s.logo&&settingsLogo){settingsLogo.src=s.logo;settingsLogo.style.display='block';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='none';}
-  else if(settingsLogo){settingsLogo.src='';settingsLogo.style.display='none';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='block';}
+  const settingsLogoChange=document.getElementById('logo-upload-change');
+  if(s.logo&&settingsLogo){settingsLogo.src=s.logo;settingsLogo.style.display='block';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='none';if(settingsLogoChange)settingsLogoChange.style.display='block';}
+  else if(settingsLogo){settingsLogo.src='';settingsLogo.style.display='none';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='block';if(settingsLogoChange)settingsLogoChange.style.display='none';}
   var vr=document.getElementById('set-vatrate');if(vr)vr.value=(s.vatRate!=null?s.vatRate:15);
   ['ejskey','ejsservice','ejstemplate','ejsreceipttemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(!el)return;var prop={ejskey:'ejsKey',ejsservice:'ejsService',ejstemplate:'ejsTemplate',ejsreceipttemplate:'ejsReceiptTemplate'}[k];el.value=s[prop]||'';});
   var tpl=normalizeTemplateIdx(s.defaultTpl);
@@ -2761,6 +2765,7 @@ window.previewSettingsLogo = async function previewSettingsLogo(input){
     const img=document.getElementById('settings-logo-preview');
     if(img){img.src=DB.settings.logo;img.style.display='block';}
     const placeholder=document.getElementById('logo-upload-placeholder');if(placeholder)placeholder.style.display='none';
+    const change=document.getElementById('logo-upload-change');if(change)change.style.display='block';
     applySettings();renderSettingsInvoicePreview();await saveDB();
   }catch(err){alert(err&&err.message?err.message:'The logo could not be uploaded.');}
   finally{input.value='';}

@@ -1005,7 +1005,7 @@
         var img = new Image();
         img.onerror = function() { reject(new Error('The selected image is not valid.')); };
         img.onload = function() {
-          var scale = Math.min(1, 1200 / img.naturalWidth, 500 / img.naturalHeight);
+          var scale = Math.min(1, 720 / img.naturalWidth, 360 / img.naturalHeight);
           var width = Math.max(1, Math.round(img.naturalWidth * scale));
           var height = Math.max(1, Math.round(img.naturalHeight * scale));
           var canvas = document.createElement('canvas');
@@ -1015,13 +1015,13 @@
           ctx.clearRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
           var result = canvas.toDataURL('image/png');
-          if (result.length > 900000) {
+          if (result.length > 420000) {
             ctx.globalCompositeOperation = 'destination-over';
             ctx.fillStyle = '#fff';
             ctx.fillRect(0, 0, width, height);
-            result = canvas.toDataURL('image/jpeg', 0.86);
+            result = canvas.toDataURL('image/jpeg', 0.84);
           }
-          if (result.length > 1400000) {
+          if (result.length > 700000) {
             reject(new Error('The logo is still too large after optimization. Please use a simpler image.'));
             return;
           }

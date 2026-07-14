@@ -37,11 +37,30 @@ function normalizeWhatsAppNumber(value) {
 }
 
 function generatePublicToken() {
-  return crypto.randomBytes(24).toString('base64url');
+  // Keep shared tokens strictly alphanumeric. Some messaging clients treat a
+  // URL-safe hyphen as a wrapping point and copy it back into the link.
+  return crypto.randomBytes(24).toString('hex');
 }
 
 function isValidPublicToken(token) {
   return TOKEN_PATTERN.test(text(token, 80));
+}
+
+function publicTokenCandidates(value) {
+  const token = text(value, 80);
+  if (!isValidPublicToken(token)) return [];
+
+  const candidates = [token];
+  for (let index = 0; index < token.length; index += 1) {
+    if (token[index] !== '-') continue;
+    const candidate = token.slice(0, index) + token.slice(index + 1);
+    if (isValidPublicToken(candidate)) candidates.push(candidate);
+  }
+  if (token.includes('-')) {
+    const candidate = token.replace(/-/g, '');
+    if (isValidPublicToken(candidate)) candidates.push(candidate);
+  }
+  return [...new Set(candidates)];
 }
 
 function selectInvoiceSource(requested, candidates, invoiceNumber) {
@@ -278,6 +297,7 @@ module.exports = {
   normalizeWhatsAppNumber,
   generatePublicToken,
   isValidPublicToken,
+  publicTokenCandidates,
   selectInvoiceSource,
   invoiceFinancials,
   invoiceStatus,

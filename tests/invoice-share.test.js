@@ -4,6 +4,7 @@ const {
   normalizeWhatsAppNumber,
   generatePublicToken,
   isValidPublicToken,
+  publicTokenCandidates,
   selectInvoiceSource,
   invoiceFinancials,
   invoiceStatus,
@@ -42,7 +43,14 @@ test('creates a secure token when an invoice has none', function() {
   assert.equal(isValidPublicToken(first), true);
   assert.equal(isValidPublicToken(second), true);
   assert.notEqual(first, second);
-  assert.equal(first.length, 32);
+  assert.equal(first.length, 48);
+  assert.match(first, /^[A-Za-z0-9]+$/);
+});
+
+test('recovers a token with a messaging-client hyphen inserted into it', function() {
+  const canonical = 'Kga1b2aE5WnXiZsXtDaXBPp9gXV0cGJw';
+  const delivered = 'Kga1b2aE5WnXiZsXtDaXBPp9g-XV0cGJw';
+  assert.deepEqual(publicTokenCandidates(delivered), [delivered, canonical]);
 });
 
 test('finds an existing converted invoice by its displayed invoice number', function() {

@@ -5,6 +5,7 @@ const {
 } = require('../lib/supabase');
 const {
   isValidPublicToken,
+  publicTokenCandidates,
   sanitizePublicInvoice,
   sanitizePublicSnapshot,
   canUseMappedSource
@@ -55,7 +56,15 @@ exports.handler = async function(event) {
   }
 
   try {
-    const share = await getDocument('publicInvoices', token);
+    let share = null;
+    let resolvedToken = token;
+    for (const candidate of publicTokenCandidates(token)) {
+      const candidateShare = await getDocument('publicInvoices', candidate);
+      if (!candidateShare || !candidateShare.exists) continue;
+      share = candidateShare;
+      resolvedToken = candidate;
+      break;
+    }
     const shareData = share && share.data ? share.data : {};
     if (!share || shareData.active !== true || shareData.public !== true) {
       return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
@@ -66,7 +75,7 @@ exports.handler = async function(event) {
       return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
     }
     const source = await getDocument('users/' + ownerUid + '/invoices', sourceInvoiceId);
-    if (source && canUseMappedSource(source.data, token)) {
+    if (source && canUseMappedSource(source.data, resolvedToken)) {
       const profile = await getDocument('users', ownerUid);
       return response(200, {
         ok: true,
