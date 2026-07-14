@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const {
   normalizeWhatsAppNumber,
   generatePublicToken,
@@ -61,6 +63,12 @@ test('creates a unique-path public invoice URL for mobile browsers', function() 
     buildVersionedPublicUrl('https://ceylonrylabs.io/', token, 'deploy15'),
     'https://ceylonrylabs.io/invoice/' + token + '/deploy15'
   );
+});
+
+test('public invoice page loads shared assets from the site root', function() {
+  const page = fs.readFileSync(path.join(__dirname, '..', 'invoice-public.html'), 'utf8');
+  assert.match(page, /<script src="\/assets\/platform\.js\?v=[^"]+"><\/script>/);
+  assert.doesNotMatch(page, /<script src="assets\/platform\.js/);
 });
 
 test('public lookup accepts the document shape returned by Supabase', async function() {
