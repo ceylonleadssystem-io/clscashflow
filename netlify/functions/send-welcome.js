@@ -36,10 +36,11 @@ exports.handler = async function handler(event) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Email not configured. Set SMTP_USER and SMTP_PASS in Netlify.' }) };
   }
 
+  const port = Number(process.env.SMTP_PORT || 465);
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: true,
+    port,
+    secure: String(process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465,
     auth: { user, pass }
   });
 
@@ -49,7 +50,8 @@ exports.handler = async function handler(event) {
   const planLabel  = planLabels[plan] || planLabels.solo;
   const monthlyPrice = monthlyPrices[plan] || monthlyPrices.solo;
   const annualPrice  = annualPrices[plan] || annualPrices.solo;
-  const loginUrl   = 'https://ceylonrylabscashflow.netlify.app/signin.html';
+  const siteUrl = String(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io').replace(/\/$/, '');
+  const loginUrl = siteUrl + '/signin.html';
 
   const trialEndFmt = trialEnd
     ? new Date(trialEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -130,7 +132,8 @@ exports.handler = async function handler(event) {
 
   try {
     await transporter.sendMail({
-      from: '"CeylonryLabs.io" <' + user + '>',
+      from: process.env.SMTP_FROM || ('"CeylonryLabs.io" <' + user + '>'),
+      replyTo: process.env.SMTP_REPLY_TO || user,
       to,
       subject,
       text,

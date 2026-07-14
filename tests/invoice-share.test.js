@@ -4,6 +4,7 @@ const {
   normalizeWhatsAppNumber,
   generatePublicToken,
   isValidPublicToken,
+  selectInvoiceSource,
   invoiceFinancials,
   invoiceStatus,
   sanitizePublicInvoice,
@@ -44,6 +45,15 @@ test('creates a secure token when an invoice has none', function() {
   assert.equal(first.length, 32);
 });
 
+test('finds an existing converted invoice by its displayed invoice number', function() {
+  const converted = { id: 'quote-cloud-id', data: { num: 'CS-0004', sourceQuote: 'QTE-0002' } };
+  const wrongDirectMatch = { id: 'local-id', data: { num: 'CS-0003' } };
+  assert.equal(selectInvoiceSource(null, [converted], 'CS-0004'), converted);
+  assert.equal(selectInvoiceSource(wrongDirectMatch, [converted], 'CS-0004'), converted);
+  assert.equal(selectInvoiceSource(null, [converted], 'CS-9999'), null);
+  assert.equal(selectInvoiceSource(null, [converted, converted], 'CS-0004'), null);
+});
+
 test('recognizes a paid invoice', function() {
   const invoice = { amount: 5000, paidAmount: 5000, status: 'paid' };
   const financials = invoiceFinancials(invoice);
@@ -65,7 +75,19 @@ test('uses the outstanding balance for a partially paid invoice', function() {
   const message = buildReminderMessage(publicInvoice, 'https://example.com/i/token');
   assert.equal(publicInvoice.outstanding, 7250);
   assert.equal(publicInvoice.status, 'partial');
-  assert.match(message, /Outstanding amount: LKR 7,250\.00/);
+  assert.match(message, /Thank you for your initial payment/);
+  assert.match(message, /Amount paid: LKR 2,750\.00/);
+  assert.match(message, /Remaining amount to pay: LKR 7,250\.00/);
+});
+
+test('thanks the customer and marks a fully paid invoice as settled', function() {
+  const invoice = sanitizePublicInvoice({
+    num: 'INV-5', client: 'Ada', amount: 10000, paidAmount: 10000, cur: 'LKR'
+  }, { settings: { bizName: 'Example Studio' } });
+  const message = buildReminderMessage(invoice, 'https://example.com/i/token');
+  assert.match(message, /Thank you for your payment/);
+  assert.match(message, /Paid amount: LKR 10,000\.00/);
+  assert.match(message, /Status: Paid and settled/);
 });
 
 test('rejects malformed public tokens', function() {

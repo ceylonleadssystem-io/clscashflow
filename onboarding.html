@@ -72,6 +72,11 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .ob-input:focus{border-color:var(--black);box-shadow:0 0 0 3px rgba(74,59,42,.06)}
 .ob-input.has-error{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.08)}
 .ob-input::placeholder{color:var(--dim)}
+.ob-password-wrap{position:relative;width:100%}
+.ob-password-wrap .ob-input{padding-right:4.5rem}
+.ob-password-toggle{position:absolute;top:50%;right:.45rem;transform:translateY(-50%);width:3.45rem;height:calc(100% - .7rem);border:0;border-left:1px solid var(--border);background:#fff;color:var(--muted);font-family:var(--font-b);font-size:.68rem;font-weight:600;cursor:pointer}
+.ob-password-toggle:hover{color:var(--text);background:var(--bg2)}
+.ob-password-toggle:focus-visible{outline:2px solid var(--black);outline-offset:-2px}
 .ob-input-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
 .ob-input-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
 .ob-select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231a1714' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;background-color:#fff}
@@ -109,6 +114,20 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .tier-price{font-size:.72rem;color:var(--gold);margin-bottom:.5rem;font-weight:600}
 .tier-features{font-size:.68rem;color:var(--muted);line-height:1.7;text-align:left}
 .plan-price-note{font-size:.72rem;line-height:1.5;color:var(--muted);margin-top:-.65rem;margin-bottom:1.15rem}
+.ob-plan-comparison{max-width:100%;margin:.2rem 0 1rem;border:1px solid var(--border);background:#fff;overflow:hidden}
+.ob-plan-comparison-title{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem .8rem;border-bottom:1px solid var(--border);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ob-plan-comparison-title span:last-child{font-size:.58rem;letter-spacing:0;text-transform:none;color:var(--dim);font-weight:400}
+.ob-plan-comparison-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ob-plan-comparison table{width:100%;min-width:620px;border-collapse:collapse;table-layout:fixed}
+.ob-plan-comparison th,.ob-plan-comparison td{padding:.48rem .55rem;border-bottom:1px solid var(--border);text-align:center;font-size:.64rem}
+.ob-plan-comparison th:first-child,.ob-plan-comparison td:first-child{width:43%;text-align:left}
+.ob-plan-comparison th{background:var(--bg3);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text)}
+.ob-plan-comparison td:first-child{color:var(--text);font-weight:500}
+.ob-plan-comparison tr:last-child td{border-bottom:0}
+.ob-plan-check{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--black);color:#fff;font-size:.58rem;font-weight:700}
+.ob-plan-check.studio{background:#285795}
+.ob-plan-check.business{background:#5a398f}
+.ob-plan-dash{color:var(--dim)}
 .tier-card.recommended{box-shadow:0 0 0 2px rgba(184,146,42,.18)}
 .tier-card.recommended::after{content:'Suggested';position:absolute;right:.65rem;top:.65rem;font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .plan-reco{background:var(--bg3);border:1px solid var(--border2);border-left:3px solid var(--gold);padding:1rem 1.1rem;margin:.25rem 0 1rem}
@@ -317,6 +336,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
   .ob-choice-label,.setup-task-title{font-size:.82rem}
   .ob-choice-desc,.setup-task-copy,.tour-card-text{font-size:.7rem}
   .tier-card{padding:1rem .85rem}
+  .ob-plan-comparison-title{display:block}
+  .ob-plan-comparison-title span:last-child{display:block;margin-top:.25rem}
   .tier-card.recommended::after{position:static;display:inline-block;margin:.35rem auto 0}
   .tpl-grid.cols-3,.tpl-grid.cols-5,.tpl-grid.cols-6{grid-template-columns:repeat(2,minmax(0,1fr))}
   .tpl-grid-wrap{max-height:260px}
@@ -403,8 +424,8 @@ firebase.initializeApp(firebaseConfig);
         <div class="ob-field"><label for="s1-email">Email Address *</label><input class="ob-input" type="email" id="s1-email" placeholder="you@yourbusiness.com" autocomplete="email" maxlength="254" required></div>
         <div class="ob-field"><label for="s1-phone">Phone Number *</label><input class="ob-input" type="tel" id="s1-phone" placeholder="+94 77 000 0000" autocomplete="tel" minlength="7" maxlength="20" required></div>
         <div class="ob-input-row">
-          <div class="ob-field"><label for="s1-pass">Password *</label><input class="ob-input" type="password" id="s1-pass" placeholder="Min 8 characters" autocomplete="new-password" minlength="8" maxlength="128" required></div>
-          <div class="ob-field"><label for="s1-pass2">Confirm Password *</label><input class="ob-input" type="password" id="s1-pass2" placeholder="Repeat password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
+          <div class="ob-field"><label for="s1-pass">Password *</label><div class="ob-password-wrap"><input class="ob-input" type="password" id="s1-pass" placeholder="Min 8 characters" autocomplete="new-password" minlength="8" maxlength="128" required><button class="ob-password-toggle" type="button" aria-label="Show password" aria-controls="s1-pass" aria-pressed="false" onclick="window.togglePasswordVisibility('s1-pass',this)">Show</button></div></div>
+          <div class="ob-field"><label for="s1-pass2">Confirm Password *</label><div class="ob-password-wrap"><input class="ob-input" type="password" id="s1-pass2" placeholder="Repeat password" autocomplete="new-password" minlength="8" maxlength="128" required><button class="ob-password-toggle" type="button" aria-label="Show confirmed password" aria-controls="s1-pass2" aria-pressed="false" onclick="window.togglePasswordVisibility('s1-pass2',this)">Show</button></div></div>
         </div>
         <div class="ob-nav"><span></span><button class="btn-next" onclick="window.nextStep(1)">Continue →</button></div>
       </div>
@@ -417,10 +438,10 @@ firebase.initializeApp(firebaseConfig);
         <p class="ob-sub">Pick your main use. We will recommend the cleanest plan for that work, but you can still choose Solo, Studio, or Business yourself.</p>
         <div class="ob-field" style="margin-bottom:.5rem"><label>Primary use *</label></div>
         <div class="ob-choices cols-2" id="use-cases">
-          <button class="ob-choice" data-plan="solo" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Dashboard, customers, invoices, PDF, email and WhatsApp.</div></div></button>
-          <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track money in and out</div><div class="ob-choice-desc">Cashflow, income, expenses, reminders, and team access.</div></div></button>
-          <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Manage reports and outstanding money</div><div class="ob-choice-desc">Quotes, partial payments, multi-currency, and better reports.</div></div></button>
-          <button class="ob-choice" data-plan="business" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">⚙️</span><div><div class="ob-choice-label">Need AI, forecasting, or advanced control</div><div class="ob-choice-desc">Business tools for unlimited teams, insights, integrations, and security.</div></div></button>
+          <button class="ob-choice" data-plan="solo" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Invoices, quotes, customers, reports, PDF export, and edit backlog.</div></div></button>
+          <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track money in and out</div><div class="ob-choice-desc">Income, expenses, suppliers, business insights, and priority support.</div></div></button>
+          <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Manage operations and suppliers</div><div class="ob-choice-desc">Studio adds operational tracking and insights to every Solo feature.</div></div></button>
+          <button class="ob-choice" data-plan="business" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">⚙️</span><div><div class="ob-choice-label">Manage payroll and advanced insight</div><div class="ob-choice-desc">Business adds payroll management and advanced business insights.</div></div></button>
         </div>
         <div class="plan-reco" id="plan-suggestion">
           <div class="plan-reco-label">Suggested plan</div>
@@ -432,16 +453,39 @@ firebase.initializeApp(firebaseConfig);
         <div class="tier-cards">
           <div class="tier-card" data-tier="solo" onclick="window.selectTier('solo',this,true)">
             <div class="tier-name">Solo</div><div class="tier-price">LKR 3,500 / mo</div>
-            <div class="tier-features">• 1 user<br>• Up to 30 customers<br>• Professional invoices<br>• Basic reports</div>
+            <div class="tier-features">• Invoices, quotes &amp; estimates<br>• Customers, reports &amp; PDF export<br>• Edit backlog</div>
           </div>
           <div class="tier-card" data-tier="studio" onclick="window.selectTier('studio',this,true)">
             <div class="tier-badge">Most Popular</div>
             <div class="tier-name">Studio</div><div class="tier-price">LKR 5,500 / mo</div>
-            <div class="tier-features">• Up to 5 users<br>• Up to 100 customers<br>• Quotes & recurring invoices<br>• Expenses and cashflow</div>
+            <div class="tier-features">• Everything in Solo<br>• Income, expenses &amp; suppliers<br>• Insights &amp; priority support</div>
           </div>
           <div class="tier-card" data-tier="business" onclick="window.selectTier('business',this,true)">
             <div class="tier-name">Business</div><div class="tier-price">LKR 8,500 / mo</div>
-            <div class="tier-features">• Unlimited users<br>• Unlimited customers<br>• AI insights & forecast<br>• Advanced reports</div>
+            <div class="tier-features">• Everything in Studio<br>• Payroll management<br>• Advanced business insights</div>
+          </div>
+        </div>
+        <div class="ob-plan-comparison" aria-label="Plan feature comparison">
+          <div class="ob-plan-comparison-title"><span>What each plan includes</span><span>Swipe sideways on a small screen</span></div>
+          <div class="ob-plan-comparison-scroll" tabindex="0">
+            <table>
+              <thead><tr><th scope="col">Feature</th><th scope="col">Solo</th><th scope="col">Studio</th><th scope="col">Business</th></tr></thead>
+              <tbody>
+                <tr><td>Dashboard</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Create &amp; Send Invoices</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Quotes &amp; Estimates</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Customer Management</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Reports</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>PDF Invoice Export</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Edit Backlog</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Income &amp; Expense Tracking</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Supplier Management</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Business Insights</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Priority Support</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Payroll Management</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Advanced Business Insights</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
         <div class="plan-price-note">Annual billing appears only when activating after the 15-day free trial.</div>
@@ -900,6 +944,20 @@ function bindInvoicePreviewInputs(){
   updateInvoicePreview();
 }
 
+window.togglePasswordVisibility = function togglePasswordVisibility(inputId, button){
+  const input=document.getElementById(inputId);
+  if(!input||!button)return;
+  const show=input.type==='password';
+  const start=input.selectionStart;
+  const end=input.selectionEnd;
+  input.type=show?'text':'password';
+  button.textContent=show?'Hide':'Show';
+  button.setAttribute('aria-pressed',show?'true':'false');
+  button.setAttribute('aria-label',(show?'Hide ':'Show ')+(inputId==='s1-pass2'?'confirmed password':'password'));
+  input.focus({preventScroll:true});
+  try{if(start!==null&&end!==null)input.setSelectionRange(start,end);}catch(e){}
+};
+
 // ── NAVIGATION ──
 window.nextStep = function nextStep(from,skip=false){
   clearStepErrors();
@@ -1107,9 +1165,9 @@ function saveStepData(step){
 
 // ── CHOICES + PLAN RECOMMENDATION ──
 const planInfo = {
-  solo:{name:'Solo',price:'LKR 3,500 / mo',templates:3,reason:'Best for one owner who needs professional invoices, customers, payment tracking, PDF, email, WhatsApp, and basic reports.'},
-  studio:{name:'Studio',price:'LKR 5,500 / mo',templates:3,reason:'Best for small teams that need quotes, recurring invoices, reminders, expenses, cashflow, multi-currency, and stronger branding.'},
-  business:{name:'Business',price:'LKR 8,500 / mo',templates:3,reason:'Best when you need unlimited users, AI insights, forecasting, advanced reports, role permissions, priority support, and integrations.'}
+  solo:{name:'Solo',price:'LKR 3,500 / mo',templates:3,reason:'Best for freelancers and solo business owners who need invoices, quotes and estimates, customers, reports, PDF export, and an invoice edit backlog.'},
+  studio:{name:'Studio',price:'LKR 5,500 / mo',templates:3,reason:'Best for growing businesses and small teams that need every Solo feature plus income and expense tracking, suppliers, business insights, and priority support.'},
+  business:{name:'Business',price:'LKR 8,500 / mo',templates:3,reason:'Best for established businesses and larger teams that need every Studio feature plus payroll management and advanced business insights.'}
 };
 function getSuggestedTier(){
   const selected=[...document.querySelectorAll('#use-cases .ob-choice.selected')];
@@ -1423,6 +1481,19 @@ function runBackground(label, work){
     console.warn(label, err);
   }
 }
+async function sendWelcomeEmail(payload){
+  const response=await fetch('/.netlify/functions/send-welcome',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload),
+    keepalive:true
+  });
+  const text=await response.text();
+  let result={};
+  try{result=text?JSON.parse(text):{};}catch(e){result={};}
+  if(!response.ok)throw new Error(result.error||('Welcome email failed with HTTP '+response.status));
+  return result;
+}
 window.launchDashboard = async function launchDashboard(){
   const btn = document.getElementById('launch-btn');
   if(btn){ btn.textContent = 'Saving your details…'; btn.disabled = true; }
@@ -1494,18 +1565,11 @@ window.launchDashboard = async function launchDashboard(){
       }, { merge: true });
       runBackground('Invite accept failed:', function(){ return acceptOnboardingInvite(user.uid,state.email); });
       runBackground('Onboarding seed failed:', function(){ return seedOnboardingData(user.uid); });
-      // Send welcome email (best-effort — don't block redirect if it fails)
-      runBackground('Welcome email failed:', function(){ return fetch('/.netlify/functions/send-welcome', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            to: state.email,
-            name: state.fname + ' ' + state.lname,
-            plan: selectedPlan,
-            biz: state.bizName || 'your business',
-            trialEnd: googleTrialEnd.toISOString()
-          })
-        }); });
+      if(btn)btn.textContent='Sending your welcome email…';
+      try{
+        const welcomeResult=await withTimeout(sendWelcomeEmail({to:state.email,name:state.fname+' '+state.lname,plan:selectedPlan,biz:state.bizName||'your business',trialEnd:googleTrialEnd.toISOString()}),8000,null);
+        if(welcomeResult&&welcomeResult.sent)await firebase.firestore().collection('users').doc(user.uid).set({welcomeEmailSentAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      }catch(emailErr){console.warn('Welcome email failed:',emailErr);}
       if (window.clsRememberPlan) runBackground('Plan remember failed:', function(){ return window.clsRememberPlan(selectedPlan, user.uid, firebase.firestore()); });
       window.location.href = planFiles[selectedPlan] || 'solo.html';
 
@@ -1569,18 +1633,11 @@ window.launchDashboard = async function launchDashboard(){
       }, { merge: true });
       runBackground('Invite accept failed:', function(){ return acceptOnboardingInvite(uid,state.email); });
       runBackground('Onboarding seed failed:', function(){ return seedOnboardingData(uid); });
-      // Send welcome email (best-effort)
-      runBackground('Welcome email failed:', function(){ return fetch('/.netlify/functions/send-welcome', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            to: state.email,
-            name: state.fname + ' ' + state.lname,
-            plan: requestedPlan,
-            biz: state.bizName || 'your business',
-            trialEnd: trialEnd.toISOString()
-          })
-        }); });
+      if(btn)btn.textContent='Sending your welcome email…';
+      try{
+        const welcomeResult=await withTimeout(sendWelcomeEmail({to:state.email,name:state.fname+' '+state.lname,plan:requestedPlan,biz:state.bizName||'your business',trialEnd:trialEnd.toISOString()}),8000,null);
+        if(welcomeResult&&welcomeResult.sent)await firebase.firestore().collection('users').doc(uid).set({welcomeEmailSentAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      }catch(emailErr){console.warn('Welcome email failed:',emailErr);}
       if (window.clsRememberPlan) runBackground('Plan remember failed:', function(){ return window.clsRememberPlan(requestedPlan, uid, firebase.firestore()); });
       window.location.href = planFiles[requestedPlan] || 'solo.html';
     }

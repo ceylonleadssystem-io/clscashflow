@@ -44,6 +44,18 @@ function isValidPublicToken(token) {
   return TOKEN_PATTERN.test(text(token, 80));
 }
 
+function selectInvoiceSource(requested, candidates, invoiceNumber) {
+  const numberToFind = text(invoiceNumber, 120);
+  if (requested && (!numberToFind || text(requested.data && requested.data.num, 120) === numberToFind)) {
+    return requested;
+  }
+  if (!numberToFind) return null;
+  const matches = (Array.isArray(candidates) ? candidates : []).filter(function(row) {
+    return text(row && row.data && row.data.num, 120) === numberToFind;
+  });
+  return matches.length === 1 ? matches[0] : null;
+}
+
 function lineItems(invoice) {
   const rows = Array.isArray(invoice && invoice.lines)
     ? invoice.lines
@@ -225,6 +237,25 @@ function formatDate(value) {
 
 function buildReminderMessage(invoice, publicUrl) {
   const dueLine = invoice.dueDate ? '\nDue date: ' + formatDate(invoice.dueDate) : '';
+  const total = Math.max(0, Number(invoice.total) || 0);
+  const outstanding = Math.max(0, Number(invoice.outstanding) || 0);
+  const paid = Math.max(0, total - outstanding);
+  const status = outstanding <= 0.01 && total > 0 ? 'paid' : (paid > 0.01 ? 'partial' : 'pending');
+  if (status === 'paid') {
+    return 'Hi ' + (invoice.customerName || 'there') + ',\n\n' +
+      'Thank you for your payment for Invoice #' + invoice.invoiceNumber + ' from ' + invoice.businessName + '.\n\n' +
+      'Paid amount: ' + invoice.currency + ' ' + formatAmount(total) + '\nStatus: Paid and settled\n\n' +
+      'You can view or download your paid invoice here:\n' + publicUrl + '\n\n' +
+      'Thank you,\n' + invoice.businessName;
+  }
+  if (status === 'partial') {
+    return 'Hi ' + (invoice.customerName || 'there') + ',\n\n' +
+      'Thank you for your initial payment for Invoice #' + invoice.invoiceNumber + ' from ' + invoice.businessName + '.\n\n' +
+      'Amount paid: ' + invoice.currency + ' ' + formatAmount(paid) + '\n' +
+      'Remaining amount to pay: ' + invoice.currency + ' ' + formatAmount(outstanding) + dueLine + '\n\n' +
+      'You can view the updated invoice here:\n' + publicUrl + '\n\n' +
+      'Thank you,\n' + invoice.businessName;
+  }
   return 'Hi ' + (invoice.customerName || 'there') + ',\n\n' +
     'This is a friendly reminder regarding Invoice #' + invoice.invoiceNumber + ' from ' + invoice.businessName + '.\n\n' +
     'Outstanding amount: ' + invoice.currency + ' ' + formatAmount(invoice.outstanding) + dueLine + '\n\n' +
@@ -247,6 +278,7 @@ module.exports = {
   normalizeWhatsAppNumber,
   generatePublicToken,
   isValidPublicToken,
+  selectInvoiceSource,
   invoiceFinancials,
   invoiceStatus,
   sanitizePublicInvoice,

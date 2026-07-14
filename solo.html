@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260714-invoice-suite"></script>
+<script src="assets/platform.js?v=20260714-converted-share-fix"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -194,6 +194,21 @@ tr:hover td{background:var(--bg3)}
 
 /* Invoice action buttons in table */
 .inv-action-row{display:flex;gap:.3rem;flex-wrap:wrap}
+.invoice-status-tabs{display:flex;gap:.45rem;padding:.85rem 1.25rem;border-bottom:1px solid var(--border);background:var(--white);overflow-x:auto}
+.invoice-status-tab{display:inline-flex;align-items:center;gap:.55rem;border:1px solid var(--border);background:var(--white);color:var(--muted);padding:.58rem .82rem;font-family:var(--font-b);font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.invoice-status-tab.active{background:var(--black);border-color:var(--black);color:#fff}
+.invoice-status-count{display:inline-grid;place-items:center;min-width:1.35rem;height:1.35rem;padding:0 .28rem;background:var(--bg3);color:var(--text);font-size:.62rem;letter-spacing:0}
+.invoice-status-tab.active .invoice-status-count{background:#fff;color:var(--black)}
+.inv-action-row.clean{display:grid;grid-template-columns:minmax(116px,1fr) repeat(3,34px) 42px;gap:.32rem;align-items:center;min-width:286px}
+.inv-action-row.clean .btn-sm{height:34px;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center}
+.invoice-icon-action{font-size:.78rem!important;letter-spacing:0!important;min-width:34px}
+.invoice-more{position:relative;height:34px}
+.invoice-more summary{list-style:none;height:34px;display:grid;place-items:center;border:1px solid var(--border-acc);color:var(--gold);cursor:pointer;font-weight:900;font-size:1rem}
+.invoice-more summary::-webkit-details-marker{display:none}
+.invoice-more-menu{position:absolute;right:0;top:38px;z-index:40;width:126px;padding:.35rem;background:#fff;border:1px solid var(--border);box-shadow:0 10px 24px rgba(20,16,12,.14);display:grid;gap:.25rem}
+.invoice-more-menu .btn-sm{width:100%;justify-content:flex-start!important;background:#fff;color:var(--text);border:0}
+.invoice-more-menu .danger{color:var(--red)}
+@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.5rem .2rem;font-size:.53rem;line-height:1.25}.invoice-status-count{flex:0 0 auto}.inv-action-row.clean{min-width:286px}.table-card:has(.invoice-more[open]){overflow:visible!important}}
 .btn-sm{padding:.28rem .55rem;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-b);cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
 .btn-sm-dark{background:var(--black);color:#fff}
 .btn-sm-dark:hover{background:var(--gold)}
@@ -665,11 +680,15 @@ document.addEventListener('click',function(e){
       <div class="sum-bar c3" id="inv-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Invoice Register</div><button class="btn-act" data-cls-fn="openInvoiceModal">+ Raise Invoice</button></div>
-        <div class="table-tools">
+        <div class="invoice-status-tabs" role="tablist" aria-label="Invoice payment status">
+          <button class="invoice-status-tab active" id="inv-tab-pending" type="button" role="tab" aria-selected="true" data-cls-fn="setInvoiceRegisterTab" data-cls-arg="pending">Pending <span class="invoice-status-count" id="inv-count-pending">0</span></button>
+          <button class="invoice-status-tab" id="inv-tab-partial" type="button" role="tab" aria-selected="false" data-cls-fn="setInvoiceRegisterTab" data-cls-arg="partial">Partially Paid <span class="invoice-status-count" id="inv-count-partial">0</span></button>
+          <button class="invoice-status-tab" id="inv-tab-paid" type="button" role="tab" aria-selected="false" data-cls-fn="setInvoiceRegisterTab" data-cls-arg="paid">Paid / Settled <span class="invoice-status-count" id="inv-count-paid">0</span></button>
+        </div>
+        <div class="table-tools" style="grid-template-columns:repeat(3,minmax(140px,1fr)) auto">
           <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="inv-from" onchange="renderInvoices()"></div>
           <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="inv-to" onchange="renderInvoices()"></div>
           <div class="f-group"><label>Sort</label><select class="f-input f-select" id="inv-sort" onchange="renderInvoices()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div>
-          <div class="f-group"><label>Status</label><select class="f-input f-select" id="inv-status-filter" onchange="renderInvoices()"><option value="">All</option><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select></div>
           <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="inv">Clear</button>
         </div>
         <table><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
@@ -2329,12 +2348,25 @@ window.saveInvoice = function saveInvoice(){
   DB.invoices.unshift({num,client:d.client,cemail:d.cemail,caddr:d.caddr,cphone:d.cphone,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,paidAmount:0,status:'unpaid',tpl:d.tpl,notes:d.notes,id:Date.now()});
   saveDB();renderInvoices();closeModal('inv-modal');
 }
+var invoiceRegisterTab='pending';
+function invoiceRegisterState(inv){
+  const total=Math.max(0,Number(inv.amount||inv.total||0));
+  const paid=Math.max(0,Number(inv.paidAmount!=null?inv.paidAmount:inv.paid)||0);
+  if(total>0&&total-paid<=0.01)return'paid';
+  if(paid>0.01)return'partial';
+  return'pending';
+}
+window.setInvoiceRegisterTab=function setInvoiceRegisterTab(tab){
+  invoiceRegisterTab=['pending','partial','paid'].indexOf(tab)>-1?tab:'pending';
+  document.querySelectorAll('.invoice-status-tab').forEach(function(btn){const active=btn.id==='inv-tab-'+invoiceRegisterTab;btn.classList.toggle('active',active);btn.setAttribute('aria-selected',active?'true':'false');});
+  renderInvoices();
+};
 function renderInvoices(){
   const total=DB.invoices.reduce((a,i)=>a+i.amount,0);
   const collected=DB.invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
   document.getElementById('inv-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Invoiced</div><div class="sum-val">${fmtAmt(total)}</div></div><div class="sum-item"><div class="sum-label">Collected</div><div class="sum-val" style="color:var(--green)">${fmtAmt(collected)}</div></div><div class="sum-item"><div class="sum-label">Outstanding</div><div class="sum-val" style="color:var(--amber)">${fmtAmt(total-collected)}</div></div>`;
-  const statusFilter=(document.getElementById('inv-status-filter')||{}).value||'';
-  const filtered=DB.invoices.filter(getFilterRange('inv')).filter(function(inv){return !statusFilter||inv.status===statusFilter;});
+  ['pending','partial','paid'].forEach(function(state){const el=document.getElementById('inv-count-'+state);if(el)el.textContent=DB.invoices.filter(function(inv){return invoiceRegisterState(inv)===state;}).length;});
+  const filtered=DB.invoices.filter(getFilterRange('inv')).filter(function(inv){return invoiceRegisterState(inv)===invoiceRegisterTab;});
   const sorted=sortRecords(filtered,'inv');
   document.getElementById('inv-table').innerHTML=sorted.length?sorted.map(inv=>{
     const paid=inv.paidAmount||0;const bal=inv.amount-paid;const pct=inv.amount>0?Math.round(paid/inv.amount*100):0;
@@ -2344,13 +2376,12 @@ function renderInvoices(){
       <td><span class="pill ${sc}">${inv.status.charAt(0).toUpperCase()+inv.status.slice(1)}</span></td>
       <td><div class="pay-info-wrap"><div class="pay-bar"><div class="pay-bar-fill${inv.status==='partial'?' partial':''}" style="width:${pct}%"></div></div><span style="font-size:.7rem;color:var(--muted)">${pct}%</span></div>${inv.status==='partial'?`<div class="pay-pending">↻ ${fmtAmt(bal)} pending</div>`:''}</td>
       <td style="text-align:right" class="amount-gold"><strong>${fmtAmt(inv.amount)}</strong></td>
-      <td><div class="inv-action-row">
-        <button class="btn-sm btn-sm-dark" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Download PDF">⬇ PDF</button>
-        <button class="btn-sm btn-sm-green" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send via Email">✉ Email</button>
-        <button class="btn-sm btn-sm-wa" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send via WhatsApp">💬 WA</button>
-        <button class="btn-sm btn-sm-out" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit</button>
-        <button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button>
-        ${inv.status!=='paid'?`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">Record Payment</button>`:`<button class="btn-sm btn-sm-green" data-cls-fn="emailPaidReceipt" data-cls-arg="${inv.num}" title="Send paid receipt">✓ Receipt</button><span style="font-size:.65rem;color:var(--green)">✓ Settled</span>`}
+      <td><div class="inv-action-row clean">
+        ${invoiceRegisterState(inv)==='paid'?`<button class="btn-sm btn-sm-green" data-cls-fn="emailPaidReceipt" data-cls-arg="${inv.num}" title="Send paid receipt">Send receipt</button>`:`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">${invoiceRegisterState(inv)==='partial'?'Add payment':'Record payment'}</button>`}
+        <button class="btn-sm btn-sm-dark invoice-icon-action" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Open PDF" aria-label="Open PDF">↓</button>
+        <button class="btn-sm btn-sm-green invoice-icon-action" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send status-aware email" aria-label="Send email">✉</button>
+        <button class="btn-sm btn-sm-wa invoice-icon-action" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send status-aware WhatsApp message" aria-label="Send WhatsApp message">●</button>
+        <details class="invoice-more"><summary title="More actions" aria-label="More actions">⋯</summary><div class="invoice-more-menu"><button class="btn-sm" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit invoice</button><button class="btn-sm danger" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button></div></details>
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
   refreshInvoiceNotifications();
@@ -2362,7 +2393,26 @@ function renderQuotes(){
   body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+fmtAmt(q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" onclick="window.printQuote('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">PDF</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" onclick="window.convertQuoteToInvoice('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" onclick="window.deleteQuote('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates yet.</td></tr>';
 }
 window.printQuote=function printQuote(num){const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q)return;const w=window.open('','_blank','width=900,height=760');w.document.write(window.clsBuildInvoicePrintHtml({inv:q,settings:DB.settings,templateIndex:q.tpl,documentLabel:q.documentType==='estimate'?'Estimate':'Quote'}));w.document.close();w.onload=function(){setTimeout(function(){w.print();},300);};};
-window.convertQuoteToInvoice=function convertQuoteToInvoice(num){const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q||q.status==='converted')return;if(!confirm('Convert '+num+' to an invoice?'))return;refreshNextInvoiceNumber();const invNum=formatInvoiceNumber(DB.nextInvNum++);DB.invoices.unshift(Object.assign({},q,{num:invNum,id:Date.now(),status:'unpaid',paidAmount:0,sourceQuote:num,documentType:'invoice'}));q.status='converted';q.convertedInvoiceNum=invNum;saveDB();renderInvoices();renderDashboard();alert(num+' converted to '+invNum+'.');};
+window.convertQuoteToInvoice=async function convertQuoteToInvoice(num){
+  const q=(DB.quotes||[]).find(function(item){return item.num===num;});
+  if(!q||q.status==='converted'||!confirm('Convert '+num+' to an invoice?'))return;
+  refreshNextInvoiceNumber();
+  const invNum=formatInvoiceNumber(DB.nextInvNum++),invoiceId=Date.now();
+  const converted=Object.assign({},q,{num:invNum,id:invoiceId,status:'unpaid',paidAmount:0,sourceQuote:num,documentType:'invoice'});
+  delete converted._id;
+  delete converted.publicToken;
+  delete converted.publicInvoiceActive;
+  delete converted.publicInvoiceUrl;
+  delete converted.publicInvoiceCreatedAt;
+  delete converted.whatsappReminderCount;
+  delete converted.lastWhatsappReminderAt;
+  delete converted.whatsappReminderHistory;
+  DB.invoices.unshift(converted);
+  q.status='converted';q.convertedInvoiceNum=invNum;
+  renderInvoices();renderDashboard();
+  const saved=await saveDB();
+  alert(saved?num+' converted to '+invNum+'.':num+' converted locally, but cloud sync is still pending. Please wait before sharing it.');
+};
 window.deleteQuote=function deleteQuote(num){if(!confirm('Delete quote '+num+'?'))return;DB.quotes=(DB.quotes||[]).filter(function(q){return q.num!==num;});saveDB();renderQuotes();};
 
 window.openInvoiceEditModal=function openInvoiceEditModal(num){
@@ -2997,8 +3047,9 @@ function invoiceContactEmail(inv){
   const c=findClientForInvoice(inv);
   return (inv&&inv.cemail)||(c&&c.email)||'';
 }
-function openSecureInvoiceWhatsApp(inv){
+async function openSecureInvoiceWhatsApp(inv){
   if(!inv||!window.clsOpenInvoiceWhatsAppReminder)return Promise.resolve(false);
+  if(_savePendingPromise){const saved=await _savePendingPromise;if(!saved){alert('Please wait for this invoice to finish syncing, then try WhatsApp again.');return false;}}
   const customer=findClientForInvoice(inv);
   return window.clsOpenInvoiceWhatsAppReminder({
     plan:'solo',
@@ -3254,13 +3305,16 @@ window.emailInvoice = async function emailInvoice(num){
   const inv=DB.invoices.find(i=>i.num===num);if(!inv)return;
   const email=invoiceContactEmail(inv);
   if(!email){alert('This customer has no email address. Open the customer or invoice and add the customer email first.');return;}
-  if(!confirm('Send payment reminder for invoice '+inv.num+' to '+email+'?'))return;
   const s=DB.settings;
   const cur=inv.cur||'LKR';
   const amountDue=typeof invoiceBalance==='function'?invoiceBalance(inv):(inv.amount||0);
+  const paidTotal=Math.max(0,(inv.amount||0)-amountDue);
+  const paymentState=invoiceRegisterState(inv);
+  const messageType=paymentState==='paid'?'paid receipt':(paymentState==='partial'?'partial payment update':'payment reminder');
+  if(!confirm('Send '+messageType+' for invoice '+inv.num+' to '+email+'?'))return;
   try{
-    if(!window.clsSendPaymentReminderEmail) throw new Error('Payment reminder email sender is not available. Refresh the page and try again.');
-    await window.clsSendPaymentReminderEmail({
+    if(!window.clsSendInvoiceStatusEmail) throw new Error('Invoice email sender is not available. Refresh the page and try again.');
+    await window.clsSendInvoiceStatusEmail({
       to:email,
       customerName:inv.client||'Customer',
       invoiceNumber:inv.num||'',
@@ -3273,12 +3327,16 @@ window.emailInvoice = async function emailInvoice(num){
       currency:cur,
       amountDue:amountDue,
       invoiceTotal:inv.amount||amountDue,
-      status:amountDue<=0?'paid':(inv.status||'unpaid'),
+      paymentAmount:paidTotal,
+      paidTotal:paidTotal,
+      remainingBalance:amountDue,
+      status:paymentState,
+      paymentDate:fmtD(new Date()),
       notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
-    alert('Payment reminder sent to '+email+'.');
+    alert((paymentState==='paid'?'Paid receipt':paymentState==='partial'?'Partial payment update':'Payment reminder')+' sent to '+email+'.');
   }catch(e){
     console.error('Payment reminder email error:',e);
     alert((e&&e.message)||'Could not send the payment reminder. Check EmailJS settings and try again.');

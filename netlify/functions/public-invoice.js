@@ -66,10 +66,7 @@ exports.handler = async function(event) {
       return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
     }
     const source = await getDocument('users/' + ownerUid + '/invoices', sourceInvoiceId);
-    if (source && !canUseMappedSource(source.data, token)) {
-      return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
-    }
-    if (source) {
+    if (source && canUseMappedSource(source.data, token)) {
       const profile = await getDocument('users', ownerUid);
       return response(200, {
         ok: true,

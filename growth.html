@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260714-invoice-suite"></script>
+<script src="assets/platform.js?v=20260714-converted-share-fix"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -230,6 +230,22 @@ tr:hover td{background:var(--bg3)}
 .invoice-customer{font-weight:700;color:var(--muted);line-height:1.25;word-break:break-word}
 .invoice-amount{display:block;font-family:var(--fm);font-weight:800;color:var(--gold);white-space:nowrap;letter-spacing:0;text-align:right;font-size:.82rem;line-height:1.25}
 .invoice-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.32rem;justify-content:end;align-items:center;max-width:226px;margin-left:auto}
+.invoice-status-tabs{display:flex;gap:.45rem;padding:.8rem 1rem;border-bottom:1px solid var(--border);background:var(--white);overflow-x:auto}
+.invoice-status-tab{display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--border);background:#fff;color:var(--muted);padding:.55rem .75rem;font-family:var(--fb);font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap;border-radius:var(--r)}
+.invoice-status-tab.active{background:var(--black);border-color:var(--black);color:#fff}
+.invoice-status-count{display:inline-grid;place-items:center;min-width:1.3rem;height:1.3rem;padding:0 .25rem;background:var(--bg3);color:var(--black);font-size:.6rem;letter-spacing:0;border-radius:999px}
+.invoice-status-tab.active .invoice-status-count{background:#fff}
+.invoice-actions.clean{display:grid;grid-template-columns:minmax(76px,1fr) repeat(3,31px) 36px;gap:.28rem;max-width:238px}
+.invoice-actions.clean .bsm{height:31px;padding:0 .3rem}
+.invoice-actions.clean .invoice-icon-action{font-size:.74rem;letter-spacing:0}
+.invoice-more{position:relative;height:31px}
+.invoice-more summary{list-style:none;height:31px;display:grid;place-items:center;border:1px solid var(--bacc);color:var(--gold);cursor:pointer;font-weight:900;font-size:1rem;border-radius:3px}
+.invoice-more summary::-webkit-details-marker{display:none}
+.invoice-more-menu{position:absolute;right:0;top:35px;z-index:40;width:118px;padding:.32rem;background:#fff;border:1px solid var(--border);box-shadow:0 10px 24px rgba(20,16,12,.14);display:grid;gap:.22rem}
+.invoice-more-menu .bsm{width:100%;justify-content:flex-start;background:#fff;color:var(--black);border:0}
+.invoice-more-menu .danger{color:var(--red)}
+#view-invoices .table-wrap:has(.invoice-more[open]){overflow:visible}
+@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.48rem .18rem;font-size:.51rem;line-height:1.2}.invoice-status-count{flex:0 0 auto}.invoice-actions.clean{min-width:232px}}
 .invoice-actions .bsm,.invoice-actions .pill{height:31px;min-width:0;width:100%;padding:0 .36rem;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .invoice-actions .bsm{font-size:.5rem;letter-spacing:.05em}
 .invoice-actions .pill{font-size:.54rem}
@@ -833,7 +849,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="view" id="view-invoices">
       <div class="help"><b>Invoices</b> — Bills you send to customers. Track which are paid, waiting, partial, or overdue. Includes VAT &amp; tax support and manual reminders.</div>
       <div class="sumbar c3" id="inv-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">All Invoices</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><div class="table-wrap"><table class="invoice-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
+      <div class="card"><div class="card-head"><span class="card-title">Invoice Register</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><div class="invoice-status-tabs" role="tablist" aria-label="Invoice payment status"><button class="invoice-status-tab active" id="inv-tab-pending" type="button" role="tab" aria-selected="true" onclick="window.setInvoiceRegisterTab('pending')">Pending <span class="invoice-status-count" id="inv-count-pending">0</span></button><button class="invoice-status-tab" id="inv-tab-partial" type="button" role="tab" aria-selected="false" onclick="window.setInvoiceRegisterTab('partial')">Partially Paid <span class="invoice-status-count" id="inv-count-partial">0</span></button><button class="invoice-status-tab" id="inv-tab-paid" type="button" role="tab" aria-selected="false" onclick="window.setInvoiceRegisterTab('paid')">Paid / Settled <span class="invoice-status-count" id="inv-count-paid">0</span></button></div><div class="table-wrap"><table class="invoice-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
       <div class="card" style="margin-top:1rem"><div class="card-head"><div><span class="card-title">Quotes &amp; Estimates</span><div class="help" style="margin:.25rem 0 0;padding:0;border:0;background:transparent">Prepare a document, download it, and convert the accepted version into an invoice.</div></div><div class="card-actions"><button class="btn bo" onclick="window.openEstimateMo()">+ Estimate</button><button class="btn bd" onclick="window.openQuoteMo()">+ Quote</button></div></div><div class="table-wrap"><table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th class="tr">Total</th><th class="tr">Actions</th></tr></thead><tbody id="quote-body"></tbody></table></div></div>
     </div>
 
@@ -2246,8 +2262,12 @@ function findInvoiceCustomer(inv) {
   }) || null;
 }
 
-function openSecureBusinessInvoiceWhatsApp(inv) {
+async function openSecureBusinessInvoiceWhatsApp(inv) {
   if (!inv || !window.clsOpenInvoiceWhatsAppReminder) return Promise.resolve(false);
+  if (_savePendingPromise) {
+    var saved = await _savePendingPromise;
+    if (!saved) { showToast('Please wait for this invoice to finish syncing, then try WhatsApp again.', 'err'); return false; }
+  }
   var customer = findInvoiceCustomer(inv);
   return window.clsOpenInvoiceWhatsAppReminder({
     plan:'business',
@@ -2584,10 +2604,24 @@ function refreshInvoiceNotifications() {
   }
 }
 
+var invoiceRegisterTab = 'pending';
+window.setInvoiceRegisterTab = function setInvoiceRegisterTab(tab) {
+  invoiceRegisterTab = ['pending','partial','paid'].indexOf(tab) > -1 ? tab : 'pending';
+  document.querySelectorAll('.invoice-status-tab').forEach(function(btn) {
+    var active = btn.id === 'inv-tab-' + invoiceRegisterTab;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  renderInvoices();
+};
+function invoiceRegisterStateBusiness(inv) {
+  var status = invoiceStatus(inv);
+  return status === 'paid' ? 'paid' : (status === 'partial' ? 'partial' : 'pending');
+}
 function renderInvoices() {
   var total = D.invoices.reduce(function(a,i) { return a+i.total; }, 0);
-  var paid = D.invoices.filter(function(i) { return i.status==='paid'; }).reduce(function(a,i) { return a+i.total; }, 0);
-  var os = D.invoices.filter(function(i) { return i.status!=='paid'; }).reduce(function(a,i) { return a+(i.total-i.paid); }, 0);
+  var paid = D.invoices.reduce(function(a,i) { return a + Math.min(toNum(i.total), Math.max(0, toNum(i.paid))); }, 0);
+  var os = D.invoices.reduce(function(a,i) { return a + Math.max(0, toNum(i.total) - toNum(i.paid)); }, 0);
 
   document.getElementById('inv-sum').innerHTML =
     sumItem('Total Invoiced', fmt(total)) +
@@ -2595,23 +2629,29 @@ function renderInvoices() {
     sumItem('Outstanding', fmt(os), 'var(--amber)');
 
   var statusCls = {paid:'pp',draft:'pdr',sent:'pse',unpaid:'pse',overdue:'pov',partial:'ppa'};
+  ['pending','partial','paid'].forEach(function(state) {
+    var el = document.getElementById('inv-count-' + state);
+    if (el) el.textContent = D.invoices.filter(function(inv) { return invoiceRegisterStateBusiness(inv) === state; }).length;
+  });
 
-  document.getElementById('inv-body').innerHTML = D.invoices.map(function(i) {
+  var visibleInvoices = D.invoices.filter(function(inv) { return invoiceRegisterStateBusiness(inv) === invoiceRegisterTab; });
+  document.getElementById('inv-body').innerHTML = visibleInvoices.map(function(i) {
     var pct = i.total > 0 ? Math.round(i.paid/i.total*100) : 0;
     var displayStatus = invoiceStatus(i);
     var sc = statusCls[displayStatus] || 'pdr';
     var pending = Math.max(0, toNum(i.total) - toNum(i.paid));
     var safeId = String(i.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     var payBar = '<div class="invoice-pay"><div class="pay-wrap"><div class="pay-bar"><div class="pay-fill' + (displayStatus==='partial' ? ' pt' : '') + '" style="width:' + pct + '%"></div></div><span style="font-size:.67rem;font-family:var(--fm);color:var(--muted)">' + pct + '%</span></div>' + (pending > 0 ? '<div class="pay-pend">' + fmt(pending) + ' pending</div>' : '') + '</div>';
-    var actions =
-      '<button class="bsm" onclick="window.printInv(\'' + safeId + '\')">PDF</button>' +
-      '<button class="bsm bsmem" onclick="window.emailInv(\'' + safeId + '\')">Email</button>' +
-      '<button class="bsm bsmwa" onclick="window.waInvoiceWithPDF(\'' + safeId + '\')">WA</button>' +
-      '<button class="bsm bsmo" onclick="window.editInv(\'' + safeId + '\')">Edit</button>' +
-      '<button class="bsm bsmdel" onclick="window.deleteInv(\'' + safeId + '\')">Delete</button>' +
-      (displayStatus !== 'paid' ? '<button class="bsm bsmgr" title="Record payment" onclick="window.openPayMo(\'' + safeId + '\')">Pay</button>' : '<button class="bsm bsmem" title="Send paid receipt" onclick="window.emailPaidReceipt(\'' + safeId + '\')">Receipt</button><span class="pill pi">Settled</span>');
+    var primaryAction = displayStatus === 'paid'
+      ? '<button class="bsm bsmem" title="Send paid receipt" onclick="window.emailPaidReceipt(\'' + safeId + '\')">Send receipt</button>'
+      : '<button class="bsm bsmgr" title="Record payment" onclick="window.openPayMo(\'' + safeId + '\')">' + (displayStatus === 'partial' ? 'Add payment' : 'Record payment') + '</button>';
+    var actions = primaryAction +
+      '<button class="bsm invoice-icon-action" title="Open PDF" aria-label="Open PDF" onclick="window.printInv(\'' + safeId + '\')">↓</button>' +
+      '<button class="bsm bsmem invoice-icon-action" title="Send status-aware email" aria-label="Send email" onclick="window.emailInv(\'' + safeId + '\')">✉</button>' +
+      '<button class="bsm bsmwa invoice-icon-action" title="Send status-aware WhatsApp message" aria-label="Send WhatsApp message" onclick="window.waInvoiceWithPDF(\'' + safeId + '\')">●</button>' +
+      '<details class="invoice-more"><summary title="More actions" aria-label="More actions">⋯</summary><div class="invoice-more-menu"><button class="bsm" onclick="window.editInv(\'' + safeId + '\')">Edit invoice</button><button class="bsm danger" onclick="window.deleteInv(\'' + safeId + '\')">Delete</button></div></details>';
     var reminderMeta = window.clsInvoiceReminderMeta ? window.clsInvoiceReminderMeta(i) : '';
-    return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + (reminderMeta ? '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.3rem;white-space:nowrap">' + escHtml(reminderMeta) + '</div>' : '') + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions">' + actions + '</div></td></tr>';
+    return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + (reminderMeta ? '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.3rem;white-space:nowrap">' + escHtml(reminderMeta) + '</div>' : '') + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions clean">' + actions + '</div></td></tr>';
   }).join('') || emptyRow(8, 'No invoices yet', 'Create a Business invoice with VAT support, payment tracking, and reminder tools.', 'Create Invoice', 'window.openInvMo()');
   refreshInvoiceNotifications();
   renderQuotes();
@@ -2636,19 +2676,28 @@ window.printQuoteBusiness = function printQuoteBusiness(id) {
   w.onload = function() { setTimeout(function() { w.print(); }, 300); };
 };
 
-window.convertBusinessQuote = function convertBusinessQuote(id) {
+window.convertBusinessQuote = async function convertBusinessQuote(id) {
   var q = (D.quotes || []).find(function(item) { return item.id === id; });
   if (!q || q.status === 'converted' || !confirm('Convert ' + id + ' to an invoice?')) return;
   var invId = formatBusinessInvoiceNumber(D._nextInvId || 1);
   D._nextInvId = (D._nextInvId || 1) + 1;
-  D.invoices.unshift(Object.assign({}, q, {id:invId,num:invId,status:'unpaid',paid:0,paidAmount:0,sourceQuote:id,documentType:'invoice'}));
+  var converted = Object.assign({}, q, {id:invId,num:invId,status:'unpaid',paid:0,paidAmount:0,sourceQuote:id,documentType:'invoice'});
+  delete converted._id;
+  delete converted.publicToken;
+  delete converted.publicInvoiceActive;
+  delete converted.publicInvoiceUrl;
+  delete converted.publicInvoiceCreatedAt;
+  delete converted.whatsappReminderCount;
+  delete converted.lastWhatsappReminderAt;
+  delete converted.whatsappReminderHistory;
+  D.invoices.unshift(converted);
   q.status = 'converted';
   q.convertedInvoiceId = invId;
   syncBusinessComputedData();
   renderInvoices();
   renderDashboard();
-  saveData();
-  showToast(id + ' converted to ' + invId + '.', 'ok');
+  var saved = await saveData();
+  showToast(saved ? id + ' converted to ' + invId + '.' : id + ' converted locally; cloud sync is still pending.', saved ? 'ok' : 'err');
 };
 
 window.deleteBusinessQuote = function deleteBusinessQuote(id) {
@@ -3252,11 +3301,14 @@ window.emailInv = async function emailInv(id) {
   var c = findInvoiceCustomer(inv);
   var email = inv.cemail || (c ? c.email : '');
   if (!email) { showToast('No customer email saved for this invoice.', 'err'); return; }
-  if (!confirm('Send payment reminder for invoice ' + inv.id + ' to ' + email + '?')) return;
   var balance = invoiceBalance(inv);
+  var status = invoiceRegisterStateBusiness(inv);
+  var paidTotal = Math.max(0, toNum(inv.total || inv.amount) - balance);
+  var messageType = status === 'paid' ? 'paid receipt' : (status === 'partial' ? 'partial payment update' : 'payment reminder');
+  if (!confirm('Send ' + messageType + ' for invoice ' + inv.id + ' to ' + email + '?')) return;
   try {
-    if (!window.clsSendPaymentReminderEmail) throw new Error('Payment reminder email sender is not available. Refresh the page and try again.');
-    await window.clsSendPaymentReminderEmail({
+    if (!window.clsSendInvoiceStatusEmail) throw new Error('Invoice email sender is not available. Refresh the page and try again.');
+    await window.clsSendInvoiceStatusEmail({
       to: email,
       customerName: inv.client || 'Customer',
       invoiceNumber: inv.id || '',
@@ -3269,7 +3321,11 @@ window.emailInv = async function emailInv(id) {
       currency: 'LKR',
       amountDue: balance,
       invoiceTotal: toNum(inv.total || inv.amount || balance),
-      status: balance <= 0 ? 'paid' : (invoiceStatus(inv) || inv.status || 'unpaid'),
+      paymentAmount: paidTotal,
+      paidTotal: paidTotal,
+      remainingBalance: balance,
+      paymentDate: formatDateHuman(new Date()),
+      status: status,
       notes: [inv.notes, D.settings.footer].filter(Boolean).join('\n\n') || 'Thank you for your business.',
       settings: D.settings,
       lines: (inv.items || inv.lines || []).map(function(line) {
@@ -3280,7 +3336,7 @@ window.emailInv = async function emailInv(id) {
         return { desc: line.desc || line.description || 'Invoice item', qty: qty, price: price, total: total };
       })
     });
-    showToast('Payment reminder emailed to ' + email + '.', 'ok');
+    showToast((status === 'paid' ? 'Paid receipt' : status === 'partial' ? 'Partial payment update' : 'Payment reminder') + ' emailed to ' + email + '.', 'ok');
   } catch (e) {
     console.error('Payment reminder email error:', e);
     showToast((e && e.message) || 'Could not send the payment reminder. Check EmailJS settings and try again.', 'err');

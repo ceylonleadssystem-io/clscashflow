@@ -11,6 +11,7 @@ const {
   normalizeWhatsAppNumber,
   generatePublicToken,
   isValidPublicToken,
+  selectInvoiceSource,
   sanitizePublicInvoice,
   buildReminderMessage,
   assertSourceAccess
@@ -65,6 +66,21 @@ async function findCustomer(ownerUid, invoice, requestedId) {
   return rows.find(function(row) { return customerMatches(invoice, row.data || {}); }) || null;
 }
 
+async function findInvoiceSource(path, requestedId, invoiceNumber) {
+  let requested = null;
+  if (requestedId) {
+    requested = await getDocument(path, requestedId);
+  }
+  const selected = selectInvoiceSource(requested, [], invoiceNumber);
+  if (selected || !invoiceNumber) return selected;
+  const matches = await queryDocuments(path, {
+    filters: [{ field: 'num', op: '==', value: invoiceNumber }],
+    fetchLimit: 2000,
+    limit: 2
+  });
+  return selectInvoiceSource(null, matches, invoiceNumber);
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return response(200, { ok: true });
   if (event.httpMethod !== 'POST') return response(405, { ok: false, error: 'Method not allowed.' });
@@ -74,14 +90,16 @@ exports.handler = async function(event) {
     if (!user) return response(401, { ok: false, error: 'Please sign in again.' });
     const body = JSON.parse(event.body || '{}');
     const ownerUid = clean(body.ownerUid || user.id, 240);
-    const invoiceId = clean(body.invoiceId, 240);
-    if (!/^[0-9a-f-]{36}$/i.test(ownerUid) || !invoiceId) {
+    const requestedInvoiceId = clean(body.invoiceId, 240);
+    const invoiceNumber = clean(body.invoiceNumber, 120);
+    if (!/^[0-9a-f-]{36}$/i.test(ownerUid) || (!requestedInvoiceId && !invoiceNumber)) {
       return response(400, { ok: false, error: 'Could not identify this invoice.' });
     }
 
     const invoicePath = 'users/' + ownerUid + '/invoices';
-    const source = await getDocument(invoicePath, invoiceId);
+    const source = await findInvoiceSource(invoicePath, requestedInvoiceId, invoiceNumber);
     if (!source) return response(404, { ok: false, error: 'Invoice not found.' });
+    const invoiceId = source.id;
     const allowed = await canWrite(invoicePath, invoiceId, source.data || {}, user);
     assertSourceAccess(ownerUid, user, allowed);
 
@@ -99,12 +117,13 @@ exports.handler = async function(event) {
     const now = new Date().toISOString();
     const publicInvoice = sanitizePublicInvoice(invoice, profile);
     const priorHistory = Array.isArray(invoice.whatsappReminderHistory) ? invoice.whatsappReminderHistory.slice(-99) : [];
+    const messageType = publicInvoice.status === 'paid' ? 'paid invoice thank-you' : (publicInvoice.status === 'partial' ? 'partial payment update' : 'payment reminder');
     const entry = {
       invoiceId,
       customerId: customer ? customer.id : '',
       initiatedBy: user.id,
       whatsappNumber: phone.number,
-      reminderType: 'manual WhatsApp reminder',
+      reminderType: 'manual WhatsApp ' + messageType,
       publicInvoiceUrl: publicUrl,
       initiatedAt: now,
       status: 'WhatsApp opened'
