@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260714-public-chat-fix"></script>
+<script src="assets/platform.js?v=20260715-quote-email-fix"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -2546,7 +2546,9 @@ window.emailQuote=async function emailQuote(num){
   if(!to){alert('Add a customer email address before sending this '+label.toLowerCase()+'.');return;}
   if(!confirm('Send '+label+' '+q.num+' to '+to+'?'))return;
   try{
-    await window.clsSendDocumentEmail({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.num,invoiceNumber:q.num,customerName:q.client||'Customer',businessName:DB.settings.bizName||'My Business',businessEmail:DB.settings.email||'',businessAddress:DB.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.amount||0,invoiceTotal:q.amount||0,date:q.date,invoiceDate:fmtD(q.date),due:q.due,dueDate:fmtD(q.due),validUntil:fmtD(q.due),terms:q.terms||'',notes:q.notes||DB.settings.footer||'',lines:q.lines||[],settings:DB.settings});
+    const sendDocument=window.clsSendDocumentEmail||window.clsSendPaymentReminderEmail;
+    if(typeof sendDocument!=='function')throw new Error('The email service is still loading. Refresh the page and try again.');
+    await sendDocument({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.num,invoiceNumber:q.num,customerName:q.client||'Customer',businessName:DB.settings.bizName||'My Business',businessEmail:DB.settings.email||'',businessAddress:DB.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.amount||0,invoiceTotal:q.amount||0,date:q.date,invoiceDate:fmtD(q.date),due:q.due,dueDate:fmtD(q.due),validUntil:fmtD(q.due),terms:q.terms||'',notes:q.notes||DB.settings.footer||'',lines:q.lines||[],settings:DB.settings});
     alert(label+' sent to '+to+'.');
   }catch(err){alert('Could not send '+label.toLowerCase()+': '+(err&&err.message?err.message:err));}
 };
