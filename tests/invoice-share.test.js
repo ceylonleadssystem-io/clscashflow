@@ -5,6 +5,7 @@ const {
   generatePublicToken,
   isValidPublicToken,
   publicTokenCandidates,
+  buildVersionedPublicUrl,
   selectInvoiceSource,
   invoiceFinancials,
   invoiceStatus,
@@ -52,6 +53,14 @@ test('recovers a token with a messaging-client hyphen inserted into it', functio
   const canonical = 'Kga1b2aE5WnXiZsXtDaXBPp9gXV0cGJw';
   const delivered = 'Kga1b2aE5WnXiZsXtDaXBPp9g-XV0cGJw';
   assert.deepEqual(publicTokenCandidates(delivered), [delivered, canonical]);
+});
+
+test('creates a unique-path public invoice URL for mobile browsers', function() {
+  const token = 'Kga1b2aE5WnXiZsXtDaXBPp9gXV0cGJw';
+  assert.equal(
+    buildVersionedPublicUrl('https://ceylonrylabs.io/', token, 'deploy15'),
+    'https://ceylonrylabs.io/invoice/' + token + '/deploy15'
+  );
 });
 
 test('public lookup accepts the document shape returned by Supabase', async function() {

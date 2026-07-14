@@ -11,6 +11,7 @@ const {
   normalizeWhatsAppNumber,
   generatePublicToken,
   isValidPublicToken,
+  buildVersionedPublicUrl,
   selectInvoiceSource,
   sanitizePublicInvoice,
   buildReminderMessage,
@@ -113,8 +114,11 @@ exports.handler = async function(event) {
     const profileDoc = await getDocument('users', ownerUid);
     const profile = profileDoc ? profileDoc.data || {} : {};
     const token = await uniqueToken(invoice.publicToken, ownerUid, invoiceId);
-    const publicUrl = publicBase(event) + '/i/' + token;
     const now = new Date().toISOString();
+    // The token remains stable, but every reminder gets a fresh path so mobile
+    // browsers cannot reopen a previously cached failure document for /i/.
+    const linkVersion = Date.now().toString(36);
+    const publicUrl = buildVersionedPublicUrl(publicBase(event), token, linkVersion);
     const publicInvoice = sanitizePublicInvoice(invoice, profile);
     const priorHistory = Array.isArray(invoice.whatsappReminderHistory) ? invoice.whatsappReminderHistory.slice(-99) : [];
     const messageType = publicInvoice.status === 'paid' ? 'paid invoice thank-you' : (publicInvoice.status === 'partial' ? 'partial payment update' : 'payment reminder');

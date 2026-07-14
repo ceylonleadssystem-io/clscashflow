@@ -63,6 +63,14 @@ function publicTokenCandidates(value) {
   return [...new Set(candidates)];
 }
 
+function buildVersionedPublicUrl(base, token, version) {
+  const root = text(base, 500).replace(/\/$/, '');
+  const publicToken = text(token, 80);
+  const linkVersion = text(version, 80).replace(/[^A-Za-z0-9_-]/g, '') || Date.now().toString(36);
+  if (!root || !isValidPublicToken(publicToken)) throw new Error('Could not create the public invoice URL.');
+  return root + '/invoice/' + publicToken + '/' + linkVersion;
+}
+
 function selectInvoiceSource(requested, candidates, invoiceNumber) {
   const numberToFind = text(invoiceNumber, 120);
   if (requested && (!numberToFind || text(requested.data && requested.data.num, 120) === numberToFind)) {
@@ -298,6 +306,7 @@ module.exports = {
   generatePublicToken,
   isValidPublicToken,
   publicTokenCandidates,
+  buildVersionedPublicUrl,
   selectInvoiceSource,
   invoiceFinancials,
   invoiceStatus,

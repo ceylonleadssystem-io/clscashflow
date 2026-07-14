@@ -18,6 +18,11 @@
   to = "/invoice-public.html?token=:token"
   status = 200
 
+[[redirects]]
+  from = "/invoice/:token/:version"
+  to = "/invoice-public.html?token=:token&v=:version"
+  status = 200
+
 # Standard security headers (no restrictive CSP, so inline scripts keep working)
 [[headers]]
   for = "/*"
@@ -34,6 +39,26 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
     Netlify-CDN-Cache-Control = "public, durable, max-age=31536000, immutable"
+
+# Public invoice links can become available immediately after a reminder is
+# created. Never retain an earlier not-found page in a mobile browser cache.
+[[headers]]
+  for = "/i/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Netlify-CDN-Cache-Control = "no-store"
+
+[[headers]]
+  for = "/invoice/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Netlify-CDN-Cache-Control = "no-store"
+
+[[headers]]
+  for = "/invoice-public.html"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Netlify-CDN-Cache-Control = "no-store"
 
 # A short browser cache makes switching Solo, Studio, and Business feel
 # immediate without leaving users on stale HTML after an update.

@@ -46,10 +46,12 @@ function permitted(event, token) {
 
 async function resolvePublicShare(token, readDocument) {
   const getter = readDocument || getDocument;
-  for (const candidate of publicTokenCandidates(token)) {
-    const share = await getter('publicInvoices', candidate);
-    if (share) return { share, resolvedToken: candidate };
-  }
+  const candidates = publicTokenCandidates(token);
+  const shares = await Promise.all(candidates.map(function(candidate) {
+    return getter('publicInvoices', candidate);
+  }));
+  const foundAt = shares.findIndex(Boolean);
+  if (foundAt !== -1) return { share: shares[foundAt], resolvedToken: candidates[foundAt] };
   return { share: null, resolvedToken: token };
 }
 
@@ -77,21 +79,28 @@ exports.handler = async function(event) {
     if (!ownerUid || !sourceInvoiceId) {
       return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
     }
-    const source = await getDocument('users/' + ownerUid + '/invoices', sourceInvoiceId);
+
+    // Every share stores a sanitized public snapshot. It is the fastest and
+    // most reliable response, and it exactly matches the reminder that was
+    // sent. Source reads below are retained only for older mappings.
+    if (shareData.invoice && typeof shareData.invoice === 'object') {
+      return response(200, {
+        ok: true,
+        invoice: sanitizePublicSnapshot(shareData.invoice)
+      });
+    }
+
+    const [source, profile] = await Promise.all([
+      getDocument('users/' + ownerUid + '/invoices', sourceInvoiceId),
+      getDocument('users', ownerUid)
+    ]);
     if (source && canUseMappedSource(source.data, resolvedToken)) {
-      const profile = await getDocument('users', ownerUid);
       return response(200, {
         ok: true,
         invoice: sanitizePublicInvoice(source.data || {}, profile ? profile.data || {} : {})
       });
     }
-    if (!shareData.invoice || typeof shareData.invoice !== 'object') {
-      return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
-    }
-    return response(200, {
-      ok: true,
-      invoice: sanitizePublicSnapshot(shareData.invoice)
-    });
+    return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
   } catch (error) {
     console.error('public-invoice error', error);
     return response(500, { ok: false, error: 'Invoice not found or unavailable.' });
