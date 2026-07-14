@@ -44,6 +44,15 @@ function permitted(event, token) {
   return current.count <= MAX_REQUESTS;
 }
 
+async function resolvePublicShare(token, readDocument) {
+  const getter = readDocument || getDocument;
+  for (const candidate of publicTokenCandidates(token)) {
+    const share = await getter('publicInvoices', candidate);
+    if (share) return { share, resolvedToken: candidate };
+  }
+  return { share: null, resolvedToken: token };
+}
+
 exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return response(200, { ok: true });
   if (event.httpMethod !== 'GET') return response(405, { ok: false, error: 'Method not allowed.' });
@@ -56,15 +65,9 @@ exports.handler = async function(event) {
   }
 
   try {
-    let share = null;
-    let resolvedToken = token;
-    for (const candidate of publicTokenCandidates(token)) {
-      const candidateShare = await getDocument('publicInvoices', candidate);
-      if (!candidateShare || !candidateShare.exists) continue;
-      share = candidateShare;
-      resolvedToken = candidate;
-      break;
-    }
+    const resolved = await resolvePublicShare(token);
+    const share = resolved.share;
+    const resolvedToken = resolved.resolvedToken;
     const shareData = share && share.data ? share.data : {};
     if (!share || shareData.active !== true || shareData.public !== true) {
       return response(404, { ok: false, error: 'Invoice not found or unavailable.' });
@@ -94,3 +97,5 @@ exports.handler = async function(event) {
     return response(500, { ok: false, error: 'Invoice not found or unavailable.' });
   }
 };
+
+exports.resolvePublicShare = resolvePublicShare;

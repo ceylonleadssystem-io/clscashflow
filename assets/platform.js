@@ -2094,8 +2094,9 @@
         });
       } catch (e) {}
     }
-    await collect(db.collection('supportTickets').where('uid', '==', user.uid));
-    if (user.email) await collect(db.collection('supportTickets').where('email', '==', String(user.email).toLowerCase()));
+    var reads = [collect(db.collection('supportTickets').where('uid', '==', user.uid))];
+    if (user.email) reads.push(collect(db.collection('supportTickets').where('email', '==', String(user.email).toLowerCase())));
+    await Promise.all(reads);
     return Object.keys(rows).map(function(id) { return rows[id]; }).sort(function(a, b) {
       return ticketTime(b) - ticketTime(a);
     }).slice(0, 8);
@@ -2222,7 +2223,7 @@
     target.scrollTop = target.scrollHeight;
   }
 
-  async function refreshChat(wrap) {
+  async function refreshChat(wrap, silent) {
     var list = wrap && wrap.querySelector('[data-chat-list]');
     if (!list) return;
     var db = getFirestore();
@@ -2231,23 +2232,18 @@
       list.innerHTML = '<div class="cls-sp-status">Please sign in to chat with support.</div>';
       return;
     }
-    list.innerHTML = '<div class="cls-sp-status">Loading chat...</div>';
+    if (!silent) list.innerHTML = '<div class="cls-sp-status">Loading chat...</div>';
     try {
       var thread = db.collection('chatThreads').doc(chatThreadId(user));
-      var threadSnap = await thread.get();
-      if (!threadSnap.exists) {
-        renderChatMessages(list, []);
-        return;
-      }
       var snap = await thread.collection('messages').orderBy('createdAt', 'asc').limit(80).get();
       var rows = [];
       snap.forEach(function(doc) { rows.push({ id: doc.id, data: doc.data() || {} }); });
       renderChatMessages(list, rows);
-      await thread.set({
+      thread.set({
         unreadForUser: false,
         lastUserReadAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastUserReadAtUtc: nowIso()
-      }, { merge: true });
+      }, { merge: true }).catch(function() {});
     } catch (e) {
       list.innerHTML = '<div class="cls-sp-status">Could not load chat right now.</div>';
     }
@@ -2267,12 +2263,8 @@
     }
     try {
       var thread = db.collection('chatThreads').doc(chatThreadId(user));
-      var threadSnap = await thread.get();
-      if (!threadSnap.exists) {
-        renderChatMessages(list, []);
-        return;
-      }
-      supportChatUnsubscribe = thread.collection('messages').orderBy('createdAt', 'asc').limit(80).onSnapshot(function(snap) {
+      var messages = thread.collection('messages').orderBy('createdAt', 'asc').limit(80);
+      supportChatUnsubscribe = messages.onSnapshot(function(snap) {
         var rows = [];
         snap.forEach(function(doc) { rows.push({ id: doc.id, data: doc.data() || {} }); });
         renderChatMessages(list, rows);
@@ -2294,10 +2286,19 @@
     if (!text) throw new Error('Please type a message first.');
     var db = getFirestore();
     var user = getAuthUser();
-    var thread = await ensureChatThread(db, user);
+    var thread = db.collection('chatThreads').doc(chatThreadId(user));
     var stamp = firebase.firestore.FieldValue.serverTimestamp();
     var authorName = cleanString(user.displayName || user.email || 'Customer', 180);
-    await thread.collection('messages').add({
+    var list = wrap && wrap.querySelector('[data-chat-list]');
+    if (list) {
+      var pending = document.createElement('div');
+      pending.className = 'cls-chat-row customer cls-chat-pending';
+      pending.innerHTML = '<div class="cls-chat-meta">' + escapeHtml(authorName) + ' · Sending...</div>' +
+        '<div class="cls-chat-bubble">' + escapeHtml(text) + '</div>';
+      list.appendChild(pending);
+      list.scrollTop = list.scrollHeight;
+    }
+    var messageWrite = thread.collection('messages').add({
       uid: user.uid,
       email: cleanString(user.email || '', 180).toLowerCase(),
       authorRole: 'customer',
@@ -2307,7 +2308,14 @@
       createdAt: stamp,
       createdAtUtc: nowIso()
     });
-    await thread.set({
+    var threadWrite = thread.set({
+      uid: user.uid,
+      email: cleanString(user.email || '', 180).toLowerCase(),
+      displayName: cleanString(user.displayName || '', 180),
+      name: cleanString(user.displayName || user.email || 'Customer', 180),
+      source: 'portal-chat',
+      page: location.href,
+      lastSeenPath: location.pathname,
       status: 'open',
       assignedTo: 'Mrs. Gamage',
       lastMessage: cleanString(text, 240),
@@ -2319,8 +2327,13 @@
       updatedAt: stamp,
       updatedAtUtc: nowIso()
     }, { merge: true });
-    refreshChat(wrap);
-    subscribeChat(wrap);
+    try {
+      await Promise.all([messageWrite, threadWrite]);
+      refreshChat(wrap, true);
+    } catch (error) {
+      if (pending) pending.remove();
+      throw error;
+    }
   }
 
   function dangerActionName(action) {
@@ -2601,6 +2614,9 @@
       refreshMyTickets(wrap);
       subscribeChat(wrap);
     }
+    document.addEventListener('cls:settings-tab', function(ev) {
+      if (ev && ev.detail && ev.detail.tab === 'support') loadSupportActivity();
+    });
 
 	    wrap.querySelector('.cls-support-toggle').addEventListener('click', function() {
 	      wrap.classList.toggle('open');
@@ -2707,6 +2723,8 @@
 	      }
 	    });
 	  }
+
+  window.clsMountSupportWidget = mountSupportWidget;
 
   function normalizeInvoiceWhatsAppNumber(value) {
     var raw = cleanString(value, 40);

@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260714-qa-links-mobile"></script>
+<script src="assets/platform.js?v=20260714-public-chat-fix"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -199,9 +199,9 @@ tr:hover td{background:var(--bg3)}
 .invoice-status-tab.active{background:var(--black);border-color:var(--black);color:#fff}
 .invoice-status-count{display:inline-grid;place-items:center;min-width:1.35rem;height:1.35rem;padding:0 .28rem;background:var(--bg3);color:var(--text);font-size:.62rem;letter-spacing:0}
 .invoice-status-tab.active .invoice-status-count{background:#fff;color:var(--black)}
-.inv-action-row.clean{display:flex;gap:.32rem;align-items:center;min-width:470px;flex-wrap:nowrap}
+.inv-action-row.clean{display:grid;grid-template-columns:repeat(4,minmax(60px,1fr));gap:.32rem;align-items:center;width:300px;max-width:100%;min-width:0}
 .inv-action-row.clean .btn-sm{height:34px;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center}
-.inv-action-row.clean .btn-sm:first-child{min-width:116px;flex:1}
+.inv-action-row.clean .btn-sm:first-child{grid-column:1/-1;width:100%}
 .invoice-icon-action{font-size:.6rem!important;letter-spacing:.04em!important;min-width:64px;gap:.28rem}
 .invoice-more{position:relative;height:34px}
 .invoice-more summary{list-style:none;height:34px;display:flex;align-items:center;justify-content:center;padding:0 .65rem;border:1px solid var(--border-acc);color:var(--gold);cursor:pointer;font-weight:800;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
@@ -2687,6 +2687,10 @@ window.showAccountSettingsTab = function showAccountSettingsTab(tab){
   document.querySelectorAll('[data-account-panel]').forEach(panel=>{
     panel.hidden=panel.getAttribute('data-account-panel')!==tab;
   });
+  if(tab==='support'){
+    if(typeof window.clsMountSupportWidget==='function')window.clsMountSupportWidget();
+    setTimeout(function(){document.dispatchEvent(new CustomEvent('cls:settings-tab',{detail:{tab:'support'}}));},0);
+  }
 };
 function loadSettings(){
   const s=DB.settings;

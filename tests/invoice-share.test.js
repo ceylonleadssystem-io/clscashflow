@@ -14,6 +14,7 @@ const {
   buildReminderMessage,
   assertSourceAccess
 } = require('../netlify/lib/invoice-share');
+const { resolvePublicShare } = require('../netlify/functions/public-invoice');
 
 test('normalizes a Sri Lankan domestic mobile number', function() {
   assert.deepEqual(normalizeWhatsAppNumber('077 123-4567'), {
@@ -51,6 +52,23 @@ test('recovers a token with a messaging-client hyphen inserted into it', functio
   const canonical = 'Kga1b2aE5WnXiZsXtDaXBPp9gXV0cGJw';
   const delivered = 'Kga1b2aE5WnXiZsXtDaXBPp9g-XV0cGJw';
   assert.deepEqual(publicTokenCandidates(delivered), [delivered, canonical]);
+});
+
+test('public lookup accepts the document shape returned by Supabase', async function() {
+  const canonical = 'Kga1b2aE5WnXiZsXtDaXBPp9gXV0cGJw';
+  const delivered = 'Kga1b2aE5WnXiZsXtDaXBPp9g-XV0cGJw';
+  const calls = [];
+  const result = await resolvePublicShare(delivered, async function(path, token) {
+    calls.push([path, token]);
+    return token === canonical ? { id: token, data: { active: true, public: true } } : null;
+  });
+
+  assert.equal(result.resolvedToken, canonical);
+  assert.equal(result.share.id, canonical);
+  assert.deepEqual(calls, [
+    ['publicInvoices', delivered],
+    ['publicInvoices', canonical]
+  ]);
 });
 
 test('finds an existing converted invoice by its displayed invoice number', function() {
