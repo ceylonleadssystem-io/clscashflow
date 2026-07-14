@@ -636,6 +636,46 @@
     return paymentReceiptEmailHtml(opts || {});
   };
 
+  function documentEmailHtml(opts) {
+    opts = opts || {};
+    var label = /^estimate$/i.test(opts.documentLabel || opts.kind) ? 'Estimate' : 'Quote';
+    var cur = opts.currency || 'LKR';
+    var number = opts.documentNumber || opts.invoiceNumber || opts.num || opts.id || '';
+    var businessName = opts.businessName || opts.bizName || 'Your Business';
+    var businessEmail = opts.businessEmail || opts.replyTo || '';
+    var businessAddress = opts.businessAddress || opts.addr || '';
+    var customerName = opts.customerName || opts.clientName || opts.client || 'Customer';
+    var validUntil = opts.validUntil || opts.dueDate || humanDate(opts.due);
+    var total = Number(opts.documentTotal != null ? opts.documentTotal : (opts.invoiceTotal || opts.total || opts.amount || 0));
+    var rows = paymentEmailLineRows(opts.lines || opts.items || [], cur, total);
+    var notes = opts.notes || 'Please contact us if you have any questions.';
+    return '<div style="margin:0;background:#f7f2ea;padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
+      '<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;">' +
+        '<div style="background:#2d2117;color:#fff;padding:30px 32px;">' +
+          '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#d3ac3d;">' + invoiceEscape(label + ' ready for review') + '</div>' +
+          '<h1 style="margin:10px 0 4px;font-size:30px;line-height:1.2;">' + invoiceEscape(label + ' ' + number) + '</h1>' +
+          '<div style="color:#eadfce;font-size:14px;">From ' + invoiceEscape(businessName) + '</div>' +
+        '</div>' +
+        '<div style="padding:30px 32px;">' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Hi ' + invoiceEscape(customerName) + ',</p>' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;color:#6f6258;">Please review the attached details for ' + invoiceEscape(label.toLowerCase()) + ' <strong style="color:#2d2117;">' + invoiceEscape(number) + '</strong>. It is valid until <strong style="color:#2d2117;">' + invoiceEscape(validUntil || '-') + '</strong>.</p>' +
+          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 22px;">' +
+            '<thead><tr style="background:#2d2117;color:#fff;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;"><th align="left" style="padding:12px 10px;">Description</th><th align="center" style="padding:12px 10px;">Qty</th><th align="right" style="padding:12px 10px;">Price</th><th align="right" style="padding:12px 10px;">Amount</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table>' +
+          '<div style="text-align:right;margin-bottom:24px;"><div style="display:inline-block;min-width:260px;background:#2d2117;color:#fff;padding:16px 20px;font-size:18px;font-weight:700;">' + invoiceEscape(label + ' total: ' + invoiceMoney(cur, total)) + '</div></div>' +
+          '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(notes) + '</div>' +
+          '<p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#6f6258;">Regards,<br><strong style="color:#2d2117;">' + invoiceEscape(businessName) + '</strong>' + (businessAddress ? '<br>' + invoiceEscape(businessAddress) : '') + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
+        '</div>' +
+        '<div style="padding:16px 32px;background:#f7f2ea;text-align:center;font-size:12px;color:#8b7c6f;">Sent with Cashflow System - Ceylonry Labs.io</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  window.clsBuildDocumentEmailHtml = function(opts) {
+    return documentEmailHtml(opts || {});
+  };
+
   function emailJsErrorMessage(err) {
     if (!err) return '';
     if (typeof err === 'string') return err;
@@ -668,8 +708,10 @@
     var settings = opts.settings || {};
     var to = String(opts.to || opts.toEmail || '').trim();
     if (!to) throw new Error('No customer email saved for this invoice.');
-    var emailKind = opts.kind || opts.emailType || opts.type || 'reminder';
+    var emailKind = String(opts.kind || opts.emailType || opts.type || 'reminder').toLowerCase();
     var isReceipt = emailKind === 'receipt' || emailKind === 'paid' || emailKind === 'payment-received';
+    var isDocument = emailKind === 'quote' || emailKind === 'estimate' || emailKind === 'document';
+    var documentLabel = /^estimate$/i.test(opts.documentLabel || emailKind) ? 'Estimate' : 'Quote';
     var publicKey = settings.ejsKey || window.CLS_EMAILJS_PUBLIC_KEY || 'gCD6W70FKqiN2ATlp';
     var serviceId = settings.ejsService || window.CLS_EMAILJS_SERVICE_ID || 'service_uneb8lv';
     var reminderTemplateId = settings.ejsTemplate || window.CLS_EMAILJS_TEMPLATE_ID || 'template_5xb3yer';
@@ -715,8 +757,8 @@
       name: customerName,
       from_name: businessName,
       reply_to: opts.businessEmail || settings.email || '',
-      subject: opts.subject || (isReceipt ? ((remainingBalance > 0.01 ? 'Partial payment received: Invoice ' : 'Payment received: Invoice ') + invoiceNo + ' from ' + businessName) : ('Payment reminder: Invoice ' + invoiceNo + ' from ' + businessName + ' - ' + invoiceMoney(cur, amountDue))),
-      message_html: isReceipt ? paymentReceiptEmailHtml(opts) : paymentReminderEmailHtml(opts),
+      subject: opts.subject || (isDocument ? (documentLabel + ' ' + invoiceNo + ' from ' + businessName) : (isReceipt ? ((remainingBalance > 0.01 ? 'Partial payment received: Invoice ' : 'Payment received: Invoice ') + invoiceNo + ' from ' + businessName) : ('Payment reminder: Invoice ' + invoiceNo + ' from ' + businessName + ' - ' + invoiceMoney(cur, amountDue)))),
+      message_html: isDocument ? documentEmailHtml(Object.assign({}, opts, { documentLabel: documentLabel })) : (isReceipt ? paymentReceiptEmailHtml(opts) : paymentReminderEmailHtml(opts)),
       business_name: businessName,
       business_address: opts.businessAddress || settings.addr || settings.address || '',
       client_name: customerName,
@@ -773,6 +815,14 @@
     opts = opts || {};
     Object.keys(opts).forEach(function(k) { payload[k] = opts[k]; });
     payload.kind = 'receipt';
+    return window.clsSendPaymentReminderEmail(payload);
+  };
+
+  window.clsSendDocumentEmail = function(opts) {
+    var payload = {};
+    opts = opts || {};
+    Object.keys(opts).forEach(function(k) { payload[k] = opts[k]; });
+    payload.kind = /^estimate$/i.test(payload.documentLabel) ? 'estimate' : 'quote';
     return window.clsSendPaymentReminderEmail(payload);
   };
 

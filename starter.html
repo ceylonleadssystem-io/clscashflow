@@ -42,6 +42,7 @@ img,canvas,svg,video{max-width:100%}
 .sb-item:hover{color:var(--text);background:var(--bg)}
 .sb-item.active{color:var(--black);background:var(--bg3);border-left-color:var(--black);font-weight:600}
 .sb-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
+.mobile-sign-out{display:none;border:0;background:transparent;font-family:var(--font-b)}
 .sb-footer{padding:1.25rem 1.5rem;border-top:1px solid var(--border)}
 .sb-biz{font-size:.78rem;color:var(--muted);margin-bottom:.75rem}
 .sb-biz strong{display:block;color:var(--text);font-weight:500;font-size:.82rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -406,11 +407,13 @@ body.is-admin .admin-only{display:flex}
 
 @media(max-width:980px){
   .table-tools{grid-template-columns:1fr 1fr}
+  .quote-filter-tools{grid-template-columns:1fr 1fr!important}
   .table-tools .btn-act-outline{width:100%}
   .dashboard-followup-grid{grid-template-columns:1fr}
 }
 @media(max-width:620px){
   .table-tools{grid-template-columns:1fr}
+  .quote-filter-tools{grid-template-columns:1fr!important}
   .reminder-row{grid-template-columns:1fr}
   .reminder-actions{justify-content:flex-start}
   .aging-row{grid-template-columns:1fr auto}
@@ -425,6 +428,7 @@ body.is-admin .admin-only{display:flex}
   .sb-nav::-webkit-scrollbar{display:none}
   .sb-item{min-width:76px;flex:0 0 76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;padding:.42rem .35rem;border-left:0;border-top:3px solid transparent;border-radius:7px;font-size:.62rem;line-height:1.15;text-align:center;color:var(--muted)}
   .sb-item.active{border-left:0;border-top-color:var(--black);background:var(--bg3)}
+  .mobile-sign-out{display:flex;color:var(--red)}
   .sb-icon{width:auto;font-size:1rem}
   #main{left:0;height:100dvh;max-width:100vw}
   .top-bar{padding:.8rem .9rem;align-items:flex-start;gap:.65rem;min-width:0}
@@ -587,6 +591,7 @@ document.addEventListener('click',function(e){
     <div class="sb-section" data-sidebar-section="account">Account</div>
     <a class="sb-item" data-nav="support"><span class="sb-icon">✉</span> Priority Support</a>
     <a class="sb-item" data-nav="settings"><span class="sb-icon">⚙️</span> Settings</a>
+    <button class="sb-item mobile-sign-out" type="button" data-cls-fn="clsSignOut"><span class="sb-icon">↪</span> Sign Out</button>
   </div>
   <div class="sb-footer">
     <div class="sb-biz"><strong id="sb-biz-name">My Business</strong><span id="sb-user-email">user@email.com</span></div>
@@ -687,6 +692,14 @@ document.addEventListener('click',function(e){
       </div>
       <div class="table-card" style="margin-top:1rem">
         <div class="table-header"><div><div class="table-title">Quotes &amp; Estimates</div><div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">Prepare a document, download it, then convert the accepted version into an invoice.</div></div><div style="display:flex;gap:.5rem"><button class="btn-act-outline" data-cls-fn="openEstimateModal">+ Raise Estimate</button><button class="btn-act" data-cls-fn="openQuoteModal">+ Raise Quote</button></div></div>
+        <div class="table-tools quote-filter-tools" style="grid-template-columns:repeat(5,minmax(120px,1fr)) auto">
+          <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="quote-from" onchange="renderQuotes()"></div>
+          <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="quote-to" onchange="renderQuotes()"></div>
+          <div class="f-group"><label>Sort</label><select class="f-input f-select" id="quote-sort" onchange="renderQuotes()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div>
+          <div class="f-group"><label>Type</label><select class="f-input f-select" id="quote-type-filter" onchange="renderQuotes()"><option value="">All Documents</option><option value="quote">Quotes</option><option value="estimate">Estimates</option></select></div>
+          <div class="f-group"><label>Status</label><select class="f-input f-select" id="quote-status-filter" onchange="renderQuotes()"><option value="">All Statuses</option><option value="draft">Draft</option><option value="converted">Converted</option></select></div>
+          <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="quote">Clear</button>
+        </div>
         <table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="quote-table"></tbody></table>
       </div>
     </div>
@@ -2170,11 +2183,11 @@ function populateExpenseCategoryFilter(){
 window.clearTableFilters=function clearTableFilters(prefix){
   [prefix+'-from',prefix+'-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var sort=document.getElementById(prefix+'-sort');if(sort)sort.value='date-desc';
-  var extra=document.getElementById(prefix+'-type-filter')||document.getElementById(prefix+'-cat-filter')||document.getElementById(prefix+'-status-filter');
-  if(extra)extra.value='';
+  [prefix+'-type-filter',prefix+'-cat-filter',prefix+'-status-filter'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   if(prefix==='cf')renderCashflow();
   if(prefix==='exp')renderExpenses();
   if(prefix==='inv')renderInvoices();
+  if(prefix==='quote')renderQuotes();
 };
 function getEditorName(){
   return (_profile&&(_profile.name||_profile.email))||(_auth.currentUser&&(_auth.currentUser.email||_auth.currentUser.displayName))||'Admin';
@@ -2516,10 +2529,27 @@ function renderInvoices(){
 }
 
 function renderQuotes(){
-  const body=document.getElementById('quote-table');if(!body)return;const quotes=Array.isArray(DB.quotes)?DB.quotes:[];
-  body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+fmtAmt(q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" onclick="window.printQuote('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">PDF</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" onclick="window.convertQuoteToInvoice('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" onclick="window.deleteQuote('+JSON.stringify(q.num).replace(/"/g,'&quot;')+')">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates yet.</td></tr>';
+  const body=document.getElementById('quote-table');if(!body)return;
+  const typeFilter=(document.getElementById('quote-type-filter')||{}).value||'';
+  const statusFilter=(document.getElementById('quote-status-filter')||{}).value||'';
+  const quotes=sortRecords((Array.isArray(DB.quotes)?DB.quotes:[]).filter(getFilterRange('quote')).filter(function(q){
+    const type=q.documentType==='estimate'?'estimate':'quote';
+    const status=q.status==='converted'?'converted':'draft';
+    return (!typeFilter||type===typeFilter)&&(!statusFilter||status===statusFilter);
+  }),'quote');
+  body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+fmtAmt(q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" data-cls-fn="printQuote" data-cls-arg="'+num+'">PDF</button><button class="btn-sm btn-sm-green" data-cls-fn="emailQuote" data-cls-arg="'+num+'">Email</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" data-cls-fn="convertQuoteToInvoice" data-cls-arg="'+num+'">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="deleteQuote" data-cls-arg="'+num+'">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates match the selected filters.</td></tr>';
 }
 window.printQuote=function printQuote(num){const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q)return;const w=window.open('','_blank','width=900,height=760');w.document.write(window.clsBuildInvoicePrintHtml({inv:q,settings:DB.settings,templateIndex:q.tpl,documentLabel:q.documentType==='estimate'?'Estimate':'Quote'}));w.document.close();w.onload=function(){setTimeout(function(){w.print();},300);};};
+window.emailQuote=async function emailQuote(num){
+  const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q)return;
+  const to=invoiceContactEmail(q);const label=q.documentType==='estimate'?'Estimate':'Quote';
+  if(!to){alert('Add a customer email address before sending this '+label.toLowerCase()+'.');return;}
+  if(!confirm('Send '+label+' '+q.num+' to '+to+'?'))return;
+  try{
+    await window.clsSendDocumentEmail({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.num,invoiceNumber:q.num,customerName:q.client||'Customer',businessName:DB.settings.bizName||'My Business',businessEmail:DB.settings.email||'',businessAddress:DB.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.amount||0,invoiceTotal:q.amount||0,date:q.date,invoiceDate:fmtD(q.date),due:q.due,dueDate:fmtD(q.due),validUntil:fmtD(q.due),terms:q.terms||'',notes:q.notes||DB.settings.footer||'',lines:q.lines||[],settings:DB.settings});
+    alert(label+' sent to '+to+'.');
+  }catch(err){alert('Could not send '+label.toLowerCase()+': '+(err&&err.message?err.message:err));}
+};
 window.convertQuoteToInvoice=async function convertQuoteToInvoice(num){
   const q=(DB.quotes||[]).find(function(item){return item.num===num;});
   if(!q||q.status==='converted'||!confirm('Convert '+num+' to an invoice?'))return;

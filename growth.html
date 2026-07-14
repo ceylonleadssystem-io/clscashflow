@@ -44,6 +44,7 @@ img,canvas,svg,video{max-width:100%}
 .nav-item:hover{color:var(--text);background:var(--bg)}
 .nav-item.on{color:var(--black);background:var(--bg3);border-left-color:var(--rose);font-weight:600}
 .nav-icon{font-size:.9rem;width:18px;text-align:center;flex-shrink:0}
+.mobile-sign-out{display:none;border:0;background:transparent;font-family:var(--fb)}
 .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.55rem;font-weight:700;padding:.08rem .42rem;border-radius:10px}
 .sb-foot{padding:1.1rem 1.5rem;border-top:1px solid var(--border)}
 .sb-user{display:flex;align-items:center;gap:.72rem;margin-bottom:.85rem}
@@ -540,6 +541,9 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 .perf-t{flex:1;height:5px;background:var(--bg4);border-radius:3px}
 .perf-f{height:5px;background:var(--rose);border-radius:3px;transition:width .5s}
 .filter-bar{display:flex;gap:.48rem;flex-wrap:wrap;padding:.75rem 1.25rem 0}
+.quote-filter-tools{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr)) auto;gap:.65rem;padding:1rem 1.25rem;border-top:1px solid var(--border);align-items:end}
+.quote-filter-tools label{display:block;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.35rem}
+.quote-filter-tools .btn{height:39px}
 .fpill{padding:.3rem .85rem;border:1.5px solid var(--border);background:var(--white);font-size:.67rem;font-weight:500;color:var(--muted);cursor:pointer;font-family:var(--fb);transition:all .14s;border-radius:20px}
 .fpill.on{background:var(--black);border-color:var(--black);color:#fff}
 .fpill:hover:not(.on){border-color:var(--rose);color:var(--rose)}
@@ -577,6 +581,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .sb-nav::-webkit-scrollbar{display:none}
   .nav-item{position:relative;min-width:78px;flex:0 0 78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;padding:.42rem .35rem;border-left:0;border-top:3px solid transparent;border-radius:7px;font-size:.6rem;line-height:1.15;text-align:center;color:var(--muted)}
   .nav-item.on{border-left:0;border-top-color:var(--rose);background:var(--bg3)}
+  .mobile-sign-out{display:flex;color:var(--red)}
   .nav-icon{width:auto;font-size:1rem}
   .nav-badge{position:absolute;right:.28rem;top:.18rem;margin:0}
   #main{left:0;height:100dvh;max-width:100vw}
@@ -635,6 +640,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .invoice-actions{grid-template-columns:repeat(2,minmax(78px,1fr));justify-content:start;max-width:100%;width:100%}
   .invoice-actions .bsm,.invoice-actions .pill{height:36px}
   .filter-bar{padding:.7rem 1rem 0;position:sticky;left:0;background:var(--white)}
+  .quote-filter-tools{grid-template-columns:1fr 1fr;padding:.85rem 1rem;position:sticky;left:0;background:var(--white)}
   .mo{align-items:flex-end;padding:.5rem}
   .mob{max-width:none!important;width:100%;max-height:94dvh;border-radius:10px 10px 0 0;overflow:auto}
   .mo-hd{padding:1rem 1.1rem}
@@ -682,6 +688,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   #mo-inv .litbl td input{border:1px solid var(--border);padding:.5rem}
   #mo-inv .li-tot{text-align:right!important}
 }
+@media(max-width:520px){.quote-filter-tools{grid-template-columns:1fr}}
 @media print{
   body>*:not(#print-inv){display:none!important}
   #print-inv{display:block!important}
@@ -724,6 +731,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="sb-sec">Account</div>
     <div class="nav-item" data-view="backlog"><span class="nav-icon">🗂️</span>Admin Backlog</div>
     <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</div>
+    <button class="nav-item mobile-sign-out" type="button" onclick="window.clsSignOut()"><span class="nav-icon">↪</span>Sign Out</button>
   </div>
   <div class="sb-foot">
     <div class="sb-user">
@@ -850,7 +858,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="help"><b>Invoices</b> — Bills you send to customers. Track which are paid, waiting, partial, or overdue. Includes VAT &amp; tax support and manual reminders.</div>
       <div class="sumbar c3" id="inv-sum"></div>
       <div class="card"><div class="card-head"><span class="card-title">Invoice Register</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><div class="invoice-status-tabs" role="tablist" aria-label="Invoice payment status"><button class="invoice-status-tab active" id="inv-tab-pending" type="button" role="tab" aria-selected="true" onclick="window.setInvoiceRegisterTab('pending')">Pending <span class="invoice-status-count" id="inv-count-pending">0</span></button><button class="invoice-status-tab" id="inv-tab-partial" type="button" role="tab" aria-selected="false" onclick="window.setInvoiceRegisterTab('partial')">Partially Paid <span class="invoice-status-count" id="inv-count-partial">0</span></button><button class="invoice-status-tab" id="inv-tab-paid" type="button" role="tab" aria-selected="false" onclick="window.setInvoiceRegisterTab('paid')">Paid / Settled <span class="invoice-status-count" id="inv-count-paid">0</span></button></div><div class="table-wrap"><table class="invoice-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
-      <div class="card" style="margin-top:1rem"><div class="card-head"><div><span class="card-title">Quotes &amp; Estimates</span><div class="help" style="margin:.25rem 0 0;padding:0;border:0;background:transparent">Prepare a document, download it, and convert the accepted version into an invoice.</div></div><div class="card-actions"><button class="btn bo" onclick="window.openEstimateMo()">+ Estimate</button><button class="btn bd" onclick="window.openQuoteMo()">+ Quote</button></div></div><div class="table-wrap"><table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th class="tr">Total</th><th class="tr">Actions</th></tr></thead><tbody id="quote-body"></tbody></table></div></div>
+      <div class="card" style="margin-top:1rem"><div class="card-head"><div><span class="card-title">Quotes &amp; Estimates</span><div class="help" style="margin:.25rem 0 0;padding:0;border:0;background:transparent">Prepare a document, email or download it, and convert the accepted version into an invoice.</div></div><div class="card-actions"><button class="btn bo" onclick="window.openEstimateMo()">+ Estimate</button><button class="btn bd" onclick="window.openQuoteMo()">+ Quote</button></div></div><div class="quote-filter-tools"><div><label for="quote-from">From Date</label><input class="fi" type="date" id="quote-from" onchange="renderQuotes()"></div><div><label for="quote-to">To Date</label><input class="fi" type="date" id="quote-to" onchange="renderQuotes()"></div><div><label for="quote-sort">Sort</label><select class="fi" id="quote-sort" onchange="renderQuotes()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div><div><label for="quote-type-filter">Type</label><select class="fi" id="quote-type-filter" onchange="renderQuotes()"><option value="">All Documents</option><option value="quote">Quotes</option><option value="estimate">Estimates</option></select></div><div><label for="quote-status-filter">Status</label><select class="fi" id="quote-status-filter" onchange="renderQuotes()"><option value="">All Statuses</option><option value="draft">Draft</option><option value="converted">Converted</option></select></div><button class="btn bo" onclick="window.clearBusinessQuoteFilters()">Clear</button></div><div class="table-wrap"><table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th class="tr">Total</th><th class="tr">Actions</th></tr></thead><tbody id="quote-body"></tbody></table></div></div>
     </div>
 
     <!-- CUSTOMERS -->
@@ -2180,7 +2188,8 @@ window.clsGoTo = window.goTo;
 // Wire up nav items
 document.querySelectorAll('.nav-item').forEach(function(item) {
   item.addEventListener('click', function() {
-    goTo(item.getAttribute('data-view'));
+    var view = item.getAttribute('data-view');
+    if (view) goTo(view);
   });
 });
 
@@ -2660,12 +2669,33 @@ function renderInvoices() {
 function renderQuotes() {
   var body = document.getElementById('quote-body');
   if (!body) return;
-  body.innerHTML = (D.quotes || []).map(function(q) {
+  var from = (document.getElementById('quote-from') || {}).value || '';
+  var to = (document.getElementById('quote-to') || {}).value || '';
+  var sort = (document.getElementById('quote-sort') || {}).value || 'date-desc';
+  var typeFilter = (document.getElementById('quote-type-filter') || {}).value || '';
+  var statusFilter = (document.getElementById('quote-status-filter') || {}).value || '';
+  var quotes = (D.quotes || []).filter(function(q) {
+    var type = q.documentType === 'estimate' ? 'estimate' : 'quote';
+    var status = q.status === 'converted' ? 'converted' : 'draft';
+    return (!from || q.date >= from) && (!to || q.date <= to) && (!typeFilter || type === typeFilter) && (!statusFilter || status === statusFilter);
+  }).sort(function(a,b) {
+    if (sort === 'date-asc') return new Date(a.date) - new Date(b.date);
+    if (sort === 'amount-desc') return toNum(b.total || b.amount) - toNum(a.total || a.amount);
+    if (sort === 'amount-asc') return toNum(a.total || a.amount) - toNum(b.total || b.amount);
+    return new Date(b.date) - new Date(a.date);
+  });
+  body.innerHTML = quotes.map(function(q) {
     var safe = String(q.id || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     var converted = q.status === 'converted';
-    return '<tr><td class="mono gld">' + escHtml(q.id) + '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.2rem">' + (q.documentType === 'estimate' ? 'Estimate' : 'Quote') + '</div></td><td>' + escHtml(q.client || 'Customer') + '</td><td>' + escHtml(formatDateHuman(q.date)) + '</td><td>' + escHtml(formatDateHuman(q.due)) + '</td><td><span class="pill ' + (converted ? 'pp' : 'pdr') + '">' + (converted ? 'Converted' : 'Draft') + '</span></td><td class="tr">' + fmt(q.total) + '</td><td class="tr"><div class="invoice-actions"><button class="bsm" onclick="window.printQuoteBusiness(\'' + safe + '\')">PDF</button>' + (converted ? '<span class="pill pp">' + escHtml(q.convertedInvoiceId || 'Invoice') + '</span>' : '<button class="bsm bsmgr" onclick="window.convertBusinessQuote(\'' + safe + '\')">Convert</button>') + '<button class="bsm bsmdel" onclick="window.deleteBusinessQuote(\'' + safe + '\')">Delete</button></div></td></tr>';
-  }).join('') || emptyRow(7, 'No quotes yet', 'Create a quote or estimate, then convert it when the customer accepts.', 'Create Quote', 'window.openQuoteMo()');
+    return '<tr><td class="mono gld">' + escHtml(q.id) + '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.2rem">' + (q.documentType === 'estimate' ? 'Estimate' : 'Quote') + '</div></td><td>' + escHtml(q.client || 'Customer') + '</td><td>' + escHtml(formatDateHuman(q.date)) + '</td><td>' + escHtml(formatDateHuman(q.due)) + '</td><td><span class="pill ' + (converted ? 'pp' : 'pdr') + '">' + (converted ? 'Converted' : 'Draft') + '</span></td><td class="tr">' + fmt(q.total) + '</td><td class="tr"><div class="invoice-actions"><button class="bsm" onclick="window.printQuoteBusiness(\'' + safe + '\')">PDF</button><button class="bsm bsmem" onclick="window.emailBusinessQuote(\'' + safe + '\')">Email</button>' + (converted ? '<span class="pill pp">' + escHtml(q.convertedInvoiceId || 'Invoice') + '</span>' : '<button class="bsm bsmgr" onclick="window.convertBusinessQuote(\'' + safe + '\')">Convert</button>') + '<button class="bsm bsmdel" onclick="window.deleteBusinessQuote(\'' + safe + '\')">Delete</button></div></td></tr>';
+  }).join('') || emptyRow(7, 'No matching documents', 'Adjust the filters or create a new quote or estimate.', 'Create Quote', 'window.openQuoteMo()');
 }
+
+window.clearBusinessQuoteFilters = function clearBusinessQuoteFilters() {
+  ['quote-from','quote-to','quote-type-filter','quote-status-filter'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  var sort = document.getElementById('quote-sort'); if (sort) sort.value = 'date-desc';
+  renderQuotes();
+};
 
 window.printQuoteBusiness = function printQuoteBusiness(id) {
   var q = (D.quotes || []).find(function(item) { return item.id === id; });
@@ -2674,6 +2704,22 @@ window.printQuoteBusiness = function printQuoteBusiness(id) {
   w.document.write(window.clsBuildInvoicePrintHtml({inv:q, settings:D.settings, templateIndex:q.tpl, documentLabel:q.documentType === 'estimate' ? 'Estimate' : 'Quote'}));
   w.document.close();
   w.onload = function() { setTimeout(function() { w.print(); }, 300); };
+};
+
+window.emailBusinessQuote = async function emailBusinessQuote(id) {
+  var q = (D.quotes || []).find(function(item) { return item.id === id; });
+  if (!q) return;
+  var customer = findInvoiceCustomer(q);
+  var to = String(q.cemail || q.email || (customer && customer.email) || '').trim();
+  var label = q.documentType === 'estimate' ? 'Estimate' : 'Quote';
+  if (!to) { showToast('Add a customer email address before sending this ' + label.toLowerCase() + '.', 'err'); return; }
+  if (!confirm('Send ' + label + ' ' + q.id + ' to ' + to + '?')) return;
+  try {
+    await window.clsSendDocumentEmail({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.id,invoiceNumber:q.id,customerName:q.client||'Customer',businessName:D.settings.biz||'Your Business',businessEmail:D.settings.email||'',businessAddress:D.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.total||q.amount||0,invoiceTotal:q.total||q.amount||0,date:q.date,invoiceDate:formatDateHuman(q.date),due:q.due,dueDate:formatDateHuman(q.due),validUntil:formatDateHuman(q.due),terms:q.terms||'',notes:q.notes||D.settings.footer||'',lines:q.lines||[],settings:D.settings});
+    showToast(label + ' sent to ' + to + '.', 'ok');
+  } catch (err) {
+    showToast('Could not send ' + label.toLowerCase() + ': ' + (err && err.message ? err.message : err), 'err');
+  }
 };
 
 window.convertBusinessQuote = async function convertBusinessQuote(id) {
