@@ -420,6 +420,37 @@ body.is-admin .admin-only{display:flex}
   .aging-count{grid-column:1/-1}
 }
 
+/* Windows 125%/150% display scaling reduces a 1920px screen to a 1536/1280px CSS viewport. */
+@media(min-width:761px) and (max-width:1600px){
+  #view-invoices .register-table{display:block;width:100%;min-width:0;table-layout:auto}
+  #view-invoices .register-table thead{display:none}
+  #view-invoices .register-table tbody{display:grid;gap:.8rem;padding:.8rem}
+  #view-invoices .register-table tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--border);background:var(--white)}
+  #view-invoices .register-table td{display:flex;min-width:0;flex-direction:column;gap:.35rem;padding:.72rem .8rem;text-align:left!important;white-space:normal;border-right:1px solid var(--border);border-bottom:0;overflow-wrap:anywhere}
+  #view-invoices .register-table td::before{font-size:.54rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:left}
+  #view-invoices .register-table td:last-child{grid-column:1/-1;border-top:1px solid var(--border);border-right:0}
+  #view-invoices .invoice-register-table td:nth-child(1)::before{content:"Invoice"}
+  #view-invoices .invoice-register-table td:nth-child(2)::before{content:"Customer"}
+  #view-invoices .invoice-register-table td:nth-child(3)::before{content:"Date"}
+  #view-invoices .invoice-register-table td:nth-child(4)::before{content:"Due date"}
+  #view-invoices .invoice-register-table td:nth-child(5)::before{content:"Status"}
+  #view-invoices .invoice-register-table td:nth-child(6)::before{content:"Payment"}
+  #view-invoices .invoice-register-table td:nth-child(7)::before{content:"Total"}
+  #view-invoices .invoice-register-table td:nth-child(8)::before{content:"Actions"}
+  #view-invoices .document-register-table td:nth-child(1)::before{content:"Document"}
+  #view-invoices .document-register-table td:nth-child(2)::before{content:"Customer"}
+  #view-invoices .document-register-table td:nth-child(3)::before{content:"Date"}
+  #view-invoices .document-register-table td:nth-child(4)::before{content:"Valid until"}
+  #view-invoices .document-register-table td:nth-child(5)::before{content:"Status"}
+  #view-invoices .document-register-table td:nth-child(6)::before{content:"Total"}
+  #view-invoices .document-register-table td:nth-child(7)::before{content:"Actions"}
+  #view-invoices .register-table .inv-action-row{justify-content:flex-start;width:100%;max-width:none}
+  #view-invoices .register-table .inv-action-row.clean{width:100%;max-width:none;grid-template-columns:minmax(160px,1fr) repeat(4,minmax(72px,auto))}
+}
+@media(min-width:761px) and (max-width:1100px){
+  #view-invoices .register-table tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 @media(max-width:760px){
   html,body{height:100dvh;overflow:hidden}
   #sidebar{top:auto;bottom:0;left:0;right:0;width:100%;height:74px;border-right:0;border-top:2px solid var(--black);z-index:700;display:block;background:rgba(255,255,255,.98);box-shadow:0 -10px 28px rgba(0,0,0,.08)}
@@ -688,7 +719,7 @@ document.addEventListener('click',function(e){
           <div class="f-group"><label>Sort</label><select class="f-input f-select" id="inv-sort" onchange="renderInvoices()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div>
           <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="inv">Clear</button>
         </div>
-        <table><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
+        <table class="register-table invoice-register-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
       </div>
       <div class="table-card" style="margin-top:1rem">
         <div class="table-header"><div><div class="table-title">Quotes &amp; Estimates</div><div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">Prepare a document, download it, then convert the accepted version into an invoice.</div></div><div style="display:flex;gap:.5rem"><button class="btn-act-outline" data-cls-fn="openEstimateModal">+ Raise Estimate</button><button class="btn-act" data-cls-fn="openQuoteModal">+ Raise Quote</button></div></div>
@@ -700,7 +731,7 @@ document.addEventListener('click',function(e){
           <div class="f-group"><label>Status</label><select class="f-input f-select" id="quote-status-filter" onchange="renderQuotes()"><option value="">All Statuses</option><option value="draft">Draft</option><option value="converted">Converted</option></select></div>
           <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="quote">Clear</button>
         </div>
-        <table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="quote-table"></tbody></table>
+        <table class="register-table document-register-table"><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="quote-table"></tbody></table>
       </div>
     </div>
 

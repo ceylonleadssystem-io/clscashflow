@@ -544,6 +544,37 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 .quote-filter-tools{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr)) auto;gap:.65rem;padding:1rem 1.25rem;border-top:1px solid var(--border);align-items:end}
 .quote-filter-tools label{display:block;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.35rem}
 .quote-filter-tools .btn{height:39px}
+
+/* Keep invoice/document actions visible when Windows display scaling narrows the CSS viewport. */
+@media(min-width:761px) and (max-width:1600px){
+  #view-invoices .invoice-table,#view-invoices table:has(#quote-body){display:block;width:100%;min-width:0;table-layout:auto}
+  #view-invoices .invoice-table thead,#view-invoices table:has(#quote-body) thead{display:none}
+  #view-invoices .invoice-table tbody,#view-invoices table:has(#quote-body) tbody{display:grid;gap:.8rem;padding:.8rem}
+  #view-invoices .invoice-table tr,#view-invoices table:has(#quote-body) tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--border);background:var(--white);border-radius:var(--r);overflow:hidden}
+  #view-invoices .invoice-table td,#view-invoices table:has(#quote-body) td{display:flex;min-width:0;flex-direction:column;gap:.35rem;padding:.72rem .8rem;text-align:left!important;white-space:normal;border-right:1px solid var(--border);border-bottom:0;overflow-wrap:anywhere}
+  #view-invoices .invoice-table td::before,#view-invoices table:has(#quote-body) td::before{font-size:.53rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:left}
+  #view-invoices .invoice-table td:last-child,#view-invoices table:has(#quote-body) td:last-child{grid-column:1/-1;border-top:1px solid var(--border);border-right:0}
+  #view-invoices .invoice-table td:nth-child(1)::before{content:"Invoice"}
+  #view-invoices .invoice-table td:nth-child(2)::before{content:"Customer"}
+  #view-invoices .invoice-table td:nth-child(3)::before{content:"Date"}
+  #view-invoices .invoice-table td:nth-child(4)::before{content:"Due date"}
+  #view-invoices .invoice-table td:nth-child(5)::before{content:"Status"}
+  #view-invoices .invoice-table td:nth-child(6)::before{content:"Payment"}
+  #view-invoices .invoice-table td:nth-child(7)::before{content:"Total"}
+  #view-invoices .invoice-table td:nth-child(8)::before{content:"Actions"}
+  #view-invoices table:has(#quote-body) td:nth-child(1)::before{content:"Document"}
+  #view-invoices table:has(#quote-body) td:nth-child(2)::before{content:"Customer"}
+  #view-invoices table:has(#quote-body) td:nth-child(3)::before{content:"Date"}
+  #view-invoices table:has(#quote-body) td:nth-child(4)::before{content:"Valid until"}
+  #view-invoices table:has(#quote-body) td:nth-child(5)::before{content:"Status"}
+  #view-invoices table:has(#quote-body) td:nth-child(6)::before{content:"Total"}
+  #view-invoices table:has(#quote-body) td:nth-child(7)::before{content:"Actions"}
+  #view-invoices .invoice-actions{justify-content:start;width:100%;max-width:none;margin-left:0}
+  #view-invoices .invoice-actions.clean{grid-template-columns:minmax(160px,1fr) repeat(4,minmax(72px,auto));max-width:none}
+}
+@media(min-width:761px) and (max-width:1100px){
+  #view-invoices .invoice-table tr,#view-invoices table:has(#quote-body) tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 .fpill{padding:.3rem .85rem;border:1.5px solid var(--border);background:var(--white);font-size:.67rem;font-weight:500;color:var(--muted);cursor:pointer;font-family:var(--fb);transition:all .14s;border-radius:20px}
 .fpill.on{background:var(--black);border-color:var(--black);color:#fff}
 .fpill:hover:not(.on){border-color:var(--rose);color:var(--rose)}
