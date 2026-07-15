@@ -1973,7 +1973,7 @@
       '#cls-billing-widget .cls-billing-wa:hover{border-color:#B8922A;color:#B8922A}' +
       '#cls-billing-widget .cls-billing-status{margin-top:1rem;padding-top:.9rem;border-top:1px solid #E7DFD2;font-size:.74rem;color:#6B6258;line-height:1.5}' +
       '@media(min-width:1180px){#settings-billing-widgets #cls-billing-widget{padding:1.5rem 1.65rem}}' +
-      '@media(max-width:760px){#cls-billing-widget{padding:1.1rem}#cls-billing-widget .cls-billing-actions{grid-template-columns:1fr}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
+      '@media(max-width:760px){#settings-billing-widgets{margin-top:1rem!important}#cls-billing-widget{margin:0 0 1rem;padding:1.1rem}#cls-billing-widget .cls-billing-actions{grid-template-columns:1fr;gap:.8rem;margin-top:.2rem}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
       '@media print{#cls-billing-widget{display:none!important}}';
     document.head.appendChild(style);
   }

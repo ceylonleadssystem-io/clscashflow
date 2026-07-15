@@ -42,7 +42,7 @@ img,canvas,svg,video{max-width:100%}
 .sb-item:hover{color:var(--text);background:var(--bg)}
 .sb-item.active{color:var(--black);background:var(--bg3);border-left-color:var(--black);font-weight:600}
 .sb-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
-.mobile-sign-out{display:none;border:0;background:transparent;font-family:var(--font-b)}
+.mobile-sign-out,.mobile-top-sign-out{display:none;border:0;background:transparent;font-family:var(--font-b)}
 .sb-footer{padding:1.25rem 1.5rem;border-top:1px solid var(--border)}
 .sb-biz{font-size:.78rem;color:var(--muted);margin-bottom:.75rem}
 .sb-biz strong{display:block;color:var(--text);font-weight:500;font-size:.82rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -404,6 +404,10 @@ body.is-admin .admin-only{display:flex}
 .tour-dot{height:4px;flex:1;background:var(--border)}
 .tour-dot.active{background:var(--gold)}
 .tour-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.75rem}
+.customer-report-table{table-layout:fixed}
+.customer-report-table th:nth-child(n+2),.customer-report-table td:nth-child(n+2){text-align:right!important}
+.customer-report-table th:first-child,.customer-report-table td:first-child{width:30%}
+.settings-billing-primary-actions{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.85rem}
 
 @media(max-width:980px){
   .table-tools{grid-template-columns:1fr 1fr}
@@ -460,6 +464,7 @@ body.is-admin .admin-only{display:flex}
   .sb-item{min-width:76px;flex:0 0 76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;padding:.42rem .35rem;border-left:0;border-top:3px solid transparent;border-radius:7px;font-size:.62rem;line-height:1.15;text-align:center;color:var(--muted)}
   .sb-item.active{border-left:0;border-top-color:var(--black);background:var(--bg3)}
   .mobile-sign-out{display:flex;color:var(--red)}
+  .mobile-top-sign-out{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:.42rem .62rem;border:1px solid rgba(192,57,43,.35);color:var(--red);background:var(--white);font-size:.56rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
   .sb-icon{width:auto;font-size:1rem}
   #main{left:0;height:100dvh;max-width:100vw}
   .top-bar{padding:.8rem .9rem;align-items:flex-start;gap:.65rem;min-width:0}
@@ -508,14 +513,33 @@ body.is-admin .admin-only{display:flex}
   #view-invoices .table-card tr{margin:.8rem;border:1px solid var(--border);background:var(--white)}
   #view-invoices .table-card td{display:flex;justify-content:space-between;gap:1rem;text-align:right!important;border-bottom:1px solid var(--border);white-space:normal}
   #view-invoices .table-card td::before{font-size:.54rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:left}
-  #view-invoices .table-card td:nth-child(1)::before{content:"Invoice"}
-  #view-invoices .table-card td:nth-child(2)::before{content:"Customer"}
-  #view-invoices .table-card td:nth-child(3)::before{content:"Date"}
-  #view-invoices .table-card td:nth-child(4)::before{content:"Due"}
-  #view-invoices .table-card td:nth-child(5)::before{content:"Status"}
-  #view-invoices .table-card td:nth-child(6)::before{content:"Payment"}
-  #view-invoices .table-card td:nth-child(7)::before{content:"Total"}
-  #view-invoices .table-card td:nth-child(8)::before{content:"Actions"}
+  #view-invoices .invoice-register-table td:nth-child(1)::before{content:"Invoice"}
+  #view-invoices .invoice-register-table td:nth-child(2)::before{content:"Customer"}
+  #view-invoices .invoice-register-table td:nth-child(3)::before{content:"Date"}
+  #view-invoices .invoice-register-table td:nth-child(4)::before{content:"Due"}
+  #view-invoices .invoice-register-table td:nth-child(5)::before{content:"Status"}
+  #view-invoices .invoice-register-table td:nth-child(6)::before{content:"Payment"}
+  #view-invoices .invoice-register-table td:nth-child(7)::before{content:"Total"}
+  #view-invoices .invoice-register-table td:nth-child(8)::before{content:"Actions"}
+  #view-invoices .document-register-table td:nth-child(1)::before{content:"Document"}
+  #view-invoices .document-register-table td:nth-child(2)::before{content:"Customer"}
+  #view-invoices .document-register-table td:nth-child(3)::before{content:"Date"}
+  #view-invoices .document-register-table td:nth-child(4)::before{content:"Valid until"}
+  #view-invoices .document-register-table td:nth-child(5)::before{content:"Status"}
+  #view-invoices .document-register-table td:nth-child(6)::before{content:"Total"}
+  #view-invoices .document-register-table td:nth-child(7)::before{content:"Actions"}
+  #view-invoices .table-card .register-table tbody{display:grid;width:100%;box-sizing:border-box;gap:.75rem;padding:.75rem}
+  #view-invoices .table-card .register-table tr{display:grid;width:100%;box-sizing:border-box;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;overflow:hidden}
+  #view-invoices .table-card .register-table td{display:flex;width:auto;min-width:0;box-sizing:border-box;flex-direction:column;justify-content:flex-start;gap:.35rem;text-align:left!important}
+  #view-invoices .table-card .register-table td:last-child{grid-column:1/-1;width:100%}
+  #view-invoices .document-register-table .inv-action-row{justify-content:flex-start;flex-wrap:wrap;width:100%;max-width:none;min-width:0}
+  #view-invoices .document-register-table .btn-sm{white-space:normal;text-align:center}
+  .customer-report-table{table-layout:fixed;min-width:640px!important}
+  .customer-report-table th:nth-child(n+2),.customer-report-table td:nth-child(n+2){text-align:right!important}
+  .customer-report-table th:first-child,.customer-report-table td:first-child{width:30%}
+  .settings-billing-primary-actions{display:grid;grid-template-columns:1fr;gap:.65rem;margin-top:.85rem}
+  .settings-billing-primary-actions .btn-act{width:100%;margin:0!important}
+  #settings-billing-widgets{margin-top:1.15rem!important}
   .modal-overlay{inset:0 0 74px;align-items:flex-end;padding:.5rem;z-index:650}
   .modal-box{max-width:none;width:100%;max-height:calc(100dvh - 74px - 1rem);border-radius:10px 10px 0 0;overflow:hidden;display:flex;flex-direction:column}
   .modal-head{padding:1rem 1.1rem;position:static;flex:0 0 auto}
@@ -557,7 +581,7 @@ body.is-admin .admin-only{display:flex}
   #inv-modal .li-table td::before{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
   #inv-modal .li-table td:last-child{position:absolute;top:.35rem;right:.35rem;display:block;width:auto;border:0;padding:0}
   #inv-modal .li-table td:nth-last-child(2){border-bottom:0}
-  #inv-modal .li-table td input{border:1px solid var(--border);padding:.5rem}
+  #inv-modal .li-table td input,#inv-modal .li-table td textarea{width:100%;max-width:100%;min-width:0;border:1px solid var(--border);padding:.5rem}
   #inv-modal .li-total-cell{text-align:right!important}
 }
 
@@ -570,7 +594,7 @@ body.is-admin .admin-only{display:flex}
 <script>
 window.CLS_RUN=function(fn,arg){if(typeof window[fn]==='function')window[fn](arg);};
 window.openWhatsAppSupport=function(){window.open('https://wa.me/94778815628?text='+encodeURIComponent('Hi CeylonryLabs! I need help with my Solo Invoice Control System billing.'),'_blank');};
-window.closeAndOpenClient=function(){if(window.closeModal)window.closeModal('inv-modal');if(window.openClientModal)window.openClientModal();};
+window.closeAndOpenClient=function(){window._clsReturnToInvoiceAfterCustomer=true;var invoice=document.getElementById('inv-modal');if(invoice)invoice.classList.remove('open');if(window.openClientModal)window.openClientModal();var customer=document.getElementById('client-modal');if(!customer||!customer.classList.contains('open')){window._clsReturnToInvoiceAfterCustomer=false;if(invoice)invoice.classList.add('open');}};
 window.showPaywallBtn=function(){if(window.openStudioUpgrade)window.openStudioUpgrade();};
 window.triggerLogoUpload=function(){var el=document.getElementById('settings-logo');if(el)el.click();};
 
@@ -650,6 +674,7 @@ document.addEventListener('click',function(e){
       <div class="page-sub" id="page-sub">Create invoices, manage up to 30 customers, track payments, export PDFs, and send by email or WhatsApp.</div>
     </div>
     <div class="top-bar-right">
+      <button class="mobile-top-sign-out" type="button" data-cls-fn="clsSignOut">Sign Out</button>
       <div class="top-date" id="top-date"></div>
       <div class="top-badge">Solo Plan</div>
     </div>
@@ -830,7 +855,7 @@ document.addEventListener('click',function(e){
       </div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Customer-wise Invoice Report</div></div>
-        <table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
+        <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
       </div>
     </div>
 
@@ -965,8 +990,8 @@ document.addEventListener('click',function(e){
               <div style="padding:1rem">
                 <strong>Solo Plan</strong> — LKR 3,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
                 <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
-                <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Solo with Genie</button>
-                <button class="btn-act" data-cls-fn="openStudioUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Studio</button>
+                <div class="settings-billing-primary-actions"><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Solo with Genie</button>
+                <button class="btn-act" data-cls-fn="openStudioUpgrade" style="background:var(--gold);color:#fff">Upgrade to Studio</button></div>
               </div>
             </div>
             <div class="table-card">
@@ -1800,10 +1825,15 @@ window.closeModal = function closeModal(id){
   var modal=document.getElementById(id);
   if(!modal)return;
   modal.classList.remove('open');
+  if(id==='client-modal'&&window._clsReturnToInvoiceAfterCustomer){
+    window._clsReturnToInvoiceAfterCustomer=false;
+    var invoiceModal=document.getElementById('inv-modal');
+    if(invoiceModal)invoiceModal.classList.add('open');
+  }
   if(id==='inv-modal')currentPayInv=null;
 }
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
-document.addEventListener('keydown',e=>{if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)window.closeModal(m.id);});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>window.closeModal(m.id));});
 
 // ════════════════════════════════
 // SUPPLIER PICKERS
@@ -3256,8 +3286,13 @@ window.saveClient = function saveClient(){
   if(editId){const i=DB.clients.list.findIndex(c=>sameClientId(c.id,editId));if(i>-1){before=snapshotForLog(DB.clients.list[i]);DB.clients.list[i]=data;addEditBacklog('customer',editId,data.name,reason,before,snapshotForLog(data));}}
   else DB.clients.list.push(data);
   const synced=syncCustomerToOpenInvoices(before,data);
-  closeModal('client-modal');
   saveDB();renderClients();populateClientSelect();renderBacklog();renderDashboard();renderInvoices();
+  const returnToInvoice=window._clsReturnToInvoiceAfterCustomer;
+  closeModal('client-modal');
+  if(returnToInvoice){
+    const idx=DB.clients.list.indexOf(data),sel=document.getElementById('i-client-sel');
+    if(sel&&idx>-1){sel.value=String(idx);window.fillClientFromSel();}
+  }
   if(synced) alert('Customer saved. Open unpaid invoices for this customer were updated with the latest contact details.');
 }
 

@@ -42,7 +42,7 @@ img,canvas,svg,video{max-width:100%}
 .sb-item:hover{color:var(--text);background:var(--bg)}
 .sb-item.active{color:var(--black);background:var(--bg3);border-left-color:var(--black);font-weight:600}
 .sb-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
-.mobile-sign-out{display:none;border:0;background:transparent;font-family:var(--font-b)}
+.mobile-sign-out,.mobile-top-sign-out{display:none;border:0;background:transparent;font-family:var(--font-b)}
 .sb-footer{padding:1.25rem 1.5rem;border-top:1px solid var(--border)}
 .sb-biz{font-size:.78rem;color:var(--muted);margin-bottom:.75rem}
 .sb-biz strong{display:block;color:var(--text);font-weight:500;font-size:.82rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -147,6 +147,24 @@ tr:hover td{background:var(--bg3)}
 .f-input:focus{border-color:var(--black);background:var(--white);box-shadow:0 0 0 3px rgba(26,23,20,.05)}
 .f-input::placeholder{color:var(--dim)}
 .f-select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231a1714' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .9rem center}
+.conversion-preview{min-height:43px;background:var(--bg);border:1px solid var(--border);padding:.62rem .75rem;color:var(--muted);font-size:.72rem;line-height:1.42}
+.conversion-preview strong{color:var(--black)}
+.txn-conversion{font-size:.61rem;color:var(--muted);margin-top:.18rem;line-height:1.35;white-space:normal}
+.payroll-panel{margin-top:.9rem;padding:1rem;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--gold)}
+.payroll-panel[hidden]{display:none}
+.payroll-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.85rem}
+.payroll-title{font-family:var(--font-d);font-size:1rem;color:var(--black)}
+.payroll-copy{font-size:.65rem;color:var(--muted);line-height:1.45;margin-top:.12rem}
+.payroll-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-top:.85rem}
+.payroll-result{background:var(--white);padding:.62rem .72rem;min-width:0}
+.payroll-result-label{font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.payroll-result-value{font-family:var(--font-m);font-size:.76rem;color:var(--black);margin-top:.22rem;overflow-wrap:anywhere}
+.payroll-result.emphasis{background:var(--black);grid-column:1/-1}
+.payroll-result.emphasis .payroll-result-label,.payroll-result.emphasis .payroll-result-value{color:#fff}
+.payroll-save{display:flex;align-items:flex-start;gap:.55rem;margin-top:.8rem;font-size:.67rem;color:var(--muted);line-height:1.45}
+.payroll-save input{margin-top:.15rem}
+.expense-payroll-meta{font-size:.6rem;color:var(--muted);line-height:1.5;margin-top:.2rem}
+.expense-payroll-meta strong{color:var(--black)}
 .f-section{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:1.1rem 0 .7rem;border-bottom:1px solid var(--border);padding-bottom:.45rem}
 
 /* Invoice line items */
@@ -202,16 +220,17 @@ tr:hover td{background:var(--bg3)}
 .invoice-status-tab.active{background:var(--black);border-color:var(--black);color:#fff}
 .invoice-status-count{display:inline-grid;place-items:center;min-width:1.35rem;height:1.35rem;padding:0 .28rem;background:var(--bg3);color:var(--text);font-size:.62rem;letter-spacing:0}
 .invoice-status-tab.active .invoice-status-count{background:#fff;color:var(--black)}
-.inv-action-row.clean{display:grid;grid-template-columns:minmax(116px,1fr) repeat(3,34px) 42px;gap:.32rem;align-items:center;min-width:286px}
+.inv-action-row.clean{display:grid;grid-template-columns:repeat(4,minmax(60px,1fr));gap:.32rem;align-items:center;width:300px;max-width:100%;min-width:0}
 .inv-action-row.clean .btn-sm{height:34px;padding:0 .45rem;display:inline-flex;align-items:center;justify-content:center}
-.invoice-icon-action{font-size:.78rem!important;letter-spacing:0!important;min-width:34px}
+.inv-action-row.clean .btn-sm:first-child{grid-column:1/-1;width:100%}
+.invoice-icon-action{font-size:.6rem!important;letter-spacing:.04em!important;min-width:64px;gap:.28rem}
 .invoice-more{position:relative;height:34px}
-.invoice-more summary{list-style:none;height:34px;display:grid;place-items:center;border:1px solid var(--border-acc);color:var(--gold);cursor:pointer;font-weight:900;font-size:1rem}
+.invoice-more summary{list-style:none;height:34px;display:flex;align-items:center;justify-content:center;padding:0 .65rem;border:1px solid var(--border-acc);color:var(--gold);cursor:pointer;font-weight:800;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .invoice-more summary::-webkit-details-marker{display:none}
 .invoice-more-menu{position:absolute;right:0;top:38px;z-index:40;width:126px;padding:.35rem;background:#fff;border:1px solid var(--border);box-shadow:0 10px 24px rgba(20,16,12,.14);display:grid;gap:.25rem}
 .invoice-more-menu .btn-sm{width:100%;justify-content:flex-start!important;background:#fff;color:var(--text);border:0}
 .invoice-more-menu .danger{color:var(--red)}
-@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.5rem .2rem;font-size:.53rem;line-height:1.25}.invoice-status-count{flex:0 0 auto}.inv-action-row.clean{min-width:286px}.table-card:has(.invoice-more[open]){overflow:visible!important}}
+@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.5rem .2rem;font-size:.53rem;line-height:1.25}.invoice-status-count{flex:0 0 auto}.inv-action-row.clean{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0;width:100%;flex:1}.inv-action-row.clean .btn-sm:first-child{grid-column:1/-1;width:100%}.invoice-more{width:100%}.table-card:has(.invoice-more[open]){overflow:visible!important}}
 .btn-sm{padding:.28rem .55rem;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-b);cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
 .btn-sm-dark{background:var(--black);color:#fff}
 .btn-sm-dark:hover{background:var(--gold)}
@@ -404,6 +423,10 @@ body.is-admin .admin-only{display:flex}
 .tour-dot{height:4px;flex:1;background:var(--border)}
 .tour-dot.active{background:var(--gold)}
 .tour-foot{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:.75rem}
+.customer-report-table{table-layout:fixed}
+.customer-report-table th:nth-child(n+2),.customer-report-table td:nth-child(n+2){text-align:right!important}
+.customer-report-table th:first-child,.customer-report-table td:first-child{width:30%}
+.settings-billing-primary-actions{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:.85rem}
 
 @media(max-width:980px){
   .table-tools{grid-template-columns:1fr 1fr}
@@ -460,6 +483,7 @@ body.is-admin .admin-only{display:flex}
   .sb-item{min-width:76px;flex:0 0 76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15rem;padding:.42rem .35rem;border-left:0;border-top:3px solid transparent;border-radius:7px;font-size:.62rem;line-height:1.15;text-align:center;color:var(--muted)}
   .sb-item.active{border-left:0;border-top-color:var(--black);background:var(--bg3)}
   .mobile-sign-out{display:flex;color:var(--red)}
+  .mobile-top-sign-out{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:.42rem .62rem;border:1px solid rgba(192,57,43,.35);color:var(--red);background:var(--white);font-size:.56rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
   .sb-icon{width:auto;font-size:1rem}
   #main{left:0;height:100dvh;max-width:100vw}
   .top-bar{padding:.8rem .9rem;align-items:flex-start;gap:.65rem;min-width:0}
@@ -508,14 +532,33 @@ body.is-admin .admin-only{display:flex}
   #view-invoices .table-card tr{margin:.8rem;border:1px solid var(--border);background:var(--white)}
   #view-invoices .table-card td{display:flex;justify-content:space-between;gap:1rem;text-align:right!important;border-bottom:1px solid var(--border);white-space:normal}
   #view-invoices .table-card td::before{font-size:.54rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:left}
-  #view-invoices .table-card td:nth-child(1)::before{content:"Invoice"}
-  #view-invoices .table-card td:nth-child(2)::before{content:"Customer"}
-  #view-invoices .table-card td:nth-child(3)::before{content:"Date"}
-  #view-invoices .table-card td:nth-child(4)::before{content:"Due"}
-  #view-invoices .table-card td:nth-child(5)::before{content:"Status"}
-  #view-invoices .table-card td:nth-child(6)::before{content:"Payment"}
-  #view-invoices .table-card td:nth-child(7)::before{content:"Total"}
-  #view-invoices .table-card td:nth-child(8)::before{content:"Actions"}
+  #view-invoices .invoice-register-table td:nth-child(1)::before{content:"Invoice"}
+  #view-invoices .invoice-register-table td:nth-child(2)::before{content:"Customer"}
+  #view-invoices .invoice-register-table td:nth-child(3)::before{content:"Date"}
+  #view-invoices .invoice-register-table td:nth-child(4)::before{content:"Due"}
+  #view-invoices .invoice-register-table td:nth-child(5)::before{content:"Status"}
+  #view-invoices .invoice-register-table td:nth-child(6)::before{content:"Payment"}
+  #view-invoices .invoice-register-table td:nth-child(7)::before{content:"Total"}
+  #view-invoices .invoice-register-table td:nth-child(8)::before{content:"Actions"}
+  #view-invoices .document-register-table td:nth-child(1)::before{content:"Document"}
+  #view-invoices .document-register-table td:nth-child(2)::before{content:"Customer"}
+  #view-invoices .document-register-table td:nth-child(3)::before{content:"Date"}
+  #view-invoices .document-register-table td:nth-child(4)::before{content:"Valid until"}
+  #view-invoices .document-register-table td:nth-child(5)::before{content:"Status"}
+  #view-invoices .document-register-table td:nth-child(6)::before{content:"Total"}
+  #view-invoices .document-register-table td:nth-child(7)::before{content:"Actions"}
+  #view-invoices .table-card .register-table tbody{display:grid;width:100%;box-sizing:border-box;gap:.75rem;padding:.75rem}
+  #view-invoices .table-card .register-table tr{display:grid;width:100%;box-sizing:border-box;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;overflow:hidden}
+  #view-invoices .table-card .register-table td{display:flex;width:auto;min-width:0;box-sizing:border-box;flex-direction:column;justify-content:flex-start;gap:.35rem;text-align:left!important}
+  #view-invoices .table-card .register-table td:last-child{grid-column:1/-1;width:100%}
+  #view-invoices .document-register-table .inv-action-row{justify-content:flex-start;flex-wrap:wrap;width:100%;max-width:none;min-width:0}
+  #view-invoices .document-register-table .btn-sm{white-space:normal;text-align:center}
+  .customer-report-table{table-layout:fixed;min-width:640px!important}
+  .customer-report-table th:nth-child(n+2),.customer-report-table td:nth-child(n+2){text-align:right!important}
+  .customer-report-table th:first-child,.customer-report-table td:first-child{width:30%}
+  #settings-billing-widgets{margin-top:1.15rem!important}
+  .settings-billing-primary-actions{display:grid;grid-template-columns:1fr}
+  .settings-billing-primary-actions .btn-act{width:100%;margin:0!important}
   .modal-overlay{align-items:flex-end;padding:.5rem}
   .modal-box{max-width:none;width:100%;max-height:94dvh;border-radius:10px 10px 0 0;overflow:auto}
   .modal-head{padding:1rem 1.1rem}
@@ -523,6 +566,8 @@ body.is-admin .admin-only{display:flex}
   .modal-foot{padding:.8rem 1rem;display:grid;grid-template-columns:1fr;gap:.55rem}
   .modal-foot .btn-act,.modal-foot .btn-act-outline{width:100%}
   .f-row,.client-select-bar{display:grid!important;grid-template-columns:1fr!important}
+  .payroll-results{grid-template-columns:1fr}
+  .payroll-head{display:block}
   .client-select-bar{align-items:stretch;padding:.8rem}
   .tpl-picker{grid-template-columns:1fr!important}
   .align-btns,.pay-type-grid{display:grid;grid-template-columns:1fr!important}
@@ -557,7 +602,7 @@ body.is-admin .admin-only{display:flex}
   #inv-modal .li-table td::before{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
   #inv-modal .li-table td:last-child{position:absolute;top:.35rem;right:.35rem;display:block;width:auto;border:0;padding:0}
   #inv-modal .li-table td:nth-last-child(2){border-bottom:0}
-  #inv-modal .li-table td input{border:1px solid var(--border);padding:.5rem}
+  #inv-modal .li-table td input,#inv-modal .li-table td textarea{width:100%;max-width:100%;min-width:0;border:1px solid var(--border);padding:.5rem}
   #inv-modal .li-total-cell{text-align:right!important}
 }
 
@@ -569,7 +614,7 @@ body.is-admin .admin-only{display:flex}
 <script>
 window.CLS_RUN=function(fn,arg){if(typeof window[fn]==='function')window[fn](arg);};
 window.openWhatsAppSupport=function(){window.open('https://wa.me/94778815628?text='+encodeURIComponent('Hi CeylonryLabs! I need help with my Studio Invoice Control System billing.'),'_blank');};
-window.closeAndOpenClient=function(){if(window.closeModal)window.closeModal('inv-modal');if(window.openClientModal)window.openClientModal();};
+window.closeAndOpenClient=function(){window._clsReturnToInvoiceAfterCustomer=true;var invoice=document.getElementById('inv-modal');if(invoice)invoice.classList.remove('open');if(window.openClientModal)window.openClientModal();var customer=document.getElementById('client-modal');if(!customer||!customer.classList.contains('open')){window._clsReturnToInvoiceAfterCustomer=false;if(invoice)invoice.classList.add('open');}};
 window.showPaywallBtn=function(){if(window.openBusinessUpgrade)window.openBusinessUpgrade();};
 window.triggerLogoUpload=function(){var el=document.getElementById('settings-logo');if(el)el.click();};
 
@@ -640,6 +685,7 @@ document.addEventListener('click',function(e){
       <div class="page-sub" id="page-sub">Create invoices, manage customers, track payments, export reports, and control staff edits.</div>
     </div>
     <div class="top-bar-right">
+      <button class="mobile-top-sign-out" type="button" data-cls-fn="clsSignOut">Sign Out</button>
       <div class="top-date" id="top-date"></div>
       <div class="top-badge">Studio Plan</div>
     </div>
@@ -675,7 +721,7 @@ document.addEventListener('click',function(e){
     <div class="view" id="view-cashflow">
       <div class="sum-bar c3" id="cf-summary"></div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title">Transaction Register</div><button class="btn-act" data-cls-fn="openModal" data-cls-arg="txn-modal">+ Add Transaction</button></div>
+        <div class="table-header"><div class="table-title">Transaction Register</div><button class="btn-act" data-cls-fn="openTransactionModal">+ Add Transaction</button></div>
         <div class="table-tools">
           <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="cf-from" onchange="renderCashflow()"></div>
           <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="cf-to" onchange="renderCashflow()"></div>
@@ -691,7 +737,7 @@ document.addEventListener('click',function(e){
     <div class="view" id="view-expenses">
       <div class="sum-bar c3" id="exp-summary"></div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title">Expense Log</div><button class="btn-act" data-cls-fn="openModal" data-cls-arg="exp-modal">+ Add Expense</button></div>
+        <div class="table-header"><div class="table-title">Expense Log</div><button class="btn-act" data-cls-fn="openExpenseModal">+ Add Expense</button></div>
         <div class="table-tools">
           <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="exp-from" onchange="renderExpenses()"></div>
           <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="exp-to" onchange="renderExpenses()"></div>
@@ -841,7 +887,7 @@ document.addEventListener('click',function(e){
       </div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Customer-wise Invoice Report</div></div>
-        <table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
+        <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
       </div>
     </div>
 
@@ -972,9 +1018,9 @@ document.addEventListener('click',function(e){
               <div style="padding:1rem">
                 <strong>Studio Plan</strong> — LKR 5,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
                 <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
-                <br><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio with Genie</button>
-                <button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff;margin-left:.45rem">Upgrade to Business</button>
-                <button class="btn-act" data-cls-fn="goBackToSolo" data-cls-this="true" style="background:#fff;color:var(--muted);margin-left:.45rem;border:1px solid var(--border)">Back to Solo</button>
+                <div class="settings-billing-primary-actions"><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio with Genie</button>
+                <button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff">Upgrade to Business</button>
+                <button class="btn-act" data-cls-fn="goBackToSolo" data-cls-this="true" style="background:#fff;color:var(--muted);border:1px solid var(--border)">Back to Solo</button></div>
               </div>
             </div>
             <div id="settings-billing-widgets" class="settings-widget-stack"></div>
@@ -1012,8 +1058,15 @@ document.addEventListener('click',function(e){
       </div>
       <div class="f-group full" style="margin-bottom:.85rem"><label>Description *</label><input class="f-input" id="t-desc" placeholder="e.g. Sales revenue — lunch service"></div>
       <div class="f-row">
-        <div class="f-group"><label>Amount (LKR) *</label><input class="f-input" type="text" id="t-amount" placeholder="0" oninput="fmtInput(this)"></div>
-        <div class="f-group"><label>Category</label><select class="f-input f-select" id="t-cat">
+        <div class="f-group"><label>Amount *</label><input class="f-input" type="number" min="0" step="0.01" id="t-amount" placeholder="0.00" oninput="window.updateStudioTxnConversionPreview()"></div>
+        <div class="f-group"><label>Currency Earned / Spent</label><select class="f-input f-select" id="t-currency" onchange="window.handleStudioTxnCurrencyChange()"><option value="LKR">LKR</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+      </div>
+      <div class="f-row">
+        <div class="f-group"><label>Exchange Rate to LKR</label><input class="f-input" type="number" min="0" step="0.01" id="t-rate" value="1" oninput="window.updateStudioTxnConversionPreview()"></div>
+        <div class="f-group"><label>Conversion</label><div class="conversion-preview" id="t-conversion-preview">Enter an amount to preview the conversion.</div></div>
+      </div>
+      <div class="f-row">
+        <div class="f-group full"><label>Category</label><select class="f-input f-select" id="t-cat">
           <option>Sales Revenue</option><option>Service Income</option><option>Invoice Payment</option>
           <option>Supplier Payment</option><option>Utilities</option><option>Payroll</option>
           <option>Marketing</option><option>Operations</option><option>Other</option>
@@ -1039,7 +1092,7 @@ document.addEventListener('click',function(e){
     <div class="modal-body">
       <div class="f-row">
         <div class="f-group"><label>Date *</label><input class="f-input" type="date" id="e-date"></div>
-        <div class="f-group"><label>Category *</label><select class="f-input f-select" id="e-cat">
+        <div class="f-group"><label>Category *</label><select class="f-input f-select" id="e-cat" onchange="window.handleExpenseCategoryChange()">
           <option>Operations</option><option>Suppliers</option><option>Utilities</option>
           <option>Marketing</option><option>Fuel & Transport</option><option>Rent</option>
           <option>Payroll</option><option>Other</option>
@@ -1047,10 +1100,30 @@ document.addEventListener('click',function(e){
       </div>
       <div class="f-group full" style="margin-bottom:.85rem"><label>Description *</label><input class="f-input" id="e-desc" placeholder="e.g. Electricity bill — May"></div>
       <div class="f-row">
-        <div class="f-group"><label>Vendor / Supplier</label><select class="f-input f-select" id="e-supplier" onchange="onSupplierPick('e')"></select></div>
-        <div class="f-group"><label>Amount (LKR) *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
+        <div class="f-group" id="e-supplier-group"><label>Vendor / Supplier</label><select class="f-input f-select" id="e-supplier" onchange="onSupplierPick('e')"></select></div>
+        <div class="f-group" id="e-amount-group"><label id="e-amount-label">Amount (LKR) *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
       <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:0"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
+      <section class="payroll-panel" id="payroll-panel" hidden>
+        <div class="payroll-head"><div><div class="payroll-title">Small Payroll Calculator</div><div class="payroll-copy">Sri Lanka defaults are editable. The expense records total employer cost, while net salary shows employee take-home before any other deductions.</div></div></div>
+        <div class="f-row">
+          <div class="f-group"><label>Salaried Staff</label><select class="f-input f-select" id="p-staff" onchange="window.loadPayrollStaffSelection()"></select></div>
+          <div class="f-group"><label>Employee / Staff Name *</label><input class="f-input" id="p-staff-name" placeholder="e.g. Joshua Perera" oninput="window.updatePayrollCalculation()"></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>EPF Member Number</label><input class="f-input" id="p-epf-no" placeholder="Optional"></div>
+          <div class="f-group"><label>Gross Monthly Earnings (LKR) *</label><input class="f-input" type="number" min="0" step="0.01" id="p-gross" placeholder="0.00" oninput="window.updatePayrollCalculation()"></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Employee EPF (%)</label><input class="f-input" type="number" min="0" step="0.01" id="p-employee-epf-rate" value="8" oninput="window.updatePayrollCalculation()"></div>
+          <div class="f-group"><label>Employer EPF (%)</label><input class="f-input" type="number" min="0" step="0.01" id="p-employer-epf-rate" value="12" oninput="window.updatePayrollCalculation()"></div>
+        </div>
+        <div class="f-row">
+          <div class="f-group"><label>Employer ETF (%)</label><input class="f-input" type="number" min="0" step="0.01" id="p-etf-rate" value="3" oninput="window.updatePayrollCalculation()"></div>
+        </div>
+        <div class="payroll-results" id="payroll-results" aria-live="polite"></div>
+        <label class="payroll-save"><input type="checkbox" id="p-save-staff" checked><span>Save or update this salaried staff member for future payroll expenses.</span></label>
+      </section>
     </div>
     <div class="modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="exp-modal">Cancel</button>
@@ -1069,12 +1142,16 @@ document.addEventListener('click',function(e){
       <input type="hidden" id="edit-id">
       <div class="f-row" id="edit-common-row">
         <div class="f-group"><label>Date *</label><input class="f-input" type="date" id="edit-date"></div>
-        <div class="f-group"><label>Amount (LKR) *</label><input class="f-input" type="text" id="edit-amount" oninput="fmtInput(this)"></div>
+        <div class="f-group"><label id="edit-amount-label">Amount (LKR) *</label><input class="f-input" type="text" id="edit-amount" oninput="fmtInput(this)"></div>
       </div>
       <div class="f-group full" style="margin-bottom:.85rem"><label>Description / Customer *</label><input class="f-input" id="edit-desc" placeholder="Record description"></div>
       <div class="f-row" id="edit-txn-row">
         <div class="f-group"><label>Type</label><select class="f-input f-select" id="edit-type"><option value="in">Cash In</option><option value="out">Cash Out</option></select></div>
         <div class="f-group"><label>Category</label><input class="f-input" id="edit-cat" placeholder="Category"></div>
+      </div>
+      <div class="f-row" id="edit-txn-currency-row">
+        <div class="f-group"><label>Source Currency</label><select class="f-input f-select" id="edit-currency"><option value="LKR">LKR</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+        <div class="f-group"><label>Exchange Rate to LKR</label><input class="f-input" type="number" min="0" step="0.01" id="edit-rate" value="1"></div>
       </div>
       <div class="f-row" id="edit-exp-row">
         <div class="f-group"><label>Vendor / Supplier</label><input class="f-input" id="edit-vendor" placeholder="Vendor or supplier"></div>
@@ -1313,6 +1390,7 @@ var DB = {
   editBacklog:[],
   clients:{list:[],nextId:1},
   suppliers:{list:[],nextId:1},
+  payrollStaff:[],
   nextInvNum:1,
   nextQuoteNum:1
 };
@@ -1322,6 +1400,7 @@ var _saveChain = Promise.resolve();
 var _saveQueued = false;
 var _saveInFlight = false;
 var _savePendingPromise = null;
+var _expenseSyncPending = false;
 
 function clonePlain(value) {
   try { return JSON.parse(JSON.stringify(value)); } catch (e) { return value; }
@@ -1356,10 +1435,16 @@ function readDBBackup(uid) {
 }
 
 function normalizeLoadedDBCollections() {
+  DB.transactions = Array.isArray(DB.transactions) ? DB.transactions : [];
+  DB.expenses = Array.isArray(DB.expenses) ? DB.expenses : [];
+  DB.invoices = Array.isArray(DB.invoices) ? DB.invoices : [];
   DB.quotes = Array.isArray(DB.quotes) ? DB.quotes : [];
+  DB.editBacklog = Array.isArray(DB.editBacklog) ? DB.editBacklog : [];
   DB.clients = DB.clients && Array.isArray(DB.clients.list) ? DB.clients : { list: Array.isArray(DB.clients) ? DB.clients : [], nextId: 1 };
   DB.suppliers = DB.suppliers && Array.isArray(DB.suppliers.list) ? DB.suppliers : { list: Array.isArray(DB.suppliers) ? DB.suppliers : [], nextId: 1 };
+  DB.payrollStaff = Array.isArray(DB.payrollStaff) ? DB.payrollStaff : [];
   (function(){var seen={};DB.clients.list.forEach(function(c,i){if(c.id==null||seen[c.id]){c.id=Date.now()+i;}seen[c.id]=true;});})();
+  if (ensureExpenseTransactions()) _expenseSyncPending = true;
   DB.invoices.sort((a,b) => (b.id||0) - (a.id||0));
   DB.quotes.sort((a,b) => (b.id||0) - (a.id||0));
   refreshNextInvoiceNumber();
@@ -1452,7 +1537,8 @@ async function saveDBNow() {
           quotes: docsFor(DB.quotes || []),
           editBacklog: docsFor(DB.editBacklog || []),
           clients: docsFor(DB.clients.list || []),
-          suppliers: docsFor(DB.suppliers.list || [])
+          suppliers: docsFor(DB.suppliers.list || []),
+          payrollStaff: docsFor(DB.payrollStaff || [])
         });
         writeDBBackup(version, true);
         return true;
@@ -1472,7 +1558,8 @@ async function saveDBNow() {
       saveCollection('quotes', DB.quotes || []),
       saveCollection('editBacklog', DB.editBacklog || []),
       saveCollection('clients', DB.clients.list || []),
-      saveCollection('suppliers', DB.suppliers.list || [])
+      saveCollection('suppliers', DB.suppliers.list || []),
+      saveCollection('payrollStaff', DB.payrollStaff || [])
     ]);
     await userRef.set({
       settings: Object.assign({}, savedSettings, { dataVersion: version }),
@@ -1520,7 +1607,7 @@ async function loadDB() {
   if (!_uid) return;
   try {
     const userRef = _db.collection('users').doc(_uid);
-    const collections = ['transactions','expenses','invoices','quotes','editBacklog','clients','suppliers'];
+    const collections = ['transactions','expenses','invoices','quotes','editBacklog','clients','suppliers','payrollStaff'];
     let profileSnap;
     let results;
     if (typeof userRef.getCollections === 'function') {
@@ -1541,8 +1628,13 @@ async function loadDB() {
     DB.editBacklog = results[4].docs.map(d => d.data());
     DB.clients.list = results[5].docs.map(d => d.data());
     DB.suppliers.list = results[6].docs.map(d => d.data());
+    DB.payrollStaff = results[7].docs.map(d => d.data());
     normalizeLoadedDBCollections();
-    if (restoreDBBackupIfNewer(serverVersion) === 'unsaved') setTimeout(function(){ saveDB(); }, 500);
+    const backupState = restoreDBBackupIfNewer(serverVersion);
+    if (backupState === 'unsaved' || _expenseSyncPending) {
+      _expenseSyncPending = false;
+      setTimeout(function(){ saveDB(); }, 500);
+    }
   } catch(e) { console.error('loadDB error:', e); }
 }
 
@@ -1686,6 +1778,33 @@ const fmtAmt = n => 'LKR '+Math.round(n).toLocaleString();
 const fmtAmtFull = n => 'LKR '+parseFloat(n).toLocaleString('en',{minimumFractionDigits:2});
 window.fmtInput = function fmtInput(el){const v=el.value.replace(/[^0-9.]/g,'');const parts=v.split('.');let int=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');el.value=parts.length>1?int+'.'+parts[1]:int;}
 function parseAmt(s){return parseFloat((s||'0').replace(/,/g,''))||0;}
+const STUDIO_CURRENCY_RATES={LKR:1,USD:300,EUR:325,GBP:380};
+function studioCurrency(code){code=String(code||'LKR').toUpperCase();return STUDIO_CURRENCY_RATES[code]?code:'LKR';}
+function studioExchangeRate(code){return STUDIO_CURRENCY_RATES[studioCurrency(code)]||1;}
+function studioTxnMoney(txn){
+  const currency=studioCurrency(txn&&txn.sourceCurrency);
+  const rate=currency==='LKR'?1:(Number(txn&&txn.exchangeRate)||studioExchangeRate(currency));
+  const lkrAmount=Number(txn&&txn.amount)||0;
+  const sourceAmount=Number(txn&&txn.sourceAmount)||(currency==='LKR'?lkrAmount:(rate?lkrAmount/rate:0));
+  return{currency,rate,sourceAmount,lkrAmount:lkrAmount||(sourceAmount*rate)};
+}
+function formatStudioTxnAmount(txn){
+  const money=studioTxnMoney(txn);
+  if(money.currency==='LKR')return fmtAmt(money.lkrAmount);
+  return `${money.currency} ${money.sourceAmount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}<div class="txn-conversion">${fmtAmt(money.lkrAmount)} @ ${money.rate.toLocaleString()}</div>`;
+}
+window.handleStudioTxnCurrencyChange=function handleStudioTxnCurrencyChange(){
+  const currency=studioCurrency((document.getElementById('t-currency')||{}).value);
+  const rate=document.getElementById('t-rate');if(rate)rate.value=studioExchangeRate(currency);
+  window.updateStudioTxnConversionPreview();
+};
+window.updateStudioTxnConversionPreview=function updateStudioTxnConversionPreview(){
+  const amount=Number((document.getElementById('t-amount')||{}).value)||0;
+  const currency=studioCurrency((document.getElementById('t-currency')||{}).value);
+  const rate=currency==='LKR'?1:(Number((document.getElementById('t-rate')||{}).value)||studioExchangeRate(currency));
+  const preview=document.getElementById('t-conversion-preview');if(!preview)return;
+  preview.innerHTML=amount?`<strong>${currency} ${amount.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</strong><br>equals <strong>${fmtAmt(amount*rate)}</strong>`:'Enter an amount to preview the conversion.';
+};
 function todayStr(){return today.toISOString().split('T')[0];}
 function formatLongDate(d){
   if(!d||isNaN(d.getTime()))return '';
@@ -1896,14 +2015,117 @@ window.openModal = function openModal(id){
   if(id==='txn-modal'||id==='exp-modal') refreshSupplierSelects();
   document.getElementById(id).classList.add('open');
 }
+window.openTransactionModal=function openTransactionModal(){
+  refreshSupplierSelects();
+  document.getElementById('t-date').value=todayStr();
+  document.getElementById('t-type').value='in';
+  document.getElementById('t-desc').value='';
+  document.getElementById('t-amount').value='';
+  document.getElementById('t-currency').value='LKR';
+  document.getElementById('t-rate').value='1';
+  document.getElementById('t-cat').value='Sales Revenue';
+  document.getElementById('t-ref').value='';
+  clearSupplierPicker('t');
+  window.updateStudioTxnConversionPreview();
+  document.getElementById('txn-modal').classList.add('open');
+};
+function payrollRound(value){return Math.round((Number(value)||0)*100)/100;}
+function currentPayrollCalculation(){
+  const gross=Math.max(0,Number((document.getElementById('p-gross')||{}).value)||0);
+  const employeeEpfRate=Math.max(0,Number((document.getElementById('p-employee-epf-rate')||{}).value)||0);
+  const employerEpfRate=Math.max(0,Number((document.getElementById('p-employer-epf-rate')||{}).value)||0);
+  const etfRate=Math.max(0,Number((document.getElementById('p-etf-rate')||{}).value)||0);
+  const employeeEpf=payrollRound(gross*employeeEpfRate/100);
+  const employerEpf=payrollRound(gross*employerEpfRate/100);
+  const etf=payrollRound(gross*etfRate/100);
+  return{
+    gross,
+    employeeEpfRate,
+    employerEpfRate,
+    etfRate,
+    employeeEpf,
+    employerEpf,
+    etf,
+    netSalary:payrollRound(Math.max(0,gross-employeeEpf)),
+    totalEmployerCost:payrollRound(gross+employerEpf+etf)
+  };
+}
+function populatePayrollStaffSelect(selectedId){
+  const select=document.getElementById('p-staff');if(!select)return;
+  const staff=(DB.payrollStaff||[]).slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
+  select.innerHTML='<option value="new">+ New salaried staff member</option>'+staff.map(function(person){return '<option value="'+escHTML(person.id)+'">'+escHTML(person.name||'Unnamed staff')+'</option>';}).join('');
+  select.value=staff.some(function(person){return String(person.id)===String(selectedId);})?String(selectedId):'new';
+}
+window.loadPayrollStaffSelection=function loadPayrollStaffSelection(){
+  const id=(document.getElementById('p-staff')||{}).value||'new';
+  const person=(DB.payrollStaff||[]).find(function(item){return String(item.id)===String(id);});
+  document.getElementById('p-staff-name').value=person?person.name||'':'';
+  document.getElementById('p-epf-no').value=person?person.epfNo||'':'';
+  document.getElementById('p-gross').value=person?Number(person.grossEarnings||0)||'':'';
+  document.getElementById('p-employee-epf-rate').value=person?Number(person.employeeEpfRate==null?8:person.employeeEpfRate):8;
+  document.getElementById('p-employer-epf-rate').value=person?Number(person.employerEpfRate==null?12:person.employerEpfRate):12;
+  document.getElementById('p-etf-rate').value=person?Number(person.etfRate==null?3:person.etfRate):3;
+  const desc=document.getElementById('e-desc');
+  if(person&&desc&&!desc.value.trim())desc.value=(person.name||'Staff')+' salary payment';
+  window.updatePayrollCalculation();
+};
+window.updatePayrollCalculation=function updatePayrollCalculation(){
+  const calc=currentPayrollCalculation();
+  const amount=document.getElementById('e-amount');
+  const amountGroup=document.getElementById('e-amount-group');if(amountGroup)amountGroup.classList.toggle('full',payroll);
+  if(amount){amount.value=calc.totalEmployerCost?calc.totalEmployerCost.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):'';amount.dataset.payrollDerived='true';}
+  const results=document.getElementById('payroll-results');if(!results)return calc;
+  results.innerHTML='<div class="payroll-result"><div class="payroll-result-label">Employee EPF deduction</div><div class="payroll-result-value">'+fmtAmtFull(calc.employeeEpf)+'</div></div>'+
+    '<div class="payroll-result"><div class="payroll-result-label">Net salary</div><div class="payroll-result-value">'+fmtAmtFull(calc.netSalary)+'</div></div>'+
+    '<div class="payroll-result"><div class="payroll-result-label">Employer EPF</div><div class="payroll-result-value">'+fmtAmtFull(calc.employerEpf)+'</div></div>'+
+    '<div class="payroll-result"><div class="payroll-result-label">Employer ETF</div><div class="payroll-result-value">'+fmtAmtFull(calc.etf)+'</div></div>'+
+    '<div class="payroll-result emphasis"><div class="payroll-result-label">Total employer cost</div><div class="payroll-result-value">'+fmtAmtFull(calc.totalEmployerCost)+'</div></div>';
+  return calc;
+};
+window.handleExpenseCategoryChange=function handleExpenseCategoryChange(){
+  const payroll=(document.getElementById('e-cat')||{}).value==='Payroll';
+  const panel=document.getElementById('payroll-panel');if(panel)panel.hidden=!payroll;
+  const supplier=document.getElementById('e-supplier-group');if(supplier)supplier.style.display=payroll?'none':'';
+  const supplierNew=document.getElementById('e-supplier-new-wrap');if(supplierNew&&payroll)supplierNew.style.display='none';
+  const amount=document.getElementById('e-amount');
+  const label=document.getElementById('e-amount-label');
+  if(label)label.textContent=payroll?'Total Employer Cost (LKR) *':'Amount (LKR) *';
+  if(amount){
+    amount.readOnly=payroll;
+    if(!payroll&&amount.dataset.payrollDerived==='true'){amount.value='';delete amount.dataset.payrollDerived;}
+  }
+  if(payroll){
+    populatePayrollStaffSelect((document.getElementById('p-staff')||{}).value);
+    window.updatePayrollCalculation();
+  }
+};
+window.openExpenseModal=function openExpenseModal(){
+  refreshSupplierSelects();
+  document.getElementById('e-date').value=todayStr();
+  document.getElementById('e-cat').value='Operations';
+  document.getElementById('e-desc').value='';
+  document.getElementById('e-amount').value='';
+  delete document.getElementById('e-amount').dataset.payrollDerived;
+  clearSupplierPicker('e');
+  populatePayrollStaffSelect('new');
+  document.getElementById('p-save-staff').checked=true;
+  window.loadPayrollStaffSelection();
+  window.handleExpenseCategoryChange();
+  document.getElementById('exp-modal').classList.add('open');
+};
 window.closeModal = function closeModal(id){
   var modal=document.getElementById(id);
   if(!modal)return;
   modal.classList.remove('open');
+  if(id==='client-modal'&&window._clsReturnToInvoiceAfterCustomer){
+    window._clsReturnToInvoiceAfterCustomer=false;
+    var invoiceModal=document.getElementById('inv-modal');
+    if(invoiceModal)invoiceModal.classList.add('open');
+  }
   if(id==='inv-modal')currentPayInv=null;
 }
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
-document.addEventListener('keydown',e=>{if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)window.closeModal(m.id);});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>window.closeModal(m.id));});
 
 // ════════════════════════════════
 // SUPPLIER PICKERS
@@ -2122,7 +2344,7 @@ function buildCharts(){
     const mo=d.getMonth(),yr=d.getFullYear();
     months.push(d.toLocaleDateString('en',{month:'short',year:'2-digit'}));
     inData.push(DB.transactions.filter(t=>t.type==='in'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0));
-    outData.push(DB.transactions.filter(t=>t.type==='out'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0)+DB.expenses.filter(e=>new Date(e.date).getMonth()===mo&&new Date(e.date).getFullYear()===yr).reduce((a,e)=>a+e.amount,0));
+    outData.push(cashOutTotal(function(item){const date=new Date(item.date);return date.getMonth()===mo&&date.getFullYear()===yr;}));
   }
   const ctx1=chartCanvas.getContext('2d');
   if(cfChart) cfChart.destroy();
@@ -2282,34 +2504,101 @@ function isInvoicePaymentTransaction(txn, invoiceNum){
   var cat=String(txn.cat||'');
   return cat==='Invoice Payment' && (ref===invoiceNum || ref.indexOf(invoiceNum+' ·')===0 || desc.indexOf(invoiceNum)>-1);
 }
+function linkedExpenseTransaction(expense){
+  if(!expense||expense.id==null)return null;
+  return DB.transactions.find(function(txn){
+    return txn&&txn.source==='expense'&&String(txn.expenseId)===String(expense.id);
+  })||null;
+}
+function nextExpenseTransactionId(){
+  var next=Date.now();
+  DB.transactions.forEach(function(txn){
+    var id=Number(txn&&txn.id);
+    if(Number.isFinite(id)&&id>=next)next=id+1;
+  });
+  return next;
+}
+function expenseTransactionFields(expense){
+  return {
+    date:expense.date||todayStr(),
+    desc:expense.desc||'Expense',
+    type:'out',
+    amount:Number(expense.amount)||0,
+    sourceAmount:Number(expense.amount)||0,
+    sourceCurrency:'LKR',
+    exchangeRate:1,
+    cat:expense.cat||'Expense',
+    ref:'Expense Log',
+    supplierId:expense.supplierId||null,
+    supplierName:expense.supplierName||expense.vendor||'',
+    source:'expense',
+    expenseId:expense.id,
+    payrollStaffId:expense.payrollStaffId||null
+  };
+}
+function syncExpenseTransaction(expense){
+  if(!expense)return false;
+  if(expense.id==null)expense.id=Date.now();
+  var transaction=linkedExpenseTransaction(expense);
+  var fields=expenseTransactionFields(expense);
+  if(!transaction){
+    DB.transactions.push(Object.assign({id:nextExpenseTransactionId()},fields));
+    return true;
+  }
+  var changed=Object.keys(fields).some(function(key){return String(transaction[key]??'')!==String(fields[key]??'');});
+  if(changed)Object.assign(transaction,fields);
+  return changed;
+}
+function ensureExpenseTransactions(){
+  var changed=false;
+  var used={};
+  DB.expenses.forEach(function(expense,index){
+    if(expense.id==null||used[String(expense.id)]){
+      expense.id=Date.now()+index;
+      changed=true;
+    }
+    used[String(expense.id)]=true;
+    if(syncExpenseTransaction(expense))changed=true;
+  });
+  return changed;
+}
+function cashOutTotal(predicate){
+  var matches=typeof predicate==='function'?predicate:function(){return true;};
+  var transactionOut=DB.transactions.filter(function(txn){return txn.type==='out'&&matches(txn);}).reduce(function(sum,txn){return sum+Number(txn.amount||0);},0);
+  var unlinkedExpenses=DB.expenses.filter(function(expense){return !linkedExpenseTransaction(expense)&&matches(expense);}).reduce(function(sum,expense){return sum+Number(expense.amount||0);},0);
+  return transactionOut+unlinkedExpenses;
+}
 
 // ════════════════════════════════
 // CASHFLOW
 // ════════════════════════════════
 function renderCashflow(){
   const allIn=DB.transactions.filter(t=>t.type==='in').reduce((a,t)=>a+t.amount,0);
-  const allOut=DB.transactions.filter(t=>t.type==='out').reduce((a,t)=>a+t.amount,0);
+  const allOut=cashOutTotal();
   document.getElementById('cf-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Cash In</div><div class="sum-val" style="color:var(--green)">${fmtAmt(allIn)}</div></div><div class="sum-item"><div class="sum-label">Total Cash Out</div><div class="sum-val" style="color:var(--red)">${fmtAmt(allOut)}</div></div><div class="sum-item"><div class="sum-label">Net Cashflow</div><div class="sum-val" style="color:var(--gold)">${fmtAmt(allIn-allOut)}</div></div>`;
   const typeFilter=(document.getElementById('cf-type-filter')||{}).value||'';
   const filtered=DB.transactions.filter(getFilterRange('cf')).filter(function(t){return !typeFilter||t.type===typeFilter;});
   const sorted=sortRecords(filtered,'cf');
-  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${escHTML(t.desc)}</td><td>${escHTML(t.cat)}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${escHTML(t.supplierName)}${t.ref?' · '+escHTML(t.ref):''}`:(escHTML(t.ref)||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="transaction:${t.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No transactions match the selected filters.</td></tr>';
+  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${escHTML(t.desc)}</td><td>${escHTML(t.cat)}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${escHTML(t.supplierName)}${t.ref?' · '+escHTML(t.ref):''}`:(escHTML(t.ref)||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${formatStudioTxnAmount(t)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="${t.source==='expense'&&t.expenseId!=null?'expense:'+t.expenseId:'transaction:'+t.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No transactions match the selected filters.</td></tr>';
 }
 window.addTransaction = function addTransaction(){
   const date=document.getElementById('t-date').value;
   const desc=document.getElementById('t-desc').value.trim();
   const type=document.getElementById('t-type').value;
-  const amount=parseAmt(document.getElementById('t-amount').value);
+  const sourceAmount=Number(document.getElementById('t-amount').value)||0;
+  const sourceCurrency=studioCurrency(document.getElementById('t-currency').value);
+  const exchangeRate=sourceCurrency==='LKR'?1:(Number(document.getElementById('t-rate').value)||studioExchangeRate(sourceCurrency));
+  const amount=sourceAmount*exchangeRate;
   const cat=document.getElementById('t-cat').value;
   const ref=document.getElementById('t-ref').value.trim();
   if(!date||!desc||!amount){alert('Please fill in date, description and amount.');return;}
   var supplier=null;
   try{supplier=resolveSupplierFromPicker('t','transaction');}
   catch(e){alert(e.message);return;}
-  DB.transactions.unshift({date,desc,type,amount,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',id:Date.now()});
+  DB.transactions.unshift({date,desc,type,amount,sourceAmount,sourceCurrency,exchangeRate,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',id:Date.now()});
   saveDB();renderCashflow();renderRecentTable();closeModal('txn-modal');
   refreshSupplierSelects();renderSuppliers();
-  document.getElementById('t-desc').value='';document.getElementById('t-amount').value='';document.getElementById('t-ref').value='';clearSupplierPicker('t');
+  document.getElementById('t-desc').value='';document.getElementById('t-amount').value='';document.getElementById('t-ref').value='';clearSupplierPicker('t');window.updateStudioTxnConversionPreview();
 }
 
 // ════════════════════════════════
@@ -2325,14 +2614,16 @@ function renderExpenses(){
   const catFilter=(document.getElementById('exp-cat-filter')||{}).value||'';
   const filtered=DB.expenses.filter(getFilterRange('exp')).filter(function(e){return !catFilter||e.cat===catFilter;});
   const sorted=sortRecords(filtered,'exp');
-  document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(e=>`<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(e.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No expenses match the selected filters.</td></tr>';
+  document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(function(e){
+    const payroll=e.payroll||null;
+    const payrollMeta=payroll?`<div class="expense-payroll-meta"><strong>Gross ${fmtAmt(payroll.gross)}</strong> · Net ${fmtAmt(payroll.netSalary)}<br>Employee EPF ${fmtAmt(payroll.employeeEpf)} · Employer EPF ${fmtAmt(payroll.employerEpf)} · ETF ${fmtAmt(payroll.etf)}</div>`:'';
+    return `<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}${payrollMeta}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(e.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`;
+  }).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No expenses match the selected filters.</td></tr>';
 }
 
 function renderBusinessInsights(){
   const income=DB.transactions.filter(function(t){return t.type==='in';}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
-  const outgoing=DB.transactions.filter(function(t){return t.type==='out';}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
-  const expenses=DB.expenses.reduce(function(sum,e){return sum+Number(e.amount||0);},0);
-  const totalOut=outgoing+expenses;
+  const totalOut=cashOutTotal();
   const net=income-totalOut;
   const outstanding=DB.invoices.reduce(function(sum,inv){return sum+Math.max(0,Number(inv.amount||0)-Number(inv.paidAmount||0));},0);
   const overdue=DB.invoices.filter(function(inv){return Math.max(0,Number(inv.amount||0)-Number(inv.paidAmount||0))>0&&invoiceDueMs(inv)<new Date().setHours(0,0,0,0);});
@@ -2353,20 +2644,50 @@ function renderBusinessInsights(){
   if(!actions.length)actions.push('<div class="report-row pos"><span>Your recorded cashflow is currently clear</span><span>Healthy</span></div>');
   const actionEl=document.getElementById('insight-actions');if(actionEl)actionEl.innerHTML=actions.join('');
 }
+function savePayrollStaffProfile(name,epfNo,calc){
+  const select=document.getElementById('p-staff');
+  const selectedId=select?select.value:'new';
+  let person=(DB.payrollStaff||[]).find(function(item){return String(item.id)===String(selectedId);});
+  if(!person)person=(DB.payrollStaff||[]).find(function(item){return String(item.name||'').trim().toLowerCase()===name.toLowerCase();});
+  if(!person){person={id:'staff-'+Date.now(),createdAt:new Date().toISOString()};DB.payrollStaff.push(person);}
+  Object.assign(person,{name,epfNo,grossEarnings:calc.gross,employeeEpfRate:calc.employeeEpfRate,employerEpfRate:calc.employerEpfRate,etfRate:calc.etfRate,salaried:true,active:true,lastPayrollAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+  return person.id;
+}
 window.addExpense = function addExpense(){
   const date=document.getElementById('e-date').value;
-  const desc=document.getElementById('e-desc').value.trim();
+  let desc=document.getElementById('e-desc').value.trim();
   const cat=document.getElementById('e-cat').value;
-  const amount=parseAmt(document.getElementById('e-amount').value);
-  if(!date||!desc||!amount){alert('Please fill in date, description and amount.');return;}
+  let amount=parseAmt(document.getElementById('e-amount').value);
+  let payroll=null;
   var supplier=null;
-  try{supplier=resolveSupplierFromPicker('e','expense');}
-  catch(e){alert(e.message);return;}
-  const vendor=supplier?supplier.name:'';
-  DB.expenses.unshift({date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,id:Date.now()});
-  saveDB();renderExpenses();closeModal('exp-modal');
+  let vendor='';
+  let payrollStaffId=null;
+  if(cat==='Payroll'){
+    const staffName=document.getElementById('p-staff-name').value.trim();
+    const epfNo=document.getElementById('p-epf-no').value.trim();
+    const calc=currentPayrollCalculation();
+    if(!date||!staffName||!calc.gross){alert('Please enter the payroll date, staff name and gross monthly earnings.');return;}
+    amount=calc.totalEmployerCost;
+    desc=desc||staffName+' salary payment';
+    vendor=staffName;
+    if(document.getElementById('p-save-staff').checked)payrollStaffId=savePayrollStaffProfile(staffName,epfNo,calc);
+    else{
+      const selected=(document.getElementById('p-staff')||{}).value;
+      payrollStaffId=selected&&selected!=='new'?selected:null;
+    }
+    payroll=Object.assign({staffId:payrollStaffId,staffName,epfNo},calc);
+  }else{
+    if(!date||!desc||!amount){alert('Please fill in date, description and amount.');return;}
+    try{supplier=resolveSupplierFromPicker('e','expense');}
+    catch(e){alert(e.message);return;}
+    vendor=supplier?supplier.name:'';
+  }
+  const expense={date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,payrollStaffId,payroll,id:Date.now()};
+  DB.expenses.unshift(expense);
+  syncExpenseTransaction(expense);
+  saveDB();renderExpenses();renderCashflow();renderDashboard();renderBusinessInsights();closeModal('exp-modal');
   renderRecentTable();refreshSupplierSelects();renderSuppliers();
-  document.getElementById('e-desc').value='';document.getElementById('e-amount').value='';clearSupplierPicker('e');
+  document.getElementById('e-desc').value='';document.getElementById('e-amount').value='';clearSupplierPicker('e');populatePayrollStaffSelect('new');
 }
 
 // ════════════════════════════════
@@ -2549,10 +2870,10 @@ function renderInvoices(){
       <td style="text-align:right" class="amount-gold"><strong>${fmtAmt(inv.amount)}</strong></td>
       <td><div class="inv-action-row clean">
         ${invoiceRegisterState(inv)==='paid'?`<button class="btn-sm btn-sm-green" data-cls-fn="emailPaidReceipt" data-cls-arg="${inv.num}" title="Send paid receipt">Send receipt</button>`:`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">${invoiceRegisterState(inv)==='partial'?'Add payment':'Record payment'}</button>`}
-        <button class="btn-sm btn-sm-dark invoice-icon-action" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Open PDF" aria-label="Open PDF">↓</button>
-        <button class="btn-sm btn-sm-green invoice-icon-action" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send status-aware email" aria-label="Send email">✉</button>
-        <button class="btn-sm btn-sm-wa invoice-icon-action" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send status-aware WhatsApp message" aria-label="Send WhatsApp message">●</button>
-        <details class="invoice-more"><summary title="More actions" aria-label="More actions">⋯</summary><div class="invoice-more-menu"><button class="btn-sm" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit invoice</button><button class="btn-sm danger" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button></div></details>
+        <button class="btn-sm btn-sm-dark invoice-icon-action" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Open invoice PDF" aria-label="Open invoice PDF">↓ PDF</button>
+        <button class="btn-sm btn-sm-green invoice-icon-action" data-cls-fn="emailInvoice" data-cls-arg="${inv.num}" title="Send invoice by email" aria-label="Send invoice by email">✉ Email</button>
+        <button class="btn-sm btn-sm-wa invoice-icon-action" data-cls-fn="waInvoiceWithPDF" data-cls-arg="${inv.num}" title="Send invoice by WhatsApp" aria-label="Send invoice by WhatsApp">WhatsApp</button>
+        <details class="invoice-more"><summary title="More invoice actions" aria-label="More invoice actions">More</summary><div class="invoice-more-menu"><button class="btn-sm" data-cls-fn="openInvoiceEditModal" data-cls-arg="${inv.num}">Edit invoice</button><button class="btn-sm danger" data-cls-fn="openDeleteInvoiceModal" data-cls-arg="${inv.num}">Delete</button></div></details>
       </div></td>
     </tr>`;}).join(''):'<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dim)">No invoices match the selected filters.</td></tr>';
   refreshInvoiceNotifications();
@@ -2689,7 +3010,9 @@ window.openEditRecord=function openEditRecord(arg){
   document.getElementById('edit-kind').value=kind;
   document.getElementById('edit-id').value=id;
   document.getElementById('edit-date').value=item.date||'';
-  document.getElementById('edit-amount').value=Number(item.amount||0).toLocaleString();
+  const txnMoney=kind==='transaction'?studioTxnMoney(item):null;
+  document.getElementById('edit-amount').value=Number(txnMoney?txnMoney.sourceAmount:item.amount||0).toLocaleString();
+  document.getElementById('edit-amount-label').textContent=kind==='transaction'?'Source Amount *':'Amount (LKR) *';
   document.getElementById('edit-desc').value=kind==='invoice'?(item.client||''):(item.desc||'');
   document.getElementById('edit-type').value=item.type||'in';
   document.getElementById('edit-cat').value=item.cat||'';
@@ -2698,9 +3021,12 @@ window.openEditRecord=function openEditRecord(arg){
   document.getElementById('edit-due').value=item.due||'';
   document.getElementById('edit-status').value=item.status||'unpaid';
   document.getElementById('edit-ref').value=item.ref||'';
+  document.getElementById('edit-currency').value=txnMoney?txnMoney.currency:'LKR';
+  document.getElementById('edit-rate').value=txnMoney?txnMoney.rate:1;
   document.getElementById('edit-reason').value='';
   document.getElementById('edit-modal-title').textContent='Edit '+(kind==='transaction'?'Transaction':kind==='expense'?'Expense':'Invoice');
   document.getElementById('edit-txn-row').style.display=kind==='transaction'?'grid':'none';
+  document.getElementById('edit-txn-currency-row').style.display=kind==='transaction'?'grid':'none';
   document.getElementById('edit-exp-row').style.display=kind==='expense'?'grid':'none';
   document.getElementById('edit-inv-row').style.display=kind==='invoice'?'grid':'none';
   document.getElementById('edit-ref').closest('.f-group').style.display=kind==='transaction'?'flex':'none';
@@ -2719,7 +3045,9 @@ window.saveRecordEdit=function saveRecordEdit(){
   if(!date||!desc||!amount){alert('Please fill in date, description/customer, and amount.');return;}
   const before=snapshotForLog(item);
   if(kind==='transaction'){
-    item.date=date;item.amount=amount;item.desc=desc;
+    const sourceCurrency=studioCurrency(document.getElementById('edit-currency').value);
+    const exchangeRate=sourceCurrency==='LKR'?1:(Number(document.getElementById('edit-rate').value)||studioExchangeRate(sourceCurrency));
+    item.date=date;item.sourceAmount=amount;item.sourceCurrency=sourceCurrency;item.exchangeRate=exchangeRate;item.amount=amount*exchangeRate;item.desc=desc;
     item.type=document.getElementById('edit-type').value;
     item.cat=document.getElementById('edit-cat').value.trim()||'Other';
     item.ref=document.getElementById('edit-ref').value.trim();
@@ -2728,6 +3056,7 @@ window.saveRecordEdit=function saveRecordEdit(){
     item.vendor=document.getElementById('edit-vendor').value.trim();
     item.supplierName=item.vendor;
     item.cat=document.getElementById('edit-exp-cat').value.trim()||'Other';
+    syncExpenseTransaction(item);
   }else if(kind==='invoice'){
     item.date=date;item.amount=amount;item.client=desc;
     item.due=document.getElementById('edit-due').value||item.due;
@@ -3350,8 +3679,13 @@ window.saveClient = function saveClient(){
   if(editId){const i=DB.clients.list.findIndex(c=>c.id===editId);if(i>-1){before=snapshotForLog(DB.clients.list[i]);DB.clients.list[i]=data;addEditBacklog('customer',editId,data.name,reason,before,snapshotForLog(data));}}
   else DB.clients.list.push(data);
   const synced=syncCustomerToOpenInvoices(before,data);
-  closeModal('client-modal');
   saveDB();renderClients();populateClientSelect();renderBacklog();renderDashboard();renderInvoices();
+  const returnToInvoice=window._clsReturnToInvoiceAfterCustomer;
+  closeModal('client-modal');
+  if(returnToInvoice){
+    const idx=DB.clients.list.indexOf(data),sel=document.getElementById('i-client-sel');
+    if(sel&&idx>-1){sel.value=String(idx);window.fillClientFromSel();}
+  }
   if(synced) alert('Customer saved. Open unpaid invoices for this customer were updated with the latest contact details.');
 }
 
