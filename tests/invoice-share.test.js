@@ -186,6 +186,34 @@ test('stored public snapshot is re-sanitized before being returned', function() 
   assert.equal(Object.hasOwn(result, 'notes'), false);
 });
 
+test('public invoice snapshots retain sanitized bank details', function() {
+  const invoice = sanitizePublicInvoice({
+    num: 'INV-0045',
+    client: 'Customer',
+    amount: 1200,
+    lines: [{ desc: 'Service', qty: 1, price: 1200 }]
+  }, {
+    settings: {
+      bizName: 'Public Business',
+      bankName: 'Example Bank',
+      bankAccountName: 'Public Business (Pvt) Ltd',
+      bankAccountNumber: '00123456789',
+      bankBranch: 'Colombo 03'
+    }
+  });
+
+  assert.equal(invoice.bankName, 'Example Bank');
+  assert.equal(invoice.bankAccountName, 'Public Business (Pvt) Ltd');
+  assert.equal(invoice.bankAccountNumber, '00123456789');
+  assert.equal(invoice.bankBranch, 'Colombo 03');
+
+  const snapshot = sanitizePublicSnapshot(invoice);
+  assert.equal(snapshot.bankName, 'Example Bank');
+  assert.equal(snapshot.bankAccountName, 'Public Business (Pvt) Ltd');
+  assert.equal(snapshot.bankAccountNumber, '00123456789');
+  assert.equal(snapshot.bankBranch, 'Colombo 03');
+});
+
 test('mapped source tolerates a missing flag but honors revocation and token replacement', function() {
   const token = generatePublicToken();
   const replacement = generatePublicToken();

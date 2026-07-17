@@ -453,16 +453,16 @@ firebase.initializeApp(firebaseConfig);
         <div class="tier-cards">
           <div class="tier-card" data-tier="solo" onclick="window.selectTier('solo',this,true)">
             <div class="tier-name">Solo</div><div class="tier-price">LKR 3,500 / mo</div>
-            <div class="tier-features">• Invoices, quotes &amp; estimates<br>• Customers, reports &amp; PDF export<br>• Edit backlog</div>
+            <div class="tier-features">• 1 user only<br>• Invoices, quotes &amp; estimates<br>• Customers, reports &amp; PDF export<br>• Edit backlog</div>
           </div>
           <div class="tier-card" data-tier="studio" onclick="window.selectTier('studio',this,true)">
             <div class="tier-badge">Most Popular</div>
             <div class="tier-name">Studio</div><div class="tier-price">LKR 5,500 / mo</div>
-            <div class="tier-features">• Everything in Solo<br>• Income, expenses &amp; suppliers<br>• Insights &amp; priority support</div>
+            <div class="tier-features">• Up to 5 users<br>• Everything in Solo<br>• Income, expenses &amp; suppliers<br>• Insights &amp; priority support</div>
           </div>
           <div class="tier-card" data-tier="business" onclick="window.selectTier('business',this,true)">
             <div class="tier-name">Business</div><div class="tier-price">LKR 8,500 / mo</div>
-            <div class="tier-features">• Everything in Studio<br>• Payroll management<br>• Advanced business insights</div>
+            <div class="tier-features">• Unlimited users<br>• Everything in Studio<br>• Payroll management<br>• Advanced business insights</div>
           </div>
         </div>
         <div class="ob-plan-comparison" aria-label="Plan feature comparison">
@@ -471,6 +471,7 @@ firebase.initializeApp(firebaseConfig);
             <table>
               <thead><tr><th scope="col">Feature</th><th scope="col">Solo</th><th scope="col">Studio</th><th scope="col">Business</th></tr></thead>
               <tbody>
+                <tr><td>Users</td><td><strong>1 user only</strong></td><td><strong>Up to 5 users</strong></td><td><strong>Unlimited users</strong></td></tr>
                 <tr><td>Dashboard</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Create &amp; Send Invoices</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Quotes &amp; Estimates</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
@@ -548,6 +549,15 @@ firebase.initializeApp(firebaseConfig);
           <div class="ob-field"><label>Invoice Email</label><input class="ob-input" type="email" id="s4-email" placeholder="invoices@yourbusiness.com"></div>
         </div>
         <div class="ob-field"><label>Business Address</label><input class="ob-input" id="s4-addr" placeholder="Business address"></div>
+        <div class="notif-section-title" style="margin:1.2rem 0 .8rem">Bank Details Optional</div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Bank Name</label><input class="ob-input" id="s4-bank-name" placeholder="Your bank"></div>
+          <div class="ob-field"><label>Account Name</label><input class="ob-input" id="s4-bank-account-name" placeholder="Name on the account"></div>
+        </div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Account Number</label><input class="ob-input" id="s4-bank-account-number" inputmode="numeric" autocomplete="off" placeholder="Bank account number"></div>
+          <div class="ob-field"><label>Branch</label><input class="ob-input" id="s4-bank-branch" placeholder="Branch name"></div>
+        </div>
         <div style="background:var(--bg3);border:1px solid var(--border);padding:1rem;margin:1rem 0">
           <div class="notif-section-title" style="margin-bottom:.8rem">First Customer Optional</div>
           <div class="ob-input-row">
@@ -611,6 +621,10 @@ firebase.initializeApp(firebaseConfig);
               <div id="invoice-preview-notes-block">
                 <div class="invoice-preview-notes-title">Notes</div>
                 <div class="invoice-preview-notes-body" id="invoice-preview-footer"></div>
+              </div>
+              <div id="invoice-preview-bank-block" style="display:none;margin-top:.65rem">
+                <div class="invoice-preview-notes-title">Bank details</div>
+                <div class="invoice-preview-notes-body" id="invoice-preview-bank" style="white-space:pre-line"></div>
               </div>
               <div>
                 <div class="invoice-preview-total-line"><span>Subtotal</span><span id="invoice-preview-subtotal">LKR 120,000.00</span></div>
@@ -840,7 +854,7 @@ const state = {
   fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',
   bizName:'',industry:'',tier:'',suggestedTier:'solo',planTouched:false,useCases:[],firstClient:null,expLevel:'',
   setupTasks:{profile:true,payroll:false,notifications:false},
-  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',selectedTemplate:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',
+  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',selectedTemplate:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',
   empCount:0,employees:[],payFreq:'Monthly',
   channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:'',
   showAround:'not-needed',showAroundUrl:'https://cal.com/cashflowsystem/show-around',customerSuccessManager:'Sasuni'
@@ -906,6 +920,12 @@ function updateInvoicePreview(){
   const customerEmail=getFieldValue('s2-client-email','accounts@customer.lk');
   const customerPhone=getFieldValue('s2-client-phone','');
   const footer=getFieldValue('s4-footer','');
+  const bankLines=[
+    ['Bank',getFieldValue('s4-bank-name','')],
+    ['Account name',getFieldValue('s4-bank-account-name','')],
+    ['Account number',getFieldValue('s4-bank-account-number','')],
+    ['Branch',getFieldValue('s4-bank-branch','')]
+  ].filter(row=>row[1]).map(row=>`${row[0]}: ${row[1]}`);
   const taxRate=Math.max(0,parseFloat(getFieldValue('s4-taxrate','15'))||0);
   const subtotal=120000;
   const tax=subtotal*taxRate/100;
@@ -925,6 +945,9 @@ function updateInvoicePreview(){
   setText('invoice-preview-footer',footer);
   const notesBlock=document.getElementById('invoice-preview-notes-block');
   if(notesBlock) notesBlock.style.display=footer?'block':'none';
+  setText('invoice-preview-bank',bankLines.join('\n'));
+  const bankBlock=document.getElementById('invoice-preview-bank-block');
+  if(bankBlock) bankBlock.style.display=bankLines.length?'block':'none';
   setText('invoice-preview-number',previewNo);
   setText('invoice-preview-date',previewDate(today));
   setText('invoice-preview-due',previewDate(due));
@@ -937,7 +960,7 @@ function updateInvoicePreview(){
   if(taxRow) taxRow.style.display=taxRate>0?'flex':'none';
 }
 function bindInvoicePreviewInputs(){
-  ['s4-bizname','s4-email','s4-addr','s4-footer','s4-taxrate','s4-prefix','s4-font','s4-view','s2-client-name','s2-client-email','s2-client-phone'].forEach(id=>{
+  ['s4-bizname','s4-email','s4-addr','s4-footer','s4-bank-name','s4-bank-account-name','s4-bank-account-number','s4-bank-branch','s4-taxrate','s4-prefix','s4-font','s4-view','s2-client-name','s2-client-email','s2-client-phone'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){el.addEventListener('input',updateInvoicePreview);el.addEventListener('change',updateInvoicePreview);}
   });
@@ -1126,6 +1149,10 @@ function saveStepData(step){
     state.vat=document.getElementById('s4-vat').value;
     state.taxRate=document.getElementById('s4-taxrate').value;
     state.footer=document.getElementById('s4-footer').value.trim();
+    state.bankName=document.getElementById('s4-bank-name').value.trim();
+    state.bankAccountName=document.getElementById('s4-bank-account-name').value.trim();
+    state.bankAccountNumber=document.getElementById('s4-bank-account-number').value.trim();
+    state.bankBranch=document.getElementById('s4-bank-branch').value.trim();
     state.invoicePrefix=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(document.getElementById('s4-prefix').value):document.getElementById('s4-prefix').value.trim())||'INV';
     state.invoiceFont=document.getElementById('s4-font').value || 'classic';
     state.invoiceView=document.getElementById('s4-view').value || 'modern';
@@ -1402,6 +1429,10 @@ function buildInvoiceSettingsPayload(){
     email: state.invEmail || '',
     vat: state.vat || '',
     footer: state.footer || '',
+    bankName: state.bankName || '',
+    bankAccountName: state.bankAccountName || '',
+    bankAccountNumber: state.bankAccountNumber || '',
+    bankBranch: state.bankBranch || '',
     logo: state.logo || '',
     logoAlign: 'left',
     logoSize: 'M',

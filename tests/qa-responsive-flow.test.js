@@ -112,3 +112,154 @@ test('Studio expenses synchronize into Money Out without dashboard double counti
   assert.match(page, /const totalOut=cashOutTotal\(\)/);
   assert.match(page, /item\.cat=document\.getElementById\('edit-exp-cat'\)[\s\S]*syncExpenseTransaction\(item\)/);
 });
+
+test('Studio manual Money Out records synchronize back into Expenses', function() {
+  const page = read('starter.html');
+  assert.match(page, /function transactionExpenseFields\(txn\)/);
+  assert.match(page, /source:'transaction'/);
+  assert.match(page, /sourceTransactionId:txn\.id/);
+  assert.match(page, /function syncTransactionExpense\(txn\)/);
+  assert.match(page, /if\(txn\.type!==['"]out['"]\)[\s\S]*DB\.expenses=DB\.expenses\.filter/);
+  assert.match(page, /if \(ensureTransactionExpenses\(\)\) _expenseSyncPending = true/);
+  assert.match(page, /DB\.transactions\.unshift\(transaction\);\s*syncTransactionExpense\(transaction\)/);
+});
+
+test('Studio expense modal opens defensively and historical backlog dates are normalized', function() {
+  const page = read('starter.html');
+  assert.match(page, /window\.openExpenseModal=function openExpenseModal\(\)\{[\s\S]*window\.openModal\('exp-modal'\)/);
+  assert.match(page, /window\.updatePayrollCalculation=function updatePayrollCalculation\(\)\{\s*const payroll=\(document\.getElementById\('e-cat'\)\|\|\{\}\)\.value==='Payroll';/);
+  assert.match(page, /function backlogDateValue\(log\)/);
+  assert.match(page, /log\.editedAt\|\|log\.date\|\|log\.createdAt\|\|log\.timestamp/);
+  assert.match(page, /DB\.editBacklog\.sort\(\(a,b\) => backlogDateValue\(b\) - backlogDateValue\(a\)\)/);
+  assert.match(page, /const logs=\[\.\.\.\(DB\.editBacklog\|\|\[\]\)\]\.sort\(function\(a,b\)\{return backlogDateValue\(b\)-backlogDateValue\(a\);\}\)/);
+});
+
+test('Business report PDF waits for charts and replaces canvases with captured images', function() {
+  const page = read('growth.html');
+  assert.match(page, /window\.exportReportPDF = async function exportReportPDF\(\)/);
+  assert.match(page, /await loadChartLibrary\(\)/);
+  assert.match(page, /requestAnimationFrame\(function\(\) \{\s*requestAnimationFrame/);
+  assert.match(page, /CH\[key\]\.update\('none'\)/);
+  assert.match(page, /sourceCanvases\[idx\]\.toDataURL\('image\/png'\)/);
+  assert.match(page, /canvas\.replaceWith\(img\)/);
+});
+
+test('Business supplier payments persist paid and outstanding balances', function() {
+  const page = read('growth.html');
+  assert.match(page, /function supplierPaymentCapacity\(txn, existing\)/);
+  assert.match(page, /supplierId:t\.supplierId \|\| ''/);
+  assert.match(page, /payablePaidAmount:toNum\(s\.payablePaidAmount\)/);
+  assert.match(page, /supplier\.payablePaidAmount = Math\.max\(0,/);
+  assert.match(page, /supplier\.payableAmount = Math\.max\(0,/);
+  assert.match(page, /Payment is higher than the supplier outstanding balance/);
+  assert.match(page, /Outstanding: ['"] \+ fmt\(outstanding\) \+ ['"] · Paid: ['"] \+ fmt\(paid\)/);
+  assert.match(page, /Current Outstanding Payable \(LKR\)/);
+});
+
+for (const file of ['solo.html', 'starter.html', 'growth.html']) {
+  test(file + ' applies default payment notes to new invoices and customer messages', function() {
+    const page = read(file);
+    if (file === 'growth.html') {
+      assert.match(page, /setFieldValue\('inv-notes', D\.settings\.footer \|\| ''\)/);
+      assert.match(page, /function combinedInvoiceNotesBusiness\(primary, fallback\)/);
+      assert.match(page, /Payment details \/ notes:\\n/);
+      assert.match(page, /notes: combinedInvoiceNotesBusiness\(inv\.notes, D\.settings\.footer\)/);
+    } else {
+      assert.match(page, /defaultNotes\.value=DB\.settings\.footer\|\|''/);
+      assert.match(page, /function combinedInvoiceNotes\(primary,fallback\)/);
+      assert.match(page, /Payment details \/ notes:\\n/);
+      assert.match(page, /notes:combinedInvoiceNotes\(inv\.notes,s\.footer\)/);
+    }
+  });
+}
+
+test('plan user limits are displayed consistently and enforced by team access', function() {
+  const platform = read('assets/platform.js');
+  const landing = read('index.html');
+  const onboarding = read('onboarding.html');
+  const access = read('access-admin.html');
+
+  assert.match(platform, /solo:\s*\{[\s\S]*?userLimit:\s*1[\s\S]*?userLabel:\s*'1 user only'/);
+  assert.match(platform, /studio:\s*\{[\s\S]*?userLimit:\s*5[\s\S]*?userLabel:\s*'Up to 5 users'/);
+  assert.match(platform, /business:\s*\{[\s\S]*?userLimit:\s*Infinity[\s\S]*?userLabel:\s*'Unlimited users'/);
+  assert.match(landing, /<td>Users<\/td><td><strong>1 user only<\/strong><\/td><td><strong>Up to 5 users<\/strong><\/td><td><strong>Unlimited users<\/strong><\/td>/);
+  assert.match(onboarding, /<td>Users<\/td><td><strong>1 user only<\/strong><\/td><td><strong>Up to 5 users<\/strong><\/td><td><strong>Unlimited users<\/strong><\/td>/);
+  assert.match(access, /var used = 1 \+ activeCount \+ pendingCount;/);
+  assert.match(access, /if\(s\.full\)\{[\s\S]*?btn\.disabled = true;/);
+});
+
+test('Solo mobile invoice More actions expand inside the invoice card', function() {
+  const page = read('solo.html');
+  assert.match(page, /\.invoice-more\[open\]\{grid-column:1\/-1;height:auto\}/);
+  assert.match(page, /\.invoice-more-menu\{position:static;width:100%;margin-top:\.35rem;box-shadow:none\}/);
+  assert.match(page, /td:has\(\.invoice-more\[open\]\)\{overflow:visible!important\}/);
+});
+
+test('Business mobile data tables scroll instead of crushing their columns', function() {
+  const page = read('growth.html');
+  for (const bodyId of ['cf-body', 'exp-body', 'sup-body', 'team-body', 'backlog-body', 'an-cli']) {
+    assert.match(page, new RegExp('class="table-wrap"[\\s\\S]{0,1800}id="' + bodyId + '"'));
+  }
+  assert.match(page, /\.table-wrap\{width:100%;max-width:100%;overflow-x:auto/);
+  assert.match(page, /\.card table:not\(\.invoice-table\)\{min-width:720px;table-layout:auto\}/);
+  assert.doesNotMatch(page, /\.table-wrap\{overflow-x:hidden\}/);
+});
+
+test('Business mobile modal actions remain above the bottom navigation', function() {
+  const page = read('growth.html');
+  assert.match(page, /\.mo\{inset:0 0 74px;align-items:flex-end;padding:\.5rem;z-index:650\}/);
+  assert.match(page, /max-height:calc\(100dvh - 74px - 1rem\)/);
+  assert.match(page, /\.mo-bd\{padding:1rem;overflow-y:auto;min-height:0;overscroll-behavior:contain\}/);
+  assert.match(page, /\.mo-ft\{position:static;flex:0 0 auto;/);
+  assert.match(page, /#mo-inv \.invoice-mob\{height:calc\(100dvh - 74px - 1rem\);max-height:calc\(100dvh - 74px - 1rem\)/);
+});
+
+test('onboarding captures optional bank details for invoice defaults', function() {
+  const page = read('onboarding.html');
+  for (const id of ['s4-bank-name', 's4-bank-account-name', 's4-bank-account-number', 's4-bank-branch']) {
+    assert.match(page, new RegExp('id="' + id + '"'));
+  }
+  assert.match(page, /bankName: state\.bankName/);
+  assert.match(page, /bankAccountName: state\.bankAccountName/);
+  assert.match(page, /bankAccountNumber: state\.bankAccountNumber/);
+  assert.match(page, /bankBranch: state\.bankBranch/);
+  assert.match(page, /id="invoice-preview-bank-block"/);
+});
+
+for (const file of ['solo.html', 'starter.html']) {
+  test(file + ' stores optional bank details in invoice settings', function() {
+    const page = read(file);
+    for (const id of ['set-bank-name', 'set-bank-account-name', 'set-bank-account-number', 'set-bank-branch']) {
+      assert.match(page, new RegExp('id="' + id + '"'));
+    }
+    assert.match(page, /settings\.bankName=document\.getElementById\('set-bank-name'\)\.value\.trim\(\)/);
+    assert.match(page, /settings\.bankAccountNumber=document\.getElementById\('set-bank-account-number'\)\.value\.trim\(\)/);
+  });
+}
+
+test('Business stores optional bank details in invoice settings', function() {
+  const page = read('growth.html');
+  for (const id of ['s-bank-name', 's-bank-account-name', 's-bank-account-number', 's-bank-branch']) {
+    assert.match(page, new RegExp('id="' + id + '"'));
+  }
+  assert.match(page, /settings\.bankName = document\.getElementById\('s-bank-name'\)\.value\.trim\(\)/);
+  assert.match(page, /settings\.bankAccountNumber = document\.getElementById\('s-bank-account-number'\)\.value\.trim\(\)/);
+});
+
+test('shared invoice outputs render bank details only for invoices', function() {
+  const platform = read('assets/platform.js');
+  assert.match(platform, /function invoiceBankRows\(settings\)/);
+  assert.match(platform, /function invoiceBankEmailHtml\(settings\)/);
+  assert.match(platform, /documentLabel === 'Invoice' \? invoiceBankRows\(s\) : \[\]/);
+  assert.match(platform, /class="bank-details"/);
+  assert.match(platform, /var bankHtml = invoiceBankEmailHtml\(opts\.settings \|\| opts\)/);
+});
+
+test('public invoice page receives bank details from the sanitized snapshot', function() {
+  const page = read('invoice-public.html');
+  const share = read('netlify/lib/invoice-share.js');
+  for (const field of ['bankName', 'bankAccountName', 'bankAccountNumber', 'bankBranch']) {
+    assert.match(page, new RegExp(field + ':data\\.' + field));
+    assert.match(share, new RegExp(field + ': text\\('));
+  }
+});

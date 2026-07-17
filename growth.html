@@ -166,7 +166,7 @@ img,canvas,svg,video{max-width:100%}
 
 /* TABLES */
 table{width:100%;border-collapse:collapse}
-.table-wrap{width:100%;min-width:0;overflow-x:hidden}
+.table-wrap{width:100%;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
 th{font-size:.57rem;letter-spacing:.13em;text-transform:uppercase;color:#fff;padding:.6rem 1.2rem;text-align:left;background:var(--black);white-space:nowrap;font-weight:500}
 td{padding:.7rem 1.2rem;font-size:.81rem;color:var(--muted);border-bottom:1px solid var(--border);vertical-align:middle}
 td:first-child{color:var(--text)}
@@ -645,9 +645,10 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .card-head,.db-tcard-head{align-items:flex-start;gap:.75rem;flex-direction:column;padding:.85rem 1rem;position:sticky;left:0;background:var(--white);z-index:1}
   .card-title,.db-tcard-title{font-size:1rem}
   .card-actions{width:100%;display:grid;grid-template-columns:1fr;gap:.5rem}
-  .card table:not(.invoice-table){min-width:0;table-layout:auto}
-  .card table:not(.invoice-table) th,.card table:not(.invoice-table) td{white-space:normal;overflow-wrap:anywhere}
-  .table-wrap{overflow-x:hidden;-webkit-overflow-scrolling:touch}
+  .card table:not(.invoice-table){min-width:720px;table-layout:auto}
+  .card table:not(.invoice-table) th,.card table:not(.invoice-table) td{white-space:normal;overflow-wrap:normal;word-break:normal}
+  .table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;touch-action:pan-x pan-y}
+  .table-wrap::after{content:'';display:block;width:1px;height:1px}
   .settings-page-head{grid-template-columns:1fr;align-items:start;margin-bottom:.8rem}
   .settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;overflow:visible;flex-wrap:wrap;padding-bottom:0}
   .settings-tabs button{width:100%;white-space:normal;min-height:38px;line-height:1.2;padding:.45rem .5rem}
@@ -697,11 +698,11 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .customer-revenue-table th:nth-child(n+2),.customer-revenue-table td:nth-child(n+2){text-align:right!important}
   .customer-revenue-table th:first-child,.customer-revenue-table td:first-child{width:30%}
   #settings-billing-widgets{margin-top:1rem}
-  .mo{align-items:flex-end;padding:.5rem}
-  .mob{max-width:none!important;width:100%;max-height:94dvh;border-radius:10px 10px 0 0;overflow:auto}
+  .mo{inset:0 0 74px;align-items:flex-end;padding:.5rem;z-index:650}
+  .mob{max-width:none!important;width:100%;height:auto;max-height:calc(100dvh - 74px - 1rem);border-radius:10px 10px 0 0;overflow:hidden;display:flex;flex-direction:column}
   .mo-hd{padding:1rem 1.1rem}
-  .mo-bd{padding:1rem}
-  .mo-ft{padding:.8rem 1rem;display:grid;grid-template-columns:1fr;gap:.55rem}
+  .mo-bd{padding:1rem;overflow-y:auto;min-height:0;overscroll-behavior:contain}
+  .mo-ft{position:static;flex:0 0 auto;padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr;gap:.55rem}
   .mo-ft .btn{width:100%}
   .frow{grid-template-columns:1fr!important}
   .litbl{min-width:700px}
@@ -725,7 +726,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .settings-tabs{grid-template-columns:1fr}
 }
 @media(max-width:760px){
-  #mo-inv .invoice-mob{height:94dvh;max-height:94dvh;overflow:hidden}
+  #mo-inv .invoice-mob{height:calc(100dvh - 74px - 1rem);max-height:calc(100dvh - 74px - 1rem);overflow:hidden}
   #mo-inv .invoice-mo-body{padding:.85rem}
   #mo-inv .business-invoice-closing{grid-template-columns:1fr}
   #mo-inv .litbl{display:block;min-width:0!important;width:100%}
@@ -907,7 +908,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="view" id="view-expenses">
       <div class="help"><b>Expenses</b> — Everything you spend to run your business. Rent, electricity, packaging, marketing, and more.</div>
       <div class="sumbar c3" id="exp-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">All Expenses</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-exp')">+ Add Expense</button></div></div><table><thead><tr><th>Date</th><th>Description</th><th>Paid To</th><th>Category</th><th class="tr">Amount (LKR)</th></tr></thead><tbody id="exp-body"></tbody></table></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Expenses</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-exp')">+ Add Expense</button></div></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Paid To</th><th>Category</th><th class="tr">Amount (LKR)</th></tr></thead><tbody id="exp-body"></tbody></table></div></div>
     </div>
 
     <!-- INVOICES -->
@@ -942,7 +943,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="sumbar c3" id="sup-sum"></div>
       <div class="card"><div class="card-head"><span class="card-title">My Suppliers</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-sup')">+ Add Supplier</button></div></div>
         <div class="filter-bar" id="sup-filters"><div class="fpill on" onclick="window.filterSup('all',this)">All</div><div class="fpill" onclick="window.filterSup('active',this)">Active</div><div class="fpill" onclick="window.filterSup('inactive',this)">Inactive</div></div>
-        <table style="margin-top:.75rem"><thead><tr><th>Supplier</th><th>Type</th><th>Contact</th><th>Total Spent (YTD)</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="sup-body"></tbody></table>
+        <div class="table-wrap"><table style="margin-top:.75rem"><thead><tr><th>Supplier</th><th>Type</th><th>Contact</th><th>Total Spent (YTD)</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="sup-body"></tbody></table></div>
       </div>
     </div>
 
@@ -952,7 +953,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="sumbar c3" id="team-sum"></div>
       <div class="card">
         <div class="card-head"><span class="card-title">Business Team Roles</span><a class="btn bd" href="access-admin.html?plan=business&return=growth.html">Manage Team</a></div>
-        <table><thead><tr><th>Role</th><th>Permissions</th><th class="tr">User Limit</th></tr></thead><tbody id="team-body"></tbody></table>
+        <div class="table-wrap"><table><thead><tr><th>Role</th><th>Permissions</th><th class="tr">User Limit</th></tr></thead><tbody id="team-body"></tbody></table></div>
       </div>
     </div>
 
@@ -962,7 +963,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="sumbar c3" id="backlog-sum"></div>
       <div class="card">
         <div class="card-head"><span class="card-title">Recent Admin Activity</span><button class="btn bo" onclick="window.exportCSV('backlog')">↓ Download</button></div>
-        <table><thead><tr><th>Date</th><th>Action</th><th>Item</th><th>Before</th><th>After</th><th>By</th></tr></thead><tbody id="backlog-body"></tbody></table>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Action</th><th>Item</th><th>Before</th><th>After</th><th>By</th></tr></thead><tbody id="backlog-body"></tbody></table></div>
       </div>
     </div>
 
@@ -1052,6 +1053,16 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="fg"><label>Invoice Font</label><select class="fi fsel" id="s-invoice-font"><option value="classic">Classic Serif</option><option value="modern">Modern Sans</option><option value="editorial">Editorial Serif</option><option value="clean">Clean Humanist</option><option value="mono">Mono Ledger</option></select></div>
               </div>
               <div class="fg"><label>Template View</label><select class="fi fsel" id="s-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select><div class="template-helper">Switch the structure and mood of every invoice while keeping your selected template colour.</div></div>
+              <div class="fsec">Bank Details</div>
+              <div class="template-helper">Optional. These details appear automatically on every invoice and stay hidden when blank.</div>
+              <div class="frow">
+                <div class="fg"><label>Bank Name</label><input class="fi" id="s-bank-name" type="text" placeholder="Your bank"></div>
+                <div class="fg"><label>Account Name</label><input class="fi" id="s-bank-account-name" type="text" placeholder="Name on the account"></div>
+              </div>
+              <div class="frow">
+                <div class="fg"><label>Account Number</label><input class="fi" id="s-bank-account-number" type="text" inputmode="numeric" autocomplete="off" placeholder="Bank account number"></div>
+                <div class="fg"><label>Branch</label><input class="fi" id="s-bank-branch" type="text" placeholder="Branch name"></div>
+              </div>
               <div class="fsec">Template Library</div>
               <div class="settings-template-grid" id="settings-template-grid"></div>
               <div class="settings-preview-wrap">
@@ -1224,7 +1235,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="frow"><div class="fg"><label>Email (optional)</label><input class="fi" type="email" id="sp-email" placeholder="supplier@business.lk"></div><div class="fg"><label>Status</label><select class="fi fsel" id="sp-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div>
     <div class="fg"><label>Address (optional)</label><input class="fi" id="sp-addr" placeholder="Supplier address"></div>
     <div class="fsec">Payable Reminder</div>
-    <div class="frow"><div class="fg"><label>Amount You Owe (LKR)</label><input class="fi" type="number" min="0" step="0.01" id="sp-payable-amount" placeholder="0.00"></div><div class="fg"><label>Due In Days</label><input class="fi" type="number" min="0" step="1" id="sp-payable-days" placeholder="7"></div></div>
+    <div class="frow"><div class="fg"><label>Current Outstanding Payable (LKR)</label><input class="fi" type="number" min="0" step="0.01" id="sp-payable-amount" placeholder="0.00"></div><div class="fg"><label>Due In Days</label><input class="fi" type="number" min="0" step="1" id="sp-payable-days" placeholder="7"></div></div>
     <div class="fg" style="margin-bottom:0"><label>Reference / Reminder Note</label><input class="fi" id="sp-payable-ref" placeholder="e.g. July packaging balance"></div>
   </div>
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-sup')">Cancel</button><button class="btn bd" id="sup-save-btn" onclick="window.addSup()">Save Supplier</button></div>
@@ -1247,7 +1258,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1,
   _nextQuoteId:1
 };
@@ -1433,6 +1444,7 @@ window.showToast = function showToast(msg, type) {
 }
 
 var openingTxnForEdit = false;
+var pendingSupplierPaymentId = '';
 function setFieldValue(id, value) {
   var el = document.getElementById(id);
   if (el) el.value = value == null ? '' : value;
@@ -1450,6 +1462,7 @@ function setTxnSlipCurrent(name) {
   }
 }
 function resetTxnForm() {
+  pendingSupplierPaymentId = '';
   setFieldValue('t-edit-id', '');
   setFieldValue('t-date', today());
   setFieldValue('t-type', 'in');
@@ -1491,7 +1504,8 @@ window.openSupplierPayment = function openSupplierPayment(supplierId, amount, re
   var supplier = D.suppliers.find(function(s) { return String(s.id) === String(supplierId) || String(s.name) === String(supplierId); });
   var name = supplier ? supplier.name : String(supplierId || '');
   if (!name) { showToast('Supplier not found.', 'err'); return; }
-  window.openMo('mo-txn');
+  window.openTxnMo();
+  pendingSupplierPaymentId = supplier ? supplier.id : '';
   setFieldValue('t-type', 'out');
   setFieldValue('t-date', today());
   setFieldValue('t-desc', 'Supplier payment - ' + name);
@@ -1964,10 +1978,10 @@ function normalizeBusinessData() {
   ensureCurrencySettings();
   D.txns = (D.txns || []).map(function(t, i) {
     var money = normalizeTxnCurrencyFields(t);
-    return {id:String(t.id || t._id || ('T' + Date.now() + i)), date:t.date || today(), desc:t.desc || t.description || 'Transaction', type:t.type === 'out' ? 'out' : 'in', cat:t.cat || t.category || 'Other', amount:money.amount, sourceAmount:money.sourceAmount, sourceCurrency:money.sourceCurrency, exchangeRate:money.exchangeRate, ref:t.ref || t.reference || '', purpose:t.purpose || t.outPurpose || '', paidTo:t.paidTo || t.vendor || t.supplier || '', method:t.method || '', slipName:t.slipName || '', note:t.note || '', source:t.source || ''};
+    return {id:String(t.id || t._id || ('T' + Date.now() + i)), date:t.date || today(), desc:t.desc || t.description || 'Transaction', type:t.type === 'out' ? 'out' : 'in', cat:t.cat || t.category || 'Other', amount:money.amount, sourceAmount:money.sourceAmount, sourceCurrency:money.sourceCurrency, exchangeRate:money.exchangeRate, ref:t.ref || t.reference || '', purpose:t.purpose || t.outPurpose || '', paidTo:t.paidTo || t.vendor || t.supplier || '', supplierId:t.supplierId || '', method:t.method || '', slipName:t.slipName || '', note:t.note || '', source:t.source || ''};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   D.exps = (D.exps || []).map(function(e, i) {
-    return {id:String(e.id || e._id || ('E' + Date.now() + i)), date:e.date || today(), desc:e.desc || e.description || 'Expense', vendor:e.vendor || e.supplierName || e.supplier || '', cat:e.cat || e.category || 'Other', amount:toNum(e.amount), supplierId:e.supplierId || '', purpose:e.purpose || 'Operating Expense', ref:e.ref || e.reference || '', slipName:e.slipName || '', method:e.method || '', sourceTxnId:e.sourceTxnId || ''};
+    return {id:String(e.id || e._id || ('E' + Date.now() + i)), date:e.date || today(), desc:e.desc || e.description || 'Expense', vendor:e.vendor || e.supplierName || e.supplier || '', cat:e.cat || e.category || 'Other', amount:toNum(e.amount), supplierId:e.supplierId || '', purpose:e.purpose || 'Operating Expense', ref:e.ref || e.reference || '', slipName:e.slipName || '', method:e.method || '', sourceTxnId:e.sourceTxnId || '', source:e.source || ''};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   D.invoices = (D.invoices || []).map(function(inv, i) {
     var id = inv.id || inv.num || ('INV-' + String(i + 1).padStart(4,'0'));
@@ -2012,7 +2026,7 @@ function normalizeBusinessData() {
     return {id:String(s.id || ('S' + Date.now() + i)), name:name, role:s.role || 'Team member', ini:ini, col:s.col || '#B8922A', sal:toNum(s.sal || s.salary), paid:s.paid === true, rev:toNum(s.rev), invs:toNum(s.invs)};
   });
   D.suppliers = (D.suppliers || []).map(function(s, i) {
-    return {id:String(s.id || s._id || ('SP' + Date.now() + i)), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', ytd:toNum(s.ytd), status:s.status || 'active', email:s.email || '', addr:s.addr || '', payableAmount:toNum(s.payableAmount || s.payable || s.amountOwed), payableDays:toNum(s.payableDays || s.days), payableRef:s.payableRef || s.ref || ''};
+    return {id:String(s.id || s._id || ('SP' + Date.now() + i)), name:s.name || s.supplier || 'Supplier', cat:s.cat || s.category || 'Other', contact:s.contact || s.contactName || '', phone:s.phone || '', ytd:toNum(s.ytd), status:s.status || 'active', email:s.email || '', addr:s.addr || '', payableAmount:toNum(s.payableAmount || s.payable || s.amountOwed), payablePaidAmount:toNum(s.payablePaidAmount), payableDays:toNum(s.payableDays || s.days), payableRef:s.payableRef || s.ref || ''};
   });
   D.payables = (D.payables || []).map(function(p, i) {
     return {id:String(p.id || ('P' + Date.now() + i)), supplierId:p.supplierId || '', supplier:p.supplier || p.vendor || 'Supplier', amount:toNum(p.amount), days:toNum(p.days), ref:p.ref || p.reference || ''};
@@ -2117,9 +2131,23 @@ window.exportCSV = function exportCSV(type) {
   showToast('CSV downloaded!', 'ok');
 }
 
-window.exportReportPDF = function exportReportPDF() {
+window.exportReportPDF = async function exportReportPDF() {
+  try {
+    await loadChartLibrary();
+  } catch (e) {
+    console.warn('Report charts were unavailable before export:', e);
+  }
   syncBusinessComputedData();
   renderReports();
+  await new Promise(function(resolve) {
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() { setTimeout(resolve, 80); });
+    });
+  });
+  Object.keys(CH || {}).forEach(function(key) {
+    if (CH[key] && typeof CH[key].update === 'function') CH[key].update('none');
+  });
+  await new Promise(function(resolve) { requestAnimationFrame(resolve); });
   var src = document.getElementById('view-reports');
   var print = document.getElementById('print-inv');
   if (!src || !print) return;
@@ -2899,8 +2927,11 @@ function renderSupTable(f) {
   var rows = f === 'all' ? D.suppliers : D.suppliers.filter(function(s) { return s.status === f; });
   document.getElementById('sup-body').innerHTML = rows.map(function(s) {
     var contact = [s.contact, s.phone, s.email].filter(Boolean).join(' · ') || 'No contact saved';
-    var payable = toNum(s.payableAmount) > 0 ? '<div class="form-note" style="margin-top:.25rem;color:var(--red)">Payable: ' + fmt(s.payableAmount) + ' · due in ' + toNum(s.payableDays) + ' days</div>' : '';
-    return '<tr><td style="font-weight:600">' + escHtml(s.name) + payable + '</td><td><span class="pill psu" style="font-size:.55rem">' + escHtml(s.cat) + '</span></td><td style="font-size:.78rem">' + escHtml(contact) + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + escHtml(s.status) + '</span></td><td class="tr"><button class="bsm bsmgr" onclick="window.openSupplierPayment(' + jsArg(s.id) + ',' + toNum(s.payableAmount) + ',' + jsArg(s.payableRef || '') + ')">Pay</button> <button class="bsm bsmo" onclick="window.openSupMo(' + jsArg(s.id) + ')">Edit</button> <button class="bsm bsmdel" onclick="window.deleteSupplier(' + jsArg(s.id) + ')">Delete</button></td></tr>';
+    var outstanding = toNum(s.payableAmount);
+    var paid = toNum(s.payablePaidAmount);
+    var payable = '<div class="form-note" style="margin-top:.25rem;color:' + (outstanding > 0 ? 'var(--red)' : 'var(--green)') + '">Outstanding: ' + fmt(outstanding) + ' · Paid: ' + fmt(paid) + (outstanding > 0 ? ' · due in ' + toNum(s.payableDays) + ' days' : ' · settled') + '</div>';
+    var payAction = outstanding > 0 ? '<button class="bsm bsmgr" onclick="window.openSupplierPayment(' + jsArg(s.id) + ',' + outstanding + ',' + jsArg(s.payableRef || '') + ')">Pay</button> ' : '<span class="pill pi">Settled</span> ';
+    return '<tr><td style="font-weight:600">' + escHtml(s.name) + payable + '</td><td><span class="pill psu" style="font-size:.55rem">' + escHtml(s.cat) + '</span></td><td style="font-size:.78rem">' + escHtml(contact) + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + escHtml(s.status) + '</span></td><td class="tr">' + payAction + '<button class="bsm bsmo" onclick="window.openSupMo(' + jsArg(s.id) + ')">Edit</button> <button class="bsm bsmdel" onclick="window.deleteSupplier(' + jsArg(s.id) + ')">Delete</button></td></tr>';
   }).join('') || emptyRow(6, 'No suppliers yet', 'Add suppliers to link expenses and supplier payments to real vendors.', 'Add Supplier', "window.openSupMo()");
 }
 
@@ -3139,6 +3170,10 @@ function collectSettingsDraft() {
     email: val('s-email', D.settings.email) || D.settings.email || 'invoices@yourbusiness.lk',
     vat: val('s-vat', D.settings.vat) || D.settings.vat || 'Optional',
     footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Thank you for your business.',
+    bankName: val('s-bank-name', D.settings.bankName) || D.settings.bankName || '',
+    bankAccountName: val('s-bank-account-name', D.settings.bankAccountName) || D.settings.bankAccountName || '',
+    bankAccountNumber: val('s-bank-account-number', D.settings.bankAccountNumber) || D.settings.bankAccountNumber || '',
+    bankBranch: val('s-bank-branch', D.settings.bankBranch) || D.settings.bankBranch || '',
     ejsKey: val('s-ejskey', D.settings.ejsKey) || D.settings.ejsKey || '',
     ejsService: val('s-ejsservice', D.settings.ejsService) || D.settings.ejsService || '',
     ejsTemplate: val('s-ejstemplate', D.settings.ejsTemplate) || D.settings.ejsTemplate || '',
@@ -3220,7 +3255,7 @@ function renderSettingsInvoicePreview() {
 }
 
 function bindSettingsPreviewInputs() {
-  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
+  ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-bank-name','s-bank-account-name','s-bank-account-number','s-bank-branch','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el || el.dataset.previewBound) return;
     el.dataset.previewBound = '1';
@@ -3254,6 +3289,7 @@ window.openInvMo = function openInvMo() {
   var due = new Date(); due.setDate(due.getDate()+30);
   document.getElementById('inv-due').valueAsDate = due;
   ['inv-cli','inv-cemail','inv-cphone','inv-caddr','inv-notes'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  setFieldValue('inv-notes', D.settings.footer || '');
   document.getElementById('inv-vat').value = D.settings.vatRate != null ? D.settings.vatRate : 0;
   document.getElementById('inv-disc').value = 0;
   document.getElementById('li-body').innerHTML = '';
@@ -3449,7 +3485,7 @@ window.emailInv = async function emailInv(id) {
       remainingBalance: balance,
       paymentDate: formatDateHuman(new Date()),
       status: status,
-      notes: [inv.notes, D.settings.footer].filter(Boolean).join('\n\n') || 'Thank you for your business.',
+      notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer) || 'Thank you for your business.',
       settings: D.settings,
       lines: (inv.items || inv.lines || []).map(function(line) {
         line = line || {};
@@ -3501,7 +3537,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(id) {
       paymentMethod: lastPayment ? lastPayment.method : '',
       paymentReference: lastPayment ? lastPayment.ref : '',
       status: inv.status || 'paid',
-      notes: [inv.notes, D.settings.footer].filter(Boolean).join('\n\n') || 'Thank you for your business.',
+      notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer) || 'Thank you for your business.',
       settings: D.settings,
       lines: (inv.items || inv.lines || []).map(function(line) {
         line = line || {};
@@ -3604,11 +3640,40 @@ function buildTxnFromForm(existing) {
     ref:ref,
     purpose:purpose,
     paidTo:paidTo,
+    supplierId:(existing && existing.supplierId) || pendingSupplierPaymentId || '',
     method:existing ? (existing.method || '') : '',
     slipName:newSlipName || (existing ? existing.slipName || '' : ''),
     note:existing ? (existing.note || '') : '',
     source:existing ? (existing.source || 'manual') : 'manual'
   };
+}
+function isSupplierPaymentTxn(txn) {
+  return !!txn && txn.type === 'out' && (txn.purpose === 'Supplier Payment' || txn.cat === 'Supplier Payment');
+}
+function supplierForPaymentTxn(txn) {
+  if (!txn) return null;
+  return D.suppliers.find(function(s) {
+    return (txn.supplierId && String(s.id) === String(txn.supplierId)) ||
+      (!txn.supplierId && txn.paidTo && String(s.name).toLowerCase() === String(txn.paidTo).toLowerCase());
+  }) || null;
+}
+function supplierPaymentCapacity(txn, existing) {
+  var supplier = supplierForPaymentTxn(txn);
+  if (!supplier) return 0;
+  var available = toNum(supplier.payableAmount);
+  var existingSupplier = supplierForPaymentTxn(existing);
+  if (isSupplierPaymentTxn(existing) && existingSupplier && String(existingSupplier.id) === String(supplier.id)) {
+    available += toNum(existing.amount);
+  }
+  return available;
+}
+function adjustSupplierPaymentBalance(txn, reverse) {
+  if (!isSupplierPaymentTxn(txn)) return;
+  var supplier = supplierForPaymentTxn(txn);
+  if (!supplier) return;
+  var amount = toNum(txn.amount);
+  supplier.payablePaidAmount = Math.max(0, toNum(supplier.payablePaidAmount) + (reverse ? -amount : amount));
+  supplier.payableAmount = Math.max(0, toNum(supplier.payableAmount) + (reverse ? amount : -amount));
 }
 function syncExpenseForTxn(txn) {
   D.exps = D.exps.filter(function(e) { return String(e.sourceTxnId || '') !== String(txn.id); });
@@ -3659,15 +3724,31 @@ window.addTxn = async function addTxn() {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Save Changes' : 'Save Transaction'; }
     return;
   }
+  if (isSupplierPaymentTxn(tx)) {
+    var paymentSupplier = supplierForPaymentTxn(tx);
+    if (!paymentSupplier) {
+      showToast('Choose a saved supplier before recording this payment.', 'err');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Save Changes' : 'Save Transaction'; }
+      return;
+    }
+    if (toNum(tx.amount) > supplierPaymentCapacity(tx, existing) + 0.01) {
+      showToast('Payment is higher than the supplier outstanding balance.', 'err');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Save Changes' : 'Save Transaction'; }
+      return;
+    }
+  }
   try {
     if (existing) {
+      adjustSupplierPaymentBalance(existing, true);
       var idx = D.txns.findIndex(function(t) { return String(t.id) === String(editId); });
       if (idx > -1) D.txns[idx] = tx;
+      adjustSupplierPaymentBalance(tx, false);
       syncExpenseForTxn(tx);
       await refreshAfterTxnChange('Transaction updated!', 'ok');
       return;
     }
     D.txns.unshift(tx);
+    adjustSupplierPaymentBalance(tx, false);
     syncExpenseForTxn(tx);
     await refreshAfterTxnChange(tx.type === 'out' ? 'Money Out saved and added to Expenses.' : 'Transaction saved!', 'ok');
   } finally {
@@ -3691,6 +3772,7 @@ window.editTxn = function editTxn(id) {
   setFieldValue('t-ref', t.ref || '');
   setFieldValue('t-purpose', t.purpose || 'Operating Expense');
   setFieldValue('t-paidto', t.paidTo || '');
+  pendingSupplierPaymentId = t.supplierId || '';
   var slip = document.getElementById('t-slip');
   if (slip) slip.value = '';
   setTxnSlipCurrent(t.slipName || '');
@@ -3706,6 +3788,7 @@ window.deleteTxn = function deleteTxn(id) {
   if (!t) { showToast('Transaction not found.', 'err'); return; }
   if (t.source === 'invoice-payment') { showToast('Invoice payment transactions are managed from the invoice record.', 'err'); return; }
   if (!confirm('Delete this transaction? This also removes the linked expense when it is Money Out.')) return;
+  adjustSupplierPaymentBalance(t, true);
   D.txns = D.txns.filter(function(tx) { return String(tx.id) !== String(id); });
   D.exps = D.exps.filter(function(e) { return String(e.sourceTxnId || '') !== String(id); });
   refreshAfterTxnChange('Transaction deleted.', 'ok');
@@ -3809,6 +3892,7 @@ window.addSup = function addSup() {
     payableAmount:toNum(document.getElementById('sp-payable-amount').value),
     payableDays:toNum(document.getElementById('sp-payable-days').value),
     payableRef:document.getElementById('sp-payable-ref').value.trim(),
+    payablePaidAmount:0,
     ytd:0
   };
   if (obj.email && !isValidBusinessEmail(obj.email)) { showToast('Please enter a valid supplier email address.', 'err'); return; }
@@ -3819,6 +3903,7 @@ window.addSup = function addSup() {
     if (idx > -1) {
       before = Object.assign({}, D.suppliers[idx]);
       obj.ytd = toNum(D.suppliers[idx].ytd);
+      obj.payablePaidAmount = toNum(D.suppliers[idx].payablePaidAmount);
       D.suppliers[idx] = obj;
     }
   } else {
@@ -3861,13 +3946,22 @@ function invoiceWaPhoneBusiness(inv) {
 }
 function invoiceWaTextBusiness(inv, withFile) {
   var biz = D.settings.biz || 'My Business';
+  var notes = combinedInvoiceNotesBusiness(inv.notes, D.settings.footer);
   return 'Hi ' + (inv.client || 'there') + ',\n\n'
     + 'Please find your invoice from ' + biz + '.\n\n'
     + 'Invoice: ' + inv.id + '\n'
     + 'Amount: ' + fmt(inv.total) + '\n'
     + 'Due: ' + formatDateHuman(inv.due) + '\n\n'
     + (withFile ? 'The PDF invoice is attached to this message.\n\n' : 'You can view the invoice details above. If the PDF is needed, I can send it as an attachment separately.\n\n')
+    + (notes ? 'Payment details / notes:\n' + notes + '\n\n' : '')
     + 'Invoice generated by Business Cashflow System - CeylonryLabs.io';
+}
+function combinedInvoiceNotesBusiness(primary, fallback) {
+  primary = String(primary || '').trim();
+  fallback = String(fallback || '').trim();
+  if (!primary) return fallback;
+  if (!fallback || primary === fallback || primary.indexOf(fallback) !== -1) return primary;
+  return primary + '\n\n' + fallback;
 }
 function invoicePdfFileNameBusiness(inv) {
   var parts = [
@@ -3929,7 +4023,7 @@ function buildBusinessInvoiceSharePdfFile(inv) {
   if (inv.disc) { y += 18; doc.text('Discount', 360, y); doc.text('- ' + money(inv.disc), 455, y); }
   y += 24; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text('Grand Total', 360, y); doc.text(money(inv.total), 455, y);
   y += 44; doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text('Notes', x, y);
-  var shareNotes = [inv.notes, s.footer].filter(Boolean).join('\n\n') || 'Invoice by Cashflow System - Ceylonry Labs.io';
+  var shareNotes = combinedInvoiceNotesBusiness(inv.notes, s.footer) || 'Invoice by Cashflow System - Ceylonry Labs.io';
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(text(shareNotes, w), x, y + 16);
   doc.setFontSize(8); doc.setTextColor(120,112,104); doc.text('Invoice generated by Business Cashflow System - CeylonryLabs.io', x, 780);
   var blob = doc.output('blob');
@@ -3979,6 +4073,10 @@ window.saveSettings = function saveSettings() {
   D.settings.email = document.getElementById('s-email').value;
   D.settings.vat = document.getElementById('s-vat').value;
   D.settings.footer = document.getElementById('s-footer').value || 'Thank you for your business.';
+  D.settings.bankName = document.getElementById('s-bank-name').value.trim();
+  D.settings.bankAccountName = document.getElementById('s-bank-account-name').value.trim();
+  D.settings.bankAccountNumber = document.getElementById('s-bank-account-number').value.trim();
+  D.settings.bankBranch = document.getElementById('s-bank-branch').value.trim();
   if (D.settings.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') D.settings.footer = 'Thank you for your business.';
   var vatRateEl = document.getElementById('s-vatrate');
   var defaultTplEl = document.getElementById('s-default-tpl');
@@ -4529,7 +4627,7 @@ _fauth.onAuthStateChanged(async function(user) {
     var ini = (accountName || 'U').split(' ').map(function(w) { return w[0]; }).join('').substring(0,2).toUpperCase();
     document.getElementById('sb-av').textContent = ini;
     var s = D.settings;
-    [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer],['s-ejskey',s.ejsKey],['s-ejsservice',s.ejsService],['s-ejstemplate',s.ejsTemplate],['s-ejsreceipttemplate',s.ejsReceiptTemplate]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
+    [['s-biz',s.biz],['s-user',s.user],['s-addr',s.addr],['s-email',s.email],['s-vat',s.vat],['s-footer',s.footer],['s-bank-name',s.bankName],['s-bank-account-name',s.bankAccountName],['s-bank-account-number',s.bankAccountNumber],['s-bank-branch',s.bankBranch],['s-ejskey',s.ejsKey],['s-ejsservice',s.ejsService],['s-ejstemplate',s.ejsTemplate],['s-ejsreceipttemplate',s.ejsReceiptTemplate]].forEach(function(f) { var el = document.getElementById(f[0]); if (el) el.value = f[1] || ''; });
     var vatRateField = document.getElementById('s-vatrate');
     if (vatRateField) vatRateField.value = s.vatRate != null ? s.vatRate : 15;
     var defaultTplField = document.getElementById('s-default-tpl');

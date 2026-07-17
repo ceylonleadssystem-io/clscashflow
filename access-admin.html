@@ -188,7 +188,11 @@ var _profile = null;   // their profile doc data
 var _ownerUid = null;  // the account whose team we manage (= owner)
 var _plan = (localStorage.getItem('cls-last-plan') || localStorage.getItem('cls-current-plan') || 'solo').toLowerCase();
 
-var PLAN_LIMITS = { solo: 1, studio: 5, business: Infinity };
+var PLAN_LIMITS = {
+  solo: window.clsPlanDetails && window.clsPlanDetails.solo ? window.clsPlanDetails.solo.userLimit : 1,
+  studio: window.clsPlanDetails && window.clsPlanDetails.studio ? window.clsPlanDetails.studio.userLimit : 5,
+  business: window.clsPlanDetails && window.clsPlanDetails.business ? window.clsPlanDetails.business.userLimit : Infinity
+};
 var PLAN_NAMES  = { solo: 'Solo', studio: 'Studio', business: 'Business' };
 var PLAN_FILES  = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
 var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };

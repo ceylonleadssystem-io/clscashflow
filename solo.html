@@ -210,7 +210,7 @@ tr:hover td{background:var(--bg3)}
 .invoice-more-menu{position:absolute;right:0;top:38px;z-index:40;width:126px;padding:.35rem;background:#fff;border:1px solid var(--border);box-shadow:0 10px 24px rgba(20,16,12,.14);display:grid;gap:.25rem}
 .invoice-more-menu .btn-sm{width:100%;justify-content:flex-start!important;background:#fff;color:var(--text);border:0}
 .invoice-more-menu .danger{color:var(--red)}
-@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.5rem .2rem;font-size:.53rem;line-height:1.25}.invoice-status-count{flex:0 0 auto}.inv-action-row.clean{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0;width:100%;flex:1}.inv-action-row.clean .btn-sm:first-child{grid-column:1/-1;width:100%}.invoice-more{width:100%}.table-card:has(.invoice-more[open]){overflow:visible!important}}
+@media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.5rem .2rem;font-size:.53rem;line-height:1.25}.invoice-status-count{flex:0 0 auto}.inv-action-row.clean{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0;width:100%;flex:1}.inv-action-row.clean .btn-sm:first-child{grid-column:1/-1;width:100%}.invoice-more{width:100%}.invoice-more[open]{grid-column:1/-1;height:auto}.invoice-more-menu{position:static;width:100%;margin-top:.35rem;box-shadow:none}.table-card:has(.invoice-more[open]),.invoice-register-table tr:has(.invoice-more[open]),.invoice-register-table td:has(.invoice-more[open]){overflow:visible!important}}
 .btn-sm{padding:.28rem .55rem;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-b);cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
 .btn-sm-dark{background:var(--black);color:#fff}
 .btn-sm-dark:hover{background:var(--gold)}
@@ -676,7 +676,7 @@ document.addEventListener('click',function(e){
     <div class="top-bar-right">
       <button class="mobile-top-sign-out" type="button" data-cls-fn="clsSignOut">Sign Out</button>
       <div class="top-date" id="top-date"></div>
-      <div class="top-badge">Solo Plan</div>
+      <div class="top-badge">Solo · 1 User</div>
     </div>
   </div>
   <div class="content">
@@ -973,7 +973,17 @@ document.addEventListener('click',function(e){
               </div>
               <div class="f-row">
                 <div class="f-group"><label>VAT / Tax Registration Number</label><input class="f-input" id="set-vat" placeholder="Optional registration number"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Your registration identifier, not the VAT percentage.</div></div>
-                <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
+                <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms or a thank-you note"></div>
+              </div>
+              <div class="f-section" style="margin-top:1rem">Bank Details</div>
+              <div class="template-helper">Optional. These details appear automatically on every invoice and stay hidden when blank.</div>
+              <div class="f-row">
+                <div class="f-group"><label>Bank Name</label><input class="f-input" id="set-bank-name" placeholder="Your bank"></div>
+                <div class="f-group"><label>Account Name</label><input class="f-input" id="set-bank-account-name" placeholder="Name on the account"></div>
+              </div>
+              <div class="f-row">
+                <div class="f-group"><label>Account Number</label><input class="f-input" id="set-bank-account-number" inputmode="numeric" autocomplete="off" placeholder="Bank account number"></div>
+                <div class="f-group"><label>Branch</label><input class="f-input" id="set-bank-branch" placeholder="Branch name"></div>
               </div>
               <div class="settings-preview-wrap">
                 <div class="settings-preview-label">Invoice Preview</div>
@@ -988,7 +998,7 @@ document.addEventListener('click',function(e){
             <div class="table-card">
               <div class="table-header"><div class="table-title">Solo Billing</div><button class="btn-act" data-cls-fn="openStudioUpgrade">Upgrade</button></div>
               <div style="padding:1rem">
-                <strong>Solo Plan</strong> — LKR 3,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
+                <strong>Solo Plan · 1 user only</strong> — LKR 3,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
                 <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
                 <div class="settings-billing-primary-actions"><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Solo with Genie</button>
                 <button class="btn-act" data-cls-fn="openStudioUpgrade" style="background:var(--gold);color:#fff">Upgrade to Studio</button></div>
@@ -1315,7 +1325,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -2300,6 +2310,7 @@ function resetInvoiceModal(){
   const reasonWrap=document.getElementById('i-edit-reason-wrap');if(reasonWrap)reasonWrap.style.display='none';
   const reason=document.getElementById('i-edit-reason');if(reason)reason.value='';
   ['i-client','i-cemail','i-caddr','i-cphone','i-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const defaultNotes=document.getElementById('i-notes');if(defaultNotes)defaultNotes.value=DB.settings.footer||'';
   document.getElementById('i-terms').value='Net 30';
   document.getElementById('i-cur').value='LKR';
   document.getElementById('inv-disc').value='0';
@@ -2796,6 +2807,7 @@ function loadSettings(){
   if(s.logo&&settingsLogo){settingsLogo.src=s.logo;settingsLogo.style.display='block';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='none';if(settingsLogoChange)settingsLogoChange.style.display='block';}
   else if(settingsLogo){settingsLogo.src='';settingsLogo.style.display='none';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='block';if(settingsLogoChange)settingsLogoChange.style.display='none';}
   var vr=document.getElementById('set-vatrate');if(vr)vr.value=(s.vatRate!=null?s.vatRate:15);
+  [['set-bank-name','bankName'],['set-bank-account-name','bankAccountName'],['set-bank-account-number','bankAccountNumber'],['set-bank-branch','bankBranch']].forEach(function(pair){var el=document.getElementById(pair[0]);if(el)el.value=s[pair[1]]||'';});
   ['ejskey','ejsservice','ejstemplate','ejsreceipttemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(!el)return;var prop={ejskey:'ejsKey',ejsservice:'ejsService',ejstemplate:'ejsTemplate',ejsreceipttemplate:'ejsReceiptTemplate'}[k];el.value=s[prop]||'';});
   var tpl=normalizeTemplateIdx(s.defaultTpl);
   var tplInput=document.getElementById('set-default-tpl');if(tplInput)tplInput.value=String(tpl);
@@ -2817,6 +2829,10 @@ window.saveSettings = function saveSettings(){
   DB.settings.addr=document.getElementById('set-addr').value.trim();
   DB.settings.email=document.getElementById('set-email').value.trim();
   DB.settings.vat=document.getElementById('set-vat').value.trim();
+  DB.settings.bankName=document.getElementById('set-bank-name').value.trim();
+  DB.settings.bankAccountName=document.getElementById('set-bank-account-name').value.trim();
+  DB.settings.bankAccountNumber=document.getElementById('set-bank-account-number').value.trim();
+  DB.settings.bankBranch=document.getElementById('set-bank-branch').value.trim();
   var vrIn=document.getElementById('set-vatrate');
   var nextVatRate=vrIn?parseFloat(vrIn.value):15;
   if(!Number.isFinite(nextVatRate)||nextVatRate<0||nextVatRate>100){alert('Default VAT / tax rate must be between 0% and 100%.');if(vrIn)vrIn.focus();return;}
@@ -2875,6 +2891,8 @@ function invoicePreviewSettings(){
   s.addr=value('set-addr',s.addr||'42 Galle Road, Colombo 03');
   s.email=value('set-email',s.email||'invoices@business.com');
   s.vat=value('set-vat',s.vat||'');s.footer=value('set-footer',s.footer||'Thank you for your business.');
+  s.bankName=value('set-bank-name',s.bankName||'');s.bankAccountName=value('set-bank-account-name',s.bankAccountName||'');
+  s.bankAccountNumber=value('set-bank-account-number',s.bankAccountNumber||'');s.bankBranch=value('set-bank-branch',s.bankBranch||'');
   s.defaultTpl=normalizeTemplateIdx(value('set-default-tpl',s.defaultTpl));
   s.invoiceFont=value('set-invoice-font',s.invoiceFont||'classic');s.invoiceView=value('set-invoice-view',s.invoiceView||'modern');
   s.logoAlign=DB.settings.logoAlign||'left';s.logoSize=DB.settings.logoSize||'M';
@@ -2888,7 +2906,7 @@ function renderSettingsInvoicePreview(){
 }
 function valueOr(id,fallback){const el=document.getElementById(id);return el&&el.value!==''?el.value:fallback;}
 function bindSettingsInvoicePreview(){
-  ['set-bizname','set-addr','set-email','set-vat','set-footer','set-invoice-prefix','set-invoice-font','set-invoice-view','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});
+  ['set-bizname','set-addr','set-email','set-vat','set-footer','set-bank-name','set-bank-account-name','set-bank-account-number','set-bank-branch','set-invoice-prefix','set-invoice-font','set-invoice-view','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});
 }
 
 // ════════════════════════════════
@@ -2985,7 +3003,7 @@ function buildInvoiceEmailHTML(inv){
   +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px"><tr>'
   +'<td style="vertical-align:top;width:55%">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">Notes</div>'
-    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr([inv.notes,s.footer].filter(Boolean).join('\n\n')||'Invoice by Cashflow System - Ceylonry Labs.io')+'</div>'
+    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr(combinedInvoiceNotes(inv.notes,s.footer)||'Invoice by Cashflow System - Ceylonry Labs.io')+'</div>'
   +'</td>'
   +'<td style="vertical-align:top;text-align:right">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">'+esc(s.bizName||'Your Business')+'</div>'
@@ -3439,7 +3457,7 @@ window.emailInvoice = async function emailInvoice(num){
       remainingBalance:amountDue,
       status:paymentState,
       paymentDate:fmtD(new Date()),
-      notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
+      notes:combinedInvoiceNotes(inv.notes,s.footer)||'Thank you for your business.',
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
@@ -3480,7 +3498,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(num){
       amountDue:Math.max(0,balance),
       paymentDate:fmtD(new Date()),
       status:inv.status||'paid',
-      notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
+      notes:combinedInvoiceNotes(inv.notes,s.footer)||'Thank you for your business.',
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
@@ -3798,13 +3816,21 @@ function invoiceWaText(inv, systemName, withFile){
   var s=DB.settings;
   var biz=s.bizName||'My Business';
   var cur=inv.cur||'LKR';
+  var notes=combinedInvoiceNotes(inv.notes,s.footer);
   return 'Hi '+(inv.client||'there')+',\n\n'
     +'Please find your invoice from '+biz+'.\n\n'
     +'Invoice: '+inv.num+'\n'
     +'Amount: '+cur+' '+Number(inv.amount||0).toLocaleString()+'\n'
     +'Due: '+fmtD(inv.due)+'\n\n'
+    +(notes?'Payment details / notes:\n'+notes+'\n\n':'')
     +(withFile?'The PDF invoice is attached to this message.\n\n':'You can view the invoice details above. If the PDF is needed, I can send it as an attachment separately.\n\n')
     +'Invoice generated by '+systemName+' - CeylonryLabs.io';
+}
+function combinedInvoiceNotes(primary,fallback){
+  var seen={};
+  return [primary,fallback].map(function(value){return String(value||'').trim();}).filter(function(value){
+    var key=value.toLowerCase();if(!value||seen[key])return false;seen[key]=true;return true;
+  }).join('\n\n');
 }
 function invoicePdfFileName(inv){
   return String((inv&&inv.num)||'invoice').replace(/[^a-z0-9_-]+/gi,'-')+'.pdf';
@@ -3858,7 +3884,7 @@ function buildInvoiceSharePdfFile(inv, systemName){
   if(inv.disc){y+=18;doc.text('Discount',360,y);doc.text(String(inv.disc)+'%',455,y);}
   y+=24;doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('Grand Total',360,y);doc.text(money(inv.amount),455,y);
   y+=44;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Notes',x,y);
-  var shareNotes=[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Invoice by Cashflow System - Ceylonry Labs.io';
+  var shareNotes=combinedInvoiceNotes(inv.notes,s.footer)||'Invoice by Cashflow System - Ceylonry Labs.io';
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(text(shareNotes,w),x,y+16);
   doc.setFontSize(8);doc.setTextColor(120,112,104);doc.text('Invoice generated by '+systemName+' - CeylonryLabs.io',x,780);
   var blob=doc.output('blob');

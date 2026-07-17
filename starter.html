@@ -687,7 +687,7 @@ document.addEventListener('click',function(e){
     <div class="top-bar-right">
       <button class="mobile-top-sign-out" type="button" data-cls-fn="clsSignOut">Sign Out</button>
       <div class="top-date" id="top-date"></div>
-      <div class="top-badge">Studio Plan</div>
+      <div class="top-badge">Studio · 5 Users</div>
     </div>
   </div>
   <div class="content">
@@ -1001,7 +1001,17 @@ document.addEventListener('click',function(e){
               </div>
               <div class="f-row">
                 <div class="f-group"><label>VAT / Tax Registration Number</label><input class="f-input" id="set-vat" placeholder="Optional registration number"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Your registration identifier, not the VAT percentage.</div></div>
-                <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms, bank details, or a thank-you note"></div>
+                <div class="f-group"><label>Notes</label><input class="f-input" id="set-footer" placeholder="Payment terms or a thank-you note"></div>
+              </div>
+              <div class="f-section" style="margin-top:1rem">Bank Details</div>
+              <div class="template-helper">Optional. These details appear automatically on every invoice and stay hidden when blank.</div>
+              <div class="f-row">
+                <div class="f-group"><label>Bank Name</label><input class="f-input" id="set-bank-name" placeholder="Your bank"></div>
+                <div class="f-group"><label>Account Name</label><input class="f-input" id="set-bank-account-name" placeholder="Name on the account"></div>
+              </div>
+              <div class="f-row">
+                <div class="f-group"><label>Account Number</label><input class="f-input" id="set-bank-account-number" inputmode="numeric" autocomplete="off" placeholder="Bank account number"></div>
+                <div class="f-group"><label>Branch</label><input class="f-input" id="set-bank-branch" placeholder="Branch name"></div>
               </div>
               <div class="settings-preview-wrap">
                 <div class="settings-preview-label">Invoice Preview</div>
@@ -1016,7 +1026,7 @@ document.addEventListener('click',function(e){
             <div class="table-card">
               <div class="table-header"><div class="table-title">Studio Billing</div><button class="btn-act" data-cls-fn="openBusinessUpgrade">Upgrade</button></div>
               <div style="padding:1rem">
-                <strong>Studio Plan</strong> — LKR 5,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
+                <strong>Studio Plan · up to 5 users</strong> — LKR 5,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
                 <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
                 <div class="settings-billing-primary-actions"><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio with Genie</button>
                 <button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff">Upgrade to Business</button>
@@ -1030,7 +1040,7 @@ document.addEventListener('click',function(e){
         <section class="settings-panel" data-account-panel="team" hidden>
           <div class="table-card">
             <div class="table-header"><div class="table-title">Team Access</div><a class="btn-act" href="access-admin.html">Manage Team</a></div>
-            <div style="padding:1rem;font-size:.85rem;color:var(--muted);line-height:1.8">Invite team members, assign roles, and control access. <a href="access-admin.html" style="color:var(--gold);font-weight:600">Open Access Admin</a></div>
+            <div style="padding:1rem;font-size:.85rem;color:var(--muted);line-height:1.8">Invite team members, assign roles, and control access for up to 5 users total, including the owner. <a href="access-admin.html" style="color:var(--gold);font-weight:600">Open Access Admin</a></div>
             <div style="padding:0 1.35rem 1.35rem;display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
               <div class="f-group"><label>User 1 Email (You)</label><input class="f-input" id="set-u1" placeholder="you@email.com"></div>
               <div class="f-group"><label>User 2 Email (Optional)</label><input class="f-input" id="set-u2" placeholder="colleague@email.com"></div>
@@ -1382,7 +1392,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
+  settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -1445,12 +1455,13 @@ function normalizeLoadedDBCollections() {
   DB.payrollStaff = Array.isArray(DB.payrollStaff) ? DB.payrollStaff : [];
   (function(){var seen={};DB.clients.list.forEach(function(c,i){if(c.id==null||seen[c.id]){c.id=Date.now()+i;}seen[c.id]=true;});})();
   if (ensureExpenseTransactions()) _expenseSyncPending = true;
+  if (ensureTransactionExpenses()) _expenseSyncPending = true;
   DB.invoices.sort((a,b) => (b.id||0) - (a.id||0));
   DB.quotes.sort((a,b) => (b.id||0) - (a.id||0));
   refreshNextInvoiceNumber();
   DB.transactions.sort((a,b) => (b.id||0) - (a.id||0));
   DB.expenses.sort((a,b) => (b.id||0) - (a.id||0));
-  DB.editBacklog.sort((a,b) => new Date(b.editedAt||0) - new Date(a.editedAt||0));
+  DB.editBacklog.sort((a,b) => backlogDateValue(b) - backlogDateValue(a));
 }
 
 function applyDBBackup(backup, updateVersion) {
@@ -2070,6 +2081,7 @@ window.loadPayrollStaffSelection=function loadPayrollStaffSelection(){
   window.updatePayrollCalculation();
 };
 window.updatePayrollCalculation=function updatePayrollCalculation(){
+  const payroll=(document.getElementById('e-cat')||{}).value==='Payroll';
   const calc=currentPayrollCalculation();
   const amount=document.getElementById('e-amount');
   const amountGroup=document.getElementById('e-amount-group');if(amountGroup)amountGroup.classList.toggle('full',payroll);
@@ -2100,18 +2112,17 @@ window.handleExpenseCategoryChange=function handleExpenseCategoryChange(){
   }
 };
 window.openExpenseModal=function openExpenseModal(){
+  window.openModal('exp-modal');
   refreshSupplierSelects();
-  document.getElementById('e-date').value=todayStr();
-  document.getElementById('e-cat').value='Operations';
-  document.getElementById('e-desc').value='';
-  document.getElementById('e-amount').value='';
-  delete document.getElementById('e-amount').dataset.payrollDerived;
+  var date=document.getElementById('e-date');if(date)date.value=todayStr();
+  var cat=document.getElementById('e-cat');if(cat)cat.value='Operations';
+  var desc=document.getElementById('e-desc');if(desc)desc.value='';
+  var amount=document.getElementById('e-amount');if(amount){amount.value='';delete amount.dataset.payrollDerived;}
   clearSupplierPicker('e');
   populatePayrollStaffSelect('new');
-  document.getElementById('p-save-staff').checked=true;
+  var saveStaff=document.getElementById('p-save-staff');if(saveStaff)saveStaff.checked=true;
   window.loadPayrollStaffSelection();
   window.handleExpenseCategoryChange();
-  document.getElementById('exp-modal').classList.add('open');
 };
 window.closeModal = function closeModal(id){
   var modal=document.getElementById(id);
@@ -2507,8 +2518,23 @@ function isInvoicePaymentTransaction(txn, invoiceNum){
 function linkedExpenseTransaction(expense){
   if(!expense||expense.id==null)return null;
   return DB.transactions.find(function(txn){
-    return txn&&txn.source==='expense'&&String(txn.expenseId)===String(expense.id);
+    return txn&&((txn.source==='expense'&&String(txn.expenseId)===String(expense.id))||
+      (expense.sourceTransactionId!=null&&String(txn.id)===String(expense.sourceTransactionId)));
   })||null;
+}
+function linkedTransactionExpense(txn){
+  if(!txn||txn.id==null)return null;
+  return DB.expenses.find(function(expense){
+    return expense&&expense.sourceTransactionId!=null&&String(expense.sourceTransactionId)===String(txn.id);
+  })||null;
+}
+function nextExpenseId(){
+  var next=Date.now();
+  DB.expenses.forEach(function(expense){
+    var id=Number(expense&&expense.id);
+    if(Number.isFinite(id)&&id>=next)next=id+1;
+  });
+  return next;
 }
 function nextExpenseTransactionId(){
   var next=Date.now();
@@ -2562,6 +2588,42 @@ function ensureExpenseTransactions(){
   });
   return changed;
 }
+function transactionExpenseFields(txn){
+  return {
+    date:txn.date||todayStr(),
+    desc:txn.desc||'Money Out',
+    amount:Number(txn.amount)||0,
+    cat:txn.cat||'Expense',
+    vendor:txn.supplierName||'',
+    supplierId:txn.supplierId||null,
+    supplierName:txn.supplierName||'',
+    ref:txn.ref||'',
+    source:'transaction',
+    sourceTransactionId:txn.id
+  };
+}
+function syncTransactionExpense(txn){
+  if(!txn||txn.source==='expense'||txn.id==null)return false;
+  var expense=linkedTransactionExpense(txn);
+  if(txn.type!=='out'){
+    if(!expense)return false;
+    DB.expenses=DB.expenses.filter(function(item){return item!==expense;});
+    return true;
+  }
+  var fields=transactionExpenseFields(txn);
+  if(!expense){
+    DB.expenses.push(Object.assign({id:nextExpenseId()},fields));
+    return true;
+  }
+  var changed=Object.keys(fields).some(function(key){return String(expense[key]??'')!==String(fields[key]??'');});
+  if(changed)Object.assign(expense,fields);
+  return changed;
+}
+function ensureTransactionExpenses(){
+  var changed=false;
+  DB.transactions.forEach(function(txn){if(syncTransactionExpense(txn))changed=true;});
+  return changed;
+}
 function cashOutTotal(predicate){
   var matches=typeof predicate==='function'?predicate:function(){return true;};
   var transactionOut=DB.transactions.filter(function(txn){return txn.type==='out'&&matches(txn);}).reduce(function(sum,txn){return sum+Number(txn.amount||0);},0);
@@ -2595,7 +2657,9 @@ window.addTransaction = function addTransaction(){
   var supplier=null;
   try{supplier=resolveSupplierFromPicker('t','transaction');}
   catch(e){alert(e.message);return;}
-  DB.transactions.unshift({date,desc,type,amount,sourceAmount,sourceCurrency,exchangeRate,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',id:Date.now()});
+  var transaction={date,desc,type,amount,sourceAmount,sourceCurrency,exchangeRate,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',id:Date.now()};
+  DB.transactions.unshift(transaction);
+  syncTransactionExpense(transaction);
   saveDB();renderCashflow();renderRecentTable();closeModal('txn-modal');
   refreshSupplierSelects();renderSuppliers();
   document.getElementById('t-desc').value='';document.getElementById('t-amount').value='';document.getElementById('t-ref').value='';clearSupplierPicker('t');window.updateStudioTxnConversionPreview();
@@ -2716,6 +2780,7 @@ function resetInvoiceModal(){
   const reasonWrap=document.getElementById('i-edit-reason-wrap');if(reasonWrap)reasonWrap.style.display='none';
   const reason=document.getElementById('i-edit-reason');if(reason)reason.value='';
   ['i-client','i-cemail','i-caddr','i-cphone','i-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const defaultNotes=document.getElementById('i-notes');if(defaultNotes)defaultNotes.value=DB.settings.footer||'';
   document.getElementById('i-terms').value='Net 30';
   document.getElementById('i-cur').value='LKR';
   document.getElementById('inv-disc').value='0';
@@ -3051,6 +3116,7 @@ window.saveRecordEdit=function saveRecordEdit(){
     item.type=document.getElementById('edit-type').value;
     item.cat=document.getElementById('edit-cat').value.trim()||'Other';
     item.ref=document.getElementById('edit-ref').value.trim();
+    syncTransactionExpense(item);
   }else if(kind==='expense'){
     item.date=date;item.amount=amount;item.desc=desc;
     item.vendor=document.getElementById('edit-vendor').value.trim();
@@ -3072,6 +3138,13 @@ window.saveRecordEdit=function saveRecordEdit(){
   renderCashflow();renderExpenses();renderInvoices();renderRecentTable();renderDashboard();renderBacklog();
   alert('Edit saved and added to the admin backlog.');
 };
+function backlogDateValue(log){
+  var value=log&&(log.editedAt||log.date||log.createdAt||log.timestamp);
+  if(value&&typeof value.toDate==='function')value=value.toDate();
+  if(value&&value.seconds!=null)value=new Date(Number(value.seconds)*1000);
+  var parsed=value instanceof Date?value:new Date(value||0);
+  return Number.isNaN(parsed.getTime())?new Date(0):parsed;
+}
 function renderBacklog(){
   const summary=document.getElementById('backlog-summary');
   const table=document.getElementById('backlog-table');
@@ -3081,11 +3154,11 @@ function renderBacklog(){
     table.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">Only admin users can view the edit backlog.</td></tr>';
     return;
   }
-  const logs=[...(DB.editBacklog||[])].sort(function(a,b){return new Date(b.editedAt)-new Date(a.editedAt);});
-  const thisMonth=logs.filter(function(l){const d=new Date(l.editedAt);const n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();}).length;
-  summary.innerHTML=`<div class="sum-item"><div class="sum-label">Total Edits</div><div class="sum-val">${logs.length}</div></div><div class="sum-item"><div class="sum-label">This Month</div><div class="sum-val" style="color:var(--gold)">${thisMonth}</div></div><div class="sum-item"><div class="sum-label">Latest Edit</div><div class="sum-val" style="font-size:1.05rem">${logs[0]?fmtD(logs[0].editedAt.slice(0,10)):'—'}</div></div>`;
+  const logs=[...(DB.editBacklog||[])].sort(function(a,b){return backlogDateValue(b)-backlogDateValue(a);});
+  const thisMonth=logs.filter(function(l){const d=backlogDateValue(l);const n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();}).length;
+  summary.innerHTML=`<div class="sum-item"><div class="sum-label">Total Edits</div><div class="sum-val">${logs.length}</div></div><div class="sum-item"><div class="sum-label">This Month</div><div class="sum-val" style="color:var(--gold)">${thisMonth}</div></div><div class="sum-item"><div class="sum-label">Latest Edit</div><div class="sum-val" style="font-size:1.05rem">${logs[0]?fmtD(backlogDateValue(logs[0]).toISOString().slice(0,10)):'—'}</div></div>`;
   table.innerHTML=logs.length?logs.map(function(l){
-    const when=l.editedAt?new Date(l.editedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    const logDate=backlogDateValue(l);const when=logDate.getTime()?logDate.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     const action=l.action==='delete'?'Deleted':'Edited';
     return `<tr><td>${when}</td><td><div class="audit-row-main"><span class="audit-chip">${escHTML(action)}</span><span class="audit-chip">${escHTML(l.kind)}</span>${escHTML(l.label)}</div><div class="audit-meta">Record ID: ${escHTML(l.itemId)}</div></td><td>${summarizeBacklogValue(l.before)}</td><td>${summarizeBacklogValue(l.after)}</td><td>${escHTML(l.editedBy||'Admin')}</td><td><div class="audit-reason">${escHTML(l.reason)}</div></td></tr>`;
   }).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No invoice, customer, or payment edits have been logged yet.</td></tr>';
@@ -3214,6 +3287,7 @@ function loadSettings(){
   if(s.logo&&settingsLogo){settingsLogo.src=s.logo;settingsLogo.style.display='block';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='none';}
   else if(settingsLogo){settingsLogo.src='';settingsLogo.style.display='none';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='block';}
   var vr=document.getElementById('set-vatrate');if(vr)vr.value=(s.vatRate!=null?s.vatRate:15);
+  [['set-bank-name','bankName'],['set-bank-account-name','bankAccountName'],['set-bank-account-number','bankAccountNumber'],['set-bank-branch','bankBranch']].forEach(function(pair){var el=document.getElementById(pair[0]);if(el)el.value=s[pair[1]]||'';});
   ['ejskey','ejsservice','ejstemplate','ejsreceipttemplate'].forEach(function(k){var el=document.getElementById('set-'+k);if(!el)return;var prop={ejskey:'ejsKey',ejsservice:'ejsService',ejstemplate:'ejsTemplate',ejsreceipttemplate:'ejsReceiptTemplate'}[k];el.value=s[prop]||'';});
   var tpl=normalizeTemplateIdx(s.defaultTpl);
   var tplInput=document.getElementById('set-default-tpl');if(tplInput)tplInput.value=String(tpl);
@@ -3235,6 +3309,10 @@ window.saveSettings = function saveSettings(){
   DB.settings.addr=document.getElementById('set-addr').value.trim();
   DB.settings.email=document.getElementById('set-email').value.trim();
   DB.settings.vat=document.getElementById('set-vat').value.trim();
+  DB.settings.bankName=document.getElementById('set-bank-name').value.trim();
+  DB.settings.bankAccountName=document.getElementById('set-bank-account-name').value.trim();
+  DB.settings.bankAccountNumber=document.getElementById('set-bank-account-number').value.trim();
+  DB.settings.bankBranch=document.getElementById('set-bank-branch').value.trim();
   var vrIn=document.getElementById('set-vatrate');
   var nextVatRate=vrIn?parseFloat(vrIn.value):15;
   if(!Number.isFinite(nextVatRate)||nextVatRate<0||nextVatRate>100){alert('Default VAT / tax rate must be between 0% and 100%.');if(vrIn)vrIn.focus();return;}
@@ -3290,6 +3368,8 @@ function invoicePreviewSettings(){
   s.bizName=valueOr('set-bizname',s.bizName||'My Business');s.biz=s.bizName;
   s.addr=valueOr('set-addr',s.addr||'42 Galle Road, Colombo 03');s.email=valueOr('set-email',s.email||'invoices@business.com');
   s.vat=valueOr('set-vat',s.vat||'');s.footer=valueOr('set-footer',s.footer||'Thank you for your business.');
+  s.bankName=valueOr('set-bank-name',s.bankName||'');s.bankAccountName=valueOr('set-bank-account-name',s.bankAccountName||'');
+  s.bankAccountNumber=valueOr('set-bank-account-number',s.bankAccountNumber||'');s.bankBranch=valueOr('set-bank-branch',s.bankBranch||'');
   s.defaultTpl=normalizeTemplateIdx(valueOr('set-default-tpl',s.defaultTpl));s.invoiceFont=valueOr('set-invoice-font',s.invoiceFont||'classic');s.invoiceView=valueOr('set-invoice-view',s.invoiceView||'modern');
   s.logoAlign=DB.settings.logoAlign||'left';s.logoSize=DB.settings.logoSize||'M';return s;
 }
@@ -3299,7 +3379,7 @@ function renderSettingsInvoicePreview(){
   const inv={num:prefix+'-0001',client:'Sample Customer',caddr:'Colombo, Sri Lanka',cemail:'customer@example.com',date:new Date().toISOString().slice(0,10),due:new Date(Date.now()+30*86400000).toISOString().slice(0,10),terms:'Net 30',cur:'LKR',lines:[{desc:'Professional service',qty:1,price:25000,total:25000}],sub:25000,vat:25000*rate/100,total:25000+(25000*rate/100),notes:s.footer,tpl:s.defaultTpl};
   box.innerHTML=window.clsBuildInvoicePreviewFrame({inv:inv,settings:s,templateIndex:s.defaultTpl});
 }
-function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-email','set-vat','set-footer','set-invoice-prefix','set-invoice-font','set-invoice-view','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
+function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-email','set-vat','set-footer','set-bank-name','set-bank-account-name','set-bank-account-number','set-bank-branch','set-invoice-prefix','set-invoice-font','set-invoice-view','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
 
 // ════════════════════════════════
 // INVOICE PDF PRINTING
@@ -3395,7 +3475,7 @@ function buildInvoiceEmailHTML(inv){
   +'<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:40px"><tr>'
   +'<td style="vertical-align:top;width:55%">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">Notes</div>'
-    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr([inv.notes,s.footer].filter(Boolean).join('\n\n')||'Invoice by Cashflow System - Ceylonry Labs.io')+'</div>'
+    +'<div style="font-size:12px;color:#888;line-height:1.7">'+escBr(combinedInvoiceNotes(inv.notes,s.footer)||'Invoice by Cashflow System - Ceylonry Labs.io')+'</div>'
   +'</td>'
   +'<td style="vertical-align:top;text-align:right">'
     +'<div style="font-size:13px;font-weight:700;color:#111;margin-bottom:6px">'+esc(s.bizName||'Your Business')+'</div>'
@@ -3832,7 +3912,7 @@ window.emailInvoice = async function emailInvoice(num){
       remainingBalance:amountDue,
       status:paymentState,
       paymentDate:fmtD(new Date()),
-      notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
+      notes:combinedInvoiceNotes(inv.notes,s.footer)||'Thank you for your business.',
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
@@ -3873,7 +3953,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(num){
       amountDue:Math.max(0,balance),
       paymentDate:fmtD(new Date()),
       status:inv.status||'paid',
-      notes:[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Thank you for your business.',
+      notes:combinedInvoiceNotes(inv.notes,s.footer)||'Thank you for your business.',
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
@@ -4192,13 +4272,21 @@ function invoiceWaText(inv, systemName, withFile){
   var s=DB.settings;
   var biz=s.bizName||'My Business';
   var cur=inv.cur||'LKR';
+  var notes=combinedInvoiceNotes(inv.notes,s.footer);
   return 'Hi '+(inv.client||'there')+',\n\n'
     +'Please find your invoice from '+biz+'.\n\n'
     +'Invoice: '+inv.num+'\n'
     +'Amount: '+cur+' '+Number(inv.amount||0).toLocaleString()+'\n'
     +'Due: '+fmtD(inv.due)+'\n\n'
+    +(notes?'Payment details / notes:\n'+notes+'\n\n':'')
     +(withFile?'The PDF invoice is attached to this message.\n\n':'You can view the invoice details above. If the PDF is needed, I can send it as an attachment separately.\n\n')
     +'Invoice generated by '+systemName+' - CeylonryLabs.io';
+}
+function combinedInvoiceNotes(primary,fallback){
+  var seen={};
+  return [primary,fallback].map(function(value){return String(value||'').trim();}).filter(function(value){
+    var key=value.toLowerCase();if(!value||seen[key])return false;seen[key]=true;return true;
+  }).join('\n\n');
 }
 function invoicePdfFileName(inv){
   return String((inv&&inv.num)||'invoice').replace(/[^a-z0-9_-]+/gi,'-')+'.pdf';
@@ -4252,7 +4340,7 @@ function buildInvoiceSharePdfFile(inv, systemName){
   if(inv.disc){y+=18;doc.text('Discount',360,y);doc.text(String(inv.disc)+'%',455,y);}
   y+=24;doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('Grand Total',360,y);doc.text(money(inv.amount),455,y);
   y+=44;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Notes',x,y);
-  var shareNotes=[inv.notes,s.footer].filter(Boolean).join('\n\n')||'Invoice by Cashflow System - Ceylonry Labs.io';
+  var shareNotes=combinedInvoiceNotes(inv.notes,s.footer)||'Invoice by Cashflow System - Ceylonry Labs.io';
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(text(shareNotes,w),x,y+16);
   doc.setFontSize(8);doc.setTextColor(120,112,104);doc.text('Invoice generated by '+systemName+' - CeylonryLabs.io',x,780);
   var blob=doc.output('blob');

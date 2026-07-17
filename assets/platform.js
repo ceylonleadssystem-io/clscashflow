@@ -5,6 +5,8 @@
   var PLAN_DETAILS = {
     solo: {
       name: 'Solo',
+      userLimit: 1,
+      userLabel: '1 user only',
       monthlyPrice: 3500,
       price: 36000,
       file: 'solo.html',
@@ -13,6 +15,8 @@
     },
     studio: {
       name: 'Studio',
+      userLimit: 5,
+      userLabel: 'Up to 5 users',
       monthlyPrice: 5500,
       price: 60000,
       file: 'starter.html',
@@ -21,6 +25,8 @@
     },
     business: {
       name: 'Business',
+      userLimit: Infinity,
+      userLabel: 'Unlimited users',
       monthlyPrice: 8500,
       price: 94800,
       file: 'growth.html',
@@ -515,6 +521,7 @@
     var remainingBalance = opts.remainingBalance != null ? Number(opts.remainingBalance || 0) : amountDue;
     var status = opts.status || (amountDue <= 0 ? 'paid' : 'unpaid');
     var notes = opts.notes || 'Thank you for your business.';
+    var bankHtml = invoiceBankEmailHtml(opts.settings || opts);
     var lines = opts.lines || opts.items || [];
     var rows = paymentEmailLineRows(lines, cur, invoiceTotal);
     var payLink = opts.payLink || opts.paymentLink || opts.checkoutUrl || '';
@@ -566,6 +573,7 @@
             '<div style="display:inline-block;min-width:260px;background:#2d2117;color:#fff;padding:16px 20px;font-size:18px;font-weight:700;">Invoice total: ' + invoiceEscape(invoiceMoney(cur, invoiceTotal)) + '</div>' +
           '</div>' +
           '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(closingNote + '\n\n' + notes) + '</div>' +
+          bankHtml +
           '<p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#6f6258;">' + invoiceEscape(businessName) + '<br>' + invoiceEscape(businessAddress) + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
         '</div>' +
         '<div style="padding:16px 32px;border-top:1px solid #eadfce;text-align:center;font-size:12px;color:#8b7c6f;">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
@@ -592,6 +600,7 @@
     var paymentDate = opts.paymentDate || humanDate(opts.paymentRawDate || opts.date) || humanDate(new Date());
     var paymentMethod = opts.paymentMethod || 'Payment recorded';
     var paymentReference = opts.paymentReference || opts.paymentRef || '';
+    var bankHtml = invoiceBankEmailHtml(opts.settings || opts);
     var statusLine = remainingBalance <= 0.01
       ? 'This invoice is now fully settled. Thank you for your payment.'
       : 'Thank you for your initial payment. The remaining amount to pay is ' + invoiceMoney(cur, remainingBalance) + '.';
@@ -621,6 +630,7 @@
             '<tr><td style="border-top:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Paid total</td><td align="right" style="border-top:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(invoiceMoney(cur, paidTotal || paymentAmount || invoiceTotal)) + '</td></tr>' +
             '<tr><td style="border-top:1px solid #eadfce;border-bottom:1px solid #eadfce;padding:12px 0;color:#8b7c6f;">Remaining balance</td><td align="right" style="border-top:1px solid #eadfce;border-bottom:1px solid #eadfce;padding:12px 0;font-weight:800;">' + invoiceEscape(invoiceMoney(cur, remainingBalance)) + '</td></tr>' +
           '</table>' +
+          bankHtml +
           '<p style="font-size:14px;line-height:1.6;margin:0;color:#6f6258;">Regards,<br><strong style="color:#2d2117;">' + invoiceEscape(businessName) + '</strong>' + (businessAddress ? '<br>' + invoiceEscape(businessAddress) : '') + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
         '</div>' +
         '<div style="padding:16px 30px;background:#f7f2ea;text-align:center;font-size:13px;color:#8b7c6f;">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
@@ -854,6 +864,10 @@
       addr: settings.addr || settings.address || '',
       email: email,
       vat: settings.vat || '',
+      bankName: settings.bankName || settings.bank || '',
+      bankAccountName: settings.bankAccountName || settings.accountName || '',
+      bankAccountNumber: settings.bankAccountNumber || settings.accountNumber || '',
+      bankBranch: settings.bankBranch || settings.branch || '',
       footer: footer,
       logo: settings.logo || '',
       logoAlign: align,
@@ -864,6 +878,27 @@
       invoiceView: invoiceView(settings.invoiceView || settings.templateView || settings.view).id,
       invoicePrefix: sanitizeInvoicePrefix(settings.invoicePrefix || settings.prefix || 'INV')
     };
+  }
+
+  function invoiceBankRows(settings) {
+    settings = normalizeInvoiceSettings(settings || {});
+    return [
+      ['Bank', settings.bankName],
+      ['Account name', settings.bankAccountName],
+      ['Account number', settings.bankAccountNumber],
+      ['Branch', settings.bankBranch]
+    ].filter(function(row) { return String(row[1] || '').trim(); });
+  }
+
+  function invoiceBankEmailHtml(settings) {
+    var rows = invoiceBankRows(settings);
+    if (!rows.length) return '';
+    return '<div style="margin:24px 0 0;padding:18px 20px;border:1px solid #e2dbd2;background:#faf8f4">' +
+      '<div style="margin-bottom:10px;font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:#8a6818">Bank details</div>' +
+      rows.map(function(row) {
+        return '<div style="display:flex;justify-content:space-between;gap:18px;padding:4px 0;font-size:13px;line-height:1.45;color:#6e635a">' +
+          '<span>' + invoiceEscape(row[0]) + '</span><strong style="color:#18130f;text-align:right;word-break:break-word">' + invoiceEscape(row[1]) + '</strong></div>';
+      }).join('') + '</div>';
   }
 
   function invoiceLineItems(inv) {
@@ -952,6 +987,10 @@
     var title = inv.num || inv.id || 'PREVIEW';
     var documentLabel = String(opts.documentLabel || inv.documentLabel || inv.documentType || 'Invoice');
     documentLabel = /^quote$/i.test(documentLabel) ? 'Quote' : (/^estimate$/i.test(documentLabel) ? 'Estimate' : 'Invoice');
+    var bankRows = documentLabel === 'Invoice' ? invoiceBankRows(s) : [];
+    var bankHtml = bankRows.length ? '<div class="bank-details"><div class="label">Bank details</div>' + bankRows.map(function(row) {
+      return '<div class="bank-row"><span>' + invoiceEscape(row[0]) + '</span><b>' + invoiceEscape(row[1]) + '</b></div>';
+    }).join('') + '</div>' : '';
     var font = invoiceFont(s.invoiceFont);
     var logo = s.logo
       ? '<img class="logo-img" src="' + s.logo + '" alt="Logo">'
@@ -1020,7 +1059,7 @@
       '*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}' +
       'html,body{width:210mm;min-height:0;background:#fff;color:#18130f;font-family:' + bodyFont + '}' +
       'body{margin:0}.invoice-page{width:210mm;min-height:0;overflow:visible;margin:0 auto;background:#fff;color:#18130f;padding:11mm 12mm 8mm;display:block;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--paper:#fff;--line:rgba(24,19,15,.16);font-family:' + bodyFont + '}' +
-      '.brand-rule{height:4px;background:var(--accent);margin-bottom:14mm}.invoice-head{display:grid;grid-template-columns:minmax(0,1fr) 64mm;gap:12mm;align-items:start;margin-bottom:13mm;border-bottom:2px solid var(--dark);padding-bottom:9mm}.brand{text-align:' + (s.logoAlign === 'right' ? 'right' : (s.logoAlign === 'center' ? 'center' : 'left')) + '}.logo-img{display:inline-block;object-fit:contain;margin-bottom:5mm}.logo-box{display:inline-flex;width:28mm;height:16mm;border:1px dashed var(--line);align-items:center;justify-content:center;font-size:9px;letter-spacing:3px;color:#9b9188;margin-bottom:5mm}.biz-name{font-family:' + titleFont + ';font-size:24px;line-height:1.15;font-weight:800;color:#111}.muted{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line;word-break:break-word}.invoice-title{text-align:right}.invoice-title h1{font-family:' + titleFont + ';font-size:36px;line-height:1;text-transform:uppercase;letter-spacing:5px;color:#111}.invoice-title .num{margin-top:4mm;font-size:12px;font-weight:800;letter-spacing:.04em}.invoice-title .meta{margin-top:5mm;font-size:10.5px;line-height:1.7;color:#6e635a}.payment-state{display:inline-flex;margin-top:4mm;border:1px solid var(--dark);padding:6px 9px;font-size:8.5px;letter-spacing:1.6px;text-transform:uppercase;font-weight:900;color:var(--dark)}.payment-state.paid{background:#167a4b;border-color:#167a4b;color:#fff}.payment-state.partial{background:#fff7df;border-color:#b8922a;color:#7b5a00}.payment-state.overdue{border-color:#bd3d32;color:#bd3d32}.parties{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18mm;padding:0 0 8mm;margin-bottom:8mm}.label{font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:3mm}.party-name{font-size:14px;font-weight:800;line-height:1.25;margin-bottom:2mm}.items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8mm}.items th{background:transparent;color:#18130f;border-bottom:2px solid var(--dark);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:0 10px 7px}.items th:nth-child(1){width:49%}.items th:nth-child(2){width:10%}.items th:nth-child(3){width:20%}.items th:nth-child(4){width:21%}.items th:nth-child(n+2),.items td:nth-child(n+2){text-align:right}.items td{border-bottom:1px solid var(--line);padding:9px 10px;font-size:10.5px;line-height:1.35;vertical-align:top;word-break:break-word}.line-no{display:inline-block;min-width:18px;margin-right:7px;font-weight:800;color:var(--accent)}.line-desc{font-weight:650}.money-row{display:flex;justify-content:space-between;gap:10mm;border-bottom:1px solid var(--line);padding:6px 0;font-size:10.5px;color:#594f47}.money-row b{color:#111;font-variant-numeric:tabular-nums}.invoice-bottom{display:grid;grid-template-columns:minmax(0,1fr) 74mm;gap:14mm;align-items:start;margin-top:auto;padding-top:0}.notes{padding-left:0;min-height:22mm}.note-text{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line}.totals{border-top:1px solid var(--line);padding-top:2mm}.grand{margin-top:4mm;background:var(--dark);color:#fff!important;border:0;padding:11px 13px;align-items:center}.grand span{font-size:8.5px;letter-spacing:2.8px;text-transform:uppercase;font-weight:800}.grand b{font-size:17px;color:#fff}.grand.settled{background:#167a4b}.powered{margin-top:8mm;padding-top:7mm;text-align:center;font-size:9px;letter-spacing:.04em;color:#7d736a}.powered b{color:#18130f}.view-classic .invoice-title h1,.view-olden .invoice-title h1{text-transform:none;letter-spacing:0}.view-olden .brand-rule{height:6px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.view-minimal .brand-rule,.view-minimal .grand{background:#111}.view-bold .brand-rule{background:var(--dark)}.tpl-pop .grand{background:var(--accent);color:#1b1713}.tpl-green .grand,.tpl-yellow .grand{background:var(--accent);color:#111}.tpl-green .grand b,.tpl-yellow .grand b,.tpl-pop .grand b{color:#111}@media print{html,body{background:#fff}.invoice-page{box-shadow:none;margin:0;min-height:297mm;height:auto}}';
+      '.brand-rule{height:4px;background:var(--accent);margin-bottom:14mm}.invoice-head{display:grid;grid-template-columns:minmax(0,1fr) 64mm;gap:12mm;align-items:start;margin-bottom:13mm;border-bottom:2px solid var(--dark);padding-bottom:9mm}.brand{text-align:' + (s.logoAlign === 'right' ? 'right' : (s.logoAlign === 'center' ? 'center' : 'left')) + '}.logo-img{display:inline-block;object-fit:contain;margin-bottom:5mm}.logo-box{display:inline-flex;width:28mm;height:16mm;border:1px dashed var(--line);align-items:center;justify-content:center;font-size:9px;letter-spacing:3px;color:#9b9188;margin-bottom:5mm}.biz-name{font-family:' + titleFont + ';font-size:24px;line-height:1.15;font-weight:800;color:#111}.muted{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line;word-break:break-word}.invoice-title{text-align:right}.invoice-title h1{font-family:' + titleFont + ';font-size:36px;line-height:1;text-transform:uppercase;letter-spacing:5px;color:#111}.invoice-title .num{margin-top:4mm;font-size:12px;font-weight:800;letter-spacing:.04em}.invoice-title .meta{margin-top:5mm;font-size:10.5px;line-height:1.7;color:#6e635a}.payment-state{display:inline-flex;margin-top:4mm;border:1px solid var(--dark);padding:6px 9px;font-size:8.5px;letter-spacing:1.6px;text-transform:uppercase;font-weight:900;color:var(--dark)}.payment-state.paid{background:#167a4b;border-color:#167a4b;color:#fff}.payment-state.partial{background:#fff7df;border-color:#b8922a;color:#7b5a00}.payment-state.overdue{border-color:#bd3d32;color:#bd3d32}.parties{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18mm;padding:0 0 8mm;margin-bottom:8mm}.label{font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:3mm}.party-name{font-size:14px;font-weight:800;line-height:1.25;margin-bottom:2mm}.items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:8mm}.items th{background:transparent;color:#18130f;border-bottom:2px solid var(--dark);font-size:8.5px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:0 10px 7px}.items th:nth-child(1){width:49%}.items th:nth-child(2){width:10%}.items th:nth-child(3){width:20%}.items th:nth-child(4){width:21%}.items th:nth-child(n+2),.items td:nth-child(n+2){text-align:right}.items td{border-bottom:1px solid var(--line);padding:9px 10px;font-size:10.5px;line-height:1.35;vertical-align:top;word-break:break-word}.line-no{display:inline-block;min-width:18px;margin-right:7px;font-weight:800;color:var(--accent)}.line-desc{font-weight:650}.money-row{display:flex;justify-content:space-between;gap:10mm;border-bottom:1px solid var(--line);padding:6px 0;font-size:10.5px;color:#594f47}.money-row b{color:#111;font-variant-numeric:tabular-nums}.invoice-bottom{display:grid;grid-template-columns:minmax(0,1fr) 74mm;gap:14mm;align-items:start;margin-top:auto;padding-top:0}.notes{padding-left:0;min-height:22mm}.note-text{font-size:10.5px;line-height:1.55;color:#6e635a;white-space:pre-line}.bank-details{margin-top:6mm;padding-top:4mm;border-top:1px solid var(--line);max-width:88mm}.bank-row{display:flex;justify-content:space-between;gap:6mm;padding:2px 0;font-size:9.5px;line-height:1.35;color:#6e635a}.bank-row b{color:#18130f;text-align:right;word-break:break-word}.totals{border-top:1px solid var(--line);padding-top:2mm}.grand{margin-top:4mm;background:var(--dark);color:#fff!important;border:0;padding:11px 13px;align-items:center}.grand span{font-size:8.5px;letter-spacing:2.8px;text-transform:uppercase;font-weight:800}.grand b{font-size:17px;color:#fff}.grand.settled{background:#167a4b}.powered{margin-top:8mm;padding-top:7mm;text-align:center;font-size:9px;letter-spacing:.04em;color:#7d736a}.powered b{color:#18130f}.view-classic .invoice-title h1,.view-olden .invoice-title h1{text-transform:none;letter-spacing:0}.view-olden .brand-rule{height:6px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.view-minimal .brand-rule,.view-minimal .grand{background:#111}.view-bold .brand-rule{background:var(--dark)}.tpl-pop .grand{background:var(--accent);color:#1b1713}.tpl-green .grand,.tpl-yellow .grand{background:var(--accent);color:#111}.tpl-green .grand b,.tpl-yellow .grand b,.tpl-pop .grand b{color:#111}@media print{html,body{background:#fff}.invoice-page{box-shadow:none;margin:0;min-height:297mm;height:auto}}';
     css += 'html,body{width:210mm!important;min-height:297mm!important}.invoice-page{width:210mm!important;min-height:297mm!important;height:297mm!important;padding:14mm 15mm 11mm!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.brand-rule{height:5px!important;margin-bottom:10mm!important;flex:0 0 auto}.invoice-head{grid-template-columns:minmax(0,1fr) 62mm!important;gap:12mm!important;margin-bottom:9mm!important;padding-bottom:8mm!important;flex:0 0 auto}.logo-img{max-height:22mm!important;margin-bottom:4mm!important}.logo-box{width:29mm!important;height:17mm!important;margin-bottom:4mm!important}.biz-name{font-size:26px!important}.muted{font-size:11.5px!important;line-height:1.55!important}.invoice-title h1{font-size:42px!important;letter-spacing:5px!important}.invoice-title .num{font-size:12.5px!important;margin-top:4mm!important}.invoice-title .meta{font-size:11px!important;line-height:1.7!important;margin-top:4mm!important}.parties{gap:18mm!important;padding-bottom:9mm!important;margin-bottom:9mm!important;flex:0 0 auto}.label{font-size:9px!important;margin-bottom:3mm!important}.party-name{font-size:15px!important;margin-bottom:2mm!important}.items{margin-bottom:10mm!important;break-inside:auto!important;page-break-inside:auto!important;flex:0 0 auto}.items thead{display:table-header-group}.items tr{break-inside:avoid;page-break-inside:avoid}.items th{font-size:9px!important;padding:0 9px 8px!important}.items td{font-size:12px!important;line-height:1.4!important;padding:10px 9px!important}.line-no{min-width:20px!important;margin-right:7px!important}.invoice-bottom{grid-template-columns:minmax(0,1fr) 76mm!important;gap:14mm!important;margin-top:auto!important;break-inside:avoid;page-break-inside:avoid;flex:0 0 auto}.notes{min-height:25mm!important}.note-text,.money-row{font-size:11.5px!important}.money-row{padding:7px 0!important}.grand{margin-top:4mm!important;padding:13px 14px!important}.grand b{font-size:19px!important}.powered{margin-top:9mm!important;padding-top:5mm!important;font-size:9px!important;break-inside:avoid;page-break-inside:avoid;flex:0 0 auto}.invoice-head,.parties{break-inside:avoid;page-break-inside:avoid}.density-compact{padding:11mm 13mm 9mm!important}.density-compact .brand-rule{margin-bottom:6mm!important}.density-compact .invoice-head{margin-bottom:6mm!important;padding-bottom:5mm!important}.density-compact .logo-img{max-height:16mm!important;margin-bottom:2mm!important}.density-compact .biz-name{font-size:23px!important}.density-compact .invoice-title h1{font-size:36px!important}.density-compact .parties{padding-bottom:5mm!important;margin-bottom:5mm!important}.density-compact .items{margin-bottom:5mm!important}.density-compact .items td{font-size:10.5px!important;padding:7px 8px!important}.density-compact .invoice-bottom{margin-top:auto!important}.density-compact .notes{min-height:0!important}.density-compact .money-row{font-size:10.5px!important;padding:5px 0!important}.density-compact .grand{padding:10px 12px!important}.density-compact .powered{margin-top:5mm!important;padding-top:3mm!important}.density-tight{padding:9mm 11mm 7mm!important}.density-tight .brand-rule{margin-bottom:4mm!important}.density-tight .invoice-head{margin-bottom:4mm!important;padding-bottom:4mm!important}.density-tight .logo-img{max-height:13mm!important;margin-bottom:1.5mm!important}.density-tight .logo-box{height:12mm!important;margin-bottom:1.5mm!important}.density-tight .biz-name{font-size:21px!important}.density-tight .muted{font-size:9.5px!important;line-height:1.35!important}.density-tight .invoice-title h1{font-size:32px!important}.density-tight .invoice-title .meta{font-size:9.5px!important;line-height:1.4!important;margin-top:2mm!important}.density-tight .parties{padding-bottom:3mm!important;margin-bottom:3mm!important}.density-tight .label{font-size:7.5px!important;margin-bottom:1.5mm!important}.density-tight .party-name{font-size:12px!important}.density-tight .items{margin-bottom:3mm!important}.density-tight .items th{font-size:7.5px!important;padding-bottom:4px!important}.density-tight .items td{font-size:9px!important;line-height:1.2!important;padding:5px 6px!important}.density-tight .invoice-bottom{margin-top:auto!important;grid-template-columns:minmax(0,1fr) 66mm!important;gap:8mm!important}.density-tight .notes{min-height:0!important}.density-tight .note-text,.density-tight .money-row{font-size:9px!important}.density-tight .money-row{padding:4px 0!important}.density-tight .grand{margin-top:2mm!important;padding:8px 9px!important}.density-tight .grand b{font-size:14px!important}.density-tight .powered{margin-top:3mm!important;padding-top:2mm!important;font-size:8px!important}@media print{html,body{width:210mm!important;min-height:297mm!important;height:297mm!important}.invoice-page{width:210mm!important;min-height:297mm!important;height:297mm!important;overflow:hidden!important}}';
     css += 'body{background:#fff!important}@media print{html,body{background:#fff!important}}';
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceEscape(title) + '</title><style>' + css + '</style></head><body>' +
@@ -1028,7 +1067,7 @@
       '<section class="invoice-head"><div class="brand">' + logo + '<div class="biz-name">' + invoiceEscape(s.biz) + '</div><div class="muted">' + invoiceBreaks(s.addr) + (s.email ? '<br>' + invoiceEscape(s.email) : '') + (s.vat ? '<br>VAT: ' + invoiceEscape(s.vat) : '') + '</div></div><div class="invoice-title"><h1>' + invoiceEscape(documentLabel) + '</h1><div class="num">' + invoiceEscape(title) + '</div>' + (documentLabel === 'Invoice' ? '<div class="payment-state ' + invoiceEscape(status) + '">' + invoiceEscape(statusLabel) + '</div>' : '') + '<div class="meta"><div>Date: ' + humanDate(inv.date) + '</div><div>' + (documentLabel === 'Invoice' ? 'Due' : 'Valid until') + ': ' + humanDate(inv.due) + '</div><div>Terms: ' + invoiceEscape(inv.terms || 'Net 30') + '</div></div></div></section>' +
       '<section class="parties"><div><div class="label">From</div><div class="party-name">' + invoiceEscape(s.biz) + '</div><div class="muted">' + invoiceBreaks(s.addr) + (s.email ? '<br>' + invoiceEscape(s.email) : '') + '</div></div><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="muted">' + invoiceBreaks(inv.caddr || '') + (inv.cemail ? '<br>' + invoiceEscape(inv.cemail) : '') + (inv.cphone ? '<br>' + invoiceEscape(inv.cphone) : '') + '</div></div></section>' +
       '<table class="items"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<section class="invoice-bottom"><div class="notes"><div class="label">Notes</div><div class="note-text">' + invoiceBreaks(note) + '</div></div><div class="totals"><div class="money-row"><span>Subtotal</span><b>' + invoiceMoney(cur, sub) + '</b></div>' + (discAmount ? '<div class="money-row"><span>Discount</span><b>- ' + invoiceMoney(cur, discAmount) + '</b></div>' : '') + (vat ? '<div class="money-row"><span>Tax / VAT</span><b>' + invoiceMoney(cur, vat) + '</b></div>' : '') + (documentLabel === 'Invoice' && paid > 0.01 ? '<div class="money-row"><span>Invoice total</span><b>' + invoiceMoney(cur, total) + '</b></div><div class="money-row"><span>Paid</span><b>- ' + invoiceMoney(cur, paid) + '</b></div>' : '') + '<div class="money-row grand' + (status === 'paid' && documentLabel === 'Invoice' ? ' settled' : '') + '"><span>' + (documentLabel !== 'Invoice' ? 'Total' : (status === 'partial' || status === 'paid' ? 'Balance due' : 'Total due')) + '</span><b>' + invoiceMoney(cur, documentLabel === 'Invoice' && paid > 0.01 ? balance : total) + '</b></div></div></section>' +
+      '<section class="invoice-bottom"><div class="notes"><div class="label">Notes</div><div class="note-text">' + invoiceBreaks(note) + '</div>' + bankHtml + '</div><div class="totals"><div class="money-row"><span>Subtotal</span><b>' + invoiceMoney(cur, sub) + '</b></div>' + (discAmount ? '<div class="money-row"><span>Discount</span><b>- ' + invoiceMoney(cur, discAmount) + '</b></div>' : '') + (vat ? '<div class="money-row"><span>Tax / VAT</span><b>' + invoiceMoney(cur, vat) + '</b></div>' : '') + (documentLabel === 'Invoice' && paid > 0.01 ? '<div class="money-row"><span>Invoice total</span><b>' + invoiceMoney(cur, total) + '</b></div><div class="money-row"><span>Paid</span><b>- ' + invoiceMoney(cur, paid) + '</b></div>' : '') + '<div class="money-row grand' + (status === 'paid' && documentLabel === 'Invoice' ? ' settled' : '') + '"><span>' + (documentLabel !== 'Invoice' ? 'Total' : (status === 'partial' || status === 'paid' ? 'Balance due' : 'Total due')) + '</span><b>' + invoiceMoney(cur, documentLabel === 'Invoice' && paid > 0.01 ? balance : total) + '</b></div></div></section>' +
       '<div class="powered"><b>' + DEFAULT_INVOICE_FOOTER + '</b></div></div></body></html>';
   };
 
