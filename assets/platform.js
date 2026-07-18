@@ -1038,6 +1038,10 @@
     var title = inv.num || inv.id || 'PREVIEW';
     var documentLabel = String(opts.documentLabel || inv.documentLabel || inv.documentType || 'Invoice');
     documentLabel = /^quote$/i.test(documentLabel) ? 'Quote' : (/^estimate$/i.test(documentLabel) ? 'Estimate' : 'Invoice');
+    var bankRows = documentLabel === 'Invoice' ? invoiceBankRows(s) : [];
+    var bankHtml = bankRows.length ? '<div class="bank-details"><div class="label">Bank details</div>' + bankRows.map(function(row) {
+      return '<div class="bank-row"><span>' + invoiceEscape(row[0]) + '</span><b>' + invoiceEscape(row[1]) + '</b></div>';
+    }).join('') + '</div>' : '';
     var logoWidth = s.logoSize === 'L' ? 42 : (s.logoSize === 'S' ? 24 : 34);
     var logoStyle = 'max-width:' + logoWidth + 'mm;max-height:24mm';
     var logo = s.logo

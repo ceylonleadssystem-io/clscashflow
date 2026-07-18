@@ -250,9 +250,27 @@ test('shared invoice outputs render bank details only for invoices', function() 
   const platform = read('assets/platform.js');
   assert.match(platform, /function invoiceBankRows\(settings\)/);
   assert.match(platform, /function invoiceBankEmailHtml\(settings\)/);
-  assert.match(platform, /documentLabel === 'Invoice' \? invoiceBankRows\(s\) : \[\]/);
+  const rendererCount = (platform.match(/window\.clsBuildInvoicePrintHtml = function/g) || []).length;
+  const bankBlockCount = (platform.match(/var bankRows = documentLabel === 'Invoice' \? invoiceBankRows\(s\) : \[\]/g) || []).length;
+  assert.equal(bankBlockCount, rendererCount, 'every invoice renderer must prepare its own bank details block');
   assert.match(platform, /class="bank-details"/);
   assert.match(platform, /var bankHtml = invoiceBankEmailHtml\(opts\.settings \|\| opts\)/);
+});
+
+test('all application pages load the current invoice renderer without stale caching', function() {
+  const version = '20260718-bank-details-v2';
+  const pages = [
+    'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
+    'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
+    'access-admin.html', 'ceylonry-admin.html', 'mrs-gamage-story.html',
+    'privacy.html', 'terms.html'
+  ];
+  for (const file of pages) {
+    assert.match(read(file), new RegExp('assets/platform\\.js\\?v=' + version));
+  }
+
+  const netlify = read('netlify.toml');
+  assert.match(netlify, /for = "\/assets\/platform\.js"[\s\S]*Cache-Control = "public, max-age=0, must-revalidate"/);
 });
 
 test('public invoice page receives bank details from the sanitized snapshot', function() {

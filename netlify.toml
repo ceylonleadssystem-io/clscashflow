@@ -40,6 +40,14 @@
     Cache-Control = "public, max-age=31536000, immutable"
     Netlify-CDN-Cache-Control = "public, durable, max-age=31536000, immutable"
 
+# The shared application runtime controls invoice rendering and changes often.
+# Revalidate it so an older renderer cannot survive a deploy.
+[[headers]]
+  for = "/assets/platform.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Netlify-CDN-Cache-Control = "public, max-age=0, must-revalidate"
+
 # Public invoice links can become available immediately after a reminder is
 # created. Never retain an earlier not-found page in a mobile browser cache.
 [[headers]]
