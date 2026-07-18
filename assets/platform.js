@@ -2300,7 +2300,7 @@
     if (!target) return;
     rows = rows || [];
     if (!rows.length) {
-      target.innerHTML = '<div class="cls-sp-status">Start a chat with Mrs. Gamage. Staff can see this in the admin panel and reply from there.</div>';
+      target.innerHTML = '<div class="cls-sp-status">Start a chat with Priority Support. You will receive a reply within 30 minutes.</div>';
       return;
     }
     target.innerHTML = rows.map(function(row) {
@@ -2646,7 +2646,8 @@
         '<div><div class="cls-danger-kicker">Danger Zone</div><div class="cls-danger-title">Account Controls</div><div class="cls-danger-copy">Reset clears operational records while keeping your account. Delete removes the login account after feedback is saved.</div></div>' +
         '<div class="cls-danger-actions"><button type="button" class="cls-danger-btn" data-danger-action="resetData">Reset Data</button><button type="button" class="cls-danger-btn fill" data-danger-action="deleteAccount">Delete Account</button></div>' +
       '</div>';
-    (document.getElementById('settings-security-widgets') || settingsView).appendChild(wrap);
+    var profilePanel = settingsView.querySelector('[data-account-panel="profile"]');
+    (document.getElementById('settings-account-security-widgets') || profilePanel || document.getElementById('settings-security-widgets') || settingsView).appendChild(wrap);
     wrap.addEventListener('click', function(ev) {
       var btn = ev.target.closest('[data-danger-action]');
       if (!btn) return;
@@ -2671,32 +2672,11 @@
     wrap.id = SUPPORT_ID;
     wrap.className = 'cls-settings-support-card';
     wrap.innerHTML =
-      '<div class="cls-support-top">' +
-        '<div>' +
-          '<div class="cls-support-kicker">Support</div>' +
-          '<div class="cls-support-title">Need help?</div>' +
-          '<div class="cls-support-copy">Chat with Mrs. Gamage for quick help, or send a support ticket for anything the team should track formally.</div>' +
-        '</div>' +
-        '<button type="button" class="cls-support-toggle">New ticket</button>' +
-      '</div>' +
-	      '<form id="cls-support-form" class="cls-support-form">' +
-	        '<div><label>Name</label><input name="name" autocomplete="name"></div>' +
-	        '<div><label>Email</label><input name="email" type="email" autocomplete="email" required></div>' +
-	        '<div><label>Issue type</label><select name="type"><option>Question</option><option>Bug</option><option>Billing</option><option>Invoice/PDF issue</option><option>Account access</option></select></div>' +
-	        '<div><label>Priority</label><select name="priority"><option>Normal</option><option>High</option><option>Urgent</option></select></div>' +
-	        '<div class="full"><label>Message</label><textarea name="message" required placeholder="Tell us what happened..."></textarea></div>' +
-	        '<button class="cls-sp-submit" type="submit">Send ticket</button>' +
-	        '<div class="cls-sp-status" id="cls-support-status">This will be saved as a support ticket.</div>' +
-	      '</form>' +
 	      '<div class="cls-live-chat">' +
-	        '<div class="cls-ticket-head"><div><div class="cls-support-kicker">Mrs. Gamage live chat</div><div class="cls-support-copy">Send a message to our 24/7 help line. Staff replies appear here and in the admin system.</div></div><button type="button" class="cls-ticket-refresh" data-refresh-chat>Refresh</button></div>' +
+	        '<div class="cls-ticket-head"><div><div class="cls-support-kicker">Priority Support Chat</div><div class="cls-support-title">How can we help?</div><div class="cls-support-copy">Send us a message and receive a reply within 30 minutes.</div></div><button type="button" class="cls-ticket-refresh" data-refresh-chat>Refresh</button></div>' +
 	        '<div class="cls-chat-messages" data-chat-list><div class="cls-sp-status">Loading chat...</div></div>' +
 	        '<form class="cls-chat-compose" data-chat-form><textarea name="chatMessage" required placeholder="Type your message..."></textarea><button class="cls-sp-submit" type="submit">Send</button></form>' +
-	        '<div class="cls-sp-status" data-chat-status>Messages are saved to your account so our team can continue the conversation.</div>' +
-	      '</div>' +
-	      '<div class="cls-ticket-list">' +
-	        '<div class="cls-ticket-head"><div><div class="cls-support-kicker">My tickets</div><div class="cls-support-copy">Track open, in progress, and closed support tickets.</div></div><button type="button" class="cls-ticket-refresh" data-refresh-tickets>Refresh</button></div>' +
-	        '<div data-ticket-list><div class="cls-sp-status">Loading tickets...</div></div>' +
+	        '<div class="cls-sp-status" data-chat-status>Messages stay with your account so the conversation can continue here.</div>' +
 	      '</div>';
     (document.getElementById('settings-security-widgets') || settingsView).appendChild(wrap);
 
@@ -2704,56 +2684,21 @@
     function loadSupportActivity() {
       if (supportActivityLoaded) return;
       supportActivityLoaded = true;
-      refreshMyTickets(wrap);
       subscribeChat(wrap);
     }
     document.addEventListener('cls:settings-tab', function(ev) {
       if (ev && ev.detail && ev.detail.tab === 'support') loadSupportActivity();
     });
 
-	    wrap.querySelector('.cls-support-toggle').addEventListener('click', function() {
-	      wrap.classList.toggle('open');
-      if (wrap.classList.contains('open')) loadSupportActivity();
-	    });
-    wrap.querySelector('[data-refresh-tickets]').addEventListener('click', function() {
-      supportActivityLoaded = true;
-      refreshMyTickets(wrap);
-    });
     wrap.querySelector('[data-refresh-chat]').addEventListener('click', function() {
       supportActivityLoaded = true;
       refreshChat(wrap);
     });
-    wrap.addEventListener('click', function(ev) {
-      var btn = ev.target.closest('[data-close-ticket]');
-      if (!btn) return;
-      btn.disabled = true;
-      btn.textContent = 'Closing...';
-      closeMyTicket(btn.getAttribute('data-close-ticket'), wrap).catch(function(e) {
-        btn.disabled = false;
-        btn.textContent = 'Close ticket';
-        alert(e.message || 'Could not close ticket.');
-      });
-    });
-
-    var user = getAuthUser();
-    if (user) {
-      var nameInput = wrap.querySelector('input[name="name"]');
-      var emailInput = wrap.querySelector('input[name="email"]');
-      if (nameInput && user.displayName) nameInput.value = user.displayName;
-      if (emailInput && user.email) emailInput.value = user.email;
-    }
 
     try {
       if (window.firebase && firebase.apps && firebase.apps.length && firebase.auth) {
         firebase.auth().onAuthStateChanged(function(nextUser) {
-          var nameInput = wrap.querySelector('input[name="name"]');
-          var emailInput = wrap.querySelector('input[name="email"]');
-          if (nextUser) {
-            if (nameInput && nextUser.displayName && !nameInput.value) nameInput.value = nextUser.displayName;
-            if (emailInput && nextUser.email) emailInput.value = nextUser.email;
-          }
           if (supportActivityLoaded) {
-            refreshMyTickets(wrap);
             subscribeChat(wrap);
           }
         });
@@ -2771,51 +2716,16 @@
         try {
           await sendChatMessage(wrap, text);
           if (field) field.value = '';
-          if (status) status.textContent = 'Sent. Mrs. Gamage will reply here.';
+          if (status) status.textContent = 'Sent. Priority Support will reply within 30 minutes.';
         } catch (e) {
           if (status) status.textContent = e.message || 'Could not send message right now.';
         }
       });
     }
 
-    var supportForm = wrap.querySelector('#cls-support-form');
-    supportForm.addEventListener('submit', async function(ev) {
-      ev.preventDefault();
-      var form = ev.currentTarget;
-	      var status = document.getElementById('cls-support-status');
-	      var data = Object.fromEntries(new FormData(form).entries());
-	      data.email = cleanString(data.email, 180).toLowerCase();
-	      data.page = location.href;
-      data.utcAt = nowIso();
-      data.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-      Object.assign(data, await currentUserPayload());
-      status.textContent = 'Sending...';
-      try {
-        var res = await fetch('/.netlify/functions/submit-ticket', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        var json = await res.json().catch(function() { return {}; });
-        if (!res.ok || json.ok === false) throw new Error(json.error || 'Could not send ticket');
-        if (json.storage && json.storage.stored === false) {
-          await saveSupportFallback(data);
-        }
-	        status.textContent = 'Ticket sent. Our team will check it.';
-	        form.reset();
-	        refreshMyTickets(wrap);
-	      } catch (err) {
-	        try {
-	          await saveSupportFallback(data);
-	          status.textContent = 'Ticket sent. Our team will check it.';
-	          form.reset();
-	          refreshMyTickets(wrap);
-	        } catch (fallbackErr) {
-	          status.textContent = 'Could not send ticket. Please email hello@ceylonrylabs.io.';
-	        }
-	      }
-	    });
-	  }
+    var supportPanel = wrap.closest('[data-account-panel="support"]');
+    if (supportPanel && !supportPanel.hidden) loadSupportActivity();
+  }
 
   window.clsMountSupportWidget = mountSupportWidget;
 

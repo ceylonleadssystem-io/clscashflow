@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260718-bank-details-v2"></script>
+<script src="assets/platform.js?v=20260718-priority-chat"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -64,7 +64,7 @@ img,canvas,svg,video{max-width:100%}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;min-width:0;padding:1.75rem 2rem;background:var(--bg)}
 
 /* ── KPI CARDS ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin-bottom:1.5rem}
 .kpi-card{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--black);padding:1.35rem;position:relative;transition:box-shadow .2s}
 .kpi-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
 .kpi-card.gold-top{border-top-color:var(--gold)}
@@ -81,6 +81,22 @@ img,canvas,svg,video{max-width:100%}
 .chart-card-title{font-family:var(--font-d);font-size:1.05rem;font-weight:400;color:var(--black);margin-bottom:.25rem}
 .chart-card-sub{font-size:.7rem;color:var(--muted);margin-bottom:1rem}
 .chart-area{height:200px;position:relative}
+.chart-area.tall{height:270px}
+.analytics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin-bottom:1.5rem}
+.analytics-metric{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--black);padding:1rem 1.1rem;min-width:0}
+.analytics-metric.good{border-top-color:var(--green)}
+.analytics-metric.warn{border-top-color:var(--amber)}
+.analytics-metric.bad{border-top-color:var(--red)}
+.analytics-label{font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.analytics-value{font-family:var(--font-d);font-size:1.35rem;color:var(--black);margin-top:.35rem;overflow-wrap:anywhere}
+.analytics-note{font-size:.65rem;line-height:1.45;color:var(--muted);margin-top:.25rem}
+.position-meter{height:9px;background:var(--bg3);border:1px solid var(--border);margin:.7rem 0 .4rem;overflow:hidden}
+.position-meter-fill{height:100%;background:var(--green);transition:width .45s ease}
+.position-meter-fill.watch{background:var(--amber)}
+.position-meter-fill.risk{background:var(--red)}
+.report-section-copy{font-size:.68rem;color:var(--muted);margin-top:.15rem}
+.report-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.report-table-wrap table{min-width:720px}
 
 /* Category breakdown */
 .cat-list{display:flex;flex-direction:column;gap:.6rem;margin-top:.5rem}
@@ -409,6 +425,8 @@ body.is-admin .admin-only{display:flex}
 #view-settings .tpl-picker{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
 #view-settings .btn-act,#view-settings .btn-act-outline{border-radius:999px}
 #view-settings #cls-billing-widget,#view-settings #cls-support-widget,#view-settings #cls-danger-zone-widget{border-radius:8px;max-width:none!important}
+#view-settings.support-focus-mode .settings-page-head{display:none}
+#view-settings.support-focus-mode #cls-support-widget{margin-top:0}
 .tour-ov{position:fixed;inset:0;background:rgba(26,23,20,.12);z-index:9998;display:block;padding:0;pointer-events:none}
 .tour-box{background:#fff;width:100%;max-width:470px;box-shadow:0 18px 55px rgba(0,0,0,.18);margin:5.5rem 2rem 0 auto;pointer-events:auto;border:1px solid var(--border)}
 .tour-head{padding:1.3rem 1.5rem;border-bottom:2px solid var(--black);display:flex;align-items:center;justify-content:space-between;gap:1rem}
@@ -433,6 +451,7 @@ body.is-admin .admin-only{display:flex}
   .quote-filter-tools{grid-template-columns:1fr 1fr!important}
   .table-tools .btn-act-outline{width:100%}
   .dashboard-followup-grid{grid-template-columns:1fr}
+  .analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:620px){
   .table-tools{grid-template-columns:1fr}
@@ -441,6 +460,7 @@ body.is-admin .admin-only{display:flex}
   .reminder-actions{justify-content:flex-start}
   .aging-row{grid-template-columns:1fr auto}
   .aging-count{grid-column:1/-1}
+  .analytics-grid{grid-template-columns:1fr}
 }
 
 /* Windows 125%/150% display scaling reduces a 1920px screen to a 1536/1280px CSS viewport. */
@@ -698,8 +718,22 @@ document.addEventListener('click',function(e){
         <div class="kpi-card gold-top"><div class="kpi-icon">🧾</div><div class="kpi-label">Total Invoiced</div><div class="kpi-val" id="kpi-total-invoiced">LKR 0</div><div class="kpi-sub">All invoices</div></div>
         <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-label">Paid Amount</div><div class="kpi-val" id="kpi-paid-amount">LKR 0</div><div class="kpi-sub">Collected payments</div></div>
         <div class="kpi-card gold-top"><div class="kpi-icon">⏳</div><div class="kpi-label">Outstanding Amount</div><div class="kpi-val" id="kpi-outstanding">LKR 0</div><div class="kpi-sub" id="kpi-outstanding-sub">Awaiting payment</div></div>
+        <div class="kpi-card"><div class="kpi-icon">↗</div><div class="kpi-label">Expenses This Month</div><div class="kpi-val" id="kpi-month-expenses">LKR 0</div><div class="kpi-sub" id="kpi-month-expenses-sub">Recorded cash out</div></div>
+        <div class="kpi-card"><div class="kpi-icon">◎</div><div class="kpi-label">Net Cash Position</div><div class="kpi-val" id="kpi-net-cash">LKR 0</div><div class="kpi-sub" id="kpi-net-cash-sub">Cash in less cash out</div></div>
         <div class="kpi-card"><div class="kpi-icon">⚠</div><div class="kpi-label">Overdue Invoices</div><div class="kpi-val" id="kpi-overdue-count">0</div><div class="kpi-sub" id="kpi-overdue-sub">Past due</div></div>
-        <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-label">This Month Invoice Value</div><div class="kpi-val" id="kpi-month-invoiced">LKR 0</div><div class="kpi-sub">Issued this month</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-card-title">Cash In vs Cash Out</div>
+          <div class="chart-card-sub">Recorded movement across the last six months</div>
+          <div class="chart-area"><canvas id="cashflow-chart" aria-label="Cash in and cash out over six months"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Expense Mix</div>
+          <div class="chart-card-sub">Where this month&rsquo;s spending went</div>
+          <div class="chart-area" style="height:150px"><canvas id="exp-chart" aria-label="Expense categories this month"></canvas></div>
+          <div class="cat-list" id="cat-list"></div>
+        </div>
       </div>
       <div class="dashboard-followup-grid">
         <div class="reminder-panel">
@@ -830,6 +864,20 @@ document.addEventListener('click',function(e){
     <!-- ═ BUSINESS INSIGHTS ═ -->
     <div class="view" id="view-insights">
       <div class="sum-bar c3" id="insight-summary"></div>
+      <div class="analytics-grid" id="insight-metrics"></div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-card-title">Business Performance</div>
+          <div class="chart-card-sub">Invoiced, cash collected, and expenses across the last six months</div>
+          <div class="chart-area tall"><canvas id="insight-performance-chart" aria-label="Six month business performance"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Expense Distribution</div>
+          <div class="chart-card-sub">Share of recorded spending by category</div>
+          <div class="chart-area" style="height:180px"><canvas id="insight-expense-chart" aria-label="Expense distribution"></canvas></div>
+          <div class="cat-list" id="insight-expense-list"></div>
+        </div>
+      </div>
       <div class="report-grid">
         <div class="report-card">
           <div class="report-card-title">Cashflow Health</div>
@@ -845,6 +893,7 @@ document.addEventListener('click',function(e){
           <div><div class="table-title">Studio Business Snapshot</div><div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">A simple operational view based on your recorded invoices, income, expenses, and suppliers.</div></div>
           <button class="btn-act-outline" data-nav="reports">Open Reports</button>
         </div>
+        <div id="insight-snapshot" style="padding:1rem 1.25rem"></div>
       </div>
     </div>
 
@@ -852,8 +901,8 @@ document.addEventListener('click',function(e){
     <div class="view" id="view-reports">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
         <div>
-          <div style="font-family:var(--font-d);font-size:1.5rem;color:var(--black)">Invoice Reports</div>
-          <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Invoice summary, paid vs unpaid, overdue invoices, and customer-wise reports</div>
+          <div style="font-family:var(--font-d);font-size:1.5rem;color:var(--black)">Financial Reports</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Invoices, collections, expenses, cashflow, and customer performance in one view</div>
         </div>
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
         <select class="f-input f-select" id="report-period" style="width:auto;padding:.5rem 2rem .5rem .85rem" onchange="onReportPeriodChange()">
@@ -884,10 +933,26 @@ document.addEventListener('click',function(e){
           <div class="report-card-title">Paid vs Unpaid</div>
           <div id="cf-report"></div>
         </div>
+        <div class="report-card">
+          <div class="report-card-title">Expense Summary</div>
+          <div id="expense-report"></div>
+        </div>
+        <div class="report-card">
+          <div class="report-card-title">Cashflow Position</div>
+          <div id="cash-position-report"></div>
+        </div>
       </div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Customer-wise Invoice Report</div></div>
         <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div><div class="table-title">Expense Category Report</div><div class="report-section-copy">Recorded spending grouped by category for the selected period</div></div></div>
+        <div class="report-table-wrap"><table><thead><tr><th>Category</th><th>Entries</th><th>Share</th><th>Amount (LKR)</th></tr></thead><tbody id="expense-category-table"></tbody></table></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div><div class="table-title">Monthly Performance</div><div class="report-section-copy">Invoice value, cash collected, expenses, and net cash movement</div></div></div>
+        <div class="report-table-wrap"><table><thead><tr><th>Month</th><th>Invoiced (LKR)</th><th>Cash In (LKR)</th><th>Expenses (LKR)</th><th>Net Cash (LKR)</th></tr></thead><tbody id="monthly-performance-table"></tbody></table></div>
       </div>
     </div>
 
@@ -1933,7 +1998,7 @@ const tourSteps=[
   {view:'insights',title:'Business Insights',body:'<p>Studio turns your recorded data into practical checks.</p><div class="tour-list"><div><strong>Monitor:</strong> cash position, margin, outstanding invoices, overdue invoices, and top expenses.</div><div><strong>Act:</strong> use the next-step prompts to focus attention.</div></div>'},
   {view:'team',title:'Team Access',body:'<p>Studio team access is simple and limited to five users.</p><div class="tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> create invoices, manage customers, and mark payments.</div><div><strong>Accountant:</strong> dashboard, invoices, customers, and reports only.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
   {view:'backlog',title:'Edit Backlog',body:'<p>Admins can review invoice, customer, and payment changes.</p><div class="tour-list"><div><strong>Audit fields:</strong> date, edited item, previous value, new value, edited by, and reason.</div></div>'},
-  {view:'support',title:'Priority Support',body:'<p>Studio includes direct support tools.</p><div class="tour-list"><div><strong>Live chat:</strong> message Mrs. Gamage and continue the conversation from your account.</div><div><strong>Tickets:</strong> submit and track formal support requests.</div></div>'},
+  {view:'support',title:'Priority Support',body:'<p>Chat directly with Priority Support from your account.</p><div class="tour-list"><div><strong>Fast response:</strong> receive a reply within 30 minutes.</div><div><strong>Continuous history:</strong> return to this page to continue the conversation.</div></div>'},
   {view:'settings',title:'Settings',body:'<p>Settings controls the business profile used on invoices and reports.</p><div class="tour-list"><div><strong>Invoice profile:</strong> business name, logo, address, invoice email, VAT/tax number, default tax rate, template, and notes.</div><div><strong>Billing:</strong> trial and upgrade controls stay here.</div></div>'}
 ];
 let tourIndex=0;
@@ -1991,10 +2056,12 @@ function maybeStartFirstTour(){
 // ════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════
-const pageTitles={dashboard:['Studio Cashflow Control','Your invoices, cashflow, and operations at a glance'],cashflow:['Money In & Out','Record income and outgoing payments in one register'],expenses:['Expenses','Track business spending by supplier and category'],invoices:['Invoice Management','Create and send invoices, quotes, and estimates'],clients:['Customer Directory','Manage your customers and billing contacts'],suppliers:['Supplier Management','Manage vendors and link them to business spending'],reports:['Reports','Invoice, payment, and customer reporting'],insights:['Business Insights','Simple cashflow and operational checks for better decisions'],team:['Team Access','Control Studio roles for up to 5 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],support:['Priority Support','Chat with the support team or raise a tracked ticket'],settings:['Business Settings','Manage your invoice profile and preferences']};
+const pageTitles={dashboard:['Studio Cashflow Control','Your invoices, cashflow, and operations at a glance'],cashflow:['Money In & Out','Record income and outgoing payments in one register'],expenses:['Expenses','Track business spending by supplier and category'],invoices:['Invoice Management','Create and send invoices, quotes, and estimates'],clients:['Customer Directory','Manage your customers and billing contacts'],suppliers:['Supplier Management','Manage vendors and link them to business spending'],reports:['Reports','Invoice, payment, and customer reporting'],insights:['Business Insights','Simple cashflow and operational checks for better decisions'],team:['Team Access','Control Studio roles for up to 5 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],support:['Priority Support','Chat with Priority Support. Replies within 30 minutes.'],settings:['Business Settings','Manage your invoice profile and preferences']};
 window.nav = function nav(view){
   if(view==='backlog'&&!isAdminUser()) view='dashboard';
   const actualView=view==='support'?'settings':view;
+  const settingsView=document.getElementById('view-settings');
+  if(settingsView)settingsView.classList.toggle('support-focus-mode',view==='support');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   var _vel=document.getElementById('view-'+actualView);if(_vel)_vel.classList.add('active');
@@ -2214,8 +2281,9 @@ function clearSupplierPicker(prefix){
 // ════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════
-let cfChart=null, expChart=null;
+let cfChart=null, expChart=null, insightPerformanceChart=null, insightExpenseChart=null;
 let chartRenderToken=0;
+let insightChartRenderToken=0;
 const MS_DAY=86400000;
 function loadChartLibrary(){
   if(window.Chart) return Promise.resolve(window.Chart);
@@ -2232,18 +2300,89 @@ function loadChartLibrary(){
   }
   return window._clsChartLoader;
 }
+function waitForChartLibrary(){
+  return Promise.race([
+    loadChartLibrary(),
+    new Promise(function(_,reject){setTimeout(function(){reject(new Error('Chart library timed out'));},1500);})
+  ]);
+}
+function prepareFallbackCanvas(canvas){
+  const rect=canvas.getBoundingClientRect();
+  const width=Math.max(320,Math.round(rect.width||canvas.parentElement.clientWidth||640));
+  const height=Math.max(180,Math.round(rect.height||canvas.parentElement.clientHeight||240));
+  const ratio=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);
+  const ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
+  return {ctx,width,height};
+}
+function compactChartValue(value){
+  value=Number(value)||0;
+  if(Math.abs(value)>=1000000)return 'LKR '+(value/1000000).toFixed(1)+'M';
+  if(Math.abs(value)>=1000)return 'LKR '+Math.round(value/1000)+'K';
+  return 'LKR '+Math.round(value);
+}
+function drawFallbackSeriesChart(canvas,labels,series){
+  const prepared=prepareFallbackCanvas(canvas),ctx=prepared.ctx,width=prepared.width,height=prepared.height;
+  const pad={left:58,right:18,top:28,bottom:38};
+  const plotW=width-pad.left-pad.right,plotH=height-pad.top-pad.bottom;
+  const all=series.reduce(function(values,item){return values.concat(item.data||[]);},[]);
+  const max=Math.max.apply(null,all.concat([1]));
+  ctx.font='10px Arial';ctx.textBaseline='middle';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad.top+(plotH*i/4),value=max*(1-i/4);
+    ctx.strokeStyle='rgba(31,27,24,.08)';ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(width-pad.right,y);ctx.stroke();
+    ctx.fillStyle='#7A726A';ctx.textAlign='right';ctx.fillText(compactChartValue(value),pad.left-8,y);
+  }
+  const slot=plotW/Math.max(labels.length,1),barSeries=series.filter(function(item){return item.type!=='line';});
+  const barW=Math.max(5,Math.min(24,(slot*.68)/Math.max(barSeries.length,1)));
+  series.forEach(function(item,seriesIndex){
+    if(item.type==='line'){
+      ctx.strokeStyle=item.color;ctx.fillStyle=item.color;ctx.lineWidth=2;ctx.beginPath();
+      item.data.forEach(function(value,index){const x=pad.left+slot*(index+.5),y=pad.top+plotH-(Number(value||0)/max*plotH);if(index===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();
+      item.data.forEach(function(value,index){const x=pad.left+slot*(index+.5),y=pad.top+plotH-(Number(value||0)/max*plotH);ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});
+      return;
+    }
+    const barIndex=barSeries.indexOf(item);
+    item.data.forEach(function(value,index){const h=Number(value||0)/max*plotH,x=pad.left+slot*(index+.5)-(barW*barSeries.length/2)+(barIndex*barW);ctx.fillStyle=item.color;ctx.fillRect(x,pad.top+plotH-h,Math.max(3,barW-2),h);});
+  });
+  labels.forEach(function(label,index){ctx.fillStyle='#6B6258';ctx.textAlign='center';ctx.fillText(label,pad.left+slot*(index+.5),height-17);});
+  let legendX=pad.left;
+  series.forEach(function(item){ctx.fillStyle=item.color;ctx.fillRect(legendX,8,10,10);ctx.fillStyle='#6B6258';ctx.textAlign='left';ctx.fillText(item.label,legendX+15,13);legendX+=ctx.measureText(item.label).width+42;});
+}
+function drawFallbackDonut(canvas,labels,values,colors){
+  const prepared=prepareFallbackCanvas(canvas),ctx=prepared.ctx,width=prepared.width,height=prepared.height;
+  const total=values.reduce(function(sum,value){return sum+Number(value||0);},0)||1;
+  const radius=Math.min(width,height)*.34,inner=radius*.66,cx=width/2,cy=height/2;
+  let angle=-Math.PI/2;
+  values.forEach(function(value,index){const next=angle+(Number(value||0)/total*Math.PI*2);ctx.beginPath();ctx.arc(cx,cy,radius,angle,next);ctx.arc(cx,cy,inner,next,angle,true);ctx.closePath();ctx.fillStyle=colors[index%colors.length];ctx.fill();angle=next;});
+  ctx.fillStyle='#1F1B18';ctx.font='600 18px Georgia';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(labels.length+' categor'+(labels.length===1?'y':'ies'),cx,cy-7);
+  ctx.fillStyle='#7A726A';ctx.font='10px Arial';ctx.fillText(compactChartValue(total).replace('LKR ',''),cx,cy+13);
+}
 function scheduleCharts(){
   const token=++chartRenderToken;
   const run=function(){
-    loadChartLibrary().then(function(){
+    waitForChartLibrary().then(function(){
       const active=document.querySelector('.view.active');
       if(active&&active.id!=='view-dashboard') return;
       if(token===chartRenderToken) buildCharts();
-    }).catch(function(e){console.warn('Chart load skipped:', e);});
+    }).catch(function(e){console.warn('Using dashboard chart fallback:', e);if(token===chartRenderToken)buildCharts();});
   };
   if(window.clsRunWhenIdle) window.clsRunWhenIdle(run, 900);
   else if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:900});
   else setTimeout(run,120);
+}
+function scheduleInsightCharts(){
+  const token=++insightChartRenderToken;
+  const run=function(){
+    waitForChartLibrary().then(function(){
+      const active=document.querySelector('.view.active');
+      if(active&&active.id!=='view-insights')return;
+      if(token===insightChartRenderToken)buildInsightCharts();
+    }).catch(function(e){console.warn('Using insight chart fallback:',e);if(token===insightChartRenderToken)buildInsightCharts();});
+  };
+  if(window.clsRunWhenIdle)window.clsRunWhenIdle(run,700);
+  else if('requestIdleCallback' in window)requestIdleCallback(run,{timeout:700});
+  else setTimeout(run,100);
 }
 function invoiceBalance(inv){
   return Math.max(0,(Number(inv.amount)||0)-(Number(inv.paidAmount)||0));
@@ -2271,11 +2410,20 @@ function renderDashboard(){
   const paidAmount=DB.invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
   const outstanding=DB.invoices.reduce((a,i)=>a+Math.max(0,(i.amount||0)-(i.paidAmount||0)),0);
   const overdue=DB.invoices.filter(i=>i.status!=='paid'&&new Date(i.due)<todayMs);
-  const monthValue=DB.invoices.filter(i=>new Date(i.date).getMonth()===mo&&new Date(i.date).getFullYear()===yr).reduce((a,i)=>a+(i.amount||0),0);
+  const monthPredicate=function(item){const d=new Date(item.date);return d.getMonth()===mo&&d.getFullYear()===yr;};
+  const monthExpenses=cashOutTotal(monthPredicate);
+  const recordedIncome=DB.transactions.filter(function(t){return t.type==='in';}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
+  const recordedOut=cashOutTotal();
+  const netCash=recordedIncome-recordedOut;
   animCount('kpi-total-invoiced',totalInvoiced);
   animCount('kpi-paid-amount',paidAmount);
   animCount('kpi-outstanding',outstanding);
-  animCount('kpi-month-invoiced',monthValue);
+  animCount('kpi-month-expenses',monthExpenses);
+  animCount('kpi-net-cash',netCash);
+  const expenseSub=document.getElementById('kpi-month-expenses-sub');
+  if(expenseSub){expenseSub.textContent=DB.expenses.filter(monthPredicate).length+' expense entr'+(DB.expenses.filter(monthPredicate).length===1?'y':'ies');expenseSub.style.color=monthExpenses>0?'var(--red)':'var(--muted)';}
+  const netSub=document.getElementById('kpi-net-cash-sub');
+  if(netSub){netSub.textContent=netCash>=0?'Positive recorded position':'Cash out exceeds cash in';netSub.style.color=netCash>=0?'var(--green)':'var(--red)';}
   const overdueEl=document.getElementById('kpi-overdue-count');if(overdueEl)overdueEl.textContent=String(overdue.length);
   const outCount=DB.invoices.filter(i=>i.status!=='paid').length;
   document.getElementById('kpi-outstanding-sub').textContent=outCount+' invoice'+(outCount!==1?'s':'')+' pending';
@@ -2344,7 +2492,6 @@ function animCount(id,target){
   requestAnimationFrame(tick);
 }
 function buildCharts(){
-  if(!window.Chart) return;
   const chartCanvas=document.getElementById('cashflow-chart');
   const expenseCanvas=document.getElementById('exp-chart');
   if(!chartCanvas||!expenseCanvas) return;
@@ -2357,18 +2504,22 @@ function buildCharts(){
     inData.push(DB.transactions.filter(t=>t.type==='in'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0));
     outData.push(cashOutTotal(function(item){const date=new Date(item.date);return date.getMonth()===mo&&date.getFullYear()===yr;}));
   }
-  const ctx1=chartCanvas.getContext('2d');
-  if(cfChart) cfChart.destroy();
-  cfChart=new Chart(ctx1,{type:'bar',data:{labels:months,datasets:[{label:'Cash In',data:inData,backgroundColor:'rgba(26,158,92,.65)',borderRadius:3},{label:'Cash Out',data:outData,backgroundColor:'rgba(192,57,43,.25)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6258',font:{size:10},boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9},callback:v=>v>=1000000?'LKR '+(v/1000000).toFixed(1)+'M':v>=1000?'LKR '+(v/1000).toFixed(0)+'K':'LKR '+v}}}}});
-  // Expense donut
-  const cats={};DB.expenses.filter(e=>new Date(e.date).getMonth()===today.getMonth()).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount;});
+  const cats={};DB.expenses.filter(function(e){const d=new Date(e.date);return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear();}).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount;});
   const catNames=Object.keys(cats);const catVals=Object.values(cats);
   const catColors=['#B8922A','#1B2E5C','#1F5C3A','#334155','#7C1D2E','#0F6B6B'];
-  const ctx2=expenseCanvas.getContext('2d');
-  if(expChart) expChart.destroy();
   const total=catVals.reduce((a,v)=>a+v,0)||1;
+  if(!window.Chart){
+    drawFallbackSeriesChart(chartCanvas,months,[{label:'Cash In',data:inData,color:'#1A9E5C'},{label:'Cash Out',data:outData,color:'#C46B61'}]);
+    if(catNames.length)drawFallbackDonut(expenseCanvas,catNames,catVals,catColors);
+  }else{
+    const ctx1=chartCanvas.getContext('2d');
+    if(cfChart)cfChart.destroy();
+    cfChart=new Chart(ctx1,{type:'bar',data:{labels:months,datasets:[{label:'Cash In',data:inData,backgroundColor:'rgba(26,158,92,.65)',borderRadius:3},{label:'Cash Out',data:outData,backgroundColor:'rgba(192,57,43,.25)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6258',font:{size:10},boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9},callback:v=>v>=1000000?'LKR '+(v/1000000).toFixed(1)+'M':v>=1000?'LKR '+(v/1000).toFixed(0)+'K':'LKR '+v}}}}});
+    const ctx2=expenseCanvas.getContext('2d');
+    if(expChart)expChart.destroy();
+    if(catNames.length)expChart=new Chart(ctx2,{type:'doughnut',data:{labels:catNames,datasets:[{data:catVals,backgroundColor:catNames.map((_,i)=>catColors[i%catColors.length]),borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false}}}});
+  }
   if(catNames.length){
-    expChart=new Chart(ctx2,{type:'doughnut',data:{labels:catNames,datasets:[{data:catVals,backgroundColor:catColors.slice(0,catNames.length),borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false}}}});
     document.getElementById('cat-list').innerHTML=catNames.map((n,i)=>`<div class="cat-item"><div class="cat-dot" style="background:${catColors[i%catColors.length]}"></div><span class="cat-name">${n}</span><span class="cat-pct">${Math.round(catVals[i]/total*100)}%</span></div>`).join('');
   } else {
     document.getElementById('cat-list').innerHTML='<div style="font-size:.78rem;color:var(--dim);padding:.5rem 0">No expenses this month</div>';
@@ -2695,9 +2846,28 @@ function renderBusinessInsights(){
   DB.expenses.forEach(function(e){var key=e.cat||'Other';categoryTotals[key]=(categoryTotals[key]||0)+Number(e.amount||0);});
   const topCategory=Object.entries(categoryTotals).sort(function(a,b){return b[1]-a[1];})[0];
   const margin=income>0?Math.round(net/income*100):0;
+  const invoiceTotal=DB.invoices.reduce(function(sum,inv){return sum+Number(inv.amount||0);},0);
+  const invoicePaid=DB.invoices.reduce(function(sum,inv){return sum+Number(inv.paidAmount||0);},0);
+  const collectionRate=invoiceTotal>0?Math.round(invoicePaid/invoiceTotal*100):0;
+  const expenseRatio=income>0?Math.round(totalOut/income*100):0;
+  const currentMonth=new Date();
+  const currentMonthMatch=function(item){const d=new Date(item.date);return d.getMonth()===currentMonth.getMonth()&&d.getFullYear()===currentMonth.getFullYear();};
+  const monthIncome=DB.transactions.filter(function(t){return t.type==='in'&&currentMonthMatch(t);}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
+  const monthOut=cashOutTotal(currentMonthMatch);
+  const monthNet=monthIncome-monthOut;
+  const overdueShare=DB.invoices.length?overdue.length/DB.invoices.length:0;
+  const positionScore=Math.max(0,Math.min(100,Math.round((net>=0?35:8)+(collectionRate*.4)+((1-Math.min(1,overdueShare))*25))));
+  const positionLabel=positionScore>=70?'Strong':positionScore>=45?'Watch':'At Risk';
+  const positionClass=positionScore>=70?'good':positionScore>=45?'warn':'bad';
   const supplierCount=DB.suppliers&&Array.isArray(DB.suppliers.list)?DB.suppliers.list.length:0;
   const summary=document.getElementById('insight-summary');
   if(summary)summary.innerHTML=`<div class="sum-item"><div class="sum-label">Recorded Income</div><div class="sum-val" style="color:var(--green)">${fmtAmt(income)}</div></div><div class="sum-item"><div class="sum-label">Recorded Expenses</div><div class="sum-val" style="color:var(--red)">${fmtAmt(totalOut)}</div></div><div class="sum-item"><div class="sum-label">Net Cash Position</div><div class="sum-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${fmtAmt(net)}</div></div>`;
+  const metrics=document.getElementById('insight-metrics');
+  if(metrics)metrics.innerHTML=`
+    <div class="analytics-metric ${collectionRate>=70?'good':collectionRate>=40?'warn':'bad'}"><div class="analytics-label">Collection Rate</div><div class="analytics-value">${collectionRate}%</div><div class="analytics-note">${fmtAmt(invoicePaid)} collected from issued invoices</div></div>
+    <div class="analytics-metric ${expenseRatio<=60?'good':expenseRatio<=85?'warn':'bad'}"><div class="analytics-label">Expense Ratio</div><div class="analytics-value">${expenseRatio}%</div><div class="analytics-note">Recorded cash out as a share of cash in</div></div>
+    <div class="analytics-metric ${monthNet>=0?'good':'bad'}"><div class="analytics-label">This Month Net</div><div class="analytics-value">${fmtAmt(monthNet)}</div><div class="analytics-note">${fmtAmt(monthIncome)} in · ${fmtAmt(monthOut)} out</div></div>
+    <div class="analytics-metric ${positionClass}"><div class="analytics-label">Business Position</div><div class="analytics-value">${positionLabel} · ${positionScore}/100</div><div class="position-meter"><div class="position-meter-fill ${positionClass==='warn'?'watch':positionClass==='bad'?'risk':''}" style="width:${positionScore}%"></div></div><div class="analytics-note">Cash position, collections, and overdue exposure</div></div>`;
   const health=document.getElementById('insight-health');
   if(health)health.innerHTML=`<div class="report-row ${net>=0?'pos':'neg'}"><span>Cash position</span><span>${net>=0?'Positive':'Needs attention'}</span></div><div class="report-row"><span>Net margin on recorded income</span><span>${margin}%</span></div><div class="report-row ${outstanding>0?'neg':'pos'}"><span>Outstanding invoices</span><span>${fmtAmt(outstanding)}</span></div><div class="report-row ${overdue.length?'neg':'pos'}"><span>Overdue invoices</span><span>${overdue.length}</span></div><div class="report-row"><span>Active supplier records</span><span>${supplierCount}</span></div>`;
   const actions=[];
@@ -2707,6 +2877,48 @@ function renderBusinessInsights(){
   if(!supplierCount)actions.push('<div class="report-row"><span>Add suppliers to organise spending</span><span>Start</span></div>');
   if(!actions.length)actions.push('<div class="report-row pos"><span>Your recorded cashflow is currently clear</span><span>Healthy</span></div>');
   const actionEl=document.getElementById('insight-actions');if(actionEl)actionEl.innerHTML=actions.join('');
+  const topCustomer=Object.entries(DB.invoices.reduce(function(map,inv){const key=inv.client||'Unknown Customer';map[key]=(map[key]||0)+Number(inv.amount||0);return map;},{})).sort(function(a,b){return b[1]-a[1];})[0];
+  const snapshot=document.getElementById('insight-snapshot');
+  if(snapshot)snapshot.innerHTML=`<div class="report-grid" style="margin-bottom:0">
+    <div><div class="report-row"><span>Largest customer by invoice value</span><span>${topCustomer?escHTML(topCustomer[0]):'No data'}</span></div><div class="report-row"><span>Top customer value</span><span>${topCustomer?fmtAmt(topCustomer[1]):fmtAmt(0)}</span></div></div>
+    <div><div class="report-row"><span>Largest expense category</span><span>${topCategory?escHTML(topCategory[0]):'No data'}</span></div><div class="report-row"><span>Supplier records</span><span>${supplierCount}</span></div></div>
+  </div>`;
+  scheduleInsightCharts();
+}
+
+function buildInsightCharts(){
+  const performanceCanvas=document.getElementById('insight-performance-chart');
+  const expenseCanvas=document.getElementById('insight-expense-chart');
+  if(!performanceCanvas||!expenseCanvas)return;
+  const labels=[],invoiced=[],cashIn=[],expenses=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(today.getFullYear(),today.getMonth()-i,1),mo=d.getMonth(),yr=d.getFullYear();
+    const matches=function(item){const value=new Date(item.date);return value.getMonth()===mo&&value.getFullYear()===yr;};
+    labels.push(d.toLocaleDateString('en',{month:'short',year:'2-digit'}));
+    invoiced.push(DB.invoices.filter(matches).reduce(function(sum,inv){return sum+Number(inv.amount||0);},0));
+    cashIn.push(DB.transactions.filter(function(t){return t.type==='in'&&matches(t);}).reduce(function(sum,t){return sum+Number(t.amount||0);},0));
+    expenses.push(cashOutTotal(matches));
+  }
+  const categories={};DB.expenses.forEach(function(e){const key=e.cat||'Other';categories[key]=(categories[key]||0)+Number(e.amount||0);});
+  const names=Object.keys(categories),values=Object.values(categories),colors=['#B8922A','#1B2E5C','#1F5C3A','#C0392B','#52616B','#7C1D2E','#0F6B6B'];
+  const list=document.getElementById('insight-expense-list');
+  if(!window.Chart){
+    drawFallbackSeriesChart(performanceCanvas,labels,[{label:'Invoiced',data:invoiced,color:'#B8922A'},{label:'Cash Collected',data:cashIn,color:'#1A9E5C'},{label:'Expenses',data:expenses,color:'#C0392B',type:'line'}]);
+    if(names.length)drawFallbackDonut(expenseCanvas,names,values,colors);
+  }else{
+    if(insightPerformanceChart)insightPerformanceChart.destroy();
+    insightPerformanceChart=new Chart(performanceCanvas.getContext('2d'),{type:'bar',data:{labels:labels,datasets:[
+      {label:'Invoiced',data:invoiced,backgroundColor:'rgba(184,146,42,.7)',borderRadius:3},
+      {label:'Cash Collected',data:cashIn,backgroundColor:'rgba(26,158,92,.7)',borderRadius:3},
+      {label:'Expenses',data:expenses,type:'line',borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.12)',pointRadius:3,tension:.28,fill:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#6B6258',font:{size:10},boxWidth:10,padding:12}}},scales:{x:{grid:{display:false},ticks:{color:'#6B6258',font:{size:9}}},y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9},callback:function(v){return v>=1000000?'LKR '+(v/1000000).toFixed(1)+'M':v>=1000?'LKR '+Math.round(v/1000)+'K':'LKR '+v;}}}}}});
+    if(insightExpenseChart)insightExpenseChart.destroy();
+    if(names.length)insightExpenseChart=new Chart(expenseCanvas.getContext('2d'),{type:'doughnut',data:{labels:names,datasets:[{data:values,backgroundColor:names.map(function(_,i){return colors[i%colors.length];}),borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:false}}}});
+  }
+  if(names.length){
+    const total=values.reduce(function(sum,value){return sum+value;},0)||1;
+    if(list)list.innerHTML=names.map(function(name,i){return `<div class="cat-item"><div class="cat-dot" style="background:${colors[i%colors.length]}"></div><span class="cat-name">${escHTML(name)}</span><span class="cat-pct">${Math.round(values[i]/total*100)}%</span></div>`;}).join('');
+  }else if(list)list.innerHTML='<div style="font-size:.78rem;color:var(--dim);padding:.5rem 0">No expense data yet</div>';
 }
 function savePayrollStaffProfile(name,epfNo,calc){
   const select=document.getElementById('p-staff');
@@ -3233,6 +3445,16 @@ function renderReports(){
   const paid=invoices.filter(i=>i.status==='paid').length;
   const todayMs=new Date().setHours(0,0,0,0);
   const overdue=invoices.filter(i=>i.status!=='paid'&&new Date(i.due)<todayMs);
+  const expenses=DB.expenses.filter(function(e){return inRange(e.date);});
+  const cashIn=DB.transactions.filter(function(t){return t.type==='in'&&inRange(t.date);}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
+  const cashOut=cashOutTotal(function(item){return inRange(item.date);});
+  const netCash=cashIn-cashOut;
+  const collectionRate=totalIssued>0?Math.round(totalPaid/totalIssued*100):0;
+  const expenseCategories={};
+  expenses.forEach(function(e){const key=e.cat||'Other';expenseCategories[key]=(expenseCategories[key]||0)+Number(e.amount||0);});
+  const categoryEntries=Object.entries(expenseCategories).sort(function(a,b){return b[1]-a[1];});
+  const payrollTotal=expenses.filter(function(e){return e.cat==='Payroll';}).reduce(function(sum,e){return sum+Number(e.amount||0);},0);
+  const linkedExpenseTotal=expenses.filter(function(e){return e.supplierId||e.supplierName||e.vendor;}).reduce(function(sum,e){return sum+Number(e.amount||0);},0);
   document.getElementById('pl-report').innerHTML=`
     <div class="report-row"><span>Total Invoices</span><span>${invoices.length}</span></div>
     <div class="report-row pos"><span>Total Invoice Value</span><span>${fmtAmt(totalIssued)}</span></div>
@@ -3243,6 +3465,17 @@ function renderReports(){
     <div class="report-row"><span>Partial Invoices</span><span>${partial}</span></div>
     <div class="report-row neg"><span>Unpaid Invoices</span><span>${unpaid}</span></div>
     <div class="report-row total ${overdue.length?'neg':'pos'}"><span><strong>Overdue Invoices</strong></span><span>${overdue.length}</span></div>`;
+  document.getElementById('expense-report').innerHTML=`
+    <div class="report-row neg"><span>Total Expenses</span><span>${fmtAmt(cashOut)}</span></div>
+    <div class="report-row"><span>Expense Records</span><span>${expenses.length}</span></div>
+    <div class="report-row"><span>Payroll Costs</span><span>${fmtAmt(payrollTotal)}</span></div>
+    <div class="report-row"><span>Supplier-linked Spend</span><span>${fmtAmt(linkedExpenseTotal)}</span></div>
+    <div class="report-row total"><span><strong>Top Category</strong></span><span>${categoryEntries[0]?escHTML(categoryEntries[0][0]):'No expenses'}</span></div>`;
+  document.getElementById('cash-position-report').innerHTML=`
+    <div class="report-row pos"><span>Recorded Cash In</span><span>${fmtAmt(cashIn)}</span></div>
+    <div class="report-row neg"><span>Recorded Cash Out</span><span>${fmtAmt(cashOut)}</span></div>
+    <div class="report-row"><span>Invoice Collection Rate</span><span>${collectionRate}%</span></div>
+    <div class="report-row total ${netCash>=0?'pos':'neg'}"><span><strong>Net Cash Position</strong></span><span>${fmtAmt(netCash)}</span></div>`;
   const byCustomer={};
   invoices.forEach(function(inv){
     const key=inv.client||'Unknown Customer';
@@ -3253,6 +3486,24 @@ function renderReports(){
     byCustomer[key].outstanding+=Math.max(0,(inv.amount||0)-(inv.paidAmount||0));
   });
   document.getElementById('cat-report-table').innerHTML=Object.entries(byCustomer).sort((a,b)=>b[1].total-a[1].total).map(([customer,data])=>`<tr><td>${escHTML(customer)}</td><td>${data.count}</td><td style="text-align:right" class="amount-pos">${fmtAmt(data.paid)}</td><td style="text-align:right" class="${data.outstanding>0?'amount-neg':'amount-pos'}">${fmtAmt(data.outstanding)}</td><td style="text-align:right" class="amount-gold">${fmtAmt(data.total)}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No invoices in this period</td></tr>';
+  document.getElementById('expense-category-table').innerHTML=categoryEntries.map(function(entry){
+    const count=expenses.filter(function(e){return (e.cat||'Other')===entry[0];}).length;
+    const share=cashOut>0?Math.round(entry[1]/cashOut*100):0;
+    return `<tr><td>${escHTML(entry[0])}</td><td style="text-align:right">${count}</td><td style="text-align:right">${share}%</td><td style="text-align:right" class="amount-neg">${fmtAmt(entry[1])}</td></tr>`;
+  }).join('')||'<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--dim)">No expenses in this period</td></tr>';
+  const monthKeys={};
+  invoices.forEach(function(item){monthKeys[String(item.date||'').slice(0,7)]=true;});
+  DB.transactions.filter(function(item){return inRange(item.date);}).forEach(function(item){monthKeys[String(item.date||'').slice(0,7)]=true;});
+  expenses.forEach(function(item){monthKeys[String(item.date||'').slice(0,7)]=true;});
+  const months=Object.keys(monthKeys).filter(Boolean).sort().reverse().slice(0,12);
+  document.getElementById('monthly-performance-table').innerHTML=months.map(function(key){
+    const monthMatch=function(item){return String(item.date||'').slice(0,7)===key;};
+    const monthInvoiced=invoices.filter(monthMatch).reduce(function(sum,item){return sum+Number(item.amount||0);},0);
+    const monthIn=DB.transactions.filter(function(item){return item.type==='in'&&inRange(item.date)&&monthMatch(item);}).reduce(function(sum,item){return sum+Number(item.amount||0);},0);
+    const monthOut=cashOutTotal(function(item){return inRange(item.date)&&monthMatch(item);});
+    const monthDate=new Date(key+'-01T00:00:00');
+    return `<tr><td>${monthDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td><td style="text-align:right" class="amount-gold">${fmtAmt(monthInvoiced)}</td><td style="text-align:right" class="amount-pos">${fmtAmt(monthIn)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(monthOut)}</td><td style="text-align:right" class="${monthIn-monthOut>=0?'amount-pos':'amount-neg'}">${fmtAmt(monthIn-monthOut)}</td></tr>`;
+  }).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No monthly activity in this period</td></tr>';
 }
 
 function renderTeamAccess(){
@@ -4144,10 +4395,24 @@ function seedDemoData(){
   ];
   DB.transactions=[
     {date:demoDate(-1),desc:'Payment received — INV-0010 (Kasun Perera)',type:'in',amount:320000,cat:'Invoice Payment',ref:'INV-0010',id:2010},
-    {date:demoDate(-5),desc:'Payment received — INV-0012 (Pasan Yasas)',type:'in',amount:100000,cat:'Invoice Payment',ref:'INV-0012 · Bank transfer',id:2012}
+    {date:demoDate(-5),desc:'Payment received — INV-0012 (Pasan Yasas)',type:'in',amount:100000,cat:'Invoice Payment',ref:'INV-0012 · Bank transfer',id:2012},
+    {date:demoDate(-38),desc:'Studio project receipt',type:'in',amount:240000,cat:'Service Income',ref:'BANK-2406',id:2013},
+    {date:demoDate(-69),desc:'Workshop receipts',type:'in',amount:185000,cat:'Service Income',ref:'BANK-2405',id:2014},
+    {date:demoDate(-101),desc:'Event package receipts',type:'in',amount:225000,cat:'Service Income',ref:'BANK-2404',id:2015}
   ];
-  DB.expenses=[];
-  DB.suppliers={list:[],nextId:1};
+  DB.expenses=[
+    {date:demoDate(-2),desc:'July payroll',amount:86750,cat:'Payroll',vendor:'Studio Team',id:4010,payroll:{gross:75000,netSalary:69000,employeeEpf:6000,employerEpf:9000,etf:2250}},
+    {date:demoDate(-4),desc:'Design software subscriptions',amount:18000,cat:'Software',vendor:'Creative Cloud',supplierId:5010,supplierName:'Creative Cloud',id:4011},
+    {date:demoDate(-7),desc:'Office and printing supplies',amount:32000,cat:'Office',vendor:'Colombo Office Mart',supplierId:5011,supplierName:'Colombo Office Mart',id:4012},
+    {date:demoDate(-40),desc:'June payroll',amount:82000,cat:'Payroll',vendor:'Studio Team',id:4013},
+    {date:demoDate(-72),desc:'Marketing campaign',amount:54000,cat:'Marketing',vendor:'Launch Media',supplierId:5012,supplierName:'Launch Media',id:4014},
+    {date:demoDate(-104),desc:'April payroll',amount:78000,cat:'Payroll',vendor:'Studio Team',id:4015}
+  ];
+  DB.suppliers={list:[
+    {id:5010,name:'Creative Cloud',email:'billing@example.com',phone:'',address:'Online subscription',notes:'Monthly software supplier'},
+    {id:5011,name:'Colombo Office Mart',email:'accounts@example.com',phone:'+94 11 555 0101',address:'Colombo',notes:'Office supplies'},
+    {id:5012,name:'Launch Media',email:'hello@example.com',phone:'+94 77 555 0102',address:'Colombo',notes:'Campaign support'}
+  ],nextId:5013};
   DB.editBacklog=[
     {id:3010,kind:'invoice',itemId:'INV-0012',label:'INV-0012 · Pasan Yasas',reason:'Demo: corrected payment status after partial bank transfer.',before:{num:'INV-0012',client:'Pasan Yasas',status:'unpaid',paidAmount:0,amount:250000},after:{num:'INV-0012',client:'Pasan Yasas',status:'partial',paidAmount:100000,amount:250000},editedAt:new Date().toISOString(),editedBy:'Demo Owner',editorUid:'demo-user'}
   ];
@@ -4219,7 +4484,11 @@ window.exportReportPDF=function(){
   var s=DB.settings;
   var pl=(document.getElementById('pl-report')||{}).innerHTML||'';
   var cf=(document.getElementById('cf-report')||{}).innerHTML||'';
+  var er=(document.getElementById('expense-report')||{}).innerHTML||'';
+  var cr=(document.getElementById('cash-position-report')||{}).innerHTML||'';
   var cat=(document.getElementById('cat-report-table')||{}).innerHTML||'';
+  var expCat=(document.getElementById('expense-category-table')||{}).innerHTML||'';
+  var monthly=(document.getElementById('monthly-performance-table')||{}).innerHTML||'';
   var biz=s.bizName||'Your Business';
   var logo=s.logo?'<img src="'+s.logo+'" style="max-height:88px;max-width:260px;object-fit:contain;display:block;margin-bottom:.65rem">':'';
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+biz+' Invoice Report</title>'
@@ -4246,16 +4515,22 @@ window.exportReportPDF=function(){
    +'@media print{@page{size:A4;margin:0}#dlbar{display:none!important}html,body{margin:0!important;padding:0!important}}'
    +'</style></head><body>'
    +'<div id="dlbar" style="position:sticky;top:0;background:#1a1714;color:#fff;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;font-family:Arial,Helvetica,sans-serif;font-size:.82rem">'
-   +'<span>Invoice Report — '+pt+'</span><div style="display:flex;gap:.6rem">'
+   +'<span>Studio Financial Report — '+pt+'</span><div style="display:flex;gap:.6rem">'
    +'<button onclick="window.print()" style="background:#B8922A;color:#fff;border:none;padding:.45rem 1.25rem;cursor:pointer;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase">Download PDF</button>'
    +'<button onclick="window.close()" style="background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.25);padding:.45rem 1rem;cursor:pointer;font-size:.78rem">Close</button></div></div>'
    +'<div class="page">'
    +'<div class="rhead"><div>'+logo+'<div class="biz">'+biz+'</div><div class="sub">'+(s.addr||'')+'</div></div>'
-   +'<div class="ttl"><h1>INVOICE REPORT</h1><div class="per">'+pt+'</div></div></div>'
+   +'<div class="ttl"><h1>FINANCIAL REPORT</h1><div class="per">'+pt+'</div></div></div>'
    +'<div class="cards"><div class="card"><h3>Invoice Summary</h3>'+pl+'</div>'
    +'<div class="card"><h3>Paid vs Unpaid</h3>'+cf+'</div></div>'
+   +'<div class="cards"><div class="card"><h3>Expense Summary</h3>'+er+'</div>'
+   +'<div class="card"><h3>Cash Position</h3>'+cr+'</div></div>'
    +'<div class="sec-title">Customer-wise Invoice Report</div>'
    +'<table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody>'+cat+'</tbody></table>'
+   +'<div class="sec-title">Expense Category Report</div>'
+   +'<table><thead><tr><th>Category</th><th>Records</th><th>Share</th><th>Amount (LKR)</th></tr></thead><tbody>'+expCat+'</tbody></table>'
+   +'<div class="sec-title">Monthly Performance</div>'
+   +'<table><thead><tr><th>Month</th><th>Invoiced</th><th>Cash In</th><th>Expenses</th><th>Net Cash</th></tr></thead><tbody>'+monthly+'</tbody></table>'
    +'<div class="powered">Report generated by Studio Invoice Control System - <b>CeylonryLabs.io</b></div>'
    +'</div></body></html>';
   var w=window.open('','_blank','width=880,height=760');

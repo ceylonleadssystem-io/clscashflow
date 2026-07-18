@@ -113,6 +113,40 @@ test('Studio expenses synchronize into Money Out without dashboard double counti
   assert.match(page, /item\.cat=document\.getElementById\('edit-exp-cat'\)[\s\S]*syncExpenseTransaction\(item\)/);
 });
 
+test('Studio dashboard combines invoice, expense, and cash position metrics', function() {
+  const page = read('starter.html');
+  for (const id of ['kpi-month-expenses', 'kpi-net-cash', 'cashflow-chart', 'exp-chart']) {
+    assert.match(page, new RegExp('id="' + id + '"'));
+  }
+  assert.match(page, /const monthExpenses=cashOutTotal\(monthPredicate\)/);
+  assert.match(page, /const netCash=recordedIncome-recordedOut/);
+  assert.match(page, /cfChart=new Chart\(ctx1/);
+});
+
+test('Studio financial reports include expenses, cash position, and monthly performance', function() {
+  const page = read('starter.html');
+  for (const id of ['expense-report', 'cash-position-report', 'expense-category-table', 'monthly-performance-table']) {
+    assert.match(page, new RegExp('id="' + id + '"'));
+  }
+  assert.match(page, /const cashOut=cashOutTotal\(function\(item\)\{return inRange\(item\.date\);\}\)/);
+  assert.match(page, /Invoice Collection Rate/);
+  assert.match(page, /Supplier-linked Spend/);
+  assert.match(page, /<h3>Expense Summary<\/h3>/);
+  assert.match(page, /<div class="sec-title">Monthly Performance<\/div>/);
+});
+
+test('Studio Business Insights renders decision metrics and live charts', function() {
+  const page = read('starter.html');
+  for (const id of ['insight-metrics', 'insight-performance-chart', 'insight-expense-chart', 'insight-snapshot']) {
+    assert.match(page, new RegExp('id="' + id + '"'));
+  }
+  assert.match(page, /Business Position/);
+  assert.match(page, /positionScore/);
+  assert.match(page, /function buildInsightCharts\(\)/);
+  assert.match(page, /label:'Cash Collected'/);
+  assert.match(page, /label:'Expenses'/);
+});
+
 test('Studio manual Money Out records synchronize back into Expenses', function() {
   const page = read('starter.html');
   assert.match(page, /function transactionExpenseFields\(txn\)/);
@@ -258,7 +292,7 @@ test('shared invoice outputs render bank details only for invoices', function() 
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260718-bank-details-v2';
+  const version = '20260718-priority-chat';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
