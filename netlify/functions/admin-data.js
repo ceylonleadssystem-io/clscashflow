@@ -90,8 +90,9 @@ async function readCollection(db, name, orderField, limit) {
   }
 }
 
-async function readChats(db) {
+async function readChats(db, includeMessages) {
   const threads = await readCollection(db, 'chatThreads', 'lastMessageAt', 50);
+  if (!includeMessages) return threads;
   await Promise.all(threads.map(async function(row) {
     try {
       const snap = await db.collection('chatThreads').doc(row.id).collection('messages').orderBy('createdAt', 'desc').limit(20).get();
@@ -864,17 +865,12 @@ exports.handler = async function handler(event) {
       return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown admin action.' }) };
     }
 
-    const usersPromise = readCollection(db, 'users', 'createdAt', 300);
-    const paymentRequestsPromise = usersPromise.then(async function(userRows) {
-      await ensureExpiredTrialPaymentRequests(admin, db, userRows);
-      return readCollection(db, 'paymentRequests', 'createdAt', 160);
-    });
     const initialRows = await Promise.all([
-      usersPromise,
+      readCollection(db, 'users', 'createdAt', 300),
       readCollection(db, 'platformVisits', 'createdAt', 200),
       readCollection(db, 'supportTickets', 'createdAt', 160),
-      readChats(db),
-      paymentRequestsPromise
+      readChats(db, false),
+      readCollection(db, 'paymentRequests', 'createdAt', 160)
     ]);
     const users = initialRows[0];
     const visits = initialRows[1];

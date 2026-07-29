@@ -709,6 +709,7 @@ function renderTickets(tickets, stats){
 
 var adminLoading = false;
 var adminHasRendered = false;
+var adminHasData = false;
 var adminActiveSection = 'overview';
 var adminUserRows = [];
 var ADMIN_CACHE_KEY = 'cls-admin-dashboard-cache-v2';
@@ -776,6 +777,7 @@ async function loadAdminData(opts){
     if (cached) {
       var cachedPayload = cached.payload;
       renderAdminPayload(cachedPayload.users || [], cachedPayload.visits || [], cachedPayload.tickets || [], cachedPayload.paymentRequests || [], cachedPayload.chats || [], cachedPayload.stats || {});
+      adminHasData = true;
       setDataStatus('loading', 'Showing saved data while checking for updates…');
     } else if (!adminHasRendered) {
       ['kpi-users','kpi-visitors','kpi-visits','kpi-landing','kpi-live','kpi-open','kpi-tickets','kpi-payment-requests','kpi-open-chats','kpi-chats'].forEach(function(id){
@@ -795,6 +797,7 @@ async function loadAdminData(opts){
     try {
       var payload = await fetchAdminFunction();
       renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {});
+      adminHasData = true;
       writeAdminCache(payload);
       setDataStatus('ok', 'Up to date · loaded ' + new Date().toLocaleTimeString());
       return;
@@ -802,7 +805,7 @@ async function loadAdminData(opts){
       adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
       console.warn('Admin function unavailable:', serverErr);
       if (serverErr && (serverErr.status === 401 || serverErr.status === 403 || window.__CLS_ALLOW_ADMIN_BROWSER_FALLBACK !== true)) {
-        if (cached || adminHasRendered) {
+        if (cached || adminHasData) {
           setDataStatus('warn', 'Could not refresh. Showing the last loaded data · ' + adminFunctionError);
           return;
         }

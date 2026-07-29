@@ -403,7 +403,10 @@ test('admin dashboard loads quickly without presenting failed requests as zero d
   assert.match(page, /sessionStorage\.getItem\(ADMIN_CACHE_KEY\)/);
   assert.match(page, /Showing saved data while checking for updates/);
   assert.match(page, /textContent = '—'/);
+  assert.match(page, /if \(cached \|\| adminHasData\)/);
   assert.match(endpoint, /const initialRows = await Promise\.all\(/);
   assert.match(endpoint, /const totals = await Promise\.all\(/);
+  assert.match(endpoint, /readChats\(db, false\)/);
+  assert.doesNotMatch(endpoint, /paymentRequestsPromise/);
   assert.match(database, /\.select\('id', \{ count: 'exact', head: true \}\)/);
 });
