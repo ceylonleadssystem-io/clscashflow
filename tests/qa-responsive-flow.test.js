@@ -86,7 +86,7 @@ test('Business Money In and Out has responsive date, sort, and type filters', fu
   assert.match(page, /\.cashflow-filter-tools\{grid-template-columns:1fr\}/);
 });
 
-test('Studio payroll expenses calculate EPF and ETF and persist salaried staff', function() {
+test('Studio payroll Cash Out calculates EPF and ETF and persists salaried staff', function() {
   const page = read('starter.html');
   for (const id of ['payroll-panel', 'p-staff', 'p-staff-name', 'p-gross', 'p-employee-epf-rate', 'p-employer-epf-rate', 'p-etf-rate', 'payroll-results']) {
     assert.match(page, new RegExp('id="' + id + '"'));
@@ -98,6 +98,11 @@ test('Studio payroll expenses calculate EPF and ETF and persist salaried staff',
   assert.match(page, /netSalary:payrollRound\(Math\.max\(0,gross-employeeEpf\)\)/);
   assert.match(page, /payrollStaff: docsFor\(DB\.payrollStaff/);
   assert.match(page, /saveCollection\('payrollStaff'/);
+  assert.match(page, /id="t-type" onchange="window\.handleTransactionPayrollChange\(\)"/);
+  assert.match(page, /id="t-cat" onchange="window\.handleTransactionPayrollChange\(\)"/);
+  assert.match(page, /const payroll=\(document\.getElementById\('t-type'\)\|\|\{\}\)\.value==='out'/);
+  assert.match(page, /payroll=Object\.assign\(\{staffId:payrollStaffId,staffName,epfNo\},calc\)/);
+  assert.match(page, /payroll:txn\.payroll\|\|null/);
 });
 
 test('Studio expenses synchronize into Money Out without dashboard double counting', function() {
@@ -161,7 +166,7 @@ test('Studio manual Money Out records synchronize back into Expenses', function(
 test('Studio expense modal opens defensively and historical backlog dates are normalized', function() {
   const page = read('starter.html');
   assert.match(page, /window\.openExpenseModal=function openExpenseModal\(\)\{[\s\S]*window\.openModal\('exp-modal'\)/);
-  assert.match(page, /window\.updatePayrollCalculation=function updatePayrollCalculation\(\)\{\s*const payroll=\(document\.getElementById\('e-cat'\)\|\|\{\}\)\.value==='Payroll';/);
+  assert.match(page, /window\.updatePayrollCalculation=function updatePayrollCalculation\(\)\{\s*const payroll=\(document\.getElementById\('t-type'\)\|\|\{\}\)\.value==='out'/);
   assert.match(page, /function backlogDateValue\(log\)/);
   assert.match(page, /log\.editedAt\|\|log\.date\|\|log\.createdAt\|\|log\.timestamp/);
   assert.match(page, /DB\.editBacklog\.sort\(\(a,b\) => backlogDateValue\(b\) - backlogDateValue\(a\)\)/);
@@ -335,31 +340,16 @@ test('customer directories provide search, filters, sorting, clear controls, and
   assert.match(business, /clearBusinessCustomerFilters/);
 });
 
-test('Studio includes the complete staff and payroll workflow', function() {
+test('Studio exposes only the lightweight Cash Out payroll workflow', function() {
   const page = read('starter.html');
-  assert.match(page, /data-nav="payroll"/);
-  assert.match(page, /id="view-payroll"/);
-  assert.match(page, /id="payroll-staff-modal"/);
-  assert.match(page, /function payrollTax/);
-  assert.match(page, /function payrollEmployeeCalc/);
-  assert.match(page, /openSalaryPaidModal/);
-  assert.match(page, /commitSalaryPayment/);
-  assert.match(page, /openStatutorySettlement/);
-  assert.match(page, /commitStatutorySettlement/);
-  assert.match(page, /printPayrollPayslip/);
-  assert.match(page, /deactivatePayrollStaff/);
-  assert.match(page, /Historical Outflow Timeline/);
-  assert.match(page, /id="payroll-trend-chart"/);
-  assert.match(page, /id="payroll-split-chart"/);
-  assert.match(page, /previewPayrollAvatar/);
-  assert.match(page, /function payrollFileData/);
-  assert.match(page, /payrollAttachmentLink/);
-  assert.match(page, /pending-approval/);
-  assert.match(page, /id="salary-paid-period"/);
-  assert.match(page, /transportAllowance/);
-  assert.match(page, /overtimeHours/);
-  assert.match(page, /loanDeduction/);
-  assert.match(page, /\/\.netlify\/functions\/send-payslip/);
+  assert.doesNotMatch(page, /data-nav="payroll"/);
+  assert.doesNotMatch(page, /id="view-payroll"/);
+  assert.match(page, /if\(view==='payroll'\) view='cashflow'/);
+  assert.match(page, /id="payroll-staff-modal" hidden/);
+  assert.match(page, /id="salary-paid-modal" hidden/);
+  assert.match(page, /id="statutory-settlement-modal" hidden/);
+  assert.match(page, /Small Payroll Calculator/);
+  assert.match(page, /future payroll Cash Out entries/);
 });
 
 test('payroll and customer controls remain usable on mobile', function() {
@@ -369,8 +359,7 @@ test('payroll and customer controls remain usable on mobile', function() {
     assert.match(page, /customer-search\{grid-column:1\/-1\}/);
   });
   const studio = read('starter.html');
-  assert.match(studio, /payroll-kpis\{grid-template-columns:1fr 1fr\}/);
-  assert.match(studio, /payroll-profile-grid,\.payroll-breakdown,\.payroll-charts\{grid-template-columns:1fr\}/);
+  assert.match(studio, /\.payroll-results\{grid-template-columns:1fr\}/);
   assert.match(studio, /\.modal-box\{max-width:none;width:100%;max-height:94dvh/);
 });
 
