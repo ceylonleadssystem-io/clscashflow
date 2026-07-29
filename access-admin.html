@@ -197,6 +197,7 @@ var PLAN_NAMES  = { solo: 'Solo', studio: 'Studio', business: 'Business' };
 var PLAN_FILES  = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
 var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
 var ROLE_LABELS = { admin:'Admin', staff:'Staff', accountant:'Accountant', viewer:'Viewer' };
+var TEAM_CACHE_TTL = 5 * 60 * 1000;
 
 // ── helpers ──
 function el(id){ return document.getElementById(id); }
@@ -237,6 +238,22 @@ applyDashboardLinks();
 function initials(name, email){
   var src = (name || email || '?').trim();
   return (src[0] || '?').toUpperCase();
+}
+function teamCacheKey(){ return _ownerUid ? 'cls-team-access:' + _ownerUid : ''; }
+function readTeamCache(){
+  try {
+    var cached = JSON.parse(localStorage.getItem(teamCacheKey()) || 'null');
+    if(!cached || Date.now() - Number(cached.savedAt || 0) > TEAM_CACHE_TTL) return null;
+    return { members:Array.isArray(cached.members) ? cached.members : [], pending:Array.isArray(cached.pending) ? cached.pending : [] };
+  } catch(e){ return null; }
+}
+function writeTeamCache(members, pending){
+  try { localStorage.setItem(teamCacheKey(), JSON.stringify({savedAt:Date.now(), members:members, pending:pending})); } catch(e){}
+}
+function renderTeamState(members, pending){
+  renderSeats(members.length, pending.length);
+  renderMembers(members);
+  renderPending(pending);
 }
 
 // ════════════════════════════════
@@ -292,27 +309,29 @@ _auth.onAuthStateChanged(async function(user){
 async function loadTeam(){
   var members = [];
   var pending = [];
-  try {
-    var memSnap = await _db.collection('users').where('ownerUid','==',_ownerUid).get();
+  var cached = readTeamCache();
+  if(cached) renderTeamState(cached.members, cached.pending);
+  var reads = await Promise.all([
+    _db.collection('users').where('ownerUid','==',_ownerUid).get().catch(function(e){ console.error('load members error:', e); return null; }),
+    _db.collection('users').doc(_ownerUid).collection('team').where('status','==','pending').get().catch(function(e){ console.error('load invites error:', e); return null; })
+  ]);
+  var memSnap = reads[0];
+  var invSnap = reads[1];
+  if(memSnap){
     memSnap.forEach(function(d){
       var data = d.data();
       if(data.role === 'removed') return;
       members.push({ uid: d.id, name: data.name||'', email: data.email||'', role: data.role||'staff' });
     });
-  } catch(e){ console.error('load members error:', e); }
-
-  try {
-    var invSnap = await _db.collection('users').doc(_ownerUid).collection('team')
-      .where('status','==','pending').get();
+  } else if(cached) members = cached.members;
+  if(invSnap){
     invSnap.forEach(function(d){
       var data = d.data();
       pending.push({ id: d.id, email: data.email||'', role: data.role||'staff' });
     });
-  } catch(e){ console.error('load invites error:', e); }
-
-  renderSeats(members.length, pending.length);
-  renderMembers(members);
-  renderPending(pending);
+  } else if(cached) pending = cached.pending;
+  renderTeamState(members, pending);
+  if(memSnap || invSnap) writeTeamCache(members, pending);
 }
 
 function seatsState(activeCount, pendingCount){

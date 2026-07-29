@@ -236,6 +236,12 @@ body.is-admin .admin-only{display:flex}
 
 /* ── CLIENTS ── */
 .client-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
+.customer-tools{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:grid;gap:.75rem;background:var(--white)}
+.customer-tools-main{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:.65rem;align-items:center}
+.customer-search{position:relative}.customer-search input{width:100%;padding-right:2.4rem}.customer-search-clear{position:absolute;right:.55rem;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1rem}
+.customer-view-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}.customer-view-toggle button{border:0;background:var(--bg);color:var(--muted);padding:.58rem .72rem;cursor:pointer}.customer-view-toggle button.active{background:var(--black);color:#fff}
+.customer-filter-row{display:flex;align-items:center;gap:.45rem;overflow-x:auto;padding-bottom:.15rem}.customer-chip{white-space:nowrap;border:1px solid var(--border);background:var(--bg);color:var(--muted);border-radius:999px;padding:.38rem .7rem;font:600 .65rem var(--font-b);cursor:pointer}.customer-chip.active{background:var(--gold);border-color:var(--gold);color:#fff}.customer-clear-filters{margin-left:auto;border:0;background:transparent;color:var(--red);font:600 .65rem var(--font-b);cursor:pointer;white-space:nowrap}
+.customer-table-wrap{overflow-x:auto}.customer-directory-table{min-width:760px}.customer-directory-table td:last-child{text-align:right}
 .client-card{background:var(--white);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.25rem;position:relative;transition:all .2s}
 .client-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);border-left-color:var(--black)}
 .client-card-name{font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
@@ -481,6 +487,7 @@ body.is-admin .admin-only{display:flex}
   .kpi-sub{font-size:.64rem;line-height:1.35}
   .kpi-icon{top:.75rem;right:.75rem}
   .charts-row,.dashboard-followup-grid,.report-grid,.client-grid,.supplier-grid,.profit-overview-grid{grid-template-columns:1fr!important}
+  .customer-tools-main{grid-template-columns:1fr 1fr}.customer-search{grid-column:1/-1}.customer-view-toggle{justify-self:end}
   .chart-card,.profit-overview-card,.report-card,.client-card,.supplier-card{padding:1rem}
   .chart-area{height:220px}
   .sum-bar,.sum-bar.c2,.sum-bar.c3,.pay-summary{grid-template-columns:1fr!important}
@@ -791,6 +798,14 @@ document.addEventListener('click',function(e){
         <div class="table-header">
           <div class="table-title">Customer Directory</div>
           <button class="btn-act" data-cls-fn="openClientModal">+ Add Customer</button>
+        </div>
+        <div class="customer-tools">
+          <div class="customer-tools-main">
+            <div class="customer-search"><input class="f-input" id="customer-search" type="search" placeholder="Search name, company, phone, email or address" oninput="renderClients()"><button class="customer-search-clear" type="button" aria-label="Clear customer search" onclick="window.clearCustomerSearch()">×</button></div>
+            <select class="f-input f-select" id="customer-sort" onchange="renderClients()"><option value="billed-desc">Highest billed</option><option value="billed-asc">Lowest billed</option><option value="name-asc">Name A-Z</option><option value="newest">Newest first</option></select>
+            <div class="customer-view-toggle" aria-label="Customer view"><button id="customer-view-grid" class="active" type="button" onclick="window.setCustomerView('grid')">▦ Grid</button><button id="customer-view-table" type="button" onclick="window.setCustomerView('table')">☷ Table</button></div>
+          </div>
+          <div class="customer-filter-row"><button class="customer-chip active" data-customer-filter="all" onclick="window.setCustomerFilter('all')">All Customers</button><button class="customer-chip" data-customer-filter="unpaid" onclick="window.setCustomerFilter('unpaid')">Outstanding Unpaid</button><button class="customer-chip" data-customer-filter="high-value" onclick="window.setCustomerFilter('high-value')">High Value (&gt; LKR 100k)</button><button class="customer-clear-filters" type="button" onclick="window.clearCustomerFilters()">Clear filters</button></div>
         </div>
         <div style="padding:1.25rem" id="client-grid-wrap">
           <div class="client-grid" id="client-grid"></div>
@@ -3196,22 +3211,53 @@ function syncCustomerToOpenInvoices(before,data){
   });
   return changed;
 }
+var customerDirectoryState={filter:'all',view:'grid'};
+window.setCustomerFilter=function(filter){customerDirectoryState.filter=filter||'all';renderClients();};
+window.setCustomerView=function(view){customerDirectoryState.view=view==='table'?'table':'grid';renderClients();};
+window.clearCustomerSearch=function(){var el=document.getElementById('customer-search');if(el)el.value='';renderClients();};
+window.clearCustomerFilters=function(){customerDirectoryState.filter='all';var search=document.getElementById('customer-search');var sort=document.getElementById('customer-sort');if(search)search.value='';if(sort)sort.value='billed-desc';renderClients();};
+function clientDirectoryMetrics(client){
+  const keys=[client.name,client.biz,client.email,client.phone].map(normKey).filter(Boolean);
+  const invs=(DB.invoices||[]).filter(function(inv){return [inv.client,inv.cemail,inv.cphone].map(normKey).some(function(key){return keys.indexOf(key)!==-1;});});
+  const billed=invs.reduce(function(sum,inv){return sum+Number(inv.amount||inv.total||0);},0);
+  const outstanding=invs.reduce(function(sum,inv){return sum+invoiceBalance(inv);},0);
+  return{invoices:invs.length,billed:billed,outstanding:outstanding};
+}
 function renderClients(){
   if(!DB.clients) DB.clients={list:[],nextId:1};
-  const list=DB.clients.list||[];
+  const all=DB.clients.list||[];
+  const search=String((document.getElementById('customer-search')||{}).value||'').trim().toLowerCase();
+  const sort=String((document.getElementById('customer-sort')||{}).value||'billed-desc');
+  const rows=all.map(function(client){return{client:client,metrics:clientDirectoryMetrics(client)};}).filter(function(row){
+    const c=row.client,m=row.metrics,hay=[c.name,c.biz,c.email,c.phone,c.addr].join(' ').toLowerCase();
+    if(search&&hay.indexOf(search)===-1)return false;
+    if(customerDirectoryState.filter==='unpaid'&&m.outstanding<=0)return false;
+    if(customerDirectoryState.filter==='high-value'&&m.billed<=100000)return false;
+    return true;
+  });
+  rows.sort(function(a,b){if(sort==='billed-asc')return a.metrics.billed-b.metrics.billed;if(sort==='name-asc')return String(a.client.name||'').localeCompare(String(b.client.name||''));if(sort==='newest')return Number(b.client.id||0)-Number(a.client.id||0);return b.metrics.billed-a.metrics.billed;});
+  const list=rows.map(function(row){return row.client;});
   const countEl=document.getElementById('client-count-val');
   const emailEl=document.getElementById('client-email-count');
   const waEl=document.getElementById('client-wa-count');
-  if(countEl) countEl.textContent=list.length;
-  if(emailEl) emailEl.textContent=list.filter(c=>c.email).length;
-  if(waEl) waEl.textContent=list.filter(c=>c.phone).length;
+  if(countEl) countEl.textContent=all.length;
+  if(emailEl) emailEl.textContent=all.filter(c=>c.email).length;
+  if(waEl) waEl.textContent=all.filter(c=>c.phone).length;
+  document.querySelectorAll('[data-customer-filter]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.customerFilter===customerDirectoryState.filter);});
+  ['grid','table'].forEach(function(view){var btn=document.getElementById('customer-view-'+view);if(btn)btn.classList.toggle('active',view===customerDirectoryState.view);});
   const grid=document.getElementById('client-grid');
   if(!grid) return;
   if(!list.length){
-    grid.innerHTML=`<div class="client-empty" style="grid-column:1/-1"><div class="client-empty-icon">👥</div><div class="client-empty-text">No customers yet. Add your first customer to get started.</div><button class="btn-act" data-cls-fn="openClientModal">+ Add First Customer</button></div>`;
+    grid.className='client-grid';grid.innerHTML=`<div class="client-empty" style="grid-column:1/-1"><div class="client-empty-icon">👥</div><div class="client-empty-text">${all.length?'No customers match these filters.':'No customers yet. Add your first customer to get started.'}</div>${all.length?'<button class="btn-act-outline" onclick="window.clearCustomerFilters()">Clear Filters</button>':'<button class="btn-act" data-cls-fn="openClientModal">+ Add First Customer</button>'}</div>`;
     return;
   }
-  grid.innerHTML=list.map(c=>`
+  if(customerDirectoryState.view==='table'){
+    grid.className='customer-table-wrap';
+    grid.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th>Total Billed</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHTML(c.name||'Customer')+'</strong><br><span style="font-size:.68rem">'+escHTML(c.biz||'Individual')+'</span></td><td>'+escHTML(c.email||'—')+'<br>'+escHTML(c.phone||'')+'</td><td>'+m.invoices+'</td><td>'+fmtAmt(m.billed)+'</td><td class="'+(m.outstanding?'amount-neg':'amount-pos')+'">'+fmtAmt(m.outstanding)+'</td><td><button class="btn-sm btn-sm-dark" data-cls-fn="editClient" data-cls-arg="'+c.id+'">Edit</button> <button class="btn-sm btn-sm-out" data-cls-fn="invoiceFromClient" data-cls-arg="'+c.id+'">+ Invoice</button></td></tr>';}).join('')+'</tbody></table>';
+    return;
+  }
+  grid.className='client-grid';
+  grid.innerHTML=rows.map(function(row){const c=row.client,m=row.metrics;return`
     <div class="client-card">
       <div class="client-card-name">${c.name}</div>
       ${c.biz?`<div class="client-card-biz">${c.biz}</div>`:''}
@@ -3221,12 +3267,13 @@ function renderClients(){
         ${c.addr?`📍 ${c.addr}<br>`:''}
         ${c.notes?`<em style="color:var(--dim)">${c.notes}</em>`:''}
       </div>
+      <div style="font-size:.65rem;color:var(--muted);line-height:1.5;margin-top:.25rem"><strong>${m.invoices} invoice${m.invoices===1?'':'s'} · ${fmtAmt(m.billed)} billed</strong><br>${m.outstanding?fmtAmt(m.outstanding)+' outstanding':'Fully settled'}</div>
       <div class="client-card-actions">
         <button class="btn-sm btn-sm-dark" type="button" data-cls-fn="editClient" data-cls-arg="${c.id}">Edit</button>
         <button class="btn-sm btn-sm-out" type="button" data-cls-fn="invoiceFromClient" data-cls-arg="${c.id}">+ Invoice</button>
         <button class="btn-sm" type="button" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="deleteClient" data-cls-arg="${c.id}">✕</button>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 
 function sameClientId(a,b){

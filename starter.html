@@ -181,6 +181,8 @@ tr:hover td{background:var(--bg3)}
 .payroll-save input{margin-top:.15rem}
 .expense-payroll-meta{font-size:.6rem;color:var(--muted);line-height:1.5;margin-top:.2rem}
 .expense-payroll-meta strong{color:var(--black)}
+.payroll-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin-bottom:1rem}.payroll-kpi{background:#fff;border:1px solid var(--border);border-top:3px solid var(--black);padding:1rem}.payroll-kpi.stat{border-top-color:var(--gold)}.payroll-kpi.tax{border-top-color:var(--red)}.payroll-kpi-label{font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:800}.payroll-kpi-value{font-family:var(--font-d);font-size:1.35rem;margin:.35rem 0}.payroll-kpi-note{font-size:.64rem;color:var(--muted);line-height:1.4}.payroll-toolbar{display:grid;grid-template-columns:1fr auto auto;gap:.65rem;padding:1rem;border-bottom:1px solid var(--border)}.payroll-chips{display:flex;gap:.4rem;overflow-x:auto;padding:.8rem 1rem;border-bottom:1px solid var(--border)}.payroll-profile{display:none}.payroll-profile.active{display:block}.payroll-overview.hidden{display:none}.payroll-profile-grid{display:grid;grid-template-columns:1fr 2fr;gap:1rem}.payroll-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:1rem}.payroll-breakdown>div{background:#fff;padding:1rem}.payroll-actions{display:flex;gap:.5rem;flex-wrap:wrap}.payroll-status{display:inline-flex;border-radius:999px;padding:.25rem .55rem;font-size:.58rem;font-weight:800;text-transform:uppercase}.payroll-status.active,.payroll-status.paid{background:#e8f7ef;color:#167a4b}.payroll-status.pending{background:#fff4dc;color:#9a6500}.payroll-status.inactive{background:#fbe9e7;color:var(--red)}.payroll-avatar{width:42px;height:42px;border-radius:50%;background:var(--bg3);display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:var(--gold);margin-right:.55rem;vertical-align:middle}.payroll-history{margin-top:1rem;overflow-x:auto}.payroll-modal-preview{background:var(--bg);border-left:3px solid var(--gold);padding:.85rem;margin-top:.8rem;font-size:.72rem;line-height:1.7}.payroll-charts{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem}.payroll-chart-card{background:#fff;border:1px solid var(--border);padding:1rem;min-height:280px}.payroll-chart-card canvas{width:100%!important;height:220px!important}.payroll-avatar-photo{width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-right:.65rem;vertical-align:middle}.payroll-avatar-preview{display:flex;align-items:center;gap:.8rem;padding:.7rem;background:var(--bg);border:1px dashed var(--border);margin-bottom:.8rem}.payroll-avatar-preview img{width:64px;height:64px;border-radius:50%;object-fit:cover;display:none}
+.payroll-toolbar{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .f-section{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:1.1rem 0 .7rem;border-bottom:1px solid var(--border);padding-bottom:.45rem}
 
 /* Invoice line items */
@@ -272,6 +274,12 @@ body.is-admin .admin-only{display:flex}
 
 /* ── CLIENTS ── */
 .client-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
+.customer-tools{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:grid;gap:.75rem;background:var(--white)}
+.customer-tools-main{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:.65rem;align-items:center}
+.customer-search{position:relative}.customer-search input{width:100%;padding-right:2.4rem}.customer-search-clear{position:absolute;right:.55rem;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1rem}
+.customer-view-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}.customer-view-toggle button{border:0;background:var(--bg);color:var(--muted);padding:.58rem .72rem;cursor:pointer}.customer-view-toggle button.active{background:var(--black);color:#fff}
+.customer-filter-row{display:flex;align-items:center;gap:.45rem;overflow-x:auto;padding-bottom:.15rem}.customer-chip{white-space:nowrap;border:1px solid var(--border);background:var(--bg);color:var(--muted);border-radius:999px;padding:.38rem .7rem;font:600 .65rem var(--font-b);cursor:pointer}.customer-chip.active{background:var(--gold);border-color:var(--gold);color:#fff}.customer-clear-filters{margin-left:auto;border:0;background:transparent;color:var(--red);font:600 .65rem var(--font-b);cursor:pointer;white-space:nowrap}
+.customer-table-wrap{overflow-x:auto}.customer-directory-table{min-width:760px}.customer-directory-table td:last-child{text-align:right}
 .client-card{background:var(--white);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.25rem;position:relative;transition:all .2s}
 .client-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);border-left-color:var(--black)}
 .client-card-name{font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
@@ -429,6 +437,7 @@ body.is-admin .admin-only{display:flex}
 #view-settings .btn-act,#view-settings .btn-act-outline{border-radius:999px}
 #view-settings #cls-billing-widget,#view-settings #cls-support-widget,#view-settings #cls-danger-zone-widget{border-radius:8px;max-width:none!important}
 #view-settings .logo-area.has-logo{min-height:190px;border-style:solid}
+.support-focus-mode .settings-page-head{display:none}
 #view-settings.support-focus-mode #cls-billing-widget,
 #view-settings.support-focus-mode #cls-danger-zone-widget,
 #view-settings.support-focus-mode .settings-page-head,
@@ -532,6 +541,7 @@ body.is-admin .admin-only{display:flex}
   .kpi-sub{font-size:.64rem;line-height:1.35}
   .kpi-icon{top:.75rem;right:.75rem}
   .charts-row,.dashboard-followup-grid,.report-grid,.client-grid,.supplier-grid,.profit-overview-grid{grid-template-columns:1fr!important}
+  .customer-tools-main{grid-template-columns:1fr 1fr}.customer-search{grid-column:1/-1}.customer-view-toggle{justify-self:end}
   .chart-card,.profit-overview-card,.report-card,.client-card,.supplier-card{padding:1rem}
   .chart-area{height:220px}
   .sum-bar,.sum-bar.c2,.sum-bar.c3,.pay-summary{grid-template-columns:1fr!important}
@@ -600,6 +610,7 @@ body.is-admin .admin-only{display:flex}
   .f-row,.client-select-bar{display:grid!important;grid-template-columns:1fr!important}
   .payroll-results{grid-template-columns:1fr}
   .payroll-head{display:block}
+  .payroll-kpis{grid-template-columns:1fr 1fr}.payroll-toolbar{grid-template-columns:1fr}.payroll-profile-grid,.payroll-breakdown,.payroll-charts{grid-template-columns:1fr}.payroll-actions .btn-act,.payroll-actions .btn-act-outline{flex:1}.payroll-chart-card{min-height:250px}
   .client-select-bar{align-items:stretch;padding:.8rem}
   .tpl-picker{grid-template-columns:1fr!important}
   .align-btns,.pay-type-grid{display:grid;grid-template-columns:1fr!important}
@@ -690,6 +701,7 @@ document.addEventListener('click',function(e){
     <div class="sb-section" data-sidebar-section="operations">Operations</div>
     <a class="sb-item" data-nav="cashflow"><span class="sb-icon">↕</span> Money In &amp; Out</a>
     <a class="sb-item" data-nav="expenses"><span class="sb-icon">↗</span> Expenses</a>
+    <a class="sb-item" data-nav="payroll"><span class="sb-icon">🪪</span> Staff &amp; Payroll</a>
     <a class="sb-item" data-nav="suppliers"><span class="sb-icon">▤</span> Suppliers</a>
     <div class="sb-section" data-sidebar-section="insights">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
@@ -828,6 +840,24 @@ document.addEventListener('click',function(e){
     </div>
 
     <!-- ═ EDIT BACKLOG ═ -->
+    <div class="view" id="view-payroll">
+      <div class="payroll-overview" id="payroll-overview">
+        <div class="payroll-kpis" id="payroll-kpis"></div>
+        <div class="payroll-charts"><div class="payroll-chart-card"><div class="table-title">6-Month Payroll Outflow Trend</div><div style="font-size:.65rem;color:var(--muted);margin:.2rem 0 .8rem">Gross pay, net salaries, and statutory obligations.</div><canvas id="payroll-trend-chart"></canvas></div><div class="payroll-chart-card"><div class="table-title">Monthly Cash Split</div><div style="font-size:.65rem;color:var(--muted);margin:.2rem 0 .8rem">Net salaries, EPF/ETF, and APIT.</div><canvas id="payroll-split-chart"></canvas></div></div>
+        <div class="table-card">
+          <div class="table-header"><div><div class="table-title">Staff &amp; Payroll</div><div style="font-size:.68rem;color:var(--muted);margin-top:.2rem">Monthly salary outflows and Sri Lanka statutory obligations.</div></div><button class="btn-act" onclick="window.openPayrollStaffModal()">+ Add Staff</button></div>
+          <div class="payroll-toolbar"><input class="f-input" id="payroll-search" placeholder="Search employee name or ID" oninput="renderPayrollModule()"><select class="f-input f-select" id="payroll-status-filter" onchange="renderPayrollModule()"><option value="active">Active Staff</option><option value="inactive">Inactive / Deactivated</option><option value="all">All Staff Statuses</option></select><input class="f-input" type="month" id="payroll-month-filter" onchange="renderPayrollModule()"><select class="f-input f-select" id="payroll-payment-status-filter" onchange="renderPayrollModule()"><option value="">All Payroll Statuses</option><option value="draft">Draft</option><option value="pending-approval">Pending Approval</option><option value="approved">Approved</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option><option value="not-created">Not Created</option></select><select class="f-input f-select" id="payroll-department-filter" onchange="renderPayrollModule()"><option value="">All Departments</option></select><select class="f-input f-select" id="payroll-method-filter" onchange="renderPayrollModule()"><option value="">All Payment Methods</option><option>Online Bank Transfer</option><option>Bank Transfer</option><option>Cheque</option><option>Cash</option></select><button class="btn-act-outline" onclick="window.clearPayrollFilters()">Clear</button></div>
+          <div class="payroll-chips"><button class="customer-chip active" data-payroll-filter="all" onclick="window.setPayrollFilter('all')">All Staff</button><button class="customer-chip" data-payroll-filter="permanent" onclick="window.setPayrollFilter('permanent')">Permanent</button><button class="customer-chip" data-payroll-filter="contract" onclick="window.setPayrollFilter('contract')">Contract / Intern</button><button class="customer-chip" data-payroll-filter="apit" onclick="window.setPayrollFilter('apit')">APIT Tax Payers</button></div>
+          <div style="overflow-x:auto"><table style="min-width:1080px"><thead><tr><th>Employee</th><th>Type</th><th>Gross</th><th>Net Salary</th><th>EPF / ETF</th><th>APIT</th><th>Total CTC</th><th>Status</th><th>Action</th></tr></thead><tbody id="payroll-table"></tbody></table></div>
+        </div>
+      </div>
+      <div class="payroll-profile" id="payroll-profile">
+        <div class="table-header" style="margin-bottom:1rem"><button class="btn-act-outline" onclick="window.closePayrollProfile()">← Staff Overview</button><div class="payroll-actions"><button class="btn-act" onclick="window.openSalaryPaidModal()">Mark Salary Paid</button><button class="btn-act-outline" onclick="window.printPayrollPayslip()">Payslip PDF</button><button class="btn-act-outline" onclick="window.sharePayrollWhatsApp()">WhatsApp</button><button class="btn-act-outline" onclick="window.emailPayrollPayslip()">Email</button><button class="btn-act-outline" style="color:var(--red)" onclick="window.deactivatePayrollStaff()">Remove Staff</button></div></div>
+        <div id="payroll-profile-content"></div>
+      </div>
+    </div>
+
+    <!-- ═ EDIT BACKLOG ═ -->
     <div class="view" id="view-backlog">
       <div class="sum-bar c3" id="backlog-summary"></div>
       <div class="table-card">
@@ -848,6 +878,14 @@ document.addEventListener('click',function(e){
         <div class="table-header">
           <div class="table-title">Customer Directory</div>
           <button class="btn-act" data-cls-fn="openClientModal">+ Add Customer</button>
+        </div>
+        <div class="customer-tools">
+          <div class="customer-tools-main">
+            <div class="customer-search"><input class="f-input" id="customer-search" type="search" placeholder="Search name, company, phone, email or address" oninput="renderClients()"><button class="customer-search-clear" type="button" aria-label="Clear customer search" onclick="window.clearCustomerSearch()">×</button></div>
+            <select class="f-input f-select" id="customer-sort" onchange="renderClients()"><option value="billed-desc">Highest billed</option><option value="billed-asc">Lowest billed</option><option value="name-asc">Name A-Z</option><option value="newest">Newest first</option></select>
+            <div class="customer-view-toggle" aria-label="Customer view"><button id="customer-view-grid" class="active" type="button" onclick="window.setCustomerView('grid')">▦ Grid</button><button id="customer-view-table" type="button" onclick="window.setCustomerView('table')">☷ Table</button></div>
+          </div>
+          <div class="customer-filter-row"><button class="customer-chip active" data-customer-filter="all" onclick="window.setCustomerFilter('all')">All Customers</button><button class="customer-chip" data-customer-filter="unpaid" onclick="window.setCustomerFilter('unpaid')">Outstanding Unpaid</button><button class="customer-chip" data-customer-filter="high-value" onclick="window.setCustomerFilter('high-value')">High Value (&gt; LKR 100k)</button><button class="customer-clear-filters" type="button" onclick="window.clearCustomerFilters()">Clear filters</button></div>
         </div>
         <div style="padding:1.25rem" id="client-grid-wrap">
           <div class="client-grid" id="client-grid"></div>
@@ -1139,6 +1177,54 @@ document.addEventListener('click',function(e){
 </div><!-- /main -->
 
 <!-- ════ ADD TRANSACTION MODAL ════ -->
+<div class="modal-overlay" id="payroll-staff-modal">
+  <div class="modal-box" style="max-width:760px">
+    <div class="modal-head"><div class="modal-title" id="payroll-staff-modal-title">Add New Employee</div><button class="modal-close" onclick="window.closeModal('payroll-staff-modal')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="payroll-edit-id">
+      <div class="f-section">Employment Details</div>
+      <div class="payroll-avatar-preview"><img id="payroll-avatar-preview" alt="Employee photo"><div><label>Employee Photo</label><input class="f-input" type="file" id="payroll-avatar" accept="image/png,image/jpeg,image/webp" onchange="window.previewPayrollAvatar(this)"><div class="logo-area-hint">PNG, JPG, or WebP · Max 5MB · optimized before saving</div></div></div>
+      <div class="f-row"><div class="f-group"><label>Employee ID</label><input class="f-input" id="payroll-employee-id" readonly></div><div class="f-group"><label>Full Name *</label><input class="f-input" id="payroll-name"></div></div>
+      <div class="f-row"><div class="f-group"><label>Designation / Job Title</label><input class="f-input" id="payroll-job-title"></div><div class="f-group"><label>Department</label><input class="f-input" id="payroll-department" placeholder="e.g. Operations"></div></div>
+      <div class="f-row"><div class="f-group"><label>Employment Type</label><select class="f-input f-select" id="payroll-type"><option value="permanent">Full-time / Permanent</option><option value="part-time">Part-time</option><option value="contract">Contract</option><option value="intern">Intern</option></select></div><div class="f-group"><label>Join Date</label><input class="f-input" type="date" id="payroll-join-date"></div></div>
+      <div class="f-row"><div class="f-group"><label>NIC / Passport</label><input class="f-input" id="payroll-nic"></div><div class="f-group"></div></div>
+      <div class="f-section">Salary &amp; Tax</div>
+      <div class="f-row"><div class="f-group"><label>Basic Salary (EPF Base)</label><input class="f-input" type="number" min="0" id="payroll-basic" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"><label>Fixed Allowances</label><input class="f-input" type="number" min="0" id="payroll-fixed" oninput="window.updatePayrollStaffPreview()"></div></div>
+      <div class="f-row"><div class="f-group"><label>Non-EPF Allowances</label><input class="f-input" type="number" min="0" id="payroll-non-epf" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"><label><input type="checkbox" id="payroll-secondary" onchange="window.updatePayrollStaffPreview()"> Secondary employment (no tax relief)</label></div></div>
+      <div class="f-row"><div class="f-group"><label>Transport Allowance</label><input class="f-input" type="number" min="0" id="payroll-transport" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"><label>Housing Allowance</label><input class="f-input" type="number" min="0" id="payroll-housing" oninput="window.updatePayrollStaffPreview()"></div></div>
+      <div class="f-row"><div class="f-group"><label>Meal Allowance</label><input class="f-input" type="number" min="0" id="payroll-meal" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"><label>Other Allowances</label><input class="f-input" type="number" min="0" id="payroll-other-allowance" oninput="window.updatePayrollStaffPreview()"></div></div>
+      <div class="f-row"><div class="f-group"><label>Overtime Hours</label><input class="f-input" type="number" min="0" id="payroll-overtime-hours" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"><label>Overtime Rate</label><input class="f-input" type="number" min="0" id="payroll-overtime-rate" oninput="window.updatePayrollStaffPreview()"></div></div>
+      <div class="f-row"><div class="f-group"><label>Bonus / Commission</label><input class="f-input" type="number" min="0" id="payroll-bonus" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"><label>Other Earnings</label><input class="f-input" type="number" min="0" id="payroll-other-earnings" oninput="window.updatePayrollStaffPreview()"></div></div>
+      <div class="f-section">Other Deductions</div>
+      <div class="f-row"><div class="f-group"><label>Loan Deduction</label><input class="f-input" type="number" min="0" id="payroll-loan" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"><label>Salary Advance Deduction</label><input class="f-input" type="number" min="0" id="payroll-advance" oninput="window.updatePayrollStaffPreview()"></div></div>
+      <div class="f-row"><div class="f-group"><label>Other Deductions</label><input class="f-input" type="number" min="0" id="payroll-other-deduction" oninput="window.updatePayrollStaffPreview()"></div><div class="f-group"></div></div>
+      <div class="f-section">Statutory, Bank &amp; Contact Details</div>
+      <div class="f-row"><div class="f-group"><label>Company EPF Reg No.</label><input class="f-input" id="payroll-company-epf"></div><div class="f-group"><label>EPF / ETF Member No.</label><input class="f-input" id="payroll-member-no"></div></div>
+      <div class="f-row"><div class="f-group"><label>EPF B-Card Serial</label><input class="f-input" id="payroll-b-card"></div><div class="f-group"><label>Email</label><input class="f-input" type="email" id="payroll-email"></div></div>
+      <div class="f-row"><div class="f-group"><label>WhatsApp / Mobile</label><input class="f-input" id="payroll-phone"></div><div class="f-group"><label>Bank Name</label><input class="f-input" id="payroll-bank"></div></div>
+      <div class="f-row"><div class="f-group"><label>Branch Code</label><input class="f-input" id="payroll-branch"></div><div class="f-group"><label>Bank Account Number</label><input class="f-input" id="payroll-account"></div></div>
+      <div class="payroll-modal-preview" id="payroll-staff-preview"></div>
+    </div>
+    <div class="modal-foot"><button class="btn-cancel" onclick="window.closeModal('payroll-staff-modal')">Cancel</button><button class="btn-save" onclick="window.savePayrollStaff()">Save Employee</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="salary-paid-modal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head"><div class="modal-title">Mark Salary as Paid</div><button class="modal-close" onclick="window.closeModal('salary-paid-modal')">×</button></div>
+    <div class="modal-body"><div class="payroll-modal-preview" id="salary-paid-summary"></div><div class="f-row"><div class="f-group"><label>Payroll Period</label><input class="f-input" type="month" id="salary-paid-period"></div><div class="f-group"><label>Payment / Scheduled Date</label><input class="f-input" type="date" id="salary-paid-date"></div></div><div class="f-row"><div class="f-group"><label>Payment Method</label><select class="f-input f-select" id="salary-paid-method"><option>Online Bank Transfer</option><option>Bank Transfer</option><option>Cheque</option><option>Cash</option></select></div><div class="f-group"><label>Payroll Status</label><select class="f-input f-select" id="salary-paid-status"><option value="draft">Draft</option><option value="pending-approval">Pending Approval</option><option value="approved">Approved</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select></div></div><div class="f-group full"><label>Payroll Description</label><input class="f-input" id="salary-paid-description"></div><div class="f-group full"><label>Bank Reference / Transaction ID</label><input class="f-input" id="salary-paid-ref"></div><div class="f-group full"><label>Payment Slip (PDF, PNG or JPG)</label><input class="f-input" type="file" id="salary-paid-slip" accept=".pdf,image/png,image/jpeg"></div></div>
+    <div class="modal-foot"><button class="btn-cancel" onclick="window.closeModal('salary-paid-modal')">Cancel</button><button class="btn-save" onclick="window.commitSalaryPayment()">Save &amp; Commit Outflow</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="statutory-settlement-modal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head"><div class="modal-title">Settle Statutory Liability</div><button class="modal-close" onclick="window.closeModal('statutory-settlement-modal')">×</button></div>
+    <div class="modal-body"><input type="hidden" id="statutory-kind"><div class="payroll-modal-preview" id="statutory-summary"></div><div class="f-row"><div class="f-group"><label>Settlement Date</label><input class="f-input" type="date" id="statutory-date"></div><div class="f-group"><label>Source Bank Account</label><input class="f-input" id="statutory-bank"></div></div><div class="f-group full"><label>C-Form / Tax Confirmation Reference</label><input class="f-input" id="statutory-ref"></div><div class="f-group full"><label>Receipt Attachment</label><input class="f-input" type="file" id="statutory-slip" accept=".pdf,image/png,image/jpeg"></div></div>
+    <div class="modal-foot"><button class="btn-cancel" onclick="window.closeModal('statutory-settlement-modal')">Cancel</button><button class="btn-save" onclick="window.commitStatutorySettlement()">Confirm Statutory Payment</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="txn-modal">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-head"><div class="modal-title">Add Transaction</div><button class="modal-close" data-cls-fn="closeModal" data-cls-arg="txn-modal">×</button></div>
@@ -2076,7 +2162,7 @@ function maybeStartFirstTour(){
 // ════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════
-const pageTitles={dashboard:['Studio Cashflow Control','Your invoices, cashflow, and operations at a glance'],cashflow:['Money In & Out','Record income and outgoing payments in one register'],expenses:['Expenses','Track business spending by supplier and category'],invoices:['Invoice Management','Create and send invoices, quotes, and estimates'],clients:['Customer Directory','Manage your customers and billing contacts'],suppliers:['Supplier Management','Manage vendors and link them to business spending'],reports:['Reports','Invoice, payment, and customer reporting'],insights:['Business Insights','Simple cashflow and operational checks for better decisions'],team:['Team Access','Control Studio roles for up to 5 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],support:['Priority Support','Chat with Priority Support. Replies within 30 minutes.'],settings:['Business Settings','Manage your invoice profile and preferences']};
+const pageTitles={dashboard:['Studio Cashflow Control','Your invoices, cashflow, and operations at a glance'],cashflow:['Money In & Out','Record income and outgoing payments in one register'],expenses:['Expenses','Track business spending by supplier and category'],payroll:['Staff & Payroll','Manage employee salary outflows, EPF/ETF, APIT, payslips, and settlements'],invoices:['Invoice Management','Create and send invoices, quotes, and estimates'],clients:['Customer Directory','Manage your customers and billing contacts'],suppliers:['Supplier Management','Manage vendors and link them to business spending'],reports:['Reports','Invoice, payment, and customer reporting'],insights:['Business Insights','Simple cashflow and operational checks for better decisions'],team:['Team Access','Control Studio roles for up to 5 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],support:['Priority Support','Chat with Priority Support. Replies within 30 minutes.'],settings:['Business Settings','Manage your invoice profile and preferences']};
 window.nav = function nav(view){
   if(view==='backlog'&&!isAdminUser()) view='dashboard';
   const actualView=view==='support'?'settings':view;
@@ -2092,6 +2178,7 @@ window.nav = function nav(view){
   if(view==='dashboard') renderDashboard();
   if(view==='cashflow') renderCashflow();
   if(view==='expenses') renderExpenses();
+  if(view==='payroll') renderPayrollModule();
   if(view==='invoices'){renderInvoices();populateClientSelect();}
   if(view==='clients') renderClients();
   if(view==='suppliers') renderSuppliers();
@@ -3016,7 +3103,7 @@ function resetInvoiceModal(){
   ['i-client','i-cemail','i-caddr','i-cphone','i-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const defaultNotes=document.getElementById('i-notes');if(defaultNotes)defaultNotes.value=DB.settings.footer||'';
   document.getElementById('i-terms').value='Net 30';
-  document.getElementById('i-cur').value='LKR';
+  document.getElementById('i-cur').value=studioCurrency(DB.settings.invoiceCurrency||DB.settings.mainCurrency||'LKR');
   document.getElementById('inv-disc').value='0';
   document.getElementById('inv-vat').checked=false;
   var vr=document.getElementById('inv-vatrate');if(vr)vr.value=(DB.settings.vatRate!=null?DB.settings.vatRate:15);
@@ -3534,6 +3621,189 @@ function renderTeamAccess(){
 }
 
 // ════════════════════════════════
+// STAFF & PAYROLL
+// ════════════════════════════════
+var payrollDirectoryState={filter:'all',selectedId:null};
+var payrollPendingAvatar='';
+var payrollTrendChart=null,payrollSplitChart=null;
+function payrollValue(id){var el=document.getElementById(id);return el?el.value:'';}
+function payrollNumber(id){return Math.max(0,Number(payrollValue(id))||0);}
+function payrollTax(gross,secondary){
+  gross=Math.max(0,Number(gross)||0);
+  if(secondary)return payrollRound(gross*.10);
+  var taxable=Math.max(0,gross-150000),tax=0;
+  var bands=[[50000,.06],[50000,.12],[50000,.18],[50000,.24],[Infinity,.30]];
+  bands.forEach(function(band){var amount=Math.min(taxable,band[0]);if(amount>0){tax+=amount*band[1];taxable-=amount;}});
+  return payrollRound(tax);
+}
+function payrollEmployeeCalc(person){
+  person=person||{};
+  var basic=Math.max(0,Number(person.basicSalary!=null?person.basicSalary:person.grossEarnings)||0);
+  var fixed=Math.max(0,Number(person.fixedAllowances)||0);
+  var nonEpf=Math.max(0,Number(person.nonEpfAllowances)||0);
+  var transport=Math.max(0,Number(person.transportAllowance)||0),housing=Math.max(0,Number(person.housingAllowance)||0),meal=Math.max(0,Number(person.mealAllowance)||0),otherAllowance=Math.max(0,Number(person.otherAllowance)||0);
+  var overtime=payrollRound(Math.max(0,Number(person.overtimeHours)||0)*Math.max(0,Number(person.overtimeRate)||0));
+  var bonus=Math.max(0,Number(person.bonusCommission)||0),otherEarnings=Math.max(0,Number(person.otherEarnings)||0);
+  var loan=Math.max(0,Number(person.loanDeduction)||0),advance=Math.max(0,Number(person.advanceDeduction)||0),otherDeduction=Math.max(0,Number(person.otherDeduction)||0);
+  var gross=payrollRound(basic+fixed+nonEpf+transport+housing+meal+otherAllowance+overtime+bonus+otherEarnings);
+  var statutory=person.employmentType!=='contract'&&person.employmentType!=='intern';
+  var employeeEpf=statutory?payrollRound(basic*.08):0;
+  var employerEpf=statutory?payrollRound(basic*.12):0;
+  var etf=statutory?payrollRound(basic*.03):0;
+  var apit=payrollTax(gross,person.secondaryEmployment===true);
+  var deductions=payrollRound(employeeEpf+apit+loan+advance+otherDeduction);
+  var net=payrollRound(Math.max(0,gross-deductions));
+  return{basic:basic,fixed:fixed,nonEpf:nonEpf,transport:transport,housing:housing,meal:meal,otherAllowance:otherAllowance,overtime:overtime,bonus:bonus,otherEarnings:otherEarnings,gross:gross,employeeEpf:employeeEpf,employerEpf:employerEpf,etf:etf,epfEtf:payrollRound(employeeEpf+employerEpf+etf),apit:apit,loan:loan,advance:advance,otherDeduction:otherDeduction,deductions:deductions,net:net,ctc:payrollRound(gross+employerEpf+etf)};
+}
+function nextPayrollEmployeeId(){
+  var max=(DB.payrollStaff||[]).reduce(function(n,p){var m=String(p.employeeId||'').match(/(\d+)/);return Math.max(n,m?Number(m[1]):0);},0);
+  return 'EMP-'+String(max+1).padStart(3,'0');
+}
+function payrollCurrentMonth(){return new Date().toISOString().slice(0,7);}
+function payrollPaymentFor(person){
+  var month=payrollCurrentMonth();
+  return (person.payments||[]).find(function(p){return p.month===month;})||null;
+}
+function payrollSummary(){
+  var active=(DB.payrollStaff||[]).filter(function(p){return p.active!==false;});
+  return active.reduce(function(out,p){var c=payrollEmployeeCalc(p);out.gross+=c.gross;out.net+=c.net;out.epfEtf+=c.epfEtf;out.apit+=c.apit;out.ctc+=c.ctc;return out;},{gross:0,net:0,epfEtf:0,apit:0,ctc:0});
+}
+window.setPayrollFilter=function(filter){payrollDirectoryState.filter=filter||'all';renderPayrollModule();};
+window.clearPayrollFilters=function(){payrollDirectoryState.filter='all';var ids={'payroll-search':'','payroll-status-filter':'active','payroll-month-filter':payrollCurrentMonth(),'payroll-payment-status-filter':'','payroll-department-filter':'','payroll-method-filter':''};Object.keys(ids).forEach(function(id){var el=document.getElementById(id);if(el)el.value=ids[id];});renderPayrollModule();};
+window.openPayrollStaffModal=function(id){
+  var person=(DB.payrollStaff||[]).find(function(p){return String(p.id)===String(id);})||null;
+  document.getElementById('payroll-staff-modal-title').textContent=person?'Edit Employee':'Add New Employee';
+  document.getElementById('payroll-edit-id').value=person?person.id:'';
+  document.getElementById('payroll-employee-id').value=person?person.employeeId||nextPayrollEmployeeId():nextPayrollEmployeeId();
+  document.getElementById('payroll-name').value=person?person.name||'':'';
+  document.getElementById('payroll-job-title').value=person?person.jobTitle||'':'';
+  document.getElementById('payroll-department').value=person?person.department||'':'';
+  document.getElementById('payroll-type').value=person?person.employmentType||'permanent':'permanent';
+  document.getElementById('payroll-join-date').value=person?person.joinDate||'':todayStr();
+  document.getElementById('payroll-nic').value=person?person.nic||'':'';
+  document.getElementById('payroll-basic').value=person?person.basicSalary||person.grossEarnings||'':'';
+  document.getElementById('payroll-fixed').value=person?person.fixedAllowances||'':'';
+  document.getElementById('payroll-non-epf').value=person?person.nonEpfAllowances||'':'';
+  document.getElementById('payroll-transport').value=person?person.transportAllowance||'':'';
+  document.getElementById('payroll-housing').value=person?person.housingAllowance||'':'';
+  document.getElementById('payroll-meal').value=person?person.mealAllowance||'':'';
+  document.getElementById('payroll-other-allowance').value=person?person.otherAllowance||'':'';
+  document.getElementById('payroll-overtime-hours').value=person?person.overtimeHours||'':'';
+  document.getElementById('payroll-overtime-rate').value=person?person.overtimeRate||'':'';
+  document.getElementById('payroll-bonus').value=person?person.bonusCommission||'':'';
+  document.getElementById('payroll-other-earnings').value=person?person.otherEarnings||'':'';
+  document.getElementById('payroll-loan').value=person?person.loanDeduction||'':'';
+  document.getElementById('payroll-advance').value=person?person.advanceDeduction||'':'';
+  document.getElementById('payroll-other-deduction').value=person?person.otherDeduction||'':'';
+  document.getElementById('payroll-secondary').checked=!!(person&&person.secondaryEmployment);
+  document.getElementById('payroll-company-epf').value=person?person.companyEpfNo||'':'';
+  document.getElementById('payroll-member-no').value=person?person.epfNo||person.memberNo||'':'';
+  document.getElementById('payroll-b-card').value=person?person.bCard||'':'';
+  document.getElementById('payroll-email').value=person?person.email||'':'';
+  document.getElementById('payroll-phone').value=person?person.phone||'':'';
+  document.getElementById('payroll-bank').value=person?person.bankName||'':'';
+  document.getElementById('payroll-branch').value=person?person.branchCode||'':'';
+  document.getElementById('payroll-account').value=person?person.accountNumber||'':'';
+  payrollPendingAvatar=person?person.avatar||'':'';
+  var avatarPreview=document.getElementById('payroll-avatar-preview');
+  if(avatarPreview){avatarPreview.src=payrollPendingAvatar||'';avatarPreview.style.display=payrollPendingAvatar?'block':'none';}
+  document.getElementById('payroll-avatar').value='';
+  window.updatePayrollStaffPreview();window.openModal('payroll-staff-modal');
+};
+window.previewPayrollAvatar=async function(input){
+  if(!input.files||!input.files[0])return;
+  try{
+    payrollPendingAvatar=window.clsPrepareInvoiceLogo?await window.clsPrepareInvoiceLogo(input.files[0]):'';
+    if(!payrollPendingAvatar)throw new Error('The employee photo could not be prepared.');
+    var preview=document.getElementById('payroll-avatar-preview');preview.src=payrollPendingAvatar;preview.style.display='block';
+  }catch(e){alert(e&&e.message?e.message:'The employee photo could not be uploaded.');input.value='';}
+};
+window.updatePayrollStaffPreview=function(){
+  var calc=payrollEmployeeCalc({basicSalary:payrollNumber('payroll-basic'),fixedAllowances:payrollNumber('payroll-fixed'),nonEpfAllowances:payrollNumber('payroll-non-epf'),transportAllowance:payrollNumber('payroll-transport'),housingAllowance:payrollNumber('payroll-housing'),mealAllowance:payrollNumber('payroll-meal'),otherAllowance:payrollNumber('payroll-other-allowance'),overtimeHours:payrollNumber('payroll-overtime-hours'),overtimeRate:payrollNumber('payroll-overtime-rate'),bonusCommission:payrollNumber('payroll-bonus'),otherEarnings:payrollNumber('payroll-other-earnings'),loanDeduction:payrollNumber('payroll-loan'),advanceDeduction:payrollNumber('payroll-advance'),otherDeduction:payrollNumber('payroll-other-deduction'),employmentType:payrollValue('payroll-type'),secondaryEmployment:document.getElementById('payroll-secondary').checked});
+  document.getElementById('payroll-staff-preview').innerHTML='<strong>Live statutory preview</strong><br>Gross salary: '+fmtAmtFull(calc.gross)+' · Net take-home: '+fmtAmtFull(calc.net)+'<br>EPF/ETF remittance: '+fmtAmtFull(calc.epfEtf)+' · APIT: '+fmtAmtFull(calc.apit)+' · Total CTC: '+fmtAmtFull(calc.ctc);
+};
+window.savePayrollStaff=function(){
+  var name=payrollValue('payroll-name').trim();if(!name){alert('Employee name is required.');return;}
+  var editId=payrollValue('payroll-edit-id'),person=(DB.payrollStaff||[]).find(function(p){return String(p.id)===String(editId);});
+  if(!person){person={id:'staff-'+Date.now(),payments:[],active:true,createdAt:new Date().toISOString()};DB.payrollStaff.push(person);}
+  Object.assign(person,{employeeId:payrollValue('payroll-employee-id'),name:name,avatar:payrollPendingAvatar||'',jobTitle:payrollValue('payroll-job-title').trim(),department:payrollValue('payroll-department').trim(),employmentType:payrollValue('payroll-type'),joinDate:payrollValue('payroll-join-date'),nic:payrollValue('payroll-nic').trim(),basicSalary:payrollNumber('payroll-basic'),fixedAllowances:payrollNumber('payroll-fixed'),nonEpfAllowances:payrollNumber('payroll-non-epf'),transportAllowance:payrollNumber('payroll-transport'),housingAllowance:payrollNumber('payroll-housing'),mealAllowance:payrollNumber('payroll-meal'),otherAllowance:payrollNumber('payroll-other-allowance'),overtimeHours:payrollNumber('payroll-overtime-hours'),overtimeRate:payrollNumber('payroll-overtime-rate'),bonusCommission:payrollNumber('payroll-bonus'),otherEarnings:payrollNumber('payroll-other-earnings'),loanDeduction:payrollNumber('payroll-loan'),advanceDeduction:payrollNumber('payroll-advance'),otherDeduction:payrollNumber('payroll-other-deduction'),secondaryEmployment:document.getElementById('payroll-secondary').checked,companyEpfNo:payrollValue('payroll-company-epf').trim(),epfNo:payrollValue('payroll-member-no').trim(),bCard:payrollValue('payroll-b-card').trim(),email:payrollValue('payroll-email').trim(),phone:payrollValue('payroll-phone').trim(),bankName:payrollValue('payroll-bank').trim(),branchCode:payrollValue('payroll-branch').trim(),accountNumber:payrollValue('payroll-account').trim(),salaried:true,active:person.active!==false,updatedAt:new Date().toISOString()});
+  saveDB();window.closeModal('payroll-staff-modal');renderPayrollModule();
+};
+function payrollInitials(name){return String(name||'?').split(/\s+/).map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();}
+function renderPayrollModule(){
+  DB.payrollStaff=Array.isArray(DB.payrollStaff)?DB.payrollStaff:[];
+  var monthFilter=document.getElementById('payroll-month-filter');if(monthFilter&&!monthFilter.value)monthFilter.value=payrollCurrentMonth();
+  var departmentFilter=document.getElementById('payroll-department-filter');
+  if(departmentFilter){var selectedDepartment=departmentFilter.value,departments=Array.from(new Set(DB.payrollStaff.map(function(p){return String(p.department||'').trim();}).filter(Boolean))).sort();departmentFilter.innerHTML='<option value="">All Departments</option>'+departments.map(function(d){return '<option>'+escHTML(d)+'</option>';}).join('');departmentFilter.value=selectedDepartment;}
+  var sum=payrollSummary(),settlements=DB.settings.payrollSettlements||{},month=payrollCurrentMonth();
+  document.getElementById('payroll-kpis').innerHTML='<div class="payroll-kpi"><div class="payroll-kpi-label">Total Payroll Gross</div><div class="payroll-kpi-value">'+fmtAmt(sum.gross)+'</div><div class="payroll-kpi-note">'+DB.payrollStaff.filter(function(p){return p.active!==false;}).length+' active staff</div></div><div class="payroll-kpi"><div class="payroll-kpi-label">Direct Net Payout</div><div class="payroll-kpi-value amount-pos">'+fmtAmt(sum.net)+'</div><div class="payroll-kpi-note">Monthly salary outflow</div></div><div class="payroll-kpi stat"><div class="payroll-kpi-label">EPF (20%) + ETF (3%)</div><div class="payroll-kpi-value">'+fmtAmt(sum.epfEtf)+'</div><button class="btn-act-outline" onclick="window.openStatutorySettlement(\'epf\')">'+(settlements[month+'-epf']?'Settled':'Settle Batch')+'</button></div><div class="payroll-kpi tax"><div class="payroll-kpi-label">APIT / PAYE Tax</div><div class="payroll-kpi-value amount-neg">'+fmtAmt(sum.apit)+'</div><button class="btn-act-outline" onclick="window.openStatutorySettlement(\'apit\')">'+(settlements[month+'-apit']?'Settled':'Settle Tax Batch')+'</button></div>';
+  var search=String((document.getElementById('payroll-search')||{}).value||'').toLowerCase(),status=String((document.getElementById('payroll-status-filter')||{}).value||'active'),period=String((document.getElementById('payroll-month-filter')||{}).value||payrollCurrentMonth()),paymentStatus=String((document.getElementById('payroll-payment-status-filter')||{}).value||''),department=String((document.getElementById('payroll-department-filter')||{}).value||''),method=String((document.getElementById('payroll-method-filter')||{}).value||'');
+  var list=DB.payrollStaff.filter(function(p){var c=payrollEmployeeCalc(p),record=(p.payments||[]).find(function(pay){return pay.month===period;}),recordStatus=record?(record.status||'paid'):'not-created',hay=[p.name,p.employeeId,p.jobTitle,p.department].join(' ').toLowerCase();if(search&&hay.indexOf(search)===-1)return false;if(status==='active'&&p.active===false)return false;if(status==='inactive'&&p.active!==false)return false;if(paymentStatus&&recordStatus!==paymentStatus)return false;if(department&&p.department!==department)return false;if(method&&(!record||record.method!==method))return false;if(payrollDirectoryState.filter==='permanent'&&p.employmentType!=='permanent')return false;if(payrollDirectoryState.filter==='contract'&&p.employmentType==='permanent')return false;if(payrollDirectoryState.filter==='apit'&&c.apit<=0)return false;return true;});
+  document.querySelectorAll('[data-payroll-filter]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.payrollFilter===payrollDirectoryState.filter);});
+  document.getElementById('payroll-table').innerHTML=list.map(function(p){var c=payrollEmployeeCalc(p),record=(p.payments||[]).find(function(pay){return pay.month===period;}),recordStatus=record&&record.status?record.status:(record?'paid':'not-created'),avatar=p.avatar?'<img class="payroll-avatar-photo" src="'+escHTML(p.avatar)+'" alt="">':'<span class="payroll-avatar">'+payrollInitials(p.name)+'</span>';return '<tr onclick="window.openPayrollProfile('+JSON.stringify(String(p.id))+')" style="cursor:pointer"><td>'+avatar+'<strong>'+escHTML(p.name||'Employee')+'</strong><br><span style="font-size:.62rem;margin-left:3rem">'+escHTML(p.jobTitle||'')+' · '+escHTML(p.employeeId||'')+(p.department?' · '+escHTML(p.department):'')+'</span></td><td>'+escHTML(p.employmentType||'permanent')+'</td><td>'+fmtAmt(c.gross)+'</td><td class="amount-pos">'+fmtAmt(c.net)+'</td><td>'+fmtAmt(c.epfEtf)+'</td><td>'+fmtAmt(c.apit)+'</td><td><strong>'+fmtAmt(c.ctc)+'</strong></td><td><span class="payroll-status '+(p.active===false?'inactive':(recordStatus==='paid'?'paid':'pending'))+'">'+(p.active===false?'Inactive':escHTML(recordStatus.replace(/-/g,' ')))+'</span></td><td>›</td></tr>';}).join('')||'<tr><td colspan="9" style="text-align:center;padding:2rem">'+(DB.payrollStaff.length?'No staff match these filters.':'No payroll staff yet. Use Add Staff to begin.')+'</td></tr>';
+  renderPayrollCharts();
+}
+function payrollMonthKeys(){
+  var out=[],d=new Date();d.setDate(1);
+  for(var i=5;i>=0;i--){var m=new Date(d.getFullYear(),d.getMonth()-i,1);out.push(m.toISOString().slice(0,7));}
+  return out;
+}
+async function renderPayrollCharts(){
+  var trendCanvas=document.getElementById('payroll-trend-chart'),splitCanvas=document.getElementById('payroll-split-chart');if(!trendCanvas||!splitCanvas)return;
+  try{await loadChartLibrary();}catch(e){return;}
+  var months=payrollMonthKeys(),current=payrollSummary();
+  var history=months.map(function(month){
+    var records=(DB.expenses||[]).filter(function(e){return e.cat==='Payroll'&&String(e.date||'').slice(0,7)===month&&e.payroll;});
+    if(!records.length&&month===payrollCurrentMonth())return{gross:current.gross,net:current.net,stat:current.epfEtf+current.apit};
+    return records.reduce(function(out,e){var p=e.payroll||{};out.gross+=Number(p.gross)||0;out.net+=Number(p.netSalary||p.net)||0;out.stat+=(Number(p.employeeEpf)||0)+(Number(p.employerEpf)||0)+(Number(p.etf)||0)+(Number(p.apit)||0);return out;},{gross:0,net:0,stat:0});
+  });
+  if(payrollTrendChart)payrollTrendChart.destroy();
+  payrollTrendChart=new Chart(trendCanvas,{type:'line',data:{labels:months.map(function(m){return new Date(m+'-01T00:00:00').toLocaleDateString('en',{month:'short'});}),datasets:[{label:'Gross Pay',data:history.map(function(x){return x.gross;}),borderColor:'#1c1814',backgroundColor:'transparent',tension:.3},{label:'Net Salaries',data:history.map(function(x){return x.net;}),borderColor:'#1a9e5c',backgroundColor:'transparent',tension:.3},{label:'Statutory',data:history.map(function(x){return x.stat;}),borderColor:'#B8922A',backgroundColor:'transparent',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+  if(payrollSplitChart)payrollSplitChart.destroy();
+  payrollSplitChart=new Chart(splitCanvas,{type:'doughnut',data:{labels:['Net Salaries','EPF / ETF','APIT'],datasets:[{data:[current.net,current.epfEtf,current.apit],backgroundColor:['#1a9e5c','#B8922A','#c0392b'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+}
+window.openPayrollProfile=function(id){payrollDirectoryState.selectedId=id;document.getElementById('payroll-overview').classList.add('hidden');document.getElementById('payroll-profile').classList.add('active');renderPayrollProfile();};
+window.closePayrollProfile=function(){payrollDirectoryState.selectedId=null;document.getElementById('payroll-profile').classList.remove('active');document.getElementById('payroll-overview').classList.remove('hidden');renderPayrollModule();};
+function selectedPayrollPerson(){return (DB.payrollStaff||[]).find(function(p){return String(p.id)===String(payrollDirectoryState.selectedId);});}
+function payrollFileData(file){
+  return new Promise(function(resolve,reject){
+    if(!file){resolve(null);return;}
+    if(file.size>700000){reject(new Error('Attachments must be smaller than 700 KB so they can be stored safely with the payroll record.'));return;}
+    var reader=new FileReader();reader.onload=function(){resolve({name:file.name,type:file.type||'application/octet-stream',data:String(reader.result||'')});};reader.onerror=function(){reject(new Error('The attachment could not be read.'));};reader.readAsDataURL(file);
+  });
+}
+function payrollAttachmentLink(attachment,name){
+  if(!attachment||!attachment.data)return escHTML(name||'No attachment');
+  return '<a href="'+escHTML(attachment.data)+'" download="'+escHTML(attachment.name||name||'attachment')+'">📎 '+escHTML(attachment.name||name||'View attachment')+'</a>';
+}
+function renderPayrollProfile(){
+  var p=selectedPayrollPerson();if(!p)return window.closePayrollProfile();var c=payrollEmployeeCalc(p),payments=(p.payments||[]).slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+  var profileAvatar=p.avatar?'<img class="payroll-avatar-photo" src="'+escHTML(p.avatar)+'" alt="">':'<span class="payroll-avatar">'+payrollInitials(p.name)+'</span>';
+  document.getElementById('payroll-profile-content').innerHTML='<div class="payroll-profile-grid"><div class="table-card" style="padding:1.2rem">'+profileAvatar+'<strong style="font-size:1.05rem">'+escHTML(p.name)+'</strong><div class="client-card-detail" style="margin-top:1rem">'+escHTML(p.jobTitle||'')+'<br>'+escHTML(p.employeeId||'')+' · '+escHTML(p.employmentType||'')+'<br>NIC: '+escHTML(p.nic||'—')+'<br>EPF/ETF: '+escHTML(p.epfNo||'—')+'<br>Bank: '+escHTML(p.bankName||'—')+' '+escHTML(p.accountNumber||'')+'<br>'+escHTML(p.email||'')+' '+escHTML(p.phone||'')+'</div><button class="btn-act-outline" style="margin-top:1rem" onclick="window.openPayrollStaffModal('+JSON.stringify(String(p.id))+')">Edit Details</button></div><div class="table-card" style="padding:1.2rem"><div class="table-title">Current Cash Flow Impact</div><div class="payroll-breakdown"><div><div class="payroll-kpi-label">Net Outflow</div><div class="payroll-kpi-value amount-pos">'+fmtAmt(c.net)+'</div></div><div><div class="payroll-kpi-label">EPF/ETF Remittance</div><div class="payroll-kpi-value">'+fmtAmt(c.epfEtf)+'</div></div><div><div class="payroll-kpi-label">APIT Tax</div><div class="payroll-kpi-value amount-neg">'+fmtAmt(c.apit)+'</div></div></div><div class="payroll-breakdown"><div><strong>Earnings</strong><div class="client-card-detail">Basic '+fmtAmt(c.basic)+'<br>Fixed allowances '+fmtAmt(c.fixed)+'<br>Non-EPF '+fmtAmt(c.nonEpf)+'<br><strong>Gross '+fmtAmt(c.gross)+'</strong></div></div><div><strong>Deductions</strong><div class="client-card-detail">Employee EPF '+fmtAmt(c.employeeEpf)+'<br>APIT '+fmtAmt(c.apit)+'<br><strong>Net '+fmtAmt(c.net)+'</strong></div></div><div><strong>Employer Contributions</strong><div class="client-card-detail">Employer EPF '+fmtAmt(c.employerEpf)+'<br>ETF '+fmtAmt(c.etf)+'<br><strong>Total CTC '+fmtAmt(c.ctc)+'</strong></div></div></div></div></div><div class="table-card payroll-history"><div class="table-header"><div class="table-title">Historical Outflow Timeline</div></div><table><thead><tr><th>Date</th><th>Month</th><th>Method</th><th>Reference</th><th>Proof</th><th>Amount</th></tr></thead><tbody>'+payments.map(function(pay){return '<tr><td>'+fmtD(pay.date)+'</td><td>'+escHTML(pay.month)+'</td><td>'+escHTML(pay.method)+'</td><td>'+escHTML(pay.reference||'—')+'</td><td>'+payrollAttachmentLink(pay.attachment,pay.slipName)+'</td><td>'+fmtAmt(pay.amount)+'</td></tr>';}).join('')+(payments.length?'':'<tr><td colspan="6" style="text-align:center">No salary payments recorded yet.</td></tr>')+'</tbody></table></div>';
+}
+window.openSalaryPaidModal=function(){var p=selectedPayrollPerson();if(!p)return;var c=payrollEmployeeCalc(p);document.getElementById('salary-paid-summary').innerHTML='<strong>'+escHTML(p.name)+'</strong><br>Net amount due: '+fmtAmtFull(c.net);document.getElementById('salary-paid-period').value=payrollCurrentMonth();document.getElementById('salary-paid-date').value=todayStr();document.getElementById('salary-paid-status').value='paid';document.getElementById('salary-paid-description').value=p.name+' salary - '+payrollCurrentMonth();document.getElementById('salary-paid-ref').value='';window.openModal('salary-paid-modal');};
+window.commitSalaryPayment=async function(){var p=selectedPayrollPerson();if(!p)return;var date=payrollValue('salary-paid-date'),period=payrollValue('salary-paid-period'),status=payrollValue('salary-paid-status'),ref=payrollValue('salary-paid-ref').trim();if(!date||!period){alert('Payroll period and payment date are required.');return;}if(status==='paid'&&!ref){alert('A transaction reference is required when payroll is marked paid.');return;}try{var c=payrollEmployeeCalc(p),file=(document.getElementById('salary-paid-slip').files||[])[0],attachment=await payrollFileData(file);p.payments=Array.isArray(p.payments)?p.payments:[];p.payments=p.payments.filter(function(pay){return pay.month!==period;});var reference=ref||('PAY-'+period.replace('-','')+'-'+String(p.employeeId||p.id).replace(/[^a-z0-9]/gi,''));p.payments.push({id:'pay-'+Date.now(),payrollReference:reference,month:period,date:date,description:payrollValue('salary-paid-description').trim(),status:status,method:payrollValue('salary-paid-method'),reference:ref,slipName:file?file.name:'',attachment:attachment,amount:c.net,gross:c.gross,deductions:c.deductions});if(status==='paid'){var existing=(DB.expenses||[]).some(function(e){return e.payrollStaffId===p.id&&String(e.date||'').slice(0,7)===period;});if(!existing)DB.expenses.push({date:date,desc:payrollValue('salary-paid-description').trim()||p.name+' salary payment',cat:'Payroll',vendor:p.name,amount:c.ctc,payrollStaffId:p.id,paymentMethod:payrollValue('salary-paid-method'),reference:ref,payroll:Object.assign({staffId:p.id,staffName:p.name,epfNo:p.epfNo,status:status,period:period},c),id:Date.now()});}await saveDB();window.closeModal('salary-paid-modal');renderPayrollProfile();}catch(e){alert(e&&e.message?e.message:'The salary payment could not be saved.');}};
+window.openStatutorySettlement=function(kind){var sum=payrollSummary();document.getElementById('statutory-kind').value=kind;document.getElementById('statutory-summary').innerHTML='<strong>'+(kind==='epf'?'EPF/ETF - Central Bank & ETF Board':'APIT/PAYE - Inland Revenue Department')+'</strong><br>Batch total: '+fmtAmtFull(kind==='epf'?sum.epfEtf:sum.apit);document.getElementById('statutory-date').value=todayStr();document.getElementById('statutory-ref').value='';window.openModal('statutory-settlement-modal');};
+window.commitStatutorySettlement=async function(){var kind=payrollValue('statutory-kind'),date=payrollValue('statutory-date'),ref=payrollValue('statutory-ref').trim();if(!date||!ref){alert('Settlement date and confirmation reference are required.');return;}try{var file=(document.getElementById('statutory-slip').files||[])[0],attachment=await payrollFileData(file),key=payrollCurrentMonth()+'-'+kind;DB.settings.payrollSettlements=DB.settings.payrollSettlements||{};DB.settings.payrollSettlements[key]={date:date,reference:ref,bank:payrollValue('statutory-bank').trim(),slipName:file?file.name:'',attachment:attachment};await saveDB();window.closeModal('statutory-settlement-modal');renderPayrollModule();}catch(e){alert(e&&e.message?e.message:'The statutory settlement could not be saved.');}};
+window.deactivatePayrollStaff=function(){var p=selectedPayrollPerson();if(!p||!confirm('Deactivate '+p.name+'? Historical payroll records will be preserved.'))return;p.active=false;p.deactivatedAt=new Date().toISOString();saveDB();window.closePayrollProfile();};
+window.printPayrollPayslip=function(){var p=selectedPayrollPerson();if(!p)return;var c=payrollEmployeeCalc(p),w=window.open('','_blank');if(!w)return;w.document.write('<!doctype html><title>Payslip '+escHTML(p.employeeId||'')+'</title><style>body{font-family:Arial;padding:40px;color:#222}h1{margin-bottom:4px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:10px 0}.total{font-weight:bold;font-size:18px}</style><h1>'+escHTML(DB.settings.bizName||'Business')+'</h1><p>Payslip · '+escHTML(payrollCurrentMonth())+'</p><h2>'+escHTML(p.name)+'</h2><div class="row"><span>Gross salary</span><b>'+fmtAmtFull(c.gross)+'</b></div><div class="row"><span>Employee EPF</span><b>- '+fmtAmtFull(c.employeeEpf)+'</b></div><div class="row"><span>APIT / PAYE</span><b>- '+fmtAmtFull(c.apit)+'</b></div><div class="row total"><span>Net take-home</span><b>'+fmtAmtFull(c.net)+'</b></div>');w.document.close();w.focus();w.print();};
+window.sharePayrollWhatsApp=function(){var p=selectedPayrollPerson();if(!p)return;var c=payrollEmployeeCalc(p),phone=String(p.phone||'').replace(/\D/g,'');if(!phone){alert('Add a WhatsApp number to this employee first.');return;}window.open('https://wa.me/'+phone+'?text='+encodeURIComponent('Payslip '+payrollCurrentMonth()+' - '+p.name+'\\nNet salary: '+fmtAmtFull(c.net)+'\\n'+(DB.settings.bizName||'Your employer')),'_blank');};
+async function payrollPayslipPdfBase64(person){
+  if((!window.jspdf||!window.jspdf.jsPDF)&&window.clsLoadScriptOnce)await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','cls-jspdf');
+  if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('The PDF generator could not be loaded.');
+  var c=payrollEmployeeCalc(person),doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'}),x=54,y=62;
+  doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text(DB.settings.bizName||'Your Business',x,y);
+  doc.setFontSize(11);doc.setTextColor(184,146,42);doc.text('PAYSLIP · '+payrollCurrentMonth(),x,y+22);
+  doc.setTextColor(28,24,20);doc.setFontSize(14);doc.text(person.name||'Employee',x,y+62);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text((person.employeeId||'')+' · '+(person.jobTitle||''),x,y+80);
+  var rows=[['Basic salary',c.basic],['Fixed allowances',c.fixed],['Non-EPF allowances',c.nonEpf],['Gross salary',c.gross],['Employee EPF','- '+fmtAmtFull(c.employeeEpf)],['APIT / PAYE','- '+fmtAmtFull(c.apit)],['Net take-home',c.net]];
+  y+=116;rows.forEach(function(row,index){doc.setDrawColor(226,221,212);doc.line(x,y+18,540,y+18);doc.setFont(index===3||index===6?'helvetica':'helvetica',index===3||index===6?'bold':'normal');doc.text(row[0],x,y);doc.text(typeof row[1]==='number'?fmtAmtFull(row[1]):String(row[1]),370,y);y+=34;});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(110,100,90);doc.text('Generated by CeylonryLabs.io Cashflow System',x,780);
+  return doc.output('datauristring').split(',')[1];
+}
+window.emailPayrollPayslip=async function(){var p=selectedPayrollPerson();if(!p||!p.email){alert('Add an email address to this employee first.');return;}try{var c=payrollEmployeeCalc(p),pdf=await payrollPayslipPdfBase64(p),response=await fetch('/.netlify/functions/send-payslip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:p.email,employeeName:p.name,businessName:DB.settings.bizName||'Your Employer',replyTo:DB.settings.email||'',month:payrollCurrentMonth(),netSalary:fmtAmtFull(c.net),pdfBase64:pdf})}),result=await response.json().catch(function(){return{};});if(!response.ok||!result.sent)throw new Error(result.error||'Payslip email failed.');alert('Payslip emailed to '+p.email+'.');}catch(e){alert(e&&e.message?e.message:'The payslip could not be emailed.');}};
+
+// ════════════════════════════════
 // SETTINGS
 // ════════════════════════════════
 let currentAccountSettingsTab = 'profile';
@@ -3552,6 +3822,7 @@ window.showAccountSettingsTab = function showAccountSettingsTab(tab){
 };
 function loadSettings(){
   const s=DB.settings;
+  hydrateStudioCurrencySelects();
   ['bizname','username','addr','email','vat','footer','u1','u2'].forEach(k=>{const el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('bizname','bizName').replace('username','username')]||s[k]||'';});
   document.getElementById('set-bizname').value=s.bizName||'';
   document.getElementById('set-username').value=s.username||'';
@@ -3567,6 +3838,8 @@ function loadSettings(){
   var prefixEl=document.getElementById('set-invoice-prefix');if(prefixEl)prefixEl.value=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(s.invoicePrefix):s.invoicePrefix)||'INV';
   var fontEl=document.getElementById('set-invoice-font');if(fontEl)fontEl.value=s.invoiceFont||'classic';
   var viewEl=document.getElementById('set-invoice-view');if(viewEl)viewEl.value=s.invoiceView||'modern';
+  var mainCurrencyEl=document.getElementById('set-main-currency');if(mainCurrencyEl)mainCurrencyEl.value=studioCurrency(s.mainCurrency||'LKR');
+  var invoiceCurrencyEl=document.getElementById('set-invoice-currency');if(invoiceCurrencyEl)invoiceCurrencyEl.value=studioCurrency(s.invoiceCurrency||s.mainCurrency||'LKR');
   syncTemplatePickers(tpl);
   loadLogoAlign();
   loadLogoSize();
@@ -3607,6 +3880,8 @@ window.saveSettings = function saveSettings(){
   var prefixEl=document.getElementById('set-invoice-prefix');DB.settings.invoicePrefix=window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(prefixEl&&prefixEl.value):((prefixEl&&prefixEl.value)||'INV');
   var fontEl=document.getElementById('set-invoice-font');DB.settings.invoiceFont=fontEl&&fontEl.value?fontEl.value:'classic';
   var viewEl=document.getElementById('set-invoice-view');DB.settings.invoiceView=viewEl&&viewEl.value?viewEl.value:'modern';
+  var mainCurrencyEl=document.getElementById('set-main-currency');DB.settings.mainCurrency=studioCurrency(mainCurrencyEl&&mainCurrencyEl.value);
+  var invoiceCurrencyEl=document.getElementById('set-invoice-currency');DB.settings.invoiceCurrency=studioCurrency(invoiceCurrencyEl&&invoiceCurrencyEl.value);
   setInvoiceTemplate(DB.settings.defaultTpl);
   DB.invoices.forEach(function(inv){inv.tpl=DB.settings.defaultTpl;});
   saveDB();applySettings();alert('✓ Settings saved successfully. All invoices will use the '+templateName(DB.settings.defaultTpl)+' template.');
@@ -3649,10 +3924,10 @@ function invoicePreviewSettings(){
 function renderSettingsInvoicePreview(){
   const box=document.getElementById('settings-invoice-preview');if(!box||!window.clsBuildInvoicePreviewFrame)return;
   const s=invoicePreviewSettings(),rate=Number(valueOr('set-vatrate',0))||0,prefix=valueOr('set-invoice-prefix','INV')||'INV';
-  const inv={num:prefix+'-0001',client:'Sample Customer',caddr:'Colombo, Sri Lanka',cemail:'customer@example.com',date:new Date().toISOString().slice(0,10),due:new Date(Date.now()+30*86400000).toISOString().slice(0,10),terms:'Net 30',cur:'LKR',lines:[{desc:'Professional service',qty:1,price:25000,total:25000}],sub:25000,vat:25000*rate/100,total:25000+(25000*rate/100),notes:s.footer,tpl:s.defaultTpl};
+  const inv={num:prefix+'-0001',client:'Sample Customer',caddr:'Colombo, Sri Lanka',cemail:'customer@example.com',date:new Date().toISOString().slice(0,10),due:new Date(Date.now()+30*86400000).toISOString().slice(0,10),terms:'Net 30',cur:studioCurrency(s.invoiceCurrency||s.mainCurrency||'LKR'),lines:[{desc:'Professional service',qty:1,price:25000,total:25000}],sub:25000,vat:25000*rate/100,total:25000+(25000*rate/100),notes:s.footer,tpl:s.defaultTpl};
   box.innerHTML=window.clsBuildInvoicePreviewFrame({inv:inv,settings:s,templateIndex:s.defaultTpl});
 }
-function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-email','set-vat','set-footer','set-bank-name','set-bank-account-name','set-bank-account-number','set-bank-branch','set-invoice-prefix','set-invoice-font','set-invoice-view','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
+function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-email','set-vat','set-footer','set-bank-name','set-bank-account-name','set-bank-account-number','set-bank-branch','set-invoice-prefix','set-invoice-font','set-invoice-view','set-invoice-currency','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
 
 // ════════════════════════════════
 // INVOICE PDF PRINTING
@@ -3941,22 +4216,53 @@ function syncCustomerToOpenInvoices(before,data){
   });
   return changed;
 }
+var customerDirectoryState={filter:'all',view:'grid'};
+window.setCustomerFilter=function(filter){customerDirectoryState.filter=filter||'all';renderClients();};
+window.setCustomerView=function(view){customerDirectoryState.view=view==='table'?'table':'grid';renderClients();};
+window.clearCustomerSearch=function(){var el=document.getElementById('customer-search');if(el)el.value='';renderClients();};
+window.clearCustomerFilters=function(){customerDirectoryState.filter='all';var search=document.getElementById('customer-search');var sort=document.getElementById('customer-sort');if(search)search.value='';if(sort)sort.value='billed-desc';renderClients();};
+function clientDirectoryMetrics(client){
+  const keys=[client.name,client.biz,client.email,client.phone].map(normKey).filter(Boolean);
+  const invs=(DB.invoices||[]).filter(function(inv){return [inv.client,inv.cemail,inv.cphone].map(normKey).some(function(key){return keys.indexOf(key)!==-1;});});
+  const billed=invs.reduce(function(sum,inv){return sum+Number(inv.amount||inv.total||0);},0);
+  const outstanding=invs.reduce(function(sum,inv){return sum+invoiceBalance(inv);},0);
+  return{invoices:invs.length,billed:billed,outstanding:outstanding};
+}
 function renderClients(){
   if(!DB.clients) DB.clients={list:[],nextId:1};
-  const list=DB.clients.list||[];
+  const all=DB.clients.list||[];
+  const search=String((document.getElementById('customer-search')||{}).value||'').trim().toLowerCase();
+  const sort=String((document.getElementById('customer-sort')||{}).value||'billed-desc');
+  const rows=all.map(function(client){return{client:client,metrics:clientDirectoryMetrics(client)};}).filter(function(row){
+    const c=row.client,m=row.metrics,hay=[c.name,c.biz,c.email,c.phone,c.addr].join(' ').toLowerCase();
+    if(search&&hay.indexOf(search)===-1)return false;
+    if(customerDirectoryState.filter==='unpaid'&&m.outstanding<=0)return false;
+    if(customerDirectoryState.filter==='high-value'&&m.billed<=100000)return false;
+    return true;
+  });
+  rows.sort(function(a,b){if(sort==='billed-asc')return a.metrics.billed-b.metrics.billed;if(sort==='name-asc')return String(a.client.name||'').localeCompare(String(b.client.name||''));if(sort==='newest')return Number(b.client.id||0)-Number(a.client.id||0);return b.metrics.billed-a.metrics.billed;});
+  const list=rows.map(function(row){return row.client;});
   const countEl=document.getElementById('client-count-val');
   const emailEl=document.getElementById('client-email-count');
   const waEl=document.getElementById('client-wa-count');
-  if(countEl) countEl.textContent=list.length;
-  if(emailEl) emailEl.textContent=list.filter(c=>c.email).length;
-  if(waEl) waEl.textContent=list.filter(c=>c.phone).length;
+  if(countEl) countEl.textContent=all.length;
+  if(emailEl) emailEl.textContent=all.filter(c=>c.email).length;
+  if(waEl) waEl.textContent=all.filter(c=>c.phone).length;
+  document.querySelectorAll('[data-customer-filter]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.customerFilter===customerDirectoryState.filter);});
+  ['grid','table'].forEach(function(view){var btn=document.getElementById('customer-view-'+view);if(btn)btn.classList.toggle('active',view===customerDirectoryState.view);});
   const grid=document.getElementById('client-grid');
   if(!grid) return;
   if(!list.length){
-    grid.innerHTML=`<div class="client-empty" style="grid-column:1/-1"><div class="client-empty-icon">👥</div><div class="client-empty-text">No customers yet. Add your first customer to get started.</div><button class="btn-act" data-cls-fn="openClientModal">+ Add First Customer</button></div>`;
+    grid.className='client-grid';grid.innerHTML=`<div class="client-empty" style="grid-column:1/-1"><div class="client-empty-icon">👥</div><div class="client-empty-text">${all.length?'No customers match these filters.':'No customers yet. Add your first customer to get started.'}</div>${all.length?'<button class="btn-act-outline" onclick="window.clearCustomerFilters()">Clear Filters</button>':'<button class="btn-act" data-cls-fn="openClientModal">+ Add First Customer</button>'}</div>`;
     return;
   }
-  grid.innerHTML=list.map(c=>`
+  if(customerDirectoryState.view==='table'){
+    grid.className='customer-table-wrap';
+    grid.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th>Total Billed</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHTML(c.name||'Customer')+'</strong><br><span style="font-size:.68rem">'+escHTML(c.biz||'Individual')+'</span></td><td>'+escHTML(c.email||'—')+'<br>'+escHTML(c.phone||'')+'</td><td>'+m.invoices+'</td><td>'+fmtAmt(m.billed)+'</td><td class="'+(m.outstanding?'amount-neg':'amount-pos')+'">'+fmtAmt(m.outstanding)+'</td><td><button class="btn-sm btn-sm-dark" onclick="CLS_RUN(\'editClient\','+c.id+')">Edit</button> <button class="btn-sm btn-sm-out" onclick="CLS_RUN(\'invoiceFromClient\','+c.id+')">+ Invoice</button></td></tr>';}).join('')+'</tbody></table>';
+    return;
+  }
+  grid.className='client-grid';
+  grid.innerHTML=rows.map(function(row){const c=row.client,m=row.metrics;return`
     <div class="client-card">
       <div class="client-card-name">${c.name}</div>
       ${c.biz?`<div class="client-card-biz">${c.biz}</div>`:''}
@@ -3966,12 +4272,13 @@ function renderClients(){
         ${c.addr?`📍 ${c.addr}<br>`:''}
         ${c.notes?`<em style="color:var(--dim)">${c.notes}</em>`:''}
       </div>
+      <div class="expense-payroll-meta"><strong>${m.invoices} invoice${m.invoices===1?'':'s'} · ${fmtAmt(m.billed)} billed</strong><br>${m.outstanding?fmtAmt(m.outstanding)+' outstanding':'Fully settled'}</div>
       <div class="client-card-actions">
         <button class="btn-sm btn-sm-dark" onclick="CLS_RUN('editClient',${c.id})">Edit</button>
         <button class="btn-sm btn-sm-out" onclick="CLS_RUN('invoiceFromClient',${c.id})">+ Invoice</button>
         <button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" onclick="CLS_RUN('deleteClient',${c.id})">✕</button>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 
 window.openClientModal = function openClientModal(){

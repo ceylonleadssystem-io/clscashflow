@@ -372,6 +372,7 @@ tr:hover td{background:var(--bg3)}
 .staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:.9rem;padding:1.25rem}
 .staff-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem;transition:all .18s}
 .staff-card:hover{background:var(--white);box-shadow:0 4px 14px rgba(44,31,20,.07)}
+.customer-tools{padding:1rem;border-bottom:1px solid var(--border);display:grid;gap:.7rem}.customer-tools-main{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:.6rem;align-items:center}.customer-search{position:relative}.customer-search .fi{padding-right:2.2rem}.customer-search button{position:absolute;right:.45rem;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);cursor:pointer}.customer-view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}.customer-view-toggle button{border:0;background:var(--bg3);color:var(--muted);padding:.58rem .7rem;cursor:pointer}.customer-view-toggle button.active{background:var(--dark);color:#fff}.customer-filter-row{display:flex;align-items:center;gap:.4rem;overflow-x:auto}.customer-chip{white-space:nowrap;border:1px solid var(--border);background:var(--bg3);color:var(--muted);border-radius:999px;padding:.35rem .68rem;font:700 .62rem var(--fb);cursor:pointer}.customer-chip.active{background:var(--gold);border-color:var(--gold);color:#fff}.customer-clear{margin-left:auto;border:0;background:transparent;color:var(--red);font:700 .62rem var(--fb);cursor:pointer;white-space:nowrap}.customer-table-wrap{overflow-x:auto;padding:0}.customer-directory-table{min-width:780px}
 .st-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;margin-bottom:.6rem}
 .st-name{font-size:.87rem;font-weight:600;color:var(--text)}
 .st-role{font-size:.69rem;color:var(--gold);margin:.08rem 0 .58rem}
@@ -575,6 +576,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 }
 @media(min-width:761px) and (max-width:1100px){
   #view-invoices .invoice-table tr,#view-invoices table:has(#quote-body) tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .customer-tools-main{grid-template-columns:1fr 1fr}.customer-search{grid-column:1/-1}
 }
 .fpill{padding:.3rem .85rem;border:1.5px solid var(--border);background:var(--white);font-size:.67rem;font-weight:500;color:var(--muted);cursor:pointer;font-family:var(--fb);transition:all .14s;border-radius:20px}
 .fpill.on{background:var(--black);border-color:var(--black);color:#fff}
@@ -923,7 +925,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="view" id="view-clients">
       <div class="help"><b>Customers</b> — Customer details, billing addresses, invoice history, and quick WhatsApp/email contact links.</div>
       <div class="sumbar c3" id="cli-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">My Customers</span><button class="btn bd" onclick="window.openCliMo()">+ Add Customer</button></div><div class="cli-grid" id="cli-grid"></div></div>
+      <div class="card"><div class="card-head"><span class="card-title">My Customers</span><button class="btn bd" onclick="window.openCliMo()">+ Add Customer</button></div><div class="customer-tools"><div class="customer-tools-main"><div class="customer-search"><input class="fi" id="business-customer-search" type="search" placeholder="Search name, business, phone, email or address" oninput="renderClients()"><button type="button" aria-label="Clear customer search" onclick="window.clearBusinessCustomerSearch()">×</button></div><select class="fi" id="business-customer-sort" onchange="renderClients()"><option value="billed-desc">Highest billed</option><option value="billed-asc">Lowest billed</option><option value="name-asc">Name A-Z</option><option value="newest">Newest first</option></select><div class="customer-view-toggle"><button id="business-customer-grid" class="active" onclick="window.setBusinessCustomerView('grid')">▦ Grid</button><button id="business-customer-table" onclick="window.setBusinessCustomerView('table')">☷ Table</button></div></div><div class="customer-filter-row"><button class="customer-chip active" data-business-customer-filter="all" onclick="window.setBusinessCustomerFilter('all')">All Customers</button><button class="customer-chip" data-business-customer-filter="unpaid" onclick="window.setBusinessCustomerFilter('unpaid')">Outstanding Unpaid</button><button class="customer-chip" data-business-customer-filter="high-value" onclick="window.setBusinessCustomerFilter('high-value')">High Value (&gt; LKR 100k)</button><button class="customer-clear" onclick="window.clearBusinessCustomerFilters()">Clear filters</button></div></div><div class="cli-grid" id="cli-grid"></div></div>
     </div>
 
     <!-- DEBT -->
@@ -942,8 +944,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="help"><b>Suppliers</b> — Everyone you buy from. Track your total spend per supplier across the year.</div>
       <div class="sumbar c3" id="sup-sum"></div>
       <div class="card"><div class="card-head"><span class="card-title">My Suppliers</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-sup')">+ Add Supplier</button></div></div>
-        <div class="filter-bar" id="sup-filters"><div class="fpill on" onclick="window.filterSup('all',this)">All</div><div class="fpill" onclick="window.filterSup('active',this)">Active</div><div class="fpill" onclick="window.filterSup('inactive',this)">Inactive</div></div>
-        <div class="table-wrap"><table style="margin-top:.75rem"><thead><tr><th>Supplier</th><th>Type</th><th>Contact</th><th>Total Spent (YTD)</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="sup-body"></tbody></table></div>
+        <div class="customer-tools"><div class="customer-tools-main"><input class="fi" id="supplier-search" placeholder="Search supplier, type, contact or reference" oninput="window.renderSupTable()"><select class="fi" id="supplier-type-filter" onchange="window.renderSupTable()"><option value="">All Supplier Types</option><option>Packaging</option><option>Raw materials</option><option>Technology</option><option>Stationery</option><option>Logistics</option><option>Maintenance</option><option>Other</option></select><select class="fi" id="supplier-sort" onchange="window.renderSupTable()"><option value="newest">Newest First</option><option value="spent-desc">Highest Total Spent</option><option value="name-asc">Supplier Name A-Z</option><option value="outstanding-desc">Highest Outstanding</option></select></div><div class="filter-bar" id="sup-filters"><div class="fpill on" onclick="window.filterSup('all',this)">All</div><div class="fpill" onclick="window.filterSup('active',this)">Active</div><div class="fpill" onclick="window.filterSup('inactive',this)">Inactive</div><button class="btn bo" onclick="window.clearSupplierFilters()">Clear</button></div></div>
+        <div class="table-wrap"><table style="margin-top:.75rem"><thead><tr><th>Supplier</th><th>Type</th><th>Contact</th><th>Total Spent (YTD)</th><th>Outstanding</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="sup-body"></tbody></table></div>
       </div>
     </div>
 
@@ -2858,18 +2860,38 @@ window.deleteBusinessQuote = function deleteBusinessQuote(id) {
   saveData();
 };
 
+var businessCustomerState={filter:'all',view:'grid'};
+window.setBusinessCustomerFilter=function(filter){businessCustomerState.filter=filter||'all';renderClients();};
+window.setBusinessCustomerView=function(view){businessCustomerState.view=view==='table'?'table':'grid';renderClients();};
+window.clearBusinessCustomerSearch=function(){var el=document.getElementById('business-customer-search');if(el)el.value='';renderClients();};
+window.clearBusinessCustomerFilters=function(){businessCustomerState.filter='all';var search=document.getElementById('business-customer-search'),sort=document.getElementById('business-customer-sort');if(search)search.value='';if(sort)sort.value='billed-desc';renderClients();};
+function businessCustomerMetrics(c){
+  var invs=D.invoices.filter(function(i){return i.client===c.biz||i.client===c.name||i.cemail===c.email||i.cphone===c.phone;});
+  var billed=invs.reduce(function(a,i){return a+toNum(i.total||i.amount);},0);
+  var outstanding=invs.reduce(function(a,i){return a+Math.max(0,toNum(i.total||i.amount)-toNum(i.paidAmount||i.paid));},0);
+  return{invoices:invs,billed:billed,outstanding:outstanding};
+}
 function renderClients() {
+  var search=String((document.getElementById('business-customer-search')||{}).value||'').trim().toLowerCase();
+  var sort=String((document.getElementById('business-customer-sort')||{}).value||'billed-desc');
+  var rows=D.clients.map(function(c){return{client:c,metrics:businessCustomerMetrics(c)};}).filter(function(row){var c=row.client,m=row.metrics,hay=[c.name,c.biz,c.email,c.phone,c.addr].join(' ').toLowerCase();if(search&&hay.indexOf(search)===-1)return false;if(businessCustomerState.filter==='unpaid'&&m.outstanding<=0)return false;if(businessCustomerState.filter==='high-value'&&m.billed<=100000)return false;return true;});
+  rows.sort(function(a,b){if(sort==='billed-asc')return a.metrics.billed-b.metrics.billed;if(sort==='name-asc')return String(a.client.name||'').localeCompare(String(b.client.name||''));if(sort==='newest')return Number(b.client.createdAt||b.client.id||0)-Number(a.client.createdAt||a.client.id||0);return b.metrics.billed-a.metrics.billed;});
   document.getElementById('cli-sum').innerHTML =
     sumItem('Total Customers', D.clients.length + '') +
     sumItem('With Email', D.clients.filter(function(c) { return c.email; }).length + '', 'var(--green)') +
     sumItem('With WhatsApp', D.clients.filter(function(c) { return c.phone; }).length + '', 'var(--gold)');
 
-  document.getElementById('cli-grid').innerHTML = D.clients.map(function(c) {
-    var invs = D.invoices.filter(function(i) { return i.client === c.biz; });
-    var tot = invs.reduce(function(a,i) { return a+i.total; }, 0);
+  document.querySelectorAll('[data-business-customer-filter]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.businessCustomerFilter===businessCustomerState.filter);});
+  ['grid','table'].forEach(function(view){var btn=document.getElementById('business-customer-'+view);if(btn)btn.classList.toggle('active',view===businessCustomerState.view);});
+  var host=document.getElementById('cli-grid');
+  if(!rows.length){host.className='cli-grid';host.innerHTML='<div class="empty-wide">'+emptyState(D.clients.length?'No customers match':'No customers yet',D.clients.length?'Clear the filters to see the full directory.':'Add customers once, then use them for invoices and follow-ups.',D.clients.length?'Clear Filters':'Add Customer',D.clients.length?'window.clearBusinessCustomerFilters()':'window.openCliMo()')+'</div>';return;}
+  if(businessCustomerState.view==='table'){host.className='customer-table-wrap';host.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th class="tr">Total Billed</th><th class="tr">Outstanding</th><th class="tr">Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHtml(c.name)+'</strong><br>'+escHtml(c.biz||'Individual')+'</td><td>'+escHtml(c.email||'—')+'<br>'+escHtml(c.phone||'')+'</td><td>'+m.invoices.length+'</td><td class="tr">'+fmt(m.billed)+'</td><td class="tr">'+fmt(m.outstanding)+'</td><td class="tr"><button class="bsm bsmo" onclick="window.editClient('+jsArg(c.id)+')">Edit</button></td></tr>';}).join('')+'</tbody></table>';return;}
+  host.className='cli-grid';
+  host.innerHTML = rows.map(function(row) {
+    var c=row.client, invs=row.metrics.invoices, tot=row.metrics.billed;
     var ini = c.name.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2);
     return '<div class="cli-card"><div class="cli-av">' + ini + '</div><div class="cli-name">' + escHtml(c.name) + '</div><div class="cli-biz">' + escHtml(c.biz) + '</div><div class="cli-det">' + (c.email ? '✉ ' + escHtml(c.email) + '<br>' : '') + '📱 ' + escHtml(c.phone) + (c.addr ? '<br>📍 ' + escHtml(c.addr) : '') + '</div><div class="sumbar c2" style="margin:.75rem 0"><div class="sum-i"><div class="sum-lbl">Invoices</div><div class="sum-val">' + invs.length + '</div></div><div class="sum-i"><div class="sum-lbl">Total Billed</div><div class="sum-val">' + fmtS(tot) + '</div></div></div><div class="cli-acts"><button class="bsm bsmwa" onclick="window.open(' + jsArg('https://wa.me/' + c.phone.replace(/\D/g,'')) + ')">💬 WA</button><button class="bsm bsmo" onclick="window.editClient(' + jsArg(c.id) + ')">Edit</button><button class="bsm bsmdel" onclick="window.deleteClient(' + jsArg(c.id) + ')">Delete</button></div></div>';
-  }).join('') || '<div class="empty-wide">' + emptyState('No customers yet', 'Add customers once, then use them for invoices, WhatsApp follow-ups, and revenue reporting.', 'Add Customer', 'window.openCliMo()') + '</div>';
+  }).join('');
 }
 
 function renderDebt() {
@@ -2917,23 +2939,29 @@ function renderSuppliers() {
   renderSupTable('all');
 }
 
+var supplierStatusFilter='all';
 window.filterSup = function filterSup(v, el) {
   document.querySelectorAll('#sup-filters .fpill').forEach(function(p) { p.classList.remove('on'); });
   el.classList.add('on');
-  renderSupTable(v);
+  supplierStatusFilter=v;renderSupTable();
 }
 
+window.clearSupplierFilters=function(){supplierStatusFilter='all';var search=document.getElementById('supplier-search'),type=document.getElementById('supplier-type-filter'),sort=document.getElementById('supplier-sort');if(search)search.value='';if(type)type.value='';if(sort)sort.value='newest';document.querySelectorAll('#sup-filters .fpill').forEach(function(p,i){p.classList.toggle('on',i===0);});renderSupTable();};
 function renderSupTable(f) {
-  var rows = f === 'all' ? D.suppliers : D.suppliers.filter(function(s) { return s.status === f; });
+  if(f)supplierStatusFilter=f;
+  var search=String((document.getElementById('supplier-search')||{}).value||'').toLowerCase(),type=String((document.getElementById('supplier-type-filter')||{}).value||''),sort=String((document.getElementById('supplier-sort')||{}).value||'newest');
+  var rows=D.suppliers.filter(function(s){if(supplierStatusFilter!=='all'&&s.status!==supplierStatusFilter)return false;if(type&&String(s.cat||'')!==type)return false;return !search||[s.name,s.cat,s.contact,s.phone,s.email,s.payableRef].join(' ').toLowerCase().indexOf(search)!==-1;});
+  rows.sort(function(a,b){if(sort==='spent-desc')return toNum(b.ytd)-toNum(a.ytd);if(sort==='name-asc')return String(a.name||'').localeCompare(String(b.name||''));if(sort==='outstanding-desc')return toNum(b.payableAmount)-toNum(a.payableAmount);return toNum(b.id||b.createdAt)-toNum(a.id||a.createdAt);});
   document.getElementById('sup-body').innerHTML = rows.map(function(s) {
     var contact = [s.contact, s.phone, s.email].filter(Boolean).join(' · ') || 'No contact saved';
     var outstanding = toNum(s.payableAmount);
     var paid = toNum(s.payablePaidAmount);
     var payable = '<div class="form-note" style="margin-top:.25rem;color:' + (outstanding > 0 ? 'var(--red)' : 'var(--green)') + '">Outstanding: ' + fmt(outstanding) + ' · Paid: ' + fmt(paid) + (outstanding > 0 ? ' · due in ' + toNum(s.payableDays) + ' days' : ' · settled') + '</div>';
     var payAction = outstanding > 0 ? '<button class="bsm bsmgr" onclick="window.openSupplierPayment(' + jsArg(s.id) + ',' + outstanding + ',' + jsArg(s.payableRef || '') + ')">Pay</button> ' : '<span class="pill pi">Settled</span> ';
-    return '<tr><td style="font-weight:600">' + escHtml(s.name) + payable + '</td><td><span class="pill psu" style="font-size:.55rem">' + escHtml(s.cat) + '</span></td><td style="font-size:.78rem">' + escHtml(contact) + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + escHtml(s.status) + '</span></td><td class="tr">' + payAction + '<button class="bsm bsmo" onclick="window.openSupMo(' + jsArg(s.id) + ')">Edit</button> <button class="bsm bsmdel" onclick="window.deleteSupplier(' + jsArg(s.id) + ')">Delete</button></td></tr>';
-  }).join('') || emptyRow(6, 'No suppliers yet', 'Add suppliers to link expenses and supplier payments to real vendors.', 'Add Supplier', "window.openSupMo()");
+    return '<tr><td style="font-weight:600">' + escHtml(s.name) + payable + '</td><td><span class="pill psu" style="font-size:.55rem">' + escHtml(s.cat) + '</span></td><td style="font-size:.78rem">' + escHtml(contact) + '</td><td class="mono gld">' + fmt(s.ytd) + '</td><td class="mono" style="color:'+(outstanding?'var(--red)':'var(--green)')+'">'+fmt(outstanding)+'</td><td><span class="pill ' + (s.status==='active' ? 'pi' : 'pdr') + '">' + escHtml(s.status) + '</span></td><td class="tr"><span style="display:inline-flex;gap:.3rem;align-items:center;justify-content:flex-end;flex-wrap:wrap">' + payAction + '<button class="bsm bsmo" onclick="window.openSupMo(' + jsArg(s.id) + ')">Edit</button> <button class="bsm bsmdel" onclick="window.deleteSupplier(' + jsArg(s.id) + ')">Delete</button></span></td></tr>';
+  }).join('') || emptyRow(7, 'No suppliers match', 'Clear the filters or add a new supplier.', 'Clear Filters', "window.clearSupplierFilters()");
 }
+window.renderSupTable=renderSupTable;
 
 function currentAuthorizedTeamMembers() {
   var seen = {};

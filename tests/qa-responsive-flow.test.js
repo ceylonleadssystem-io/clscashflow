@@ -315,3 +315,81 @@ test('public invoice page receives bank details from the sanitized snapshot', fu
     assert.match(share, new RegExp(field + ': text\\('));
   }
 });
+
+test('customer directories provide search, filters, sorting, clear controls, and grid/table views', function() {
+  ['solo.html', 'starter.html'].forEach(function(file) {
+    const page = read(file);
+    assert.match(page, /id="customer-search"/);
+    assert.match(page, /id="customer-sort"/);
+    assert.match(page, /data-customer-filter="unpaid"/);
+    assert.match(page, /data-customer-filter="high-value"/);
+    assert.match(page, /setCustomerView\('table'\)/);
+    assert.match(page, /clearCustomerFilters/);
+    assert.match(page, /function clientDirectoryMetrics/);
+  });
+  const business = read('growth.html');
+  assert.match(business, /id="business-customer-search"/);
+  assert.match(business, /id="business-customer-sort"/);
+  assert.match(business, /data-business-customer-filter="unpaid"/);
+  assert.match(business, /setBusinessCustomerView\('table'\)/);
+  assert.match(business, /clearBusinessCustomerFilters/);
+});
+
+test('Studio includes the complete staff and payroll workflow', function() {
+  const page = read('starter.html');
+  assert.match(page, /data-nav="payroll"/);
+  assert.match(page, /id="view-payroll"/);
+  assert.match(page, /id="payroll-staff-modal"/);
+  assert.match(page, /function payrollTax/);
+  assert.match(page, /function payrollEmployeeCalc/);
+  assert.match(page, /openSalaryPaidModal/);
+  assert.match(page, /commitSalaryPayment/);
+  assert.match(page, /openStatutorySettlement/);
+  assert.match(page, /commitStatutorySettlement/);
+  assert.match(page, /printPayrollPayslip/);
+  assert.match(page, /deactivatePayrollStaff/);
+  assert.match(page, /Historical Outflow Timeline/);
+  assert.match(page, /id="payroll-trend-chart"/);
+  assert.match(page, /id="payroll-split-chart"/);
+  assert.match(page, /previewPayrollAvatar/);
+  assert.match(page, /function payrollFileData/);
+  assert.match(page, /payrollAttachmentLink/);
+  assert.match(page, /pending-approval/);
+  assert.match(page, /id="salary-paid-period"/);
+  assert.match(page, /transportAllowance/);
+  assert.match(page, /overtimeHours/);
+  assert.match(page, /loanDeduction/);
+  assert.match(page, /\/\.netlify\/functions\/send-payslip/);
+});
+
+test('payroll and customer controls remain usable on mobile', function() {
+  ['solo.html', 'starter.html'].forEach(function(file) {
+    const page = read(file);
+    assert.match(page, /customer-tools-main\{grid-template-columns:1fr 1fr\}/);
+    assert.match(page, /customer-search\{grid-column:1\/-1\}/);
+  });
+  const studio = read('starter.html');
+  assert.match(studio, /payroll-kpis\{grid-template-columns:1fr 1fr\}/);
+  assert.match(studio, /payroll-profile-grid,\.payroll-breakdown,\.payroll-charts\{grid-template-columns:1fr\}/);
+  assert.match(studio, /\.modal-box\{max-width:none;width:100%;max-height:94dvh/);
+});
+
+test('Business suppliers support QA-requested search, filters, sorting, balances, and aligned actions', function() {
+  const page = read('growth.html');
+  assert.match(page, /id="supplier-search"/);
+  assert.match(page, /id="supplier-type-filter"/);
+  assert.match(page, /id="supplier-sort"/);
+  assert.match(page, /Highest Outstanding/);
+  assert.match(page, /window\.clearSupplierFilters/);
+  assert.match(page, /<th>Outstanding<\/th>/);
+  assert.match(page, /display:inline-flex;gap:\.3rem;align-items:center;justify-content:flex-end/);
+});
+
+test('payslip email endpoint sends a PDF attachment', function() {
+  const fn = read('netlify/functions/send-payslip.js');
+  assert.match(fn, /const nodemailer = require\('nodemailer'\)/);
+  assert.match(fn, /attachments:\s*\[\{/);
+  assert.match(fn, /contentType: 'application\/pdf'/);
+  assert.match(fn, /encoding: 'base64'/);
+  assert.match(fn, /Buffer\.byteLength\(pdfBase64, 'base64'\)/);
+});
