@@ -991,7 +991,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       </div>
       <div class="sumbar c4" id="an-sum"></div>
       <div class="g2c" style="margin-bottom:1.2rem">
-        <div class="chart-card"><div class="ch-title">Monthly Income Trend</div><div class="ch-sub">How much you earned each month</div><div class="ch-wrap"><canvas id="ch-rev"></canvas></div></div>
+        <div class="chart-card"><div class="ch-title">Monthly Cashflow Trend</div><div class="ch-sub">Income and expenses by month</div><div class="ch-wrap"><canvas id="ch-rev"></canvas></div></div>
         <div class="chart-card"><div class="ch-title">Income vs Expenses</div><div class="ch-sub">Monthly comparison</div><div class="ch-wrap"><canvas id="ch-ie"></canvas></div></div>
       </div>
       <div class="rep-grid" id="an-reports"></div>
@@ -1087,7 +1087,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               </div>
               <div class="fsec">Your Business Logo</div>
               <label for="logo-inp" style="display:block;border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)">
-                <img id="logo-prev" style="max-height:46px;display:none;margin:0 auto .45rem;object-fit:contain" src="" alt="">
+                <img id="logo-prev" style="display:none;margin:0 auto .45rem;object-fit:contain" src="" alt="">
                 <div id="logo-hint"><div style="font-size:1.3rem;margin-bottom:.3rem">🏢</div><div style="font-size:.79rem;color:var(--muted)">Click to upload your logo</div><div style="font-size:.67rem;color:var(--dim);margin-top:.18rem">PNG, JPG, or WebP · Max 5MB · Optimized automatically</div></div>
                 <input type="file" id="logo-inp" accept="image/*" style="display:none" onchange="previewLogo(this)">
               </label>
@@ -1175,7 +1175,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <input type="hidden" id="t-edit-id">
     <div class="frow"><div class="fg"><label>Date</label><input class="fi" type="date" id="t-date"></div><div class="fg"><label>Type</label><select class="fi fsel" id="t-type" onchange="window.updateTxnTypeUI()"><option value="in">Money In (I received)</option><option value="out">Money Out (I spent)</option></select></div></div>
     <div class="fg"><label>What was this for?</label><input class="fi" id="t-desc" placeholder="e.g. Payment received from customer"></div>
-    <div class="frow"><div class="fg"><label>Amount</label><input class="fi" type="number" id="t-amt" placeholder="0.00" oninput="window.updateTxnCurrencyPreview()"></div><div class="fg"><label>Currency Earned / Spent</label><select class="fi fsel" id="t-currency" onchange="window.handleTxnCurrencyChange()"><option value="LKR">LKR</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div></div>
+    <div class="frow"><div class="fg"><label>Amount</label><input class="fi" type="text" inputmode="decimal" data-money-input id="t-amt" placeholder="0.00" oninput="window.formatBusinessMoneyInput(this);window.updateTxnCurrencyPreview()"></div><div class="fg"><label>Currency Earned / Spent</label><select class="fi fsel" id="t-currency" onchange="window.handleTxnCurrencyChange()"><option value="LKR">LKR</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div></div>
     <div class="frow"><div class="fg"><label>Exchange Rate to LKR</label><input class="fi" type="number" id="t-rate" min="0" step="0.01" placeholder="1" oninput="window.updateTxnCurrencyPreview()"></div><div class="fg"><label>Conversion</label><div class="conversion-preview" id="t-conversion-preview">Enter an amount to preview the conversion.</div></div></div>
     <div class="frow"><div class="fg" style="grid-column:1/-1;margin-bottom:0"><label>Category</label><select class="fi fsel" id="t-cat"><option>Sales Revenue</option><option>Service Income</option><option>Invoice Payment</option><option>Supplier Payment</option><option>Utilities</option><option>Marketing</option><option>Operations</option><option>Other</option></select></div></div>
     <div class="txn-extra" id="t-out-extra">
@@ -1195,7 +1195,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   <div class="mo-bd">
     <div class="frow"><div class="fg"><label>Date</label><input class="fi" type="date" id="e-date"></div><div class="fg"><label>Category</label><select class="fi fsel" id="e-cat"><option>Operations</option><option>Suppliers</option><option>Utilities</option><option>Marketing</option><option>Fuel &amp; Transport</option><option>Rent</option><option>Other</option></select></div></div>
     <div class="fg"><label>What did you spend on?</label><input class="fi" id="e-desc" placeholder="e.g. Electricity bill for June"></div>
-    <div class="frow"><div class="fg"><label>Paid to (Supplier / Person)</label><input class="fi" id="e-vendor" list="supplier-options" placeholder="Choose or type a new supplier"><datalist id="supplier-options"></datalist></div><div class="fg"><label>Amount (LKR)</label><input class="fi" type="number" id="e-amt" placeholder="0.00"></div></div>
+    <div class="frow"><div class="fg"><label>Paid to (Supplier / Person)</label><input class="fi" id="e-vendor" list="supplier-options" placeholder="Choose or type a new supplier"><datalist id="supplier-options"></datalist></div><div class="fg"><label>Amount (LKR)</label><input class="fi" type="text" inputmode="decimal" data-money-input id="e-amt" placeholder="0.00" oninput="window.formatBusinessMoneyInput(this)"></div></div>
   </div>
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-exp')">Cancel</button><button class="btn bd" onclick="window.addExp()">Save Expense</button></div>
 </div></div>
@@ -1216,7 +1216,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="business-invoice-closing">
       <div class="fg" style="margin-bottom:0"><label>Note to Customer (optional)</label><textarea class="fi fi-textarea" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></textarea></div>
       <div>
-        <div class="invoice-tax-grid"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" min="0" max="100" step="0.01" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="number" id="inv-disc" value="0" min="0" step="0.01" oninput="calcTotals()"></div></div>
+        <div class="invoice-tax-grid"><div class="fg"><label>VAT %</label><input class="fi" type="number" id="inv-vat" value="0" min="0" max="100" step="0.01" oninput="calcTotals()"></div><div class="fg"><label>Discount (LKR)</label><input class="fi" type="text" inputmode="decimal" data-money-input id="inv-disc" value="0" oninput="window.formatBusinessMoneyInput(this);calcTotals()"></div></div>
         <div class="inv-totals" id="inv-totals"></div>
       </div>
     </div>
@@ -1251,7 +1251,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="frow"><div class="fg"><label>Email (optional)</label><input class="fi" type="email" id="sp-email" placeholder="supplier@business.lk"></div><div class="fg"><label>Status</label><select class="fi fsel" id="sp-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div></div>
     <div class="fg"><label>Address (optional)</label><input class="fi" id="sp-addr" placeholder="Supplier address"></div>
     <div class="fsec">Payable Reminder</div>
-    <div class="frow"><div class="fg"><label>Current Outstanding Payable (LKR)</label><input class="fi" type="number" min="0" step="0.01" id="sp-payable-amount" placeholder="0.00"></div><div class="fg"><label>Due In Days</label><input class="fi" type="number" min="0" step="1" id="sp-payable-days" placeholder="7"></div></div>
+    <div class="frow"><div class="fg"><label>Current Outstanding Payable (LKR)</label><input class="fi" type="text" inputmode="decimal" data-money-input id="sp-payable-amount" placeholder="0.00" oninput="window.formatBusinessMoneyInput(this)"></div><div class="fg"><label>Due In Days</label><input class="fi" type="number" min="0" step="1" id="sp-payable-days" placeholder="7"></div></div>
     <div class="fg" style="margin-bottom:0"><label>Reference / Reminder Note</label><input class="fi" id="sp-payable-ref" placeholder="e.g. July packaging balance"></div>
   </div>
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-sup')">Cancel</button><button class="btn bd" id="sup-save-btn" onclick="window.addSup()">Save Supplier</button></div>
@@ -1266,8 +1266,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="frow"><div class="fg"><label>Job Title</label><input class="fi" id="payroll-role"></div><div class="fg"><label>Department</label><input class="fi" id="payroll-department"></div></div>
     <div class="frow"><div class="fg"><label>Email</label><input class="fi" type="email" id="payroll-email"></div><div class="fg"><label>Phone / WhatsApp</label><input class="fi" id="payroll-phone"></div></div>
     <div class="fsec">Salary & Statutory Details</div>
-    <div class="frow"><div class="fg"><label>Basic Salary / EPF Base *</label><input class="fi" type="number" min="0" id="payroll-basic" oninput="window.updateBusinessPayrollPreview()"></div><div class="fg"><label>Fixed Allowances</label><input class="fi" type="number" min="0" id="payroll-allowances" oninput="window.updateBusinessPayrollPreview()"></div></div>
-    <div class="frow"><div class="fg"><label>Other Deductions</label><input class="fi" type="number" min="0" id="payroll-deductions" oninput="window.updateBusinessPayrollPreview()"></div><div class="fg"><label>EPF Member Number</label><input class="fi" id="payroll-epf-no"></div></div>
+    <div class="frow"><div class="fg"><label>Basic Salary / EPF Base *</label><input class="fi" type="text" inputmode="decimal" data-money-input id="payroll-basic" oninput="window.formatBusinessMoneyInput(this);window.updateBusinessPayrollPreview()"></div><div class="fg"><label>Fixed Allowances</label><input class="fi" type="text" inputmode="decimal" data-money-input id="payroll-allowances" oninput="window.formatBusinessMoneyInput(this);window.updateBusinessPayrollPreview()"></div></div>
+    <div class="frow"><div class="fg"><label>Other Deductions</label><input class="fi" type="text" inputmode="decimal" data-money-input id="payroll-deductions" oninput="window.formatBusinessMoneyInput(this);window.updateBusinessPayrollPreview()"></div><div class="fg"><label>EPF Member Number</label><input class="fi" id="payroll-epf-no"></div></div>
     <label style="display:flex;gap:.55rem;align-items:center;font-size:.75rem;margin:.5rem 0"><input type="checkbox" id="payroll-secondary" onchange="window.updateBusinessPayrollPreview()"> Secondary employment (10% APIT estimate)</label>
     <div class="help" id="payroll-preview" style="margin:1rem 0 0"></div>
   </div>
@@ -1551,7 +1551,7 @@ window.openSupplierPayment = function openSupplierPayment(supplierId, amount, re
   setFieldValue('t-cat', 'Supplier Payment');
   setFieldValue('t-purpose', 'Supplier Payment');
   setFieldValue('t-paidto', name);
-  setFieldValue('t-amt', amount || '');
+  setBusinessMoneyField('t-amt', amount || '');
   setFieldValue('t-ref', ref || '');
   setFieldValue('t-currency', 'LKR');
   setFieldValue('t-rate', 1);
@@ -1588,7 +1588,7 @@ window.openSupMo = function openSupMo(id) {
       setFieldValue('sp-email', s.email || '');
       setFieldValue('sp-addr', s.addr || '');
       setFieldValue('sp-status', s.status || 'active');
-      setFieldValue('sp-payable-amount', toNum(s.payableAmount) || '');
+      setBusinessMoneyField('sp-payable-amount', toNum(s.payableAmount) || '');
       setFieldValue('sp-payable-days', toNum(s.payableDays) || '');
       setFieldValue('sp-payable-ref', s.payableRef || '');
       var title = document.getElementById('sup-mo-title');
@@ -1659,7 +1659,25 @@ function sumItem(lbl, val, color) {
   var style = color ? ' style="color:' + color + '"' : '';
   return '<div class="sum-i"><div class="sum-lbl">' + lbl + '</div><div class="sum-val"' + style + '>' + val + '</div></div>';
 }
-function toNum(v) { return Number(v || 0) || 0; }
+function toNum(v) {
+  return Number(String(v == null ? '' : v).replace(/,/g, '').trim()) || 0;
+}
+window.formatBusinessMoneyInput = function formatBusinessMoneyInput(input) {
+  if (!input) return;
+  var raw = String(input.value || '').replace(/,/g, '').replace(/[^\d.]/g, '');
+  if (!raw) { input.value = ''; return; }
+  var parts = raw.split('.');
+  var whole = parts.shift() || '0';
+  var decimal = parts.join('').slice(0, 2);
+  whole = whole.replace(/^0+(?=\d)/, '');
+  input.value = Number(whole || 0).toLocaleString('en-LK') + (raw.indexOf('.') > -1 ? '.' + decimal : '');
+};
+function setBusinessMoneyField(id, value) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.value = value == null || value === '' ? '' : String(value);
+  window.formatBusinessMoneyInput(el);
+}
 var CURRENCY_META = {
   LKR:{symbol:'LKR ', locale:'en-LK', label:'Sri Lankan Rupee'},
   USD:{symbol:'$ ', locale:'en-US', label:'US Dollar'},
@@ -2247,7 +2265,7 @@ window.updateBusinessPayrollPreview=function(){
 };
 window.openPayrollMo=function(id){
   var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);})||{};
-  setFieldValue('payroll-id',p.id||'');setFieldValue('payroll-employee-id',p.employeeId||('EMP-'+String((D.staff||[]).length+1).padStart(3,'0')));setFieldValue('payroll-name',p.name||'');setFieldValue('payroll-role',p.role||'');setFieldValue('payroll-department',p.department||'');setFieldValue('payroll-email',p.email||'');setFieldValue('payroll-phone',p.phone||'');setFieldValue('payroll-basic',p.basicSalary||'');setFieldValue('payroll-allowances',p.allowances||'');setFieldValue('payroll-deductions',p.deductions||'');setFieldValue('payroll-epf-no',p.epfNo||'');
+  setFieldValue('payroll-id',p.id||'');setFieldValue('payroll-employee-id',p.employeeId||('EMP-'+String((D.staff||[]).length+1).padStart(3,'0')));setFieldValue('payroll-name',p.name||'');setFieldValue('payroll-role',p.role||'');setFieldValue('payroll-department',p.department||'');setFieldValue('payroll-email',p.email||'');setFieldValue('payroll-phone',p.phone||'');setBusinessMoneyField('payroll-basic',p.basicSalary||'');setBusinessMoneyField('payroll-allowances',p.allowances||'');setBusinessMoneyField('payroll-deductions',p.deductions||'');setFieldValue('payroll-epf-no',p.epfNo||'');
   document.getElementById('payroll-secondary').checked=p.secondaryEmployment===true;document.getElementById('payroll-mo-title').textContent=p.id?'Edit Staff Member':'Add Staff Member';window.updateBusinessPayrollPreview();window.openMo('mo-payroll');
 };
 window.savePayrollStaff=function(){
@@ -3127,7 +3145,7 @@ function renderReports() {
   var expD = sumByMonth(monthInfo, D.exps);
 
   var c3 = document.getElementById('ch-rev');
-  if (window.Chart && c3) CH.rev = new Chart(c3, {type:'line',data:{labels:months,datasets:[{label:'Income',data:revD,borderColor:'#B8922A',backgroundColor:'rgba(184,146,42,.08)',tension:.4,fill:true,pointBackgroundColor:'#B8922A'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
+  if (window.Chart && c3) CH.rev = new Chart(c3, {type:'line',data:{labels:months,datasets:[{label:'Income',data:revD,borderColor:'#B8922A',backgroundColor:'rgba(184,146,42,.08)',tension:.4,fill:true,pointBackgroundColor:'#B8922A'},{label:'Expenses',data:expD,borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.04)',tension:.4,fill:false,pointBackgroundColor:'#C0392B'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9},callback:function(value){return Number(value).toLocaleString('en-LK');}}}}}});
 
   var c4 = document.getElementById('ch-ie');
   if (window.Chart && c4) CH.ie = new Chart(c4, {type:'bar',data:{labels:months,datasets:[{label:'Income',data:revD,backgroundColor:'rgba(29,158,98,.65)',borderRadius:3},{label:'Expenses',data:expD,backgroundColor:'rgba(192,57,43,.55)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:10}}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Mono',size:9}}}}}});
@@ -3371,6 +3389,7 @@ function bindSettingsPreviewInputs() {
     el.dataset.previewBound = '1';
     el.addEventListener('input', function() {
       if (id === 's-logo-x' || id === 's-logo-y') updateBusinessLogoPositionLabels();
+      if (id.indexOf('s-logo-') === 0) updateBusinessLogoControlPreview();
       renderSettingsInvoicePreview();
     });
     el.addEventListener('change', function() {
@@ -3380,10 +3399,26 @@ function bindSettingsPreviewInputs() {
         updateBusinessLogoPositionLabels();
       }
       if (id === 's-logo-x' || id === 's-logo-y') updateBusinessLogoPositionLabels();
+      if (id.indexOf('s-logo-') === 0) updateBusinessLogoControlPreview();
       renderSettingsInvoicePreview();
     });
   });
   updateBusinessLogoPositionLabels();
+  updateBusinessLogoControlPreview();
+}
+
+function updateBusinessLogoControlPreview() {
+  var preview = document.getElementById('logo-prev');
+  if (!preview) return;
+  var sizeField = document.getElementById('s-logo-size');
+  var alignField = document.getElementById('s-logo-align');
+  var size = sizeField ? sizeField.value : (D.settings.logoSize || 'M');
+  var widths = { S: 72, M: 120, L: 180 };
+  preview.style.width = (widths[size] || widths.M) + 'px';
+  preview.style.maxWidth = '80%';
+  preview.style.maxHeight = Math.round((widths[size] || widths.M) * .65) + 'px';
+  preview.style.marginLeft = alignField && alignField.value === 'right' ? 'auto' : (alignField && alignField.value === 'center' ? 'auto' : '0');
+  preview.style.marginRight = alignField && alignField.value === 'left' ? 'auto' : (alignField && alignField.value === 'center' ? 'auto' : '0');
 }
 
 window.openInvMo = function openInvMo() {
@@ -3421,8 +3456,9 @@ window.openEstimateMo = function openEstimateMo() { window.openQuoteMo(); busine
 window.addLi = function addLi(item) {
   item = item || {};
   var tr = document.createElement('tr');
-  tr.innerHTML = '<td><textarea data-role="desc" placeholder="Description. Use Shift+Enter or Enter for a new line." oninput="autoGrowTextarea(this);calcTotals()">' + escHtml(item.desc || '') + '</textarea></td><td><input data-role="qty" style="padding:.3rem .42rem;width:100%" type="number" value="' + (item.qty || 1) + '" min="1" oninput="calcTotals()"></td><td><input data-role="price" style="padding:.3rem .42rem;width:100%" type="number" value="' + (item.price || 0) + '" min="0" oninput="calcTotals()"></td><td class="li-tot">LKR 0.00</td><td><button class="li-rm" onclick="this.closest(\'tr\').remove();calcTotals()">✕</button></td>';
+  tr.innerHTML = '<td><textarea data-role="desc" placeholder="Description. Use Shift+Enter or Enter for a new line." oninput="autoGrowTextarea(this);calcTotals()">' + escHtml(item.desc || '') + '</textarea></td><td><input data-role="qty" style="padding:.3rem .42rem;width:100%" type="number" value="' + (item.qty || 1) + '" min="1" oninput="calcTotals()"></td><td><input data-role="price" data-money-input style="padding:.3rem .42rem;width:100%" type="text" inputmode="decimal" value="' + (item.price || 0) + '" oninput="window.formatBusinessMoneyInput(this);calcTotals()"></td><td class="li-tot">LKR 0.00</td><td><button class="li-rm" onclick="this.closest(\'tr\').remove();calcTotals()">✕</button></td>';
   document.getElementById('li-body').appendChild(tr);
+  window.formatBusinessMoneyInput(tr.querySelector('[data-role="price"]'));
   autoGrowTextarea(tr.querySelector('textarea'));
 }
 
@@ -3432,14 +3468,14 @@ function calcTotals() {
     var qty = row.querySelector('[data-role="qty"]');
     var price = row.querySelector('[data-role="price"]');
     if (qty && price) {
-      var v = Number(qty.value||1) * Number(price.value||0);
+      var v = toNum(qty.value||1) * toNum(price.value||0);
       sub += v;
       var td = row.querySelector('.li-tot');
       if (td) td.textContent = 'LKR ' + fmtN(v);
     }
   });
   var vat = sub * (Number(document.getElementById('inv-vat').value||0)/100);
-  var disc = Number(document.getElementById('inv-disc').value||0);
+  var disc = toNum(document.getElementById('inv-disc').value||0);
   var total = sub + vat - disc;
   var el = document.getElementById('inv-totals');
   if (el) el.innerHTML =
@@ -3465,7 +3501,7 @@ window.saveInv = function saveInv() {
     var price = row.querySelector('[data-role="price"]');
     var lineDesc = desc ? desc.value.trim() : '';
     var lineQty = qty ? Number(qty.value || 1) : 1;
-    var linePrice = price ? Number(price.value || 0) : 0;
+    var linePrice = price ? toNum(price.value || 0) : 0;
     if (!isFinite(lineQty) || lineQty <= 0 || !isFinite(linePrice) || linePrice < 0) {
       invalidLine = true;
       return;
@@ -3475,7 +3511,7 @@ window.saveInv = function saveInv() {
   if (invalidLine) { showToast('Invoice quantities must be above 0 and prices cannot be negative.', 'err'); return; }
   if (!items.length) { showToast('Please add at least one item', 'err'); return; }
   var vatRate = Number(document.getElementById('inv-vat').value || 0);
-  var discount = Number(document.getElementById('inv-disc').value || 0);
+  var discount = toNum(document.getElementById('inv-disc').value || 0);
   if (!isFinite(vatRate) || vatRate < 0 || vatRate > 100) { showToast('VAT / tax rate must be between 0 and 100.', 'err'); return; }
   if (!isFinite(discount) || discount < 0) { showToast('Discount cannot be negative.', 'err'); return; }
   var t = calcTotals();
@@ -3684,7 +3720,7 @@ window.openPayMo = function openPayMo(id) {
       '</div>' +
       '<div class="form-note">' + escHtml(dueLabel(days)) + ' · Due ' + escHtml(formatDateHuman(inv.due)) + '</div>' +
     '</div>' +
-    '<div class="frow"><div class="fg"><label>Amount Being Paid (LKR)</label><input class="fi" type="number" id="pm-amt" value="' + balance + '" min="0" max="' + balance + '"></div><div class="fg"><label>Payment Method</label><select class="fi fsel" id="pm-method"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Online Payment</option><option>Credit Card</option><option>Debit Card</option><option>Bank Deposit</option></select></div></div>' +
+    '<div class="frow"><div class="fg"><label>Amount Being Paid (LKR)</label><input class="fi" type="text" inputmode="decimal" data-money-input id="pm-amt" value="' + fmtN(balance) + '" oninput="window.formatBusinessMoneyInput(this)"></div><div class="fg"><label>Payment Method</label><select class="fi fsel" id="pm-method"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Online Payment</option><option>Credit Card</option><option>Debit Card</option><option>Bank Deposit</option></select></div></div>' +
     '<div class="frow"><div class="fg"><label>Date of Payment</label><input class="fi" type="date" id="pm-date" value="' + today() + '"></div><div class="fg"><label>Reference / Transaction ID</label><input class="fi" id="pm-ref" placeholder="e.g. slip no, card ref, cheque no"></div></div>' +
     '<div class="fg payment-slip"><label>Payment Slip / Receipt</label><input class="fi" type="file" id="pm-slip" accept="image/*,.pdf"><div class="form-note">The file name is saved for tracking. Attach the slip in your records or email thread.</div></div>' +
     '<div class="fg" style="margin-bottom:0"><label>Payment Notes</label><textarea class="fi fi-textarea" id="pm-note" placeholder="Optional note for card payment, bank branch, payer name, or follow-up details."></textarea></div>';
@@ -3694,7 +3730,7 @@ window.openPayMo = function openPayMo(id) {
 window.confirmPay = function confirmPay() {
   var inv = D.invoices.find(function(i) { return i.id === payInvId; });
   if (!inv) return;
-  var amt = Number(document.getElementById('pm-amt').value||0);
+  var amt = toNum(document.getElementById('pm-amt').value||0);
   if (!isFinite(amt) || amt <= 0) { showToast('Please enter a payment amount above zero.', 'err'); return; }
   var balance = invoiceBalance(inv);
   if (balance <= 0) { showToast('This invoice is already fully paid.', 'err'); return; }
@@ -3725,7 +3761,7 @@ window.confirmPay = function confirmPay() {
 function buildTxnFromForm(existing) {
   var d = document.getElementById('t-date').value;
   var desc = document.getElementById('t-desc').value.trim();
-  var sourceAmount = Number(document.getElementById('t-amt').value);
+  var sourceAmount = toNum(document.getElementById('t-amt').value);
   var type = document.getElementById('t-type').value;
   var cat = document.getElementById('t-cat').value;
   var ref = document.getElementById('t-ref').value.trim();
@@ -3875,7 +3911,7 @@ window.editTxn = function editTxn(id) {
   setFieldValue('t-date', t.date || today());
   setFieldValue('t-type', t.type || 'in');
   setFieldValue('t-desc', t.desc || '');
-  setFieldValue('t-amt', money.sourceAmount || money.amount || '');
+  setBusinessMoneyField('t-amt', money.sourceAmount || money.amount || '');
   setFieldValue('t-currency', money.sourceCurrency);
   setFieldValue('t-rate', money.exchangeRate || exchangeRateToLkr(money.sourceCurrency));
   ensureSelectOption('t-cat', t.cat || 'Other');
@@ -3907,7 +3943,7 @@ window.deleteTxn = function deleteTxn(id) {
 window.addExp = function addExp() {
   var d = document.getElementById('e-date').value;
   var desc = document.getElementById('e-desc').value.trim();
-  var amt = Number(document.getElementById('e-amt').value);
+  var amt = toNum(document.getElementById('e-amt').value);
   if (!d || !desc || !amt) { showToast('Please fill in all fields', 'err'); return; }
   var vendor = document.getElementById('e-vendor').value.trim();
   var cat = document.getElementById('e-cat').value;
@@ -4260,7 +4296,7 @@ async function previewLogo(input) {
     if (!D.settings.logo) throw new Error('The logo could not be prepared.');
     var prev = document.getElementById('logo-prev');
     var hint = document.getElementById('logo-hint');
-    if (prev) { prev.src = D.settings.logo; prev.style.display = 'block'; }
+    if (prev) { prev.src = D.settings.logo; prev.style.display = 'block'; updateBusinessLogoControlPreview(); }
     if (hint) hint.style.display = 'none';
     renderSettingsInvoicePreview();
     await saveData();
@@ -4775,7 +4811,7 @@ _fauth.onAuthStateChanged(async function(user) {
     if (s.logo) {
       var logoPrev = document.getElementById('logo-prev');
       var logoHint = document.getElementById('logo-hint');
-      if (logoPrev) { logoPrev.src = s.logo; logoPrev.style.display = 'block'; }
+      if (logoPrev) { logoPrev.src = s.logo; logoPrev.style.display = 'block'; updateBusinessLogoControlPreview(); }
       if (logoHint) logoHint.style.display = 'none';
     }
     var monthlyReport = document.getElementById('s-monthly-report');

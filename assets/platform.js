@@ -495,10 +495,10 @@
       var price = Number(line.price || line.unitPrice || 0) || 0;
       var total = line.total != null ? Number(line.total || 0) : qty * price;
       return '<tr>' +
-        '<td style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;font-weight:700;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
-        '<td align="center" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(qty) + '</td>' +
-        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#6f6258;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
-        '<td align="right" style="border-bottom:1px solid #eadfce;padding:12px 10px;color:#2d2117;font-weight:700;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
+        '<td width="50%" valign="top" style="width:50%;border-bottom:1px solid #eadfce;padding:14px 12px;color:#2d2117;font-size:14px;line-height:1.45;font-weight:700;word-break:break-word;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
+        '<td width="8%" valign="top" align="center" style="width:8%;border-bottom:1px solid #eadfce;padding:14px 8px;color:#6f6258;font-size:14px;line-height:1.45;white-space:nowrap;">' + invoiceEscape(qty) + '</td>' +
+        '<td width="21%" valign="top" align="right" style="width:21%;border-bottom:1px solid #eadfce;padding:14px 8px;color:#6f6258;font-size:14px;line-height:1.45;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
+        '<td width="21%" valign="top" align="right" style="width:21%;border-bottom:1px solid #eadfce;padding:14px 12px;color:#2d2117;font-size:14px;line-height:1.45;font-weight:700;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -750,7 +750,12 @@
       var qty = Number(line.qty || 1) || 1;
       var price = Number(line.price || line.unitPrice || 0) || 0;
       var total = line.total != null ? Number(line.total || 0) : qty * price;
-      return '<tr><td>' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td><td>' + invoiceEscape(qty) + '</td><td>' + invoiceEscape(invoiceMoney(cur, price)) + '</td><td>' + invoiceEscape(invoiceMoney(cur, total)) + '</td></tr>';
+      return '<tr>' +
+        '<td width="50%" valign="top" style="width:50%;padding:14px 12px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#2d2117;font-weight:700;word-break:break-word;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
+        '<td width="8%" valign="top" align="center" style="width:8%;padding:14px 8px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#6f6258;white-space:nowrap;">' + invoiceEscape(qty) + '</td>' +
+        '<td width="21%" valign="top" align="right" style="width:21%;padding:14px 8px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#6f6258;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
+        '<td width="21%" valign="top" align="right" style="width:21%;padding:14px 12px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#2d2117;font-weight:700;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
+      '</tr>';
     }).join('');
     var params = {
       to_email: to,
@@ -787,7 +792,12 @@
       pay_link: opts.payLink || opts.paymentLink || opts.checkoutUrl || '',
       payment_status: opts.status || (amountDue <= 0 ? 'paid' : 'unpaid'),
       notes: opts.notes || '',
-      items_html: itemRows
+      items_html: itemRows,
+      bank_name: settings.bankName || settings.bank || '',
+      bank_account_name: settings.bankAccountName || settings.accountName || '',
+      bank_account_number: settings.bankAccountNumber || settings.accountNumber || '',
+      bank_branch: settings.bankBranch || settings.branch || '',
+      bank_details_html: emailJsBankDetailsHtml(settings)
     };
     var config = { publicKey: publicKey, serviceId: serviceId, templateId: templateId };
     var browserError = null;
@@ -899,6 +909,25 @@
         return '<div style="display:flex;justify-content:space-between;gap:18px;padding:4px 0;font-size:13px;line-height:1.45;color:#6e635a">' +
           '<span>' + invoiceEscape(row[0]) + '</span><strong style="color:#18130f;text-align:right;word-break:break-word">' + invoiceEscape(row[1]) + '</strong></div>';
       }).join('') + '</div>';
+  }
+
+  function emailJsBankDetailsHtml(settings) {
+    var rows = invoiceBankRows(settings);
+    if (!rows.length) return '';
+    return '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;margin:28px 0 0;background:#fbfaf7;border:1px solid #eadfce;">' +
+      '<tr><td style="padding:16px 18px;">' +
+        '<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#b8922a;font-weight:800;margin-bottom:7px;">Bank details for payment</div>' +
+        '<div style="font-size:13px;line-height:1.55;color:#6f6258;margin-bottom:8px;">Please use the invoice number as the payment reference.</div>' +
+        '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">' +
+          rows.map(function(row) {
+            return '<tr>' +
+              '<td width="38%" valign="top" style="width:38%;padding:8px 0;color:#8b7c6f;font-size:13px;line-height:1.45;border-bottom:1px solid #eadfce;">' + invoiceEscape(row[0]) + '</td>' +
+              '<td width="62%" valign="top" align="right" style="width:62%;padding:8px 0;color:#2d2117;font-size:13px;line-height:1.45;font-weight:700;border-bottom:1px solid #eadfce;word-break:break-word;">' + invoiceEscape(row[1]) + '</td>' +
+            '</tr>';
+          }).join('') +
+        '</table>' +
+      '</td></tr>' +
+    '</table>';
   }
 
   function invoiceLineItems(inv) {
