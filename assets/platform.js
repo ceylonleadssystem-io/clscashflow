@@ -1726,9 +1726,10 @@
         '.cls-notify-copy{font-size:12px;color:#6B6258;line-height:1.45;margin-top:3px}' +
         '.cls-notify-mute{background:transparent;border:1px solid #DCD4C8;color:#6B6258;padding:7px 9px;font-family:inherit;font-size:10px;letter-spacing:.11em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:nowrap}' +
         '.cls-notify-list{display:grid;gap:8px;max-height:280px;overflow:auto}' +
-        '.cls-notify-item{border-left:3px solid #B8922A;background:#F7F5F0;padding:9px 10px;font-size:12px;line-height:1.45}' +
+        '.cls-notify-item{border-left:3px solid #B8922A;background:#F7F5F0;padding:9px 34px 9px 10px;font-size:12px;line-height:1.45;position:relative}' +
         '.cls-notify-item.bad{border-left-color:#c0392b;background:#FDECEA}' +
         '.cls-notify-item.warn{border-left-color:#B8922A;background:#FFF8EA}' +
+        '.cls-notify-dismiss{position:absolute;right:7px;top:7px;width:22px;height:22px;border:0;background:transparent;color:#6B6258;font-size:17px;line-height:20px;cursor:pointer;border-radius:50%}.cls-notify-dismiss:hover,.cls-notify-dismiss:focus{background:#fff;color:#c0392b;outline:1px solid #DCD4C8}' +
         '.cls-notify-meta{font-size:10px;color:#6B6258;margin-top:3px}' +
         '@media(max-width:760px){.cls-notify-panel{right:-6px;width:calc(100vw - 22px)}}' +
         '@media print{.cls-notify{display:none!important}}';
@@ -1790,6 +1791,18 @@
 
     var user = getAuthUser();
     var key = 'cls-notifications-muted-' + (user && user.uid ? user.uid : (opts.plan || rememberedPlan() || planFromPath() || 'anon'));
+    var dismissKey = 'cls-notifications-dismissed-' + (user && user.uid ? user.uid : (opts.plan || rememberedPlan() || planFromPath() || 'anon'));
+    var dismissed = [];
+    try { dismissed = JSON.parse(safeGet(dismissKey) || '[]'); } catch (e) { dismissed = []; }
+    if (!Array.isArray(dismissed)) dismissed = [];
+    function notificationId(item) {
+      var raw = String(item.title || '') + '|' + String(item.meta || '');
+      var hash = 0;
+      for (var i = 0; i < raw.length; i++) hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
+      return 'n' + Math.abs(hash);
+    }
+    items.forEach(function(item) { item.id = notificationId(item); });
+    items = items.filter(function(item) { return dismissed.indexOf(item.id) === -1; });
     var muted = safeGet(key) === '1';
     var wrap = document.getElementById('cls-invoice-notifications');
     if (!wrap) {
@@ -1806,7 +1819,7 @@
       '<div class="cls-notify-panel">' +
         '<div class="cls-notify-head"><div><div class="cls-notify-title">Invoice alerts</div><div class="cls-notify-copy">' + (count ? count + ' invoice' + (count === 1 ? '' : 's') + ' need attention.' : 'Nothing urgent right now.') + '</div></div><button type="button" class="cls-notify-mute">' + (muted ? 'Unmute' : 'Mute') + '</button></div>' +
         '<div class="cls-notify-list">' + (count ? items.slice(0, 12).map(function(item) {
-          return '<div class="cls-notify-item ' + item.cls + '"><strong>' + escapeHtml(item.title) + '</strong><div class="cls-notify-meta">' + escapeHtml(item.meta) + '</div></div>';
+          return '<div class="cls-notify-item ' + item.cls + '" data-notification-id="' + escapeHtml(item.id) + '"><button type="button" class="cls-notify-dismiss" aria-label="Dismiss ' + escapeHtml(item.title) + '">×</button><strong>' + escapeHtml(item.title) + '</strong><div class="cls-notify-meta">' + escapeHtml(item.meta) + '</div></div>';
         }).join('') : '<div class="cls-notify-copy">Paid and pending invoices will appear here when they need follow-up.</div>') + '</div>' +
       '</div>';
     wrap.querySelector('.cls-notify-btn').addEventListener('click', function(ev) {
@@ -1817,6 +1830,17 @@
       ev.stopPropagation();
       safeSet(key, muted ? '' : '1');
       window.clsMountInvoiceNotifications(opts);
+    });
+    wrap.querySelectorAll('.cls-notify-dismiss').forEach(function(button) {
+      button.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        var item = button.closest('[data-notification-id]');
+        var id = item && item.getAttribute('data-notification-id');
+        if (!id) return;
+        if (dismissed.indexOf(id) === -1) dismissed.push(id);
+        safeSet(dismissKey, JSON.stringify(dismissed.slice(-200)));
+        window.clsMountInvoiceNotifications(opts);
+      });
     });
     if (!window.__clsNotifyDismissBound) {
       window.__clsNotifyDismissBound = true;

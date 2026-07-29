@@ -352,6 +352,33 @@ test('Studio exposes only the lightweight Cash Out payroll workflow', function()
   assert.match(page, /future payroll Cash Out entries/);
 });
 
+test('Business includes the full staff and payroll workflow', function() {
+  const page = read('growth.html');
+  assert.match(page, /data-view="payroll"/);
+  assert.match(page, /id="view-payroll"/);
+  assert.match(page, /id="mo-payroll"/);
+  assert.match(page, /id="mo-payroll-pay"/);
+  assert.match(page, /function businessPayrollCalc/);
+  assert.match(page, /window\.savePayrollStaff/);
+  assert.match(page, /window\.commitPayrollPayment/);
+  assert.match(page, /window\.deletePayrollStaff/);
+  assert.match(page, /payrollStaffId:p\.id/);
+  assert.match(page, /staff: clonePlain\(D\.staff/);
+  assert.match(page, /staff: D\.staff/);
+  assert.match(page, /'payables','staff','editLog'/);
+});
+
+test('invoice notifications can be dismissed individually across all plans', function() {
+  const platform = read('assets/platform.js');
+  assert.match(platform, /cls-notify-dismiss/);
+  assert.match(platform, /cls-notifications-dismissed-/);
+  assert.match(platform, /data-notification-id/);
+  assert.match(platform, /safeSet\(dismissKey, JSON\.stringify\(dismissed\.slice\(-200\)\)\)/);
+  ['solo.html', 'starter.html', 'growth.html'].forEach(function(file) {
+    assert.match(read(file), /assets\/platform\.js/);
+  });
+});
+
 test('payroll and customer controls remain usable on mobile', function() {
   ['solo.html', 'starter.html'].forEach(function(file) {
     const page = read(file);
