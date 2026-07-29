@@ -553,7 +553,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   #view-invoices .invoice-table thead,#view-invoices table:has(#quote-body) thead{display:none}
   #view-invoices .invoice-table tbody,#view-invoices table:has(#quote-body) tbody{display:grid;gap:.8rem;padding:.8rem}
   #view-invoices .invoice-table tr,#view-invoices table:has(#quote-body) tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--border);background:var(--white);border-radius:var(--r);overflow:hidden}
-  #view-invoices .invoice-table td,#view-invoices table:has(#quote-body) td{display:flex;min-width:0;flex-direction:column;gap:.35rem;padding:.72rem .8rem;text-align:left!important;white-space:normal;border-right:1px solid var(--border);border-bottom:0;overflow-wrap:anywhere}
+  #view-invoices .invoice-table th,#view-invoices .invoice-table td,#view-invoices table:has(#quote-body) th,#view-invoices table:has(#quote-body) td{width:auto!important;max-width:none!important}
+  #view-invoices .invoice-table td,#view-invoices table:has(#quote-body) td{display:flex;min-width:0;flex-direction:column;gap:.35rem;padding:.72rem .8rem;text-align:left!important;white-space:normal;border-right:1px solid var(--border);border-bottom:0;overflow-wrap:break-word;word-break:normal}
   #view-invoices .invoice-table td::before,#view-invoices table:has(#quote-body) td::before{font-size:.53rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:800;text-align:left}
   #view-invoices .invoice-table td:last-child,#view-invoices table:has(#quote-body) td:last-child{grid-column:1/-1;border-top:1px solid var(--border);border-right:0}
   #view-invoices .invoice-table td:nth-child(1)::before{content:"Invoice"}

@@ -42,6 +42,12 @@ test('Business quote rows use a dedicated mobile card layout', function() {
   assert.match(page, /table:has\(#quote-body\) td:nth-child\(7\)::before\{content:"Actions"\}/);
 });
 
+test('Business invoice responsive cards reset desktop percentage column widths', function() {
+  const page = read('growth.html');
+  assert.match(page, /#view-invoices \.invoice-table th,#view-invoices \.invoice-table td[^}]+width:auto!important;max-width:none!important/);
+  assert.match(page, /overflow-wrap:break-word;word-break:normal/);
+});
+
 test('billing actions have mobile spacing and stacked controls', function() {
   const solo = read('solo.html');
   const studio = read('starter.html');
