@@ -289,6 +289,10 @@ test('Business stores optional bank details in invoice settings', function() {
   }
   assert.match(page, /settings\.bankName = document\.getElementById\('s-bank-name'\)\.value\.trim\(\)/);
   assert.match(page, /settings\.bankAccountNumber = document\.getElementById\('s-bank-account-number'\)\.value\.trim\(\)/);
+  assert.match(page, /out\.bankName = src\.bankName \|\| src\.bank \|\| out\.bankName \|\| ''/);
+  assert.match(page, /out\.bankAccountNumber = src\.bankAccountNumber \|\| src\.accountNumber \|\| out\.bankAccountNumber \|\| ''/);
+  assert.match(page, /window\.saveSettings = async function saveSettings\(\)/);
+  assert.match(page, /var saved = await saveData\(\)/);
 });
 
 test('shared invoice outputs render bank details only for invoices', function() {
@@ -300,10 +304,12 @@ test('shared invoice outputs render bank details only for invoices', function() 
   assert.equal(bankBlockCount, rendererCount, 'every invoice renderer must prepare its own bank details block');
   assert.match(platform, /class="bank-details"/);
   assert.match(platform, /var bankHtml = invoiceBankEmailHtml\(opts\.settings \|\| opts\)/);
+  assert.match(platform, /bank_details_html: emailJsBankDetailsHtml\(settings\)/);
+  assert.match(platform, /bank_account_number: settings\.bankAccountNumber/);
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260718-priority-chat';
+  const version = '20260730-bank-save';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',

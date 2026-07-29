@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260718-priority-chat"></script>
+<script src="assets/platform.js?v=20260730-bank-save"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1785,6 +1785,10 @@ function mapStudioSettings(src) {
   out.vat = src.vat || src.taxNo || out.vat || '';
   out.footer = src.footer || out.footer || 'Thank you for your business.';
   if (out.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') out.footer = 'Thank you for your business.';
+  out.bankName = src.bankName || src.bank || out.bankName || '';
+  out.bankAccountName = src.bankAccountName || src.accountName || out.bankAccountName || '';
+  out.bankAccountNumber = src.bankAccountNumber || src.accountNumber || out.bankAccountNumber || '';
+  out.bankBranch = src.bankBranch || src.branch || out.bankBranch || '';
   out.logo = src.logo || out.logo || '';
   out.monthlyReport = src.monthlyReport === true || out.monthlyReport === true;
   out.logoAlign = src.logoAlign || out.logoAlign || 'left';
@@ -4212,7 +4216,7 @@ window.waRemind = function waRemind(id) {
   return openSecureBusinessInvoiceWhatsApp(inv);
 }
 
-window.saveSettings = function saveSettings() {
+window.saveSettings = async function saveSettings() {
   D.settings.biz = document.getElementById('s-biz').value || D.settings.biz;
   D.settings.user = document.getElementById('s-user').value || D.settings.user;
   D.settings.addr = document.getElementById('s-addr').value;
@@ -4285,8 +4289,10 @@ window.saveSettings = function saveSettings() {
   renderCashflow();
   renderReports();
   renderInsights();
-  showToast('Settings saved!', 'ok');
-  saveData();
+  var saved = await saveData();
+  if (saved) showToast('Settings saved to your Business account.', 'ok');
+  else showToast('Settings were kept on this device, but cloud sync failed. Please check your connection and try again.', 'err');
+  return saved;
 }
 
 async function previewLogo(input) {
