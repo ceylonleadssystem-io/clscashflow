@@ -864,20 +864,39 @@ exports.handler = async function handler(event) {
       return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Unknown admin action.' }) };
     }
 
-    const users = await readCollection(db, 'users', 'createdAt', 300);
-    const visits = await readCollection(db, 'platformVisits', 'createdAt', 200);
-    const tickets = await readCollection(db, 'supportTickets', 'createdAt', 160);
-    await ensureExpiredTrialPaymentRequests(admin, db, users);
-    const paymentRequests = await readCollection(db, 'paymentRequests', 'createdAt', 160);
-    const chats = await readChats(db);
+    const usersPromise = readCollection(db, 'users', 'createdAt', 300);
+    const paymentRequestsPromise = usersPromise.then(async function(userRows) {
+      await ensureExpiredTrialPaymentRequests(admin, db, userRows);
+      return readCollection(db, 'paymentRequests', 'createdAt', 160);
+    });
+    const initialRows = await Promise.all([
+      usersPromise,
+      readCollection(db, 'platformVisits', 'createdAt', 200),
+      readCollection(db, 'supportTickets', 'createdAt', 160),
+      readChats(db),
+      paymentRequestsPromise
+    ]);
+    const users = initialRows[0];
+    const visits = initialRows[1];
+    const tickets = initialRows[2];
+    const chats = initialRows[3];
+    const paymentRequests = initialRows[4];
     const stats = buildStats(users, visits, tickets, paymentRequests, chats);
 
-    const usersTotal = await countQuery(db.collection('users'));
-    const visitsTotal = await countQuery(db.collection('platformVisits'));
-    const ticketsTotal = await countQuery(db.collection('supportTickets'));
-    const paymentRequestsTotal = await countQuery(db.collection('paymentRequests'));
-    const chatsTotal = await countQuery(db.collection('chatThreads'));
-    const landingVisitsTotal = await countQuery(db.collection('platformVisits').where('isLanding', '==', true));
+    const totals = await Promise.all([
+      countQuery(db.collection('users')),
+      countQuery(db.collection('platformVisits')),
+      countQuery(db.collection('supportTickets')),
+      countQuery(db.collection('paymentRequests')),
+      countQuery(db.collection('chatThreads')),
+      countQuery(db.collection('platformVisits').where('isLanding', '==', true))
+    ]);
+    const usersTotal = totals[0];
+    const visitsTotal = totals[1];
+    const ticketsTotal = totals[2];
+    const paymentRequestsTotal = totals[3];
+    const chatsTotal = totals[4];
+    const landingVisitsTotal = totals[5];
 
     if (usersTotal != null) stats.usersTotal = usersTotal;
     if (visitsTotal != null) stats.visitsTotal = visitsTotal;

@@ -41,6 +41,11 @@
 .user-card .actions .btn{width:100%;min-height:38px}
 .btn.danger-fill{background:#c0392b;color:#fff;border-color:#c0392b}
 .chat-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.data-status{display:flex;align-items:center;gap:10px;min-height:42px;margin:0 0 14px;padding:10px 13px;border:1px solid #e2d8ca;background:#fff;color:#6B6258;font-size:12px}
+.data-status::before{content:'';width:8px;height:8px;border-radius:50%;background:#B8922A;flex:0 0 auto}
+.data-status.ok::before{background:#10834c}.data-status.warn{background:#fff8ea;border-color:#ead39a}.data-status.warn::before{background:#b27600}
+.data-status.bad{background:#fdecea;border-color:#e8b7b1;color:#7d251d}.data-status.bad::before{background:#c0392b}
+.data-status.loading::before{animation:adminPulse .8s ease-in-out infinite alternate}@keyframes adminPulse{to{opacity:.25;transform:scale(.72)}}
 @media(max-width:760px){.admin-tabs{position:static}.user-card .actions{grid-template-columns:1fr 1fr}.top{position:static}.wrap{padding:16px}.section-head{align-items:flex-start;flex-direction:column}.table{min-width:940px}}
 @media(max-width:520px){.user-card .actions{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
@@ -85,6 +90,8 @@
       </div>
       <div class="utc" id="utc-clock"></div>
     </div>
+
+    <div class="data-status loading" id="data-status" role="status" aria-live="polite">Loading platform data…</div>
 
     <nav class="admin-tabs" id="admin-tabs" aria-label="Admin sections">
       <button class="admin-tab active" type="button" data-admin-tab="overview">Overview</button>
@@ -481,7 +488,18 @@ async function fetchAdminFunction(body, forceRefresh){
     options.headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
   }
-  var res = await fetch('/.netlify/functions/admin-data', options);
+  var controller = typeof AbortController === 'function' ? new AbortController() : null;
+  var timer = controller ? setTimeout(function(){ controller.abort(); }, ADMIN_REQUEST_TIMEOUT_MS) : null;
+  if (controller) options.signal = controller.signal;
+  var res;
+  try {
+    res = await fetch('/.netlify/functions/admin-data', options);
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('The admin server took too long to respond.');
+    throw e;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
   var json = await res.json().catch(function(){ return {}; });
   if (!res.ok || !json.ok) {
     if (res.status === 401 && !forceRefresh) return fetchAdminFunction(body, true);
@@ -693,6 +711,30 @@ var adminLoading = false;
 var adminHasRendered = false;
 var adminActiveSection = 'overview';
 var adminUserRows = [];
+var ADMIN_CACHE_KEY = 'cls-admin-dashboard-cache-v2';
+var ADMIN_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
+var ADMIN_REQUEST_TIMEOUT_MS = 12000;
+function setDataStatus(kind, message){
+  var node = $('data-status');
+  if (!node) return;
+  node.className = 'data-status ' + (kind || '');
+  node.textContent = message || '';
+}
+function readAdminCache(){
+  try {
+    var cached = JSON.parse(sessionStorage.getItem(ADMIN_CACHE_KEY) || 'null');
+    if (!cached || !cached.payload || !cached.savedAt) return null;
+    if (Date.now() - Number(cached.savedAt) > ADMIN_CACHE_MAX_AGE_MS) return null;
+    return cached;
+  } catch (e) {
+    return null;
+  }
+}
+function writeAdminCache(payload){
+  try {
+    sessionStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), payload: payload }));
+  } catch (e) {}
+}
 function setRefreshState(isLoading){
   var btn = $('refresh-btn');
   if (!btn) return;
@@ -730,29 +772,47 @@ async function loadAdminData(opts){
   setRefreshState(true);
   try {
     showAdmin();
-    if (!adminHasRendered || opts.forceLoading) {
+    var cached = !adminHasRendered ? readAdminCache() : null;
+    if (cached) {
+      var cachedPayload = cached.payload;
+      renderAdminPayload(cachedPayload.users || [], cachedPayload.visits || [], cachedPayload.tickets || [], cachedPayload.paymentRequests || [], cachedPayload.chats || [], cachedPayload.stats || {});
+      setDataStatus('loading', 'Showing saved data while checking for updates…');
+    } else if (!adminHasRendered) {
+      ['kpi-users','kpi-visitors','kpi-visits','kpi-landing','kpi-live','kpi-open','kpi-tickets','kpi-payment-requests','kpi-open-chats','kpi-chats'].forEach(function(id){
+        if ($(id)) $(id).textContent = '—';
+      });
       renderEmpty('users-body', 11, 'Loading users...');
       renderEmpty('visits-body', 10, 'Loading visits...');
       renderEmpty('payment-requests-body', 9, 'Loading payment requests...');
       renderEmpty('tickets-body', 8, 'Loading tickets...');
       $('chats-body').innerHTML = '<div class="card muted">Loading Mrs. Gamage chats...</div>';
       $('user-breakdown').innerHTML = '<div class="card muted">Loading per-user breakdown...</div>';
+      setDataStatus('loading', 'Loading platform data…');
+    } else {
+      setDataStatus('loading', 'Refreshing in the background…');
     }
     var adminFunctionError = '';
     try {
       var payload = await fetchAdminFunction();
       renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {});
+      writeAdminCache(payload);
+      setDataStatus('ok', 'Up to date · loaded ' + new Date().toLocaleTimeString());
       return;
     } catch (serverErr) {
       adminFunctionError = serverErr && serverErr.message ? serverErr.message : 'Admin data function failed.';
       console.warn('Admin function unavailable:', serverErr);
       if (serverErr && (serverErr.status === 401 || serverErr.status === 403 || window.__CLS_ALLOW_ADMIN_BROWSER_FALLBACK !== true)) {
+        if (cached || adminHasRendered) {
+          setDataStatus('warn', 'Could not refresh. Showing the last loaded data · ' + adminFunctionError);
+          return;
+        }
         renderEmpty('users-body', 11, 'Could not load users. Admin function: '+adminFunctionError);
         renderEmpty('visits-body', 10, 'Could not load visits. Admin function: '+adminFunctionError);
         renderEmpty('payment-requests-body', 9, 'Could not load payment requests. Admin function: '+adminFunctionError);
         renderEmpty('tickets-body', 8, 'Could not load tickets. Admin function: '+adminFunctionError);
         $('chats-body').innerHTML = '<div class="card muted">Could not load Mrs. Gamage chats. Admin function: '+esc(adminFunctionError)+'</div>';
         $('user-breakdown').innerHTML = '<div class="card muted">Could not build the per-user breakdown because the admin server function could not load.</div>';
+        setDataStatus('bad', 'Data could not be loaded · ' + adminFunctionError);
         adminHasRendered = true;
         return;
       }
@@ -825,6 +885,7 @@ async function loadAdminData(opts){
     if (ticketsLoaded) renderTickets(tickets, stats);
     switchAdminSection(adminActiveSection);
     adminHasRendered = true;
+    setDataStatus('warn', 'Loaded through the browser fallback. Server data endpoint needs attention.');
   } finally {
     adminLoading = false;
     setRefreshState(false);
@@ -1076,13 +1137,11 @@ $('admin-login').addEventListener('click', async function(){
   var pass = $('admin-pass').value;
   if (!isAdminEmail(email)) { $('login-error').textContent = 'This panel only accepts the platform admin email.'; return; }
   try {
-    var cred = await auth.signInWithEmailAndPassword(email, pass);
-    await ensureAdminProfile(cred.user, false);
+    await auth.signInWithEmailAndPassword(email, pass);
   } catch (e) {
     if (isCredentialError(e.code)) {
       try {
-        var created = await auth.createUserWithEmailAndPassword(email, pass);
-        await ensureAdminProfile(created.user, true);
+        await auth.createUserWithEmailAndPassword(email, pass);
         return;
       } catch(createErr) {
         if (createErr.code === 'auth/email-already-in-use' || isCredentialError(createErr.code)) {
@@ -1193,9 +1252,8 @@ auth.onAuthStateChanged(function(user){
     showLogin('This account is not allowed to access the admin panel. Your normal account remains signed in.');
     return;
   }
-  ensureAdminProfile(user, false).then(function(){ return loadAdminData({ forceLoading: true }); }).catch(function(e){
-    showLogin('Admin profile could not be prepared: ' + e.message);
-  });
+  loadAdminData({ forceLoading: true }).catch(function(e){ console.warn('Admin data load failed:', e); });
+  ensureAdminProfile(user, false).catch(function(e){ console.warn('Admin profile refresh failed:', e); });
 });
 </script>
 </body>

@@ -169,11 +169,20 @@ function firestoreQuery(path, filters, order, limitValue) {
     count: function() {
       return {
         get: async function() {
-          const rows = await queryDocuments(path, {
-            filters,
-            fetchLimit: 2000
+          let query = service()
+            .from('app_documents')
+            .select('id', { count: 'exact', head: true })
+            .eq('path', path);
+          filters.forEach(function(filter) {
+            if (filter.op === '==') {
+              const match = {};
+              match[filter.field] = filter.value;
+              query = query.contains('data', match);
+            }
           });
-          return { data: function() { return { count: rows.length }; } };
+          const result = await query;
+          if (result.error) throw result.error;
+          return { data: function() { return { count: Number(result.count || 0) }; } };
         }
       };
     }

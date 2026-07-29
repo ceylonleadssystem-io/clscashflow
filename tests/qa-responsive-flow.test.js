@@ -393,3 +393,17 @@ test('payslip email endpoint sends a PDF attachment', function() {
   assert.match(fn, /encoding: 'base64'/);
   assert.match(fn, /Buffer\.byteLength\(pdfBase64, 'base64'\)/);
 });
+
+test('admin dashboard loads quickly without presenting failed requests as zero data', function() {
+  const page = read('ceylonry-admin.html');
+  const endpoint = read('netlify/functions/admin-data.js');
+  const database = read('netlify/lib/supabase.js');
+  assert.match(page, /id="data-status"/);
+  assert.match(page, /ADMIN_REQUEST_TIMEOUT_MS = 12000/);
+  assert.match(page, /sessionStorage\.getItem\(ADMIN_CACHE_KEY\)/);
+  assert.match(page, /Showing saved data while checking for updates/);
+  assert.match(page, /textContent = '—'/);
+  assert.match(endpoint, /const initialRows = await Promise\.all\(/);
+  assert.match(endpoint, /const totals = await Promise\.all\(/);
+  assert.match(database, /\.select\('id', \{ count: 'exact', head: true \}\)/);
+});
