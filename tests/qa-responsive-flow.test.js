@@ -321,7 +321,7 @@ test('shared invoice outputs render bank details only for invoices', function() 
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260730-bank-save';
+  const version = '20260801-manual-billing';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
@@ -439,13 +439,13 @@ test('admin dashboard loads quickly without presenting failed requests as zero d
   const endpoint = read('netlify/functions/admin-data.js');
   const database = read('netlify/lib/supabase.js');
   assert.match(page, /id="data-status"/);
-  assert.match(page, /ADMIN_REQUEST_TIMEOUT_MS = 12000/);
+  assert.match(page, /ADMIN_REQUEST_TIMEOUT_MS = 6500/);
   assert.match(page, /sessionStorage\.getItem\(ADMIN_CACHE_KEY\)/);
   assert.match(page, /Showing saved data while checking for updates/);
   assert.match(page, /textContent = '—'/);
   assert.match(page, /if \(cached \|\| adminHasData\)/);
   assert.match(endpoint, /const initialRows = await Promise\.all\(/);
-  assert.match(endpoint, /const totals = await Promise\.all\(/);
+  assert.doesNotMatch(endpoint, /const totals = await Promise\.all\(/);
   assert.match(endpoint, /readChats\(db, false\)/);
   assert.doesNotMatch(endpoint, /paymentRequestsPromise/);
   assert.match(database, /\.select\('id', \{ count: 'exact', head: true \}\)/);
@@ -532,4 +532,20 @@ test('all plans use monthly bank transfer billing with receipt upload and grace 
   assert.match(solo, /Pay Solo by Bank Transfer/);
   assert.match(studio, /Pay Studio by Bank Transfer/);
   assert.match(business, /Pay Business by Bank Transfer/);
+});
+
+test('admin console is compact, searchable, payment-aware, and date-maps visits', function() {
+  const page=read('ceylonry-admin.html');
+  const api=read('netlify/functions/admin-data.js');
+  assert.match(page,/id="user-search"/);
+  assert.match(page,/admin-action-menu/);
+  assert.match(page,/id="receipt-grid"/);
+  assert.match(page,/id="chat-status-filter"/);
+  assert.match(page,/Archived chats/);
+  assert.match(page,/id="visit-from"/);
+  assert.match(page,/renderVisitMap/);
+  assert.match(page,/Difference paid & apply/);
+  assert.match(api,/applyTicketPlanChange/);
+  assert.match(api,/accountPaused:true,paid:false,subscriptionStatus:'paused'/);
+  assert.match(api,/admin\.auth\(\)\.deleteUser/);
 });

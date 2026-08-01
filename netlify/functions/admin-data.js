@@ -200,22 +200,22 @@ const PLAN_DETAILS = {
     name: 'Solo',
     price: 36000,
     monthlyPrice: 3500,
-    monthlyPayLink: 'https://paylink.geniebiz.lk/JgLRmPDlzb',
-    annualPayLink: 'https://paylink.geniebiz.lk/r9Qm3Plxa2'
+    monthlyPayLink: '',
+    annualPayLink: ''
   },
   studio: {
     name: 'Studio',
     price: 60000,
     monthlyPrice: 5500,
-    monthlyPayLink: 'https://paylink.geniebiz.lk/eoqQAbG61x',
-    annualPayLink: 'https://paylink.geniebiz.lk/yjELmYAPOJ'
+    monthlyPayLink: '',
+    annualPayLink: ''
   },
   business: {
     name: 'Business',
     price: 94800,
     monthlyPrice: 8500,
-    monthlyPayLink: 'https://paylink.geniebiz.lk/DmwLnMeMwJ',
-    annualPayLink: 'https://paylink.geniebiz.lk/rZN6y8VLoq'
+    monthlyPayLink: '',
+    annualPayLink: ''
   }
 };
 
@@ -292,8 +292,8 @@ async function ensureExpiredTrialPaymentRequests(admin, db, users) {
   await Promise.all((users || []).map(async function(row) {
     const data = row.data || {};
     if (!row.id || isInternalAdmin(data) || isPaidProfile(data) || isPausedProfile(data)) return;
-    const trialEndMs = parseTime(data.trialEnd);
-    if (!trialEndMs || trialEndMs >= now) return;
+    const trialEndMs = parseTime(data.nextPaymentDue || data.subscriptionCurrentPeriodEnd || data.trialEnd);
+    if (!trialEndMs || trialEndMs + 86400000 >= now) return;
 
 	    const plan = normalizePlan(data.currentPlan || data.plan || data.lastPlan);
 	    const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
@@ -321,7 +321,7 @@ async function ensureExpiredTrialPaymentRequests(admin, db, users) {
 	        defaultAnnualPayLink: planInfo.annualPayLink,
 	        paymentLink: monthlyPayLink,
 	        paymentLinkCycle: 'monthly',
-	        paymentProvider: 'genie',
+	        paymentProvider: 'bank-transfer',
 	        billingCycle: 'monthly',
 	        currency: 'LKR',
         trialEnd: data.trialEnd || '',
@@ -343,16 +343,17 @@ async function ensureExpiredTrialPaymentRequests(admin, db, users) {
 	        paymentRequestAmount: planInfo.monthlyPrice,
 	        paymentRequestMonthlyAmount: planInfo.monthlyPrice,
 	        paymentRequestAnnualAmount: planInfo.price,
-	        paymentProvider: 'genie',
+	        paymentProvider: 'bank-transfer',
 	        paymentMonthlyPayLink: monthlyPayLink,
 	        paymentAnnualPayLink: annualPayLink,
 	      paymentLink: monthlyPayLink,
 	      paymentLinkCycle: 'monthly',
 	      billingCycle: 'monthly',
-	        manualPaymentStatus: 'payment-requested',
+	        manualPaymentStatus: 'payment-required', accountPaused:true, subscriptionStatus:'paused',
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
+    await db.collection('users').doc(row.id).set({accountPaused:true,paid:false,subscriptionStatus:'paused',manualPaymentStatus:'payment-required',paymentRequestStatus:'pending',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
   }));
 }
 
@@ -414,7 +415,7 @@ function userUpdateForAction(admin, updateType) {
       requestedPlan: 'solo',
       planPrice: 36000,
       planMonthlyPrice: 3500,
-      billingCycle: 'annual',
+      billingCycle: 'monthly',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
       updatedAt: stamp
@@ -428,7 +429,7 @@ function userUpdateForAction(admin, updateType) {
       requestedPlan: 'studio',
       planPrice: 60000,
       planMonthlyPrice: 5500,
-      billingCycle: 'annual',
+      billingCycle: 'monthly',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
       updatedAt: stamp
@@ -442,7 +443,7 @@ function userUpdateForAction(admin, updateType) {
       requestedPlan: 'business',
       planPrice: 94800,
       planMonthlyPrice: 8500,
-      billingCycle: 'annual',
+      billingCycle: 'monthly',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
       updatedAt: stamp
@@ -544,6 +545,17 @@ exports.handler = async function handler(event) {
         }
         await db.collection('supportTickets').doc(id).set(update, { merge: true });
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+
+      if (action === 'applyTicketPlanChange') {
+        const ticketId=String(body.ticketId||'').trim(),email=String(body.email||'').trim().toLowerCase(),target=normalizePlan(body.plan);
+        if(!ticketId||!email||!target)return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Ticket, email, and target plan are required.'})};
+        const snap=await db.collection('users').where('email','==',email).limit(1).get();let userRow=null;snap.forEach(function(doc){userRow={id:doc.id,data:doc.data()||{}};});
+        if(!userRow)return {statusCode:404,headers:headers(),body:JSON.stringify({ok:false,error:'No user matches this ticket email.'})};
+        const current=normalizePlan(userRow.data.currentPlan||userRow.data.plan),prices={solo:3500,studio:5500,business:8500},difference=Math.max(0,(prices[target]||0)-(prices[current]||0)),paid=isPaidProfile(userRow.data),stamp=admin.firestore.FieldValue.serverTimestamp();
+        await db.collection('users').doc(userRow.id).set({plan:target,currentPlan:target,lastPlan:target,requestedPlan:target,planMonthlyPrice:prices[target],planChangedAt:stamp,planChangedBy:'platform_admin',planChangeDifferencePaid:paid?difference:0,updatedAt:stamp},{merge:true});
+        await db.collection('supportTickets').doc(ticketId).set({status:'closed',closedAt:stamp,closedBy:'platform_admin',resolvedPlan:target,resolvedDifference:difference,resolution:paid&&difference?'Upgrade difference confirmed paid and plan changed.':'Trial plan changed.',updatedAt:stamp},{merge:true});
+        return {statusCode:200,headers:headers(),body:JSON.stringify({ok:true,difference})};
       }
 
       if (action === 'updateUser') {
@@ -766,7 +778,7 @@ exports.handler = async function handler(event) {
 	          defaultAnnualPayLink: planInfo.annualPayLink,
 	          paymentLink: monthlyPayLink,
 	          paymentLinkCycle: 'monthly',
-	          paymentProvider: 'genie',
+	          paymentProvider: 'bank-transfer',
 	          billingCycle: 'monthly',
 	          currency: 'LKR',
           trialEnd: profile.trialEnd || '',
@@ -792,8 +804,9 @@ exports.handler = async function handler(event) {
 	          trialLine,
 	          'Package: ' + planInfo.name + ' Plan',
 	          'Amount: LKR ' + Number(planInfo.monthlyPrice || 0).toLocaleString('en-US') + '/month',
-	          'Annual option: LKR ' + Number(planInfo.price || 0).toLocaleString('en-US') + '/year',
-	          'Genie link: ' + monthlyPayLink,
+	          'Pay by bank transfer to: Ceylonry Life Care',
+	          'Commercial Bank · City Office · Account 1001069904',
+	          'Upload the payment slip in Billing after the transfer.',
 	          'Payment request token: ' + token,
           '',
           'Our team can send the manual invoice for this package. Reply here if you want us to resend details or confirm payment.'
@@ -828,7 +841,7 @@ exports.handler = async function handler(event) {
 	          paymentRequestAmount: planInfo.monthlyPrice,
 	          paymentRequestMonthlyAmount: planInfo.monthlyPrice,
 	          paymentRequestAnnualAmount: planInfo.price,
-	          paymentProvider: 'genie',
+	          paymentProvider: 'bank-transfer',
 	          paymentMonthlyPayLink: monthlyPayLink,
 	          paymentAnnualPayLink: annualPayLink,
 	          paymentLink: monthlyPayLink,
@@ -877,29 +890,8 @@ exports.handler = async function handler(event) {
     const tickets = initialRows[2];
     const chats = initialRows[3];
     const paymentRequests = initialRows[4];
+    await ensureExpiredTrialPaymentRequests(admin, db, users);
     const stats = buildStats(users, visits, tickets, paymentRequests, chats);
-
-    const totals = await Promise.all([
-      countQuery(db.collection('users')),
-      countQuery(db.collection('platformVisits')),
-      countQuery(db.collection('supportTickets')),
-      countQuery(db.collection('paymentRequests')),
-      countQuery(db.collection('chatThreads')),
-      countQuery(db.collection('platformVisits').where('isLanding', '==', true))
-    ]);
-    const usersTotal = totals[0];
-    const visitsTotal = totals[1];
-    const ticketsTotal = totals[2];
-    const paymentRequestsTotal = totals[3];
-    const chatsTotal = totals[4];
-    const landingVisitsTotal = totals[5];
-
-    if (usersTotal != null) stats.usersTotal = usersTotal;
-    if (visitsTotal != null) stats.visitsTotal = visitsTotal;
-    if (ticketsTotal != null) stats.ticketsTotal = ticketsTotal;
-    if (paymentRequestsTotal != null) stats.paymentRequestsTotal = paymentRequestsTotal;
-    if (chatsTotal != null) stats.chatsTotal = chatsTotal;
-    if (landingVisitsTotal != null) stats.landingVisitsTotal = landingVisitsTotal;
 
     return {
       statusCode: 200,

@@ -1496,7 +1496,7 @@
 	      customPaymentLink: customPayLink || '',
 	      paymentLinkCycle: 'monthly',
 	      paymentLinkExpiresAt: paymentLinkExpiresAt,
-      paymentProvider: 'genie',
+      paymentProvider: 'bank-transfer',
       billingCycle: 'monthly',
       currency: 'LKR',
       trialEnd: trialEnd && !isNaN(trialEnd.getTime()) ? trialEnd.toISOString() : '',
@@ -1513,7 +1513,7 @@
       paymentRequestAmount: details.monthlyPrice || 0,
       paymentRequestMonthlyAmount: details.monthlyPrice || 0,
       paymentRequestAnnualAmount: details.price,
-      paymentProvider: 'genie',
+      paymentProvider: 'bank-transfer',
       paymentMonthlyPayLink: monthlyPayLink || '',
       paymentAnnualPayLink: annualPayLink || '',
 	      paymentLink: monthlyPayLink || '',
@@ -1572,7 +1572,7 @@
         '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">' + trialText + '<br>Pay your <strong>CLS ' + details.name + '</strong> monthly package by bank transfer to continue using your dashboard and data.</div>' +
         '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.25);padding:1.45rem;margin-bottom:1.5rem">' +
           '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.monthlyPrice) + '<span style="font-size:1rem;color:#6B6258">/mo</span></div>' +
-          '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · annual option ' + money(details.price) + '</div>' +
+          '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · monthly bank transfer</div>' +
         '</div>' +
         '<div id="cls-payment-request-token" style="background:#fff8ea;border:1px solid rgba(184,146,42,.28);padding:.8rem 1rem;margin:-.5rem 0 1rem;color:#6B6258;font-size:.74rem;line-height:1.55">Creating a manual payment request for admin...</div>' +
         '<button id="cls-genie-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay by bank transfer</button>' +
@@ -1619,7 +1619,7 @@
     var base64=await readReceiptFile(file),period=new Date().toISOString().slice(0,7);
     var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,amount:money(details.monthlyPrice),period:period})});
     var out=await res.json().catch(function(){return{};});if(!res.ok||!out.sent)throw new Error(out.error||'Payment slip could not be sent.');
-    var next=new Date();next.setMonth(next.getMonth()+1);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),updatedAt:fieldTimestamp()};
+    var next=new Date();next.setMonth(next.getMonth()+1);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentSlipName:cleanString(file.name,180),lastPaymentSlipType:cleanString(file.type,100),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),updatedAt:fieldTimestamp()};
     var db=getFirestore(),uid=profile.ownerUid||(user&&user.uid)||profile.uid||'';if(db&&uid)await db.collection('users').doc(uid).set(update,{merge:true});Object.assign(profile,update);if(statusEl)statusEl.textContent='Thank you so much — your payment slip was sent to accounts@ceylonrylabs.io and access is active.';setTimeout(function(){var wall=document.getElementById('cls-paywall');if(wall)wall.remove();},1000);return true;
   };
   window.clsOpenBankTransferPayment=function clsOpenBankTransferPayment(plan,profile){

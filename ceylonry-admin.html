@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260730-bank-save"></script>
+<script src="assets/platform.js?v=20260801-manual-billing"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1280px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.token{font-weight:800;letter-spacing:.08em;color:#1C1814;white-space:nowrap}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{padding:8px 10px;font-size:10px}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.secure-note{font-size:11px;color:#6B6258;line-height:1.5}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
@@ -48,6 +48,7 @@
 .data-status.loading::before{animation:adminPulse .8s ease-in-out infinite alternate}@keyframes adminPulse{to{opacity:.25;transform:scale(.72)}}
 @media(max-width:760px){.admin-tabs{position:static}.user-card .actions{grid-template-columns:1fr 1fr}.top{position:static}.wrap{padding:16px}.section-head{align-items:flex-start;flex-direction:column}.table{min-width:940px}}
 @media(max-width:520px){.user-card .actions{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
+.admin-tools{display:flex;gap:.6rem;flex-wrap:wrap;align-items:end;margin:.65rem 0 1rem}.admin-tools .field{margin:0;min-width:150px}.admin-tools .field.search{flex:1;min-width:240px}.admin-tools input,.admin-tools select{min-height:40px}.compact-users{min-width:0!important}.compact-users th,.compact-users td{padding:9px 10px}.compact-users td{vertical-align:middle}.compact-users .actions{display:grid;grid-template-columns:repeat(2,minmax(110px,1fr));padding:10px}.admin-action-menu{position:relative}.admin-action-menu summary{cursor:pointer;list-style:none;border:1px solid #d8cda9;padding:7px 10px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}.admin-action-menu summary::-webkit-details-marker{display:none}.admin-action-menu[open]{z-index:20}.admin-action-menu .action-pop{position:absolute;right:0;top:calc(100% + 5px);width:300px;background:#fff;border:1px solid #ded7cc;box-shadow:0 18px 50px rgba(0,0,0,.16);z-index:30}.receipt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem;margin-bottom:1rem}.receipt-card{background:#fff;border:1px solid #ded7cc;border-left:4px solid #1a9e5c;padding:1rem;display:grid;gap:.45rem}.receipt-card strong{font-size:.88rem}.receipt-card span{font-size:.72rem;color:#6b6258}.visit-map{position:relative;min-height:310px;background:#e9f0ed;border:1px solid #d4ddd8;border-radius:18px;overflow:hidden;margin-bottom:1rem}.visit-map svg{width:100%;height:310px}.map-pin{cursor:pointer}.map-pin circle{fill:#d8a92c;stroke:#fff;stroke-width:2}.map-pin text{font:800 10px Inter,Arial;fill:#111;text-anchor:middle;dominant-baseline:middle}.map-empty{display:grid;place-items:center;height:310px;color:#6b6258}.ticket-upgrade{margin-top:.45rem;padding:.5rem;background:#fff6df;border-left:3px solid #d8a92c;font-size:.72rem;line-height:1.45}.chat-card.archived{opacity:.72}.chat-card.archived .chat-reply{display:none}.table{min-width:0}.user-breakdown{display:none!important}@media(max-width:900px){.table-wrap{overflow:auto}.compact-users{min-width:850px!important}.admin-action-menu .action-pop{position:fixed;inset:auto 1rem 1rem;width:auto;max-height:70vh;overflow:auto}.visit-map{min-height:240px}.visit-map svg{height:240px}}
 </style>
 </head>
 <body>
@@ -115,27 +116,26 @@
 
     <section class="section" data-admin-section="payments">
       <div class="section-head"><h2>Payment Requests</h2><span class="muted">Tokens created automatically when trials expire</span></div>
+      <div class="receipt-grid" id="receipt-grid"></div>
       <div class="table-wrap"><table class="table">
-        <thead><tr><th>Status</th><th>Token</th><th>User</th><th>Plan</th><th>Amount</th><th>Payment Link</th><th>Trial End</th><th>Created UTC</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Status</th><th>User</th><th>Plan</th><th>Cycle</th><th>Amount</th><th>Due</th><th>Created</th><th>Actions</th></tr></thead>
         <tbody id="payment-requests-body"></tbody>
       </table></div>
     </section>
 
     <section class="section" data-admin-section="users">
-      <div class="section-head"><h2>Per-user breakdown</h2><span class="muted">Who is there, current status, and what needs to be done</span></div>
+      <div class="section-head"><h2>Newly onboarded</h2><span class="muted">Latest accounts appear first in the compact directory below</span></div>
       <div class="user-breakdown" id="user-breakdown"></div>
-    </section>
-
-    <section class="section" data-admin-section="users">
-      <div class="section-head"><h2>Users</h2><span class="muted">Latest profile, plan, and last seen data</span></div>
-      <div class="table-wrap"><table class="table">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Plan</th><th>Payment</th><th>Account</th><th>Owner</th><th>Trial End</th><th>Last Seen UTC</th><th>Path</th><th>Actions</th></tr></thead>
+      <div class="admin-tools"><div class="field search"><label>Search users</label><input id="user-search" type="search" placeholder="Name, email, business or ID"></div><div class="field"><label>Plan</label><select id="user-plan-filter"><option value="">All plans</option><option>solo</option><option>studio</option><option>business</option></select></div><div class="field"><label>Status</label><select id="user-status-filter"><option value="">All statuses</option><option value="new">New this week</option><option value="trial">Trial</option><option value="paid">Paid</option><option value="paused">Paused</option><option value="receipt">Receipt uploaded</option></select></div></div>
+      <div class="table-wrap"><table class="table compact-users">
+        <thead><tr><th>User</th><th>Plan</th><th>Billing</th><th>Account</th><th>Joined</th><th>Last seen</th><th>Actions</th></tr></thead>
         <tbody id="users-body"></tbody>
       </table></div>
     </section>
 
     <section class="section" data-admin-section="visits">
       <div class="section-head"><h2>Visits</h2><span class="muted">Location comes from Netlify geo when deployed</span></div>
+      <div class="admin-tools"><div class="field"><label>From date</label><input type="date" id="visit-from"></div><div class="field"><label>To date</label><input type="date" id="visit-to"></div><button class="btn" id="visit-clear">Clear</button></div><div class="visit-map" id="visit-map"></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>UTC</th><th>Visitor</th><th>Page</th><th>Plan</th><th>Path</th><th>City</th><th>Country</th><th>Timezone</th><th>Device</th><th>IP</th></tr></thead>
         <tbody id="visits-body"></tbody>
@@ -144,11 +144,13 @@
 
     <section class="section" data-admin-section="chats">
       <div class="section-head"><h2>Mrs. Gamage Live Chat</h2><span class="muted">Customer messages from the portal chat</span></div>
+      <div class="admin-tools"><div class="field search"><label>Search chats</label><input id="chat-search" type="search" placeholder="Name, email or message"></div><div class="field"><label>View</label><select id="chat-status-filter"><option value="open">Open chats</option><option value="closed">Archived chats</option><option value="">All chats</option></select></div></div>
       <div class="chat-grid" id="chats-body"></div>
     </section>
 
     <section class="section" data-admin-section="tickets">
       <div class="section-head"><h2>Support Tickets</h2><span class="muted">Chat and bug reports from the Help widget</span></div>
+      <div class="admin-tools"><div class="field search"><label>Search tickets</label><input id="ticket-search" type="search" placeholder="Email, type or message"></div><div class="field"><label>Status</label><select id="ticket-status-filter"><option value="open">Open / in progress</option><option value="closed">Closed</option><option value="">All tickets</option></select></div></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>Status</th><th>Priority</th><th>Type</th><th>Email</th><th>Message</th><th>Page</th><th>UTC</th><th>Actions</th></tr></thead>
         <tbody id="tickets-body"></tbody>
@@ -307,7 +309,7 @@ function adminUserActions(row){
   var email = esc(u.email || '');
   var paused = u.accountPaused === true || String(u.subscriptionStatus || '').toLowerCase() === 'paused';
   var id = esc(row.id || '');
-  var html = '<div class="actions">' +
+  var html = '<details class="admin-action-menu"><summary>Manage</summary><div class="action-pop"><div class="actions">' +
     '<button class="btn" data-user-action="resetPassword" data-user-id="'+id+'" data-user-email="'+email+'">Reset login</button>' +
     '<button class="btn gold" data-user-action="markPaid" data-user-id="'+id+'">Manual paid</button>' +
     '<button class="btn" data-user-action="markUnpaid" data-user-id="'+id+'">Mark unpaid</button>' +
@@ -320,7 +322,7 @@ function adminUserActions(row){
   if (!isPlatformUser(row)) {
     html += '<button class="btn danger-fill" data-user-action="deleteUser" data-user-id="'+id+'" data-user-email="'+email+'">Delete user</button>';
   }
-  html += '</div><div class="secure-note">Passwords are not viewable. Use reset login for secure access help.</div>';
+  html += '</div><div class="secure-note" style="padding:0 10px 10px">Password resets are secure emails; passwords are never displayed.</div></div></details>';
   return html;
 }
 function normalizePlan(plan){
@@ -513,14 +515,24 @@ async function fetchAdminFunction(body, forceRefresh){
 
 function renderUsers(users, stats){
   users = users || [];
+  var q=String(($('user-search')||{}).value||'').toLowerCase(),planFilter=String(($('user-plan-filter')||{}).value||'').toLowerCase(),statusFilter=String(($('user-status-filter')||{}).value||'').toLowerCase(),weekAgo=Date.now()-7*86400000;
+  users=users.filter(function(row){var u=row.data||{},plan=normalizePlan(u.currentPlan||u.plan||u.lastPlan),status=String(u.subscriptionStatus||'').toLowerCase(),hay=[u.name,u.displayName,u.bizName,u.businessName,u.email,row.id].join(' ').toLowerCase(),created=dateMs(u.createdAt||u.createdAtUtc);if(q&&hay.indexOf(q)<0)return false;if(planFilter&&plan!==planFilter)return false;if(statusFilter==='new'&&created<weekAgo)return false;if(statusFilter==='trial'&&(u.paid===true||status==='active'||status==='manual-paid'))return false;if(statusFilter==='paid'&&!(u.paid===true||status==='active'||status==='manual-paid'||status==='receipt-submitted'))return false;if(statusFilter==='paused'&&!(u.accountPaused===true||status==='paused'))return false;if(statusFilter==='receipt'&&!u.lastPaymentSlipAtUtc)return false;return true;}).sort(function(a,b){return dateMs((b.data||{}).createdAt||(b.data||{}).createdAtUtc)-dateMs((a.data||{}).createdAt||(a.data||{}).createdAtUtc);});
   stats = stats || clientStats(users, [], []);
   $('kpi-users').textContent = fmtInt(stats.usersTotal == null ? users.length : stats.usersTotal);
   $('users-body').innerHTML = users.map(function(row){
     var u = row.data || {};
     var plan = u.currentPlan || u.plan || u.lastPlan || '';
-    return '<tr><td>'+esc(u.name || u.displayName || '')+'</td><td>'+esc(u.email || '')+'</td><td>'+esc(u.role || 'owner')+'</td><td>'+planPill(plan)+'</td><td>'+paymentPill(u)+'</td><td>'+accountPill(u)+'</td><td>'+esc(u.ownerUid || row.id)+'</td><td>'+esc(fmtDate(u.trialEnd))+'</td><td>'+esc(u.lastSeenUtc || fmtDate(u.lastSeenAt))+'</td><td>'+esc(u.lastSeenPath || '')+'</td><td>'+adminUserActions(row)+'</td></tr>';
-  }).join('') || '<tr><td colspan="11" class="muted">No users found yet.</td></tr>';
+    var due=u.nextPaymentDue||u.subscriptionCurrentPeriodEnd||u.trialEnd||'';return '<tr><td><b>'+esc(u.name||u.displayName||u.bizName||'Unnamed user')+'</b><br><span class="muted">'+esc(u.email||'')+'</span><br><small class="muted">'+esc(row.id)+'</small></td><td>'+planPill(plan)+'</td><td>'+paymentPill(u)+'<br><small class="muted">Due '+esc(shortDate(due))+'</small>'+(u.lastPaymentSlipAtUtc?'<br><span class="pill ok">receipt received</span>':'')+'</td><td>'+accountPill(u)+'</td><td>'+esc(shortDate(u.createdAt||u.createdAtUtc))+'</td><td>'+esc(shortDate(u.lastSeenUtc||u.lastSeenAt))+'<br><small class="muted">'+esc(u.lastSeenPath||'')+'</small></td><td>'+adminUserActions(row)+'</td></tr>';
+  }).join('') || '<tr><td colspan="7" class="muted">No users match these filters.</td></tr>';
 }
+
+function renderReceipts(users){var host=$('receipt-grid');if(!host)return;var rows=(users||[]).filter(function(r){return !!((r.data||{}).lastPaymentSlipAtUtc);}).sort(function(a,b){return dateMs((b.data||{}).lastPaymentSlipAtUtc)-dateMs((a.data||{}).lastPaymentSlipAtUtc);});host.innerHTML=rows.slice(0,12).map(function(r){var u=r.data||{};return '<article class="receipt-card"><strong>'+esc(u.name||u.displayName||u.email||'Customer')+'</strong><span>'+esc(u.email||'')+' · '+esc(normalizePlan(u.currentPlan||u.plan))+'</span><span>Received '+esc(shortDate(u.lastPaymentSlipAtUtc))+' · '+esc(u.lastPaymentPeriod||'')+'</span><span>'+esc(u.lastPaymentSlipName||'Payment slip emailed to accounts@ceylonrylabs.io')+'</span></article>';}).join('')||'<div class="card muted">No payment receipts uploaded yet.</div>';}
+
+var COUNTRY_POINTS={LK:[80.7,7.9],IN:[78,21],GB:[-2,54],US:[-98,39],CA:[-106,56],AU:[134,-25],CN:[104,35],SG:[104,1.3],AE:[54,24],DE:[10,51],FR:[2,46],JP:[138,37]};
+function visitCountryCode(g){var raw=String((g||{}).countryCode||(g||{}).country_code||(g||{}).country||'').toUpperCase();var names={'SRI LANKA':'LK','UNITED STATES':'US','UNITED KINGDOM':'GB','CHINA':'CN','INDIA':'IN','AUSTRALIA':'AU','SINGAPORE':'SG','UNITED ARAB EMIRATES':'AE','GERMANY':'DE','FRANCE':'FR','JAPAN':'JP'};return names[raw]||raw.slice(0,2);}
+function filteredVisits(visits){var from=($('visit-from')||{}).value||'',to=($('visit-to')||{}).value||'';return (visits||[]).filter(function(r){var d=new Date(visitMs(r.data||{}));var day=isNaN(d.getTime())?'':d.toISOString().slice(0,10);return(!from||day>=from)&&(!to||day<=to);});}
+function renderVisitMap(visits){var host=$('visit-map');if(!host)return;var counts={};filteredVisits(visits).forEach(function(r){var d=r.data||{},code=visitCountryCode(d.geo||{});if(!COUNTRY_POINTS[code])return;if(!counts[code])counts[code]={visits:0,ips:{}};counts[code].visits+=1;counts[code].ips[String(d.ip||d.visitorId||r.id||'unknown')]=true;});var entries=Object.entries(counts);if(!entries.length){host.innerHTML='<div class="map-empty">No mapped visits in this date range.</div>';return;}var land='<path d="M40 90L110 55l90 20 55-35 70 32 80-20 95 48-30 55-90-8-40 45-75-22-55 24-85-40-50-3z" fill="#cfdbd5" stroke="#b7c7c0"/><path d="M455 200l60-30 90 28 80-10 75 40-30 38-110-8-45 25-80-18z" fill="#cfdbd5" stroke="#b7c7c0"/>';
+  var pins=entries.map(function(e){var p=COUNTRY_POINTS[e[0]],unique=Object.keys(e[1].ips).length,x=(p[0]+180)/360*800,y=(90-p[1])/180*310,r=Math.min(20,8+Math.sqrt(unique)*3);return '<g class="map-pin"><title>'+esc(e[0])+': '+unique+' unique visitors · '+e[1].visits+' visits</title><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r+'"></circle><text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'">'+unique+'</text></g>';}).join('');host.innerHTML='<svg viewBox="0 0 800 310" preserveAspectRatio="none" aria-label="World visit map showing unique visitors"><rect width="800" height="310" fill="#eaf1ee"/>'+land+pins+'</svg>';}
 
 function renderUserBreakdown(users, visits, tickets, paymentRequests, chats){
   users = users || [];
@@ -572,7 +584,8 @@ function renderVisits(visits, stats){
   $('kpi-visits').textContent = fmtInt(stats.visitsTotal == null ? visits.length : stats.visitsTotal);
   $('kpi-landing').textContent = fmtInt(stats.landingVisitsTotal == null ? visits.filter(function(row){ return isLandingVisit(row.data || {}); }).length : stats.landingVisitsTotal);
   $('kpi-live').textContent = fmtInt(stats.liveVisitorsLast10Min || 0);
-  $('visits-body').innerHTML = visits.map(function(row){
+  renderVisitMap(visits);var visible=filteredVisits(visits);
+  $('visits-body').innerHTML = visible.map(function(row){
     var v = row.data || {}, g = v.geo || {};
     var visitor = v.email || v.displayName || v.uid || v.visitorId || v.sessionId || 'Anonymous visitor';
     var device = [v.screen, v.language].filter(Boolean).join(' · ');
@@ -610,12 +623,7 @@ function renderPaymentRequests(paymentRequests, stats){
 	    paymentRequestCache[row.id] = row;
 	    var status = String(r.status || 'pending').toLowerCase();
 	    var closed = status === 'paid' || status === 'closed';
-	    var payLink = r.customPaymentLink || r.paymentCustomPayLink || r.paymentLink || r.monthlyPayLink || r.defaultMonthlyPayLink || '';
-	    var linkExpiry = r.paymentLinkExpiresAt || r.customPaymentLinkExpiresAt || '';
-	    var linkHtml = payLink
-	      ? '<a href="'+esc(payLink)+'" target="_blank" rel="noopener">Open</a><br><span class="muted">'+esc(linkExpiry ? 'Expires '+shortDate(linkExpiry) : 'Default link')+'</span>'
-	      : '<span class="muted">No link</span>';
-	    var actions = '<div class="actions"><button class="btn" data-copy-payment-request="'+esc(row.id)+'">Copy</button><button class="btn" data-payment-link="'+esc(row.id)+'">Set link</button>';
+	    var actions = '<div class="actions">';
     if (!closed) {
       actions += '<button class="btn" data-payment-request="'+esc(row.id)+'" data-payment-status="invoiced">Invoice sent</button>' +
         '<button class="btn gold" data-payment-request="'+esc(row.id)+'" data-payment-status="paid">Mark paid</button>' +
@@ -624,8 +632,8 @@ function renderPaymentRequests(paymentRequests, stats){
       actions += '<span class="pill ok">'+esc(status)+'</span>';
 	    }
 	    actions += '</div>';
-	    return '<tr><td>'+requestStatusPill(status)+'</td><td><span class="token">'+esc(r.token || row.id)+'</span></td><td>'+esc(r.name || r.businessName || '')+'<br><span class="muted">'+esc(r.email || '')+'</span></td><td>'+planPill(r.plan)+'</td><td>'+esc(money(r.amount))+'</td><td>'+linkHtml+'</td><td>'+esc(shortDate(r.trialEnd))+'</td><td>'+esc(r.createdAtUtc || fmtDate(r.createdAt))+'</td><td>'+actions+'</td></tr>';
-	  }).join('') || '<tr><td colspan="9" class="muted">No expired-trial payment requests yet.</td></tr>';
+	    return '<tr><td>'+requestStatusPill(status)+'</td><td><b>'+esc(r.name || r.businessName || '')+'</b><br><span class="muted">'+esc(r.email || '')+'</span><br><small class="token">'+esc(r.token||row.id)+'</small></td><td>'+planPill(r.plan)+'</td><td>Monthly<br><small class="muted">Bank transfer</small></td><td>'+esc(money(r.amount))+'</td><td>'+esc(shortDate(r.nextPaymentDue||r.trialEnd))+'</td><td>'+esc(shortDate(r.createdAtUtc||r.createdAt))+'</td><td>'+actions+'</td></tr>';
+	  }).join('') || '<tr><td colspan="8" class="muted">No pending monthly payments.</td></tr>';
 }
 
 function chatMessageMs(data){
@@ -662,7 +670,7 @@ function renderChats(chats, stats){
   stats = stats || clientStats([], [], [], [], chats);
   if ($('kpi-chats')) $('kpi-chats').textContent = fmtInt(stats.chatsTotal == null ? chats.length : stats.chatsTotal);
   if ($('kpi-open-chats')) $('kpi-open-chats').textContent = fmtInt(stats.openChatsTotal == null ? chats.filter(function(c){ return String((c.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length : stats.openChatsTotal);
-  var wrap = $('chats-body');
+  var q=String(($('chat-search')||{}).value||'').toLowerCase(),wanted=String(($('chat-status-filter')||{}).value||'');chats=chats.filter(function(r){var c=r.data||{},status=String(c.status||'open').toLowerCase(),hay=[c.name,c.displayName,c.email,c.lastMessage].join(' ').toLowerCase();return(!q||hay.indexOf(q)>-1)&&(!wanted||status===wanted);});var wrap = $('chats-body');
   if (!wrap) return;
   if (!chats.length) {
     wrap.innerHTML = '<div class="card muted">No Mrs. Gamage chat threads yet.</div>';
@@ -677,7 +685,7 @@ function renderChats(chats, stats){
       ? '<button class="btn" data-chat-status="open" data-chat-id="'+esc(row.id)+'">Reopen</button>'
       : '<button class="btn red" data-chat-status="closed" data-chat-id="'+esc(row.id)+'">Close</button>';
     var paymentAction = '<button class="btn gold" data-chat-payment="'+esc(row.id)+'">Send payment request</button>';
-    return '<article class="chat-card" data-chat-card data-chat-id="'+esc(row.id)+'">' +
+    return '<article class="chat-card '+(closed?'archived':'')+'" data-chat-card data-chat-id="'+esc(row.id)+'">' +
       '<div class="chat-card-head">' +
         '<div><div class="chat-title">'+esc(c.name || c.displayName || c.email || 'Customer')+'</div><div class="chat-sub">'+esc(c.email || '')+'<br>'+esc(c.page || c.lastSeenPath || '')+'</div></div>' +
         '<div>'+statusPill(status)+'</div>' +
@@ -697,13 +705,14 @@ function renderTickets(tickets, stats){
   stats = stats || clientStats([], [], tickets);
   $('kpi-tickets').textContent = fmtInt(stats.ticketsTotal == null ? tickets.length : stats.ticketsTotal);
   $('kpi-open').textContent = fmtInt(stats.openTicketsTotal == null ? tickets.filter(function(t){ return String((t.data || {}).status || 'open').toLowerCase() !== 'closed'; }).length : stats.openTicketsTotal);
-  $('tickets-body').innerHTML = tickets.map(function(row){
+  var q=String(($('ticket-search')||{}).value||'').toLowerCase(),wanted=String(($('ticket-status-filter')||{}).value||'');tickets=tickets.filter(function(r){var t=r.data||{},status=String(t.status||'open').toLowerCase(),hay=[t.email,t.type,t.message,t.name].join(' ').toLowerCase();return(!q||hay.indexOf(q)>-1)&&(!wanted||(wanted==='closed'?status==='closed':status!=='closed'));});$('tickets-body').innerHTML = tickets.map(function(row){
     var t = row.data || {};
     var closed = String(t.status || 'open').toLowerCase() === 'closed';
     var actionHtml = closed
       ? '<span class="pill ok">closed by '+esc(t.closedBy || 'support')+'</span>'
       : '<div class="actions"><button class="btn" data-status="in-progress" data-ticket="'+row.id+'">In progress</button><button class="btn gold" data-status="closed" data-ticket="'+row.id+'">Close</button></div>';
-    return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td>'+actionHtml+'</td></tr>';
+    var msg=String(t.message||''),current=(msg.match(/Current plan:\s*(Solo|Studio|Business)/i)||[])[1],requested=(msg.match(/Requested plan:\s*(Solo|Studio|Business)/i)||[])[1],prices={solo:3500,studio:5500,business:8500},change='';if(current&&requested){var diff=(prices[requested.toLowerCase()]||0)-(prices[current.toLowerCase()]||0),user=adminUserRows.find(function(r){return String((r.data||{}).email||'').toLowerCase()===String(t.email||'').toLowerCase();}),paid=user&&((user.data||{}).paid===true||['active','manual-paid','receipt-submitted'].indexOf(String((user.data||{}).subscriptionStatus||'').toLowerCase())>-1);change='<div class="ticket-upgrade">'+(paid&&diff>0?'Paid upgrade · collect '+money(diff)+' difference before changing plan.':paid&&diff<0?'Paid downgrade · apply next billing cycle; no automatic refund.':'Trial account · plan can be changed immediately after confirmation.')+'</div>';if(!closed)actionHtml+='<button class="btn dark" data-ticket-plan="'+esc(requested.toLowerCase())+'" data-ticket-id="'+esc(row.id)+'" data-ticket-email="'+esc(t.email||'')+'">'+(paid&&diff>0?'Difference paid & apply':'Apply plan change')+'</button>';}
+    return '<tr><td>'+statusPill(t.status)+'</td><td>'+esc(t.priority || '')+'</td><td>'+esc(t.type || '')+change+'</td><td>'+esc(t.email || '')+'</td><td class="ticket-msg">'+esc(t.message || '')+'</td><td>'+esc(t.page || '')+'</td><td>'+esc(t.utcAt || fmtDate(t.createdAt))+'</td><td>'+actionHtml+'</td></tr>';
   }).join('') || '<tr><td colspan="8" class="muted">No support tickets yet.</td></tr>';
 }
 
@@ -712,9 +721,10 @@ var adminHasRendered = false;
 var adminHasData = false;
 var adminActiveSection = 'overview';
 var adminUserRows = [];
+var adminPayloadState={users:[],visits:[],tickets:[],paymentRequests:[],chats:[],stats:{}};
 var ADMIN_CACHE_KEY = 'cls-admin-dashboard-cache-v2';
 var ADMIN_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
-var ADMIN_REQUEST_TIMEOUT_MS = 12000;
+var ADMIN_REQUEST_TIMEOUT_MS = 6500;
 function setDataStatus(kind, message){
   var node = $('data-status');
   if (!node) return;
@@ -757,7 +767,9 @@ function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stat
   var localStats = Object.assign({}, stats || {});
   if (localStats.usersTotal == null) localStats.usersTotal = visibleUsers.length;
   adminUserRows = visibleUsers;
+  adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:stats||{}};
   renderUsers(visibleUsers, localStats);
+  renderReceipts(visibleUsers);
   renderPaymentRequests(paymentRequests || [], stats || {});
   renderUserBreakdown(visibleUsers, visits || [], tickets || [], paymentRequests || [], chats || []);
   renderVisits(visits || [], stats || {});
@@ -911,6 +923,7 @@ async function updateTicket(id, status){
   }
   await loadAdminData();
 }
+async function applyTicketPlanChange(id,email,plan){await fetchAdminFunction({action:'applyTicketPlanChange',ticketId:id,email:email,plan:plan});await loadAdminData({forceLoading:true});}
 
 function adminPaymentRequestUpdatePayload(status){
   var stamp = firebase.firestore.FieldValue.serverTimestamp();
@@ -978,7 +991,7 @@ async function setPaymentRequestLink(id){
   if (!row) throw new Error('Payment request is not loaded yet.');
   var request = row.data || {};
   var existing = request.customPaymentLink || request.paymentCustomPayLink || request.paymentLink || request.monthlyPayLink || '';
-  var url = window.prompt('Paste the fresh Genie payment link. It will expire in 7 days.', existing || 'https://paylink.geniebiz.lk/');
+  var url = window.prompt('Paste an optional payment reference or receipt URL.', existing || '');
   if (url == null) return;
   url = String(url || '').trim();
   if (!/^https?:\/\//i.test(url)) throw new Error('Payment link must start with http:// or https://');
@@ -1166,6 +1179,11 @@ $('refresh-btn').addEventListener('click', function(){
 $('signout-btn').addEventListener('click', function(){
   auth.signOut().then(function(){ showLogin(); });
 });
+['user-search','user-plan-filter','user-status-filter'].forEach(function(id){var el=$(id);if(el)el.addEventListener(id==='user-search'?'input':'change',function(){renderUsers(adminPayloadState.users,adminPayloadState.stats);});});
+['chat-search','chat-status-filter'].forEach(function(id){var el=$(id);if(el)el.addEventListener(id==='chat-search'?'input':'change',function(){renderChats(adminPayloadState.chats,adminPayloadState.stats);});});
+['ticket-search','ticket-status-filter'].forEach(function(id){var el=$(id);if(el)el.addEventListener(id==='ticket-search'?'input':'change',function(){renderTickets(adminPayloadState.tickets,adminPayloadState.stats);});});
+['visit-from','visit-to'].forEach(function(id){var el=$(id);if(el)el.addEventListener('change',function(){renderVisits(adminPayloadState.visits,adminPayloadState.stats);});});
+if($('visit-clear'))$('visit-clear').addEventListener('click',function(){if($('visit-from'))$('visit-from').value='';if($('visit-to'))$('visit-to').value='';renderVisits(adminPayloadState.visits,adminPayloadState.stats);});
 document.addEventListener('click', function(ev){
   var tabBtn = ev.target.closest('[data-admin-tab]');
   if (tabBtn) {
@@ -1197,6 +1215,7 @@ document.addEventListener('click', function(ev){
     sendPaymentRequestChat(chatPaymentBtn.getAttribute('data-chat-payment')).catch(function(e){ alert(e.message); });
     return;
   }
+  var ticketPlanBtn=ev.target.closest('[data-ticket-plan]');if(ticketPlanBtn){var target=ticketPlanBtn.getAttribute('data-ticket-plan');if(!confirm('Apply the '+target+' plan now? For a paid upgrade, confirm the displayed difference has been received.'))return;applyTicketPlanChange(ticketPlanBtn.getAttribute('data-ticket-id'),ticketPlanBtn.getAttribute('data-ticket-email'),target).catch(function(e){alert(e.message);});return;}
   var ticketBtn = ev.target.closest('[data-ticket]');
   if (ticketBtn) {
     updateTicket(ticketBtn.getAttribute('data-ticket'), ticketBtn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
@@ -1248,6 +1267,7 @@ function updateUtcClock(){
 }
 updateUtcClock();
 setInterval(updateUtcClock, 1000);
+setInterval(function(){if(!document.hidden&&auth.currentUser&&!adminLoading)loadAdminData().catch(function(){});},60000);
 
 auth.onAuthStateChanged(function(user){
   if (!user) { showLogin(); return; }
