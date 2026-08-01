@@ -1107,7 +1107,7 @@
     opts = opts || {};
     var html = window.clsBuildInvoicePrintHtml(opts);
     html = html.replace('</style>', '@media screen{html,body{width:100%;min-height:100%;background:#f7f3ed}.invoice-page{margin:0 auto!important;box-shadow:0 12px 32px rgba(44,31,20,.12)}}</style>');
-    return '<iframe class="cls-invoice-preview-frame" title="Invoice preview" loading="lazy" srcdoc="' + invoiceEscape(html) + '"></iframe>';
+    return '<iframe class="cls-invoice-preview-frame" title="Invoice preview — same A4 layout used for PDF" scrolling="no" srcdoc="' + invoiceEscape(html) + '"></iframe>';
   };
 
   window.clsPrepareInvoiceLogo = function(file) {

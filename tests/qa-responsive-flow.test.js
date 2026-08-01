@@ -330,6 +330,7 @@ test('settings preview and PDF share one renderer and preserve empty notes', fun
   pages.forEach(function(page) {
     assert.match(page, /clsBuildInvoicePrintHtml/);
     assert.match(page, /clsBuildInvoicePreviewFrame/);
+    assert.match(page, /\.cls-invoice-preview-frame\{[^}]*width:794px[^}]*height:1123px/);
   });
   assert.match(pages[0], /DB\.settings\.footer=document\.getElementById\('set-footer'\)\.value\.trim\(\)/);
   assert.match(pages[1], /DB\.settings\.footer=document\.getElementById\('set-footer'\)\.value\.trim\(\)/);
@@ -337,7 +338,7 @@ test('settings preview and PDF share one renderer and preserve empty notes', fun
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260802-invoice-output';
+  const version = '20260802-a4-preview';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',

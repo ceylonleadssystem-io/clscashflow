@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260802-invoice-output"></script>
+<script src="assets/platform.js?v=20260802-a4-preview"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -378,8 +378,8 @@ body.is-admin .admin-only{display:flex}
 .settings-panel-grid>*{min-width:0}
 .settings-preview-wrap{margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)}
 .settings-preview-label{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.7rem}
-.settings-invoice-preview{background:#fff;border:1px solid var(--border);min-height:540px;overflow:hidden}
-.cls-invoice-preview-frame{display:block;width:100%;height:min(780px,82vh);border:0;background:#fff}
+.settings-invoice-preview{background:#f7f3ed;border:1px solid var(--border);min-height:540px;overflow:auto;padding:14px}
+.cls-invoice-preview-frame{display:block;width:794px;max-width:none;height:1123px;border:0;background:#fff;margin:0 auto;box-shadow:0 12px 32px rgba(44,31,20,.12)}
 .settings-widget-stack{display:grid;gap:1rem}
 #view-settings{max-width:1060px;margin:0 auto}
 #view-settings .trial-card,#view-settings .settings-helper,#view-settings .table-card[style*="max-width"],#view-settings>div[style*="max-width"]{max-width:none!important}

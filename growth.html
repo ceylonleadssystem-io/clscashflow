@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260802-invoice-output"></script>
+<script src="assets/platform.js?v=20260802-a4-preview"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -351,8 +351,8 @@ tr:hover td{background:var(--bg3)}
 .tpl-mini .tm-total{position:absolute;right:.42rem;bottom:.35rem;width:48px;height:9px;background:var(--tpl-accent,#B8922A)}
 .settings-preview-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:.85rem;margin-top:.65rem}
 .settings-preview-label{font-size:.54rem;letter-spacing:.17em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.55rem}
-.settings-invoice-preview{background:#fff;border:1px solid var(--border);box-shadow:0 8px 22px rgba(44,31,20,.08);padding:0;min-height:520px;border-radius:4px;overflow:hidden}
-.cls-invoice-preview-frame{width:100%;height:min(780px,82vh);border:0;display:block;background:#fff}
+.settings-invoice-preview{background:#f7f3ed;border:1px solid var(--border);box-shadow:0 8px 22px rgba(44,31,20,.08);padding:14px;min-height:520px;border-radius:4px;overflow:auto}
+.cls-invoice-preview-frame{display:block;width:794px;max-width:none;height:1123px;border:0;background:#fff;margin:0 auto;box-shadow:0 12px 32px rgba(44,31,20,.12)}
 .preview-invoice-top{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;border-bottom:2px solid var(--black);padding-bottom:.75rem;margin-bottom:.85rem}
 .preview-logo-box{width:80px;height:42px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:.56rem;color:var(--dim);overflow:hidden;background:#fff}
 .preview-logo-box img{max-width:100%;max-height:100%;object-fit:contain}
