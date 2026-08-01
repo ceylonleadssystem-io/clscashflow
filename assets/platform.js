@@ -2475,6 +2475,28 @@
     }, { merge: true });
     try {
       await Promise.all([messageWrite, threadWrite]);
+      var noticeResponse = await fetch('/.netlify/functions/submit-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notifyOnly: true,
+          threadId: chatThreadId(user),
+          name: authorName,
+          displayName: authorName,
+          email: cleanString(user.email || '', 180).toLowerCase(),
+          type: 'Priority Support live chat',
+          priority: 'High',
+          message: text,
+          page: location.href,
+          uid: user.uid,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+          utcAt: nowIso()
+        })
+      });
+      var noticeResult = await noticeResponse.json().catch(function() { return {}; });
+      if (!noticeResponse.ok || noticeResult.ok === false || noticeResult.emailed === false) {
+        throw new Error(noticeResult.error || 'Message saved, but the support email notification could not be sent.');
+      }
       refreshChat(wrap, true);
     } catch (error) {
       if (pending) pending.remove();

@@ -1268,6 +1268,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="fsec">Salary & Statutory Details</div>
     <div class="frow"><div class="fg"><label>Basic Salary / EPF Base *</label><input class="fi" type="text" inputmode="decimal" data-money-input id="payroll-basic" oninput="window.formatBusinessMoneyInput(this);window.updateBusinessPayrollPreview()"></div><div class="fg"><label>Fixed Allowances</label><input class="fi" type="text" inputmode="decimal" data-money-input id="payroll-allowances" oninput="window.formatBusinessMoneyInput(this);window.updateBusinessPayrollPreview()"></div></div>
     <div class="frow"><div class="fg"><label>Other Deductions</label><input class="fi" type="text" inputmode="decimal" data-money-input id="payroll-deductions" oninput="window.formatBusinessMoneyInput(this);window.updateBusinessPayrollPreview()"></div><div class="fg"><label>EPF Member Number</label><input class="fi" id="payroll-epf-no"></div></div>
+    <label style="display:flex;gap:.55rem;align-items:center;font-size:.75rem;margin:.5rem 0"><input type="checkbox" id="payroll-statutory" checked onchange="window.updateBusinessPayrollPreview()"> Apply EPF / ETF statutory contributions</label>
     <label style="display:flex;gap:.55rem;align-items:center;font-size:.75rem;margin:.5rem 0"><input type="checkbox" id="payroll-secondary" onchange="window.updateBusinessPayrollPreview()"> Secondary employment (10% APIT estimate)</label>
     <div class="help" id="payroll-preview" style="margin:1rem 0 0"></div>
   </div>
@@ -1305,6 +1306,7 @@ var D = {
 // ===================== UTILS =====================
 var payInvId = null, editInvId = null, selTpl = 0, CH = {}, businessDocumentMode = 'invoice';
 var chartRenderToken = 0;
+var BUSINESS_DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 function loadChartLibrary() {
   if (window.Chart) return Promise.resolve(window.Chart);
@@ -2256,26 +2258,27 @@ function businessPayrollMonth(){return new Date().toISOString().slice(0,7);}
 function businessPayrollCalc(person){
   person=person||{};
   var basic=toNum(person.basicSalary),allowances=toNum(person.allowances),gross=basic+allowances;
-  var employeeEpf=basic*.08,employerEpf=basic*.12,etf=basic*.03;
+  var statutoryEnabled=person.statutoryEnabled!==false;
+  var employeeEpf=statutoryEnabled?basic*.08:0,employerEpf=statutoryEnabled?basic*.12:0,etf=statutoryEnabled?basic*.03:0;
   var apit=person.secondaryEmployment===true?gross*.10:(gross>308333?(gross-308333)*.18:gross>225000?(gross-225000)*.12:gross>141667?(gross-141667)*.06:0);
   var net=Math.max(0,gross-employeeEpf-apit-toNum(person.deductions));
   return{gross:Math.round(gross*100)/100,employeeEpf:Math.round(employeeEpf*100)/100,employerEpf:Math.round(employerEpf*100)/100,etf:Math.round(etf*100)/100,apit:Math.round(apit*100)/100,net:Math.round(net*100)/100,ctc:Math.round((gross+employerEpf+etf)*100)/100};
 }
 function payrollField(id){var el=document.getElementById(id);return el?el.value:'';}
 window.updateBusinessPayrollPreview=function(){
-  var calc=businessPayrollCalc({basicSalary:payrollField('payroll-basic'),allowances:payrollField('payroll-allowances'),deductions:payrollField('payroll-deductions'),secondaryEmployment:!!(document.getElementById('payroll-secondary')||{}).checked});
+  var calc=businessPayrollCalc({basicSalary:payrollField('payroll-basic'),allowances:payrollField('payroll-allowances'),deductions:payrollField('payroll-deductions'),statutoryEnabled:!!(document.getElementById('payroll-statutory')||{}).checked,secondaryEmployment:!!(document.getElementById('payroll-secondary')||{}).checked});
   var el=document.getElementById('payroll-preview');if(el)el.innerHTML='<b>Gross '+fmt(calc.gross)+'</b> · Net '+fmt(calc.net)+'<br>Employee EPF '+fmt(calc.employeeEpf)+' · Employer EPF '+fmt(calc.employerEpf)+' · ETF '+fmt(calc.etf)+' · APIT '+fmt(calc.apit)+'<br><b>Total employer cost '+fmt(calc.ctc)+'</b>';
   return calc;
 };
 window.openPayrollMo=function(id){
   var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);})||{};
   setFieldValue('payroll-id',p.id||'');setFieldValue('payroll-employee-id',p.employeeId||('EMP-'+String((D.staff||[]).length+1).padStart(3,'0')));setFieldValue('payroll-name',p.name||'');setFieldValue('payroll-role',p.role||'');setFieldValue('payroll-department',p.department||'');setFieldValue('payroll-email',p.email||'');setFieldValue('payroll-phone',p.phone||'');setBusinessMoneyField('payroll-basic',p.basicSalary||'');setBusinessMoneyField('payroll-allowances',p.allowances||'');setBusinessMoneyField('payroll-deductions',p.deductions||'');setFieldValue('payroll-epf-no',p.epfNo||'');
-  document.getElementById('payroll-secondary').checked=p.secondaryEmployment===true;document.getElementById('payroll-mo-title').textContent=p.id?'Edit Staff Member':'Add Staff Member';window.updateBusinessPayrollPreview();window.openMo('mo-payroll');
+  document.getElementById('payroll-statutory').checked=p.statutoryEnabled!==false;document.getElementById('payroll-secondary').checked=p.secondaryEmployment===true;document.getElementById('payroll-mo-title').textContent=p.id?'Edit Staff Member':'Add Staff Member';window.updateBusinessPayrollPreview();window.openMo('mo-payroll');
 };
 window.savePayrollStaff=function(){
   var id=payrollField('payroll-id'),name=payrollField('payroll-name').trim(),basic=toNum(payrollField('payroll-basic'));if(!name||!basic){showToast('Employee name and basic salary are required.','err');return;}
   var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p){p={id:'S'+Date.now(),payments:[],active:true};D.staff.push(p);}
-  Object.assign(p,{employeeId:payrollField('payroll-employee-id').trim(),name:name,role:payrollField('payroll-role').trim(),department:payrollField('payroll-department').trim(),email:payrollField('payroll-email').trim(),phone:payrollField('payroll-phone').trim(),basicSalary:basic,allowances:toNum(payrollField('payroll-allowances')),deductions:toNum(payrollField('payroll-deductions')),epfNo:payrollField('payroll-epf-no').trim(),secondaryEmployment:document.getElementById('payroll-secondary').checked,active:p.active!==false,updatedAt:new Date().toISOString()});
+  Object.assign(p,{employeeId:payrollField('payroll-employee-id').trim(),name:name,role:payrollField('payroll-role').trim(),department:payrollField('payroll-department').trim(),email:payrollField('payroll-email').trim(),phone:payrollField('payroll-phone').trim(),basicSalary:basic,allowances:toNum(payrollField('payroll-allowances')),deductions:toNum(payrollField('payroll-deductions')),epfNo:payrollField('payroll-epf-no').trim(),statutoryEnabled:document.getElementById('payroll-statutory').checked,secondaryEmployment:document.getElementById('payroll-secondary').checked,active:p.active!==false,updatedAt:new Date().toISOString()});
   saveData();window.closeMo('mo-payroll');renderPayroll();showToast('Employee saved.','ok');
 };
 window.openPayrollPayment=function(id){
@@ -4605,6 +4608,10 @@ async function saveDataNow() {
 }
 
 function saveData() {
+  if (BUSINESS_DEMO_MODE) {
+    try { localStorage.setItem('cls-business-demo-backup', JSON.stringify(currentBusinessSnapshot(Date.now(), false))); } catch(e) {}
+    return Promise.resolve(true);
+  }
   try {
     if (_uid) writeBusinessBackup(Date.now(), false);
   } catch(e) {}
@@ -4671,6 +4678,7 @@ async function loadData(uid) {
 }
 
 window.clsSignOut = function clsSignOut() {
+  if (BUSINESS_DEMO_MODE) { window.location.href = 'index.html'; return; }
   if (!confirm('Sign out of Cashflow Business?')) return;
   try {
     localStorage.removeItem('cls-growth-tour-pending');
@@ -4719,8 +4727,79 @@ window.showPaywall = function showPaywall(profile) {
   document.body.appendChild(ov);
 }
 
+function businessDemoDate(offset) {
+  var d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
+}
+
+function initBusinessDemoMode() {
+  _signedInUid = 'demo-business-user';
+  _uid = 'demo-business-workspace';
+  _trialEnd = new Date(Date.now() + 15 * 86400000);
+  _isPaid = false;
+  _profile = {role:'owner',name:'Demo Owner',email:'demo@ceylonrylabs.io',plan:'business',paid:false,trialEnd:_trialEnd.toISOString()};
+  D.settings = Object.assign({}, D.settings, {
+    biz:'Lanka Trail Foods', user:'Demo Owner', addr:'42 Lake Road, Kandy',
+    email:'accounts@lankatrail.example', vat:'VAT DEMO-1024',
+    footer:'Thank you for supporting a growing local business.',
+    bankName:'Commercial Bank', bankAccountName:'Lanka Trail Foods',
+    bankAccountNumber:'0000 1234 5678', bankBranch:'Kandy City'
+  });
+  D.clients = [
+    {id:'C1',name:'Nimali Fernando',biz:'Fernando Learning Hub',email:'accounts@fernandohub.example',phone:'+94 77 555 1122',addr:'Negombo',notes:'Monthly programme customer'},
+    {id:'C2',name:'Ravindu Silva',biz:'Hill Country Retreats',email:'finance@hillcountry.example',phone:'+94 71 555 2299',addr:'Nuwara Eliya',notes:'Quarterly corporate orders'},
+    {id:'C3',name:'Ayesha Perera',biz:'Coastal Pantry',email:'hello@coastalpantry.example',phone:'+94 76 555 3300',addr:'Galle',notes:'New wholesale customer'}
+  ];
+  D.invoices = [
+    {id:'INV-0041',num:'INV-0041',client:'Fernando Learning Hub',cemail:'accounts@fernandohub.example',date:businessDemoDate(-35),due:businessDemoDate(-5),items:[{desc:'Corporate snack programme',qty:1,price:285000}],total:285000,amount:285000,paid:0,status:'overdue'},
+    {id:'INV-0042',num:'INV-0042',client:'Hill Country Retreats',cemail:'finance@hillcountry.example',date:businessDemoDate(-12),due:businessDemoDate(18),items:[{desc:'Guest welcome hamper supply',qty:40,price:8500}],total:340000,amount:340000,paid:140000,status:'partial'},
+    {id:'INV-0043',num:'INV-0043',client:'Coastal Pantry',cemail:'hello@coastalpantry.example',date:businessDemoDate(-3),due:businessDemoDate(27),items:[{desc:'Wholesale pantry collection',qty:1,price:195000}],total:195000,amount:195000,paid:195000,status:'paid'}
+  ];
+  D.txns = [
+    {id:'T1',date:businessDemoDate(-3),desc:'Coastal Pantry invoice payment',type:'in',cat:'Invoice Payment',amount:195000,sourceAmount:195000,sourceCurrency:'LKR',exchangeRate:1,ref:'INV-0043'},
+    {id:'T2',date:businessDemoDate(-8),desc:'Hill Country Retreats partial payment',type:'in',cat:'Invoice Payment',amount:140000,sourceAmount:140000,sourceCurrency:'LKR',exchangeRate:1,ref:'INV-0042'},
+    {id:'T3',date:businessDemoDate(-6),desc:'Packaging supplier payment',type:'out',cat:'Supplier Payment',amount:68000,sourceAmount:68000,sourceCurrency:'LKR',exchangeRate:1,ref:'SUP-201'}
+  ];
+  D.exps = [
+    {id:'E1',date:businessDemoDate(-6),desc:'Eco packaging order',vendor:'GreenPack Lanka',cat:'Packaging',amount:68000},
+    {id:'E2',date:businessDemoDate(-10),desc:'Delivery fuel and tolls',vendor:'Operations',cat:'Logistics',amount:27500},
+    {id:'E3',date:businessDemoDate(-14),desc:'Digital campaign',vendor:'Island Creative',cat:'Marketing',amount:45000}
+  ];
+  D.suppliers = [
+    {id:'S1',name:'GreenPack Lanka',type:'Packaging',email:'sales@greenpack.example',phone:'+94 11 555 2200',ytd:248000,outstanding:42000,status:'active'},
+    {id:'S2',name:'Island Creative',type:'Technology',email:'hello@islandcreative.example',phone:'+94 77 555 8800',ytd:135000,outstanding:0,status:'active'}
+  ];
+  D.payables = [{id:'P1',name:'GreenPack Lanka',amount:42000,due:businessDemoDate(8),days:8}];
+  D.staff = [
+    {id:'ST1',employeeId:'EMP-001',name:'Tharushi Jayasinghe',role:'Operations Lead',department:'Operations',basicSalary:95000,allowances:12000,deductions:0,active:true,payments:[]},
+    {id:'ST2',employeeId:'EMP-002',name:'Dilan Weerasinghe',role:'Sales Coordinator',department:'Sales',basicSalary:78000,allowances:8000,deductions:2500,active:true,payments:[]}
+  ];
+  D.editLog = [{id:'L1',date:businessDemoDate(-2),type:'Invoice updated',item:'INV-0042',previous:'Unpaid',next:'Partially paid',by:'Demo Owner'}];
+  D._nextInvId = 44;
+  normalizeBusinessData();
+  syncBusinessComputedData();
+  document.body.classList.add('demo-mode');
+  document.getElementById('tb-date').textContent = new Date().toLocaleDateString('en-LK',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('sb-uname').textContent = 'Demo Owner';
+  document.getElementById('sb-av').textContent = 'DO';
+  var roleNode = document.querySelector('.sb-urole'); if (roleNode) roleNode.textContent = 'Admin · Business Demo';
+  var bizNode = document.querySelector('.sb-brand-plan'); if (bizNode) bizNode.textContent = 'Business Demo';
+  ['t-date','e-date'].forEach(function(id){var node=document.getElementById(id);if(node)node.value=today();});
+  renderDashboard();
+  enforcePermissions();
+  var signOut = document.querySelector('[onclick*="clsSignOut"]'); if (signOut) signOut.textContent = 'Exit Demo';
+  var banner = document.createElement('div');
+  banner.id = 'business-demo-banner';
+  banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:900;background:#1a1714;color:#fff;padding:.65rem 1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;font-size:.75rem';
+  banner.innerHTML = '<div><strong>Business demo</strong> · fictional sample data <a href="starter.html?demo=1" style="color:#fff;margin-left:1rem">Studio demo</a> <a href="index.html" style="color:#fff;margin-left:1rem">Home</a></div><button class="btn bo" onclick="window.startBusinessTour()">Show me around</button>';
+  document.body.appendChild(banner);
+  setTimeout(function(){ window.startBusinessTour(); }, 700);
+}
+
 // ===================== INIT =====================
 _fauth.onAuthStateChanged(async function(user) {
+  if (BUSINESS_DEMO_MODE) return;
   if (!user) { if (window.clsRedirectToSignInAfterAuthCheck) window.clsRedirectToSignInAfterAuthCheck(); else window.location.href = 'signin.html'; return; }
   _signedInUid = user.uid;
   _uid = user.uid;
@@ -4847,6 +4926,8 @@ _fauth.onAuthStateChanged(async function(user) {
     }
   } catch(e) { console.error('Business auth guard:', e); }
 });
+
+if (BUSINESS_DEMO_MODE) initBusinessDemoMode();
 
 function currentBusinessView() {
   var active = document.querySelector('.view.active');

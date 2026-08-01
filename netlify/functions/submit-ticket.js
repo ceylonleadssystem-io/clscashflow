@@ -55,8 +55,10 @@ exports.handler = async function handler(event) {
     uid: clean(body.uid, 120),
     displayName: clean(body.displayName, 180),
     timezone: clean(body.timezone, 120),
-    utcAt: clean(body.utcAt, 80) || new Date().toISOString()
+    utcAt: clean(body.utcAt, 80) || new Date().toISOString(),
+    threadId: clean(body.threadId, 180)
   };
+  const notifyOnly = body.notifyOnly === true;
 
   if (!data.email || !data.message) {
     return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Email and message are required.' }) };
@@ -64,7 +66,7 @@ exports.handler = async function handler(event) {
 
   const admin = await getAdmin();
   let storage = { stored: false };
-  if (admin) {
+  if (admin && !notifyOnly) {
     try {
       const doc = await admin.firestore().collection('supportTickets').add({
         ...data,
@@ -76,8 +78,10 @@ exports.handler = async function handler(event) {
     } catch (err) {
       storage = { stored: false, reason: err && err.message ? err.message : 'Supabase write failed' };
     }
-  } else {
+  } else if (!notifyOnly) {
     storage = { stored: false, reason: 'Supabase service role not configured' };
+  } else {
+    storage = { stored: true, id: data.threadId || 'live-chat' };
   }
 
   const user = process.env.SMTP_USER;
@@ -114,7 +118,7 @@ exports.handler = async function handler(event) {
       from: '"Cashflow Support" <' + (process.env.SMTP_FROM || user) + '>',
       to,
       replyTo: data.email,
-      subject: 'New Cashflow Support Ticket - ' + data.type,
+      subject: (notifyOnly ? 'New Cashflow Live Chat Message - ' : 'New Cashflow Support Ticket - ') + data.type,
       text:
         'New support ticket\n\n' +
         'Name: ' + data.name + '\n' +

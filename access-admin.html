@@ -198,6 +198,8 @@ var PLAN_FILES  = { solo: 'solo.html', studio: 'starter.html', business: 'growth
 var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
 var ROLE_LABELS = { admin:'Admin', staff:'Staff', accountant:'Accountant', viewer:'Viewer' };
 var TEAM_CACHE_TTL = 5 * 60 * 1000;
+var TEAM_REQUEST_TIMEOUT = 6000;
+var _teamLoadToken = 0;
 
 // ── helpers ──
 function el(id){ return document.getElementById(id); }
@@ -240,10 +242,11 @@ function initials(name, email){
   return (src[0] || '?').toUpperCase();
 }
 function teamCacheKey(){ return _ownerUid ? 'cls-team-access:' + _ownerUid : ''; }
-function readTeamCache(){
+function readTeamCache(allowStale){
   try {
     var cached = JSON.parse(localStorage.getItem(teamCacheKey()) || 'null');
-    if(!cached || Date.now() - Number(cached.savedAt || 0) > TEAM_CACHE_TTL) return null;
+    if(!cached) return null;
+    if(!allowStale && Date.now() - Number(cached.savedAt || 0) > TEAM_CACHE_TTL) return null;
     return { members:Array.isArray(cached.members) ? cached.members : [], pending:Array.isArray(cached.pending) ? cached.pending : [] };
   } catch(e){ return null; }
 }
@@ -254,6 +257,17 @@ function renderTeamState(members, pending){
   renderSeats(members.length, pending.length);
   renderMembers(members);
   renderPending(pending);
+}
+function withTeamTimeout(promise, label){
+  return Promise.race([
+    promise,
+    new Promise(function(resolve){
+      setTimeout(function(){
+        console.warn(label + ' timed out; showing cached team data.');
+        resolve(null);
+      }, TEAM_REQUEST_TIMEOUT);
+    })
+  ]);
 }
 
 // ════════════════════════════════
@@ -279,7 +293,6 @@ _auth.onAuthStateChanged(async function(user){
       || localStorage.getItem('cls-current-plan')
       || 'solo');
     _plan = normalizePlan(_plan);
-    if (window.clsRememberPlan) await window.clsRememberPlan(_plan, user.uid, _db);
     applyDashboardLinks();
 
     if(!isOwner){
@@ -296,7 +309,15 @@ _auth.onAuthStateChanged(async function(user){
 
     el('loading').classList.add('hidden');
     el('app').classList.remove('hidden');
-    await loadTeam();
+    renderTeamState([], []);
+    if (window.clsRememberPlan) {
+      window.clsRememberPlan(_plan, user.uid, _db).catch(function(e){
+        console.warn('Could not remember Team Access plan in background:', e);
+      });
+    }
+    loadTeam().catch(function(e){
+      console.error('Team refresh failed:', e);
+    });
   } catch(e){
     console.error('access-admin auth error:', e);
     el('loading').textContent = 'Could not load team access. Please refresh.';
@@ -307,14 +328,22 @@ _auth.onAuthStateChanged(async function(user){
 // LOAD TEAM (members + pending invites)
 // ════════════════════════════════
 async function loadTeam(){
+  var loadToken = ++_teamLoadToken;
   var members = [];
   var pending = [];
-  var cached = readTeamCache();
+  var cached = readTeamCache(true);
   if(cached) renderTeamState(cached.members, cached.pending);
   var reads = await Promise.all([
-    _db.collection('users').where('ownerUid','==',_ownerUid).get().catch(function(e){ console.error('load members error:', e); return null; }),
-    _db.collection('users').doc(_ownerUid).collection('team').where('status','==','pending').get().catch(function(e){ console.error('load invites error:', e); return null; })
+    withTeamTimeout(
+      _db.collection('users').where('ownerUid','==',_ownerUid).get().catch(function(e){ console.error('load members error:', e); return null; }),
+      'Team member request'
+    ),
+    withTeamTimeout(
+      _db.collection('users').doc(_ownerUid).collection('team').where('status','==','pending').get().catch(function(e){ console.error('load invites error:', e); return null; }),
+      'Pending invite request'
+    )
   ]);
+  if(loadToken !== _teamLoadToken) return;
   var memSnap = reads[0];
   var invSnap = reads[1];
   if(memSnap){

@@ -19,6 +19,21 @@ test('Priority Support renders a focused chat-only widget', function() {
   assert.doesNotMatch(widget, /New Ticket|My Tickets|data-refresh-tickets|data-support-form/);
 });
 
+test('Priority Support sends an email trigger after persisting a live-chat message', function() {
+  const platform = read('assets/platform.js');
+  const start = platform.indexOf('async function sendChatMessage');
+  const end = platform.indexOf('function dangerActionName', start);
+  const sender = platform.slice(start, end);
+  const endpoint = read('netlify/functions/submit-ticket.js');
+
+  assert.match(sender, /await Promise\.all\(\[messageWrite, threadWrite\]\)/);
+  assert.match(sender, /notifyOnly:\s*true/);
+  assert.match(sender, /Priority Support live chat/);
+  assert.match(sender, /\/\.netlify\/functions\/submit-ticket/);
+  assert.match(endpoint, /const notifyOnly = body\.notifyOnly === true/);
+  assert.match(endpoint, /New Cashflow Live Chat Message/);
+});
+
 test('Studio opens Priority Support without the Settings chrome', function() {
   const page = read('starter.html');
 

@@ -201,6 +201,14 @@ test('Business supplier payments persist paid and outstanding balances', functio
   assert.match(page, /Current Outstanding Payable \(LKR\)/);
 });
 
+test('Business payroll can disable EPF and ETF per employee', function() {
+  const page = read('growth.html');
+  assert.match(page, /id="payroll-statutory" checked/);
+  assert.match(page, /statutoryEnabled=person\.statutoryEnabled!==false/);
+  assert.match(page, /statutoryEnabled\?basic\*\.08:0/);
+  assert.match(page, /statutoryEnabled:document\.getElementById\('payroll-statutory'\)\.checked/);
+});
+
 for (const file of ['solo.html', 'starter.html', 'growth.html']) {
   test(file + ' applies default payment notes to new invoices and customer messages', function() {
     const page = read(file);
@@ -231,6 +239,10 @@ test('plan user limits are displayed consistently and enforced by team access', 
   assert.match(onboarding, /<td>Users<\/td><td><strong>1 user only<\/strong><\/td><td><strong>Up to 5 users<\/strong><\/td><td><strong>Unlimited users<\/strong><\/td>/);
   assert.match(access, /var used = 1 \+ activeCount \+ pendingCount;/);
   assert.match(access, /if\(s\.full\)\{[\s\S]*?btn\.disabled = true;/);
+  assert.doesNotMatch(access, /if \(window\.clsRememberPlan\) await window\.clsRememberPlan/);
+  assert.match(access, /renderTeamState\(\[\], \[\]\);/);
+  assert.match(access, /loadTeam\(\)\.catch/);
+  assert.match(access, /function withTeamTimeout\(promise, label\)/);
 });
 
 test('Solo mobile invoice More actions expand inside the invoice card', function() {
@@ -437,4 +449,25 @@ test('admin dashboard loads quickly without presenting failed requests as zero d
   assert.match(endpoint, /readChats\(db, false\)/);
   assert.doesNotMatch(endpoint, /paymentRequestsPromise/);
   assert.match(database, /\.select\('id', \{ count: 'exact', head: true \}\)/);
+});
+
+test('public demos use fictional data, guided tours, and include Business', function() {
+  const landing = read('index.html');
+  const story = read('mrs-gamage-story.html');
+  const solo = read('solo.html');
+  const studio = read('starter.html');
+  const business = read('growth.html');
+
+  for (const page of [landing, solo, studio, business]) {
+    assert.doesNotMatch(page, /Pasan Yasas|pasan@example/i);
+  }
+  assert.match(solo, /Show me around/);
+  assert.match(studio, /Show me around/);
+  assert.match(solo, /setTimeout\(function\(\)\{ window\.startSystemTour\(\); \}, 700\)/);
+  assert.match(studio, /setTimeout\(function\(\)\{ window\.startSystemTour\(\); \}, 700\)/);
+  assert.match(business, /var BUSINESS_DEMO_MODE = new URLSearchParams/);
+  assert.match(business, /function initBusinessDemoMode\(\)/);
+  assert.match(business, /window\.startBusinessTour\(\)/);
+  assert.match(landing, /growth\.html\?demo=1/);
+  assert.match(story, /growth\.html\?demo=1/);
 });

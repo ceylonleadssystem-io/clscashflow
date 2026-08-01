@@ -4710,18 +4710,18 @@ function seedDemoData(){
   };
   DB.clients={nextId:5,list:[
     {id:1,name:'Kasun Perera',biz:'Kasun Perera',email:'accounts@kasun.lk',phone:'+94 77 123 4567',addr:'Colombo 05',notes:'Regular monthly customer'},
-    {id:2,name:'Pasan Yasas',biz:'Pasan Yasas',email:'pasan@example.com',phone:'+94 77 888 1122',addr:'Kadawatha',notes:'Prefers WhatsApp reminders'},
+    {id:2,name:'Nimali Fernando',biz:'Fernando Learning Hub',email:'accounts@fernandohub.example',phone:'+94 77 555 1122',addr:'Negombo',notes:'Prefers WhatsApp reminders'},
     {id:3,name:'Gamage Kitchen',biz:'Gamage Kitchen',email:'hello@gamage.lk',phone:'+94 71 555 9090',addr:'Kandy',notes:'New customer'}
   ]};
   DB.invoices=[
     {num:'INV-0010',client:'Kasun Perera',cemail:'accounts@kasun.lk',caddr:'Colombo 05',cphone:'+94 77 123 4567',date:demoDate(-1),due:demoDate(29),terms:'Net 30',cur:'LKR',lines:[{desc:'Birthday event package',qty:1,price:320000,total:320000}],amount:320000,disc:0,vat:0,vatRate:0,paidAmount:320000,status:'paid',tpl:0,notes:'Invoice by Cashflow System - Ceylonry Labs.io',id:1010},
-    {num:'INV-0011',client:'Pasan Yasas',cemail:'pasan@example.com',caddr:'Kadawatha',cphone:'+94 77 888 1122',date:demoDate(-32),due:demoDate(-2),terms:'Net 30',cur:'LKR',lines:[{desc:'Kids club membership package',qty:1,price:320000,total:320000}],amount:320000,disc:0,vat:0,vatRate:0,paidAmount:0,status:'overdue',tpl:0,notes:'Payment due within 30 days.',id:1011},
-    {num:'INV-0012',client:'Pasan Yasas',cemail:'pasan@example.com',caddr:'Kadawatha',cphone:'+94 77 888 1122',date:demoDate(-10),due:demoDate(5),terms:'Net 15',cur:'LKR',lines:[{desc:'Workshop fee',qty:1,price:250000,total:250000}],amount:250000,disc:0,vat:0,vatRate:0,paidAmount:100000,status:'partial',tpl:0,notes:'Balance can be settled by due date.',id:1012},
+    {num:'INV-0011',client:'Fernando Learning Hub',cemail:'accounts@fernandohub.example',caddr:'Negombo',cphone:'+94 77 555 1122',date:demoDate(-32),due:demoDate(-2),terms:'Net 30',cur:'LKR',lines:[{desc:'Kids club membership package',qty:1,price:320000,total:320000}],amount:320000,disc:0,vat:0,vatRate:0,paidAmount:0,status:'overdue',tpl:0,notes:'Payment due within 30 days.',id:1011},
+    {num:'INV-0012',client:'Fernando Learning Hub',cemail:'accounts@fernandohub.example',caddr:'Negombo',cphone:'+94 77 555 1122',date:demoDate(-10),due:demoDate(5),terms:'Net 15',cur:'LKR',lines:[{desc:'Workshop fee',qty:1,price:250000,total:250000}],amount:250000,disc:0,vat:0,vatRate:0,paidAmount:100000,status:'partial',tpl:0,notes:'Balance can be settled by due date.',id:1012},
     {num:'INV-0013',client:'Gamage Kitchen',cemail:'hello@gamage.lk',caddr:'Kandy',cphone:'+94 71 555 9090',date:demoDate(-3),due:demoDate(27),terms:'Net 30',cur:'LKR',lines:[{desc:'Brand launch invoice',qty:1,price:180000,total:180000}],amount:180000,disc:0,vat:0,vatRate:0,paidAmount:0,status:'unpaid',tpl:0,notes:'Invoice by Cashflow System - Ceylonry Labs.io',id:1013}
   ];
   DB.transactions=[
     {date:demoDate(-1),desc:'Payment received — INV-0010 (Kasun Perera)',type:'in',amount:320000,cat:'Invoice Payment',ref:'INV-0010',id:2010},
-    {date:demoDate(-5),desc:'Payment received — INV-0012 (Pasan Yasas)',type:'in',amount:100000,cat:'Invoice Payment',ref:'INV-0012 · Bank transfer',id:2012},
+    {date:demoDate(-5),desc:'Payment received — INV-0012 (Fernando Learning Hub)',type:'in',amount:100000,cat:'Invoice Payment',ref:'INV-0012 · Bank transfer',id:2012},
     {date:demoDate(-38),desc:'Studio project receipt',type:'in',amount:240000,cat:'Service Income',ref:'BANK-2406',id:2013},
     {date:demoDate(-69),desc:'Workshop receipts',type:'in',amount:185000,cat:'Service Income',ref:'BANK-2405',id:2014},
     {date:demoDate(-101),desc:'Event package receipts',type:'in',amount:225000,cat:'Service Income',ref:'BANK-2404',id:2015}
@@ -4740,7 +4740,7 @@ function seedDemoData(){
     {id:5012,name:'Launch Media',email:'hello@example.com',phone:'+94 77 555 0102',address:'Colombo',notes:'Campaign support'}
   ],nextId:5013};
   DB.editBacklog=[
-    {id:3010,kind:'invoice',itemId:'INV-0012',label:'INV-0012 · Pasan Yasas',reason:'Demo: corrected payment status after partial bank transfer.',before:{num:'INV-0012',client:'Pasan Yasas',status:'unpaid',paidAmount:0,amount:250000},after:{num:'INV-0012',client:'Pasan Yasas',status:'partial',paidAmount:100000,amount:250000},editedAt:new Date().toISOString(),editedBy:'Demo Owner',editorUid:'demo-user'}
+    {id:3010,kind:'invoice',itemId:'INV-0012',label:'INV-0012 · Fernando Learning Hub',reason:'Demo: corrected payment status after partial bank transfer.',before:{num:'INV-0012',client:'Fernando Learning Hub',status:'unpaid',paidAmount:0,amount:250000},after:{num:'INV-0012',client:'Fernando Learning Hub',status:'partial',paidAmount:100000,amount:250000},editedAt:new Date().toISOString(),editedBy:'Demo Owner',editorUid:'demo-user'}
   ];
   DB.nextInvNum=14;
 }
@@ -4755,9 +4755,10 @@ function initDemoMode(){
     const banner=document.createElement('div');
     banner.id='demo-banner';
     banner.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#1a1714;color:#fff;padding:.6rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;z-index:900;font-family:'DM Sans',sans-serif;font-size:.78rem;";
-    banner.innerHTML='<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><span>Demo mode · sample data only</span><a href="index.html" style="color:#fff;border:1px solid rgba(255,255,255,.35);padding:.36rem .9rem;text-decoration:none;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600">Home</a></div><button data-cls-fn="openInvoiceModal" style="background:#B8922A;color:#fff;border:none;padding:.4rem 1.25rem;cursor:pointer;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;font-family:&quot;DM Sans&quot;,sans-serif">Try creating an invoice →</button>';
+    banner.innerHTML='<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><span>Studio demo · fictional sample data</span><a href="index.html" style="color:#fff;border:1px solid rgba(255,255,255,.35);padding:.36rem .9rem;text-decoration:none">Home</a><a href="growth.html?demo=1" style="color:#fff;border:1px solid rgba(255,255,255,.35);padding:.36rem .9rem;text-decoration:none">Business demo</a></div><div style="display:flex;gap:.6rem;flex-wrap:wrap"><button data-cls-fn="startSystemTour" class="btn-act-outline">Show me around</button><button data-cls-fn="openInvoiceModal" class="btn-act">Try creating an invoice →</button></div>';
     document.body.appendChild(banner);
   }
+  setTimeout(function(){ window.startSystemTour(); }, 700);
 }
 // Sign out
 window.clsSignOut = function clsSignOut() {
