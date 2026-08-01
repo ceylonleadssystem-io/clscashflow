@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CeylonryLabs.io — Account Setup</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -360,6 +360,78 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 @media(max-width:380px){
   .tpl-grid.cols-3,.tpl-grid.cols-5,.tpl-grid.cols-6{grid-template-columns:1fr}
   .ob-title{font-size:1.34rem}
+}
+
+/* Refined bold editorial onboarding — visual layer only; workflow remains unchanged. */
+:root{
+  --rail-width:320px;
+  --gold:#d7a72f;--gold-l:#e2bd5c;--gold-d:#ad7e10;
+  --bg:#fff;--bg2:#080808;--bg3:#f5f5f3;--bg4:#ecece8;
+  --text:#080808;--muted:#62625d;--dim:#92928b;
+  --border:#deded9;--border2:#c9c9c1;--black:#080808;
+  --font-d:'Inter',sans-serif;--font-b:'Inter',sans-serif;
+}
+body{background:#fff}
+.ob-left{background:#080808;border:0;padding:2rem;color:#fff}
+.ob-left::before{height:55%;background:radial-gradient(circle at 0 100%,rgba(215,167,47,.25),transparent 64%)}
+.ob-logo{font-family:var(--font-b);font-size:1.3rem;font-weight:800;letter-spacing:-.045em;color:#fff}
+.ob-logo span{color:var(--gold)}
+.ob-logo-tag{color:#a8a8a0;font-weight:700;letter-spacing:.25em}
+.ob-left a[style]{color:#c7c7c0!important}
+.ob-step-item{padding:.9rem 0;border-color:#292929}
+.ob-step-dot{width:30px;height:30px;border-color:#555;background:transparent;color:#aaa}
+.ob-step-item.active .ob-step-dot{border-color:var(--gold);background:var(--gold);color:#080808;box-shadow:none}
+.ob-step-item.done .ob-step-dot{background:#fff;border-color:#fff;color:#080808}
+.ob-step-title{font-size:.76rem;font-weight:700;color:#777}
+.ob-step-sub{color:#777}
+.ob-step-item.done .ob-step-title,.ob-step-item.active .ob-step-title{color:#fff}
+.ob-progress-bar{height:5px;background:#2c2c2c}
+.ob-progress-fill{background:var(--gold)}
+.ob-progress-text{color:#aaa;font-weight:700}
+.ob-right{background:#fff;padding:4.5rem clamp(1.5rem,5vw,5rem)}
+.ob-steps-wrap{max-width:760px}
+.ob-eyebrow{font-size:.68rem;letter-spacing:.22em;color:#8d6809;font-weight:800;margin-bottom:1rem}
+.ob-title{font-size:clamp(2.5rem,5vw,4.4rem);font-weight:900;line-height:.92;letter-spacing:-.075em;max-width:700px;margin-bottom:1.2rem}
+.ob-title em{font-style:normal;color:var(--text)}
+.ob-sub{font-size:1rem;line-height:1.65;max-width:650px;margin-bottom:1.8rem}
+.ob-rule{width:72px;height:7px;background:var(--gold);margin-bottom:1.8rem}
+.ob-field{gap:.5rem;margin-bottom:1.1rem}
+.ob-field label{font-size:.68rem;letter-spacing:.12em;color:#444;font-weight:800}
+.ob-input{min-height:56px;border:1px solid var(--border);border-radius:14px;background:#f7f7f5;padding:.9rem 1rem;font-size:.95rem}
+.ob-input:focus{border-color:#080808;background:#fff;box-shadow:0 0 0 4px rgba(215,167,47,.2)}
+.ob-password-toggle{border-left:1px solid var(--border);border-radius:0 10px 10px 0;background:transparent}
+.ob-choice,.setup-task,.tier-card,.tour-card,.showaround-panel,.plan-reco,.summary-box{border:1px solid var(--border);border-radius:18px;background:#fafaf8}
+.ob-choice{padding:1.1rem}
+.ob-choice:hover,.setup-task:hover,.tier-card:hover{border-color:#080808;background:#fff;transform:translateY(-2px)}
+.ob-choice.selected,.tier-card.selected{border-color:#080808;background:#080808;color:#fff;box-shadow:0 8px 0 var(--gold)}
+.ob-choice.selected .ob-choice-label,.ob-choice.selected .ob-choice-desc,.tier-card.selected .tier-name,.tier-card.selected .tier-features{color:#fff}
+.ob-choice.selected .ob-choice-dot{background:var(--gold);border-color:var(--gold)}
+.tier-card{border-radius:22px;padding:1.35rem 1rem}
+.tier-badge{border-radius:999px;color:#080808;font-weight:800}
+.ob-plan-comparison,.tpl-grid-wrap{border-radius:18px}
+.invoice-preview-card{border-radius:26px}
+.ob-nav{margin-top:1.5rem}
+.btn-next,.btn-back,.btn-skip{min-height:52px;border-radius:999px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.btn-next{background:#080808;color:#fff;border-color:#080808}
+.btn-next:hover{background:var(--gold);border-color:var(--gold);color:#080808}
+.btn-back,.btn-skip{background:#fff;border-color:#bdbdb6}
+.showaround-actions .selected{background:#080808;border-color:#080808;box-shadow:0 0 0 4px rgba(215,167,47,.24)}
+
+@media(max-width:860px){
+  .ob-right{padding:2rem 1.25rem 3rem}
+  .ob-right::before{content:'CeylonryLabs.io  /  Account setup';display:block;position:absolute;top:0;left:0;right:0;height:54px;padding:18px 20px;background:#080808;color:#fff;font-size:.7rem;font-weight:800;letter-spacing:.08em}
+  .ob-steps-wrap{margin-top:54px;max-width:680px}
+  .ob-title{font-size:clamp(2.25rem,10vw,3.5rem)}
+}
+@media(max-width:560px){
+  .ob-right{padding:1rem 1rem 2rem}
+  .ob-steps-wrap{margin-top:54px}
+  .ob-card{overflow:visible}
+  .ob-title{font-size:2.35rem;line-height:.96;letter-spacing:-.06em}
+  .ob-sub{font-size:.88rem}
+  .ob-rule{height:5px;margin-bottom:1.25rem}
+  .ob-input{min-height:52px;border-radius:12px}
+  .ob-choice,.setup-task,.tier-card,.tour-card,.showaround-panel,.plan-reco,.summary-box{border-radius:14px}
 }
 </style>
 <!-- Supabase compatibility SDK -->

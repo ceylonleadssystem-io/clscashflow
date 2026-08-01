@@ -451,7 +451,7 @@ test('admin dashboard loads quickly without presenting failed requests as zero d
   assert.match(database, /\.select\('id', \{ count: 'exact', head: true \}\)/);
 });
 
-test('public demos use fictional data, guided tours, and include Business', function() {
+test('public demos use fictional data and expose only Business from the landing page', function() {
   const landing = read('index.html');
   const story = read('mrs-gamage-story.html');
   const solo = read('solo.html');
@@ -469,5 +469,6 @@ test('public demos use fictional data, guided tours, and include Business', func
   assert.match(business, /function initBusinessDemoMode\(\)/);
   assert.match(business, /window\.startBusinessTour\(\)/);
   assert.match(landing, /growth\.html\?demo=1/);
-  assert.match(story, /growth\.html\?demo=1/);
+  assert.doesNotMatch(landing, /starter\.html\?demo=1/);
+  assert.doesNotMatch(story, /(?:starter|growth)\.html\?demo=1/);
 });
