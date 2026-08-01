@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260801-manual-billing"></script>
+<script src="assets/platform.js?v=20260802-invoice-output"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1110,7 +1110,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
               <div class="plan-name">Business Plan ✨</div>
               <div class="plan-price">LKR 8,500 / mo</div>
-              <div style="font-size:.62rem;color:rgba(255,255,255,.52);margin-top:.15rem">Annual activation appears after the 15-day trial</div>
+              <div style="font-size:.62rem;color:rgba(255,255,255,.62);margin-top:.15rem">First monthly payment is due after the 15-day trial</div>
               <div class="plan-tagline">Built for growing SMEs · unlimited users</div>
               <div class="growth-trial-box" id="growth-trial-status">Your Business trial status will appear here.</div>
               <div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.38);margin-bottom:.5rem">Everything in Studio, plus:</div>
@@ -1128,10 +1128,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="plan-item"><span class="plan-item-check">✓</span>More Invoice Templates</div>
                 <div class="plan-item"><span class="plan-item-check">✓</span>Manual Payment Reminders</div>
               </div>
-              <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business by Bank Transfer</button>
               <button onclick="window.startBusinessTour()" style="margin-top:.5rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Business Tour</button>
               <button onclick="window.goBackToStudio(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Studio</button>
-              <button onclick="window.showToast('Priority support is included with Business.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Priority Support</button>
             </div>
             <div id="settings-billing-widgets" class="settings-widget-stack"></div>
           </div>
@@ -1299,7 +1297,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'Thank you for your business.',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1,
   _nextQuoteId:1
 };
@@ -1445,6 +1443,7 @@ function maybeStartBusinessTour() {
   }
 }
 	window.goBackToStudio = async function goBackToStudio(btn) {
+	  if(window.clsCanDirectTrialPlanSwitch&&!window.clsCanDirectTrialPlanSwitch(_profile)){alert('Plan switching closes when the free trial ends. Please use Support for any package change.');return;}
 	  if (!_signedInUid) { alert('Please sign in again before switching plans.'); return; }
 	  if (window.clsIsProfilePaid && window.clsIsProfilePaid(_profile)) {
 	    await window.clsRequestPlanChange('studio', _profile || {}, { uid: _signedInUid, db: _fdb, source: 'business-downgrade-button' });
@@ -1786,8 +1785,8 @@ function mapStudioSettings(src) {
   out.addr = src.addr || src.address || out.addr || '';
   out.email = src.email || src.invEmail || src.invoiceEmail || out.email || '';
   out.vat = src.vat || src.taxNo || out.vat || '';
-  out.footer = src.footer || out.footer || 'Thank you for your business.';
-  if (out.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') out.footer = 'Thank you for your business.';
+  if (Object.prototype.hasOwnProperty.call(src, 'footer')) out.footer = String(src.footer || '');
+  if (out.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') out.footer = '';
   out.bankName = src.bankName || src.bank || out.bankName || '';
   out.bankAccountName = src.bankAccountName || src.accountName || out.bankAccountName || '';
   out.bankAccountNumber = src.bankAccountNumber || src.accountNumber || out.bankAccountNumber || '';
@@ -3347,7 +3346,7 @@ function collectSettingsDraft() {
     addr: val('s-addr', D.settings.addr) || D.settings.addr || 'Business address',
     email: val('s-email', D.settings.email) || D.settings.email || 'invoices@yourbusiness.lk',
     vat: val('s-vat', D.settings.vat) || D.settings.vat || 'Optional',
-    footer: val('s-footer', D.settings.footer) || D.settings.footer || 'Thank you for your business.',
+    footer: val('s-footer', D.settings.footer),
     bankName: val('s-bank-name', D.settings.bankName) || D.settings.bankName || '',
     bankAccountName: val('s-bank-account-name', D.settings.bankAccountName) || D.settings.bankAccountName || '',
     bankAccountNumber: val('s-bank-account-number', D.settings.bankAccountNumber) || D.settings.bankAccountNumber || '',
@@ -3681,7 +3680,7 @@ window.emailInv = async function emailInv(id) {
       remainingBalance: balance,
       paymentDate: formatDateHuman(new Date()),
       status: status,
-      notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer) || 'Thank you for your business.',
+      notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer),
       settings: D.settings,
       lines: (inv.items || inv.lines || []).map(function(line) {
         line = line || {};
@@ -3733,7 +3732,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(id) {
       paymentMethod: lastPayment ? lastPayment.method : '',
       paymentReference: lastPayment ? lastPayment.ref : '',
       status: inv.status || 'paid',
-      notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer) || 'Thank you for your business.',
+      notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer),
       settings: D.settings,
       lines: (inv.items || inv.lines || []).map(function(line) {
         line = line || {};
@@ -4153,6 +4152,7 @@ function invoiceWaTextBusiness(inv, withFile) {
     + 'Invoice generated by Business Cashflow System - CeylonryLabs.io';
 }
 function combinedInvoiceNotesBusiness(primary, fallback) {
+  if (primary != null) return String(primary).trim();
   primary = String(primary || '').trim();
   fallback = String(fallback || '').trim();
   if (!primary) return fallback;
@@ -4268,12 +4268,12 @@ window.saveSettings = async function saveSettings() {
   D.settings.addr = document.getElementById('s-addr').value;
   D.settings.email = document.getElementById('s-email').value;
   D.settings.vat = document.getElementById('s-vat').value;
-  D.settings.footer = document.getElementById('s-footer').value || 'Thank you for your business.';
+  D.settings.footer = document.getElementById('s-footer').value.trim();
   D.settings.bankName = document.getElementById('s-bank-name').value.trim();
   D.settings.bankAccountName = document.getElementById('s-bank-account-name').value.trim();
   D.settings.bankAccountNumber = document.getElementById('s-bank-account-number').value.trim();
   D.settings.bankBranch = document.getElementById('s-bank-branch').value.trim();
-  if (D.settings.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') D.settings.footer = 'Thank you for your business.';
+  if (D.settings.footer === 'Invoice by Cashflow System - Ceylonry Labs.io') D.settings.footer = '';
   var vatRateEl = document.getElementById('s-vatrate');
   var defaultTplEl = document.getElementById('s-default-tpl');
   var prefixEl = document.getElementById('s-invoice-prefix');
@@ -4405,8 +4405,7 @@ function buildInvoicePrintHtml(inv) {
   var totals = invoiceTotalsMarkup(inv);
   var status = invoiceStatus(inv);
   var balance = invoiceBalance(inv);
-  var noteText = String(inv.notes || s.footer || '').trim();
-  if (!noteText || noteText === 'Invoice by Cashflow System - Ceylonry Labs.io') noteText = 'Thank you for your business.';
+  var noteText = String(Object.prototype.hasOwnProperty.call(inv, 'notes') ? (inv.notes || '') : (s.footer || '')).trim();
   return '<style>' +
     '@page{size:A4;margin:0}@media print{#print-inv{display:block!important;background:#fff;color:#1d1712}.inv-page{box-shadow:none!important}}.inv-page{width:794px;min-height:1123px;margin:0 auto;background:#fff;position:relative;font-family:Arial,Helvetica,sans-serif;padding:70px 76px 58px;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--muted:#6F6353;--line:#E8DED2;--paper:#FFFFFF;color:#1d1712;box-sizing:border-box}.inv-page *{box-sizing:border-box}.inv-main{position:relative;z-index:1}.inv-top-rule{height:5px;background:var(--accent);margin-bottom:46px}.inv-hero{display:grid;grid-template-columns:1fr 270px;gap:52px;align-items:start;margin-bottom:58px}.inv-logo-img{display:block;object-fit:contain;margin-bottom:16px}.inv-logo-text{font-family:Georgia,serif;font-size:26px;line-height:1.05;margin-bottom:14px;color:inherit}.inv-business{font-family:Georgia,serif;font-size:29px;font-weight:700;color:inherit;margin-bottom:8px}.inv-small{font-size:12px;line-height:1.65;color:var(--muted);white-space:pre-line}.inv-title{text-align:right}.inv-title h1{font-size:46px;letter-spacing:9px;text-transform:uppercase;margin:0 0 12px;color:var(--dark);line-height:1}.inv-title b{font-size:15px;color:#1d1712}.inv-meta{font-size:12px;line-height:1.9;color:var(--muted);margin-top:24px}.inv-meta span{display:inline-block;width:58px;color:#A89A8B}.inv-parties{display:grid;grid-template-columns:1fr 1fr 170px;gap:36px;margin-bottom:70px}.inv-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:12px}.inv-name{font-size:17px;font-weight:800;color:#111;margin-bottom:7px;line-height:1.35}.inv-status{display:inline-flex;align-items:center;border:1px solid var(--line);padding:7px 10px;border-radius:999px;text-transform:capitalize;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:10px}.inv-table{width:100%;border-collapse:collapse;margin-bottom:30px;table-layout:fixed}.inv-table th{border-bottom:3px solid var(--dark);color:#1d1712;background:transparent;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:0 14px 13px;text-align:left}.inv-table th:nth-child(1){width:54%}.inv-table th:nth-child(2){width:12%}.inv-table th:nth-child(3){width:17%}.inv-table th:nth-child(4){width:17%}.inv-table th:nth-child(n+2),.inv-table td:nth-child(n+2){text-align:right}.inv-table td{padding:17px 14px;border-bottom:1px solid var(--line);font-size:13px;color:#111;vertical-align:top}.inv-desc{white-space:pre-line;line-height:1.45;font-weight:700;word-break:break-word}.inv-table td:nth-child(n+2){font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:500}.inv-bottom{display:grid;grid-template-columns:1fr 330px;gap:48px;align-items:start;margin-top:18px}.inv-note-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin-bottom:12px;color:var(--dark)}.inv-note{font-size:12px;line-height:1.7;color:var(--muted);white-space:pre-line}.inv-totals-print{border-top:1px solid var(--line);padding-top:14px}.inv-totals-print>div{display:flex;justify-content:space-between;gap:24px;font-size:13px;padding:8px 0;color:#55483e}.inv-totals-print b{font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;color:#111}.inv-grand{background:var(--dark);color:#fff!important;margin-top:14px;padding:20px 22px!important;align-items:center}.inv-grand span{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:800}.inv-grand b{font-size:21px;color:#fff!important}.inv-brand-foot{position:absolute;left:76px;right:76px;bottom:42px;border-top:1px solid var(--line);padding-top:14px;text-align:center;font-size:10px;letter-spacing:.08em;color:#A89A8B}.inv-brand-foot b{color:#1d1712}.tpl-gold .inv-top-rule,.tpl-ceylon .inv-top-rule,.tpl-bold .inv-top-rule{height:9px;background:linear-gradient(90deg,var(--accent),#D8B456,var(--accent))}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:var(--dark);color:#fff;padding:34px;margin:-18px 0 54px}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:#fff}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:rgba(255,255,255,.75)}.tpl-line .inv-top-rule{height:4px;background:var(--accent)}.tpl-line .inv-title h1{color:var(--accent)}.tpl-minimal .inv-top-rule{height:3px;background:#111}.tpl-minimal .inv-title h1{letter-spacing:6px;color:#111}.tpl-minimal .inv-grand{background:#111}.tpl-darkside,.tpl-split{background:#FDF9F2}.tpl-darkside .inv-top-rule,.tpl-split .inv-top-rule{height:6px;background:#111}.tpl-darkside .inv-title h1,.tpl-split .inv-title h1{color:#111}.tpl-corporate{--accent:#1E5B8A;--dark:#113B5E}.tpl-bold .inv-title{border:3px solid var(--accent);padding:22px 24px}.tpl-bold .inv-title h1{color:var(--accent)}.tpl-signature{background:#FDFAF4;font-family:Georgia,serif}.tpl-signature .inv-top-rule{height:8px;background:transparent;border-top:3px double var(--accent);border-bottom:1px solid var(--accent)}.tpl-signature .inv-table th{border-bottom-color:var(--accent);font-family:Arial,Helvetica,sans-serif}.tpl-signature .inv-grand{background:#4A3B2A}' +
     '.inv-page{padding:62px 72px 52px!important;overflow:hidden!important}.inv-main{min-height:0!important;display:block!important}.inv-top-rule{margin-bottom:28px!important}.inv-hero{grid-template-columns:minmax(0,1fr) 285px!important;gap:46px!important;margin-bottom:30px!important}.inv-title h1{font-size:42px!important;letter-spacing:8px!important}.inv-business{font-size:28px!important}.inv-parties{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 170px!important;gap:34px!important;margin-bottom:30px!important}.inv-table{margin-bottom:18px!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-table th{padding:0 12px 12px!important}.inv-table td{padding:15px 12px!important}.inv-bottom{grid-template-columns:minmax(0,1fr) 325px!important;gap:40px!important;margin-top:8px!important;align-items:start!important;break-inside:avoid!important;page-break-inside:avoid!important}.inv-totals-print{padding-top:12px!important}.inv-totals-print>div{padding:8px 0!important}.inv-grand{display:flex!important;justify-content:space-between!important;gap:18px!important;white-space:nowrap!important;min-height:62px!important;max-width:100%!important;padding:18px 22px!important}.inv-grand b{font-size:21px!important}.inv-brand-foot{position:static!important;margin-top:18px!important;border-top:1px solid var(--line)!important;padding-top:15px!important;text-align:center!important;font-size:10px!important;line-height:1.4!important;color:#A89A8B!important}.inv-brand-foot b{color:#1d1712!important}.tpl-header .inv-hero,.tpl-corporate .inv-hero{background:transparent!important;color:#1d1712!important;padding:0!important;margin:-4px 0 30px!important}.tpl-header .inv-title h1,.tpl-corporate .inv-title h1,.tpl-header .inv-title b,.tpl-corporate .inv-title b{color:var(--dark)!important}.tpl-header .inv-small,.tpl-corporate .inv-small,.tpl-header .inv-meta,.tpl-corporate .inv-meta,.tpl-header .inv-meta span,.tpl-corporate .inv-meta span{color:var(--muted)!important}.tpl-darkside,.tpl-split{background:#fff!important}.tpl-bold .inv-title{border:0!important;padding:0!important}.tpl-bold .inv-title h1{color:var(--accent)!important}@media print{.inv-page{width:210mm!important;min-height:297mm!important;padding:16mm 18mm 12mm!important;overflow:hidden!important}.inv-main{min-height:0!important;display:block!important}.inv-brand-foot{margin-top:18px!important}}' +

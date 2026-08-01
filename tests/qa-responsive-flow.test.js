@@ -320,8 +320,24 @@ test('shared invoice outputs render bank details only for invoices', function() 
   assert.match(platform, /bank_account_number: settings\.bankAccountNumber/);
 });
 
+test('settings preview and PDF share one renderer and preserve empty notes', function() {
+  const platform = read('assets/platform.js');
+  const pages = ['solo.html', 'starter.html', 'growth.html'].map(read);
+  assert.match(platform, /clsBuildInvoicePreviewFrame/);
+  assert.match(platform, /var html = window\.clsBuildInvoicePrintHtml\(opts\)/);
+  assert.match(platform, /Object\.prototype\.hasOwnProperty\.call\(inv, 'notes'\)/);
+  assert.match(platform, /var notesHtml = note \?/);
+  pages.forEach(function(page) {
+    assert.match(page, /clsBuildInvoicePrintHtml/);
+    assert.match(page, /clsBuildInvoicePreviewFrame/);
+  });
+  assert.match(pages[0], /DB\.settings\.footer=document\.getElementById\('set-footer'\)\.value\.trim\(\)/);
+  assert.match(pages[1], /DB\.settings\.footer=document\.getElementById\('set-footer'\)\.value\.trim\(\)/);
+  assert.match(pages[2], /D\.settings\.footer = document\.getElementById\('s-footer'\)\.value\.trim\(\)/);
+});
+
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260801-manual-billing';
+  const version = '20260802-invoice-output';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
@@ -519,6 +535,7 @@ test('Business expenses can be viewed and exported by date range', function() {
 
 test('all plans use monthly bank transfer billing with receipt upload and grace period', function() {
   const platform = read('assets/platform.js');
+  const onboarding = read('onboarding.html');
   const solo = read('solo.html');
   const studio = read('starter.html');
   const business = read('growth.html');
@@ -528,10 +545,15 @@ test('all plans use monthly bank transfer billing with receipt upload and grace 
   assert.match(platform, /City Office/);
   assert.match(platform, /submit-subscription-receipt/);
   assert.match(platform, /due \+ 86400000/);
-  assert.match(platform, /Monthly payment timeline/);
-  assert.match(solo, /Pay Solo by Bank Transfer/);
-  assert.match(studio, /Pay Studio by Bank Transfer/);
-  assert.match(business, /Pay Business by Bank Transfer/);
+  assert.match(platform, /Trial to paid timeline/);
+  assert.match(platform, /first paid month begins/i);
+  assert.match(platform, /Payment opens when trial ends/);
+  assert.match(platform, /clsCanDirectTrialPlanSwitch/);
+  assert.match(platform, /cls-trial-ended/);
+  assert.match(onboarding, /\.logo-upload-area\{[^}]*background:#f7f7f4/);
+  assert.doesNotMatch(solo, /Pay Solo by Bank Transfer/);
+  assert.doesNotMatch(studio, /Pay Studio by Bank Transfer/);
+  assert.doesNotMatch(business, /Pay Business by Bank Transfer/);
 });
 
 test('admin console is compact, searchable, payment-aware, and date-maps visits', function() {

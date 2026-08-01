@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260801-manual-billing"></script>
+<script src="assets/platform.js?v=20260802-invoice-output"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1133,9 +1133,7 @@ document.addEventListener('click',function(e){
               <div style="padding:1rem">
                 <strong>Studio Plan · up to 5 users</strong> — LKR 5,500/mo package value &nbsp;<span style="background:var(--gold);color:#fff;padding:2px 8px;font-size:.7rem">ACTIVE</span>
                 <div id="billing-trial-status" style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-top:.65rem"></div>
-                <div class="settings-billing-primary-actions"><button class="btn-act" data-cls-fn="clsStartCurrentPlanPayment" style="background:#1a1714;color:#fff">Pay Studio by Bank Transfer</button>
-                <button class="btn-act" data-cls-fn="openBusinessUpgrade" style="background:var(--gold);color:#fff">Upgrade to Business</button>
-                <button class="btn-act" data-cls-fn="goBackToSolo" data-cls-this="true" style="background:#fff;color:var(--muted);border:1px solid var(--border)">Back to Solo</button></div>
+                <div style="font-size:.72rem;color:var(--muted);margin-top:.65rem">Payment, bank details, and the monthly cycle are managed in the billing panel beside this summary.</div>
               </div>
             </div>
             <div id="settings-billing-widgets" class="settings-widget-stack"></div>
@@ -1543,7 +1541,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-    settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'Invoice by Cashflow System - Ceylonry Labs.io',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
+    settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -2027,7 +2025,7 @@ window.openBusinessUpgrade = async function openBusinessUpgrade(){
       requestedPlan:'business',
       planPrice:94800,
       planMonthlyPrice:8500,
-      billingCycle:'annual',
+      billingCycle:'monthly',
       upgradedFrom:'studio',
       upgradedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -2044,6 +2042,7 @@ window.openBusinessUpgrade = async function openBusinessUpgrade(){
   }
 	};
 	window.goBackToSolo = async function goBackToSolo(btn){
+	  if(window.clsCanDirectTrialPlanSwitch&&!window.clsCanDirectTrialPlanSwitch(_profile)){alert('Plan switching closes when the free trial ends. Please use Support for any package change.');return;}
 	  if(!_signedInUid){alert('Please sign in again before switching plans.');return;}
 	  if(window.clsIsProfilePaid&&window.clsIsProfilePaid(_profile)){
 	    await window.clsRequestPlanChange('solo',_profile||{}, {uid:_signedInUid, db:_db, source:'studio-downgrade-button'});
@@ -2062,7 +2061,7 @@ window.openBusinessUpgrade = async function openBusinessUpgrade(){
       requestedPlan:'solo',
       planPrice:36000,
       planMonthlyPrice:3500,
-      billingCycle:'annual',
+      billingCycle:'monthly',
       downgradedFrom:'studio',
       downgradedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -3870,7 +3869,7 @@ window.saveSettings = function saveSettings(){
   DB.settings.ejsService=ejsServiceEl?(ejsServiceEl.value||'').trim():(DB.settings.ejsService||'');
   DB.settings.ejsTemplate=ejsTemplateEl?(ejsTemplateEl.value||'').trim():(DB.settings.ejsTemplate||'');
   DB.settings.ejsReceiptTemplate=ejsReceiptTemplateEl?(ejsReceiptTemplateEl.value||'').trim():(DB.settings.ejsReceiptTemplate||'');
-  DB.settings.footer=document.getElementById('set-footer').value.trim()||'Invoice by Cashflow System - Ceylonry Labs.io';
+  DB.settings.footer=document.getElementById('set-footer').value.trim();
   DB.settings.u1=document.getElementById('set-u1').value.trim();
   DB.settings.u2=document.getElementById('set-u2').value.trim();
   DB.settings.logoAlign=(document.querySelector('.align-btn.active')?document.querySelector('.align-btn.active').dataset.align:null)||'left';
@@ -3917,7 +3916,7 @@ function invoicePreviewSettings(){
   const s=Object.assign({},DB.settings);
   s.bizName=valueOr('set-bizname',s.bizName||'My Business');s.biz=s.bizName;
   s.addr=valueOr('set-addr',s.addr||'42 Galle Road, Colombo 03');s.email=valueOr('set-email',s.email||'invoices@business.com');
-  s.vat=valueOr('set-vat',s.vat||'');s.footer=valueOr('set-footer',s.footer||'Thank you for your business.');
+  s.vat=valueOr('set-vat',s.vat||'');s.footer=document.getElementById('set-footer')?document.getElementById('set-footer').value:s.footer||'';
   s.bankName=valueOr('set-bank-name',s.bankName||'');s.bankAccountName=valueOr('set-bank-account-name',s.bankAccountName||'');
   s.bankAccountNumber=valueOr('set-bank-account-number',s.bankAccountNumber||'');s.bankBranch=valueOr('set-bank-branch',s.bankBranch||'');
   s.defaultTpl=normalizeTemplateIdx(valueOr('set-default-tpl',s.defaultTpl));s.invoiceFont=valueOr('set-invoice-font',s.invoiceFont||'classic');s.invoiceView=valueOr('set-invoice-view',s.invoiceView||'modern');
@@ -4494,7 +4493,7 @@ window.emailInvoice = async function emailInvoice(num){
       remainingBalance:amountDue,
       status:paymentState,
       paymentDate:fmtD(new Date()),
-      notes:combinedInvoiceNotes(inv.notes,s.footer)||'Thank you for your business.',
+      notes:combinedInvoiceNotes(inv.notes,s.footer),
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
@@ -4535,7 +4534,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(num){
       amountDue:Math.max(0,balance),
       paymentDate:fmtD(new Date()),
       status:inv.status||'paid',
-      notes:combinedInvoiceNotes(inv.notes,s.footer)||'Thank you for your business.',
+      notes:combinedInvoiceNotes(inv.notes,s.footer),
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))
     });
@@ -4891,6 +4890,7 @@ function invoiceWaText(inv, systemName, withFile){
     +'Invoice generated by '+systemName+' - CeylonryLabs.io';
 }
 function combinedInvoiceNotes(primary,fallback){
+  if(primary != null) return String(primary).trim();
   var seen={};
   return [primary,fallback].map(function(value){return String(value||'').trim();}).filter(function(value){
     var key=value.toLowerCase();if(!value||seen[key])return false;seen[key]=true;return true;

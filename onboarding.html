@@ -203,8 +203,9 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 .invoice-preview-page[data-view="bold"] .invoice-preview-table th{background:#15110d;color:#fff;border-bottom:0}
 
 /* Logo upload */
-.logo-upload-area{border:2px dashed var(--border2);padding:1.5rem;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:.85rem;position:relative;background:var(--bg2)}
-.logo-upload-area:hover{border-color:var(--gold);background:var(--bg3)}
+.logo-upload-area{border:2px dashed #cfcfc7;padding:1.5rem;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:.85rem;position:relative;background:#f7f7f4}
+.logo-upload-area:hover{border-color:var(--gold);background:#fffaf0}
+.logo-upload-area.has-logo{background:#f2f1ec;border-color:#d9c88e}
 .logo-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .logo-preview{max-height:50px;max-width:160px;object-fit:contain;margin:0 auto .6rem;display:block}
 .logo-upload-label{font-size:.78rem;color:var(--muted)}
@@ -441,7 +442,7 @@ body{background:#fff}
 const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 </script>
-<script src="assets/platform.js?v=20260801-manual-billing"></script>
+<script src="assets/platform.js?v=20260802-invoice-output"></script>
 </head>
 <body>
 
@@ -1343,6 +1344,7 @@ function previewLogo(input){
   reader.onload=e=>{
     const img=document.getElementById('logo-preview-img');
     img.src=e.target.result;img.style.display='block';
+    const area=img.closest('.logo-upload-area');if(area)area.classList.add('has-logo');
     document.getElementById('logo-placeholder').style.display='none';
     state.logo=e.target.result;
     updateInvoicePreview();
