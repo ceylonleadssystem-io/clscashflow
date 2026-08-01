@@ -66,6 +66,10 @@ tr:hover td{background:#f1f1ed!important}
 .sum-item,.sum-i{border:1px solid #d7d7d1!important;border-radius:16px!important}
 .greeting{background:#080808!important;border-radius:20px!important}
 .db-greeting{border-left:6px solid #d7a72f!important}
+.db-greeting{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:1rem!important;padding:1rem 1.25rem!important;margin-bottom:1rem!important;background:#fff!important}
+.db-greet-h{font-family:'Inter',sans-serif!important;font-size:clamp(1.25rem,2vw,1.65rem)!important;font-weight:900!important;letter-spacing:-.045em!important;color:#080808!important}
+.db-greet-p{font-size:.7rem!important;color:#60605b!important;margin-top:.15rem!important}
+.db-plan-pill{display:inline-flex!important;align-items:center!important;white-space:nowrap!important;border-radius:999px!important;background:#d7a72f!important;color:#080808!important;padding:.35rem .8rem!important;font-size:.56rem!important;font-weight:900!important;letter-spacing:.12em!important;text-transform:uppercase!important}
 
 /* Controls and dialogs */
 .btn-act,.btn-primary,.btn-save,.btn-black,.btn-add,.btn-dark{border-radius:999px!important;background:#080808!important;font-weight:800!important}
@@ -132,6 +136,10 @@ input:focus,select:focus,textarea:focus{border-color:#080808!important;box-shado
   .sum-item,.sum-i{padding:.72rem!important}
   .table-header,.card-head{padding:.72rem .8rem!important}
   .modal-overlay,.mo{padding:.35rem!important}
+  .db-greeting{align-items:flex-start!important;padding:.75rem .8rem!important}
+  .db-greet-h{font-size:1.15rem!important}
+  .db-greet-p{font-size:.6rem!important}
+  .db-plan-pill{font-size:.48rem!important;padding:.28rem .55rem!important}
 }
 
 @media(min-width:430px) and (max-width:760px){

@@ -738,6 +738,10 @@ document.addEventListener('click',function(e){
 
     <!-- ═ DASHBOARD ═ -->
     <div class="view active" id="view-dashboard">
+      <div class="db-greeting">
+        <div><div class="db-greet-h" id="studio-greet-h">Welcome!</div><div class="db-greet-p">Here is your cashflow and operations activity at a glance today</div></div>
+        <span class="db-plan-pill">Studio Plan</span>
+      </div>
       <div class="kpi-grid">
         <div class="kpi-card gold-top"><div class="kpi-icon">🧾</div><div class="kpi-label">Total Invoiced</div><div class="kpi-val" id="kpi-total-invoiced">LKR 0</div><div class="kpi-sub">All invoices</div></div>
         <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-label">Paid Amount</div><div class="kpi-val" id="kpi-paid-amount">LKR 0</div><div class="kpi-sub">Collected payments</div></div>
@@ -4668,6 +4672,7 @@ window.emailSupplier = function emailSupplier(id){
 function init(){
   applySettings();
   renderTrialStatus();
+  if(window.clsUpdateTimeGreeting)window.clsUpdateTimeGreeting('studio-greet-h',_profile,_auth.currentUser,'there');
   // Date
   document.getElementById('top-date').textContent=today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   // Set today on modal date fields

@@ -2930,6 +2930,31 @@
     });
   }
 
+  function greetingFirstName(profile, user, fallback) {
+    profile = profile || {};
+    user = user || {};
+    var metadata = user.user_metadata || {};
+    var raw = profile.firstName || profile.givenName || profile.given_name ||
+      metadata.first_name || metadata.given_name ||
+      profile.name || user.displayName || metadata.full_name || metadata.name ||
+      profile.email || user.email || fallback || 'there';
+    raw = String(raw || '').trim();
+    if (raw.indexOf('@') > -1) raw = raw.split('@')[0].replace(/[._-]+/g, ' ');
+    var first = raw.split(/\s+/)[0].replace(/[^\p{L}\p{N}'’-]/gu, '');
+    if (!first || /^(business|studio|solo|account|user)$/i.test(first)) first = String(fallback || 'there');
+    return first.charAt(0).toUpperCase() + first.slice(1);
+  }
+
+  window.clsUpdateTimeGreeting = function(elementId, profile, user, fallback) {
+    var target = document.getElementById(elementId);
+    if (!target) return '';
+    var hour = new Date().getHours();
+    var greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    var text = greeting + ', ' + greetingFirstName(profile, user, fallback) + '! 🌿';
+    target.textContent = text;
+    return text;
+  };
+
 	  function boot() {
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);

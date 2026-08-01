@@ -2683,6 +2683,7 @@ function renderDashboardInvoiceControls() {
 }
 
 function renderDashboard() {
+  if(window.clsUpdateTimeGreeting)window.clsUpdateTimeGreeting('greet-h',_profile,_fauth.currentUser,'there');
   syncBusinessComputedData();
   var inc = D.txns.filter(function(t) { return t.type==='in'; }).reduce(function(a,t) { return a+t.amount; }, 0);
   var out = D.exps.reduce(function(a,e) { return a+e.amount; }, 0);
@@ -4844,15 +4845,12 @@ _fauth.onAuthStateChanged(async function(user) {
     var _ds = new Date().toLocaleDateString('en-LK', {weekday:'short', day:'numeric', month:'long', year:'numeric'});
     document.getElementById('tb-date').textContent = _ds;
     var _d2 = document.getElementById('tb-date2'); if(_d2) _d2.textContent = _ds;
-    var hr = new Date().getHours();
-    var greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
     var accountEmail = (_profile.email || (user && user.email) || '');
     var accountName = (_profile.name || (user && user.displayName) || D.settings.user || 'there');
     if(_profile.ownerUid && D.settings.user && accountName === D.settings.user && accountEmail){
       accountName = accountEmail.split('@')[0];
     }
-    var fn = accountName.split(' ')[0];
-    document.getElementById('greet-h').textContent = greet + ', ' + fn + '! 🌿';
+    if(window.clsUpdateTimeGreeting)window.clsUpdateTimeGreeting('greet-h',_profile,user,'there');
     document.getElementById('sb-uname').textContent = accountName || '';
     var visibleRole = String(_profile.role || _profile.accessRole || 'admin').toLowerCase();
     var roleLabel = visibleRole === 'accountant' ? 'Accountant' : (visibleRole === 'staff' ? 'Staff' : (visibleRole === 'viewer' || visibleRole === 'view-only' ? 'View Only' : 'Admin'));

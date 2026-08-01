@@ -472,3 +472,20 @@ test('public demos use fictional data and expose only Business from the landing 
   assert.doesNotMatch(landing, /starter\.html\?demo=1/);
   assert.doesNotMatch(story, /(?:starter|growth)\.html\?demo=1/);
 });
+
+test('all three plan dashboards greet the signed-in user by first name and local time', function() {
+  const platform = read('assets/platform.js');
+  const solo = read('solo.html');
+  const studio = read('starter.html');
+  const business = read('growth.html');
+
+  assert.match(platform, /window\.clsUpdateTimeGreeting/);
+  assert.match(platform, /hour < 12 \? 'Good morning' : hour < 17 \? 'Good afternoon' : 'Good evening'/);
+  assert.match(platform, /profile\.firstName \|\| profile\.givenName/);
+  assert.match(solo, /id="solo-greet-h"/);
+  assert.match(solo, /clsUpdateTimeGreeting\('solo-greet-h',_profile,_auth\.currentUser,'there'\)/);
+  assert.match(studio, /id="studio-greet-h"/);
+  assert.match(studio, /clsUpdateTimeGreeting\('studio-greet-h',_profile,_auth\.currentUser,'there'\)/);
+  assert.match(business, /id="greet-h"/);
+  assert.match(business, /clsUpdateTimeGreeting\('greet-h',_profile,_fauth\.currentUser,'there'\)/);
+});
