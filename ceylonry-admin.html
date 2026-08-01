@@ -724,7 +724,7 @@ var adminUserRows = [];
 var adminPayloadState={users:[],visits:[],tickets:[],paymentRequests:[],chats:[],stats:{}};
 var ADMIN_CACHE_KEY = 'cls-admin-dashboard-cache-v2';
 var ADMIN_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
-var ADMIN_REQUEST_TIMEOUT_MS = 6500;
+var ADMIN_REQUEST_TIMEOUT_MS = 15000;
 function setDataStatus(kind, message){
   var node = $('data-status');
   if (!node) return;

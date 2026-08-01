@@ -439,7 +439,7 @@ test('admin dashboard loads quickly without presenting failed requests as zero d
   const endpoint = read('netlify/functions/admin-data.js');
   const database = read('netlify/lib/supabase.js');
   assert.match(page, /id="data-status"/);
-  assert.match(page, /ADMIN_REQUEST_TIMEOUT_MS = 6500/);
+  assert.match(page, /ADMIN_REQUEST_TIMEOUT_MS = 15000/);
   assert.match(page, /sessionStorage\.getItem\(ADMIN_CACHE_KEY\)/);
   assert.match(page, /Showing saved data while checking for updates/);
   assert.match(page, /textContent = '—'/);

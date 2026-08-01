@@ -77,17 +77,12 @@ async function verifyAdmin(admin, event) {
 }
 
 async function readCollection(db, name, orderField, limit) {
-  try {
-    const snap = await db.collection(name).orderBy(orderField, 'desc').limit(limit).get();
-    return snap.docs.map(function(doc) {
-      return { id: doc.id, data: serialize(doc.data() || {}) };
-    });
-  } catch (err) {
-    const snap = await db.collection(name).limit(limit).get();
-    return snap.docs.map(function(doc) {
-      return { id: doc.id, data: serialize(doc.data() || {}) };
-    });
-  }
+  // Admin rendering already sorts each view. A plain limited read avoids a
+  // failed indexed query followed by a second full request on older projects.
+  const snap = await db.collection(name).limit(limit).get();
+  return snap.docs.map(function(doc) {
+    return { id: doc.id, data: serialize(doc.data() || {}) };
+  });
 }
 
 async function readChats(db, includeMessages) {
@@ -890,7 +885,9 @@ exports.handler = async function handler(event) {
     const tickets = initialRows[2];
     const chats = initialRows[3];
     const paymentRequests = initialRows[4];
-    await ensureExpiredTrialPaymentRequests(admin, db, users);
+    // Never block the dashboard read with per-user billing writes. Overdue
+    // enforcement belongs to the billing event/scheduled path; doing it here
+    // made the first admin response exceed the browser and Netlify timeouts.
     const stats = buildStats(users, visits, tickets, paymentRequests, chats);
 
     return {
