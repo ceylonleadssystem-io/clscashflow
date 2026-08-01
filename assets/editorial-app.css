@@ -1,0 +1,88 @@
+/* Cashflow System — bold editorial application theme */
+:root{
+  --gold:#d7a72f!important;--gold-l:#e3ba52!important;--gold-d:#a77809!important;
+  --bg:#f4f4f1!important;--white:#fff!important;--bg3:#ecece8!important;--bg4:#dfdfd9!important;
+  --text:#080808!important;--muted:#60605b!important;--dim:#92928b!important;
+  --border:#d7d7d1!important;--border-acc:rgba(215,167,47,.45)!important;--bacc:rgba(215,167,47,.45)!important;
+  --black:#080808!important;--rose:#d7a72f!important;--rose-bg:rgba(215,167,47,.09)!important;
+  --font-d:'Inter',sans-serif!important;--font-b:'Inter',sans-serif!important;
+  --fd:'Inter',sans-serif!important;--fb:'Inter',sans-serif!important;--fm:ui-monospace,SFMono-Regular,Menlo,monospace!important;
+  --r:16px!important;
+}
+body{font-family:'Inter',sans-serif!important;color:#080808!important;background:#f4f4f1!important}
+
+/* Sign in */
+.shell{border-radius:28px!important;overflow:hidden!important;box-shadow:0 28px 90px rgba(0,0,0,.16)!important}
+.left{background:#080808!important;padding:3.25rem!important}
+.left::before{width:330px!important;height:330px!important;border:70px solid rgba(215,167,47,.08)!important;top:-110px!important;right:-130px!important}
+.left::after{background:#d7a72f!important;border:0!important;width:120px!important;height:120px!important;bottom:-55px!important;left:-35px!important}
+.logo,.sb-logo,.pg-title,.page-title,.right-title,.left-title{font-family:'Inter',sans-serif!important}
+.logo{font-size:1.25rem!important;font-weight:900!important;letter-spacing:-.05em!important}
+.left-title{font-size:3.6rem!important;font-weight:900!important;line-height:.88!important;letter-spacing:-.075em!important}
+.left-title em{font-style:normal!important}
+.right{padding:3.5rem!important}
+.right-eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-weight:800!important;color:#896504!important}
+.right-title{font-size:2.5rem!important;font-weight:900!important;letter-spacing:-.06em!important;line-height:1!important}
+.rule{height:6px!important;width:64px!important;background:#d7a72f!important}
+.finput,.btn-google{border-radius:13px!important;min-height:54px!important}
+.finput{background:#f5f5f2!important;border-color:#d2d2cc!important}
+.finput:focus{background:#fff!important;border-color:#080808!important;box-shadow:0 0 0 4px rgba(215,167,47,.2)!important}
+.btn-sign{border-radius:999px!important;background:#080808!important;min-height:52px!important;font-weight:800!important}
+.password-toggle{border-radius:9px!important}
+
+/* App shells and navigation */
+#sidebar,#sb{background:#080808!important;border-right:0!important;color:#fff!important}
+.sb-logo-wrap,.sb-top{border-color:#292929!important}
+.sb-logo{font-size:1.18rem!important;font-weight:900!important;letter-spacing:-.045em!important;color:#fff!important}
+.sb-prod,.sb-section,.sb-sec{color:#777!important;font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-weight:800!important}
+.sb-plan-tag,.sb-tag{border-radius:999px!important;background:#d7a72f!important;color:#080808!important;font-weight:800!important}
+.sb-item,.nav-item{color:#aaa!important;border-left:0!important;margin:.12rem .7rem!important;padding:.72rem .8rem!important;border-radius:11px!important}
+.sb-item:hover,.nav-item:hover{background:#1d1d1d!important;color:#fff!important}
+.sb-item.active,.nav-item.on{background:#fff!important;color:#080808!important;border-left:0!important;font-weight:800!important}
+.sb-footer,.sb-foot{border-color:#292929!important}
+.sb-biz,.sb-user,.sb-urole{color:#aaa!important}
+.sb-biz strong,.sb-uname{color:#fff!important}
+.btn-upgrade,.btn-up{border-radius:999px!important;background:#d7a72f!important;color:#080808!important;font-weight:800!important}
+.btn-sign-out,.btn-back-Studio{border-radius:999px!important;background:transparent!important}
+.top-bar,.topbar{border-bottom:1px solid #d7d7d1!important;box-shadow:none!important;padding:1rem 2rem!important}
+.page-title,.pg-title{font-weight:900!important;letter-spacing:-.04em!important}
+.page-sub,.pg-sub{font-size:.68rem!important}
+.top-badge,.tb-badge,.growth-trial-pill{border-radius:999px!important;font-weight:800!important}
+.content{background:#f4f4f1!important}
+
+/* Cards, summaries, reports and charts */
+.kpi-card,.kpi,.sum-item,.chart-card,.table-card,.card,.rep-card,.db-greeting,.modal,.modal-box,.settings-section,.ins-card{border-color:#d7d7d1!important;border-radius:18px!important;box-shadow:none!important}
+.kpi-card,.kpi{border-top:0!important;padding:1.35rem!important}
+.kpi-card::before,.kpi::before{content:'';display:block;width:32px;height:5px;background:#d7a72f;margin-bottom:.8rem}
+.kpi-label,.kpi-lbl,.sum-label,.sum-lbl,.db-section-label{font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-weight:800!important}
+.kpi-val,.sum-val,.chart-card-title,.chart-title,.table-title,.card-title,.ch-title,.db-greet-h,.greet-h{font-family:'Inter',sans-serif!important;font-weight:850!important;letter-spacing:-.045em!important}
+.kpi-val,.sum-val{font-variant-numeric:tabular-nums!important}
+.table-card{border-left:0!important;overflow:hidden!important}
+.table-header,.card-head{padding:1.1rem 1.25rem!important}
+th{background:#080808!important;font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-weight:800!important}
+td{background:#fff!important}
+tr:hover td{background:#f1f1ed!important}
+.sum-bar,.sumbar{gap:12px!important;background:transparent!important}
+.sum-item,.sum-i{border:1px solid #d7d7d1!important;border-radius:16px!important}
+.greeting{background:#080808!important;border-radius:20px!important}
+.db-greeting{border-left:6px solid #d7a72f!important}
+
+/* Controls and dialogs */
+.btn-act,.btn-primary,.btn-save,.btn-black,.btn-add,.btn-dark{border-radius:999px!important;background:#080808!important;font-weight:800!important}
+.btn-act-outline,.btn-outline,.btn-secondary{border-radius:999px!important}
+input,select,textarea{border-radius:11px!important}
+input:focus,select:focus,textarea:focus{border-color:#080808!important;box-shadow:0 0 0 4px rgba(215,167,47,.2)!important}
+.modal-overlay{background:rgba(0,0,0,.58)!important;backdrop-filter:blur(9px)!important}
+.modal,.modal-box{overflow:hidden!important}
+.modal-head,.modal-header{border-bottom:1px solid #d7d7d1!important}
+.pill{border-radius:999px!important}
+
+@media(max-width:760px){
+  .shell{border-radius:0!important}
+  .right{padding:1.35rem 1rem 2rem!important}
+  .right-title{font-size:2.2rem!important}
+  #sidebar,#sb{background:#080808!important}
+  .content{padding:1rem!important}
+  .top-bar,.topbar{padding:.8rem 1rem!important}
+  .kpi-card,.kpi,.sum-item,.sum-i,.chart-card,.table-card,.card,.rep-card{border-radius:14px!important}
+}
