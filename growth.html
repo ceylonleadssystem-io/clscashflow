@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260730-bank-save"></script>
+<script src="assets/platform.js?v=20260801-manual-billing"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -764,7 +764,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 }
 #print-inv{display:none}
 </style>
-<link rel="stylesheet" href="assets/editorial-app.css?v=20260801-responsive">
+<link rel="stylesheet" href="assets/editorial-app.css?v=20260801-payroll">
 </head>
 <body>
 
@@ -913,7 +913,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="view" id="view-expenses">
       <div class="help"><b>Expenses</b> — Everything you spend to run your business. Rent, electricity, packaging, marketing, and more.</div>
       <div class="sumbar c3" id="exp-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">All Expenses</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-exp')">+ Add Expense</button></div></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Paid To</th><th>Category</th><th class="tr">Amount (LKR)</th></tr></thead><tbody id="exp-body"></tbody></table></div></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Expenses</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('expenses')">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-exp')">+ Add Expense</button></div></div><div class="cashflow-filter-tools"><div><label for="exp-from">From Date</label><input class="fi" type="date" id="exp-from" onchange="renderExpenses()"></div><div><label for="exp-to">To Date</label><input class="fi" type="date" id="exp-to" onchange="renderExpenses()"></div><div><label for="exp-sort">Sort</label><select class="fi" id="exp-sort" onchange="renderExpenses()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div><div><label for="exp-category-filter">Category</label><select class="fi" id="exp-category-filter" onchange="renderExpenses()"><option value="">All Categories</option></select></div><button class="btn bo" onclick="window.clearBusinessExpenseFilters()">Clear</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Paid To</th><th>Category</th><th class="tr">Amount (LKR)</th></tr></thead><tbody id="exp-body"></tbody></table></div></div>
     </div>
 
     <!-- INVOICES -->
@@ -957,7 +957,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="help"><b>Staff &amp; Payroll</b> — Manage employees, Sri Lanka EPF/ETF and APIT, salary payments, and payroll history.</div>
       <div class="sumbar c4" id="payroll-sum"></div>
       <div class="card">
-        <div class="card-head"><span class="card-title">Employee Payroll</span><button class="btn bd" onclick="window.openPayrollMo()">+ Add Staff</button></div>
+        <div class="card-head"><span class="card-title">Employee Payroll</span><div class="card-actions"><button class="btn bo" onclick="window.downloadMonthlyPayrollReport()">↓ Monthly Payroll PDF</button><button class="btn bd" onclick="window.openPayrollMo()">+ Add Staff</button></div></div>
         <div class="cashflow-filter-tools"><div><label for="payroll-search">Search</label><input class="fi" id="payroll-search" placeholder="Name, employee ID or department" oninput="renderPayroll()"></div><div><label for="payroll-status">Staff Status</label><select class="fi" id="payroll-status" onchange="renderPayroll()"><option value="active">Active Staff</option><option value="all">All Staff</option><option value="inactive">Inactive Staff</option></select></div><div><label for="payroll-month">Payroll Month</label><input class="fi" type="month" id="payroll-month" onchange="renderPayroll()"></div><button class="btn bo" onclick="window.clearPayrollFilters()">Clear</button></div>
         <div class="table-wrap"><table><thead><tr><th>Employee</th><th>Department</th><th class="tr">Gross</th><th class="tr">Net Salary</th><th class="tr">EPF / ETF</th><th class="tr">APIT</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="payroll-body"></tbody></table></div>
       </div>
@@ -1128,7 +1128,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="plan-item"><span class="plan-item-check">✓</span>More Invoice Templates</div>
                 <div class="plan-item"><span class="plan-item-check">✓</span>Manual Payment Reminders</div>
               </div>
-              <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business with Genie</button>
+              <button onclick="window.clsStartCurrentPlanPayment&&window.clsStartCurrentPlanPayment()" style="margin-top:1.15rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Pay Business by Bank Transfer</button>
               <button onclick="window.startBusinessTour()" style="margin-top:.5rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Show Business Tour</button>
               <button onclick="window.goBackToStudio(this)" style="margin-top:.5rem;width:100%;background:#fff;color:var(--black);border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">← Back to Studio</button>
               <button onclick="window.showToast('Priority support is included with Business.')" style="margin-top:.5rem;width:100%;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.22);padding:.65rem;font-family:var(--fb);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:var(--r)">Priority Support</button>
@@ -2151,7 +2151,7 @@ window.exportCSV = function exportCSV(type) {
   var name = type + '-export.csv';
   if (type === 'expenses') {
     rows = [['Date','Description','Paid To','Category','Amount']];
-    D.exps.forEach(function(e) { rows.push([e.date,e.desc,e.vendor,e.cat,e.amount]); });
+    businessVisibleExpenses().forEach(function(e) { rows.push([e.date,e.desc,e.vendor,e.cat,e.amount]); });
     name = 'business-expenses.csv';
   } else if (type === 'invoices') {
     rows = [['Invoice','Customer','Date','Due','Status','Total','Paid','Outstanding']];
@@ -2291,10 +2291,44 @@ window.commitPayrollPayment=function(){
 window.togglePayrollStaff=function(id){var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;p.active=p.active===false;saveData();renderPayroll();};
 window.deletePayrollStaff=function(id){var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p||!confirm('Delete '+p.name+'? Payment history will also be removed.'))return;D.staff=D.staff.filter(function(x){return String(x.id)!==String(id);});saveData();renderPayroll();};
 window.clearPayrollFilters=function(){setFieldValue('payroll-search','');setFieldValue('payroll-status','active');setFieldValue('payroll-month',businessPayrollMonth());renderPayroll();};
+async function ensurePayrollPdfLibrary(){
+  if(window.jspdf&&window.jspdf.jsPDF)return true;
+  if(window.clsLoadScriptOnce)await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','cls-jspdf');
+  return !!(window.jspdf&&window.jspdf.jsPDF);
+}
+function payrollPdfHeader(doc,title,month){
+  var biz=D.settings.biz||'Your Business';
+  try{if(D.settings.logo&&/^data:image\//.test(D.settings.logo)){var logoFormat=/^data:image\/jpe?g/i.test(D.settings.logo)?'JPEG':'PNG';doc.addImage(D.settings.logo,logoFormat,42,28,54,42);}}catch(e){}
+  doc.setTextColor(8,8,8);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(biz,108,46);
+  doc.setFontSize(9);doc.setTextColor(96,96,91);doc.text(String(D.settings.addr||''),108,61);
+  doc.setFillColor(8,8,8);doc.rect(42,84,doc.internal.pageSize.getWidth()-84,48,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(18);doc.text(title,58,108);
+  doc.setTextColor(215,167,47);doc.setFontSize(10);doc.text(String(month||''),doc.internal.pageSize.getWidth()-58,108,{align:'right'});
+}
+async function buildEmployeePayslipDoc(person,month){
+  if(!(await ensurePayrollPdfLibrary()))throw new Error('PDF tools could not be loaded.');
+  var doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'}),c=businessPayrollCalc(person),x=52,y=168,w=491;
+  payrollPdfHeader(doc,'EMPLOYEE PAYSLIP',month);
+  doc.setTextColor(8,8,8);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(person.name||'Employee',x,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(96,96,91);doc.text([person.employeeId||'',person.role||'',person.department||'',person.email||''].filter(Boolean).join('  ·  '),x,y+17);
+  y+=48;doc.setDrawColor(215,215,209);doc.line(x,y,w+x,y);y+=25;
+  var rows=[['Basic salary / EPF base',toNum(person.basicSalary)],['Fixed allowances',toNum(person.allowances)],['Gross earnings',c.gross],['Employee EPF deduction',-c.employeeEpf],['APIT / PAYE',-c.apit],['Other deductions',-toNum(person.deductions)],['NET SALARY',c.net],['Employer EPF',c.employerEpf],['Employer ETF',c.etf],['TOTAL EMPLOYER COST',c.ctc]];
+  rows.forEach(function(row,i){var total=i===6||i===9;if(total){doc.setFillColor(i===6?215:8,i===6?167:8,i===6?47:8);doc.rect(x,y-15,w,29,'F');doc.setTextColor(i===6?8:255,i===6?8:255,i===6?8:255);}else doc.setTextColor(50,50,48);doc.setFont('helvetica',total?'bold':'normal');doc.setFontSize(total?11:9);doc.text(row[0],x+10,y);doc.text(fmt(row[1]),x+w-10,y,{align:'right'});y+=total?38:27;});
+  doc.setTextColor(96,96,91);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('Generated by Cashflow System · '+new Date().toLocaleString('en-LK'),x,760);
+  return doc;
+}
+window.downloadPayrollPayslip=async function(id){try{var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;var month=payrollField('payroll-month')||businessPayrollMonth(),doc=await buildEmployeePayslipDoc(p,month);doc.save('Payslip-'+month+'-'+String(p.name||'Employee').replace(/[^A-Za-z0-9_-]+/g,'-')+'.pdf');}catch(e){showToast(e.message||'Could not create payslip.','err');}};
+window.emailPayrollPayslip=async function(id){
+  var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;if(!p.email){showToast('Add the employee email before sending a payslip.','err');return;}
+  try{showToast('Preparing payslip email…','ok');var month=payrollField('payroll-month')||businessPayrollMonth(),doc=await buildEmployeePayslipDoc(p,month),pdfBase64=doc.output('datauristring').split(',')[1];var res=await fetch('/.netlify/functions/send-payslip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:p.email,employeeName:p.name,businessName:D.settings.biz||'Your Business',replyTo:D.settings.email||'',month:month,netSalary:fmt(businessPayrollCalc(p).net),pdfBase64:pdfBase64})});var out=await res.json().catch(function(){return{};});if(!res.ok||!out.sent)throw new Error(out.error||'Payslip email failed.');showToast('Payslip emailed to '+p.email+'.','ok');}catch(e){showToast(e.message||'Could not email payslip.','err');}
+};
+window.downloadMonthlyPayrollReport=async function(){
+  try{if(!(await ensurePayrollPdfLibrary()))throw new Error('PDF tools could not be loaded.');var month=payrollField('payroll-month')||businessPayrollMonth(),people=(D.staff||[]).filter(function(p){return p.active!==false;}),doc=new window.jspdf.jsPDF({unit:'pt',format:'a4',orientation:'landscape'});payrollPdfHeader(doc,'CONSOLIDATED MONTHLY PAYROLL',month);var y=158,cols=[42,180,270,350,430,510,590,675,755];doc.setFillColor(235,231,222);doc.rect(42,y-15,758,26,'F');doc.setTextColor(8,8,8);doc.setFont('helvetica','bold');doc.setFontSize(8);['Employee','Department','Gross','Emp. EPF','Employer EPF','ETF','APIT','Deductions','Net salary'].forEach(function(h,i){doc.text(h,cols[i],y);});y+=28;var totals={gross:0,employeeEpf:0,employerEpf:0,etf:0,apit:0,deductions:0,net:0,ctc:0};people.forEach(function(p){if(y>545){doc.addPage();payrollPdfHeader(doc,'CONSOLIDATED MONTHLY PAYROLL',month);y=158;}var c=businessPayrollCalc(p);Object.keys(totals).forEach(function(k){totals[k]+=k==='deductions'?toNum(p.deductions):toNum(c[k]);});doc.setFont('helvetica','normal');doc.setFontSize(8);[p.name,p.department||'—',fmt(c.gross),fmt(c.employeeEpf),fmt(c.employerEpf),fmt(c.etf),fmt(c.apit),fmt(toNum(p.deductions)),fmt(c.net)].forEach(function(v,i){doc.text(String(v),cols[i],y,{maxWidth:i<2?82:72});});y+=23;});y+=8;doc.setDrawColor(8,8,8);doc.line(42,y,800,y);y+=23;doc.setFont('helvetica','bold');doc.text('TOTALS',42,y);[totals.gross,totals.employeeEpf,totals.employerEpf,totals.etf,totals.apit,totals.deductions,totals.net].forEach(function(v,i){doc.text(fmt(v),cols[i+2],y);});y+=34;doc.setFillColor(8,8,8);doc.rect(560,y-17,240,32,'F');doc.setTextColor(255,255,255);doc.text('TOTAL EMPLOYER COST',574,y);doc.setTextColor(215,167,47);doc.text(fmt(totals.ctc),786,y,{align:'right'});doc.save('Monthly-Payroll-'+month+'.pdf');}catch(e){showToast(e.message||'Could not create payroll report.','err');}
+};
 function renderPayroll(){
   D.staff=Array.isArray(D.staff)?D.staff:[];var monthEl=document.getElementById('payroll-month');if(monthEl&&!monthEl.value)monthEl.value=businessPayrollMonth();var search=String(payrollField('payroll-search')).toLowerCase(),status=payrollField('payroll-status')||'active',month=payrollField('payroll-month')||businessPayrollMonth();
   var active=D.staff.filter(function(p){return p.active!==false;}),tot=active.reduce(function(a,p){var c=businessPayrollCalc(p);a.gross+=c.gross;a.net+=c.net;a.stat+=c.employeeEpf+c.employerEpf+c.etf+c.apit;return a;},{gross:0,net:0,stat:0});var sum=document.getElementById('payroll-sum');if(sum)sum.innerHTML=sumItem('Active Staff',active.length)+sumItem('Gross Payroll',fmt(tot.gross))+sumItem('Net Salaries',fmt(tot.net),'var(--green)')+sumItem('EPF / ETF / APIT',fmt(tot.stat),'var(--gold)');
-  var list=D.staff.filter(function(p){var hay=[p.name,p.employeeId,p.department,p.role].join(' ').toLowerCase();return(!search||hay.indexOf(search)>-1)&&(status==='all'||(status==='active'&&p.active!==false)||(status==='inactive'&&p.active===false));});var body=document.getElementById('payroll-body');if(body)body.innerHTML=list.map(function(p){var c=businessPayrollCalc(p),paid=(p.payments||[]).some(function(x){return x.month===month;});return '<tr><td><b>'+escHtml(p.name)+'</b><br><span class="muted">'+escHtml(p.employeeId||'')+' · '+escHtml(p.role||'')+'</span></td><td>'+escHtml(p.department||'—')+'</td><td class="tr">'+fmt(c.gross)+'</td><td class="tr">'+fmt(c.net)+'</td><td class="tr">'+fmt(c.employeeEpf+c.employerEpf+c.etf)+'</td><td class="tr">'+fmt(c.apit)+'</td><td><span class="pill '+(p.active===false?'pdr':paid?'pse':'pi')+'">'+(p.active===false?'Inactive':paid?'Paid':'Pending')+'</span></td><td class="tr"><button class="bsm" onclick="window.openPayrollMo(\''+p.id+'\')">Edit</button> <button class="bsm" onclick="window.openPayrollPayment(\''+p.id+'\')">Pay</button> <button class="bsm" onclick="window.togglePayrollStaff(\''+p.id+'\')">'+(p.active===false?'Activate':'Deactivate')+'</button> <button class="bsm" onclick="window.deletePayrollStaff(\''+p.id+'\')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="8" style="text-align:center;padding:2rem">No staff match these filters.</td></tr>';
+  var list=D.staff.filter(function(p){var hay=[p.name,p.employeeId,p.department,p.role].join(' ').toLowerCase();return(!search||hay.indexOf(search)>-1)&&(status==='all'||(status==='active'&&p.active!==false)||(status==='inactive'&&p.active===false));});var body=document.getElementById('payroll-body');if(body)body.innerHTML=list.map(function(p){var c=businessPayrollCalc(p),paid=(p.payments||[]).some(function(x){return x.month===month;});return '<tr><td><b>'+escHtml(p.name)+'</b><br><span class="muted">'+escHtml(p.employeeId||'')+' · '+escHtml(p.role||'')+'</span></td><td>'+escHtml(p.department||'—')+'</td><td class="tr">'+fmt(c.gross)+'</td><td class="tr">'+fmt(c.net)+'</td><td class="tr">'+fmt(c.employeeEpf+c.employerEpf+c.etf)+'</td><td class="tr">'+fmt(c.apit)+'</td><td><span class="pill '+(p.active===false?'pdr':paid?'pse':'pi')+'">'+(p.active===false?'Inactive':paid?'Paid':'Pending')+'</span></td><td class="tr payroll-actions"><button class="bsm" onclick="window.downloadPayrollPayslip(\''+p.id+'\')">PDF</button> <button class="bsm bsmem" onclick="window.emailPayrollPayslip(\''+p.id+'\')">Email</button> <button class="bsm" onclick="window.openPayrollMo(\''+p.id+'\')">Edit</button> <button class="bsm" onclick="window.openPayrollPayment(\''+p.id+'\')">Pay</button> <button class="bsm" onclick="window.togglePayrollStaff(\''+p.id+'\')">'+(p.active===false?'Activate':'Deactivate')+'</button> <button class="bsm" onclick="window.deletePayrollStaff(\''+p.id+'\')">Delete</button></td></tr>';}).join('')||'<tr><td colspan="8" style="text-align:center;padding:2rem">No staff match these filters.</td></tr>';
   var history=[];D.staff.forEach(function(p){(p.payments||[]).forEach(function(x){history.push(Object.assign({employee:p.name},x));});});history.sort(function(a,b){return String(b.date).localeCompare(String(a.date));});var hb=document.getElementById('payroll-history');if(hb)hb.innerHTML=history.map(function(x){return '<tr><td>'+escHtml(formatDateHuman(x.date))+'</td><td>'+escHtml(x.month)+'</td><td>'+escHtml(x.employee)+'</td><td>'+escHtml(x.method)+'</td><td>'+escHtml(x.reference)+'</td><td class="tr">'+fmt(x.amount)+'</td></tr>';}).join('')||'<tr><td colspan="6" style="text-align:center;padding:2rem">No payroll payments yet.</td></tr>';
 }
 
@@ -2780,22 +2814,29 @@ window.clearBusinessCashflowFilters = function clearBusinessCashflowFilters() {
   renderCashflow();
 };
 
+function businessVisibleExpenses() {
+  var from=(document.getElementById('exp-from')||{}).value||'',to=(document.getElementById('exp-to')||{}).value||'',category=(document.getElementById('exp-category-filter')||{}).value||'',sort=(document.getElementById('exp-sort')||{}).value||'date-desc';
+  return D.exps.filter(function(e){return(!from||String(e.date)>=from)&&(!to||String(e.date)<=to)&&(!category||e.cat===category);}).slice().sort(function(a,b){if(sort==='date-asc')return String(a.date).localeCompare(String(b.date));if(sort==='amount-desc')return toNum(b.amount)-toNum(a.amount);if(sort==='amount-asc')return toNum(a.amount)-toNum(b.amount);return String(b.date).localeCompare(String(a.date));});
+}
 function renderExpenses() {
-  var total = D.exps.reduce(function(a,e) { return a+e.amount; }, 0);
+  var categorySelect=document.getElementById('exp-category-filter');if(categorySelect){var selected=categorySelect.value,categories=Array.from(new Set(D.exps.map(function(e){return e.cat;}).filter(Boolean))).sort();categorySelect.innerHTML='<option value="">All Categories</option>'+categories.map(function(cat){return '<option value="'+escHtml(cat)+'">'+escHtml(cat)+'</option>';}).join('');categorySelect.value=selected;}
+  var visible=businessVisibleExpenses();
+  var total = visible.reduce(function(a,e) { return a+e.amount; }, 0);
   var cats = {};
-  D.exps.forEach(function(e) { cats[e.cat] = (cats[e.cat]||0) + e.amount; });
+  visible.forEach(function(e) { cats[e.cat] = (cats[e.cat]||0) + e.amount; });
   var top = Object.entries(cats).sort(function(a,b) { return b[1]-a[1]; })[0];
 
   document.getElementById('exp-sum').innerHTML =
     sumItem('Total Expenses', fmt(total), 'var(--red)') +
-    sumItem('No. of Transactions', D.exps.length + '') +
+    sumItem('No. of Transactions', visible.length + '') +
     sumItem('Top Category', top ? top[0] : '—');
 
-  document.getElementById('exp-body').innerHTML = D.exps.map(function(e) {
+  document.getElementById('exp-body').innerHTML = visible.map(function(e) {
     var meta = (e.ref ? 'Ref: ' + escHtml(e.ref) : '') + (e.slipName ? (e.ref ? ' · ' : '') + 'Slip: ' + escHtml(e.slipName) : '');
     return '<tr><td>' + escHtml(e.date) + '</td><td>' + escHtml(e.desc) + (meta ? '<div class="form-note">' + meta + '</div>' : '') + '</td><td>' + escHtml(e.vendor || '—') + '</td><td><span style="background:var(--bg3);padding:.1rem .4rem;font-size:.68rem">' + escHtml(e.cat) + '</span></td><td class="tr mono neg">− ' + fmt(e.amount) + '</td></tr>';
-  }).join('') || emptyRow(5, 'No expenses recorded', 'Add operating costs, supplier bills, rent, marketing, utilities, and other operations costs here.', 'Add Expense', "window.openMo('mo-exp')");
+  }).join('') || emptyRow(5, D.exps.length?'No expenses in this date range':'No expenses recorded', D.exps.length?'Change or clear the date filters to see more expenses.':'Add operating costs, supplier bills, rent, marketing, utilities, and other operations costs here.', D.exps.length?'Clear Filters':'Add Expense', D.exps.length?'window.clearBusinessExpenseFilters()':"window.openMo('mo-exp')");
 }
+window.clearBusinessExpenseFilters=function(){['exp-from','exp-to','exp-category-filter'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});var sort=document.getElementById('exp-sort');if(sort)sort.value='date-desc';renderExpenses();};
 
 function invoiceStatus(i) {
   var balance = toNum(i.total) - toNum(i.paid);
@@ -2869,9 +2910,9 @@ function renderInvoices() {
       ? '<button class="bsm bsmem" title="Send paid receipt" onclick="window.emailPaidReceipt(\'' + safeId + '\')">Send receipt</button>'
       : '<button class="bsm bsmgr" title="Record payment" onclick="window.openPayMo(\'' + safeId + '\')">' + (displayStatus === 'partial' ? 'Add payment' : 'Record payment') + '</button>';
     var actions = primaryAction +
-      '<button class="bsm invoice-icon-action" title="Open PDF" aria-label="Open PDF" onclick="window.printInv(\'' + safeId + '\')">↓</button>' +
-      '<button class="bsm bsmem invoice-icon-action" title="Send status-aware email" aria-label="Send email" onclick="window.emailInv(\'' + safeId + '\')">✉</button>' +
-      '<button class="bsm bsmwa invoice-icon-action" title="Send status-aware WhatsApp message" aria-label="Send WhatsApp message" onclick="window.waInvoiceWithPDF(\'' + safeId + '\')">●</button>' +
+      '<button class="bsm invoice-icon-action" title="Open PDF" aria-label="Open PDF" onclick="window.printInv(\'' + safeId + '\')">↓ PDF</button>' +
+      '<button class="bsm bsmem invoice-icon-action" title="Send status-aware email" aria-label="Send email" onclick="window.emailInv(\'' + safeId + '\')">✉ Email</button>' +
+      '<button class="bsm bsmwa invoice-icon-action" title="Send status-aware WhatsApp message" aria-label="Send WhatsApp message" onclick="window.waInvoiceWithPDF(\'' + safeId + '\')">WA</button>' +
       '<details class="invoice-more"><summary title="More actions" aria-label="More actions">⋯</summary><div class="invoice-more-menu"><button class="bsm" onclick="window.editInv(\'' + safeId + '\')">Edit invoice</button><button class="bsm danger" onclick="window.deleteInv(\'' + safeId + '\')">Delete</button></div></details>';
     var reminderMeta = window.clsInvoiceReminderMeta ? window.clsInvoiceReminderMeta(i) : '';
     return '<tr><td class="mono gld" style="font-size:.77rem">' + escHtml(i.id) + (reminderMeta ? '<div style="font-family:var(--fb);font-size:.62rem;color:var(--muted);margin-top:.3rem;white-space:nowrap">' + escHtml(reminderMeta) + '</div>' : '') + '</td><td><div class="invoice-customer">' + escHtml(i.client) + '</div></td><td>' + escHtml(formatDateHuman(i.date)) + '</td><td>' + escHtml(formatDateHuman(i.due)) + '</td><td><span class="pill ' + sc + '">' + escHtml(displayStatus) + '</span></td><td>' + payBar + '</td><td class="invoice-amount">' + fmt(i.total) + '</td><td><div class="invoice-actions clean">' + actions + '</div></td></tr>';
@@ -4822,7 +4863,7 @@ _fauth.onAuthStateChanged(async function(user) {
     _trialEnd = trialEnd;
     _isPaid = isPaid;
     if (isPaused) { if (window.clsRenderAccountPaused) window.clsRenderAccountPaused(_profile, { plan: 'business' }); return; }
-    if (now > trialEnd && !isPaid) { showPaywall(_profile); return; }
+    if (now.getTime() > trialEnd.getTime() + 86400000 && !isPaid) { showPaywall(_profile); return; }
 
     // Merge profile into D.settings
     if (_profile.bizName) D.settings.biz = _profile.bizName;

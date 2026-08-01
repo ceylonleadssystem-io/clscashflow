@@ -80,6 +80,12 @@ input:focus,select:focus,textarea:focus{border-color:#080808!important;box-shado
 .modal,.modal-box{overflow:hidden!important}
 .modal-head,.modal-header{border-bottom:1px solid #d7d7d1!important}
 .pill{border-radius:999px!important}
+#view-invoices .invoice-actions.clean{grid-template-columns:minmax(118px,1fr) repeat(3,minmax(64px,auto)) 42px!important;max-width:none!important}
+#view-invoices .invoice-icon-action{font-size:.6rem!important;white-space:nowrap!important;padding:0 .55rem!important}
+#view-invoices .invoice-more[open]{z-index:100!important}
+#view-invoices tr:has(.invoice-more[open]),#view-invoices td:has(.invoice-more[open]),#view-invoices .table-wrap:has(.invoice-more[open]),#view-invoices .card:has(.invoice-more[open]){overflow:visible!important;position:relative!important;z-index:60!important}
+#view-invoices .invoice-more-menu{z-index:200!important;min-width:150px!important;border-radius:10px!important}
+.payroll-actions{display:flex!important;justify-content:flex-end!important;gap:.3rem!important;flex-wrap:wrap!important}
 
 @media(max-width:760px){
   .shell{border-radius:0!important}

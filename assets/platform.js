@@ -10,8 +10,7 @@
       monthlyPrice: 3500,
       price: 36000,
       file: 'solo.html',
-      monthlyPayLink: 'https://paylink.geniebiz.lk/JgLRmPDlzb',
-      annualPayLink: 'https://paylink.geniebiz.lk/r9Qm3Plxa2'
+      monthlyPayLink: '', annualPayLink: ''
     },
     studio: {
       name: 'Studio',
@@ -20,8 +19,7 @@
       monthlyPrice: 5500,
       price: 60000,
       file: 'starter.html',
-      monthlyPayLink: 'https://paylink.geniebiz.lk/eoqQAbG61x',
-      annualPayLink: 'https://paylink.geniebiz.lk/yjELmYAPOJ'
+      monthlyPayLink: '', annualPayLink: ''
     },
     business: {
       name: 'Business',
@@ -30,12 +28,12 @@
       monthlyPrice: 8500,
       price: 94800,
       file: 'growth.html',
-      monthlyPayLink: 'https://paylink.geniebiz.lk/DmwLnMeMwJ',
-      annualPayLink: 'https://paylink.geniebiz.lk/rZN6y8VLoq'
+      monthlyPayLink: '', annualPayLink: ''
     }
   };
   var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
   var BILLING_ID = 'cls-billing-widget';
+  var CLS_BANK = {accountName:'Ceylonry Life Care',bank:'Commercial Bank',accountNumber:'1001069904',branch:'City Office',email:'accounts@ceylonrylabs.io'};
   var SUPPORT_ID = 'cls-support-widget';
   var DANGER_ID = 'cls-danger-zone-widget';
   var DEFAULT_INVOICE_FOOTER = 'Invoice by Cashflow System - Ceylonry Labs.io';
@@ -240,6 +238,8 @@
   function isProfilePaidRecord(profile) {
     profile = profile || {};
     var status = String(profile.subscriptionStatus || '').toLowerCase();
+    var due = dateMs(profile.nextPaymentDue || profile.subscriptionCurrentPeriodEnd);
+    if (due && Date.now() > due + 86400000) return false;
     return profile.paid === true || status === 'active' || status === 'manual-paid';
   }
 
@@ -1383,22 +1383,7 @@
   }
 
   window.clsOpenGeniePayment = function clsOpenGeniePayment(plan, cycle, opts) {
-    opts = opts || {};
-    var profile = opts.profile || window._profile || null;
-    plan = bestPlan(profile, plan || opts.plan);
-    cycle = cycle === 'monthly' ? 'monthly' : 'annual';
-    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
-    var url = paymentLinkFor(profile, plan, cycle);
-    var btn = opts.button || (document.activeElement && document.activeElement.tagName ? document.activeElement : null);
-    if (!url) {
-      window.clsOpenPlanWhatsApp(plan, profile);
-      return;
-    }
-    if (btn && 'disabled' in btn) {
-      btn.disabled = true;
-      btn.textContent = 'Opening Genie...';
-    }
-    window.location.href = url;
+    opts=opts||{};return window.clsOpenBankTransferPayment(plan,opts.profile||window._profile||{});
   };
 
   window.clsStartPayableCheckout = async function clsStartPayableCheckout(plan, opts) {
@@ -1584,13 +1569,13 @@
     ov.innerHTML =
       '<div style="background:#fff;max-width:540px;width:100%;padding:3rem;text-align:center;color:#1a1714;">' +
         '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2rem;font-weight:300;margin-bottom:.55rem">Payment required</div>' +
-        '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">' + trialText + '<br>Pay your <strong>CLS ' + details.name + '</strong> monthly package through Genie to continue using your dashboard and data.</div>' +
+        '<div style="font-size:.86rem;color:#6B6258;line-height:1.7;margin-bottom:1.6rem">' + trialText + '<br>Pay your <strong>CLS ' + details.name + '</strong> monthly package by bank transfer to continue using your dashboard and data.</div>' +
         '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.25);padding:1.45rem;margin-bottom:1.5rem">' +
           '<div style="font-family:Cormorant Garamond,Georgia,serif;font-size:2.25rem;font-weight:300">' + money(details.monthlyPrice) + '<span style="font-size:1rem;color:#6B6258">/mo</span></div>' +
           '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + details.name + ' Plan · annual option ' + money(details.price) + '</div>' +
         '</div>' +
         '<div id="cls-payment-request-token" style="background:#fff8ea;border:1px solid rgba(184,146,42,.28);padding:.8rem 1rem;margin:-.5rem 0 1rem;color:#6B6258;font-size:.74rem;line-height:1.55">Creating a manual payment request for admin...</div>' +
-        '<button id="cls-genie-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay monthly with Genie</button>' +
+        '<button id="cls-genie-action" type="button" style="display:block;width:100%;background:#1a1714;color:#fff;border:0;padding:1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-bottom:.75rem;font-family:inherit">Pay by bank transfer</button>' +
         '<button id="cls-wa-action" type="button" style="display:block;width:100%;background:#fff;color:#6B6258;border:1px solid rgba(184,146,42,.35);padding:.85rem;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;font-family:inherit">Activate via WhatsApp</button>' +
         '<button onclick="window.clsSignOut&&window.clsSignOut()" type="button" style="margin-top:1rem;background:transparent;border:0;color:#A8A29A;font-size:.72rem;cursor:pointer;font-family:inherit">Sign out</button>' +
         '<div style="font-size:.68rem;color:#A8A29A;margin-top:1rem">Your data stays saved while payment is completed.</div>' +
@@ -1606,12 +1591,42 @@
       }
     });
     document.getElementById('cls-genie-action').addEventListener('click', function() {
-      window.clsOpenGeniePayment(plan, 'monthly', { profile: profile, button: this });
+      window.clsOpenBankTransferPayment(plan, profile);
     });
     document.getElementById('cls-wa-action').addEventListener('click', function() {
       window.clsOpenPlanWhatsApp(plan, profile || { email: user && user.email });
     });
 	  };
+
+  function bankDetailsHtml() {
+    return '<div class="cls-bank-details"><strong>Bank Details</strong><div><span>Account Name</span><b>'+escapeHtml(CLS_BANK.accountName)+'</b></div><div><span>Bank</span><b>'+escapeHtml(CLS_BANK.bank)+'</b></div><div><span>Account Number</span><b>'+escapeHtml(CLS_BANK.accountNumber)+'</b></div><div><span>Branch</span><b>'+escapeHtml(CLS_BANK.branch)+'</b></div></div>';
+  }
+  function billingDueDate(profile) {
+    profile=profile||{};var recurring=profile.nextPaymentDue||profile.subscriptionCurrentPeriodEnd;var fallback=isProfilePaidRecord(profile)?'':profile.trialEnd;var ms=dateMs(recurring||fallback);
+    return ms?new Date(ms):new Date(Date.now()+30*86400000);
+  }
+  function paymentTimelineHtml(profile) {
+    var due=billingDueDate(profile),reminder=new Date(due.getTime()-5*86400000),pause=new Date(due.getTime()+86400000),fmt=function(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
+    return '<div class="cls-payment-timeline"><strong>Monthly payment timeline</strong><div><i></i><span><b>'+fmt(reminder)+'</b> · Payment reminder</span></div><div><i></i><span><b>'+fmt(due)+'</b> · Monthly payment due</span></div><div><i></i><span><b>'+fmt(pause)+'</b> · Access pauses if no slip is uploaded</span></div></div>';
+  }
+  function readReceiptFile(file) { return new Promise(function(resolve,reject){var reader=new FileReader();reader.onload=function(){resolve(String(reader.result||'').split(',')[1]||'');};reader.onerror=function(){reject(new Error('Could not read the payment slip.'));};reader.readAsDataURL(file);}); }
+  window.clsSubmitSubscriptionReceipt=async function clsSubmitSubscriptionReceipt(file, profile, plan, statusEl) {
+    profile=profile||window._profile||{};var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,user=getAuthUser();
+    if(!file)throw new Error('Choose a PDF or image of the payment slip.');
+    if(file.size>3000000)throw new Error('Payment slip must be smaller than 3 MB.');
+    var allowed=/^(application\/pdf|image\/(png|jpe?g|webp))$/i;if(!allowed.test(file.type))throw new Error('Upload a PDF, PNG, JPG, or WebP payment slip.');
+    if(statusEl)statusEl.textContent='Uploading payment slip…';
+    var base64=await readReceiptFile(file),period=new Date().toISOString().slice(0,7);
+    var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,amount:money(details.monthlyPrice),period:period})});
+    var out=await res.json().catch(function(){return{};});if(!res.ok||!out.sent)throw new Error(out.error||'Payment slip could not be sent.');
+    var next=new Date();next.setMonth(next.getMonth()+1);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),updatedAt:fieldTimestamp()};
+    var db=getFirestore(),uid=profile.ownerUid||(user&&user.uid)||profile.uid||'';if(db&&uid)await db.collection('users').doc(uid).set(update,{merge:true});Object.assign(profile,update);if(statusEl)statusEl.textContent='Thank you so much — your payment slip was sent to accounts@ceylonrylabs.io and access is active.';setTimeout(function(){var wall=document.getElementById('cls-paywall');if(wall)wall.remove();},1000);return true;
+  };
+  window.clsOpenBankTransferPayment=function clsOpenBankTransferPayment(plan,profile){
+    profile=profile||window._profile||{};plan=bestPlan(profile,plan);var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,old=document.getElementById('cls-bank-payment-modal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='cls-bank-payment-modal';wrap.className='cls-bank-modal';wrap.innerHTML='<div class="cls-bank-card"><button class="cls-bank-close" aria-label="Close">×</button><div class="cls-billing-kicker">Monthly subscription</div><h2>Pay by bank transfer</h2><p>Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> for your '+escapeHtml(details.name)+' plan, then upload the payment slip.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></label><button class="cls-bank-submit">Upload slip and continue</button><div class="cls-bank-status">The attachment will be emailed securely to '+escapeHtml(CLS_BANK.email)+'.</div></div>';document.body.appendChild(wrap);wrap.querySelector('.cls-bank-close').onclick=function(){wrap.remove();};wrap.addEventListener('click',function(e){if(e.target===wrap)wrap.remove();});wrap.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=wrap.querySelector('.cls-bank-status'),file=wrap.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Thank you — payment submitted';setTimeout(function(){wrap.remove();},1300);}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};
+  };
+  window.clsStartCurrentPlanPayment=function(){return window.clsOpenBankTransferPayment(null,window._profile||{});};
+  window.clsRenderSubscriptionPaywall=function(profile,opts){opts=opts||{};if(document.getElementById('cls-paywall'))return;var plan=bestPlan(profile,opts.plan),details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,ov=document.createElement('div');ov.id='cls-paywall';ov.className='cls-bank-modal';ov.innerHTML='<div class="cls-bank-card cls-bank-paused"><div class="cls-billing-kicker">Payment overdue</div><h2>Access is temporarily paused</h2><p>Your monthly payment is more than one day overdue. Your data is safe. Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> and upload the payment slip to continue.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></label><button class="cls-bank-submit">Upload slip and restore access</button><div class="cls-bank-status">The attachment will be emailed to '+escapeHtml(CLS_BANK.email)+'.</div><button class="cls-bank-signout" onclick="window.clsSignOut&&window.clsSignOut()">Sign out</button></div>';document.body.appendChild(ov);ov.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=ov.querySelector('.cls-bank-status'),file=ov.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Thank you — access restored';}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};};
 
   function trialStartForPrompt(profile) {
     profile = profile || {};
@@ -1688,24 +1703,24 @@
           '<button type="button" class="cls-trial-secondary" data-trial-pay-annual>Annual option</button>' +
         '</div>' +
         '<button type="button" class="cls-trial-secondary" data-trial-later style="width:100%;margin-top:.7rem">Not now</button>' +
-        '<div class="cls-trial-status" data-trial-status>We will create an admin payment request so support can follow up if the Genie link expires.</div>' +
+        '<div class="cls-trial-status" data-trial-status>We will create an admin payment request so support can follow up if the Bank transfer instructions expires.</div>' +
       '</div>';
     document.body.appendChild(ov);
 
     window.clsEnsurePaymentRequest(profile, { plan: plan, force: true, source: 'trial-day-5' }).then(function(req) {
       var status = ov.querySelector('[data-trial-status]');
-      if (status && req && req.token) status.textContent = 'Payment request token: ' + req.token + '. Admin can update the Genie link from the admin panel if it expires.';
+      if (status && req && req.token) status.textContent = 'Payment request token: ' + req.token + '. Admin can update the Bank transfer instructions from the admin panel if it expires.';
     }).catch(function() {});
 
     ov.querySelector('.cls-trial-close').addEventListener('click', function() { dismissTrialPrompt(key); });
     ov.querySelector('[data-trial-later]').addEventListener('click', function() { dismissTrialPrompt(key); });
     ov.querySelector('[data-trial-pay-monthly]').addEventListener('click', function() {
       safeSet(key, new Date().toISOString().slice(0, 10));
-      window.clsOpenGeniePayment(plan, 'monthly', { profile: profile, button: this });
+      window.clsOpenBankTransferPayment(plan, profile);
     });
     ov.querySelector('[data-trial-pay-annual]').addEventListener('click', function() {
       safeSet(key, new Date().toISOString().slice(0, 10));
-      window.clsOpenGeniePayment(plan, 'annual', { profile: profile, button: this });
+      window.clsOpenBankTransferPayment(plan, profile);
     });
   };
 
@@ -2068,6 +2083,7 @@
       '#cls-billing-widget .cls-billing-pay:hover,#cls-billing-widget .cls-billing-monthly:hover{background:#1a9e5c}' +
       '#cls-billing-widget .cls-billing-wa:hover{border-color:#B8922A;color:#B8922A}' +
       '#cls-billing-widget .cls-billing-status{margin-top:1rem;padding-top:.9rem;border-top:1px solid #E7DFD2;font-size:.74rem;color:#6B6258;line-height:1.5}' +
+      '.cls-bank-modal{position:fixed;inset:0;background:rgba(8,8,8,.78);backdrop-filter:blur(8px);z-index:10000;display:grid;place-items:center;padding:1rem;overflow:auto}.cls-bank-card{position:relative;width:min(560px,100%);background:#fff;border-radius:22px;padding:clamp(1.25rem,4vw,2.3rem);box-shadow:0 24px 80px rgba(0,0,0,.28);font-family:Inter,Arial,sans-serif}.cls-bank-card h2{font-size:clamp(1.8rem,5vw,2.7rem);letter-spacing:-.055em;line-height:1;margin:.35rem 0 .8rem}.cls-bank-card>p{color:#60605b;line-height:1.55;font-size:.88rem}.cls-bank-close{position:absolute;right:1rem;top:1rem;border:0;background:#f1f0ec;border-radius:50%;width:36px;height:36px;font-size:1.4rem;cursor:pointer}.cls-bank-details{background:#f5f2ea;border-left:4px solid #d7a72f;padding:1rem;margin:1.1rem 0}.cls-bank-details>strong,.cls-payment-timeline>strong{display:block;margin-bottom:.65rem}.cls-bank-details>div{display:flex;justify-content:space-between;gap:1rem;padding:.27rem 0;font-size:.8rem}.cls-bank-details span{color:#68645d}.cls-bank-details b{text-align:right}.cls-payment-timeline{border:1px solid #dedbd4;border-radius:14px;padding:1rem;margin:1rem 0}.cls-payment-timeline>div{display:flex;gap:.65rem;align-items:center;padding:.28rem 0;font-size:.76rem;color:#605f5a}.cls-payment-timeline i{display:block;width:9px;height:9px;border-radius:50%;background:#d7a72f;flex:0 0 auto}.cls-receipt-upload{display:grid;gap:.4rem;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-top:1rem}.cls-receipt-upload input{width:100%;border:1px dashed #b8b3a9;border-radius:12px;padding:.85rem;background:#faf9f6}.cls-bank-submit{width:100%;margin-top:.8rem;border:0;border-radius:999px;background:#080808;color:#fff;padding:1rem;font:800 .72rem Inter,Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}.cls-bank-submit:disabled{opacity:.55}.cls-bank-status{margin-top:.75rem;font-size:.72rem;line-height:1.5;color:#68645d;text-align:center}.cls-bank-signout{display:block;margin:.75rem auto 0;border:0;background:none;color:#a23d32;cursor:pointer}.cls-billing-bank{margin-top:1rem}.cls-billing-bank .cls-bank-details{margin:.7rem 0}.cls-billing-bank .cls-payment-timeline{margin:.7rem 0}' +
       '@media(min-width:1180px){#settings-billing-widgets #cls-billing-widget{padding:1.5rem 1.65rem}}' +
       '@media(max-width:760px){#settings-billing-widgets{margin-top:1rem!important}#cls-billing-widget{margin:0 0 1rem;padding:1.1rem}#cls-billing-widget .cls-billing-actions{grid-template-columns:1fr;gap:.8rem;margin-top:.2rem}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
       '@media print{#cls-billing-widget{display:none!important}}';
@@ -2093,15 +2109,9 @@
 	    var periodCopy = periodEnd && !isNaN(periodEnd.getTime())
 	      ? 'Active until ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
 	      : (paid ? 'Your paid subscription is active.' : 'You can activate before or after the trial ends.');
-	    var title = paid ? 'Billing locked to ' + details.name : 'Pay with Genie';
-	    var copy = paid
-	      ? 'Paid accounts stay on the active plan to protect billing and data access. To change plans, submit an upgrade request and CeylonryLabs will process it manually.'
-	      : 'Secure Genie payment links for your CLS ' + details.name + ' account. Use monthly after the free trial or choose annual payment from here.';
-	    var actionHtml = paid
-	      ? (nextPlan
-	        ? '<button type="button" class="cls-billing-pay" data-billing-request="' + escapeHtml(nextPlan) + '">Request ' + escapeHtml(nextDetails.name) + '</button><button type="button" class="cls-billing-wa" data-billing-wa>Contact support</button>'
-	        : '<button type="button" class="cls-billing-wa" data-billing-wa>Contact support</button>')
-	      : '<button type="button" class="cls-billing-monthly" data-billing-monthly>Pay monthly</button><button type="button" class="cls-billing-pay" data-billing-pay>Pay annual</button><button type="button" class="cls-billing-wa" data-billing-wa>WhatsApp</button>';
+	    var title = 'Monthly bank transfer';
+	    var copy = 'Pay your CLS ' + details.name + ' monthly package directly to our Commercial Bank account. Upload the payment slip after transfer so it reaches our accounts team.';
+	    var actionHtml = '<button type="button" class="cls-billing-monthly" data-billing-monthly>Pay by bank transfer</button>'+(nextPlan?'<button type="button" class="cls-billing-pay" data-billing-request="'+escapeHtml(nextPlan)+'">Request '+escapeHtml(nextDetails.name)+'</button>':'');
 	    var wrap = document.createElement('div');
 	    wrap.id = BILLING_ID;
 	    wrap.innerHTML =
@@ -2111,22 +2121,17 @@
 	          '<div class="cls-billing-title">' + escapeHtml(title) + '</div>' +
 	          '<div class="cls-billing-copy">' + escapeHtml(copy) + '</div>' +
 	          '<div class="cls-billing-price">' + escapeHtml(money(details.monthlyPrice || 0)) + '<span style="font-size:.9rem;color:#6B6258"> / mo</span></div>' +
-	          '<div class="cls-billing-sub">Annual payment: ' + escapeHtml(money(details.price)) + ' · ' + escapeHtml(periodCopy) + '</div>' +
+	          '<div class="cls-billing-sub">' + escapeHtml(periodCopy) + '</div><div class="cls-billing-bank">'+bankDetailsHtml()+paymentTimelineHtml(profile)+'</div>' +
 	        '</div>' +
 	        '<div class="cls-billing-actions">' + actionHtml + '</div>' +
 	      '</div>' +
-	      '<div class="cls-billing-status" data-billing-status>' + (paid ? 'Plan changes are sent to hello@ceylonrylabs.io as a request.' : 'Payment is processed through Genie. No card details touch this website.') + '</div>';
+	      '<div class="cls-billing-status" data-billing-status>After transfer, upload a PDF or image of the payment slip. It will be attached to an email sent to accounts@ceylonrylabs.io.</div>';
 	    (document.getElementById('settings-billing-widgets') || settingsView).appendChild(wrap);
 	    var monthlyBtn = wrap.querySelector('[data-billing-monthly]');
 	    var annualBtn = wrap.querySelector('[data-billing-pay]');
 	    var requestBtn = wrap.querySelector('[data-billing-request]');
 	    var waBtn = wrap.querySelector('[data-billing-wa]');
-	    if (monthlyBtn) monthlyBtn.addEventListener('click', function() {
-	      window.clsOpenGeniePayment(plan, 'monthly', { profile: window._profile || profile, button: this });
-	    });
-	    if (annualBtn) annualBtn.addEventListener('click', function() {
-	      window.clsOpenGeniePayment(plan, 'annual', { profile: window._profile || profile, button: this });
-	    });
+	    if (monthlyBtn) monthlyBtn.addEventListener('click', function() { window.clsOpenBankTransferPayment(plan,window._profile||profile); });
 	    if (requestBtn) requestBtn.addEventListener('click', function() {
 	      var target = this.getAttribute('data-billing-request');
 	      window.clsRequestPlanChange(target, window._profile || profile, { source: 'settings-billing-widget' });

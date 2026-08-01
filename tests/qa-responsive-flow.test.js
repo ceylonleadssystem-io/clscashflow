@@ -489,3 +489,47 @@ test('all three plan dashboards greet the signed-in user by first name and local
   assert.match(business, /id="greet-h"/);
   assert.match(business, /clsUpdateTimeGreeting\('greet-h',_profile,_fauth\.currentUser,'there'\)/);
 });
+
+test('Team Access shares the editorial UI and uses cached parallel loading', function() {
+  const page = read('access-admin.html');
+  assert.match(page, /editorial-app\.css\?v=20260801-team/);
+  assert.match(page, /TEAM_REQUEST_TIMEOUT = 3000/);
+  assert.match(page, /if\(cached\) renderTeamState\(cached\.members, cached\.pending\)/);
+  assert.match(page, /var reads = await Promise\.all\(/);
+});
+
+test('Business payroll provides consolidated PDF and individual PDF email actions', function() {
+  const page = read('growth.html');
+  assert.match(page, /downloadMonthlyPayrollReport/);
+  assert.match(page, /CONSOLIDATED MONTHLY PAYROLL/);
+  assert.match(page, /downloadPayrollPayslip/);
+  assert.match(page, /emailPayrollPayslip/);
+  assert.match(page, /\.netlify\/functions\/send-payslip/);
+  assert.match(page, /D\.settings\.logo/);
+});
+
+test('Business expenses can be viewed and exported by date range', function() {
+  const page = read('growth.html');
+  assert.match(page, /id="exp-from"/);
+  assert.match(page, /id="exp-to"/);
+  assert.match(page, /businessVisibleExpenses/);
+  assert.match(page, /clearBusinessExpenseFilters/);
+  assert.match(page, /businessVisibleExpenses\(\)\.forEach/);
+});
+
+test('all plans use monthly bank transfer billing with receipt upload and grace period', function() {
+  const platform = read('assets/platform.js');
+  const solo = read('solo.html');
+  const studio = read('starter.html');
+  const business = read('growth.html');
+  assert.match(platform, /Ceylonry Life Care/);
+  assert.match(platform, /Commercial Bank/);
+  assert.match(platform, /1001069904/);
+  assert.match(platform, /City Office/);
+  assert.match(platform, /submit-subscription-receipt/);
+  assert.match(platform, /due \+ 86400000/);
+  assert.match(platform, /Monthly payment timeline/);
+  assert.match(solo, /Pay Solo by Bank Transfer/);
+  assert.match(studio, /Pay Studio by Bank Transfer/);
+  assert.match(business, /Pay Business by Bank Transfer/);
+});

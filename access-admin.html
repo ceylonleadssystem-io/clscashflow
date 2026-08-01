@@ -5,7 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CeylonryLabs.io — Team Access</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://iudcinvfqbdzaptnnzqg.supabase.co" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
 <script src="assets/platform.js?v=20260730-bank-save"></script>
@@ -83,7 +84,12 @@ a{color:inherit;text-decoration:none}
 .loading{text-align:center;padding:4rem 0;color:var(--muted);font-size:.9rem}
 .hidden{display:none!important}
 @media(max-width:560px){.row2{grid-template-columns:1fr}.page-title{font-size:1.9rem}.wrap{padding:1.5rem 1rem 3rem}}
+:root{--bg:#f4f4f1;--text:#080808;--muted:#60605b;--dim:#92928b;--border:#d7d7d1;--black:#080808;--font-d:'Inter',sans-serif;--font-b:'Inter',sans-serif}
+body{font-family:'Inter',sans-serif;background:#f4f4f1}.topbar{border-bottom:1px solid var(--border);padding:1rem clamp(1rem,3vw,2.5rem)}.topbar .logo{font:900 1.2rem 'Inter',sans-serif;letter-spacing:-.05em}.btn-signout,.btn,.plan-pill{border-radius:999px;font-weight:800}.wrap{max-width:1180px;padding:2rem 1.25rem 3rem}.page-head{margin-bottom:1.25rem}.page-eyebrow{font:800 .62rem ui-monospace,SFMono-Regular,Menlo,monospace}.page-title{font:900 clamp(2.4rem,5vw,4.5rem)/.95 'Inter',sans-serif;letter-spacing:-.07em}.page-sub{font-size:.9rem;max-width:700px}.seat-bar{border-radius:18px;padding:1.1rem 1.25rem}.seat-bar .seat-count{font:900 1.55rem 'Inter',sans-serif}.card{border-radius:20px;overflow:hidden;margin-bottom:1rem}.card-title{font:850 1.1rem 'Inter',sans-serif;letter-spacing:-.035em}.card-body{padding:1.15rem 1.25rem}.field input,.field select,.role-select{border-radius:12px;min-height:50px;background:#f7f7f5}.list-row .avatar{font-family:'Inter',sans-serif;background:#fff}.loading::before{content:'';display:inline-block;width:16px;height:16px;margin-right:.6rem;border:2px solid #d7a72f;border-right-color:transparent;border-radius:50%;vertical-align:-3px;animation:team-spin .7s linear infinite}@keyframes team-spin{to{transform:rotate(360deg)}}
+@media(min-width:760px){#app{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:1rem;align-items:start}.page-head,#msg{grid-column:1/-1}#pending-card{grid-column:2}.card:has(#members-list){grid-column:2}.card:has(#inv-email){grid-row:3 / span 2}}
+@media(max-width:560px){.topbar .logo{font-size:1rem}.back-link{font-size:.68rem}.topbar{gap:.75rem}.topbar>div:last-child{gap:.55rem!important}.wrap{padding:1.15rem .7rem 2rem}.page-title{font-size:2.5rem}.seat-bar{display:grid;grid-template-columns:auto 1fr auto}.card-head,.card-body{padding:.9rem}.list-row{align-items:flex-start;flex-wrap:wrap}.role-select{width:100%}}
 </style>
+<link rel="stylesheet" href="assets/editorial-app.css?v=20260801-team">
 </head>
 <body>
 
@@ -198,7 +204,7 @@ var PLAN_FILES  = { solo: 'solo.html', studio: 'starter.html', business: 'growth
 var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
 var ROLE_LABELS = { admin:'Admin', staff:'Staff', accountant:'Accountant', viewer:'Viewer' };
 var TEAM_CACHE_TTL = 5 * 60 * 1000;
-var TEAM_REQUEST_TIMEOUT = 6000;
+var TEAM_REQUEST_TIMEOUT = 3000;
 var _teamLoadToken = 0;
 
 // ── helpers ──
