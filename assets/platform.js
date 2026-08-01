@@ -865,7 +865,8 @@
     settings = settings || {};
     var biz = settings.bizName || settings.biz || settings.businessName || 'Your Business';
     var email = settings.email || settings.invoiceEmail || '';
-    var footer = settings.footer || DEFAULT_INVOICE_FOOTER;
+    var footer = Object.prototype.hasOwnProperty.call(settings, 'footer') ? String(settings.footer || '').trim() : '';
+    if (footer === DEFAULT_INVOICE_FOOTER || /^thank you for your business\.?$/i.test(footer)) footer = '';
     var align = settings.logoAlign || 'left';
     var defaultX = align === 'right' ? 88 : (align === 'center' ? 50 : 8);
     return {
@@ -997,7 +998,7 @@
     }).join('');
   };
 
-  window.clsBuildInvoicePrintHtml = function(opts) {
+  function clsLegacyInvoiceRendererRemoved(opts) {
     opts = opts || {};
     var inv = opts.inv || {};
     var s = normalizeInvoiceSettings(opts.settings || {});
@@ -1012,11 +1013,12 @@
     var vat = Number(inv.vat || inv.tax || 0) || 0;
     var total = Number(inv.amount || inv.total || (sub - discAmount + vat)) || 0;
     var note = String(Object.prototype.hasOwnProperty.call(inv, 'notes') ? (inv.notes || '') : (s.footer || '')).trim();
+    if (note === DEFAULT_INVOICE_FOOTER || /^thank you for your business\.?$/i.test(note)) note = '';
     var title = inv.num || inv.id || 'PREVIEW';
     var documentLabel = String(opts.documentLabel || inv.documentLabel || inv.documentType || 'Invoice');
     documentLabel = /^quote$/i.test(documentLabel) ? 'Quote' : (/^estimate$/i.test(documentLabel) ? 'Estimate' : 'Invoice');
-    var bankRows = documentLabel === 'Invoice' ? invoiceBankRows(s) : [];
-    var bankHtml = bankRows.length ? '<div class="bank-details"><div class="label">Bank details</div>' + bankRows.map(function(row) {
+    var legacyBankRows = documentLabel === 'Invoice' ? invoiceBankRows(s) : [];
+    var legacyBankHtml = legacyBankRows.length ? '<div class="bank-details"><div class="label">Bank details</div>' + legacyBankRows.map(function(row) {
       return '<div class="bank-row"><span>' + invoiceEscape(row[0]) + '</span><b>' + invoiceEscape(row[1]) + '</b></div>';
     }).join('') + '</div>' : '';
     var font = invoiceFont(s.invoiceFont);
@@ -1062,6 +1064,7 @@
     var status = total > 0 && balance <= 0.01 ? 'paid' : (paid > 0.01 ? 'partial' : (rawStatus === 'overdue' ? 'overdue' : 'unpaid'));
     var statusLabel = status === 'paid' ? 'Paid / Settled' : (status === 'partial' ? 'Partially Paid' : (status === 'overdue' ? 'Payment Overdue' : 'Payment Pending'));
     var note = String(Object.prototype.hasOwnProperty.call(inv, 'notes') ? (inv.notes || '') : (s.footer || '')).trim();
+    if (note === DEFAULT_INVOICE_FOOTER || /^thank you for your business\.?$/i.test(note)) note = '';
     var title = inv.num || inv.id || 'PREVIEW';
     var documentLabel = String(opts.documentLabel || inv.documentLabel || inv.documentType || 'Invoice');
     documentLabel = /^quote$/i.test(documentLabel) ? 'Quote' : (/^estimate$/i.test(documentLabel) ? 'Estimate' : 'Invoice');

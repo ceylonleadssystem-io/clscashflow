@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260802-a4-preview"></script>
+<script src="assets/platform.js?v=20260802-single-renderer"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -3345,7 +3345,7 @@ function collectSettingsDraft() {
     user: val('s-user', D.settings.user) || D.settings.user || '',
     addr: val('s-addr', D.settings.addr) || D.settings.addr || 'Business address',
     email: val('s-email', D.settings.email) || D.settings.email || 'invoices@yourbusiness.lk',
-    vat: val('s-vat', D.settings.vat) || D.settings.vat || 'Optional',
+    vat: val('s-vat', D.settings.vat),
     footer: val('s-footer', D.settings.footer),
     bankName: val('s-bank-name', D.settings.bankName) || D.settings.bankName || '',
     bankAccountName: val('s-bank-account-name', D.settings.bankAccountName) || D.settings.bankAccountName || '',
