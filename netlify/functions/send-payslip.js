@@ -23,11 +23,14 @@ exports.handler = async function handler(event) {
   const employeeName = clean(data.employeeName, 160);
   const businessName = clean(data.businessName, 160) || 'Your Employer';
   const month = clean(data.month, 20);
-  const pdfBase64 = clean(data.pdfBase64, 2500000);
+  const pdfBase64 = String(data.pdfBase64 == null ? '' : data.pdfBase64)
+    .replace(/^data:application\/pdf;base64,/i, '')
+    .replace(/\s+/g, '');
   if (!to || !employeeName || !month || !pdfBase64) {
     return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'Email, employee, month, and payslip PDF are required.' }) };
   }
-  if (!/^[A-Za-z0-9+/=]+$/.test(pdfBase64) || Buffer.byteLength(pdfBase64, 'base64') > 1500000) {
+  const pdfBuffer = /^[A-Za-z0-9+/]*={0,2}$/.test(pdfBase64) ? Buffer.from(pdfBase64, 'base64') : Buffer.alloc(0);
+  if (!pdfBuffer.length || pdfBuffer.length > 4000000 || pdfBuffer.subarray(0, 5).toString('ascii') !== '%PDF-') {
     return { statusCode: 413, body: JSON.stringify({ ok: false, error: 'The payslip attachment is invalid or too large.' }) };
   }
 
@@ -63,8 +66,7 @@ exports.handler = async function handler(event) {
       html,
       attachments: [{
         filename: 'Payslip-' + month.replace(/[^0-9A-Za-z_-]/g, '-') + '-' + employeeName.replace(/[^0-9A-Za-z_-]/g, '-') + '.pdf',
-        content: pdfBase64,
-        encoding: 'base64',
+        content: pdfBuffer,
         contentType: 'application/pdf'
       }]
     });

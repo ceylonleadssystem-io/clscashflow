@@ -449,8 +449,8 @@ test('payslip email endpoint sends a PDF attachment', function() {
   assert.match(fn, /const nodemailer = require\('nodemailer'\)/);
   assert.match(fn, /attachments:\s*\[\{/);
   assert.match(fn, /contentType: 'application\/pdf'/);
-  assert.match(fn, /encoding: 'base64'/);
-  assert.match(fn, /Buffer\.byteLength\(pdfBase64, 'base64'\)/);
+  assert.match(fn, /content: pdfBuffer/);
+  assert.match(fn, /pdfBuffer\.length > 4000000/);
 });
 
 test('admin dashboard loads quickly without presenting failed requests as zero data', function() {
