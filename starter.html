@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260802-single-renderer"></script>
+<script src="assets/platform.js?v=20260803-qa-pass"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -649,6 +649,7 @@ body.is-admin .admin-only{display:flex}
   #inv-modal .li-total-cell{text-align:right!important}
 }
 
+.db-greeting{min-height:92px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:1rem!important;padding:1rem 1.25rem!important;margin-bottom:1rem!important}.db-greeting>div:first-child{min-width:0}.db-greet-h{line-height:1.08!important;margin:0 0 .28rem!important}.db-greet-p{line-height:1.35!important}.db-plan-pill{flex:0 0 auto}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))!important}.kpi-val{font-size:clamp(1.05rem,1.8vw,1.65rem)!important;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 @media print{@page{size:A4;margin:0}html,body{margin:0!important;padding:0!important}body>*:not(#print-invoice){display:none!important}#print-invoice{display:block!important;margin:0;padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 #print-invoice{display:none}
 </style>
@@ -845,9 +846,14 @@ document.addEventListener('click',function(e){
 
     <!-- ═ EDIT BACKLOG ═ -->
     <div class="view" id="view-backlog">
-      <div class="sum-bar c3" id="backlog-summary"></div>
+      <div class="sum-bar c2" id="backlog-summary"></div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Admin Edit Backlog</div><button class="btn-act-outline" data-cls-fn="renderBacklog">Refresh</button></div>
+        <div class="table-tools">
+          <div class="f-group"><label>From Date</label><input class="f-input" type="date" id="backlog-from" onchange="renderBacklog()"></div>
+          <div class="f-group"><label>To Date</label><input class="f-input" type="date" id="backlog-to" onchange="renderBacklog()"></div>
+          <button class="btn-act-outline" type="button" onclick="document.getElementById('backlog-from').value='';document.getElementById('backlog-to').value='';renderBacklog()">Clear Dates</button>
+        </div>
         <table><thead><tr><th>Date Edited</th><th>Edited Item</th><th>Previous Value</th><th>New Value</th><th>Edited By</th><th>Reason</th></tr></thead><tbody id="backlog-table"></tbody></table>
       </div>
     </div>
@@ -1127,7 +1133,7 @@ document.addEventListener('click',function(e){
         </section>
 
         <section class="settings-panel" data-account-panel="billing" hidden>
-          <div class="settings-panel-grid">
+          <div class="settings-panel-grid studio-billing-clean">
             <div class="table-card">
               <div class="table-header"><div class="table-title">Studio Billing</div><button class="btn-act" data-cls-fn="openBusinessUpgrade">Upgrade</button></div>
               <div style="padding:1rem">
@@ -3461,7 +3467,7 @@ window.saveRecordEdit=function saveRecordEdit(){
   alert('Edit saved and added to the admin backlog.');
 };
 function backlogDateValue(log){
-  var value=log&&(log.editedAt||log.date||log.createdAt||log.timestamp);
+  var value=log&&(log.editedAt||log.date||log.createdAt||log.timestamp||log.updatedAt);
   if(value&&typeof value.toDate==='function')value=value.toDate();
   if(value&&value.seconds!=null)value=new Date(Number(value.seconds)*1000);
   var parsed=value instanceof Date?value:new Date(value||0);
@@ -3476,9 +3482,15 @@ function renderBacklog(){
     table.innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">Only admin users can view the edit backlog.</td></tr>';
     return;
   }
-  const logs=[...(DB.editBacklog||[])].sort(function(a,b){return backlogDateValue(b)-backlogDateValue(a);});
+  const from=(document.getElementById('backlog-from')||{}).value||'';
+  const to=(document.getElementById('backlog-to')||{}).value||'';
+  const logs=[...(DB.editBacklog||[])].sort(function(a,b){return backlogDateValue(b)-backlogDateValue(a);}).filter(function(log){
+    const t=backlogDateValue(log).getTime();
+    if(!t)return !from&&!to;
+    return(!from||t>=new Date(from+'T00:00:00').getTime())&&(!to||t<=new Date(to+'T23:59:59.999').getTime());
+  });
   const thisMonth=logs.filter(function(l){const d=backlogDateValue(l);const n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();}).length;
-  summary.innerHTML=`<div class="sum-item"><div class="sum-label">Total Edits</div><div class="sum-val">${logs.length}</div></div><div class="sum-item"><div class="sum-label">This Month</div><div class="sum-val" style="color:var(--gold)">${thisMonth}</div></div><div class="sum-item"><div class="sum-label">Latest Edit</div><div class="sum-val" style="font-size:1.05rem">${logs[0]?fmtD(backlogDateValue(logs[0]).toISOString().slice(0,10)):'—'}</div></div>`;
+  summary.innerHTML=`<div class="sum-item"><div class="sum-label">Edits in View</div><div class="sum-val">${logs.length}</div></div><div class="sum-item"><div class="sum-label">This Month</div><div class="sum-val" style="color:var(--gold)">${thisMonth}</div></div>`;
   table.innerHTML=logs.length?logs.map(function(l){
     const logDate=backlogDateValue(l);const when=logDate.getTime()?logDate.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     const action=l.action==='delete'?'Deleted':'Edited';

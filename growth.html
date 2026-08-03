@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260802-single-renderer"></script>
+<script src="assets/platform.js?v=20260803-qa-pass"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -108,6 +108,10 @@ img,canvas,svg,video{max-width:100%}
 /* ====== CLEAN DASHBOARD ====== */
 .db-greeting{display:flex;align-items:center;justify-content:space-between;padding:1.05rem 1.4rem;background:var(--white);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:var(--r);margin-bottom:1.35rem}
 .db-greet-h{font-family:var(--fd);font-size:1.4rem;font-weight:300;color:var(--black);margin-bottom:.1rem}
+.db-greeting{min-height:92px;gap:1rem}.db-greeting>div:first-child{min-width:0}.db-greet-h,.db-greet-p{overflow-wrap:anywhere}
+.kpi-val,.sum-val,.db-kpi-value{font-size:clamp(1.15rem,2vw,1.85rem)!important;line-height:1.05;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.payroll-actions{display:grid;grid-template-columns:repeat(3,minmax(72px,1fr));gap:.38rem;min-width:260px}.payroll-actions .bsm{width:100%;min-height:34px;margin:0}
+#view-payroll table{table-layout:auto}#view-payroll td{vertical-align:middle}
 .db-greet-p{font-size:.71rem;color:var(--muted)}
 .db-date-pill{font-size:.65rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:.25rem .7rem;border-radius:20px}
 .db-plan-pill{font-size:.56rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.27rem .8rem;border-radius:20px}
@@ -298,6 +302,7 @@ tr:hover td{background:var(--bg3)}
 /* LINE ITEMS */
 .litbl{width:100%;border-collapse:collapse;margin-bottom:.62rem}
 .litbl th{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.4rem .48rem;text-align:left;background:var(--bg3);border:1px solid var(--border);font-weight:600}
+#mo-inv .litbl th{background:#eee9df!important;color:#2d2924!important;border-color:#d8d0c4!important}#mo-inv .litbl td{background:#fff!important}#mo-inv .litbl input,#mo-inv .litbl textarea{background:#f8f6f1!important;color:#1c1814!important}#mo-inv .litbl input::placeholder,#mo-inv .litbl textarea::placeholder{color:#706a62!important;opacity:1}
 .litbl td{border:1px solid var(--border);padding:.28rem .36rem}
 .litbl td input{background:var(--bg);border:none;padding:.3rem .4rem;color:var(--text);font-family:var(--fb);font-size:.79rem;width:100%;outline:none;border-radius:2px}
 .litbl td input:focus{background:var(--white)}
@@ -803,7 +808,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
         <div class="sb-urole">Admin · Business Plan</div>
       </div>
     </div>
-    <button class="btn-up" onclick="window.showToast('Priority support is included with Business.')">Priority Support</button>
+    <button class="btn-up" onclick="window.openBusinessPrioritySupport()">Priority Support</button>
     <button class="btn-back-Studio" onclick="window.goBackToStudio(this)">← Back to Studio</button>
     <button class="btn-sign-out" onclick="window.clsSignOut()">Sign Out</button>
   </div>
@@ -1105,8 +1110,8 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
         </section>
 
         <section class="settings-panel" id="settings-billing" data-settings-panel="billing" hidden>
-          <div class="settings-panel-grid">
-            <div class="plan-box">
+          <div class="settings-panel-grid business-billing-clean">
+            <div class="plan-box business-plan-summary">
               <div style="font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;opacity:.38;margin-bottom:.32rem">Your Current Plan</div>
               <div class="plan-name">Business Plan ✨</div>
               <div class="plan-price">LKR 8,500 / mo</div>
@@ -2412,6 +2417,15 @@ window.goTo = function clsGoTo(id) {
   }
 }
 window.clsGoTo = window.goTo;
+window.openBusinessPrioritySupport=function(){
+  window.goTo('settings');
+  setTimeout(function(){
+    if(window.clsMountSupportWidget)window.clsMountSupportWidget();
+    var support=document.getElementById('cls-support-widget');
+    document.dispatchEvent(new CustomEvent('cls:settings-tab',{detail:{tab:'support'}}));
+    if(support)support.scrollIntoView({behavior:'smooth',block:'start'});
+  },80);
+};
 
 // Wire up nav items
 document.querySelectorAll('.nav-item').forEach(function(item) {
@@ -4427,7 +4441,14 @@ function buildInvoicePrintHtml(inv) {
 window.printInv = function printInv(id) {
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
-  document.getElementById('print-inv').innerHTML = buildInvoicePrintHtml(inv);
+  var html = window.clsBuildInvoicePrintHtml ? window.clsBuildInvoicePrintHtml({
+    inv: inv,
+    settings: D.settings,
+    templateIndex: normalizeBusinessTemplate(D.settings.defaultTpl),
+    documentLabel: 'Invoice',
+    systemName: 'Business Cashflow System'
+  }) : buildInvoicePrintHtml(inv);
+  document.getElementById('print-inv').innerHTML = html;
   var oldTitle = document.title;
   document.title = invoicePdfFileNameBusiness(inv).replace(/\.pdf$/i, '');
   var cleaned = false;

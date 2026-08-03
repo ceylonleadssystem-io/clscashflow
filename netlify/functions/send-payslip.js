@@ -37,10 +37,11 @@ exports.handler = async function handler(event) {
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Email is not configured. Set SMTP_USER and SMTP_PASS in Netlify.' }) };
   }
 
+  const smtpPort = Number(process.env.SMTP_PORT || 465);
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: true,
+    port: smtpPort,
+    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE !== 'false' : smtpPort === 465,
     auth: { user, pass }
   });
   const fromAddress = process.env.SMTP_FROM || user;
@@ -52,6 +53,7 @@ exports.handler = async function handler(event) {
     + '<p>If any information needs correction, please contact your payroll administrator.</p></div></div>';
 
   try {
+    await transporter.verify();
     await transporter.sendMail({
       from: '"' + businessName.replace(/"/g, '') + '" <' + fromAddress + '>',
       to,
