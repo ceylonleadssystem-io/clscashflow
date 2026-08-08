@@ -125,7 +125,7 @@
     </section>
 
     <section class="section" data-admin-section="payments">
-      <div class="section-head"><h2>Payment Requests</h2><span class="muted">Tokens created automatically when trials expire</span></div>
+      <div class="section-head"><div><h2>Payment Requests</h2><span class="muted">Tokens created automatically when trials expire</span></div><button class="btn danger" id="clear-payment-data" type="button">Clear all payment test data</button></div>
       <div class="receipt-grid" id="receipt-grid"></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>Status</th><th>User</th><th>Plan</th><th>Cycle</th><th>Amount</th><th>Due</th><th>Created</th><th>Actions</th></tr></thead>
@@ -251,7 +251,7 @@ function clientStats(users, visits, tickets, paymentRequests, chats){
     if (now - visitMs(v) <= 10 * 60 * 1000) liveIds[id] = true;
   });
   var monthKey=new Date().toISOString().slice(0,7),prices={solo:3500,studio:5500,business:8500},monthlyRevenue=0,monthlyPayments=0,activeMrr=0;
-  (users||[]).forEach(function(row){var u=row.data||{},plan=normalizePlan(u.currentPlan||u.plan||u.lastPlan),amount=Number(u.planMonthlyPrice||prices[plan]||0),status=String(u.subscriptionStatus||'').toLowerCase(),paid=u.paid===true||['active','manual-paid','receipt-submitted'].indexOf(status)>-1;if(paid&&u.accountPaused!==true)activeMrr+=amount;if(String(u.lastPaymentPeriod||String(u.lastPaymentSlipAtUtc||'').slice(0,7))===monthKey){monthlyRevenue+=amount;monthlyPayments+=1;}});
+  (users||[]).forEach(function(row){var u=row.data||{},plan=normalizePlan(u.currentPlan||u.plan||u.lastPlan),amount=Number(u.planMonthlyPrice||prices[plan]||0),status=String(u.subscriptionStatus||'').toLowerCase(),verified=!!u.paymentVerifiedAtUtc,paid=verified&&(u.paid===true||['active','manual-paid'].indexOf(status)>-1);if(paid&&u.accountPaused!==true)activeMrr+=amount;if(verified&&String(u.paymentVerifiedAtUtc).slice(0,7)===monthKey){monthlyRevenue+=amount;monthlyPayments+=1;}});
   return {
     usersTotal: (users || []).length,
     visitsTotal: (visits || []).length,
@@ -295,7 +295,7 @@ function requestStatusPill(status){
 function paymentPill(u){
   u = u || {};
   var status = String(u.subscriptionStatus || '').toLowerCase();
-  if (u.paid === true || status === 'active' || status === 'manual-paid') return '<span class="pill ok">paid</span>';
+  if (u.paymentVerifiedAtUtc && (u.paid === true || status === 'active' || status === 'manual-paid')) return '<span class="pill ok">paid</span>';
   if (status === 'paused') return '<span class="pill bad">paused</span>';
   if (status === 'manual-unpaid') return '<span class="pill warn">unpaid</span>';
   return '<span class="pill warn">trial/manual</span>';
@@ -954,7 +954,7 @@ function adminPaymentRequestUpdatePayload(status){
   var stamp = firebase.firestore.FieldValue.serverTimestamp();
   if (status === 'pending') return { status:'pending', updatedAt:stamp, updatedBy:'platform_admin' };
   if (status === 'invoiced') return { status:'invoiced', invoiceSentAt:stamp, invoiceSentBy:'platform_admin', updatedAt:stamp, updatedBy:'platform_admin' };
-  if (status === 'paid') return { status:'paid', paidAt:stamp, paidBy:'platform_admin', updatedAt:stamp, updatedBy:'platform_admin' };
+  if (status === 'paid') return { status:'paid', paidAt:stamp, paymentVerifiedAtUtc:new Date().toISOString(), paidBy:'platform_admin', updatedAt:stamp, updatedBy:'platform_admin' };
   if (status === 'closed') return { status:'closed', closedAt:stamp, closedBy:'platform_admin', updatedAt:stamp, updatedBy:'platform_admin' };
   return null;
 }
@@ -991,6 +991,13 @@ async function updatePaymentRequest(id, status){
     }
   }
   await loadAdminData({ forceLoading: true });
+}
+async function clearAllPaymentData(){
+  if(!confirm('Clear every payment request, receipt record, and paid flag? This is intended for removing the current test data.'))return;
+  if(!confirm('Final confirmation: no customer payment is genuine and all payment data should be removed.'))return;
+  var button=$('clear-payment-data');if(button){button.disabled=true;button.textContent='Clearing…';}
+  try{var result=await fetchAdminFunction({action:'clearAllPaymentData'});try{localStorage.removeItem(ADMIN_CACHE_KEY);}catch(e){}await loadAdminData({forceLoading:true});alert('Payment test data cleared. '+Number(result.paymentRequestsDeleted||0)+' requests and '+Number(result.paymentsDeleted||0)+' revenue records removed.');}
+  finally{if(button){button.disabled=false;button.textContent='Clear all payment test data';}}
 }
 async function copyPaymentRequest(id){
   var row = paymentRequestCache[id];
@@ -1127,7 +1134,7 @@ function adminUserUpdatePayload(updateType){
   var stamp = firebase.firestore.FieldValue.serverTimestamp();
   if (updateType === 'pause') return { accountPaused:true, paid:false, subscriptionStatus:'paused', manualPaymentStatus:'paused', pausedAt:stamp, pausedBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'unpause') return { accountPaused:false, subscriptionStatus:'active', manualPaymentStatus:'unpaused', unpausedAt:stamp, unpausedBy:'platform_admin', updatedAt:stamp };
-  if (updateType === 'markPaid') return { paid:true, accountPaused:false, subscriptionStatus:'manual-paid', manualPaymentStatus:'paid', paidManually:true, planLocked:true, planLockedAt:stamp, manualPaidAt:stamp, lastManualPaymentAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
+  if (updateType === 'markPaid') return { paid:true, accountPaused:false, subscriptionStatus:'manual-paid', manualPaymentStatus:'paid', paidManually:true, paymentVerifiedAtUtc:new Date().toISOString(), planLocked:true, planLockedAt:stamp, manualPaidAt:stamp, lastManualPaymentAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'markUnpaid') return { paid:false, planLocked:false, subscriptionStatus:'manual-unpaid', manualPaymentStatus:'unpaid', paidManually:false, manualUnpaidAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'setPlanSolo') return { plan:'solo', currentPlan:'solo', lastPlan:'solo', requestedPlan:'solo', planPrice:36000, planMonthlyPrice:3500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
   if (updateType === 'setPlanStudio') return { plan:'studio', currentPlan:'studio', lastPlan:'studio', requestedPlan:'studio', planPrice:60000, planMonthlyPrice:5500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
@@ -1210,6 +1217,7 @@ $('signout-btn').addEventListener('click', function(){
 ['visit-from','visit-to'].forEach(function(id){var el=$(id);if(el)el.addEventListener('change',function(){renderVisits(adminPayloadState.visits,adminPayloadState.stats);});});
 if($('visit-clear'))$('visit-clear').addEventListener('click',function(){if($('visit-from'))$('visit-from').value='';if($('visit-to'))$('visit-to').value='';renderVisits(adminPayloadState.visits,adminPayloadState.stats);});
 document.addEventListener('click', function(ev){
+  if(ev.target.closest('#clear-payment-data')){clearAllPaymentData().catch(function(e){alert(e.message||'Payment cleanup failed.');});return;}
   var tabBtn = ev.target.closest('[data-admin-tab]');
   if (tabBtn) {
     switchAdminSection(tabBtn.getAttribute('data-admin-tab'));

@@ -97,7 +97,6 @@ async function synchronizedUsers(admin, db, profileRows) {
     pageToken = page.pageToken;
   } while (pageToken && authUsers.length < 5000);
 
-  const missing = [];
   authUsers.forEach(function(user) {
     const email = String(user.email || '').trim().toLowerCase();
     let row = byId.get(String(user.uid)) || byEmail.get(email);
@@ -113,18 +112,8 @@ async function synchronizedUsers(admin, db, profileRows) {
     if (row) {
       row.data = Object.assign({}, authData, row.data || {}, { email: (row.data || {}).email || email, authSynchronized: true });
       byId.set(String(user.uid), row);
-    } else {
-      row = { id: String(user.uid), data: Object.assign({ createdAtUtc: authData.authCreatedAtUtc, plan: 'solo', subscriptionStatus: 'trial' }, authData) };
-      profiles.push(row);
-      byId.set(String(user.uid), row);
-      if (email) byEmail.set(email, row);
-      missing.push(row);
     }
   });
-
-  await Promise.all(missing.slice(0, 200).map(function(row) {
-    return db.collection('users').doc(row.id).set(Object.assign({}, row.data, { syncedFromAuthAtUtc: new Date().toISOString() }), { merge: true }).catch(function() {});
-  }));
   return profiles;
 }
 
@@ -197,18 +186,18 @@ function buildRevenueStats(users, paymentRequests, subscriptionPayments) {
   }
   (subscriptionPayments || []).forEach(function(row) {
     const data = row.data || {};
-    if (['rejected', 'cancelled', 'failed'].indexOf(String(data.status || '').toLowerCase()) > -1) return;
+    if (['confirmed', 'verified', 'paid'].indexOf(String(data.status || '').toLowerCase()) === -1 || !data.verifiedAtUtc) return;
     add(row.id, data, data.receivedAtUtc || data.createdAtUtc || data.createdAt);
   });
   (paymentRequests || []).forEach(function(row) {
     const data = row.data || {};
-    if (['paid', 'completed', 'closed'].indexOf(String(data.status || '').toLowerCase()) === -1) return;
-    add(row.id, data, data.paidAtUtc || data.completedAtUtc || data.updatedAtUtc || data.updatedAt);
+    if (['paid', 'completed'].indexOf(String(data.status || '').toLowerCase()) === -1 || !data.paymentVerifiedAtUtc) return;
+    add(row.id, data, data.paymentVerifiedAtUtc);
   });
   (users || []).forEach(function(row) {
     const data = row.data || {};
-    if (!data.lastPaymentSlipAtUtc) return;
-    add(row.id, Object.assign({ uid: row.id, amountLkr: data.planMonthlyPrice }, data), data.lastPaymentSlipAtUtc);
+    if (!data.paymentVerifiedAtUtc) return;
+    add(row.id, Object.assign({ uid: row.id, amountLkr: data.planMonthlyPrice }, data), data.paymentVerifiedAtUtc);
   });
   const months = [];
   for (let i = 5; i >= 0; i -= 1) {
@@ -225,7 +214,7 @@ function buildRevenueStats(users, paymentRequests, subscriptionPayments) {
   const activeMrr = (users || []).reduce(function(total, row) {
     const data = row.data || {};
     const status = String(data.subscriptionStatus || '').toLowerCase();
-    const paid = data.paid === true || ['active', 'manual-paid', 'receipt-submitted'].indexOf(status) > -1;
+    const paid = !!data.paymentVerifiedAtUtc && (data.paid === true || ['active', 'manual-paid'].indexOf(status) > -1);
     return total + (paid && data.accountPaused !== true ? paymentAmount(data) : 0);
   }, 0);
   return { revenueThisMonth: current.revenue, confirmedPaymentsThisMonth: current.payments, activeMrr, revenueByPlan: byPlan, monthlyRevenue: months };
@@ -485,6 +474,7 @@ function userUpdateForAction(admin, updateType) {
 	      planLocked: true,
 	      planLockedAt: stamp,
 	      manualPaidAt: stamp,
+      paymentVerifiedAtUtc: new Date().toISOString(),
       lastManualPaymentAt: stamp,
       manualPaymentBy: 'platform_admin',
       updatedAt: stamp
@@ -497,6 +487,7 @@ function userUpdateForAction(admin, updateType) {
 	      subscriptionStatus: 'manual-unpaid',
       manualPaymentStatus: 'unpaid',
       paidManually: false,
+      paymentVerifiedAtUtc: admin.firestore.FieldValue.delete(),
       manualUnpaidAt: stamp,
       manualPaymentBy: 'platform_admin',
       updatedAt: stamp
@@ -583,6 +574,7 @@ function paymentRequestUpdateForStatus(admin, status) {
     return {
       status: 'paid',
       paidAt: stamp,
+      paymentVerifiedAtUtc: new Date().toISOString(),
       paidBy: 'platform_admin',
       updatedAt: stamp,
       updatedBy: 'platform_admin'
@@ -624,6 +616,40 @@ exports.handler = async function handler(event) {
     if (event.httpMethod === 'POST') {
       const body = readBody(event);
       const action = String(body.action || '').trim();
+      if (action === 'clearAllPaymentData') {
+        const rows = await Promise.all([
+          readCollection(db, 'users', 'createdAt', 5000),
+          readCollection(db, 'paymentRequests', 'createdAt', 5000),
+          readCollection(db, 'subscriptionPayments', 'receivedAtUtc', 5000)
+        ]);
+        const clearField = admin.firestore.FieldValue.delete();
+        await Promise.all(rows[0].map(function(row) {
+          return db.collection('users').doc(row.id).set({
+            paid: false,
+            subscriptionStatus: 'trial',
+            manualPaymentStatus: 'not-paid',
+            paymentVerifiedAtUtc: clearField,
+            paidAt: clearField,
+            paidBy: clearField,
+            lastPaymentSlipAt: clearField,
+            lastPaymentSlipAtUtc: clearField,
+            lastPaymentSlipName: clearField,
+            lastPaymentSlipType: clearField,
+            lastPaymentPeriod: clearField,
+            nextPaymentDue: clearField,
+            paymentRequestStatus: clearField,
+            paymentRequestToken: clearField,
+            paymentRequestPaidAt: clearField,
+            paymentRequestAmount: clearField,
+            paymentRequestMonthlyAmount: clearField,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            paymentResetBy: 'platform_admin'
+          }, { merge: true });
+        }));
+        await Promise.all(rows[1].map(function(row) { return db.collection('paymentRequests').doc(row.id).delete(); }));
+        await Promise.all(rows[2].map(function(row) { return db.collection('subscriptionPayments').doc(row.id).delete(); }));
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, usersReset: rows[0].length, paymentRequestsDeleted: rows[1].length, paymentsDeleted: rows[2].length }) };
+      }
       if (action === 'updateTicket') {
         const id = String(body.id || '').trim();
         const status = String(body.status || '').trim().toLowerCase();
