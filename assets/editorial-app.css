@@ -60,6 +60,7 @@ body{font-family:'Inter',sans-serif!important;color:#080808!important;background
 .table-card{border-left:0!important;overflow:hidden!important}
 .table-header,.card-head{padding:1.1rem 1.25rem!important}
 th{background:#080808!important;font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-weight:800!important}
+#print-inv .items th,#print-inv .inv-table th{background:#fff!important;color:#18130f!important;border-bottom:2px solid #18130f!important}
 td{background:#fff!important}
 tr:hover td{background:#f1f1ed!important}
 .sum-bar,.sumbar{gap:12px!important;background:transparent!important}
