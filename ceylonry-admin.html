@@ -738,7 +738,7 @@ var adminHasData = false;
 var adminActiveSection = 'overview';
 var adminUserRows = [];
 var adminPayloadState={users:[],visits:[],tickets:[],paymentRequests:[],chats:[],stats:{}};
-var ADMIN_CACHE_KEY = 'cls-admin-dashboard-cache-v2';
+var ADMIN_CACHE_KEY = 'cls-admin-dashboard-cache-v3-profile-count';
 var ADMIN_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
 var ADMIN_REQUEST_TIMEOUT_MS = 15000;
 function setDataStatus(kind, message){
@@ -781,17 +781,19 @@ function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stat
   users = users || [];
   var visibleUsers = users.filter(function(row){ return !isDeletedUser(row); });
   var localStats = Object.assign({}, stats || {});
-  if (localStats.usersTotal == null) localStats.usersTotal = visibleUsers.length;
+  // The overview must always use the exact same canonical profile rows shown
+  // in the Users table. Auth-only/stale identities must never inflate it.
+  localStats.usersTotal = visibleUsers.length;
   adminUserRows = visibleUsers;
-  adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:stats||{}};
+  adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:localStats};
   renderUsers(visibleUsers, localStats);
   renderReceipts(visibleUsers);
-  renderPaymentRequests(paymentRequests || [], stats || {});
+  renderPaymentRequests(paymentRequests || [], localStats);
   renderUserBreakdown(visibleUsers, visits || [], tickets || [], paymentRequests || [], chats || []);
-  renderVisits(visits || [], stats || {});
-  renderChats(chats || [], stats || {});
-  renderTickets(tickets || [], stats || {});
-  renderRevenue(stats || {});
+  renderVisits(visits || [], localStats);
+  renderChats(chats || [], localStats);
+  renderTickets(tickets || [], localStats);
+  renderRevenue(localStats);
   switchAdminSection(adminActiveSection);
   adminHasRendered = true;
 }
@@ -996,7 +998,7 @@ async function clearAllPaymentData(){
   if(!confirm('Clear every payment request, receipt record, and paid flag? This is intended for removing the current test data.'))return;
   if(!confirm('Final confirmation: no customer payment is genuine and all payment data should be removed.'))return;
   var button=$('clear-payment-data');if(button){button.disabled=true;button.textContent='Clearing…';}
-  try{var result=await fetchAdminFunction({action:'clearAllPaymentData'});try{localStorage.removeItem(ADMIN_CACHE_KEY);}catch(e){}await loadAdminData({forceLoading:true});alert('Payment test data cleared. '+Number(result.paymentRequestsDeleted||0)+' requests and '+Number(result.paymentsDeleted||0)+' revenue records removed.');}
+  try{var result=await fetchAdminFunction({action:'clearAllPaymentData'});try{sessionStorage.removeItem(ADMIN_CACHE_KEY);}catch(e){}await loadAdminData({forceLoading:true});alert('Payment test data cleared. '+Number(result.paymentRequestsDeleted||0)+' requests and '+Number(result.paymentsDeleted||0)+' revenue records removed.');}
   finally{if(button){button.disabled=false;button.textContent='Clear all payment test data';}}
 }
 async function copyPaymentRequest(id){
