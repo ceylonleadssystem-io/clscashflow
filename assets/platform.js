@@ -3044,6 +3044,7 @@
         shade.classList.add('open');
         shade.setAttribute('aria-hidden', 'false');
         openButton.setAttribute('aria-expanded', 'true');
+        document.documentElement.classList.add('mobile-drawer-open');
         return;
       }
       if ((event.target.closest('.mobile-sidebar-close, .mobile-sidebar-backdrop, [data-nav], [data-view]')) && side && shade) {
@@ -3052,9 +3053,197 @@
         shade.setAttribute('aria-hidden', 'true');
         var currentButton = document.querySelector('.mobile-portal-menu');
         if (currentButton) currentButton.setAttribute('aria-expanded', 'false');
+        document.documentElement.classList.remove('mobile-drawer-open');
       }
     });
   }
+
+  function mobileizeDataTables(root) {
+    if (!window.matchMedia || !window.matchMedia('(max-width:760px)').matches) return;
+    (root || document).querySelectorAll('table').forEach(function(table) {
+      if (table.matches('.li-table,.invoice-table,.inv-table,.invoice-preview-table,.customer-invoice-preview table') || table.closest('#view-invoices,#inv-modal,#print-inv,.cls-invoice-preview-frame')) return;
+      var headers = Array.from(table.querySelectorAll('thead th')).map(function(th) { return String(th.textContent || '').trim(); });
+      if (!headers.length) return;
+      table.classList.add('cls-mobile-table');
+      table.querySelectorAll('tbody tr').forEach(function(row) {
+        Array.from(row.children).forEach(function(cell, index) {
+          if (cell.tagName === 'TD') cell.setAttribute('data-mobile-label', headers[index] || 'Details');
+        });
+      });
+    });
+  }
+
+  function initMobileDataTables() {
+    mobileizeDataTables(document);
+    if (!window.MutationObserver || document.documentElement.dataset.mobileTableObserver === 'true') return;
+    document.documentElement.dataset.mobileTableObserver = 'true';
+    var queued = false;
+    new MutationObserver(function() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(function() { queued = false; mobileizeDataTables(document); });
+    }).observe(document.body, { childList:true, subtree:true });
+    window.addEventListener('resize', function() { mobileizeDataTables(document); }, { passive:true });
+  }
+
+  window.clsEnsurePdfLibrary = async function clsEnsurePdfLibrary() {
+    if (window.jspdf && window.jspdf.jsPDF) return true;
+    if (!window.clsLoadScriptOnce) return false;
+    try {
+      await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'cls-jspdf');
+      return !!(window.jspdf && window.jspdf.jsPDF);
+    } catch (error) {
+      console.warn('PDF library could not be loaded:', error);
+      return false;
+    }
+  };
+
+  window.clsDownloadBlobFile = function clsDownloadBlobFile(blob, filename) {
+    if (!blob) return false;
+    var url = URL.createObjectURL(blob);
+    var anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename || 'invoice.pdf';
+    anchor.rel = 'noopener';
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    document.documentElement.setAttribute('data-cls-last-download', filename || 'invoice.pdf');
+    window.dispatchEvent(new CustomEvent('cls:file-download', { detail:{ filename:filename || 'invoice.pdf', type:blob.type || '' } }));
+    setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+    return true;
+  };
+
+  window.clsBuildInvoicePdfBlob = function clsBuildInvoicePdfBlob(options) {
+    options = options || {};
+    var ascii = function(value) {
+      return String(value == null ? '' : value)
+        .replace(/[\u2013\u2014]/g, '-')
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201c\u201d]/g, '"')
+        .replace(/[^\x20-\x7e\n]/g, '?');
+    };
+    var pdfText = function(value) {
+      return ascii(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+    };
+    var wrap = function(value, width) {
+      var words = ascii(value).replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+      var rows = [], line = '';
+      words.forEach(function(word) {
+        var next = line ? line + ' ' + word : word;
+        if (next.length > width && line) { rows.push(line); line = word; }
+        else line = next;
+      });
+      if (line) rows.push(line);
+      return rows.length ? rows : [''];
+    };
+    var number = function(value) {
+      var amount = Number(value || 0);
+      return amount.toLocaleString('en', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    };
+    var currency = ascii(options.currency || 'LKR');
+    var money = function(value) { return currency + ' ' + number(value); };
+    var lines = Array.isArray(options.lines) && options.lines.length ? options.lines : [
+      { desc:'Professional Services', qty:1, price:options.total || 0, total:options.total || 0 }
+    ];
+    var pages = [], commands = [], y = 0;
+    var text = function(value, x, top, size, bold) {
+      commands.push('BT /' + (bold ? 'F2' : 'F1') + ' ' + (size || 9) + ' Tf ' + x + ' ' + (842 - top) + ' Td (' + pdfText(value) + ') Tj ET');
+    };
+    var line = function(x1, top1, x2, top2, color, width) {
+      commands.push((color || '0.72 0.57 0.16') + ' RG ' + (width || 1) + ' w ' + x1 + ' ' + (842 - top1) + ' m ' + x2 + ' ' + (842 - top2) + ' l S');
+    };
+    var fill = function(x, top, width, height, color) {
+      commands.push((color || '0.10 0.09 0.08') + ' rg ' + x + ' ' + (842 - top - height) + ' ' + width + ' ' + height + ' re f');
+    };
+    var finishPage = function() {
+      pages.push(commands.join('\n'));
+      commands = [];
+    };
+    var pageHeader = function(first) {
+      text(options.businessName || 'Your Business', 48, 54, first ? 18 : 13, true);
+      if (first) {
+        wrap(options.businessAddress || '', 48).slice(0,2).forEach(function(row, index) { text(row, 48, 72 + index * 11, 8, false); });
+        if (options.businessEmail) text(options.businessEmail, 48, 99, 8, false);
+        text('INVOICE', 390, 54, 27, true);
+        text(options.invoiceNumber || '', 390, 78, 10, true);
+        text('Date: ' + ascii(options.date || ''), 390, 96, 8, false);
+        text('Due: ' + ascii(options.due || ''), 390, 109, 8, false);
+        line(48, 132, 547, 132);
+        text('BILL TO', 48, 160, 9, true);
+        text(options.customer || 'Customer', 48, 180, 13, true);
+        wrap(options.customerDetails || '', 48).slice(0,3).forEach(function(row, index) { text(row, 48, 197 + index * 11, 8, false); });
+        text('TOTAL DUE', 390, 168, 9, true);
+        text(money(options.total), 390, 191, 16, true);
+        y = 246;
+      } else {
+        text('Invoice ' + ascii(options.invoiceNumber || ''), 390, 54, 10, true);
+        line(48, 72, 547, 72);
+        y = 94;
+      }
+      fill(48, y, 499, 24);
+      commands.push('1 1 1 rg');
+      text('DESCRIPTION', 58, y + 16, 8, true);
+      text('QTY', 318, y + 16, 8, true);
+      text('UNIT PRICE', 365, y + 16, 8, true);
+      text('AMOUNT', 468, y + 16, 8, true);
+      commands.push('0.10 0.09 0.08 rg');
+      y += 42;
+    };
+    pageHeader(true);
+    lines.forEach(function(item) {
+      var descRows = wrap(item.desc || item.description || 'Item', 43).slice(0,3);
+      var rowHeight = Math.max(26, descRows.length * 11 + 8);
+      if (y + rowHeight > 675) { finishPage(); pageHeader(false); }
+      descRows.forEach(function(row, index) { text(row, 58, y + index * 11, 9, index === 0); });
+      var qty = Number(item.qty || item.quantity || 1);
+      var price = Number(item.price || item.unitPrice || 0);
+      var total = item.total != null ? Number(item.total) : qty * price;
+      text(String(qty), 318, y, 9, false);
+      text(money(price), 365, y, 9, false);
+      text(money(total), 468, y, 9, true);
+      y += rowHeight;
+      line(48, y - 6, 547, y - 6, '0.88 0.86 0.82', 0.6);
+    });
+    if (y > 625) { finishPage(); pageHeader(false); }
+    y += 12;
+    var subtotal = options.subtotal != null ? options.subtotal : options.total;
+    text('Subtotal', 365, y, 9, false); text(money(subtotal), 468, y, 9, false); y += 17;
+    if (Number(options.tax || 0)) { text('Tax / VAT', 365, y, 9, false); text(money(options.tax), 468, y, 9, false); y += 17; }
+    if (Number(options.discount || 0)) { text('Discount', 365, y, 9, false); text(money(options.discount), 468, y, 9, false); y += 17; }
+    fill(350, y, 197, 34, '0.10 0.09 0.08'); commands.push('1 1 1 rg');
+    text('GRAND TOTAL', 365, y + 22, 9, true); text(money(options.total), 455, y + 22, 11, true); commands.push('0.10 0.09 0.08 rg');
+    y += 58;
+    text('NOTES', 48, y, 9, true); y += 16;
+    wrap(options.notes || 'Invoice by Cashflow System - Ceylonry Labs.io', 88).slice(0,5).forEach(function(row) { text(row, 48, y, 8, false); y += 11; });
+    text('Invoice generated by ' + ascii(options.systemName || 'Cashflow System') + ' - CeylonryLabs.io', 48, 795, 8, false);
+    finishPage();
+
+    var objects = [];
+    var pageRefs = [];
+    objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+    objects[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
+    pages.forEach(function(stream, index) {
+      var pageNumber = 5 + index * 2;
+      var streamNumber = pageNumber + 1;
+      pageRefs.push(pageNumber + ' 0 R');
+      objects[pageNumber] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + streamNumber + ' 0 R >>';
+      objects[streamNumber] = '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream';
+    });
+    objects[2] = '<< /Type /Pages /Kids [' + pageRefs.join(' ') + '] /Count ' + pageRefs.length + ' >>';
+    var pdf = '%PDF-1.4\n', offsets = [0];
+    for (var index = 1; index < objects.length; index += 1) {
+      offsets[index] = pdf.length;
+      pdf += index + ' 0 obj\n' + objects[index] + '\nendobj\n';
+    }
+    var xref = pdf.length;
+    pdf += 'xref\n0 ' + objects.length + '\n0000000000 65535 f \n';
+    for (var objectIndex = 1; objectIndex < objects.length; objectIndex += 1) pdf += String(offsets[objectIndex]).padStart(10, '0') + ' 00000 n \n';
+    pdf += 'trailer\n<< /Size ' + objects.length + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+    return new Blob([pdf], {type:'application/pdf'});
+  };
 
 	  function boot() {
     var pathPlan = planFromPath();
@@ -3072,6 +3261,7 @@
 	    window.addEventListener('resize', window.clsFitAllInvoicePreviews, { passive: true });
 	    initMobileApplicationDrawer();
 	    initDelegatedMobileDrawer();
+	    initMobileDataTables();
 	  }
 
   if (document.readyState === 'loading') {

@@ -176,3 +176,57 @@ input:focus,select:focus,textarea:focus{border-color:#080808!important;box-shado
   .mo,.modal-overlay{inset:0 0 54px!important;align-items:center!important}
   .mob,.modal,.modal-box{max-height:calc(100dvh - 62px)!important}
 }
+
+/* Final phone application model: one page scroll, off-canvas navigation, and
+   labelled vertical data cards instead of nested sideways table scrollers. */
+@media(max-width:760px){
+  html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior-y:auto!important}
+  html.mobile-drawer-open,html.mobile-drawer-open body{overflow:hidden!important}
+  #main{position:relative!important;inset:auto!important;left:auto!important;right:auto!important;width:100%!important;max-width:100%!important;height:auto!important;min-height:100dvh!important;overflow:visible!important;display:block!important}
+  .top-bar,.topbar{position:sticky!important;top:0!important;z-index:600!important;width:100%!important;background:#fff!important}
+  .topbar{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;gap:.5rem!important}
+  .topbar>div:first-child{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;column-gap:.65rem!important;align-items:start!important;min-width:0!important}
+  .topbar>div:first-child>.mobile-portal-menu{grid-row:1 / span 2!important;grid-column:1!important}
+  .topbar>div:first-child>.pg-title{grid-row:1!important;grid-column:2!important;min-width:0!important;white-space:normal!important;overflow-wrap:normal!important}
+  .topbar>div:first-child>.pg-sub{grid-row:2!important;grid-column:2!important;min-width:0!important;max-width:none!important}
+  .top-bar{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;gap:.5rem!important}
+  .top-bar-left{min-width:0!important}.top-bar-right,.tb-right{min-width:0!important;max-width:74px!important}
+  .top-badge,.tb-badge{display:none!important}
+  .content{height:auto!important;min-height:0!important;overflow:visible!important;overscroll-behavior:auto!important;padding:.75rem .65rem max(1rem,env(safe-area-inset-bottom))!important}
+  .view,.view.active{min-width:0!important;max-width:100%!important}
+  #sidebar,#sb{display:flex!important;position:fixed!important;top:0!important;bottom:0!important;left:0!important;right:auto!important;width:min(86vw,320px)!important;height:100dvh!important;border-top:0!important;border-right:1px solid #c9c4ba!important;z-index:920!important;transform:translateX(-105%)!important;transition:transform .24s ease!important;box-shadow:12px 0 34px rgba(0,0,0,.2)!important}
+  #sidebar.mobile-open,#sb.mobile-open{transform:translateX(0)!important}
+  #sidebar .sb-logo-wrap,#sidebar .sb-footer,#sidebar .sb-section,#sb .sb-top,#sb .sb-foot,#sb .sb-sec{display:block!important}
+  #sidebar .sb-nav,#sb .sb-nav{display:block!important;height:auto!important;min-height:0!important;flex:1 1 auto!important;overflow-y:auto!important;overflow-x:hidden!important;padding:.45rem 0 1rem!important}
+  #sidebar .sb-item,#sb .nav-item{width:100%!important;min-width:0!important;min-height:44px!important;display:flex!important;flex:0 0 auto!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:.65rem!important;margin:0!important;padding:.68rem 1.15rem!important;border-top:0!important;border-radius:0!important;text-align:left!important;font-size:.7rem!important}
+  #sidebar .sb-item.active,#sb .nav-item.on{border-top:0!important;border-left:3px solid #d7a72f!important;background:#fff!important}
+  #sidebar .sb-footer,#sb .sb-foot{display:block!important;flex:0 0 auto!important;padding:.75rem 1rem max(.75rem,env(safe-area-inset-bottom))!important}
+  .table-card,.card{max-width:100%!important;min-width:0!important;overflow:visible!important}
+  .table-wrap{width:100%!important;max-width:100%!important;overflow:visible!important;touch-action:auto!important}
+  table.cls-mobile-table{display:block!important;width:100%!important;min-width:0!important;table-layout:auto!important;border-collapse:separate!important}
+  table.cls-mobile-table thead{display:none!important}
+  table.cls-mobile-table tbody{display:grid!important;width:100%!important;gap:.65rem!important;padding:.65rem!important}
+  table.cls-mobile-table tr{display:block!important;width:100%!important;min-width:0!important;border:1px solid #d7d7d1!important;border-radius:12px!important;overflow:hidden!important;background:#fff!important}
+  table.cls-mobile-table td{display:grid!important;grid-template-columns:minmax(88px,.42fr) minmax(0,1fr)!important;align-items:start!important;gap:.65rem!important;width:100%!important;max-width:100%!important;min-width:0!important;padding:.65rem .75rem!important;border:0!important;border-bottom:1px solid #ece9e2!important;text-align:left!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  table.cls-mobile-table td:last-child{border-bottom:0!important}
+  table.cls-mobile-table td::before{content:attr(data-mobile-label);display:block!important;color:#77716a!important;font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important;font-size:.54rem!important;font-weight:800!important;letter-spacing:.1em!important;text-transform:uppercase!important;line-height:1.4!important}
+  table.cls-mobile-table td:empty{display:none!important}
+  table.cls-mobile-table .actions,table.cls-mobile-table .inv-action-row,table.cls-mobile-table .payroll-actions{width:100%!important;display:grid!important;grid-template-columns:1fr!important;gap:.4rem!important}
+  table.cls-mobile-table button,table.cls-mobile-table .btn,table.cls-mobile-table .bsm{width:100%!important;min-height:40px!important;max-width:100%!important}
+  #view-invoices .invoice-table tbody,#view-invoices table:has(#quote-body) tbody{display:grid!important;gap:.75rem!important;padding:.65rem!important}
+  #view-invoices .invoice-table tr,#view-invoices table:has(#quote-body) tr{display:block!important;width:100%!important;min-width:0!important;border:1px solid #d7d7d1!important;border-radius:12px!important;overflow:hidden!important;background:#fff!important}
+  #view-invoices .invoice-table td,#view-invoices table:has(#quote-body) td{display:grid!important;grid-template-columns:minmax(88px,.38fr) minmax(0,1fr)!important;align-items:start!important;gap:.65rem!important;width:100%!important;max-width:100%!important;min-width:0!important;padding:.65rem .75rem!important;border:0!important;border-bottom:1px solid #ece9e2!important;text-align:left!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important}
+  #view-invoices .invoice-table td:last-child,#view-invoices table:has(#quote-body) td:last-child{display:block!important;border-bottom:0!important;border-top:0!important}
+  #view-invoices .invoice-table td::before,#view-invoices table:has(#quote-body) td::before{min-width:0!important;text-align:left!important}
+  #view-invoices .invoice-actions,#view-invoices .invoice-actions.clean,#view-invoices .inv-action-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.45rem!important;width:100%!important;max-width:100%!important;margin:0!important}
+  #view-invoices .invoice-actions button,#view-invoices .invoice-actions a,#view-invoices .inv-action-row button{width:100%!important;min-width:0!important;min-height:40px!important;white-space:normal!important;overflow-wrap:anywhere!important}
+  #view-invoices .invoice-more{grid-column:1/-1!important;width:100%!important}
+  #view-invoices .invoice-more>summary{width:100%!important;min-height:40px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  .modal-overlay.open,.mo.open{overscroll-behavior:contain!important}
+  .modal-box,.mob{max-width:100%!important;max-height:calc(100dvh - .7rem)!important}
+  .modal-body,.invoice-modal-body{overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important}
+}
+
+@media(min-width:360px) and (max-width:760px){
+  .kpi-grid,.kpi-row,.db-kpi-row,.gm-strip,.gm-row2{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}

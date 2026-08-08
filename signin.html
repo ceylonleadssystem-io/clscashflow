@@ -111,7 +111,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   .btn-google{gap:.5rem}
 }
 </style>
-<link rel="stylesheet" href="assets/editorial-app.css?v=20260801-responsive">
+<link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final6">
 <style>
 @media(max-width:760px){
   html,body{min-height:100dvh;background:#fff!important}
@@ -132,6 +132,35 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   .finput,.btn-google{border-radius:12px!important}
   .password-toggle{border-radius:7px!important;min-width:44px;height:28px}
   .forgot{text-align:left!important}
+}
+@media(max-width:760px) and (max-height:720px){
+  .shell{min-height:100dvh!important}
+  .left{flex-basis:76px!important;min-height:76px!important;height:76px!important;padding:.9rem 1rem!important}
+  .left .logo{font-size:1.08rem!important}
+  .left .logo-sub{font-size:.49rem!important;margin-top:.14rem!important}
+  .right{min-height:calc(100dvh - 76px)!important;padding:.7rem 1rem .85rem!important}
+  .right>a:first-child{margin-bottom:.5rem!important;font-size:.7rem!important}
+  .right-eyebrow{font-size:.49rem!important;margin-bottom:.28rem!important}
+  .right-title{font-size:1.55rem!important;margin-bottom:.2rem!important}
+  .right-sub{font-size:.73rem!important;line-height:1.35!important;margin-bottom:.52rem!important}
+  .rule{height:3px!important;margin:0 0 .72rem!important}
+  .btn-google,.btn-sign,.finput{min-height:44px!important}
+  .btn-google{padding:.55rem .75rem!important;margin-bottom:.65rem!important}
+  .divider{margin-bottom:.62rem!important}
+  .field{gap:.22rem!important;margin-bottom:.52rem!important}
+  .finput{padding:.58rem .82rem!important}
+  .forgot{font-size:.68rem!important;margin:0 0 .55rem!important}
+  .btn-sign{padding:.62rem!important;margin-bottom:.55rem!important}
+  .signup-link{font-size:.69rem!important;line-height:1.35!important}
+  .signup-link a{display:inline!important;margin:0 0 0 .2rem!important}
+}
+@media(max-width:760px) and (max-height:580px){
+  .left{flex-basis:62px!important;min-height:62px!important;height:62px!important;padding:.65rem 1rem!important}
+  .right{min-height:calc(100dvh - 62px)!important;padding:.55rem .85rem .7rem!important}
+  .right-eyebrow,.right-sub{display:none!important}
+  .right-title{font-size:1.38rem!important}
+  .rule{margin-bottom:.55rem!important}
+  .btn-google,.btn-sign,.finput{min-height:42px!important}
 }
 </style>
 </head>
