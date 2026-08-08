@@ -1113,6 +1113,34 @@
     return '<iframe class="cls-invoice-preview-frame" title="Invoice preview — same A4 layout used for PDF" scrolling="no" srcdoc="' + invoiceEscape(html) + '"></iframe>';
   };
 
+  window.clsFitInvoicePreviewFrame = function(container) {
+    if (!container) return 1;
+    var frame = container.querySelector('.cls-invoice-preview-frame');
+    if (!frame) return 1;
+    var baseWidth = 794;
+    var baseHeight = 1123;
+    var styles = window.getComputedStyle(container);
+    var horizontalPadding = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
+    var available = Math.max(1, container.clientWidth - horizontalPadding);
+    var scale = Math.min(1, available / baseWidth);
+    frame.style.width = baseWidth + 'px';
+    frame.style.height = baseHeight + 'px';
+    frame.style.maxWidth = 'none';
+    frame.style.margin = '0';
+    frame.style.transformOrigin = 'top left';
+    frame.style.transform = 'scale(' + scale + ')';
+    container.style.height = Math.ceil(baseHeight * scale + (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0)) + 'px';
+    container.style.minHeight = '0';
+    container.style.overflow = 'hidden';
+    return scale;
+  };
+
+  window.clsFitAllInvoicePreviews = function() {
+    Array.prototype.forEach.call(document.querySelectorAll('.settings-invoice-preview'), function(container) {
+      window.clsFitInvoicePreviewFrame(container);
+    });
+  };
+
   window.clsPrepareInvoiceLogo = function(file) {
     return new Promise(function(resolve, reject) {
       if (!file || !/^image\//i.test(file.type || '')) {
@@ -2983,6 +3011,7 @@
 	    afterFirstPaint(function() {
 	      window.clsMaybeShowDay5PaymentPrompt(window._profile, { retries: 0 });
 	    }, 4200);
+	    window.addEventListener('resize', window.clsFitAllInvoicePreviews, { passive: true });
 	  }
 
   if (document.readyState === 'loading') {

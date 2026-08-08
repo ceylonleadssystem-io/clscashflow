@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260803-qa-pass"></script>
+<script src="assets/platform.js?v=20260808-mobile-invoice"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -2384,6 +2384,7 @@ window.showSettingsTab = function showSettingsTab(tab, opts) {
     panel.classList.toggle('active', active);
     panel.hidden = !active;
   });
+  if (tab === 'invoices') requestAnimationFrame(function() { fitSettingsInvoicePreview(document.getElementById('settings-invoice-preview')); });
   if (opts && opts.noScroll) return;
   var content = document.querySelector('.content');
   var head = document.querySelector('#view-settings .settings-page-head');
@@ -3444,7 +3445,9 @@ function renderSettingsInvoicePreview() {
     templateIndex: normalizeBusinessTemplate(s.defaultTpl),
     systemName: 'Business Cashflow System'
   });
+  requestAnimationFrame(function() { fitSettingsInvoicePreview(box); });
 }
+function fitSettingsInvoicePreview(box){var frame=box&&box.querySelector('.cls-invoice-preview-frame');if(!frame)return;var styles=getComputedStyle(box),pad=(parseFloat(styles.paddingLeft)||0)+(parseFloat(styles.paddingRight)||0),scale=Math.min(1,Math.max(1,box.clientWidth-pad)/794);frame.style.cssText+=';width:794px;height:1123px;max-width:none;margin:0;transform-origin:top left;transform:scale('+scale+')';box.style.height=Math.ceil(1123*scale+(parseFloat(styles.paddingTop)||0)+(parseFloat(styles.paddingBottom)||0))+'px';box.style.minHeight='0';box.style.overflow='hidden';}
 
 function bindSettingsPreviewInputs() {
   ['s-biz','s-user','s-addr','s-email','s-vat','s-footer','s-bank-name','s-bank-account-name','s-bank-account-number','s-bank-branch','s-vatrate','s-invoice-prefix','s-invoice-font','s-invoice-view','s-logo-align','s-logo-size','s-logo-x','s-logo-y'].forEach(function(id) {

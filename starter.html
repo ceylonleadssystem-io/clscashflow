@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260803-qa-pass"></script>
+<script src="assets/platform.js?v=20260808-mobile-invoice"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -3833,6 +3833,7 @@ window.showAccountSettingsTab = function showAccountSettingsTab(tab){
   document.querySelectorAll('[data-account-panel]').forEach(panel=>{
     panel.hidden=panel.getAttribute('data-account-panel')!==tab;
   });
+  if(tab==='invoices')requestAnimationFrame(function(){fitSettingsInvoicePreview(document.getElementById('settings-invoice-preview'));});
 };
 function loadSettings(){
   const s=DB.settings;
@@ -3940,7 +3941,9 @@ function renderSettingsInvoicePreview(){
   const s=invoicePreviewSettings(),rate=Number(valueOr('set-vatrate',0))||0,prefix=valueOr('set-invoice-prefix','INV')||'INV';
   const inv={num:prefix+'-0001',client:'Sample Customer',caddr:'Colombo, Sri Lanka',cemail:'customer@example.com',date:new Date().toISOString().slice(0,10),due:new Date(Date.now()+30*86400000).toISOString().slice(0,10),terms:'Net 30',cur:studioCurrency(s.invoiceCurrency||s.mainCurrency||'LKR'),lines:[{desc:'Professional service',qty:1,price:25000,total:25000}],sub:25000,vat:25000*rate/100,total:25000+(25000*rate/100),notes:s.footer,tpl:s.defaultTpl};
   box.innerHTML=window.clsBuildInvoicePreviewFrame({inv:inv,settings:s,templateIndex:s.defaultTpl});
+  requestAnimationFrame(function(){fitSettingsInvoicePreview(box);});
 }
+function fitSettingsInvoicePreview(box){const frame=box&&box.querySelector('.cls-invoice-preview-frame');if(!frame)return;const styles=getComputedStyle(box),pad=(parseFloat(styles.paddingLeft)||0)+(parseFloat(styles.paddingRight)||0),scale=Math.min(1,Math.max(1,box.clientWidth-pad)/794);frame.style.cssText+=';width:794px;height:1123px;max-width:none;margin:0;transform-origin:top left;transform:scale('+scale+')';box.style.height=Math.ceil(1123*scale+(parseFloat(styles.paddingTop)||0)+(parseFloat(styles.paddingBottom)||0))+'px';box.style.minHeight='0';box.style.overflow='hidden';}
 function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-email','set-vat','set-footer','set-bank-name','set-bank-account-name','set-bank-account-number','set-bank-branch','set-invoice-prefix','set-invoice-font','set-invoice-view','set-invoice-currency','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
 
 // ════════════════════════════════
