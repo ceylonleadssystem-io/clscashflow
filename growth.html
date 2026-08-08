@@ -249,6 +249,7 @@ tr:hover td{background:var(--bg3)}
 .invoice-more-menu{position:absolute;right:0;top:35px;z-index:40;width:118px;padding:.32rem;background:#fff;border:1px solid var(--border);box-shadow:0 10px 24px rgba(20,16,12,.14);display:grid;gap:.22rem}
 .invoice-more-menu .bsm{width:100%;justify-content:flex-start;background:#fff;color:var(--black);border:0}
 .invoice-more-menu .danger{color:var(--red)}
+.invoice-table tbody tr:last-child .invoice-more-menu{top:auto;bottom:35px}
 #view-invoices .table-wrap:has(.invoice-more[open]){overflow:visible}
 @media(max-width:640px){.invoice-status-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3rem;padding:.65rem}.invoice-status-tab{justify-content:center;white-space:normal;text-align:center;padding:.48rem .18rem;font-size:.51rem;line-height:1.2}.invoice-status-count{flex:0 0 auto}.invoice-actions.clean{min-width:232px}}
 .invoice-actions .bsm,.invoice-actions .pill{height:31px;min-width:0;width:100%;padding:0 .36rem;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3048,12 +3049,12 @@ function renderClients() {
   ['grid','table'].forEach(function(view){var btn=document.getElementById('business-customer-'+view);if(btn)btn.classList.toggle('active',view===businessCustomerState.view);});
   var host=document.getElementById('cli-grid');
   if(!rows.length){host.className='cli-grid';host.innerHTML='<div class="empty-wide">'+emptyState(D.clients.length?'No customers match':'No customers yet',D.clients.length?'Clear the filters to see the full directory.':'Add customers once, then use them for invoices and follow-ups.',D.clients.length?'Clear Filters':'Add Customer',D.clients.length?'window.clearBusinessCustomerFilters()':'window.openCliMo()')+'</div>';return;}
-  if(businessCustomerState.view==='table'){host.className='customer-table-wrap';host.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th class="tr">Total Billed</th><th class="tr">Outstanding</th><th class="tr">Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHtml(c.name)+'</strong><br>'+escHtml(c.biz||'Individual')+'</td><td>'+escHtml(c.email||'—')+'<br>'+escHtml(c.phone||'')+'</td><td>'+m.invoices.length+'</td><td class="tr">'+fmt(m.billed)+'</td><td class="tr">'+fmt(m.outstanding)+'</td><td class="tr"><button class="bsm bsmo" onclick="window.editClient('+jsArg(c.id)+')">Edit</button></td></tr>';}).join('')+'</tbody></table>';return;}
+  if(businessCustomerState.view==='table'){host.className='customer-table-wrap';host.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th class="tr">Total Billed</th><th class="tr">Outstanding</th><th class="tr">Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHtml(c.name)+'</strong><br>'+escHtml(c.biz||'Individual')+'</td><td>'+escHtml(c.email||'—')+'<br>'+escHtml(c.phone||'')+'</td><td>'+m.invoices.length+'</td><td class="tr">'+fmt(m.billed)+'</td><td class="tr">'+fmt(m.outstanding)+'</td><td class="tr"><button class="bsm bd" onclick="window.invoiceFromBusinessClient('+jsArg(c.id)+')">+ Invoice</button> <button class="bsm bsmo" onclick="window.editClient('+jsArg(c.id)+')">Edit</button></td></tr>';}).join('')+'</tbody></table>';return;}
   host.className='cli-grid';
   host.innerHTML = rows.map(function(row) {
     var c=row.client, invs=row.metrics.invoices, tot=row.metrics.billed;
     var ini = c.name.split(' ').map(function(w) { return w[0]; }).join('').substring(0,2);
-    return '<div class="cli-card"><div class="cli-av">' + ini + '</div><div class="cli-name">' + escHtml(c.name) + '</div><div class="cli-biz">' + escHtml(c.biz) + '</div><div class="cli-det">' + (c.email ? '✉ ' + escHtml(c.email) + '<br>' : '') + '📱 ' + escHtml(c.phone) + (c.addr ? '<br>📍 ' + escHtml(c.addr) : '') + '</div><div class="sumbar c2" style="margin:.75rem 0"><div class="sum-i"><div class="sum-lbl">Invoices</div><div class="sum-val">' + invs.length + '</div></div><div class="sum-i"><div class="sum-lbl">Total Billed</div><div class="sum-val">' + fmtS(tot) + '</div></div></div><div class="cli-acts"><button class="bsm bsmwa" onclick="window.open(' + jsArg('https://wa.me/' + c.phone.replace(/\D/g,'')) + ')">💬 WA</button><button class="bsm bsmo" onclick="window.editClient(' + jsArg(c.id) + ')">Edit</button><button class="bsm bsmdel" onclick="window.deleteClient(' + jsArg(c.id) + ')">Delete</button></div></div>';
+    return '<div class="cli-card"><div class="cli-av">' + ini + '</div><div class="cli-name">' + escHtml(c.name) + '</div><div class="cli-biz">' + escHtml(c.biz) + '</div><div class="cli-det">' + (c.email ? '✉ ' + escHtml(c.email) + '<br>' : '') + '📱 ' + escHtml(c.phone) + (c.addr ? '<br>📍 ' + escHtml(c.addr) : '') + '</div><div class="sumbar c2" style="margin:.75rem 0"><div class="sum-i"><div class="sum-lbl">Invoices</div><div class="sum-val">' + invs.length + '</div></div><div class="sum-i"><div class="sum-lbl">Total Billed</div><div class="sum-val">' + fmtS(tot) + '</div></div></div><div class="cli-acts"><button class="bsm bd" onclick="window.invoiceFromBusinessClient(' + jsArg(c.id) + ')">+ Invoice</button><button class="bsm bsmwa" onclick="window.open(' + jsArg('https://wa.me/' + c.phone.replace(/\D/g,'')) + ')">💬 WA</button><button class="bsm bsmo" onclick="window.editClient(' + jsArg(c.id) + ')">Edit</button><button class="bsm bsmdel" onclick="window.deleteClient(' + jsArg(c.id) + ')">Delete</button></div></div>';
   }).join('');
 }
 
@@ -3504,6 +3505,15 @@ window.openInvMo = function openInvMo() {
   addLi();
   calcTotals();
   openMo('mo-inv');
+}
+
+window.invoiceFromBusinessClient = function invoiceFromBusinessClient(id) {
+  window.openInvMo();
+  var customer = D.clients.find(function(c) { return String(c.id) === String(id); });
+  var select = document.getElementById('inv-customer-select');
+  if (!customer || !select) return;
+  select.value = String(customer.id);
+  window.applyInvoiceCustomer(customer.id);
 }
 
 window.openQuoteMo = function openQuoteMo() {

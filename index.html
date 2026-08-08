@@ -253,6 +253,9 @@ a{color:inherit}
 .contact-status.error{border-left-color:#C84636;background:#FFF0ED;color:#8F2C20}
 .contact-honeypot{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(1px,1px,1px,1px)!important;white-space:nowrap!important}
 body.contact-open{overflow:hidden}
+.whatsapp-support{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));z-index:55;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 18px;border-radius:999px;background:#25D366;color:#071d0e;text-decoration:none;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 14px 36px rgba(13,92,42,.28);transition:transform .2s ease,box-shadow .2s ease}
+.whatsapp-support:hover{transform:translateY(-2px);box-shadow:0 18px 42px rgba(13,92,42,.34)}
+.whatsapp-support svg{width:22px;height:22px;fill:currentColor;flex:0 0 auto}
 
 /* Reveal + motion */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
@@ -346,6 +349,7 @@ body.contact-open{overflow:hidden}
   .hero .container.hero-copy{width:calc(100vw - 32px);max-width:358px;margin-left:16px;margin-right:auto}
   .hero-sub{font-size:15.5px}
 }
+@media(max-width:520px){.whatsapp-support{right:14px;bottom:max(14px,env(safe-area-inset-bottom));width:52px;padding:0;justify-content:center}.whatsapp-support span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -467,10 +471,10 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <section class="hero">
       <div class="container hero-copy">
         <p class="eyebrow">Cashflow and invoicing</p>
-        <h1 class="serif" aria-label="Get paid, effortlessly.">
+        <h1 class="serif" aria-label="Get paid, effortlessly">
           <span class="hero-word">Get</span>
           <span class="hero-word">paid,</span><br>
-          <span class="hero-word">effortlessly.</span>
+          <span class="hero-word">effortlessly</span>
         </h1>
         <p class="hero-sub"><strong>Your Business Health, at a Glance</strong></p>
         <div class="hero-actions">
@@ -494,7 +498,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           </div>
           <div>
             <p class="eyebrow">The story behind the system</p>
-            <h2 class="serif">Meet Mrs. Gamage.</h2>
+            <h2 class="serif">Meet Mrs. Gamage</h2>
             <p>Her butter cakes are loved, her WhatsApp orders keep coming, and her kitchen is always busy. Cashflow System was created for business owners like her who need invoices, payment tracking, customer records, and a clearer view of where the money goes.</p>
           </div>
           <a class="btn light" href="mrs-gamage-story.html">Read her story -></a>
@@ -506,7 +510,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <div class="container">
         <div class="section-head">
           <p class="eyebrow">How it works</p>
-          <h2 class="serif">Plan. Track. Grow.</h2>
+          <h2 class="serif">Plan · Track · Grow</h2>
           <p>Create invoices, record payments, and watch outstanding balances without rebuilding your business inside spreadsheets.</p>
         </div>
         <div class="device-stage">
@@ -516,7 +520,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
               <div class="dash-head">
                 <div>
                   <p class="eyebrow">Dashboard</p>
-                  <h2 class="dash-title">This month, clearly.</h2>
+                  <h2 class="dash-title">This month, clearly</h2>
                 </div>
                 <div class="dash-date">Friday, 26 June 2026</div>
               </div>
@@ -565,7 +569,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <div class="container">
         <div class="pricing-head">
           <p class="eyebrow">Pricing</p>
-          <h2 class="serif">Choose only what you need.</h2>
+          <h2 class="serif">Choose only what you need</h2>
           <p>Start free for 15 days. Upgrade, downgrade, or cancel anytime.</p>
           <div class="toggle-stack" aria-label="Pricing options">
             <div class="segmented" role="group" aria-label="Currency">
@@ -647,7 +651,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
         </div>
         <section class="plan-comparison" aria-labelledby="plan-comparison-title">
           <div class="plan-comparison-head">
-            <h3 id="plan-comparison-title">Compare every plan.</h3>
+            <h3 id="plan-comparison-title">Compare every plan</h3>
             <p>Start with professional invoicing in Solo, add operational control in Studio, or manage payroll and advanced insight in Business.</p>
           </div>
           <div class="plan-comparison-scroll" tabindex="0" aria-label="Scrollable plan feature comparison">
@@ -679,7 +683,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <section class="features reveal" id="features">
       <div class="container">
         <p class="eyebrow" style="text-align:center">Features</p>
-        <h2 class="serif">Everything small teams expect.</h2>
+        <h2 class="serif">Everything small teams expect</h2>
         <div class="feature-grid">
           <article class="feature">
             <svg viewBox="0 0 32 32" fill="none" stroke-width="1.7"><path d="M5 8h22v16H5z"/><path d="M9 12h14M9 16h8M9 20h11"/></svg>
@@ -710,7 +714,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
         <div class="image-head">
           <div>
             <p class="eyebrow">Real business rhythm</p>
-            <h2 class="serif">Built for the work behind the orders.</h2>
+            <h2 class="serif">Built for the work behind the orders</h2>
           </div>
           <p>Cashflow System is made for the quiet middle of business: packing orders, sending invoices, following up payments, and knowing whether the month is actually profitable.</p>
         </div>
@@ -822,12 +826,17 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
   </footer>
 </div>
 
+<a class="whatsapp-support" href="https://wa.me/94778815628?text=Hi%20CeylonryLabs%2C%20I%20need%20help%20with%20Cashflow%20System." target="_blank" rel="noopener" aria-label="Contact Cashflow System support on WhatsApp">
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.11 17.33c-.26-.13-1.54-.76-1.78-.85-.24-.09-.41-.13-.59.13-.17.26-.67.85-.82 1.02-.15.17-.3.2-.56.07-.26-.13-1.09-.4-2.08-1.28-.77-.68-1.29-1.53-1.44-1.79-.15-.26-.02-.4.11-.53.12-.12.26-.3.39-.46.13-.15.17-.26.26-.43.09-.17.04-.33-.02-.46-.07-.13-.59-1.41-.8-1.93-.21-.51-.43-.44-.59-.45h-.5c-.17 0-.46.07-.69.33-.24.26-.91.89-.91 2.17s.93 2.52 1.06 2.69c.13.17 1.83 2.8 4.44 3.92.62.27 1.1.43 1.48.55.62.2 1.19.17 1.64.1.5-.07 1.54-.63 1.76-1.24.22-.61.22-1.13.15-1.24-.06-.11-.24-.17-.5-.3zM16.04 3C8.85 3 3 8.77 3 15.86c0 2.27.6 4.49 1.75 6.43L2.9 29l6.91-1.8a13.18 13.18 0 0 0 6.23 1.56h.01C23.24 28.76 29 23 29 15.9 29 8.8 23.23 3 16.04 3zm0 23.59h-.01a11 11 0 0 1-5.61-1.53l-.4-.24-4.1 1.07 1.1-3.96-.26-.41a10.63 10.63 0 0 1-1.67-5.66c0-5.9 4.91-10.7 10.96-10.7 6.04 0 10.95 4.82 10.95 10.74 0 5.9-4.91 10.69-10.96 10.69z"/></svg>
+  <span>WhatsApp support</span>
+</a>
+
 <div class="contact-modal" id="contact-modal" hidden>
   <section class="contact-dialog" role="dialog" aria-modal="true" aria-labelledby="contact-title">
     <div class="contact-dialog-head">
       <div>
         <p class="eyebrow">Contact CeylonryLabs.io</p>
-        <h2 id="contact-title">Tell us how we can help.</h2>
+        <h2 id="contact-title">Tell us how we can help</h2>
       </div>
       <button type="button" class="contact-close" data-contact-close aria-label="Close contact form">&times;</button>
     </div>
