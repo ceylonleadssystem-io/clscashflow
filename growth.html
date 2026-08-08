@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260808-mobile-invoice"></script>
+<script src="assets/platform.js?v=20260808-mobile-drawer2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -769,6 +769,26 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
 #print-inv{display:none}
+/* Mobile application drawer and page-level overflow guard */
+.mobile-portal-menu,.mobile-sidebar-close,.mobile-sidebar-backdrop{display:none}
+@media(max-width:760px){
+  html,body,#main,.content,.view{width:100%;max-width:100%;min-width:0}body{overflow-x:hidden}
+  #sb{display:flex;top:0;bottom:0;left:0;right:auto;width:min(84vw,320px);height:100dvh;border-top:0;border-right:1px solid var(--border);z-index:920;transform:translateX(-105%);transition:transform .24s ease;box-shadow:12px 0 34px rgba(0,0,0,.18)}
+  #sb.mobile-open{transform:translateX(0)}
+  #sb .sb-top,#sb .sb-foot,#sb .sb-sec{display:block!important}
+  #sb .sb-top{position:relative;flex:0 0 auto;padding-right:3.5rem}
+  #sb .sb-nav{display:block;height:auto;flex:1;overflow-y:auto;overflow-x:hidden;padding:.55rem 0 1rem}
+  #sb .nav-item{width:100%;min-width:0;min-height:44px;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:.65rem;padding:.72rem 1.25rem;border-top:0;text-align:left;font-size:.72rem}
+  #sb .nav-item.on{border-top:0;border-left:3px solid var(--rose)}
+  #sb .sb-foot{flex:0 0 auto;padding:.8rem 1rem max(.8rem,env(safe-area-inset-bottom));background:var(--white)}
+  .mobile-sign-out{display:none!important}.mobile-top-sign-out{display:none!important}
+  .mobile-portal-menu{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;flex:0 0 42px;border:1px solid var(--border);background:var(--white);color:var(--black);font-size:1.25rem;cursor:pointer;border-radius:var(--r)}
+  .mobile-sidebar-close{display:inline-flex;position:absolute;right:.75rem;top:50%;transform:translateY(-50%);width:36px;height:36px;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--white);font-size:1.2rem;cursor:pointer;border-radius:var(--r)}
+  .mobile-sidebar-backdrop{display:block;position:fixed;inset:0;z-index:910;background:rgba(20,16,12,.45);opacity:0;pointer-events:none;transition:opacity .2s}.mobile-sidebar-backdrop.open{opacity:1;pointer-events:auto}
+  .topbar>div:first-child{display:flex;align-items:flex-start;gap:.7rem;min-width:0}.topbar>div:first-child>div{min-width:0}.pg-title,.pg-sub{overflow-wrap:anywhere}
+  .content{overflow-x:hidden;padding-bottom:max(1rem,env(safe-area-inset-bottom))}.content>*{min-width:0;max-width:100%}
+  input,select,textarea,button,img,canvas,iframe{max-width:100%}.card,.table-wrap{max-width:100%;min-width:0}
+}
 </style>
 <link rel="stylesheet" href="assets/editorial-app.css?v=20260801-payroll">
 </head>
@@ -780,6 +800,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="sb-prod">Ceylonry Labs</div>
     <div class="sb-logo">Cashflow <b>Business</b></div>
     <div class="sb-tag">Business Plan</div>
+    <button class="mobile-sidebar-close" type="button" aria-label="Close navigation" onclick="document.getElementById('sb').classList.remove('mobile-open');document.querySelector('.mobile-sidebar-backdrop').classList.remove('open')">×</button>
   </div>
   <div class="sb-nav">
     <div class="sb-sec">My Business</div>
@@ -814,11 +835,13 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <button class="btn-sign-out" onclick="window.clsSignOut()">Sign Out</button>
   </div>
 </nav>
+<div class="mobile-sidebar-backdrop" aria-hidden="true" onclick="document.getElementById('sb').classList.remove('mobile-open');this.classList.remove('open')"></div>
 
 <!-- MAIN -->
 <div id="main">
   <div class="topbar">
     <div>
+      <button class="mobile-portal-menu" type="button" aria-label="Open navigation" aria-controls="sb" aria-expanded="false" onclick="document.getElementById('sb').classList.add('mobile-open');document.querySelector('.mobile-sidebar-backdrop').classList.add('open');this.setAttribute('aria-expanded','true');event.stopPropagation()">☰</button>
       <div class="pg-title" id="pg-title">Dashboard</div>
       <div class="pg-sub" id="pg-sub">Here is how your business is doing today</div>
     </div>

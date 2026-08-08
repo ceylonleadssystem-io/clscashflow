@@ -262,6 +262,29 @@ function firebaseAdminFacade() {
             name: meta.full_name || meta.name || data.user.email || ''
           };
         },
+        listUsers: async function(maxResults, pageToken) {
+          const page = Math.max(1, Number(pageToken || 1));
+          const perPage = Math.min(1000, Math.max(1, Number(maxResults || 1000)));
+          const { data, error } = await service().auth.admin.listUsers({ page, perPage });
+          if (error) throw error;
+          const rows = (data && data.users) || [];
+          return {
+            users: rows.map(function(user) {
+              const meta = user.user_metadata || {};
+              return {
+                uid: user.id,
+                email: user.email || '',
+                displayName: meta.full_name || meta.name || '',
+                disabled: !!user.banned_until,
+                metadata: {
+                  creationTime: user.created_at || '',
+                  lastSignInTime: user.last_sign_in_at || ''
+                }
+              };
+            }),
+            pageToken: rows.length === perPage ? String(page + 1) : undefined
+          };
+        },
         deleteUser: async function(uid) {
           const { error } = await service().auth.admin.deleteUser(uid);
           if (error) throw error;

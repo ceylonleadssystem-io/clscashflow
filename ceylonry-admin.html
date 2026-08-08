@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260808-mobile-invoice"></script>
+<script src="assets/platform.js?v=20260808-mobile-drawer2"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1280px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.token{font-weight:800;letter-spacing:.08em;color:#1C1814;white-space:nowrap}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{padding:8px 10px;font-size:10px}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.secure-note{font-size:11px;color:#6B6258;line-height:1.5}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
@@ -49,6 +49,7 @@
 @media(max-width:760px){.admin-tabs{position:static}.user-card .actions{grid-template-columns:1fr 1fr}.top{position:static}.wrap{padding:16px}.section-head{align-items:flex-start;flex-direction:column}.table{min-width:940px}}
 @media(max-width:520px){.user-card .actions{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 .admin-tools{display:flex;gap:.6rem;flex-wrap:wrap;align-items:end;margin:.65rem 0 1rem}.admin-tools .field{margin:0;min-width:150px}.admin-tools .field.search{flex:1;min-width:240px}.admin-tools input,.admin-tools select{min-height:40px}.compact-users{min-width:0!important}.compact-users th,.compact-users td{padding:9px 10px}.compact-users td{vertical-align:middle}.compact-users .actions{display:grid;grid-template-columns:repeat(2,minmax(110px,1fr));padding:10px}.admin-action-menu{position:relative}.admin-action-menu summary{cursor:pointer;list-style:none;border:1px solid #d8cda9;padding:7px 10px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}.admin-action-menu summary::-webkit-details-marker{display:none}.admin-action-menu[open]{z-index:20}.admin-action-menu .action-pop{position:absolute;right:0;top:calc(100% + 5px);width:300px;background:#fff;border:1px solid #ded7cc;box-shadow:0 18px 50px rgba(0,0,0,.16);z-index:30}.receipt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.75rem;margin-bottom:1rem}.receipt-card{background:#fff;border:1px solid #ded7cc;border-left:4px solid #1a9e5c;padding:1rem;display:grid;gap:.45rem}.receipt-card strong{font-size:.88rem}.receipt-card span{font-size:.72rem;color:#6b6258}.visit-map{position:relative;min-height:310px;background:#e9f0ed;border:1px solid #d4ddd8;border-radius:18px;overflow:hidden;margin-bottom:1rem}.visit-map svg{width:100%;height:310px}.map-pin{cursor:pointer}.map-pin circle{fill:#d8a92c;stroke:#fff;stroke-width:2}.map-pin text{font:800 10px Inter,Arial;fill:#111;text-anchor:middle;dominant-baseline:middle}.map-empty{display:grid;place-items:center;height:310px;color:#6b6258}.ticket-upgrade{margin-top:.45rem;padding:.5rem;background:#fff6df;border-left:3px solid #d8a92c;font-size:.72rem;line-height:1.45}.chat-card.archived{opacity:.72}.chat-card.archived .chat-reply{display:none}.table{min-width:0}.user-breakdown{display:none!important}@media(max-width:900px){.table-wrap{overflow:auto}.compact-users{min-width:850px!important}.admin-action-menu .action-pop{position:fixed;inset:auto 1rem 1rem;width:auto;max-height:70vh;overflow:auto}.visit-map{min-height:240px}.visit-map svg{height:240px}}
+.admin-cashflow{margin:1.2rem 0 0;background:#171512;color:#fff;border-top:4px solid #c99a22;padding:1.25rem}.admin-cashflow-head{display:flex;justify-content:space-between;gap:1rem;align-items:end;margin-bottom:1rem}.admin-cashflow-head h2{margin:0;font-size:1.45rem}.admin-cashflow-head span{color:#bdb7ae;font-size:.72rem}.admin-cashflow-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#514a40}.admin-cashflow-item{background:#211e1a;padding:1rem}.admin-cashflow-item small{display:block;color:#aaa198;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase}.admin-cashflow-item strong{display:block;margin-top:.3rem;color:#d8a92c;font-size:1.35rem}.revenue-bars{display:grid;grid-template-columns:repeat(6,1fr);gap:.55rem;align-items:end;height:130px;margin-top:1rem}.revenue-bar{display:flex;height:100%;flex-direction:column;justify-content:flex-end;gap:.35rem;text-align:center;color:#aaa198;font-size:.56rem}.revenue-bar i{display:block;min-height:3px;background:#d8a92c}.revenue-bar b{font-size:.55rem;color:#fff}@media(max-width:700px){.admin-cashflow-grid{grid-template-columns:1fr}.admin-cashflow-head{align-items:flex-start;flex-direction:column}.revenue-bars{gap:.25rem}}
 </style>
 </head>
 <body>
@@ -113,6 +114,15 @@
       <div class="card"><div class="label">Payment requests</div><div class="kpi-number" id="kpi-payment-requests">0</div><p class="muted">Expired trials needing invoices</p></div>
       <div class="card"><div class="label">Open chats</div><div class="kpi-number" id="kpi-open-chats">0</div><p class="muted"><span id="kpi-chats">0</span> Mrs. Gamage threads</p></div>
     </div>
+    <section class="admin-cashflow" data-admin-section="overview" aria-labelledby="admin-cashflow-title">
+      <div class="admin-cashflow-head"><div><div class="label">Revenue cash flow</div><h2 id="admin-cashflow-title">Confirmed subscription revenue</h2></div><span>Based on paid requests and uploaded bank receipts</span></div>
+      <div class="admin-cashflow-grid">
+        <div class="admin-cashflow-item"><small>Revenue this month</small><strong id="kpi-month-revenue">LKR 0</strong></div>
+        <div class="admin-cashflow-item"><small>Confirmed payments</small><strong id="kpi-month-payments">0</strong></div>
+        <div class="admin-cashflow-item"><small>Active monthly run rate</small><strong id="kpi-active-mrr">LKR 0</strong></div>
+      </div>
+      <div class="revenue-bars" id="revenue-bars" aria-label="Confirmed revenue for the latest six months"></div>
+    </section>
 
     <section class="section" data-admin-section="payments">
       <div class="section-head"><h2>Payment Requests</h2><span class="muted">Tokens created automatically when trials expire</span></div>
@@ -240,6 +250,8 @@ function clientStats(users, visits, tickets, paymentRequests, chats){
     if (id) visitorIds[id] = true;
     if (now - visitMs(v) <= 10 * 60 * 1000) liveIds[id] = true;
   });
+  var monthKey=new Date().toISOString().slice(0,7),prices={solo:3500,studio:5500,business:8500},monthlyRevenue=0,monthlyPayments=0,activeMrr=0;
+  (users||[]).forEach(function(row){var u=row.data||{},plan=normalizePlan(u.currentPlan||u.plan||u.lastPlan),amount=Number(u.planMonthlyPrice||prices[plan]||0),status=String(u.subscriptionStatus||'').toLowerCase(),paid=u.paid===true||['active','manual-paid','receipt-submitted'].indexOf(status)>-1;if(paid&&u.accountPaused!==true)activeMrr+=amount;if(String(u.lastPaymentPeriod||String(u.lastPaymentSlipAtUtc||'').slice(0,7))===monthKey){monthlyRevenue+=amount;monthlyPayments+=1;}});
   return {
     usersTotal: (users || []).length,
     visitsTotal: (visits || []).length,
@@ -256,7 +268,11 @@ function clientStats(users, visits, tickets, paymentRequests, chats){
     chatsTotal: (chats || []).length,
     openChatsTotal: (chats || []).filter(function(c){
       return String((c.data || {}).status || 'open').toLowerCase() !== 'closed';
-    }).length
+    }).length,
+    revenueThisMonth:monthlyRevenue,
+    confirmedPaymentsThisMonth:monthlyPayments,
+    activeMrr:activeMrr,
+    monthlyRevenue:[]
   };
 }
 function planPill(plan){
@@ -775,8 +791,17 @@ function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stat
   renderVisits(visits || [], stats || {});
   renderChats(chats || [], stats || {});
   renderTickets(tickets || [], stats || {});
+  renderRevenue(stats || {});
   switchAdminSection(adminActiveSection);
   adminHasRendered = true;
+}
+function renderRevenue(stats){
+  stats=stats||{};
+  if($('kpi-month-revenue'))$('kpi-month-revenue').textContent=money(Number(stats.revenueThisMonth||0));
+  if($('kpi-month-payments'))$('kpi-month-payments').textContent=fmtInt(Number(stats.confirmedPaymentsThisMonth||0));
+  if($('kpi-active-mrr'))$('kpi-active-mrr').textContent=money(Number(stats.activeMrr||0));
+  var host=$('revenue-bars');if(!host)return;var rows=Array.isArray(stats.monthlyRevenue)?stats.monthlyRevenue:[],max=Math.max.apply(null,rows.map(function(r){return Number(r.revenue||0);}).concat([1]));
+  host.innerHTML=rows.map(function(row){var height=Math.max(3,Math.round(Number(row.revenue||0)/max*92)),label=String(row.month||'').slice(5);return '<div class="revenue-bar"><b>'+esc(money(Number(row.revenue||0)).replace('LKR ',''))+'</b><i style="height:'+height+'px"></i><span>'+esc(label)+'</span></div>';}).join('')||'<div class="muted">Revenue will appear when a paid request or bank receipt is confirmed.</div>';
 }
 async function loadAdminData(opts){
   opts = opts || {};

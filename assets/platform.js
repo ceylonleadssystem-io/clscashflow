@@ -1650,7 +1650,12 @@
     var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,amount:money(details.monthlyPrice),period:period})});
     var out=await res.json().catch(function(){return{};});if(!res.ok||!out.sent)throw new Error(out.error||'Payment slip could not be sent.');
     var next=new Date();next.setMonth(next.getMonth()+1);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentSlipName:cleanString(file.name,180),lastPaymentSlipType:cleanString(file.type,100),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),updatedAt:fieldTimestamp()};
-    var db=getFirestore(),uid=profile.ownerUid||(user&&user.uid)||profile.uid||'';if(db&&uid)await db.collection('users').doc(uid).set(update,{merge:true});Object.assign(profile,update);if(statusEl)statusEl.textContent='Thank you so much — your payment slip was sent to accounts@ceylonrylabs.io and access is active.';setTimeout(function(){var wall=document.getElementById('cls-paywall');if(wall)wall.remove();},1000);return true;
+    var db=getFirestore(),uid=profile.ownerUid||(user&&user.uid)||profile.uid||'';
+    if(db&&uid){
+      await db.collection('users').doc(uid).set(update,{merge:true});
+      try{await db.collection('subscriptionPayments').doc(uid+'-'+period).set({uid:uid,email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:plan,period:period,amountLkr:details.monthlyPrice,currency:'LKR',status:'receipt-submitted',source:'bank-receipt',receiptName:cleanString(file.name,180),receivedAt:fieldTimestamp(),receivedAtUtc:nowIso()},{merge:true});}catch(ledgerError){console.warn('Subscription revenue ledger could not be updated:',ledgerError);}
+    }
+    Object.assign(profile,update);if(statusEl)statusEl.textContent='Thank you so much — your payment slip was sent to accounts@ceylonrylabs.io and access is active.';setTimeout(function(){var wall=document.getElementById('cls-paywall');if(wall)wall.remove();},1000);return true;
   };
   window.clsOpenBankTransferPayment=function clsOpenBankTransferPayment(plan,profile){
     profile=profile||window._profile||{};var trialMs=dateMs(profile.trialEnd||profile.trialEndsAt);if(!isProfilePaidRecord(profile)&&trialMs&&Date.now()<trialMs){alert('Your free trial is still active. Your first payment becomes due when the 15-day trial ends.');return;}plan=bestPlan(profile,plan);var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,old=document.getElementById('cls-bank-payment-modal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='cls-bank-payment-modal';wrap.className='cls-bank-modal';wrap.innerHTML='<div class="cls-bank-card"><button class="cls-bank-close" aria-label="Close">×</button><div class="cls-billing-kicker">Monthly subscription</div><h2>Start your paid month</h2><p>Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> for your '+escapeHtml(details.name)+' plan, then upload the payment slip. Your first paid month begins when the receipt is submitted.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></label><button class="cls-bank-submit">Upload slip and start monthly cycle</button><div class="cls-bank-status">The attachment will be emailed securely to '+escapeHtml(CLS_BANK.email)+'.</div></div>';document.body.appendChild(wrap);wrap.querySelector('.cls-bank-close').onclick=function(){wrap.remove();};wrap.addEventListener('click',function(e){if(e.target===wrap)wrap.remove();});wrap.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=wrap.querySelector('.cls-bank-status'),file=wrap.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Thank you — monthly cycle started';setTimeout(function(){wrap.remove();},1300);}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};
@@ -2998,6 +3003,59 @@
     return text;
   };
 
+  function initMobileApplicationDrawer() {
+    var sidebar = document.querySelector('#sidebar, #sb');
+    var opener = document.querySelector('.mobile-portal-menu');
+    var closer = document.querySelector('.mobile-sidebar-close');
+    var backdrop = document.querySelector('.mobile-sidebar-backdrop');
+    if (!sidebar || !opener || !backdrop || opener.dataset.drawerReady === 'true') return;
+    opener.dataset.drawerReady = 'true';
+    function setOpen(open) {
+      sidebar.classList.toggle('mobile-open', open);
+      backdrop.classList.toggle('open', open);
+      backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
+      opener.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.documentElement.classList.toggle('mobile-drawer-open', open);
+    }
+    window.clsSetMobileDrawer = setOpen;
+    opener.addEventListener('click', function() { setOpen(true); });
+    if (closer) closer.addEventListener('click', function() { setOpen(false); });
+    backdrop.addEventListener('click', function() { setOpen(false); });
+    sidebar.addEventListener('click', function(event) {
+      if (event.target.closest('[data-nav], [data-view]')) setOpen(false);
+    });
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') setOpen(false);
+    });
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 760) setOpen(false);
+    });
+  }
+
+  function initDelegatedMobileDrawer() {
+    if (document.documentElement.dataset.mobileDrawerReady === 'true') return;
+    document.documentElement.dataset.mobileDrawerReady = 'true';
+    document.addEventListener('click', function(event) {
+      var openButton = event.target.closest('.mobile-portal-menu');
+      var side = document.querySelector('#sidebar, #sb');
+      var shade = document.querySelector('.mobile-sidebar-backdrop');
+      if (openButton && side && shade) {
+        side.classList.add('mobile-open');
+        shade.classList.add('open');
+        shade.setAttribute('aria-hidden', 'false');
+        openButton.setAttribute('aria-expanded', 'true');
+        return;
+      }
+      if ((event.target.closest('.mobile-sidebar-close, .mobile-sidebar-backdrop, [data-nav], [data-view]')) && side && shade) {
+        side.classList.remove('mobile-open');
+        shade.classList.remove('open');
+        shade.setAttribute('aria-hidden', 'true');
+        var currentButton = document.querySelector('.mobile-portal-menu');
+        if (currentButton) currentButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
 	  function boot() {
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);
@@ -3012,6 +3070,8 @@
 	      window.clsMaybeShowDay5PaymentPrompt(window._profile, { retries: 0 });
 	    }, 4200);
 	    window.addEventListener('resize', window.clsFitAllInvoicePreviews, { passive: true });
+	    initMobileApplicationDrawer();
+	    initDelegatedMobileDrawer();
 	  }
 
   if (document.readyState === 'loading') {

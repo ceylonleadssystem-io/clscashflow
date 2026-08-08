@@ -340,7 +340,7 @@ test('settings preview and PDF share one renderer and preserve empty notes', fun
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260808-mobile-invoice';
+  const version = '20260808-mobile-drawer2';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',

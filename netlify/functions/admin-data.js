@@ -85,6 +85,49 @@ async function readCollection(db, name, orderField, limit) {
   });
 }
 
+async function synchronizedUsers(admin, db, profileRows) {
+  const profiles = profileRows || [];
+  const byId = new Map(profiles.map(function(row) { return [String(row.id), row]; }));
+  const byEmail = new Map(profiles.map(function(row) { return [String((row.data || {}).email || '').toLowerCase(), row]; }));
+  const authUsers = [];
+  let pageToken;
+  do {
+    const page = await admin.auth().listUsers(1000, pageToken);
+    (page.users || []).forEach(function(user) { authUsers.push(user); });
+    pageToken = page.pageToken;
+  } while (pageToken && authUsers.length < 5000);
+
+  const missing = [];
+  authUsers.forEach(function(user) {
+    const email = String(user.email || '').trim().toLowerCase();
+    let row = byId.get(String(user.uid)) || byEmail.get(email);
+    const authData = {
+      uid: user.uid,
+      email: email,
+      displayName: user.displayName || '',
+      authCreatedAtUtc: user.metadata && user.metadata.creationTime || '',
+      lastAuthSignInAtUtc: user.metadata && user.metadata.lastSignInTime || '',
+      authDisabled: user.disabled === true,
+      authSynchronized: true
+    };
+    if (row) {
+      row.data = Object.assign({}, authData, row.data || {}, { email: (row.data || {}).email || email, authSynchronized: true });
+      byId.set(String(user.uid), row);
+    } else {
+      row = { id: String(user.uid), data: Object.assign({ createdAtUtc: authData.authCreatedAtUtc, plan: 'solo', subscriptionStatus: 'trial' }, authData) };
+      profiles.push(row);
+      byId.set(String(user.uid), row);
+      if (email) byEmail.set(email, row);
+      missing.push(row);
+    }
+  });
+
+  await Promise.all(missing.slice(0, 200).map(function(row) {
+    return db.collection('users').doc(row.id).set(Object.assign({}, row.data, { syncedFromAuthAtUtc: new Date().toISOString() }), { merge: true }).catch(function() {});
+  }));
+  return profiles;
+}
+
 async function readChats(db, includeMessages) {
   const threads = await readCollection(db, 'chatThreads', 'lastMessageAt', 50);
   if (!includeMessages) return threads;
@@ -131,7 +174,64 @@ function isLandingVisit(data) {
   return data.isLanding === true || path === '/' || path === '' || path.endsWith('/index.html');
 }
 
-function buildStats(users, visits, tickets, paymentRequests, chats) {
+function paymentAmount(data) {
+  data = data || {};
+  const direct = Number(data.amountLkr || data.amount || data.monthlyAmount || data.planMonthlyPrice);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const plan = String(data.plan || data.currentPlan || '').toLowerCase();
+  return plan === 'business' ? 8500 : plan === 'studio' ? 5500 : plan === 'solo' ? 3500 : 0;
+}
+
+function buildRevenueStats(users, paymentRequests, subscriptionPayments) {
+  const now = new Date();
+  const monthKey = now.toISOString().slice(0, 7);
+  const ledger = new Map();
+  function add(key, data, receivedAt) {
+    const date = new Date(receivedAt || '');
+    if (!Number.isFinite(date.getTime())) return;
+    const period = String(data.period || date.toISOString().slice(0, 7));
+    const uid = String(data.uid || data.userUid || data.email || key);
+    const amount = paymentAmount(data);
+    if (!amount) return;
+    ledger.set(uid + '|' + period, { period, amount, plan: String(data.plan || data.currentPlan || 'unknown').toLowerCase() });
+  }
+  (subscriptionPayments || []).forEach(function(row) {
+    const data = row.data || {};
+    if (['rejected', 'cancelled', 'failed'].indexOf(String(data.status || '').toLowerCase()) > -1) return;
+    add(row.id, data, data.receivedAtUtc || data.createdAtUtc || data.createdAt);
+  });
+  (paymentRequests || []).forEach(function(row) {
+    const data = row.data || {};
+    if (['paid', 'completed', 'closed'].indexOf(String(data.status || '').toLowerCase()) === -1) return;
+    add(row.id, data, data.paidAtUtc || data.completedAtUtc || data.updatedAtUtc || data.updatedAt);
+  });
+  (users || []).forEach(function(row) {
+    const data = row.data || {};
+    if (!data.lastPaymentSlipAtUtc) return;
+    add(row.id, Object.assign({ uid: row.id, amountLkr: data.planMonthlyPrice }, data), data.lastPaymentSlipAtUtc);
+  });
+  const months = [];
+  for (let i = 5; i >= 0; i -= 1) {
+    const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    months.push({ month: date.toISOString().slice(0, 7), revenue: 0, payments: 0 });
+  }
+  const byPlan = { solo: 0, studio: 0, business: 0, unknown: 0 };
+  ledger.forEach(function(item) {
+    const bucket = months.find(function(row) { return row.month === item.period; });
+    if (bucket) { bucket.revenue += item.amount; bucket.payments += 1; }
+    if (item.period === monthKey) byPlan[byPlan[item.plan] == null ? 'unknown' : item.plan] += item.amount;
+  });
+  const current = months[months.length - 1];
+  const activeMrr = (users || []).reduce(function(total, row) {
+    const data = row.data || {};
+    const status = String(data.subscriptionStatus || '').toLowerCase();
+    const paid = data.paid === true || ['active', 'manual-paid', 'receipt-submitted'].indexOf(status) > -1;
+    return total + (paid && data.accountPaused !== true ? paymentAmount(data) : 0);
+  }, 0);
+  return { revenueThisMonth: current.revenue, confirmedPaymentsThisMonth: current.payments, activeMrr, revenueByPlan: byPlan, monthlyRevenue: months };
+}
+
+function buildStats(users, visits, tickets, paymentRequests, chats, subscriptionPayments) {
   users = users || [];
   visits = visits || [];
   tickets = tickets || [];
@@ -156,7 +256,7 @@ function buildStats(users, visits, tickets, paymentRequests, chats) {
     }
   });
 
-  return {
+  return Object.assign({
     usersTotal: users.length,
     visitsTotal: visits.length,
     uniqueVisitorsTotal: uniqueVisitors.size,
@@ -179,7 +279,7 @@ function buildStats(users, visits, tickets, paymentRequests, chats) {
     landingVisitsTotal: landingVisitsRecent,
     landingVisitsRecent,
     lastVisitAt
-  };
+  }, buildRevenueStats(users, paymentRequests, subscriptionPayments));
 }
 
 function readBody(event) {
@@ -878,17 +978,19 @@ exports.handler = async function handler(event) {
       readCollection(db, 'platformVisits', 'createdAt', 200),
       readCollection(db, 'supportTickets', 'createdAt', 160),
       readChats(db, false),
-      readCollection(db, 'paymentRequests', 'createdAt', 160)
+      readCollection(db, 'paymentRequests', 'createdAt', 160),
+      readCollection(db, 'subscriptionPayments', 'receivedAtUtc', 500)
     ]);
-    const users = initialRows[0];
+    const users = await synchronizedUsers(admin, db, initialRows[0]);
     const visits = initialRows[1];
     const tickets = initialRows[2];
     const chats = initialRows[3];
     const paymentRequests = initialRows[4];
+    const subscriptionPayments = initialRows[5];
     // Never block the dashboard read with per-user billing writes. Overdue
     // enforcement belongs to the billing event/scheduled path; doing it here
     // made the first admin response exceed the browser and Netlify timeouts.
-    const stats = buildStats(users, visits, tickets, paymentRequests, chats);
+    const stats = buildStats(users, visits, tickets, paymentRequests, chats, subscriptionPayments);
 
     return {
       statusCode: 200,
@@ -899,6 +1001,7 @@ exports.handler = async function handler(event) {
         visits: slimRows(visits),
         tickets: slimRows(tickets),
         paymentRequests: slimRows(paymentRequests),
+        subscriptionPayments: slimRows(subscriptionPayments),
         chats: slimRows(chats),
         stats
       })

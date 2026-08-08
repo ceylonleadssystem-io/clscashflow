@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="assets/platform.js?v=20260808-mobile-invoice"></script>
+<script src="assets/platform.js?v=20260808-mobile-drawer2"></script>
 <style>
 :root{
   --sand:#F3EADF;
@@ -398,6 +398,15 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 .story-teaser p{font-size:19px;color:#525252;max-width:760px}
 .story-teaser .btn{justify-self:start;grid-column:2;background:transparent;color:#050505;border:0;border-bottom:2px solid #050505;border-radius:0;padding:10px 0;box-shadow:none}
 
+.customer-success{padding:110px 0;background:#0b0b0b;color:#fff;scroll-margin-top:74px}.customer-success .eyebrow{color:#d7a72f}
+.success-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,.55fr);gap:60px;align-items:end;margin-bottom:52px}
+.success-head h2{margin:0;max-width:900px;font-size:clamp(50px,6.5vw,94px);font-weight:800;letter-spacing:-.07em;line-height:.92}
+.success-business{border-left:3px solid #d7a72f;padding:8px 0 8px 22px;display:grid;gap:7px;color:#bdbdb7;font-size:14px}.success-business strong{color:#fff;font-size:23px;line-height:1.2}
+.success-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:22px}.success-card{border:1px solid rgba(255,255,255,.14);background:#151515;padding:34px;border-radius:18px;min-width:0}
+.success-card h3{margin:0 0 15px;color:#d7a72f;font-size:12px;letter-spacing:.2em;text-transform:uppercase}.success-card p{margin:0;color:#d0d0ca;font-size:16px;line-height:1.75}
+.success-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0;padding:0;list-style:none}.success-features li{position:relative;padding:16px 16px 16px 44px;border:1px solid rgba(255,255,255,.1);background:#0d0d0d;color:#e8e8e4;font-size:14px;line-height:1.5}.success-features li::before{content:'✓';position:absolute;left:16px;top:15px;color:#d7a72f;font-weight:900}
+.success-quote{grid-column:1/-1;background:#fff;color:#111;padding:44px clamp(28px,5vw,68px);border-radius:18px}.success-quote blockquote{margin:0;font-size:clamp(22px,3vw,38px);font-weight:700;line-height:1.35;letter-spacing:-.035em}.success-quote footer{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;color:#65655f;font-size:14px}.success-quote footer strong{display:block;color:#111;font-size:16px}
+
 .product-showcase{padding:128px 0;background:#080808;color:#fff}
 .section-head{max-width:980px;margin-bottom:60px}.section-head h2{font-size:clamp(60px,8vw,112px);font-weight:800;letter-spacing:-.07em}.section-head p{color:#aaa;font-size:20px}.product-showcase .eyebrow{color:#D7A72F}
 .device-stage{padding:1px;border-radius:34px;background:linear-gradient(135deg,#D7A72F,#262626 35%,#111)}
@@ -433,6 +442,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
   .nav-brand-title{font-size:18px}.nav-logo{width:38px;height:38px}.nav-cta{display:flex;width:auto;max-width:none;justify-self:end;gap:8px}.nav-signin{display:none}.nav-trial{width:auto;min-height:42px;padding:11px 15px;font-size:10px}
   .hero{min-height:auto;padding:132px 0 76px}.hero .container.hero-copy{width:auto;max-width:none;margin:0 18px}.hero h1{font-size:clamp(44px,12.6vw,60px);line-height:.84}.hero-sub{font-size:17px;margin-top:30px}.hero-actions{max-width:340px}.hero-actions .btn{border-radius:999px}.hero-proof{display:flex;max-width:340px}.proof-chip{width:auto;flex:1 1 100%;font-size:10px}
   .story-teaser{padding:76px 0}.story-teaser-card{min-height:0;padding:0;display:grid;grid-template-columns:1fr;gap:30px}.story-teaser-logo{grid-row:auto;width:min(290px,82vw);justify-self:center}.story-teaser h2{font-size:58px}.story-teaser .btn{grid-column:auto}
+  .customer-success{padding:72px 0}.success-head,.success-grid{grid-template-columns:1fr;gap:24px}.success-head{margin-bottom:32px}.success-card{padding:24px}.success-features{grid-template-columns:1fr}.success-quote{grid-column:auto;padding:30px 24px}.success-quote footer{align-items:flex-start;flex-direction:column}
   .product-showcase{padding:84px 0}.section-head h2{font-size:60px}.device-stage{border-radius:24px}.device{border-radius:23px}.dash-title{font-size:30px}
   .pricing,.features,.image-band,.faq{padding:84px 0}.pricing-head h2,.features h2,.image-head h2,.faq h2{font-size:54px}.price-card{padding:34px 25px;border-radius:30px;min-height:auto}.price-card:hover,.price-card.featured:hover{transform:none}
   .plan-comparison{border-radius:18px}.feature-grid{gap:28px}.photo-wrap{grid-template-columns:1fr;gap:24px}.photo-card,.photo-card:first-child{aspect-ratio:4/5;border-radius:36px}.photo-card:first-child{border-top-left-radius:90px}.photo-card:nth-child(2){border-top-right-radius:90px;border-bottom-left-radius:52px}
@@ -479,7 +489,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <div class="nav-links" aria-label="Primary navigation">
         <a href="#how-it-works">How it works</a>
         <a href="#features">Features</a>
-        <a href="mrs-gamage-story.html">Story</a>
+        <a href="#success-stories">Success Story</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
         <a href="growth.html?demo=1">Demo</a>
@@ -503,7 +513,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <nav class="mobile-drawer-links" aria-label="Mobile navigation">
       <a href="#how-it-works">How it works</a>
       <a href="#features">Features</a>
-      <a href="mrs-gamage-story.html">Story</a>
+      <a href="#success-stories">Success Story</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
       <a href="growth.html?demo=1">Demo</a>
@@ -549,6 +559,48 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
             <p>Her butter cakes are loved, her WhatsApp orders keep coming, and her kitchen is always busy. Cashflow System was created for business owners like her who need invoices, payment tracking, customer records, and a clearer view of where the money goes.</p>
           </div>
           <a class="btn light" href="mrs-gamage-story.html">Read her story -></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="customer-success reveal" id="success-stories" aria-labelledby="poddo-story-title">
+      <div class="container">
+        <div class="success-head">
+          <div>
+            <p class="eyebrow">Customer Success Story</p>
+            <h2 class="serif" id="poddo-story-title">How Poddo Kids Club manages payroll and tracks cash flow.</h2>
+          </div>
+          <div class="success-business">
+            <strong>Poddo Kids Club</strong>
+            <span>Childcare &amp; Kids Entertainment</span>
+            <span>Verona Vaz · Owner</span>
+            <span>Cashflow System · Business Plan</span>
+          </div>
+        </div>
+        <div class="success-grid">
+          <article class="success-card">
+            <h3>The Challenge</h3>
+            <p>As Poddo Kids Club grew, staff payroll, income monitoring, and cash-flow tracking required several manual processes. That made it time-consuming to understand the business&rsquo;s financial position at any given moment.</p>
+          </article>
+          <article class="success-card">
+            <h3>The Solution</h3>
+            <ul class="success-features">
+              <li>Process employee payroll accurately and efficiently.</li>
+              <li>Generate professional payslips for staff.</li>
+              <li>Track incoming and outgoing cash in real time.</li>
+              <li>Monitor the current cash-flow position.</li>
+              <li>Keep financial information organised in one place.</li>
+              <li>Make decisions using up-to-date business insights.</li>
+            </ul>
+          </article>
+          <article class="success-card">
+            <h3>The Outcome</h3>
+            <p>Poddo Kids Club has reduced the time spent on payroll administration and gained a much clearer understanding of its financial position. With payroll and cash-flow information together, the team can focus more on exceptional childcare while staying confident about the business&rsquo;s finances.</p>
+          </article>
+          <figure class="success-quote">
+            <blockquote>&ldquo;Cashflow System has become an essential part of how we run Poddo Kids Club. The system is simple, reliable, and has saved us a significant amount of administrative work.&rdquo;</blockquote>
+            <footer><span><strong>Verona Vaz</strong>Owner, Poddo Kids Club</span><span>Customer Review · Cashflow System Business</span></footer>
+          </figure>
         </div>
       </div>
     </section>

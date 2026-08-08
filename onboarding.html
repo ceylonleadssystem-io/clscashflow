@@ -51,6 +51,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 
 /* ── RIGHT PANEL ── */
 .ob-right{display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:1.75rem 1.5rem;overflow:visible;background:var(--bg)}
+.ob-mobile-home{display:none}
 .ob-steps-wrap{width:100%;max-width:640px;position:relative}
 
 /* Step cards */
@@ -420,7 +421,9 @@ body{background:#fff}
 
 @media(max-width:860px){
   .ob-right{padding:2rem 1.25rem 3rem}
-  .ob-right::before{content:'CeylonryLabs.io  /  Account setup';display:block;position:absolute;top:0;left:0;right:0;height:54px;padding:18px 20px;background:#080808;color:#fff;font-size:.7rem;font-weight:800;letter-spacing:.08em}
+  .ob-right::before{display:none}
+  .ob-mobile-home{display:flex;position:fixed;top:0;left:0;right:0;z-index:50;height:54px;padding:0 1rem;align-items:center;justify-content:space-between;gap:1rem;background:#080808;color:#fff;text-decoration:none;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .ob-mobile-home span:last-child{color:#d7a72f;white-space:nowrap}
   .ob-steps-wrap{margin-top:54px;max-width:680px}
   .ob-title{font-size:clamp(2.25rem,10vw,3.5rem)}
 }
@@ -442,7 +445,7 @@ body{background:#fff}
 const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
 </script>
-<script src="assets/platform.js?v=20260808-mobile-invoice"></script>
+<script src="assets/platform.js?v=20260808-mobile-drawer2"></script>
 </head>
 <body>
 
@@ -482,6 +485,7 @@ firebase.initializeApp(firebaseConfig);
 
   <!-- RIGHT PANEL -->
   <div class="ob-right">
+    <a class="ob-mobile-home" href="index.html" aria-label="Return to the Cashflow System home page"><span>CeylonryLabs.io · Account Setup</span><span>← Back Home</span></a>
     <div class="ob-steps-wrap">
 
       <!-- ═══ STEP 1: SIGNUP ═══ -->
