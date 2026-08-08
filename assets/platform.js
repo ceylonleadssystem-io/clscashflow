@@ -3087,6 +3087,118 @@
     window.addEventListener('resize', function() { mobileizeDataTables(document); }, { passive:true });
   }
 
+  function setInvoiceWizardStep(modal, requestedStep) {
+    if (!modal) return;
+    var body = modal.querySelector('.invoice-modal-body,.invoice-mo-body');
+    if (!body) return;
+    var step = Math.max(0, Math.min(3, Number(requestedStep) || 0));
+    body.setAttribute('data-cls-wizard-current', String(step));
+    modal.setAttribute('data-cls-wizard-current', String(step));
+    Array.prototype.forEach.call(modal.querySelectorAll('[data-cls-wizard-step]'), function(node) {
+      node.hidden = Number(node.getAttribute('data-cls-wizard-step')) !== step;
+    });
+    Array.prototype.forEach.call(modal.querySelectorAll('.cls-invoice-wizard-step'), function(button, index) {
+      var active = index === step;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-current', active ? 'step' : 'false');
+    });
+    var previous = modal.querySelector('.cls-invoice-wizard-prev');
+    var next = modal.querySelector('.cls-invoice-wizard-next');
+    if (previous) previous.hidden = step === 0;
+    if (next) next.hidden = step === 3;
+    var footer = modal.querySelector('.invoice-modal-foot,.invoice-mo-footer');
+    if (footer) footer.setAttribute('data-cls-wizard-current', String(step));
+    body.scrollTop = 0;
+  }
+
+  window.clsInvoiceWizardNext = function clsInvoiceWizardNext(modalId) {
+    var modal = document.getElementById(modalId);
+    if (!modal) return;
+    setInvoiceWizardStep(modal, Number(modal.getAttribute('data-cls-wizard-current') || 0) + 1);
+  };
+
+  window.clsInvoiceWizardPrev = function clsInvoiceWizardPrev(modalId) {
+    var modal = document.getElementById(modalId);
+    if (!modal) return;
+    setInvoiceWizardStep(modal, Number(modal.getAttribute('data-cls-wizard-current') || 0) - 1);
+  };
+
+  function initMobileInvoiceWizard() {
+    var modal = document.getElementById('mo-inv') || document.getElementById('inv-modal');
+    if (!modal || modal.dataset.clsInvoiceWizard === 'true') return;
+    var body = modal.querySelector('.invoice-modal-body,.invoice-mo-body');
+    var footer = modal.querySelector('.invoice-modal-foot,.invoice-mo-footer');
+    if (!body || !footer) return;
+    modal.dataset.clsInvoiceWizard = 'true';
+    modal.classList.add('cls-invoice-wizard-modal');
+
+    var nav = document.createElement('div');
+    nav.className = 'cls-invoice-wizard-nav';
+    nav.setAttribute('aria-label', 'Invoice creation steps');
+    ['Customer','Details','Items','Review'].forEach(function(label, index) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'cls-invoice-wizard-step';
+      button.innerHTML = '<span>' + (index + 1) + '</span><b>' + label + '</b>';
+      button.addEventListener('click', function() { setInvoiceWizardStep(modal, index); });
+      nav.appendChild(button);
+    });
+    body.insertBefore(nav, body.firstChild);
+
+    if (modal.id === 'mo-inv') {
+      var businessFields = body.querySelector('.business-invoice-fields');
+      var businessSections = body.querySelectorAll(':scope > .fsec');
+      if (businessFields) {
+        businessFields.classList.add('cls-wizard-shared-container');
+        Array.prototype.forEach.call(businessFields.children, function(node, index) {
+          node.setAttribute('data-cls-wizard-step', index === businessFields.children.length - 1 ? '1' : '0');
+        });
+      }
+      if (businessSections[0]) businessSections[0].setAttribute('data-cls-wizard-step', '0');
+      if (businessSections[1]) businessSections[1].setAttribute('data-cls-wizard-step', '2');
+      var businessItems = body.querySelector('.litbl');
+      var businessAdd = body.querySelector('.li-add');
+      var businessClosing = body.querySelector('.business-invoice-closing');
+      if (businessItems) businessItems.setAttribute('data-cls-wizard-step', '2');
+      if (businessAdd) businessAdd.setAttribute('data-cls-wizard-step', '2');
+      if (businessClosing) businessClosing.setAttribute('data-cls-wizard-step', '3');
+    } else {
+      var customerBar = body.querySelector('.client-select-bar');
+      var columns = body.querySelector('.invoice-form-columns');
+      var panels = columns ? columns.querySelectorAll('.invoice-form-panel') : [];
+      var standardSections = body.querySelectorAll(':scope > .f-section');
+      var standardItems = body.querySelector('.li-table');
+      var standardAdd = body.querySelector('.btn-add-li');
+      var standardClosing = body.querySelector('.invoice-closing-grid');
+      if (customerBar) customerBar.setAttribute('data-cls-wizard-step', '0');
+      if (columns) columns.classList.add('cls-wizard-shared-container');
+      if (panels[0]) panels[0].setAttribute('data-cls-wizard-step', '0');
+      if (panels[1]) panels[1].setAttribute('data-cls-wizard-step', '1');
+      if (standardSections[0]) standardSections[0].setAttribute('data-cls-wizard-step', '2');
+      if (standardItems) standardItems.setAttribute('data-cls-wizard-step', '2');
+      if (standardAdd) standardAdd.setAttribute('data-cls-wizard-step', '2');
+      if (standardClosing) standardClosing.setAttribute('data-cls-wizard-step', '3');
+    }
+
+    var previous = document.createElement('button');
+    previous.type = 'button';
+    previous.className = 'btn-act-outline btn bo cls-invoice-wizard-prev';
+    previous.textContent = '← Back';
+    previous.addEventListener('click', function() { window.clsInvoiceWizardPrev(modal.id); });
+    var next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'btn-act btn bd cls-invoice-wizard-next';
+    next.textContent = 'Next →';
+    next.addEventListener('click', function() { window.clsInvoiceWizardNext(modal.id); });
+    footer.insertBefore(previous, footer.firstChild);
+    footer.appendChild(next);
+    setInvoiceWizardStep(modal, 0);
+
+    new MutationObserver(function() {
+      if (modal.classList.contains('open')) setInvoiceWizardStep(modal, 0);
+    }).observe(modal, { attributes:true, attributeFilter:['class'] });
+  }
+
   window.clsEnsurePdfLibrary = async function clsEnsurePdfLibrary() {
     if (window.jspdf && window.jspdf.jsPDF) return true;
     if (!window.clsLoadScriptOnce) return false;
@@ -3105,6 +3217,7 @@
     var anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = filename || 'invoice.pdf';
+    if (window.matchMedia && window.matchMedia('(max-width:760px)').matches) anchor.target = '_blank';
     anchor.rel = 'noopener';
     anchor.style.display = 'none';
     document.body.appendChild(anchor);
@@ -3113,6 +3226,73 @@
     document.documentElement.setAttribute('data-cls-last-download', filename || 'invoice.pdf');
     window.dispatchEvent(new CustomEvent('cls:file-download', { detail:{ filename:filename || 'invoice.pdf', type:blob.type || '' } }));
     setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+    return true;
+  };
+
+  function fitMobilePdfPreview(modal) {
+    if (!modal) return;
+    var stage = modal.querySelector('.cls-mobile-pdf-stage');
+    var frame = modal.querySelector('.cls-invoice-preview-frame');
+    if (!stage || !frame) return;
+    var baseWidth = 794, baseHeight = 1123;
+    var scale = Math.min(1, Math.max(0.1, (stage.clientWidth - 16) / baseWidth), Math.max(0.1, (stage.clientHeight - 16) / baseHeight));
+    frame.style.width = baseWidth + 'px';
+    frame.style.height = baseHeight + 'px';
+    frame.style.maxWidth = 'none';
+    frame.style.transformOrigin = 'top left';
+    frame.style.transform = 'scale(' + scale + ')';
+    frame.style.margin = '0';
+    var holder = modal.querySelector('.cls-mobile-pdf-holder');
+    if (holder) { holder.style.width = Math.ceil(baseWidth * scale) + 'px'; holder.style.height = Math.ceil(baseHeight * scale) + 'px'; }
+  }
+
+  window.clsCloseMobilePdfPreview = function clsCloseMobilePdfPreview() {
+    var modal = document.getElementById('cls-mobile-pdf-preview');
+    if (modal) modal.remove();
+    document.documentElement.classList.remove('cls-pdf-preview-open');
+  };
+
+  window.clsOpenMobilePdfPreview = function clsOpenMobilePdfPreview(options) {
+    options = options || {};
+    window.clsCloseMobilePdfPreview();
+    var modal = document.createElement('div');
+    modal.id = 'cls-mobile-pdf-preview';
+    modal.className = 'cls-mobile-pdf-preview';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'A4 invoice PDF preview');
+    var toolbar = document.createElement('div');
+    toolbar.className = 'cls-mobile-pdf-toolbar';
+    var back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'cls-mobile-pdf-back';
+    back.textContent = '← Back to system';
+    back.addEventListener('click', window.clsCloseMobilePdfPreview);
+    var heading = document.createElement('div');
+    heading.className = 'cls-mobile-pdf-heading';
+    var headingTitle = document.createElement('strong');
+    headingTitle.textContent = String(options.title || 'Invoice PDF');
+    var headingMeta = document.createElement('span');
+    headingMeta.textContent = 'Full A4 preview';
+    heading.appendChild(headingTitle);
+    heading.appendChild(headingMeta);
+    var download = document.createElement('button');
+    download.type = 'button';
+    download.className = 'cls-mobile-pdf-download';
+    download.textContent = 'Download A4 PDF';
+    download.addEventListener('click', function() { window.clsDownloadBlobFile(options.blob, options.filename || 'invoice.pdf'); });
+    toolbar.appendChild(back); toolbar.appendChild(heading); toolbar.appendChild(download);
+    var stage = document.createElement('div');
+    stage.className = 'cls-mobile-pdf-stage';
+    var holder = document.createElement('div');
+    holder.className = 'cls-mobile-pdf-holder';
+    if (options.previewOptions && window.clsBuildInvoicePreviewFrame) holder.innerHTML = window.clsBuildInvoicePreviewFrame(options.previewOptions);
+    else holder.innerHTML = '<div class="cls-mobile-pdf-ready">Your A4 invoice is ready to download.</div>';
+    stage.appendChild(holder);
+    modal.appendChild(toolbar); modal.appendChild(stage); document.body.appendChild(modal);
+    document.documentElement.classList.add('cls-pdf-preview-open');
+    requestAnimationFrame(function() { fitMobilePdfPreview(modal); });
+    window.addEventListener('resize', function resizePreview() { if (!document.body.contains(modal)) { window.removeEventListener('resize', resizePreview); return; } fitMobilePdfPreview(modal); }, { passive:true });
     return true;
   };
 
@@ -3263,6 +3443,7 @@
 	    initMobileApplicationDrawer();
 	    initDelegatedMobileDrawer();
 	    initMobileDataTables();
+	    initMobileInvoiceWizard();
 	  }
 
   if (document.readyState === 'loading') {

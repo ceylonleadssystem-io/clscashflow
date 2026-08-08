@@ -231,3 +231,68 @@ input:focus,select:focus,textarea:focus{border-color:#080808!important;box-shado
 @media(min-width:360px) and (max-width:760px){
   .kpi-grid,.kpi-row,.db-kpi-row,.gm-strip,.gm-row2{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+/* Phone invoice creation: four short steps instead of one nested scroller. */
+@media(max-width:760px){
+  body:has(#inv-modal.open) #demo-banner,body:has(#mo-inv.open) #demo-banner{display:none!important}
+  .cls-invoice-wizard-modal.open{inset:0!important;padding:.35rem!important;align-items:center!important;overflow:hidden!important;background:rgba(0,0,0,.62)!important}
+  .cls-invoice-wizard-modal .invoice-modal-box,.cls-invoice-wizard-modal .invoice-mob{width:100%!important;max-width:430px!important;height:auto!important;min-height:0!important;max-height:calc(100dvh - .7rem)!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;border-radius:16px!important;background:#fff!important}
+  .cls-invoice-wizard-modal .modal-head,.cls-invoice-wizard-modal .mo-hd{flex:0 0 54px!important;min-height:54px!important;padding:.75rem .9rem!important;border-bottom:1px solid #e3e0d9!important}
+  .cls-invoice-wizard-modal .invoice-modal-body,.cls-invoice-wizard-modal .invoice-mo-body{flex:0 1 auto!important;width:100%!important;min-height:0!important;max-height:none!important;overflow:hidden!important;overscroll-behavior:none!important;padding:.65rem .75rem .75rem!important;background:#fff!important}
+  .cls-invoice-wizard-nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:.3rem!important;margin:0 0 .7rem!important;padding:0!important}
+  .cls-invoice-wizard-step{min-width:0!important;min-height:48px!important;border:1px solid #dedad1!important;border-radius:10px!important;background:#f7f5f0!important;color:#6a635b!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:.12rem!important;padding:.3rem .12rem!important;font-family:Inter,sans-serif!important;cursor:pointer!important}
+  .cls-invoice-wizard-step span{width:20px!important;height:20px!important;border-radius:50%!important;background:#e5e1d8!important;color:#4b4640!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:.62rem!important;font-weight:900!important}
+  .cls-invoice-wizard-step b{font-size:.5rem!important;line-height:1!important;letter-spacing:.04em!important;text-transform:uppercase!important;white-space:nowrap!important}
+  .cls-invoice-wizard-step.active{border-color:#080808!important;background:#080808!important;color:#fff!important}
+  .cls-invoice-wizard-step.active span{background:#d7a72f!important;color:#080808!important}
+  .cls-invoice-wizard-modal [hidden]{display:none!important}
+  .cls-invoice-wizard-modal .client-select-bar{display:grid!important;grid-template-columns:1fr!important;gap:.45rem!important;padding:.55rem!important;margin-bottom:.6rem!important}
+  .cls-invoice-wizard-modal .client-select-bar button{width:100%!important;height:40px!important;min-height:40px!important}
+  .cls-invoice-wizard-modal .invoice-form-columns{display:block!important}
+  .cls-invoice-wizard-modal .invoice-form-panel{padding:0!important;border:0!important;background:#fff!important}
+  .cls-invoice-wizard-modal .f-section,.cls-invoice-wizard-modal .fsec{margin:.1rem 0 .5rem!important;padding:0 0 .35rem!important;font-size:.55rem!important}
+  .cls-invoice-wizard-modal .f-row,.cls-invoice-wizard-modal .frow{grid-template-columns:1fr 1fr!important;gap:.5rem!important;margin-bottom:.5rem!important}
+  .cls-invoice-wizard-modal .f-group,.cls-invoice-wizard-modal .fg{min-width:0!important;margin-bottom:.5rem!important}
+  .cls-invoice-wizard-modal .f-row .f-group,.cls-invoice-wizard-modal .frow .fg{margin-bottom:0!important}
+  .cls-invoice-wizard-modal label{font-size:.5rem!important;letter-spacing:.08em!important;margin-bottom:.22rem!important}
+  .cls-invoice-wizard-modal .f-input,.cls-invoice-wizard-modal .fi,.cls-invoice-wizard-modal select,.cls-invoice-wizard-modal textarea{width:100%!important;min-width:0!important;min-height:42px!important;padding:.55rem .65rem!important;font-size:.78rem!important;border-radius:9px!important}
+  .cls-invoice-wizard-modal textarea{max-height:72px!important;resize:none!important}
+  .cls-invoice-wizard-modal .form-note{display:none!important}
+  .cls-invoice-wizard-modal .li-table,.cls-invoice-wizard-modal .litbl{display:block!important;width:100%!important;min-width:0!important;margin:0 0 .55rem!important;border:0!important}
+  .cls-invoice-wizard-modal .li-table thead,.cls-invoice-wizard-modal .litbl thead{display:none!important}
+  .cls-invoice-wizard-modal .li-table tbody,.cls-invoice-wizard-modal .litbl tbody{display:grid!important;gap:.45rem!important;width:100%!important}
+  .cls-invoice-wizard-modal .li-table tr,.cls-invoice-wizard-modal .litbl tr{display:grid!important;grid-template-columns:minmax(0,1fr) 64px 96px 30px!important;gap:.35rem!important;width:100%!important;padding:.5rem!important;border:1px solid #dedad1!important;border-radius:11px!important;background:#f8f7f3!important;overflow:hidden!important}
+  .cls-invoice-wizard-modal .li-table td,.cls-invoice-wizard-modal .litbl td{display:block!important;width:auto!important;min-width:0!important;padding:0!important;border:0!important;background:transparent!important;font-size:.7rem!important;text-align:left!important}
+  .cls-invoice-wizard-modal .li-table td:first-child,.cls-invoice-wizard-modal .litbl td:first-child{grid-column:1/-1!important}
+  .cls-invoice-wizard-modal .li-table td::before,.cls-invoice-wizard-modal .litbl td::before{display:block!important;margin-bottom:.18rem!important;font-size:.46rem!important;color:#736c63!important}
+  .cls-invoice-wizard-modal .li-table input,.cls-invoice-wizard-modal .litbl input,.cls-invoice-wizard-modal .li-table textarea,.cls-invoice-wizard-modal .litbl textarea{min-height:38px!important;padding:.45rem .5rem!important;font-size:.74rem!important}
+  .cls-invoice-wizard-modal .li-total-cell{display:flex!important;align-items:center!important;justify-content:flex-start!important;min-height:38px!important}
+  .cls-invoice-wizard-modal .btn-add-li,.cls-invoice-wizard-modal .li-add{width:100%!important;min-height:40px!important;margin:0!important;border-radius:10px!important}
+  .cls-invoice-wizard-modal .business-invoice-closing,.cls-invoice-wizard-modal .invoice-closing-grid{display:grid!important;grid-template-columns:1fr!important;gap:.55rem!important;margin:0!important}
+  .cls-invoice-wizard-modal .invoice-summary-panel,.cls-invoice-wizard-modal .inv-totals{padding:.6rem!important;border-radius:11px!important}
+  .cls-invoice-wizard-modal .invoice-tax-grid{grid-template-columns:1fr 1fr!important;gap:.5rem!important}
+  .cls-invoice-wizard-modal .modal-foot,.cls-invoice-wizard-modal .mo-ft{flex:0 0 auto!important;min-height:58px!important;width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.45rem!important;padding:.55rem .75rem max(.55rem,env(safe-area-inset-bottom))!important;background:#fff!important;border-top:1px solid #e3e0d9!important}
+  .cls-invoice-wizard-modal .modal-foot button,.cls-invoice-wizard-modal .mo-ft button{width:100%!important;min-width:0!important;min-height:42px!important;margin:0!important;padding:.55rem!important;white-space:normal!important;font-size:.61rem!important}
+  .cls-invoice-wizard-modal .modal-foot:not([data-cls-wizard-current="3"]) #inv-save-btn,.cls-invoice-wizard-modal .modal-foot:not([data-cls-wizard-current="3"]) [data-cls-fn="printInvoiceFromModal"],.cls-invoice-wizard-modal .mo-ft:not([data-cls-wizard-current="3"]) #inv-save-btn{display:none!important}
+  .cls-invoice-wizard-modal .modal-foot[data-cls-wizard-current="1"] [data-cls-fn="closeModal"],.cls-invoice-wizard-modal .modal-foot[data-cls-wizard-current="2"] [data-cls-fn="closeModal"],.cls-invoice-wizard-modal .mo-ft[data-cls-wizard-current="1"] button[onclick*="closeMo"],.cls-invoice-wizard-modal .mo-ft[data-cls-wizard-current="2"] button[onclick*="closeMo"]{display:none!important}
+  .cls-invoice-wizard-modal .modal-foot[data-cls-wizard-current="3"] [data-cls-fn="closeModal"],.cls-invoice-wizard-modal .mo-ft[data-cls-wizard-current="3"] button[onclick*="closeMo"]{display:none!important}
+  .cls-invoice-wizard-modal [data-cls-wizard-step][hidden]{display:none!important}
+  .customer-filter-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.4rem!important;width:100%!important;overflow:visible!important;padding-bottom:0!important}
+  .customer-filter-row .customer-chip,.customer-filter-row .customer-clear,.customer-filter-row .customer-clear-filters{width:100%!important;min-width:0!important;margin:0!important;white-space:normal!important;line-height:1.2!important;text-align:center!important}
+  .settings-tabs{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.4rem!important;width:100%!important;justify-content:stretch!important;overflow:visible!important;padding-bottom:0!important}
+  .settings-tabs button{width:100%!important;min-width:0!important;min-height:40px!important;white-space:normal!important;line-height:1.2!important;padding:.45rem .5rem!important}
+}
+
+/* In-system phone PDF viewer: the A4 page is scaled to fit and never replaces the app. */
+html.cls-pdf-preview-open,html.cls-pdf-preview-open body{overflow:hidden!important}
+.cls-mobile-pdf-preview{position:fixed;inset:0;z-index:99999;display:grid;grid-template-rows:auto minmax(0,1fr);width:100%;height:100dvh;background:#e9e7e2;color:#080808;font-family:Inter,sans-serif;overflow:hidden}
+.cls-mobile-pdf-toolbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.5rem;padding:.55rem .6rem max(.55rem,env(safe-area-inset-top));background:#080808;color:#fff;box-shadow:0 3px 16px rgba(0,0,0,.2)}
+.cls-mobile-pdf-toolbar button{min-height:42px;border-radius:9px;padding:.55rem .7rem;font-family:Inter,sans-serif;font-size:.63rem;font-weight:800;cursor:pointer;white-space:nowrap}
+.cls-mobile-pdf-back{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff}
+.cls-mobile-pdf-download{border:0;background:#d7a72f;color:#080808}
+.cls-mobile-pdf-heading{min-width:0;text-align:center;line-height:1.15}.cls-mobile-pdf-heading strong{display:block;font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cls-mobile-pdf-heading span{display:block;margin-top:.15rem;font-size:.5rem;color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.08em}
+.cls-mobile-pdf-stage{min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;padding:.5rem;overflow:hidden}
+.cls-mobile-pdf-holder{position:relative;flex:0 0 auto;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.2);overflow:hidden}
+.cls-mobile-pdf-holder .cls-invoice-preview-frame{display:block;border:0;background:#fff;pointer-events:none}
+.cls-mobile-pdf-ready{width:min(80vw,320px);padding:2rem;text-align:center;background:#fff;border-radius:14px}
+@media(max-width:360px){.cls-mobile-pdf-heading{display:none}.cls-mobile-pdf-toolbar{grid-template-columns:1fr 1fr}.cls-mobile-pdf-toolbar button{white-space:normal}}

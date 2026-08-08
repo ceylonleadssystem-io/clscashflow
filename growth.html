@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260808-mobile-final7"></script>
+<script src="assets/platform.js?v=20260808-mobile-final12"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -791,7 +791,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   input,select,textarea,button,img,canvas,iframe{max-width:100%}.card,.table-wrap{max-width:100%;min-width:0}
 }
 </style>
-<link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final7">
+<link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final11">
 </head>
 <body>
 
@@ -3272,6 +3272,7 @@ function renderInsights() {
   var overdue = D.invoices.filter(function(i) { return i.status==='overdue'; }).length;
   var hasActivity = D.txns.length || D.invoices.length || D.exps.length;
   var net = inc - out;
+  var margin = inc > 0 ? Math.round(net / inc * 100) : 0;
   var expShare = inc > 0 ? Math.round(out / inc * 100) : 0;
   var topExpense = Object.entries(D.exps.reduce(function(o,e){o[e.cat]=(o[e.cat]||0)+e.amount;return o;},{})).sort(function(a,b){return b[1]-a[1];})[0];
 
@@ -4487,6 +4488,10 @@ window.printInv = async function printInv(id) {
       file = new File([fallback], invoicePdfFileNameBusiness(inv), {type:'application/pdf'});
     }
     if (!file) { showToast('The invoice PDF could not be created.', 'err'); return; }
+    if (window.clsOpenMobilePdfPreview) {
+      window.clsOpenMobilePdfPreview({title:'Invoice ' + (inv.id || ''),filename:invoicePdfFileNameBusiness(inv),blob:file,previewOptions:{inv:inv,settings:D.settings,templateIndex:normalizeBusinessTemplate(D.settings.defaultTpl),documentLabel:'Invoice',systemName:'Business Cashflow System'}});
+      return;
+    }
     if (window.clsDownloadBlobFile) window.clsDownloadBlobFile(file, invoicePdfFileNameBusiness(inv));
     else { var fileUrl = URL.createObjectURL(file); window.location.href = fileUrl; setTimeout(function(){ URL.revokeObjectURL(fileUrl); }, 60000); }
     showToast('Invoice PDF downloaded.', 'ok');

@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260808-mobile-final7"></script>
+<script src="assets/platform.js?v=20260808-mobile-final12"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -624,7 +624,7 @@ body.is-admin .admin-only{display:flex}
   .table-card,.table-wrap{max-width:100%;min-width:0}
 }
 </style>
-<link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final7">
+<link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final11">
 </head>
 <body>
 <script>
@@ -3987,6 +3987,9 @@ async function downloadInvoicePdf(inv,systemName){
     file=new File([fallback],invoicePdfFileName(inv),{type:'application/pdf'});
   }
   if(!file){alert('The invoice PDF could not be created.');return false;}
+  if(window.matchMedia&&window.matchMedia('(max-width:760px)').matches&&window.clsOpenMobilePdfPreview){
+    return window.clsOpenMobilePdfPreview({title:'Invoice '+(inv.num||''),filename:invoicePdfFileName(inv),blob:file,previewOptions:{inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:DB.settings.defaultTpl,documentLabel:'Invoice',systemName:systemName}});
+  }
   if(window.clsDownloadBlobFile)return window.clsDownloadBlobFile(file,invoicePdfFileName(inv));
   var url=URL.createObjectURL(file);window.location.href=url;setTimeout(function(){URL.revokeObjectURL(url);},60000);return true;
 }
