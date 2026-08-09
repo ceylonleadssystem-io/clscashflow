@@ -494,12 +494,16 @@
       var qty = Number(line.qty || 1) || 1;
       var price = Number(line.price || line.unitPrice || 0) || 0;
       var total = line.total != null ? Number(line.total || 0) : qty * price;
-      return '<tr>' +
-        '<td width="50%" valign="top" style="width:50%;border-bottom:1px solid #eadfce;padding:14px 12px;color:#2d2117;font-size:14px;line-height:1.45;font-weight:700;word-break:break-word;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
-        '<td width="8%" valign="top" align="center" style="width:8%;border-bottom:1px solid #eadfce;padding:14px 8px;color:#6f6258;font-size:14px;line-height:1.45;white-space:nowrap;">' + invoiceEscape(qty) + '</td>' +
-        '<td width="21%" valign="top" align="right" style="width:21%;border-bottom:1px solid #eadfce;padding:14px 8px;color:#6f6258;font-size:14px;line-height:1.45;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
-        '<td width="21%" valign="top" align="right" style="width:21%;border-bottom:1px solid #eadfce;padding:14px 12px;color:#2d2117;font-size:14px;line-height:1.45;font-weight:700;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
-      '</tr>';
+      return '<tr><td colspan="4" style="padding:0 0 10px;">' +
+        '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;border:1px solid #eadfce;background:#fff;table-layout:fixed;">' +
+          '<tr><td colspan="3" style="padding:13px 12px 10px;color:#2d2117;font-size:14px;line-height:1.45;font-weight:700;word-break:break-word;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td></tr>' +
+          '<tr style="background:#fbf7f0;">' +
+            '<td width="18%" valign="top" style="width:18%;padding:9px 8px;color:#6f6258;font-size:12px;line-height:1.35;"><span style="display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9a8c80;">Qty</span><strong style="color:#2d2117;">' + invoiceEscape(qty) + '</strong></td>' +
+            '<td width="38%" valign="top" align="right" style="width:38%;padding:9px 7px;color:#6f6258;font-size:12px;line-height:1.35;word-break:break-word;"><span style="display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9a8c80;">Price</span>' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
+            '<td width="44%" valign="top" align="right" style="width:44%;padding:9px 8px;color:#2d2117;font-size:12px;line-height:1.35;font-weight:800;word-break:break-word;"><span style="display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9a8c80;">Amount</span>' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
+          '</tr>' +
+        '</table>' +
+      '</td></tr>';
     }).join('');
   }
 
@@ -544,39 +548,38 @@
     var closingNote = isReceipt
       ? (remainingBalance <= 0.01 ? 'This invoice is now fully settled.' : 'A remaining balance is still open on this invoice.')
       : 'If you have already made this payment, please reply with the payment reference so we can update the invoice.';
-    return '<div style="margin:0;background:#f7f2ea;padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
-      '<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;">' +
-        '<div style="padding:22px 32px;border-bottom:1px solid #eadfce;background:#fff;">' +
+    return '<div style="width:100%;margin:0;background:#f7f2ea;padding:12px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;box-sizing:border-box;">' +
+      '<div style="width:100%;max-width:640px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;box-sizing:border-box;">' +
+        '<div style="padding:20px 18px;border-bottom:1px solid #eadfce;background:#fff;">' +
           '<div style="font-family:Georgia,serif;font-size:26px;color:#2d2117;">Ceylonry<span style="color:#b8922a;">Labs</span>.io</div>' +
           '<div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#8b7c6f;margin-top:4px;">Cashflow System</div>' +
         '</div>' +
-        '<div style="background:#2d2117;color:#fff;padding:34px 32px;text-align:center;">' +
+        '<div style="background:#2d2117;color:#fff;padding:26px 18px;text-align:center;">' +
           '<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d3ac3d;">' + invoiceEscape(eyebrow) + '</div>' +
-          '<h1 style="margin:12px 0 8px;font-size:32px;line-height:1.2;">' + invoiceEscape(title) + '</h1>' +
+          '<h1 style="margin:12px 0 8px;font-size:27px;line-height:1.2;word-break:break-word;">' + invoiceEscape(title) + '</h1>' +
           '<div style="font-size:15px;color:#eadfce;">Invoice ' + invoiceEscape(invoiceNo) + '</div>' +
         '</div>' +
-        '<div style="padding:30px 32px;">' +
+        '<div style="padding:22px 16px;">' +
           '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Hi ' + invoiceEscape(customerName) + ',</p>' +
           '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;">' + lead + '</p>' +
           '<div style="background:#fbf7f0;border:1px solid #eadfce;border-radius:8px;text-align:center;padding:24px 18px;margin:0 0 24px;">' +
             '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8b7c6f;margin-bottom:8px;">' + invoiceEscape(amountLabel) + '</div>' +
-            '<div style="font-size:34px;line-height:1.1;font-weight:800;color:#2d2117;">' + invoiceEscape(invoiceMoney(cur, amountValue)) + '</div>' +
+            '<div style="font-size:28px;line-height:1.15;font-weight:800;color:#2d2117;word-break:break-word;">' + invoiceEscape(invoiceMoney(cur, amountValue)) + '</div>' +
           '</div>' +
           ctaHtml +
           '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 24px;background:#f7f2ea;border:1px solid #eadfce;">' + detailRows + '</table>' +
-          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 24px;">' +
-            '<thead><tr style="background:#2d2117;color:#fff;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;">' +
-              '<th align="left" style="padding:12px 10px;">Description</th><th align="center" style="padding:12px 10px;">Qty</th><th align="right" style="padding:12px 10px;">Price</th><th align="right" style="padding:12px 10px;">Amount</th>' +
-            '</tr></thead><tbody>' + rows + '</tbody>' +
+          '<div style="margin:0 0 10px;font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:#8b7c6f;font-weight:800;">Invoice items</div>' +
+          '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:0 0 18px;">' +
+            '<tbody>' + rows + '</tbody>' +
           '</table>' +
-          '<div style="text-align:right;margin-bottom:24px;">' +
-            '<div style="display:inline-block;min-width:260px;background:#2d2117;color:#fff;padding:16px 20px;font-size:18px;font-weight:700;">Invoice total: ' + invoiceEscape(invoiceMoney(cur, invoiceTotal)) + '</div>' +
+          '<div style="text-align:center;margin-bottom:24px;">' +
+            '<div style="display:block;width:100%;box-sizing:border-box;background:#2d2117;color:#fff;padding:16px 14px;font-size:17px;line-height:1.35;font-weight:700;word-break:break-word;">Invoice total: ' + invoiceEscape(invoiceMoney(cur, invoiceTotal)) + '</div>' +
           '</div>' +
           '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(closingNote + '\n\n' + notes) + '</div>' +
           bankHtml +
           '<p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#6f6258;">' + invoiceEscape(businessName) + '<br>' + invoiceEscape(businessAddress) + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
         '</div>' +
-        '<div style="padding:16px 32px;border-top:1px solid #eadfce;text-align:center;font-size:12px;color:#8b7c6f;">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
+        '<div style="padding:16px 18px;border-top:1px solid #eadfce;text-align:center;font-size:12px;color:#8b7c6f;">Invoice by Cashflow System - Ceylonry Labs.io</div>' +
       '</div>' +
     '</div>';
   }
@@ -745,18 +748,7 @@
     var paidTotal = opts.paidTotal != null ? Number(opts.paidTotal || 0) : Number(opts.totalPaid || opts.paid || paymentAmount || 0);
     var remainingBalance = opts.remainingBalance != null ? Number(opts.remainingBalance || 0) : amountDue;
     var lines = opts.lines || opts.items || [];
-    var itemRows = lines.map(function(line) {
-      line = line || {};
-      var qty = Number(line.qty || 1) || 1;
-      var price = Number(line.price || line.unitPrice || 0) || 0;
-      var total = line.total != null ? Number(line.total || 0) : qty * price;
-      return '<tr>' +
-        '<td width="50%" valign="top" style="width:50%;padding:14px 12px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#2d2117;font-weight:700;word-break:break-word;">' + invoiceEscape(line.desc || line.description || 'Invoice item') + '</td>' +
-        '<td width="8%" valign="top" align="center" style="width:8%;padding:14px 8px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#6f6258;white-space:nowrap;">' + invoiceEscape(qty) + '</td>' +
-        '<td width="21%" valign="top" align="right" style="width:21%;padding:14px 8px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#6f6258;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, price)) + '</td>' +
-        '<td width="21%" valign="top" align="right" style="width:21%;padding:14px 12px;border-bottom:1px solid #eadfce;font-size:14px;line-height:1.45;color:#2d2117;font-weight:700;white-space:nowrap;">' + invoiceEscape(invoiceMoney(cur, total)) + '</td>' +
-      '</tr>';
-    }).join('');
+    var itemRows = paymentEmailLineRows(lines, cur, amountDue);
     var params = {
       to_email: to,
       user_email: to,
@@ -904,12 +896,12 @@
   function invoiceBankEmailHtml(settings) {
     var rows = invoiceBankRows(settings);
     if (!rows.length) return '';
-    return '<div style="margin:24px 0 0;padding:18px 20px;border:1px solid #e2dbd2;background:#faf8f4">' +
-      '<div style="margin-bottom:10px;font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:#8a6818">Bank details</div>' +
+    return '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;table-layout:fixed;border-collapse:collapse;margin:24px 0 0;border:1px solid #e2dbd2;background:#faf8f4;">' +
+      '<tr><td colspan="2" style="padding:16px 14px 8px;font-size:11px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:#8a6818;">Bank details</td></tr>' +
       rows.map(function(row) {
-        return '<div style="display:flex;justify-content:space-between;gap:18px;padding:4px 0;font-size:13px;line-height:1.45;color:#6e635a">' +
-          '<span>' + invoiceEscape(row[0]) + '</span><strong style="color:#18130f;text-align:right;word-break:break-word">' + invoiceEscape(row[1]) + '</strong></div>';
-      }).join('') + '</div>';
+        return '<tr><td width="38%" valign="top" style="width:38%;padding:6px 8px 6px 14px;font-size:12px;line-height:1.45;color:#6e635a;">' + invoiceEscape(row[0]) + '</td>' +
+          '<td width="62%" valign="top" align="right" style="width:62%;padding:6px 14px 6px 8px;font-size:12px;line-height:1.45;color:#18130f;font-weight:700;word-break:break-word;">' + invoiceEscape(row[1]) + '</td></tr>';
+      }).join('') + '<tr><td colspan="2" style="height:10px;line-height:10px;font-size:1px;">&nbsp;</td></tr></table>';
   }
 
   function emailJsBankDetailsHtml(settings) {
@@ -3208,6 +3200,103 @@
     } catch (error) {
       console.warn('PDF library could not be loaded:', error);
       return false;
+    }
+  };
+
+  window.clsEnsureBrandedPdfTools = async function clsEnsureBrandedPdfTools() {
+    var pdfReady = await window.clsEnsurePdfLibrary();
+    if (!pdfReady) return false;
+    if (window.html2canvas) return true;
+    if (!window.clsLoadScriptOnce) return false;
+    try {
+      await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'cls-html2canvas');
+      return !!window.html2canvas;
+    } catch (error) {
+      console.warn('Branded PDF renderer could not be loaded:', error);
+      return false;
+    }
+  };
+
+  function waitForInvoiceFrame(frame) {
+    return new Promise(function(resolve, reject) {
+      var settled = false;
+      var finish = function(error) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (error) reject(error); else resolve();
+      };
+      var timer = setTimeout(function() { finish(new Error('The branded invoice took too long to prepare.')); }, 10000);
+      frame.addEventListener('load', function() { finish(); }, { once:true });
+      frame.addEventListener('error', function() { finish(new Error('The branded invoice could not be prepared.')); }, { once:true });
+    });
+  }
+
+  function waitForInvoiceImages(doc) {
+    var images = Array.prototype.slice.call(doc.querySelectorAll('img'));
+    return Promise.all(images.map(function(img) {
+      if (img.complete && img.naturalWidth) return Promise.resolve();
+      if (typeof img.decode === 'function') return img.decode().catch(function() {});
+      return new Promise(function(resolve) {
+        var done = function() { resolve(); };
+        img.addEventListener('load', done, { once:true });
+        img.addEventListener('error', done, { once:true });
+        setTimeout(done, 4000);
+      });
+    }));
+  }
+
+  window.clsBuildBrandedInvoicePdfFile = async function clsBuildBrandedInvoicePdfFile(options, filename) {
+    options = options || {};
+    if (!window.clsBuildInvoicePrintHtml) throw new Error('The branded invoice template is unavailable.');
+    if (!(await window.clsEnsureBrandedPdfTools())) throw new Error('The branded PDF tools could not be loaded.');
+    var frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.tabIndex = -1;
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;opacity:0;pointer-events:none;background:#fff;';
+    document.body.appendChild(frame);
+    try {
+      var loaded = waitForInvoiceFrame(frame);
+      frame.srcdoc = window.clsBuildInvoicePrintHtml(options);
+      await loaded;
+      var frameDoc = frame.contentDocument;
+      var page = frameDoc && frameDoc.querySelector('.invoice-page');
+      if (!page) throw new Error('The branded A4 invoice could not be rendered.');
+      if (frameDoc.fonts && frameDoc.fonts.ready) await frameDoc.fonts.ready.catch(function() {});
+      await waitForInvoiceImages(frameDoc);
+      page.style.width = '794px';
+      page.style.minHeight = '1123px';
+      page.style.height = '1123px';
+      page.style.margin = '0';
+      page.style.boxSizing = 'border-box';
+      frameDoc.documentElement.style.background = '#fff';
+      frameDoc.body.style.background = '#fff';
+      await new Promise(function(resolve) { requestAnimationFrame(function() { requestAnimationFrame(resolve); }); });
+      var canvas = await window.html2canvas(page, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        width: 794,
+        height: 1123,
+        windowWidth: 794,
+        windowHeight: 1123,
+        scrollX: 0,
+        scrollY: 0
+      });
+      var jsPDF = window.jspdf.jsPDF;
+      var pdf = new jsPDF({ unit:'pt', format:'a4', orientation:'portrait', compress:true });
+      var pageWidth = pdf.internal.pageSize.getWidth();
+      var pageHeight = pdf.internal.pageSize.getHeight();
+      var title = String((options.inv && (options.inv.num || options.inv.id)) || 'Invoice');
+      if (typeof pdf.setProperties === 'function') pdf.setProperties({ title:'Invoice ' + title, subject:'A4 invoice', creator:'Cashflow System - CeylonryLabs.io' });
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.96), 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+      var blob = pdf.output('blob');
+      var safeName = filename || (String(title).replace(/[^a-z0-9_-]+/gi, '-') + '.pdf');
+      return typeof File === 'function' ? new File([blob], safeName, { type:'application/pdf' }) : blob;
+    } finally {
+      frame.remove();
     }
   };
 

@@ -339,8 +339,34 @@ test('settings preview and PDF share one renderer and preserve empty notes', fun
   assert.match(pages[2], /D\.settings\.footer = document\.getElementById\('s-footer'\)\.value\.trim\(\)/);
 });
 
+test('mobile downloads and native sharing use the same branded A4 invoice renderer', function() {
+  const platform = read('assets/platform.js');
+  const solo = read('solo.html');
+  const studio = read('starter.html');
+  const business = read('growth.html');
+  assert.match(platform, /window\.clsBuildBrandedInvoicePdfFile/);
+  assert.match(platform, /window\.clsBuildInvoicePrintHtml\(options\)/);
+  assert.match(platform, /html2canvas\(page/);
+  assert.match(platform, /format:'a4'/);
+  assert.match(platform, /pdf\.addImage\(canvas\.toDataURL\('image\/jpeg'/);
+  for (const page of [solo, studio, business]) {
+    assert.match(page, /clsBuildBrandedInvoicePdfFile/);
+    assert.match(page, /previewOptions/);
+  }
+  assert.match(business, /inv\.tpl != null \? inv\.tpl : D\.settings\.defaultTpl/);
+});
+
+test('invoice email line items and bank details are phone-safe presentation tables', function() {
+  const platform = read('assets/platform.js');
+  assert.match(platform, /colspan="4" style="padding:0 0 10px/);
+  assert.match(platform, /Invoice items/);
+  assert.match(platform, /table-layout:fixed/);
+  assert.match(platform, /var itemRows = paymentEmailLineRows\(lines, cur, amountDue\)/);
+  assert.doesNotMatch(platform, /display:flex;justify-content:space-between;gap:18px;padding:4px 0;font-size:13px/);
+});
+
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260808-mobile-final12';
+  const version = '20260809-branded-pdf1';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',

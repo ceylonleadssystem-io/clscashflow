@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260808-mobile-final12"></script>
+<script src="assets/platform.js?v=20260809-branded-pdf1"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -4996,25 +4996,31 @@ function buildInvoiceSharePdfFile(inv, systemName){
   return new File([blob],invoicePdfFileName(inv),{type:'application/pdf'});
 }
 async function downloadInvoicePdf(inv,systemName){
-  var ready=window.clsEnsurePdfLibrary?await window.clsEnsurePdfLibrary():!!(window.jspdf&&window.jspdf.jsPDF);
-  var file=ready?buildInvoiceSharePdfFile(inv,systemName):null;
+  var previewOptions={inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:DB.settings.defaultTpl,documentLabel:'Invoice',systemName:systemName};
+  var file=null;
+  try{if(window.clsBuildBrandedInvoicePdfFile)file=await window.clsBuildBrandedInvoicePdfFile(previewOptions,invoicePdfFileName(inv));}catch(e){console.warn('Branded invoice PDF fallback:',e);}
+  var ready=file?true:(window.clsEnsurePdfLibrary?await window.clsEnsurePdfLibrary():!!(window.jspdf&&window.jspdf.jsPDF));
+  if(!file&&ready)file=buildInvoiceSharePdfFile(inv,systemName);
   if(!file&&window.clsBuildInvoicePdfBlob){
     var fallback=window.clsBuildInvoicePdfBlob({businessName:DB.settings.bizName,businessAddress:DB.settings.addr,businessEmail:DB.settings.email,invoiceNumber:inv.num,date:fmtD(inv.date),due:fmtD(inv.due),customer:inv.client,customerDetails:[inv.caddr,inv.cemail,inv.cphone].filter(Boolean).join(' | '),currency:inv.cur||'LKR',lines:inv.lines,subtotal:(inv.lines||[]).reduce(function(a,l){return a+Number(l.total||0);},0)||inv.amount,tax:inv.vat,discount:0,total:inv.amount,notes:combinedInvoiceNotes(inv.notes,DB.settings.footer),systemName:systemName});
     file=new File([fallback],invoicePdfFileName(inv),{type:'application/pdf'});
   }
   if(!file){alert('The invoice PDF could not be created.');return false;}
   if(window.matchMedia&&window.matchMedia('(max-width:760px)').matches&&window.clsOpenMobilePdfPreview){
-    return window.clsOpenMobilePdfPreview({title:'Invoice '+(inv.num||''),filename:invoicePdfFileName(inv),blob:file,previewOptions:{inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:DB.settings.defaultTpl,documentLabel:'Invoice',systemName:systemName}});
+    return window.clsOpenMobilePdfPreview({title:'Invoice '+(inv.num||''),filename:invoicePdfFileName(inv),blob:file,previewOptions:previewOptions});
   }
   if(window.clsDownloadBlobFile)return window.clsDownloadBlobFile(file,invoicePdfFileName(inv));
   var url=URL.createObjectURL(file);window.location.href=url;setTimeout(function(){URL.revokeObjectURL(url);},60000);return true;
 }
 async function nativeShareInvoicePdf(inv, systemName){
   if(!navigator.share||!navigator.canShare||typeof File==='undefined')return false;
-  if((!window.jspdf||!window.jspdf.jsPDF)&&window.clsLoadScriptOnce){
-    try{await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','cls-jspdf');}catch(e){return false;}
+  var previewOptions={inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:DB.settings.defaultTpl,documentLabel:'Invoice',systemName:systemName};
+  var file=null;
+  try{if(window.clsBuildBrandedInvoicePdfFile)file=await window.clsBuildBrandedInvoicePdfFile(previewOptions,invoicePdfFileName(inv));}catch(e){console.warn('Branded native-share PDF fallback:',e);}
+  if(!file){
+    if((!window.jspdf||!window.jspdf.jsPDF)&&window.clsLoadScriptOnce){try{await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','cls-jspdf');}catch(e){return false;}}
+    file=buildInvoiceSharePdfFile(inv,systemName);
   }
-  var file=buildInvoiceSharePdfFile(inv,systemName);
   if(!file||!navigator.canShare({files:[file]}))return false;
   try{
     await navigator.share({title:'Invoice '+inv.num,text:invoiceWaText(inv,systemName,true),files:[file]});

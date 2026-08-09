@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260808-mobile-final12"></script>
+<script src="assets/platform.js?v=20260809-branded-pdf1"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -4279,14 +4279,17 @@ function buildBusinessInvoiceSharePdfFile(inv) {
 }
 async function nativeShareBusinessInvoicePdf(inv) {
   if (!navigator.share || !navigator.canShare || typeof File === 'undefined') return false;
-  if ((!window.jspdf || !window.jspdf.jsPDF) && window.clsLoadScriptOnce) {
-    try {
-      await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'cls-jspdf');
-    } catch (e) {
-      return false;
+  var previewOptions = {inv:inv,settings:D.settings,templateIndex:normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),documentLabel:'Invoice',systemName:'Business Cashflow System'};
+  var file = null;
+  try { if (window.clsBuildBrandedInvoicePdfFile) file = await window.clsBuildBrandedInvoicePdfFile(previewOptions, invoicePdfFileNameBusiness(inv)); }
+  catch (e) { console.warn('Branded native-share PDF fallback:', e); }
+  if (!file) {
+    if ((!window.jspdf || !window.jspdf.jsPDF) && window.clsLoadScriptOnce) {
+      try { await window.clsLoadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'cls-jspdf'); }
+      catch (e) { return false; }
     }
+    file = buildBusinessInvoiceSharePdfFile(inv);
   }
-  var file = buildBusinessInvoiceSharePdfFile(inv);
   if (!file || !navigator.canShare({files:[file]})) return false;
   try {
     await navigator.share({title:'Invoice ' + inv.id, text:invoiceWaTextBusiness(inv, true), files:[file]});
@@ -4446,7 +4449,7 @@ function buildInvoicePrintHtml(inv) {
     return window.clsBuildInvoicePrintHtml({
       inv: inv,
       settings: s,
-      templateIndex: normalizeBusinessTemplate(s.defaultTpl),
+      templateIndex: normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : s.defaultTpl),
       systemName: 'Business Cashflow System'
     });
   }
@@ -4481,15 +4484,19 @@ window.printInv = async function printInv(id) {
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
   if (window.matchMedia && window.matchMedia('(max-width:760px)').matches) {
-    var ready = window.clsEnsurePdfLibrary ? await window.clsEnsurePdfLibrary() : !!(window.jspdf && window.jspdf.jsPDF);
-    var file = ready ? buildBusinessInvoiceSharePdfFile(inv) : null;
+    var previewOptions = {inv:inv,settings:D.settings,templateIndex:normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),documentLabel:'Invoice',systemName:'Business Cashflow System'};
+    var file = null;
+    try { if (window.clsBuildBrandedInvoicePdfFile) file = await window.clsBuildBrandedInvoicePdfFile(previewOptions, invoicePdfFileNameBusiness(inv)); }
+    catch (e) { console.warn('Branded invoice PDF fallback:', e); }
+    var ready = file ? true : (window.clsEnsurePdfLibrary ? await window.clsEnsurePdfLibrary() : !!(window.jspdf && window.jspdf.jsPDF));
+    if (!file && ready) file = buildBusinessInvoiceSharePdfFile(inv);
     if (!file && window.clsBuildInvoicePdfBlob) {
       var fallback = window.clsBuildInvoicePdfBlob({businessName:D.settings.biz,businessAddress:D.settings.addr,businessEmail:D.settings.email,invoiceNumber:inv.id,date:formatDateHuman(inv.date),due:formatDateHuman(inv.due),customer:inv.client,customerDetails:[inv.caddr,inv.cemail,inv.cphone].filter(Boolean).join(' | '),currency:'LKR',lines:inv.items||inv.lines,subtotal:toNum(inv.sub)||toNum(inv.total),tax:toNum(inv.vat),discount:toNum(inv.disc),total:toNum(inv.total),notes:combinedInvoiceNotesBusiness(inv.notes,D.settings.footer),systemName:'Business Cashflow System'});
       file = new File([fallback], invoicePdfFileNameBusiness(inv), {type:'application/pdf'});
     }
     if (!file) { showToast('The invoice PDF could not be created.', 'err'); return; }
     if (window.clsOpenMobilePdfPreview) {
-      window.clsOpenMobilePdfPreview({title:'Invoice ' + (inv.id || ''),filename:invoicePdfFileNameBusiness(inv),blob:file,previewOptions:{inv:inv,settings:D.settings,templateIndex:normalizeBusinessTemplate(D.settings.defaultTpl),documentLabel:'Invoice',systemName:'Business Cashflow System'}});
+      window.clsOpenMobilePdfPreview({title:'Invoice ' + (inv.id || ''),filename:invoicePdfFileNameBusiness(inv),blob:file,previewOptions:previewOptions});
       return;
     }
     if (window.clsDownloadBlobFile) window.clsDownloadBlobFile(file, invoicePdfFileNameBusiness(inv));
@@ -4500,7 +4507,7 @@ window.printInv = async function printInv(id) {
   var html = window.clsBuildInvoicePrintHtml ? window.clsBuildInvoicePrintHtml({
     inv: inv,
     settings: D.settings,
-    templateIndex: normalizeBusinessTemplate(D.settings.defaultTpl),
+    templateIndex: normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),
     documentLabel: 'Invoice',
     systemName: 'Business Cashflow System'
   }) : buildInvoicePrintHtml(inv);
