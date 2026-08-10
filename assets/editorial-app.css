@@ -233,6 +233,7 @@ input:focus,select:focus,textarea:focus{border-color:#080808!important;box-shado
 }
 
 /* Phone invoice creation: four short steps instead of one nested scroller. */
+.cls-invoice-wizard-nav[hidden],.cls-invoice-wizard-prev[hidden],.cls-invoice-wizard-next[hidden]{display:none!important}
 @media(max-width:760px){
   body:has(#inv-modal.open) #demo-banner,body:has(#mo-inv.open) #demo-banner{display:none!important}
   .cls-invoice-wizard-modal.open{inset:0!important;padding:.35rem!important;align-items:center!important;overflow:hidden!important;background:rgba(0,0,0,.62)!important}

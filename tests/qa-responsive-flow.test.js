@@ -48,6 +48,15 @@ test('Business invoice responsive cards reset desktop percentage column widths',
   assert.match(page, /overflow-wrap:break-word;word-break:normal/);
 });
 
+test('invoice creation wizard stays mobile-only and restores the full desktop form', function() {
+  const platform = read('assets/platform.js');
+  const css = read('assets/editorial-app.css');
+  assert.match(platform, /if \(!window\.matchMedia \|\| !window\.matchMedia\('\(max-width:760px\)'\)\.matches\) return;/);
+  assert.match(platform, /if \(!isMobile\) \{[\s\S]*node\.hidden = false;[\s\S]*nav\.hidden = true;/);
+  assert.match(platform, /invoiceWizardMedia\.addEventListener\('change', syncInvoiceWizard\)/);
+  assert.match(css, /\.cls-invoice-wizard-nav\[hidden\].*display:none!important/);
+});
+
 test('billing actions have mobile spacing and stacked controls', function() {
   const solo = read('solo.html');
   const studio = read('starter.html');
@@ -366,7 +375,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260809-branded-pdf1';
+  const version = '20260810-mobile-wizard1';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
