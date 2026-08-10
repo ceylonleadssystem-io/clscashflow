@@ -73,6 +73,14 @@ test('the new editable HTML invoice pack is available across all plans through t
   assert.match(platform, /corporate-diagonal', 'flame-dark-header', 'corporate-charcoal', 'geometric-blue'/);
 });
 
+test('shared invoice, quote, and estimate renderer shows only the customer Bill To block', function() {
+  const platform = read('assets/platform.js');
+  const activeRenderer = platform.match(/window\.clsBuildInvoicePrintHtml = function\(opts\) \{([\s\S]*?)\n  \};/)[1];
+  assert.match(activeRenderer, /<div class="label">Bill To<\/div>/);
+  assert.doesNotMatch(activeRenderer, /<div class="label">From<\/div>/);
+  assert.match(activeRenderer, /\.parties\{display:grid;grid-template-columns:minmax\(0,1fr\);gap:0/);
+});
+
 test('Business refreshes its shared template picker whenever Invoice Settings opens', function() {
   const business = read('growth.html');
   assert.match(business, /if \(tab === 'invoices'\) \{\s*renderSettingsTemplatePicker\(\);\s*renderSettingsInvoicePreview\(\);/);
@@ -460,7 +468,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260810-invoice-pack3';
+  const version = '20260810-invoice-pack4';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
