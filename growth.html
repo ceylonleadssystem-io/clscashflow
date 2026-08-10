@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260810-business-payroll1"></script>
+<script src="assets/platform.js?v=20260810-invoice-pack3"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2508,7 +2508,11 @@ window.showSettingsTab = function showSettingsTab(tab, opts) {
     panel.classList.toggle('active', active);
     panel.hidden = !active;
   });
-  if (tab === 'invoices') requestAnimationFrame(function() { fitSettingsInvoicePreview(document.getElementById('settings-invoice-preview')); });
+  if (tab === 'invoices') {
+    renderSettingsTemplatePicker();
+    renderSettingsInvoicePreview();
+    requestAnimationFrame(function() { fitSettingsInvoicePreview(document.getElementById('settings-invoice-preview')); });
+  }
   if (opts && opts.noScroll) return;
   var content = document.querySelector('.content');
   var head = document.querySelector('#view-settings .settings-page-head');
@@ -3111,7 +3115,7 @@ window.emailBusinessQuote = async function emailBusinessQuote(id) {
   try {
     var sendDocument = window.clsSendDocumentEmail || window.clsSendPaymentReminderEmail;
     if (typeof sendDocument !== 'function') throw new Error('The email service is still loading. Refresh the page and try again.');
-    await sendDocument({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.id,invoiceNumber:q.id,customerName:q.client||'Customer',businessName:D.settings.biz||'Your Business',businessEmail:D.settings.email||'',businessAddress:D.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.total||q.amount||0,invoiceTotal:q.total||q.amount||0,date:q.date,invoiceDate:formatDateHuman(q.date),due:q.due,dueDate:formatDateHuman(q.due),validUntil:formatDateHuman(q.due),terms:q.terms||'',notes:q.notes||D.settings.footer||'',lines:q.lines||[],settings:D.settings});
+    await sendDocument({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.id,invoiceNumber:q.id,customerName:q.client||'Customer',businessName:D.settings.biz||'Your Business',businessEmail:D.settings.email||'',businessAddress:D.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.total||q.amount||0,invoiceTotal:q.total||q.amount||0,date:q.date,invoiceDate:formatDateHuman(q.date),due:q.due,dueDate:formatDateHuman(q.due),validUntil:formatDateHuman(q.due),terms:q.terms||'',notes:q.notes||D.settings.footer||'',lines:q.lines||[],templateIndex:normalizeBusinessTemplate(q.tpl!=null?q.tpl:D.settings.defaultTpl),settings:D.settings});
     showToast(label + ' sent to ' + to + '.', 'ok');
   } catch (err) {
     showToast('Could not send ' + label.toLowerCase() + ': ' + (err && err.message ? err.message : err), 'err');
@@ -3425,9 +3429,9 @@ function renderInsights() {
 
 // ===================== INVOICE MODAL =====================
 var TPLS = window.clsInvoiceTemplates || [
-  {name:'Furniture Pop', accent:'#ef92d8', dark:'#3156e8', paper:'#f6ecdd', layout:'pop'},
-  {name:'Orange Studio', accent:'#f16f4f', dark:'#181511', paper:'#f5f0d8', layout:'orange'},
-  {name:'Modern Mono', accent:'#1f2a24', dark:'#1f2a24', paper:'#fbfaf7', layout:'mono'}
+  {name:'Bold Editorial', accent:'#d8784a', dark:'#171615', paper:'#f8efd8', layout:'bold-editorial'},
+  {name:'Cafe Illustrated', accent:'#2546b8', dark:'#1f2b78', paper:'#fffbe8', layout:'cafe-illustrated'},
+  {name:'Elegant Wreath', accent:'#b89a68', dark:'#2a2622', paper:'#fbfaf6', layout:'elegant-wreath'}
 ];
 
 function invoiceTheme(idx) {
@@ -3832,6 +3836,7 @@ window.emailInv = async function emailInv(id) {
       remainingBalance: balance,
       paymentDate: formatDateHuman(new Date()),
       status: status,
+      templateIndex: normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),
       notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer),
       settings: D.settings,
       lines: (inv.items || inv.lines || []).map(function(line) {
@@ -3884,6 +3889,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(id) {
       paymentMethod: lastPayment ? lastPayment.method : '',
       paymentReference: lastPayment ? lastPayment.ref : '',
       status: inv.status || 'paid',
+      templateIndex: normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),
       notes: combinedInvoiceNotesBusiness(inv.notes, D.settings.footer),
       settings: D.settings,
       lines: (inv.items || inv.lines || []).map(function(line) {
@@ -4269,7 +4275,7 @@ window.addSup = function addSup() {
   saveData();
 }
 
-window.deleteSupplier = function deleteSupplier(id) {
+window.deleteSupplier = async function deleteSupplier(id) {
   var s = D.suppliers.find(function(item) { return String(item.id) === String(id); });
   if (!s) { showToast('Supplier not found.', 'err'); return; }
   if (!confirm('Delete supplier "' + s.name + '"? Existing expense records will remain.')) return;
@@ -4281,8 +4287,8 @@ window.deleteSupplier = function deleteSupplier(id) {
   renderSuppliers();
   renderDebt();
   renderDashboard();
-  showToast('Supplier deleted.', 'ok');
-  saveData();
+  var saved = await saveData();
+  showToast(saved ? 'Supplier deleted.' : 'Supplier deleted locally. Cloud sync will retry.', saved ? 'ok' : 'err');
 }
 
 function invoiceWaPhoneBusiness(inv) {

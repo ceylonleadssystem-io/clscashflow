@@ -57,6 +57,62 @@ test('invoice creation wizard stays mobile-only and restores the full desktop fo
   assert.match(css, /\.cls-invoice-wizard-nav\[hidden\].*display:none!important/);
 });
 
+test('the new editable HTML invoice pack is available across all plans through the shared A4 renderer', function() {
+  const platform = read('assets/platform.js');
+  const templateBlock = platform.match(/var INVOICE_TEMPLATES = \[([\s\S]*?)\n  \];/)[1];
+  for (const name of ['Bold Editorial', 'Cafe Illustrated', 'Elegant Wreath', 'Signature Script', 'Monochrome Wave', 'Corporate Diagonal', 'Modern Serif', 'Flame Dark Header', 'Dotted Mono', 'Corporate Charcoal', 'Geometric Blue', 'Furniture Pink', 'Minimal Grey']) {
+    assert.match(templateBlock, new RegExp("name: '" + name + "'"));
+  }
+  for (const oldName of ['Furniture Pop', 'Orange Studio', 'Modern Mono', 'Professional Script', 'Freelancer Wave', 'Editorial Serif', 'Agency Clean', 'Cafe Blue', 'Corporate Green', 'Yellow Corporate', 'Pin Box', 'Kazuma Minimal', 'Architect Blue']) {
+    assert.doesNotMatch(templateBlock, new RegExp("name: '" + oldName + "'"));
+  }
+  assert.equal((templateBlock.match(/source: 'files12'/g) || []).length, 13);
+  assert.match(platform, /function invoiceCustomTemplateCss\(layout\)/);
+  assert.match(platform, /css \+= invoiceCustomTemplateCss\(theme\.layout\)/);
+  assert.match(platform, /@page\{size:A4;margin:0\}/);
+  assert.match(platform, /corporate-diagonal', 'flame-dark-header', 'corporate-charcoal', 'geometric-blue'/);
+});
+
+test('Business refreshes its shared template picker whenever Invoice Settings opens', function() {
+  const business = read('growth.html');
+  assert.match(business, /if \(tab === 'invoices'\) \{\s*renderSettingsTemplatePicker\(\);\s*renderSettingsInvoicePreview\(\);/);
+});
+
+test('WhatsApp, invoice email, quote, and estimate outputs retain the selected new template', function() {
+  const platform = read('assets/platform.js');
+  const publicPage = read('invoice-public.html');
+  const shareApi = read('netlify/functions/invoice-share.js');
+  assert.match(platform, /function invoiceEmailTheme\(opts\)/);
+  assert.match(platform, /var theme = invoiceEmailTheme\(opts\)/);
+  assert.match(publicPage, /templateIndex:data\.templateIndex/);
+  assert.match(publicPage, /clsBuildInvoicePrintHtml\(\{inv:inv,settings:settings,templateIndex:data\.templateIndex\}\)/);
+  assert.match(shareApi, /const publicInvoice = sanitizePublicInvoice\(invoice, profile\)/);
+  assert.match(shareApi, /const message = buildReminderMessage\(publicInvoice, publicUrl\)/);
+  for (const file of ['solo.html', 'starter.html']) {
+    const page = read(file);
+    assert.match(page, /clsBuildInvoicePrintHtml\(\{inv:q,settings:DB\.settings,templateIndex:q\.tpl,documentLabel:q\.documentType==='estimate'\?'Estimate':'Quote'\}\)/);
+    assert.match(page, /templateIndex:q\.tpl!=null\?q\.tpl:getDefaultInvoiceTemplate\(\),settings:DB\.settings/);
+    assert.match(page, /templateIndex:inv\.tpl!=null\?inv\.tpl:getDefaultInvoiceTemplate\(\)/);
+  }
+  const business = read('growth.html');
+  assert.match(business, /templateIndex:q\.tpl, documentLabel:q\.documentType === 'estimate' \? 'Estimate' : 'Quote'/);
+  assert.match(business, /templateIndex:normalizeBusinessTemplate\(q\.tpl!=null\?q\.tpl:D\.settings\.defaultTpl\),settings:D\.settings/);
+  assert.match(business, /templateIndex: normalizeBusinessTemplate\(inv\.tpl != null \? inv\.tpl : D\.settings\.defaultTpl\)/);
+});
+
+test('invoice More menus are exclusive and close on outside clicks across all plans', function() {
+  const platform = read('assets/platform.js');
+  assert.match(platform, /function initExclusiveInvoiceMoreMenus\(\)/);
+  assert.match(platform, /details\.invoice-more\[open\]/);
+  assert.match(platform, /if \(menu !== except\) menu\.open = false/);
+  assert.match(platform, /target\.closest\('\.invoice-more-menu button, \.invoice-more-menu a'\)/);
+  assert.match(platform, /closeInvoiceMenus\(null\)/);
+  assert.match(platform, /initExclusiveInvoiceMoreMenus\(\)/);
+  for (const file of ['solo.html', 'starter.html', 'growth.html']) {
+    assert.match(read(file), /class="invoice-more"/);
+  }
+});
+
 test('billing actions have mobile spacing and stacked controls', function() {
   const solo = read('solo.html');
   const studio = read('starter.html');
@@ -118,6 +174,8 @@ test('Studio payroll Cash Out calculates EPF and ETF and persists salaried staff
   assert.match(page, /const payroll=\(document\.getElementById\('t-type'\)\|\|\{\}\)\.value==='out'/);
   assert.match(page, /payroll=Object\.assign\(\{staffId:payrollStaffId,staffName,epfNo\},calc\)/);
   assert.match(page, /payroll:txn\.payroll\|\|null/);
+  assert.match(page, /const revealPayrollPanel=!!\(panel&&payroll&&panel\.hidden\)/);
+  assert.match(page, /panel\.scrollIntoView\(\{behavior:'smooth',block:'nearest'\}\)/);
 });
 
 test('Studio expenses synchronize into Money Out without dashboard double counting', function() {
@@ -227,7 +285,9 @@ test('Business payroll expenses never become suppliers and supplier deletion sta
   assert.match(page, /else if \(payrollSupplierCleanupPending\) \{[\s\S]*saveData\(\)/);
   assert.doesNotMatch(page, /Object\.keys\(spend\)\.forEach\(function\(name\)/);
   assert.match(page, /source:'payroll'/);
-  assert.match(page, /window\.deleteSupplier[\s\S]*syncBusinessComputedData\(\);[\s\S]*showToast\('Supplier deleted\.'/);
+  assert.match(page, /window\.deleteSupplier[\s\S]*syncBusinessComputedData\(\);[\s\S]*Supplier deleted/);
+  assert.match(page, /window\.deleteSupplier = async function deleteSupplier/);
+  assert.match(page, /var saved = await saveData\(\)/);
 });
 
 test('Business payroll mobile UI provides grid, table, actions, history, and working deletion', function() {
@@ -400,7 +460,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260810-business-payroll1';
+  const version = '20260810-invoice-pack3';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',

@@ -214,6 +214,26 @@ test('public invoice snapshots retain sanitized bank details', function() {
   assert.equal(snapshot.bankBranch, 'Colombo 03');
 });
 
+test('WhatsApp public invoices preserve the selected new template and exact public link', function() {
+  const publicUrl = 'https://ceylonrylabs.io/invoice/' + generatePublicToken() + '/fresh-template';
+  const invoice = sanitizePublicInvoice({
+    num: 'INV-NEW-13',
+    client: 'Template Customer',
+    amount: 5400,
+    tpl: 12,
+    lines: [{ desc: 'New template service', qty: 1, price: 5400 }]
+  }, {
+    settings: { bizName: 'Template Business', defaultTpl: 0 }
+  });
+  const snapshot = sanitizePublicSnapshot(invoice);
+  const message = buildReminderMessage(snapshot, publicUrl);
+
+  assert.equal(invoice.templateIndex, 12);
+  assert.equal(snapshot.templateIndex, 12);
+  assert.match(message, new RegExp(publicUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  assert.match(message, /Invoice #INV-NEW-13/);
+});
+
 test('mapped source tolerates a missing flag but honors revocation and token replacement', function() {
   const token = generatePublicToken();
   const replacement = generatePublicToken();

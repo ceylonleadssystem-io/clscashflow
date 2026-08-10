@@ -14,7 +14,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260810-business-payroll1"></script>
+<script src="assets/platform.js?v=20260810-invoice-pack3"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2546,7 +2546,7 @@ window.emailQuote=async function emailQuote(num){
   try{
     const sendDocument=window.clsSendDocumentEmail||window.clsSendPaymentReminderEmail;
     if(typeof sendDocument!=='function')throw new Error('The email service is still loading. Refresh the page and try again.');
-    await sendDocument({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.num,invoiceNumber:q.num,customerName:q.client||'Customer',businessName:DB.settings.bizName||'My Business',businessEmail:DB.settings.email||'',businessAddress:DB.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.amount||0,invoiceTotal:q.amount||0,date:q.date,invoiceDate:fmtD(q.date),due:q.due,dueDate:fmtD(q.due),validUntil:fmtD(q.due),terms:q.terms||'',notes:q.notes||DB.settings.footer||'',lines:q.lines||[],settings:DB.settings});
+    await sendDocument({to:to,kind:label.toLowerCase(),documentLabel:label,documentNumber:q.num,invoiceNumber:q.num,customerName:q.client||'Customer',businessName:DB.settings.bizName||'My Business',businessEmail:DB.settings.email||'',businessAddress:DB.settings.addr||'',currency:q.cur||'LKR',documentTotal:q.amount||0,invoiceTotal:q.amount||0,date:q.date,invoiceDate:fmtD(q.date),due:q.due,dueDate:fmtD(q.due),validUntil:fmtD(q.due),terms:q.terms||'',notes:q.notes||DB.settings.footer||'',lines:q.lines||[],templateIndex:q.tpl!=null?q.tpl:getDefaultInvoiceTemplate(),settings:DB.settings});
     alert(label+' sent to '+to+'.');
   }catch(err){alert('Could not send '+label.toLowerCase()+': '+(err&&err.message?err.message:err));}
 };
@@ -2966,9 +2966,9 @@ function bindSettingsInvoicePreview(){
 // INVOICE PDF PRINTING
 // ════════════════════════════════
 const tplDefs=window.clsInvoiceTemplates||[
-  {name:'Furniture Pop',accent:'#ef92d8',style:'pop'},
-  {name:'Orange Studio',accent:'#f16f4f',style:'orange'},
-  {name:'Modern Mono',accent:'#1f2a24',style:'mono'}
+  {name:'Bold Editorial',accent:'#d8784a',style:'bold-editorial'},
+  {name:'Cafe Illustrated',accent:'#2546b8',style:'cafe-illustrated'},
+  {name:'Elegant Wreath',accent:'#b89a68',style:'elegant-wreath'}
 ];
 function buildInvoiceEmailHTML(inv){
   const s=DB.settings;
@@ -3073,9 +3073,9 @@ function buildInvoiceEmailHTML(inv){
 }
 function buildInvPrintHTML(inv,tplIdx){
   if(window.clsBuildInvoicePrintHtml){
-    return window.clsBuildInvoicePrintHtml({inv:inv,settings:DB.settings,templateIndex:getDefaultInvoiceTemplate(),systemName:'Solo Invoice Control System'});
+    return window.clsBuildInvoicePrintHtml({inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:getDefaultInvoiceTemplate(),systemName:'Solo Invoice Control System'});
   }
-  tplIdx=getDefaultInvoiceTemplate();
+  tplIdx=inv.tpl!=null?normalizeTemplateIdx(inv.tpl):getDefaultInvoiceTemplate();
   const t=tplDefs[tplIdx]||tplDefs[0];const s=DB.settings;const ac=t.accent;
   // Logo alignment + size (S / M / L)
   const align=s.logoAlign||'left';
@@ -3542,6 +3542,7 @@ window.emailInvoice = async function emailInvoice(num){
       paidTotal:paidTotal,
       remainingBalance:amountDue,
       status:paymentState,
+      templateIndex:inv.tpl!=null?inv.tpl:getDefaultInvoiceTemplate(),
       paymentDate:fmtD(new Date()),
       notes:combinedInvoiceNotes(inv.notes,s.footer),
       settings:s,
@@ -3584,6 +3585,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(num){
       amountDue:Math.max(0,balance),
       paymentDate:fmtD(new Date()),
       status:inv.status||'paid',
+      templateIndex:inv.tpl!=null?inv.tpl:getDefaultInvoiceTemplate(),
       notes:combinedInvoiceNotes(inv.notes,s.footer),
       settings:s,
       lines:(inv.lines||[]).map(l=>({desc:l.desc||'Invoice item',qty:l.qty||1,price:l.price||0,total:l.total!=null?l.total:((l.qty||1)*(l.price||0))}))

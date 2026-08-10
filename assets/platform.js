@@ -398,19 +398,19 @@
   }
 
   var INVOICE_TEMPLATES = [
-    { name: 'Furniture Pop', accent: '#ef92d8', dark: '#315ee8', paper: '#fbeddc', layout: 'pop' },
-    { name: 'Orange Studio', accent: '#f16f4f', dark: '#171615', paper: '#fff8dc', layout: 'orange' },
-    { name: 'Modern Mono', accent: '#1f2a24', dark: '#1f2a24', paper: '#fffdf8', layout: 'mono' },
-    { name: 'Professional Script', accent: '#9b948c', dark: '#26211d', paper: '#fbf8f1', layout: 'script' },
-    { name: 'Freelancer Wave', accent: '#3f4542', dark: '#191919', paper: '#ffffff', layout: 'wave' },
-    { name: 'Editorial Serif', accent: '#111111', dark: '#111111', paper: '#f8f8f0', layout: 'editorial' },
-    { name: 'Agency Clean', accent: '#111111', dark: '#111111', paper: '#fff1ec', layout: 'agency' },
-    { name: 'Cafe Blue', accent: '#2046d9', dark: '#2046d9', paper: '#fffbe7', layout: 'cafe' },
-    { name: 'Corporate Green', accent: '#84b735', dark: '#243449', paper: '#ffffff', layout: 'green' },
-    { name: 'Yellow Corporate', accent: '#f4c400', dark: '#404042', paper: '#ffffff', layout: 'yellow' },
-    { name: 'Pin Box', accent: '#111111', dark: '#111111', paper: '#f5f5f5', layout: 'pinbox' },
-    { name: 'Kazuma Minimal', accent: '#3f4348', dark: '#3f4348', paper: '#ffffff', layout: 'kazuma' },
-    { name: 'Architect Blue', accent: '#4263b4', dark: '#4263b4', paper: '#ffffff', layout: 'architect' }
+    { name: 'Bold Editorial', accent: '#d8784a', dark: '#171615', paper: '#f8efd8', layout: 'bold-editorial', source: 'files12' },
+    { name: 'Cafe Illustrated', accent: '#2546b8', dark: '#1f2b78', paper: '#fffbe8', layout: 'cafe-illustrated', source: 'files12' },
+    { name: 'Elegant Wreath', accent: '#b89a68', dark: '#2a2622', paper: '#fbfaf6', layout: 'elegant-wreath', source: 'files12' },
+    { name: 'Signature Script', accent: '#b9b0a3', dark: '#27231f', paper: '#fbf8f1', layout: 'signature-script', source: 'files12' },
+    { name: 'Monochrome Wave', accent: '#111111', dark: '#111111', paper: '#ffffff', layout: 'monochrome-wave', source: 'files12' },
+    { name: 'Corporate Diagonal', accent: '#84b63d', dark: '#24344a', paper: '#ffffff', layout: 'corporate-diagonal', source: 'files12' },
+    { name: 'Modern Serif', accent: '#c88c7c', dark: '#2a2420', paper: '#fff2ee', layout: 'modern-serif', source: 'files12' },
+    { name: 'Flame Dark Header', accent: '#d7a82d', dark: '#242321', paper: '#ffffff', layout: 'flame-dark-header', source: 'files12' },
+    { name: 'Dotted Mono', accent: '#111111', dark: '#111111', paper: '#ffffff', layout: 'dotted-mono', source: 'files12' },
+    { name: 'Corporate Charcoal', accent: '#b6aa8d', dark: '#353535', paper: '#ffffff', layout: 'corporate-charcoal', source: 'files12' },
+    { name: 'Geometric Blue', accent: '#4777c8', dark: '#28324f', paper: '#ffffff', layout: 'geometric-blue', source: 'files12' },
+    { name: 'Furniture Pink', accent: '#f29ad8', dark: '#315de7', paper: '#fff0dc', layout: 'furniture-pink', source: 'files12' },
+    { name: 'Minimal Grey', accent: '#bfc0c2', dark: '#44464a', paper: '#ffffff', layout: 'minimal-grey', source: 'files12' }
   ];
   var INVOICE_FONTS = [
     { id: 'classic', name: 'Classic Serif', body: 'Georgia, "Times New Roman", serif', title: 'Georgia, "Times New Roman", serif' },
@@ -486,6 +486,23 @@
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  function invoiceEmailTheme(opts) {
+    opts = opts || {};
+    var settings = opts.settings || {};
+    var idx = opts.templateIndex != null ? opts.templateIndex : (opts.tpl != null ? opts.tpl : settings.defaultTpl);
+    return invoiceTemplate(window.clsNormalizeInvoiceTemplate(idx));
+  }
+
+  function invoiceEmailBrand(opts, businessName, theme) {
+    var settings = normalizeInvoiceSettings((opts && opts.settings) || opts || {});
+    if (settings.logo) {
+      return '<img src="' + invoiceEscape(settings.logo) + '" alt="' + invoiceEscape(businessName) + '" style="display:block;max-width:170px;max-height:64px;object-fit:contain;margin:0 0 10px;">' +
+        '<div style="font-size:16px;font-weight:800;color:#fff;">' + invoiceEscape(businessName) + '</div>';
+    }
+    return '<div style="font-family:Georgia,serif;font-size:28px;line-height:1.2;color:#fff;">' + invoiceEscape(businessName) + '</div>' +
+      '<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:' + invoiceEscape(theme.accent) + ';margin-top:6px;">' + invoiceEscape(theme.name) + '</div>';
+  }
+
   function paymentEmailLineRows(lines, cur, invoiceTotal) {
     lines = lines || [];
     if (!lines.length) lines = [{ desc: 'Invoice total', qty: 1, price: invoiceTotal, total: invoiceTotal }];
@@ -530,6 +547,7 @@
     var rows = paymentEmailLineRows(lines, cur, invoiceTotal);
     var payLink = opts.payLink || opts.paymentLink || opts.checkoutUrl || '';
     var isReceipt = kind === 'receipt';
+    var theme = invoiceEmailTheme(opts);
     var title = isReceipt ? 'Payment received' : 'Invoice payment reminder';
     var eyebrow = isReceipt ? 'Thank you for your payment' : 'Payment overdue';
     var lead = isReceipt
@@ -544,25 +562,24 @@
       : '<tr><td style="padding:12px 14px;color:#6f6258;">Invoice date</td><td align="right" style="padding:12px 14px;font-weight:700;">' + invoiceEscape(invoiceDate || '-') + '</td></tr>' +
         '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Due date</td><td align="right" style="padding:12px 14px;font-weight:700;border-top:1px solid #eadfce;">' + invoiceEscape(dueDate || '-') + '</td></tr>' +
         '<tr><td style="padding:12px 14px;color:#6f6258;border-top:1px solid #eadfce;">Status</td><td align="right" style="padding:12px 14px;font-weight:700;text-transform:capitalize;border-top:1px solid #eadfce;">' + invoiceEscape(status) + '</td></tr>';
-    var ctaHtml = (!isReceipt && payLink) ? '<div style="text-align:center;margin:24px 0 6px;"><a href="' + invoiceEscape(payLink) + '" style="display:inline-block;background:#2d2117;color:#fff;text-decoration:none;padding:14px 28px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-radius:4px;">Pay now</a></div>' : '';
+    var ctaHtml = (!isReceipt && payLink) ? '<div style="text-align:center;margin:24px 0 6px;"><a href="' + invoiceEscape(payLink) + '" style="display:inline-block;background:' + invoiceEscape(theme.dark) + ';color:#fff;text-decoration:none;padding:14px 28px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-radius:4px;">Pay now</a></div>' : '';
     var closingNote = isReceipt
       ? (remainingBalance <= 0.01 ? 'This invoice is now fully settled.' : 'A remaining balance is still open on this invoice.')
       : 'If you have already made this payment, please reply with the payment reference so we can update the invoice.';
-    return '<div style="width:100%;margin:0;background:#f7f2ea;padding:12px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;box-sizing:border-box;">' +
+    return '<div style="width:100%;margin:0;background:' + invoiceEscape(theme.paper) + ';padding:12px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;box-sizing:border-box;">' +
       '<div style="width:100%;max-width:640px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;box-sizing:border-box;">' +
-        '<div style="padding:20px 18px;border-bottom:1px solid #eadfce;background:#fff;">' +
-          '<div style="font-family:Georgia,serif;font-size:26px;color:#2d2117;">Ceylonry<span style="color:#b8922a;">Labs</span>.io</div>' +
-          '<div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#8b7c6f;margin-top:4px;">Cashflow System</div>' +
+        '<div style="padding:20px 18px;border-bottom:5px solid ' + invoiceEscape(theme.accent) + ';background:' + invoiceEscape(theme.dark) + ';">' +
+          invoiceEmailBrand(opts, businessName, theme) +
         '</div>' +
-        '<div style="background:#2d2117;color:#fff;padding:26px 18px;text-align:center;">' +
-          '<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d3ac3d;">' + invoiceEscape(eyebrow) + '</div>' +
+        '<div style="background:' + invoiceEscape(theme.dark) + ';color:#fff;padding:26px 18px;text-align:center;">' +
+          '<div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:' + invoiceEscape(theme.accent) + ';">' + invoiceEscape(eyebrow) + '</div>' +
           '<h1 style="margin:12px 0 8px;font-size:27px;line-height:1.2;word-break:break-word;">' + invoiceEscape(title) + '</h1>' +
           '<div style="font-size:15px;color:#eadfce;">Invoice ' + invoiceEscape(invoiceNo) + '</div>' +
         '</div>' +
         '<div style="padding:22px 16px;">' +
           '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Hi ' + invoiceEscape(customerName) + ',</p>' +
           '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;">' + lead + '</p>' +
-          '<div style="background:#fbf7f0;border:1px solid #eadfce;border-radius:8px;text-align:center;padding:24px 18px;margin:0 0 24px;">' +
+          '<div style="background:' + invoiceEscape(theme.paper) + ';border:1px solid #eadfce;border-radius:8px;text-align:center;padding:24px 18px;margin:0 0 24px;">' +
             '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8b7c6f;margin-bottom:8px;">' + invoiceEscape(amountLabel) + '</div>' +
             '<div style="font-size:28px;line-height:1.15;font-weight:800;color:#2d2117;word-break:break-word;">' + invoiceEscape(invoiceMoney(cur, amountValue)) + '</div>' +
           '</div>' +
@@ -573,9 +590,9 @@
             '<tbody>' + rows + '</tbody>' +
           '</table>' +
           '<div style="text-align:center;margin-bottom:24px;">' +
-            '<div style="display:block;width:100%;box-sizing:border-box;background:#2d2117;color:#fff;padding:16px 14px;font-size:17px;line-height:1.35;font-weight:700;word-break:break-word;">Invoice total: ' + invoiceEscape(invoiceMoney(cur, invoiceTotal)) + '</div>' +
+            '<div style="display:block;width:100%;box-sizing:border-box;background:' + invoiceEscape(theme.dark) + ';color:#fff;padding:16px 14px;font-size:17px;line-height:1.35;font-weight:700;word-break:break-word;border-bottom:5px solid ' + invoiceEscape(theme.accent) + ';">Invoice total: ' + invoiceEscape(invoiceMoney(cur, invoiceTotal)) + '</div>' +
           '</div>' +
-          '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(closingNote + '\n\n' + notes) + '</div>' +
+          '<div style="border-left:4px solid ' + invoiceEscape(theme.accent) + ';padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(closingNote + '\n\n' + notes) + '</div>' +
           bankHtml +
           '<p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#6f6258;">' + invoiceEscape(businessName) + '<br>' + invoiceEscape(businessAddress) + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
         '</div>' +
@@ -603,15 +620,15 @@
     var paymentDate = opts.paymentDate || humanDate(opts.paymentRawDate || opts.date) || humanDate(new Date());
     var paymentMethod = opts.paymentMethod || 'Payment recorded';
     var paymentReference = opts.paymentReference || opts.paymentRef || '';
+    var theme = invoiceEmailTheme(opts);
     var bankHtml = invoiceBankEmailHtml(opts.settings || opts);
     var statusLine = remainingBalance <= 0.01
       ? 'This invoice is now fully settled. Thank you for your payment.'
       : 'Thank you for your initial payment. The remaining amount to pay is ' + invoiceMoney(cur, remainingBalance) + '.';
-    return '<div style="margin:0;background:#f7f2ea;padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
+    return '<div style="margin:0;background:' + invoiceEscape(theme.paper) + ';padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
       '<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;">' +
-        '<div style="background:#2d2117;color:#fff;padding:24px 30px;">' +
-          '<div style="font-family:Georgia,serif;font-size:28px;line-height:1.2;">Ceylonry<span style="color:#b8922a;">Labs</span>.io</div>' +
-          '<div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#d9d0c4;margin-top:7px;">Cashflow System</div>' +
+        '<div style="background:' + invoiceEscape(theme.dark) + ';color:#fff;padding:24px 30px;border-bottom:5px solid ' + invoiceEscape(theme.accent) + ';">' +
+          invoiceEmailBrand(opts, businessName, theme) +
         '</div>' +
         '<div style="padding:30px;">' +
           '<div style="background:#f7f2ea;border-left:5px solid #20a366;border-radius:6px;padding:22px;text-align:center;margin-bottom:24px;">' +
@@ -662,10 +679,12 @@
     var total = Number(opts.documentTotal != null ? opts.documentTotal : (opts.invoiceTotal || opts.total || opts.amount || 0));
     var rows = paymentEmailLineRows(opts.lines || opts.items || [], cur, total);
     var notes = opts.notes || 'Please contact us if you have any questions.';
-    return '<div style="margin:0;background:#f7f2ea;padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
+    var theme = invoiceEmailTheme(opts);
+    return '<div style="margin:0;background:' + invoiceEscape(theme.paper) + ';padding:28px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">' +
       '<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e5d9c8;border-radius:8px;overflow:hidden;">' +
-        '<div style="background:#2d2117;color:#fff;padding:30px 32px;">' +
-          '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#d3ac3d;">' + invoiceEscape(label + ' ready for review') + '</div>' +
+        '<div style="background:' + invoiceEscape(theme.dark) + ';color:#fff;padding:30px 32px;border-bottom:6px solid ' + invoiceEscape(theme.accent) + ';">' +
+          invoiceEmailBrand(opts, businessName, theme) +
+          '<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:' + invoiceEscape(theme.accent) + ';margin-top:18px;">' + invoiceEscape(label + ' ready for review') + '</div>' +
           '<h1 style="margin:10px 0 4px;font-size:30px;line-height:1.2;">' + invoiceEscape(label + ' ' + number) + '</h1>' +
           '<div style="color:#eadfce;font-size:14px;">From ' + invoiceEscape(businessName) + '</div>' +
         '</div>' +
@@ -673,11 +692,11 @@
           '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Hi ' + invoiceEscape(customerName) + ',</p>' +
           '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;color:#6f6258;">Please review the attached details for ' + invoiceEscape(label.toLowerCase()) + ' <strong style="color:#2d2117;">' + invoiceEscape(number) + '</strong>. It is valid until <strong style="color:#2d2117;">' + invoiceEscape(validUntil || '-') + '</strong>.</p>' +
           '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 22px;">' +
-            '<thead><tr style="background:#2d2117;color:#fff;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;"><th align="left" style="padding:12px 10px;">Description</th><th align="center" style="padding:12px 10px;">Qty</th><th align="right" style="padding:12px 10px;">Price</th><th align="right" style="padding:12px 10px;">Amount</th></tr></thead>' +
+            '<thead><tr style="background:' + invoiceEscape(theme.dark) + ';color:#fff;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;"><th align="left" style="padding:12px 10px;">Description</th><th align="center" style="padding:12px 10px;">Qty</th><th align="right" style="padding:12px 10px;">Price</th><th align="right" style="padding:12px 10px;">Amount</th></tr></thead>' +
             '<tbody>' + rows + '</tbody>' +
           '</table>' +
-          '<div style="text-align:right;margin-bottom:24px;"><div style="display:inline-block;min-width:260px;background:#2d2117;color:#fff;padding:16px 20px;font-size:18px;font-weight:700;">' + invoiceEscape(label + ' total: ' + invoiceMoney(cur, total)) + '</div></div>' +
-          '<div style="border-left:4px solid #b8922a;padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(notes) + '</div>' +
+          '<div style="text-align:right;margin-bottom:24px;"><div style="display:inline-block;min-width:260px;background:' + invoiceEscape(theme.dark) + ';color:#fff;padding:16px 20px;font-size:18px;font-weight:700;border-bottom:5px solid ' + invoiceEscape(theme.accent) + ';">' + invoiceEscape(label + ' total: ' + invoiceMoney(cur, total)) + '</div></div>' +
+          '<div style="border-left:4px solid ' + invoiceEscape(theme.accent) + ';padding:10px 0 10px 16px;color:#6f6258;line-height:1.6;">' + invoiceBreaks(notes) + '</div>' +
           '<p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#6f6258;">Regards,<br><strong style="color:#2d2117;">' + invoiceEscape(businessName) + '</strong>' + (businessAddress ? '<br>' + invoiceEscape(businessAddress) : '') + (businessEmail ? '<br>' + invoiceEscape(businessEmail) : '') + '</p>' +
         '</div>' +
         '<div style="padding:16px 32px;background:#f7f2ea;text-align:center;font-size:12px;color:#8b7c6f;">Sent with Cashflow System - Ceylonry Labs.io</div>' +
@@ -945,6 +964,69 @@
     return String(layout || 'pop').replace(/[^a-z0-9_-]/gi, '').toLowerCase();
   }
 
+  function invoiceCustomTemplateCss(layout) {
+    var cls = '.tpl-' + invoiceTemplateClass(layout);
+    var rules = {
+      'bold-editorial':
+        cls + '{background:var(--paper)!important;--line:rgba(23,22,21,.2)!important}' +
+        cls + ' .brand-rule{height:9mm!important;background:var(--dark)!important;margin:-14mm -15mm 0!important}' +
+        cls + ' .invoice-head{background:var(--accent)!important;margin:0 -15mm 9mm!important;padding:10mm 15mm 9mm!important;border-bottom:0!important}' +
+        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .muted{color:#171615!important}' +
+        cls + ' .grand{background:#e6bc42!important;color:#171615!important}' + cls + ' .grand b{color:#171615!important}',
+      'cafe-illustrated':
+        cls + '{background:var(--paper)!important;--line:rgba(37,70,184,.28)!important}' +
+        cls + ' .brand-rule{background:var(--accent)!important;height:2px!important}' +
+        cls + ' .invoice-head{border-bottom:2px solid var(--accent)!important}' + cls + ' .invoice-title h1,' + cls + ' .label,' + cls + ' .line-no{color:var(--accent)!important}' +
+        cls + ' .parties{border:1.5px solid var(--accent)!important;padding:7mm!important}' +
+        cls + ' .items th{border-bottom-color:var(--accent)!important;color:var(--accent)!important}' + cls + ' .grand{background:var(--accent)!important}',
+      'elegant-wreath':
+        cls + '{background:var(--paper)!important}' + cls + ' .brand-rule{height:8px!important;background:transparent!important;border-top:3px double var(--accent)!important;border-bottom:1px solid var(--accent)!important}' +
+        cls + ' .biz-name,' + cls + ' .invoice-title h1{font-family:Georgia,"Times New Roman",serif!important;font-weight:500!important}' +
+        cls + ' .invoice-head{border-bottom:1px solid var(--accent)!important}' + cls + ' .label,' + cls + ' .line-no{color:#8a7048!important}' + cls + ' .grand{background:#2a2622!important}',
+      'signature-script':
+        cls + '{background:var(--paper)!important}' + cls + ' .brand-rule{height:1px!important;background:var(--dark)!important}' +
+        cls + ' .invoice-title h1{font-family:Georgia,"Times New Roman",serif!important;font-style:italic!important;text-transform:none!important;letter-spacing:0!important;font-weight:500!important}' +
+        cls + ' .parties{border:1px solid var(--dark)!important;padding:7mm!important}' + cls + ' .grand{background:#4a3b2a!important}',
+      'monochrome-wave':
+        cls + '{background:#fff!important;--accent:#111!important;--dark:#111!important}' + cls + ' .brand-rule{height:10mm!important;background:#111!important;margin:-14mm -15mm 9mm!important}' +
+        cls + ' .invoice-title h1{font-size:48px!important;letter-spacing:1px!important}' + cls + ' .powered{background:#111!important;color:#fff!important;margin:8mm -15mm -11mm!important;padding:7mm 15mm!important;border:0!important}' + cls + ' .powered b{color:#fff!important}',
+      'corporate-diagonal':
+        cls + ' .brand-rule{height:5mm!important;background:linear-gradient(105deg,var(--dark) 0 72%,var(--accent) 72% 88%,#6f9d2a 88%)!important}' +
+        cls + ' .invoice-head{background:var(--dark)!important;color:#fff!important;padding:8mm!important;border:0!important}' +
+        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .muted{color:#fff!important}' +
+        cls + ' .items th{background:var(--accent)!important;color:#111!important;border-bottom-color:var(--accent)!important}' + cls + ' .grand{background:var(--accent)!important;color:#111!important}' + cls + ' .grand b{color:#111!important}',
+      'modern-serif':
+        cls + '{background:var(--paper)!important}' + cls + ' .brand-rule{height:2px!important;background:var(--accent)!important}' +
+        cls + ' .biz-name,' + cls + ' .invoice-title h1{font-family:Georgia,"Times New Roman",serif!important;font-weight:500!important;text-transform:none!important;letter-spacing:0!important}' +
+        cls + ' .invoice-head{border-bottom:1px solid var(--dark)!important}' + cls + ' .items th{border-bottom:1px solid var(--dark)!important}' + cls + ' .grand{background:var(--dark)!important}',
+      'flame-dark-header':
+        cls + ' .brand-rule{height:5px!important;background:var(--accent)!important;margin-bottom:0!important}' + cls + ' .invoice-head{background:var(--dark)!important;color:#fff!important;margin:0 -15mm 9mm!important;padding:9mm 15mm!important;border:0!important}' +
+        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .muted{color:#fff!important}' +
+        cls + ' .label,' + cls + ' .line-no{color:#9d7412!important}' + cls + ' .grand{background:var(--dark)!important;border-top:5px solid var(--accent)!important}',
+      'dotted-mono':
+        cls + '{font-family:"Courier New",Courier,monospace!important}' + cls + ' .brand-rule{height:0!important;border-top:3px dotted #111!important;background:transparent!important}' +
+        cls + ' .biz-name,' + cls + ' .invoice-title h1,' + cls + ' .items,' + cls + ' .money-row{font-family:"Courier New",Courier,monospace!important}' +
+        cls + ' .invoice-head,' + cls + ' .parties,' + cls + ' .items td,' + cls + ' .totals{border-color:#111!important}' + cls + ' .grand{background:#111!important}',
+      'corporate-charcoal':
+        cls + ' .brand-rule{height:7mm!important;background:var(--dark)!important;margin:-14mm -15mm 8mm!important}' + cls + ' .invoice-head{border-bottom:4px solid var(--dark)!important}' +
+        cls + ' .logo-box{background:var(--dark)!important;color:#fff!important;border:0!important}' + cls + ' .grand{background:var(--dark)!important}' +
+        cls + ' .powered{background:var(--dark)!important;color:#fff!important;margin:8mm -15mm -11mm!important;padding:5mm 15mm!important;border:0!important}' + cls + ' .powered b{color:#fff!important}',
+      'geometric-blue':
+        cls + ' .brand-rule{height:4mm!important;background:var(--accent)!important}' + cls + ' .invoice-head{background:var(--dark)!important;color:#fff!important;padding:8mm!important;border-bottom:7px solid var(--accent)!important}' +
+        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .muted{color:#fff!important}' +
+        cls + ' .items th{background:var(--dark)!important;color:#fff!important;border-bottom-color:var(--dark)!important}' + cls + ' .grand{background:var(--accent)!important}',
+      'furniture-pink':
+        cls + '{background:var(--paper)!important;border-radius:0!important}' + cls + ' .brand-rule{height:8mm!important;background:linear-gradient(90deg,var(--dark),var(--accent))!important}' +
+        cls + ' .biz-name{color:var(--dark)!important;font-size:30px!important}' + cls + ' .invoice-title h1{color:var(--dark)!important}' +
+        cls + ' .items th{background:var(--accent)!important;color:#29243b!important;border-bottom-color:var(--accent)!important}' + cls + ' .grand{background:var(--dark)!important}',
+      'minimal-grey':
+        cls + '{background:#fff!important;--line:#d8d8d8!important}' + cls + ' .brand-rule{height:1px!important;background:#777!important}' + cls + ' .invoice-head{border-bottom:1px solid #aaa!important}' +
+        cls + ' .invoice-title h1{font-size:32px!important;letter-spacing:2px!important;font-weight:500!important}' + cls + ' .items th{font-weight:500!important;color:#555!important;border-bottom:1px solid #aaa!important}' +
+        cls + ' .line-no{color:#777!important}' + cls + ' .grand{background:#555!important}'
+    };
+    return rules[invoiceTemplateClass(layout)] || '';
+  }
+
   window.clsInvoiceTemplates = INVOICE_TEMPLATES;
   window.clsInvoiceFontOptions = INVOICE_FONTS;
   window.clsInvoiceViewOptions = INVOICE_VIEWS;
@@ -965,7 +1047,7 @@
   };
   window.clsInvoiceMiniPreview = function(theme) {
     theme = theme || INVOICE_TEMPLATES[0];
-    var dark = ['orange', 'green', 'yellow'].indexOf(theme.layout) !== -1;
+    var dark = ['orange', 'green', 'yellow', 'corporate-diagonal', 'flame-dark-header', 'corporate-charcoal', 'geometric-blue'].indexOf(theme.layout) !== -1;
     var side = ['pinbox', 'kazuma', 'architect'].indexOf(theme.layout) !== -1;
     return '<div class="tpl-mini' + (dark ? ' dark' : '') + (side ? ' side' : '') + '" style="--tpl-accent:' + theme.accent + ';background:' + (dark ? theme.dark : theme.paper || '#fff') + '">' +
       '<div class="tm-logo"></div>' +
@@ -1089,6 +1171,7 @@
     css += 'html,body{width:210mm!important;min-height:297mm!important}.invoice-page{width:210mm!important;min-height:297mm!important;height:297mm!important;padding:14mm 15mm 11mm!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.brand-rule{height:5px!important;margin-bottom:10mm!important;flex:0 0 auto}.invoice-head{grid-template-columns:minmax(0,1fr) 62mm!important;gap:12mm!important;margin-bottom:9mm!important;padding-bottom:8mm!important;flex:0 0 auto}.logo-img{max-height:22mm!important;margin-bottom:4mm!important}.logo-box{width:29mm!important;height:17mm!important;margin-bottom:4mm!important}.biz-name{font-size:26px!important}.muted{font-size:11.5px!important;line-height:1.55!important}.invoice-title h1{font-size:42px!important;letter-spacing:5px!important}.invoice-title .num{font-size:12.5px!important;margin-top:4mm!important}.invoice-title .meta{font-size:11px!important;line-height:1.7!important;margin-top:4mm!important}.parties{gap:18mm!important;padding-bottom:9mm!important;margin-bottom:9mm!important;flex:0 0 auto}.label{font-size:9px!important;margin-bottom:3mm!important}.party-name{font-size:15px!important;margin-bottom:2mm!important}.items{margin-bottom:10mm!important;break-inside:auto!important;page-break-inside:auto!important;flex:0 0 auto}.items thead{display:table-header-group}.items tr{break-inside:avoid;page-break-inside:avoid}.items th{font-size:9px!important;padding:0 9px 8px!important}.items td{font-size:12px!important;line-height:1.4!important;padding:10px 9px!important}.line-no{min-width:20px!important;margin-right:7px!important}.invoice-bottom{grid-template-columns:minmax(0,1fr) 76mm!important;gap:14mm!important;margin-top:auto!important;break-inside:avoid;page-break-inside:avoid;flex:0 0 auto}.notes{min-height:25mm!important}.note-text,.money-row{font-size:11.5px!important}.money-row{padding:7px 0!important}.grand{margin-top:4mm!important;padding:13px 14px!important}.grand b{font-size:19px!important}.powered{margin-top:9mm!important;padding-top:5mm!important;font-size:9px!important;break-inside:avoid;page-break-inside:avoid;flex:0 0 auto}.invoice-head,.parties{break-inside:avoid;page-break-inside:avoid}.density-compact{padding:11mm 13mm 9mm!important}.density-compact .brand-rule{margin-bottom:6mm!important}.density-compact .invoice-head{margin-bottom:6mm!important;padding-bottom:5mm!important}.density-compact .logo-img{max-height:16mm!important;margin-bottom:2mm!important}.density-compact .biz-name{font-size:23px!important}.density-compact .invoice-title h1{font-size:36px!important}.density-compact .parties{padding-bottom:5mm!important;margin-bottom:5mm!important}.density-compact .items{margin-bottom:5mm!important}.density-compact .items td{font-size:10.5px!important;padding:7px 8px!important}.density-compact .invoice-bottom{margin-top:auto!important}.density-compact .notes{min-height:0!important}.density-compact .money-row{font-size:10.5px!important;padding:5px 0!important}.density-compact .grand{padding:10px 12px!important}.density-compact .powered{margin-top:5mm!important;padding-top:3mm!important}.density-tight{padding:9mm 11mm 7mm!important}.density-tight .brand-rule{margin-bottom:4mm!important}.density-tight .invoice-head{margin-bottom:4mm!important;padding-bottom:4mm!important}.density-tight .logo-img{max-height:13mm!important;margin-bottom:1.5mm!important}.density-tight .logo-box{height:12mm!important;margin-bottom:1.5mm!important}.density-tight .biz-name{font-size:21px!important}.density-tight .muted{font-size:9.5px!important;line-height:1.35!important}.density-tight .invoice-title h1{font-size:32px!important}.density-tight .invoice-title .meta{font-size:9.5px!important;line-height:1.4!important;margin-top:2mm!important}.density-tight .parties{padding-bottom:3mm!important;margin-bottom:3mm!important}.density-tight .label{font-size:7.5px!important;margin-bottom:1.5mm!important}.density-tight .party-name{font-size:12px!important}.density-tight .items{margin-bottom:3mm!important}.density-tight .items th{font-size:7.5px!important;padding-bottom:4px!important}.density-tight .items td{font-size:9px!important;line-height:1.2!important;padding:5px 6px!important}.density-tight .invoice-bottom{margin-top:auto!important;grid-template-columns:minmax(0,1fr) 66mm!important;gap:8mm!important}.density-tight .notes{min-height:0!important}.density-tight .note-text,.density-tight .money-row{font-size:9px!important}.density-tight .money-row{padding:4px 0!important}.density-tight .grand{margin-top:2mm!important;padding:8px 9px!important}.density-tight .grand b{font-size:14px!important}.density-tight .powered{margin-top:3mm!important;padding-top:2mm!important;font-size:8px!important}@media print{html,body{width:210mm!important;min-height:297mm!important;height:297mm!important}.invoice-page{width:210mm!important;min-height:297mm!important;height:297mm!important;overflow:hidden!important}}';
     css += '.items th{background:#fff!important;color:#18130f!important;border-bottom:2px solid var(--dark)!important}';
     css += 'body{background:#fff!important}@media print{html,body{background:#fff!important}}';
+    css += invoiceCustomTemplateCss(theme.layout);
     var notesHtml = note ? '<div class="label">Notes</div><div class="note-text">' + invoiceBreaks(note) + '</div>' : '';
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceEscape(title) + '</title><style>' + css + '</style></head><body>' +
       '<div class="invoice-page tpl-' + cssLayout + ' view-' + view + densityClass + '"><div class="brand-rule"></div>' +
@@ -3535,6 +3618,38 @@
     return new Blob([pdf], {type:'application/pdf'});
   };
 
+  function initExclusiveInvoiceMoreMenus() {
+    if (document.documentElement.getAttribute('data-cls-invoice-more-ready') === 'true') return;
+    document.documentElement.setAttribute('data-cls-invoice-more-ready', 'true');
+
+    function closeInvoiceMenus(except) {
+      document.querySelectorAll('details.invoice-more[open]').forEach(function(menu) {
+        if (menu !== except) menu.open = false;
+      });
+    }
+
+    document.addEventListener('click', function(event) {
+      var target = event.target && event.target.closest ? event.target : null;
+      if (!target) return;
+      var menu = target.closest('details.invoice-more');
+      var summary = target.closest('summary');
+      if (menu && summary && summary.parentElement === menu) {
+        closeInvoiceMenus(menu);
+        return;
+      }
+      if (menu) {
+        if (target.closest('.invoice-more-menu button, .invoice-more-menu a')) menu.open = false;
+        return;
+      }
+      closeInvoiceMenus(null);
+    }, true);
+
+    document.addEventListener('toggle', function(event) {
+      var menu = event.target;
+      if (menu && menu.matches && menu.matches('details.invoice-more') && menu.open) closeInvoiceMenus(menu);
+    }, true);
+  }
+
 	  function boot() {
     var pathPlan = planFromPath();
     if (pathPlan) safeSet('cls-last-plan', pathPlan);
@@ -3553,6 +3668,7 @@
 	    initDelegatedMobileDrawer();
 	    initMobileDataTables();
 	    initMobileInvoiceWizard();
+	    initExclusiveInvoiceMoreMenus();
 	    if (window.matchMedia) {
 	      var invoiceWizardMedia = window.matchMedia('(max-width:760px)');
 	      var syncInvoiceWizard = function() {
