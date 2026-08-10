@@ -218,6 +218,31 @@ test('Business payroll can disable EPF and ETF per employee', function() {
   assert.match(page, /statutoryEnabled:document\.getElementById\('payroll-statutory'\)\.checked/);
 });
 
+test('Business payroll expenses never become suppliers and supplier deletion stays deleted', function() {
+  const page = read('growth.html');
+  assert.match(page, /function isPayrollExpense\(expense\)/);
+  assert.match(page, /if \(isPayrollExpense\(e\)\).*payrollExpenseNames\[payrollName\] = true; return;/);
+  assert.match(page, /var payrollArtifact = payrollExpenseNames\[key\]/);
+  assert.match(page, /D\._payrollSupplierCleanupPending = true/);
+  assert.match(page, /else if \(payrollSupplierCleanupPending\) \{[\s\S]*saveData\(\)/);
+  assert.doesNotMatch(page, /Object\.keys\(spend\)\.forEach\(function\(name\)/);
+  assert.match(page, /source:'payroll'/);
+  assert.match(page, /window\.deleteSupplier[\s\S]*syncBusinessComputedData\(\);[\s\S]*showToast\('Supplier deleted\.'/);
+});
+
+test('Business payroll mobile UI provides grid, table, actions, history, and working deletion', function() {
+  const page = read('growth.html');
+  const platform = read('assets/platform.js');
+  assert.match(page, /class="payroll-view-toggle"/);
+  assert.match(page, /id="payroll-grid"/);
+  assert.match(page, /id="payroll-history-mobile"/);
+  assert.match(page, /window\.setPayrollView=function\(mode\)/);
+  assert.match(page, /class="payroll-more-menu"/);
+  assert.match(page, /showToast\('Staff member deleted\.'/);
+  assert.match(page, /data-cls-mobile-keep-table/);
+  assert.match(platform, /table\.hasAttribute\('data-cls-mobile-keep-table'\)/);
+});
+
 for (const file of ['solo.html', 'starter.html', 'growth.html']) {
   test(file + ' applies default payment notes to new invoices and customer messages', function() {
     const page = read(file);
@@ -375,7 +400,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260810-mobile-wizard1';
+  const version = '20260810-business-payroll1';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',

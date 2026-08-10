@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260810-mobile-wizard1"></script>
+<script src="assets/platform.js?v=20260810-business-payroll1"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -113,6 +113,25 @@ img,canvas,svg,video{max-width:100%}
 .kpi-val,.sum-val,.db-kpi-value{font-size:clamp(1.15rem,2vw,1.85rem)!important;line-height:1.05;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .payroll-actions-cell{width:340px;min-width:340px}.payroll-actions{display:grid;grid-template-columns:repeat(3,minmax(82px,1fr));gap:.38rem;width:100%;max-width:340px;margin-left:auto}.payroll-actions .bsm{width:100%;min-height:34px;margin:0;padding:.35rem .45rem}.payroll-actions .payroll-delete{background:#fff;color:var(--red);border:1px solid rgba(192,57,43,.35)}.payroll-actions .payroll-delete:hover{background:var(--red);color:#fff}
 #view-payroll table{table-layout:auto}#view-payroll td{vertical-align:middle}
+.payroll-view-toggle,.payroll-mobile-grid,.payroll-history-mobile{display:none}
+.payroll-view-toggle{grid-template-columns:1fr 1fr;gap:.35rem;padding:.3rem;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin:.8rem 1rem}
+.payroll-view-toggle button{min-height:36px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.58rem;font-weight:800;letter-spacing:.03em;text-transform:uppercase;cursor:pointer}
+.payroll-view-toggle button.active{background:#fff;color:var(--black);box-shadow:0 2px 7px rgba(44,31,20,.08)}
+.payroll-staff-card{border:1px solid var(--border);border-radius:12px;background:#fff;padding:.85rem}
+.payroll-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem;padding-bottom:.62rem;border-bottom:1px solid var(--border)}
+.payroll-card-name{font-size:.82rem;font-weight:800;color:var(--text)}
+.payroll-card-meta{margin-top:.1rem;font-size:.58rem;color:var(--muted)}
+.payroll-card-metrics{display:grid;grid-template-columns:1fr 1fr;gap:.48rem .7rem;padding:.65rem 0}
+.payroll-card-metric span{display:block;font-size:.52rem;color:var(--muted);margin-bottom:.12rem}
+.payroll-card-metric strong{display:block;font-size:.65rem;color:var(--text);overflow-wrap:anywhere}
+.payroll-card-metric.net strong{color:var(--green)}
+.payroll-card-actions{display:grid;grid-template-columns:1fr 1fr 1fr 36px;gap:.35rem;padding-top:.62rem;border-top:1px solid var(--border)}
+.payroll-card-actions>.bsm{width:100%;min-width:0;height:38px;margin:0;padding:.35rem;font-size:.52rem}
+.payroll-card-actions>.payroll-pdf{background:var(--black);color:#fff}.payroll-card-actions>.payroll-email{background:#eef6ff;color:#1767ba;border-color:#b8d8fa}.payroll-card-actions>.payroll-pay{background:var(--green);color:#fff}
+.payroll-more{position:relative}.payroll-more summary{list-style:none;width:36px;height:38px;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff;font-weight:800}.payroll-more summary::-webkit-details-marker{display:none}
+.payroll-more-menu{position:absolute;right:0;bottom:44px;z-index:8;width:150px;padding:.45rem;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.16);display:grid;gap:.35rem}
+.payroll-more-menu button{width:100%;min-height:36px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text);font-size:.56rem;font-weight:800;text-transform:uppercase;cursor:pointer}.payroll-more-menu .payroll-delete{color:var(--red);border-color:rgba(192,57,43,.35)}
+.payroll-history-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.45rem .8rem;padding:.75rem 0;border-bottom:1px solid var(--border)}.payroll-history-card:last-child{border-bottom:0}.payroll-history-card strong{font-size:.7rem}.payroll-history-card span{font-size:.58rem;color:var(--muted)}.payroll-history-card .amount{font-family:var(--fm);font-size:.68rem;font-weight:800;color:var(--text);text-align:right}
 .db-greet-p{font-size:.71rem;color:var(--muted)}
 .db-date-pill{font-size:.65rem;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:.25rem .7rem;border-radius:20px}
 .db-plan-pill{font-size:.56rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.27rem .8rem;border-radius:20px}
@@ -688,6 +707,33 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .invoice-actions .bsm,.invoice-actions .pill{height:36px}
   .filter-bar{padding:.7rem 1rem 0;position:sticky;left:0;background:var(--white)}
   .quote-filter-tools,.cashflow-filter-tools{grid-template-columns:1fr 1fr;padding:.85rem 1rem;position:sticky;left:0;background:var(--white)}
+  #view-payroll{--payroll-card-gap:.7rem}
+  #view-payroll .help{margin-bottom:.75rem;padding:.8rem .9rem;line-height:1.5}
+  #view-payroll #payroll-sum{gap:.7rem;margin-bottom:.85rem}
+  #view-payroll #payroll-sum .sum-i{min-height:74px;padding:.8rem 1rem;border-radius:12px}
+  #view-payroll .payroll-employee-panel,#view-payroll .payroll-history-panel{padding:0!important;border-radius:12px;overflow:visible}
+  #view-payroll .payroll-employee-panel>.card-head{position:static;display:flex;align-items:stretch;padding:1rem 1rem .75rem}
+  #view-payroll .payroll-employee-panel>.card-head .card-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.45rem}
+  #view-payroll .payroll-employee-panel>.card-head .btn{width:100%;min-width:0;padding:.5rem .35rem;font-size:.54rem;white-space:normal}
+  #view-payroll .cashflow-filter-tools{position:static;display:grid;grid-template-columns:1fr!important;gap:.5rem;padding:.25rem 1rem .55rem;background:#fff}
+  #view-payroll .cashflow-filter-tools>div{min-width:0}
+  #view-payroll .cashflow-filter-tools label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  #view-payroll .cashflow-filter-tools .fi,#view-payroll .cashflow-filter-tools .btn{width:100%;min-height:40px}
+  #view-payroll .payroll-view-toggle{display:grid;margin:.35rem 1rem .75rem}
+  #view-payroll[data-payroll-view="grid"] .payroll-mobile-grid{display:grid;gap:.7rem;padding:0 1rem 1rem}
+  #view-payroll[data-payroll-view="grid"] .payroll-table-wrap{display:none}
+  #view-payroll[data-payroll-view="table"] .payroll-mobile-grid{display:none}
+  #view-payroll[data-payroll-view="table"] .payroll-table-wrap{display:block;margin:0 1rem 1rem;width:calc(100% - 2rem);border:1px solid var(--border);border-radius:10px}
+  #view-payroll .payroll-staff-table{min-width:960px!important;width:960px!important;display:table!important}
+  #view-payroll .payroll-staff-table thead{display:table-header-group!important}
+  #view-payroll .payroll-staff-table tbody{display:table-row-group!important}
+  #view-payroll .payroll-staff-table tr{display:table-row!important}
+  #view-payroll .payroll-staff-table th,#view-payroll .payroll-staff-table td{display:table-cell!important;width:auto!important;white-space:normal!important}
+  #view-payroll .payroll-history-panel>.card-head{position:static;padding:.9rem 1rem}
+  #view-payroll .payroll-history-mobile{display:block;padding:0 1rem .25rem}
+  #view-payroll .payroll-history-table-wrap{display:none}
+  #view-payroll .payroll-card-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 36px}
+  #view-payroll .payroll-card-actions>.bsm{white-space:normal;line-height:1.15}
   #view-invoices table:has(#quote-body){display:block;width:100%;min-width:0}
   #view-invoices table:has(#quote-body) thead{display:none}
   #view-invoices table:has(#quote-body) tbody,#view-invoices table:has(#quote-body) tr,#view-invoices table:has(#quote-body) td{display:block;width:100%}
@@ -986,12 +1032,14 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="view" id="view-payroll">
       <div class="help"><b>Staff &amp; Payroll</b> — Manage employees, Sri Lanka EPF/ETF and APIT, salary payments, and payroll history.</div>
       <div class="sumbar c4" id="payroll-sum"></div>
-      <div class="card">
+      <div class="card payroll-employee-panel">
         <div class="card-head"><span class="card-title">Employee Payroll</span><div class="card-actions"><button class="btn bo" onclick="window.downloadMonthlyPayrollReport()">↓ Monthly Payroll PDF</button><button class="btn bd" onclick="window.openPayrollMo()">+ Add Staff</button></div></div>
         <div class="cashflow-filter-tools"><div><label for="payroll-search">Search</label><input class="fi" id="payroll-search" placeholder="Name, employee ID or department" oninput="renderPayroll()"></div><div><label for="payroll-status">Staff Status</label><select class="fi" id="payroll-status" onchange="renderPayroll()"><option value="active">Active Staff</option><option value="all">All Staff</option><option value="inactive">Inactive Staff</option></select></div><div><label for="payroll-month">Payroll Month</label><input class="fi" type="month" id="payroll-month" onchange="renderPayroll()"></div><button class="btn bo" onclick="window.clearPayrollFilters()">Clear</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Employee</th><th>Department</th><th class="tr">Gross</th><th class="tr">Net Salary</th><th class="tr">EPF / ETF</th><th class="tr">APIT</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="payroll-body"></tbody></table></div>
+        <div class="payroll-view-toggle" role="group" aria-label="Payroll view"><button type="button" class="active" data-payroll-view="grid" onclick="window.setPayrollView('grid')">▦ Grid View</button><button type="button" data-payroll-view="table" onclick="window.setPayrollView('table')">▤ Table View</button></div>
+        <div class="payroll-mobile-grid" id="payroll-grid"></div>
+        <div class="table-wrap payroll-table-wrap"><table class="payroll-staff-table" data-cls-mobile-keep-table><thead><tr><th>Employee</th><th>Department</th><th class="tr">Gross</th><th class="tr">Net Salary</th><th class="tr">EPF / ETF</th><th class="tr">APIT</th><th>Status</th><th class="tr">Actions</th></tr></thead><tbody id="payroll-body"></tbody></table></div>
       </div>
-      <div class="card" style="margin-top:1rem"><div class="card-head"><span class="card-title">Payroll Payment History</span></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Month</th><th>Employee</th><th>Method</th><th>Reference</th><th class="tr">Amount</th></tr></thead><tbody id="payroll-history"></tbody></table></div></div>
+      <div class="card payroll-history-panel" style="margin-top:1rem"><div class="card-head"><span class="card-title">Payroll Payment History</span></div><div class="payroll-history-mobile" id="payroll-history-mobile"></div><div class="table-wrap payroll-history-table-wrap"><table class="payroll-history-table" data-cls-mobile-keep-table><thead><tr><th>Date</th><th>Month</th><th>Employee</th><th>Method</th><th>Reference</th><th class="tr">Amount</th></tr></thead><tbody id="payroll-history"></tbody></table></div></div>
     </div>
 
     <!-- TEAM -->
@@ -2134,20 +2182,27 @@ function syncBusinessComputedData() {
     var days = isNaN(due.getTime()) ? 0 : invoiceDueDays(i);
     return {client:i.client, amount:toNum(i.total) - toNum(i.paid), days:days, inv:i.id, due:i.due || i.date || today()};
   });
+  function supplierSpendKey(value) { return String(value || '').trim().toLowerCase(); }
+  function isPayrollExpense(expense) {
+    expense = expense || {};
+    return !!expense.payrollStaffId || String(expense.cat || expense.category || '').toLowerCase() === 'payroll' || String(expense.purpose || '').toLowerCase() === 'payroll' || String(expense.source || '').toLowerCase() === 'payroll';
+  }
   var spend = {};
+  var payrollExpenseNames = {};
   D.exps.forEach(function(e) {
-    var key = (e.vendor || e.supplierName || '').trim();
+    if (isPayrollExpense(e)) { var payrollName = supplierSpendKey(e.vendor || e.supplierName || ''); if (payrollName) payrollExpenseNames[payrollName] = true; return; }
+    var key = supplierSpendKey(e.vendor || e.supplierName || '');
     if (key) spend[key] = (spend[key] || 0) + toNum(e.amount);
   });
-  D.suppliers.forEach(function(s) {
-    s.ytd = spend[s.name] || 0;
+  var supplierCountBeforePayrollCleanup = D.suppliers.length;
+  D.suppliers = D.suppliers.filter(function(supplier) {
+    var key = supplierSpendKey(supplier.name);
+    var payrollArtifact = payrollExpenseNames[key] && !spend[key] && String(supplier.cat || 'Other').toLowerCase() === 'other' && !supplier.contact && !supplier.phone && !supplier.email && !supplier.addr && toNum(supplier.payableAmount) <= 0;
+    return !payrollArtifact;
   });
-  var supplierNames = D.suppliers.map(function(s) { return s.name; });
-  Object.keys(spend).forEach(function(name) {
-    if (supplierNames.indexOf(name) < 0) {
-      D.suppliers.push({id:'SP' + Date.now() + supplierNames.length, name:name, cat:'Other', contact:'', phone:'', ytd:spend[name], status:'active', email:'', addr:'', payableAmount:0, payableDays:0, payableRef:''});
-      supplierNames.push(name);
-    }
+  if (D.suppliers.length !== supplierCountBeforePayrollCleanup) D._payrollSupplierCleanupPending = true;
+  D.suppliers.forEach(function(s) {
+    s.ytd = spend[supplierSpendKey(s.name)] || 0;
   });
   var existingPayables = D.payables || [];
   existingPayables.forEach(function(p) {
@@ -2315,10 +2370,27 @@ window.openPayrollPayment=function(id){
   var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;var c=businessPayrollCalc(p);setFieldValue('payroll-pay-id',p.id);setFieldValue('payroll-pay-month',businessPayrollMonth());setFieldValue('payroll-pay-date',today());setFieldValue('payroll-pay-ref','');document.getElementById('payroll-pay-summary').innerHTML='<b>'+escHtml(p.name)+'</b><br>Net salary '+fmt(c.net)+' · Total employer cost '+fmt(c.ctc);window.openMo('mo-payroll-pay');
 };
 window.commitPayrollPayment=function(){
-  var p=(D.staff||[]).find(function(x){return String(x.id)===String(payrollField('payroll-pay-id'));}),month=payrollField('payroll-pay-month'),date=payrollField('payroll-pay-date'),ref=payrollField('payroll-pay-ref').trim();if(!p||!month||!date||!ref){showToast('Month, date and payment reference are required.','err');return;}var c=businessPayrollCalc(p);p.payments=Array.isArray(p.payments)?p.payments:[];p.payments=p.payments.filter(function(x){return x.month!==month;});p.payments.push({id:'PAY'+Date.now(),month:month,date:date,method:payrollField('payroll-pay-method'),reference:ref,amount:c.net,gross:c.gross,ctc:c.ctc});var tx={id:'T'+Date.now(),date:date,desc:p.name+' salary - '+month,type:'out',cat:'Payroll',amount:c.ctc,sourceAmount:c.ctc,sourceCurrency:'LKR',exchangeRate:1,ref:ref,purpose:'Payroll',paidTo:p.name,payrollStaffId:p.id,payroll:c};D.txns.unshift(tx);D.exps.unshift({id:'E'+Date.now(),date:date,desc:tx.desc,vendor:p.name,cat:'Payroll',amount:c.ctc,sourceTransactionId:tx.id,payrollStaffId:p.id,payroll:c});saveData();window.closeMo('mo-payroll-pay');renderPayroll();renderCashflow();renderExpenses();showToast('Salary payment recorded.','ok');
+  var p=(D.staff||[]).find(function(x){return String(x.id)===String(payrollField('payroll-pay-id'));}),month=payrollField('payroll-pay-month'),date=payrollField('payroll-pay-date'),ref=payrollField('payroll-pay-ref').trim();if(!p||!month||!date||!ref){showToast('Month, date and payment reference are required.','err');return;}var c=businessPayrollCalc(p);p.payments=Array.isArray(p.payments)?p.payments:[];p.payments=p.payments.filter(function(x){return x.month!==month;});p.payments.push({id:'PAY'+Date.now(),month:month,date:date,method:payrollField('payroll-pay-method'),reference:ref,amount:c.net,gross:c.gross,ctc:c.ctc});var tx={id:'T'+Date.now(),date:date,desc:p.name+' salary - '+month,type:'out',cat:'Payroll',amount:c.ctc,sourceAmount:c.ctc,sourceCurrency:'LKR',exchangeRate:1,ref:ref,purpose:'Payroll',paidTo:p.name,payrollStaffId:p.id,payroll:c,source:'payroll'};D.txns.unshift(tx);D.exps.unshift({id:'E'+Date.now(),date:date,desc:tx.desc,vendor:p.name,cat:'Payroll',amount:c.ctc,sourceTransactionId:tx.id,payrollStaffId:p.id,payroll:c,purpose:'Payroll',source:'payroll'});saveData();window.closeMo('mo-payroll-pay');renderPayroll();renderCashflow();renderExpenses();showToast('Salary payment recorded.','ok');
 };
 window.togglePayrollStaff=function(id){var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;p.active=p.active===false;saveData();renderPayroll();};
-window.deletePayrollStaff=function(id){var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p||!confirm('Delete '+p.name+'? Payment history will also be removed.'))return;D.staff=D.staff.filter(function(x){return String(x.id)!==String(id);});saveData();renderPayroll();};
+window.deletePayrollStaff=function(id){
+  var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});
+  if(!p){showToast('Staff member not found.','err');return;}
+  if(!confirm('Delete '+p.name+'? Their staff profile and payroll payment history will be removed. Recorded cash-out history will remain.'))return;
+  D.staff=D.staff.filter(function(x){return String(x.id)!==String(id);});
+  D.editLog=D.editLog||[];
+  D.editLog.unshift({date:today(),item:p.name,type:'Staff deleted',previous:p.employeeId||'Staff member',next:'Deleted',by:D.settings.user||'Admin',reason:'Deleted from Staff & Payroll'});
+  syncBusinessComputedData();
+  renderPayroll();renderSuppliers();renderDebt();
+  saveData();
+  showToast('Staff member deleted.','ok');
+};
+var payrollViewMode='grid';
+window.setPayrollView=function(mode){
+  payrollViewMode=mode==='table'?'table':'grid';
+  var view=document.getElementById('view-payroll');if(view)view.setAttribute('data-payroll-view',payrollViewMode);
+  document.querySelectorAll('[data-payroll-view]').forEach(function(button){if(button.tagName==='BUTTON'){var active=button.getAttribute('data-payroll-view')===payrollViewMode;button.classList.toggle('active',active);button.setAttribute('aria-pressed',active?'true':'false');}});
+};
 window.clearPayrollFilters=function(){setFieldValue('payroll-search','');setFieldValue('payroll-status','active');setFieldValue('payroll-month',businessPayrollMonth());renderPayroll();};
 async function ensurePayrollPdfLibrary(){
   if(window.jspdf&&window.jspdf.jsPDF)return true;
@@ -2355,10 +2427,38 @@ window.downloadMonthlyPayrollReport=async function(){
   try{if(!(await ensurePayrollPdfLibrary()))throw new Error('PDF tools could not be loaded.');var month=payrollField('payroll-month')||businessPayrollMonth(),people=(D.staff||[]).filter(function(p){return p.active!==false;}),doc=new window.jspdf.jsPDF({unit:'pt',format:'a4',orientation:'landscape'});payrollPdfHeader(doc,'CONSOLIDATED MONTHLY PAYROLL',month);var y=158,cols=[42,180,270,350,430,510,590,675,755];doc.setFillColor(235,231,222);doc.rect(42,y-15,758,26,'F');doc.setTextColor(8,8,8);doc.setFont('helvetica','bold');doc.setFontSize(8);['Employee','Department','Gross','Emp. EPF','Employer EPF','ETF','APIT','Deductions','Net salary'].forEach(function(h,i){doc.text(h,cols[i],y);});y+=28;var totals={gross:0,employeeEpf:0,employerEpf:0,etf:0,apit:0,deductions:0,net:0,ctc:0};people.forEach(function(p){if(y>545){doc.addPage();payrollPdfHeader(doc,'CONSOLIDATED MONTHLY PAYROLL',month);y=158;}var c=businessPayrollCalc(p);Object.keys(totals).forEach(function(k){totals[k]+=k==='deductions'?toNum(p.deductions):toNum(c[k]);});doc.setFont('helvetica','normal');doc.setFontSize(8);[p.name,p.department||'—',fmt(c.gross),fmt(c.employeeEpf),fmt(c.employerEpf),fmt(c.etf),fmt(c.apit),fmt(toNum(p.deductions)),fmt(c.net)].forEach(function(v,i){doc.text(String(v),cols[i],y,{maxWidth:i<2?82:72});});y+=23;});y+=8;doc.setDrawColor(8,8,8);doc.line(42,y,800,y);y+=23;doc.setFont('helvetica','bold');doc.text('TOTALS',42,y);[totals.gross,totals.employeeEpf,totals.employerEpf,totals.etf,totals.apit,totals.deductions,totals.net].forEach(function(v,i){doc.text(fmt(v),cols[i+2],y);});y+=34;doc.setFillColor(8,8,8);doc.rect(560,y-17,240,32,'F');doc.setTextColor(255,255,255);doc.text('TOTAL EMPLOYER COST',574,y);doc.setTextColor(215,167,47);doc.text(fmt(totals.ctc),786,y,{align:'right'});doc.save('Monthly-Payroll-'+month+'.pdf');}catch(e){showToast(e.message||'Could not create payroll report.','err');}
 };
 function renderPayroll(){
-  D.staff=Array.isArray(D.staff)?D.staff:[];var monthEl=document.getElementById('payroll-month');if(monthEl&&!monthEl.value)monthEl.value=businessPayrollMonth();var search=String(payrollField('payroll-search')).toLowerCase(),status=payrollField('payroll-status')||'active',month=payrollField('payroll-month')||businessPayrollMonth();
-  var active=D.staff.filter(function(p){return p.active!==false;}),tot=active.reduce(function(a,p){var c=businessPayrollCalc(p);a.gross+=c.gross;a.net+=c.net;a.stat+=c.employeeEpf+c.employerEpf+c.etf+c.apit;return a;},{gross:0,net:0,stat:0});var sum=document.getElementById('payroll-sum');if(sum)sum.innerHTML=sumItem('Active Staff',active.length)+sumItem('Gross Payroll',fmt(tot.gross))+sumItem('Net Salaries',fmt(tot.net),'var(--green)')+sumItem('EPF / ETF / APIT',fmt(tot.stat),'var(--gold)');
-  var list=D.staff.filter(function(p){var hay=[p.name,p.employeeId,p.department,p.role].join(' ').toLowerCase();return(!search||hay.indexOf(search)>-1)&&(status==='all'||(status==='active'&&p.active!==false)||(status==='inactive'&&p.active===false));});var body=document.getElementById('payroll-body');if(body)body.innerHTML=list.map(function(p){var c=businessPayrollCalc(p),paid=(p.payments||[]).some(function(x){return x.month===month;});return '<tr><td><b>'+escHtml(p.name)+'</b><br><span class="muted">'+escHtml(p.employeeId||'')+' · '+escHtml(p.role||'')+'</span></td><td>'+escHtml(p.department||'—')+'</td><td class="tr">'+fmt(c.gross)+'</td><td class="tr">'+fmt(c.net)+'</td><td class="tr">'+fmt(c.employeeEpf+c.employerEpf+c.etf)+'</td><td class="tr">'+fmt(c.apit)+'</td><td><span class="pill '+(p.active===false?'pdr':paid?'pse':'pi')+'">'+(p.active===false?'Inactive':paid?'Paid':'Pending')+'</span></td><td class="tr payroll-actions-cell"><div class="payroll-actions"><button class="bsm" onclick="window.downloadPayrollPayslip(\''+p.id+'\')">Payslip PDF</button><button class="bsm bsmem" onclick="window.emailPayrollPayslip(\''+p.id+'\')">Email payslip</button><button class="bsm" onclick="window.openPayrollPayment(\''+p.id+'\')">Record pay</button><button class="bsm bsmo" onclick="window.openPayrollMo(\''+p.id+'\')">Edit</button><button class="bsm bsmo" onclick="window.togglePayrollStaff(\''+p.id+'\')">'+(p.active===false?'Activate':'Deactivate')+'</button><button class="bsm payroll-delete" onclick="window.deletePayrollStaff(\''+p.id+'\')">Delete</button></div></td></tr>';}).join('')||'<tr><td colspan="8" style="text-align:center;padding:2rem">No staff match these filters.</td></tr>';
-  var history=[];D.staff.forEach(function(p){(p.payments||[]).forEach(function(x){history.push(Object.assign({employee:p.name},x));});});history.sort(function(a,b){return String(b.date).localeCompare(String(a.date));});var hb=document.getElementById('payroll-history');if(hb)hb.innerHTML=history.map(function(x){return '<tr><td>'+escHtml(formatDateHuman(x.date))+'</td><td>'+escHtml(x.month)+'</td><td>'+escHtml(x.employee)+'</td><td>'+escHtml(x.method)+'</td><td>'+escHtml(x.reference)+'</td><td class="tr">'+fmt(x.amount)+'</td></tr>';}).join('')||'<tr><td colspan="6" style="text-align:center;padding:2rem">No payroll payments yet.</td></tr>';
+  D.staff=Array.isArray(D.staff)?D.staff:[];
+  var monthEl=document.getElementById('payroll-month');
+  if(monthEl&&!monthEl.value)monthEl.value=businessPayrollMonth();
+  var search=String(payrollField('payroll-search')).toLowerCase();
+  var status=payrollField('payroll-status')||'active';
+  var month=payrollField('payroll-month')||businessPayrollMonth();
+  var active=D.staff.filter(function(p){return p.active!==false;});
+  var tot=active.reduce(function(a,p){var c=businessPayrollCalc(p);a.gross+=c.gross;a.net+=c.net;a.stat+=c.employeeEpf+c.employerEpf+c.etf+c.apit;return a;},{gross:0,net:0,stat:0});
+  var sum=document.getElementById('payroll-sum');
+  if(sum)sum.innerHTML=sumItem('Active Staff',active.length)+sumItem('Gross Payroll',fmt(tot.gross))+sumItem('Net Salaries',fmt(tot.net),'var(--green)')+sumItem('EPF / ETF / APIT',fmt(tot.stat),'var(--gold)');
+  var list=D.staff.filter(function(p){var hay=[p.name,p.employeeId,p.department,p.role].join(' ').toLowerCase();return(!search||hay.indexOf(search)>-1)&&(status==='all'||(status==='active'&&p.active!==false)||(status==='inactive'&&p.active===false));});
+  var tableRows=list.map(function(p){
+    var c=businessPayrollCalc(p),paid=(p.payments||[]).some(function(x){return x.month===month;}),idArg=jsArg(p.id),state=p.active===false?'Inactive':paid?'Paid':'Pending',stateClass=p.active===false?'pdr':paid?'pse':'pi';
+    return '<tr><td><b>'+escHtml(p.name)+'</b><br><span class="muted">'+escHtml(p.employeeId||'')+' · '+escHtml(p.role||'')+'</span></td><td>'+escHtml(p.department||'—')+'</td><td class="tr">'+fmt(c.gross)+'</td><td class="tr">'+fmt(c.net)+'</td><td class="tr">'+fmt(c.employeeEpf+c.employerEpf+c.etf)+'</td><td class="tr">'+fmt(c.apit)+'</td><td><span class="pill '+stateClass+'">'+state+'</span></td><td class="tr payroll-actions-cell"><div class="payroll-actions"><button class="bsm" onclick="window.downloadPayrollPayslip('+idArg+')">Payslip PDF</button><button class="bsm bsmem" onclick="window.emailPayrollPayslip('+idArg+')">Email payslip</button><button class="bsm" onclick="window.openPayrollPayment('+idArg+')">Record pay</button><button class="bsm bsmo" onclick="window.openPayrollMo('+idArg+')">Edit</button><button class="bsm bsmo" onclick="window.togglePayrollStaff('+idArg+')">'+(p.active===false?'Activate':'Deactivate')+'</button><button class="bsm payroll-delete" onclick="window.deletePayrollStaff('+idArg+')">Delete</button></div></td></tr>';
+  }).join('');
+  var body=document.getElementById('payroll-body');
+  if(body)body.innerHTML=tableRows||'<tr><td colspan="8" style="text-align:center;padding:2rem">No staff match these filters.</td></tr>';
+  var cards=list.map(function(p){
+    var c=businessPayrollCalc(p),paid=(p.payments||[]).some(function(x){return x.month===month;}),idArg=jsArg(p.id),state=p.active===false?'Inactive':paid?'Paid':'Pending',stateClass=p.active===false?'pdr':paid?'pse':'pi';
+    return '<article class="payroll-staff-card"><div class="payroll-card-head"><div><div class="payroll-card-name">'+escHtml(p.name)+'</div><div class="payroll-card-meta">'+escHtml(p.employeeId||'')+' · '+escHtml(p.role||'Team member')+'</div></div><span class="pill '+stateClass+'">'+state+'</span></div><div class="payroll-card-metrics"><div class="payroll-card-metric"><span>Department</span><strong>'+escHtml(p.department||'—')+'</strong></div><div class="payroll-card-metric"><span>Gross</span><strong>'+fmt(c.gross)+'</strong></div><div class="payroll-card-metric net"><span>Net Salary</span><strong>'+fmt(c.net)+'</strong></div><div class="payroll-card-metric"><span>EPF / ETF</span><strong>'+fmt(c.employeeEpf+c.employerEpf+c.etf)+'</strong></div><div class="payroll-card-metric"><span>APIT</span><strong>'+fmt(c.apit)+'</strong></div></div><div class="payroll-card-actions"><button class="bsm payroll-pdf" aria-label="Download '+escHtml(p.name)+' payslip PDF" onclick="window.downloadPayrollPayslip('+idArg+')">PDF</button><button class="bsm payroll-email" aria-label="Email '+escHtml(p.name)+' payslip" onclick="window.emailPayrollPayslip('+idArg+')">Email</button><button class="bsm payroll-pay" aria-label="Record '+escHtml(p.name)+' salary payment" onclick="window.openPayrollPayment('+idArg+')">Pay</button><details class="payroll-more"><summary aria-label="More actions for '+escHtml(p.name)+'">⋯</summary><div class="payroll-more-menu"><button onclick="window.openPayrollMo('+idArg+')">Edit</button><button onclick="window.togglePayrollStaff('+idArg+')">'+(p.active===false?'Activate':'Deactivate')+'</button><button class="payroll-delete" onclick="window.deletePayrollStaff('+idArg+')">Delete</button></div></details></div></article>';
+  }).join('');
+  var grid=document.getElementById('payroll-grid');
+  if(grid)grid.innerHTML=cards||'<div class="empty-state" style="padding:1rem">No staff match these filters.</div>';
+  var history=[];
+  D.staff.forEach(function(p){(p.payments||[]).forEach(function(x){history.push(Object.assign({employee:p.name},x));});});
+  history.sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+  var historyRows=history.map(function(x){return '<tr><td>'+escHtml(formatDateHuman(x.date))+'</td><td>'+escHtml(x.month)+'</td><td>'+escHtml(x.employee)+'</td><td>'+escHtml(x.method)+'</td><td>'+escHtml(x.reference)+'</td><td class="tr">'+fmt(x.amount)+'</td></tr>';}).join('');
+  var hb=document.getElementById('payroll-history');
+  if(hb)hb.innerHTML=historyRows||'<tr><td colspan="6" style="text-align:center;padding:2rem">No payroll payments yet.</td></tr>';
+  var historyMobile=document.getElementById('payroll-history-mobile');
+  if(historyMobile)historyMobile.innerHTML=history.map(function(x){return '<div class="payroll-history-card"><div><strong>'+escHtml(x.employee)+'</strong><br><span>'+escHtml(formatDateHuman(x.date))+' · '+escHtml(x.month)+'</span></div><div class="amount">'+fmt(x.amount)+'</div><span>'+escHtml(x.method||'Payment')+'</span><span style="text-align:right">'+escHtml(x.reference||'No reference')+'</span></div>';}).join('')||'<div style="padding:.8rem 0;color:var(--muted);font-size:.68rem">No payroll payments yet.</div>';
+  window.setPayrollView(payrollViewMode);
 }
 
 // ===================== NAV =====================
@@ -4795,9 +4895,13 @@ async function loadData(uid) {
       D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
     }
     normalizeBusinessData();
+    var payrollSupplierCleanupPending = D._payrollSupplierCleanupPending === true;
+    delete D._payrollSupplierCleanupPending;
     var restoreStatus = restoreBusinessBackupIfNewer(serverVersion);
     if (restoreStatus === 'unsaved') {
       showToast('Recovered latest local changes. Syncing in background...', 'ok');
+      setTimeout(function() { saveData(); }, 500);
+    } else if (payrollSupplierCleanupPending) {
       setTimeout(function() { saveData(); }, 500);
     }
   } catch(e) { console.error('loadData:', e); }

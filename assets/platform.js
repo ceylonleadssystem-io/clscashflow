@@ -3054,7 +3054,7 @@
   function mobileizeDataTables(root) {
     if (!window.matchMedia || !window.matchMedia('(max-width:760px)').matches) return;
     (root || document).querySelectorAll('table').forEach(function(table) {
-      if (table.matches('.li-table,.invoice-table,.inv-table,.invoice-preview-table,.customer-invoice-preview table') || table.closest('#view-invoices,#inv-modal,#print-inv,.cls-invoice-preview-frame')) return;
+      if (table.hasAttribute('data-cls-mobile-keep-table') || table.matches('.li-table,.invoice-table,.inv-table,.invoice-preview-table,.customer-invoice-preview table') || table.closest('#view-invoices,#inv-modal,#print-inv,.cls-invoice-preview-frame')) return;
       var headers = Array.from(table.querySelectorAll('thead th')).map(function(th) { return String(th.textContent || '').trim(); });
       if (!headers.length) return;
       table.classList.add('cls-mobile-table');
