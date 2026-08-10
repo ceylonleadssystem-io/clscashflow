@@ -81,6 +81,15 @@ test('shared invoice, quote, and estimate renderer shows only the customer Bill 
   assert.match(activeRenderer, /\.parties\{display:grid;grid-template-columns:minmax\(0,1fr\);gap:0/);
 });
 
+test('multiline invoice item descriptions stay aligned after Shift+Enter', function() {
+  const platform = read('assets/platform.js');
+  const activeRenderer = platform.match(/window\.clsBuildInvoicePrintHtml = function\(opts\) \{([\s\S]*?)\n  \};/)[1];
+  assert.match(activeRenderer, /<div class="line-item-description"><span class="line-no">/);
+  assert.match(activeRenderer, /\.line-item-description\{display:grid;grid-template-columns:18px minmax\(0,1fr\);column-gap:7px;align-items:start\}/);
+  assert.match(activeRenderer, /\.line-desc\{display:block;min-width:0;font-weight:650\}/);
+  assert.match(platform, /invoiceBreaks\(line\.desc \|\| line\.description \|\| 'Invoice item'\)/);
+});
+
 test('Business refreshes its shared template picker whenever Invoice Settings opens', function() {
   const business = read('growth.html');
   assert.match(business, /if \(tab === 'invoices'\) \{\s*renderSettingsTemplatePicker\(\);\s*renderSettingsInvoicePreview\(\);/);
@@ -468,7 +477,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260810-invoice-pack4';
+  const version = '20260810-invoice-pack5';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
