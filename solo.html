@@ -15,6 +15,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
 <script src="assets/platform.js?v=20260810-invoice-pack5"></script>
+<link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
+<script src="assets/catalog.js?v=20260810-catalog1"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -646,11 +648,12 @@ document.addEventListener('click',function(e){
     navEl.classList.add('active');
     document.querySelectorAll('[data-nav="'+view+'"]').forEach(function(i){i.classList.add('active');});
     if(view==='team'||view==='backlog') view='dashboard';
-    var titles={dashboard:'Solo Invoice Control System',invoices:'Invoices',clients:'Customers',reports:'Reports',settings:'Settings'};
+    var titles={dashboard:'Solo Invoice Control System',invoices:'Invoices',catalog:'Products & Services',clients:'Customers',reports:'Reports',settings:'Settings'};
     var titleEl=document.getElementById('page-title');
     if(titleEl&&titles[view])titleEl.textContent=titles[view];
     if(view==='dashboard'&&typeof window.renderDashboard==='function')window.renderDashboard();
     if(view==='invoices'){if(typeof window.renderInvoices==='function')window.renderInvoices();if(typeof window.populateClientSelect==='function')window.populateClientSelect();}
+    if(view==='catalog'&&typeof window.renderCatalog==='function')window.renderCatalog();
     if(view==='clients'&&typeof window.renderClients==='function')window.renderClients();
     if(view==='reports'&&typeof window.renderReports==='function')window.renderReports();
     if(view==='team'&&typeof window.renderTeamAccess==='function')window.renderTeamAccess();
@@ -687,6 +690,7 @@ document.addEventListener('click',function(e){
     <div class="sb-section" data-sidebar-section="main">Main</div>
     <a class="sb-item active" data-nav="dashboard"><span class="sb-icon">📊</span> Dashboard</a>
     <a class="sb-item" data-nav="invoices"><span class="sb-icon">🧾</span> Invoices</a>
+    <a class="sb-item" data-nav="catalog"><span class="sb-icon">📦</span> Products &amp; Services</a>
     <a class="sb-item" data-nav="clients"><span class="sb-icon">👥</span> Customers</a>
     <div class="sb-section" data-sidebar-section="insights">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
@@ -812,6 +816,9 @@ document.addEventListener('click',function(e){
         <table class="register-table document-register-table"><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="quote-table"></tbody></table>
       </div>
     </div>
+
+    <!-- ═ PRODUCTS & SERVICES ═ -->
+    <div class="view" id="view-catalog"><div id="solo-catalog-root"></div></div>
 
     <!-- ═ EDIT BACKLOG ═ -->
     <div class="view solo-hidden" id="view-backlog">
@@ -1280,7 +1287,7 @@ document.addEventListener('click',function(e){
           <tr><td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button type="button" class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td></tr>
         </tbody>
       </table>
-      <button class="btn-add-li" data-cls-fn="addLi">+ Add Line Item</button>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn-add-li" data-cls-fn="addLi">+ Add Line Item</button><button class="btn-add-li" type="button" onclick="window.openCatalogSelector()">Browse Products &amp; Services</button></div>
       <div class="invoice-closing-grid">
         <div>
           <div class="f-section">Notes</div>
@@ -1380,12 +1387,31 @@ var DB = {
   expenses:[],
   invoices:[],
   quotes:[],
+  catalog:[],
   editBacklog:[],
   clients:{list:[],nextId:1},
   suppliers:{list:[],nextId:1},
   nextInvNum:1,
   nextQuoteNum:1
 };
+
+var _catalogModule = null;
+function addCatalogSnapshotToInvoice(line) {
+  var tbody=document.getElementById('li-body');
+  if(!tbody)return;
+  var first=tbody.querySelector('tr');
+  if(first&&tbody.children.length===1&&!String((first.querySelector('.li-desc')||{}).value||'').trim()&&!parseAmt((first.querySelector('.li-price')||{}).value||''))first.remove();
+  tbody.appendChild(makeLineItemRow(line));
+  var textarea=tbody.lastElementChild&&tbody.lastElementChild.querySelector('.li-desc');
+  if(textarea)autoGrowLi(textarea);
+  calcInv();
+}
+function renderCatalog(){
+  if(!_catalogModule&&window.clsCreateCatalogModule)_catalogModule=window.clsCreateCatalogModule({root:'#solo-catalog-root',level:'basic',getItems:function(){DB.catalog=Array.isArray(DB.catalog)?DB.catalog:[];return DB.catalog;},setItems:function(list){DB.catalog=list;},getDocuments:function(){return (DB.invoices||[]).concat(DB.quotes||[]);},currency:function(){return'LKR';},save:function(){saveDB();},addLine:addCatalogSnapshotToInvoice});
+  if(_catalogModule)_catalogModule.render();
+}
+window.renderCatalog=renderCatalog;
+window.openCatalogSelector=function(){renderCatalog();if(_catalogModule)_catalogModule.openSelector();};
 
 var _dataVersion = 0;
 var _saveChain = Promise.resolve();
@@ -1427,6 +1453,7 @@ function readDBBackup(uid) {
 
 function normalizeLoadedDBCollections() {
   DB.quotes = Array.isArray(DB.quotes) ? DB.quotes : [];
+  DB.catalog = Array.isArray(DB.catalog) ? DB.catalog : [];
   DB.clients = DB.clients && Array.isArray(DB.clients.list) ? DB.clients : { list: Array.isArray(DB.clients) ? DB.clients : [], nextId: 1 };
   DB.suppliers = DB.suppliers && Array.isArray(DB.suppliers.list) ? DB.suppliers : { list: Array.isArray(DB.suppliers) ? DB.suppliers : [], nextId: 1 };
   (function(){var seen={};DB.clients.list.forEach(function(c,i){if(c.id==null||seen[c.id]){c.id=Date.now()+i;}seen[c.id]=true;});})();
@@ -1520,6 +1547,7 @@ async function saveDBNow() {
           expenses: docsFor(DB.expenses),
           invoices: docsFor(DB.invoices),
           quotes: docsFor(DB.quotes || []),
+          catalog: docsFor(DB.catalog || []),
           editBacklog: docsFor(DB.editBacklog || []),
           clients: docsFor(DB.clients.list || []),
           suppliers: docsFor(DB.suppliers.list || [])
@@ -1540,6 +1568,7 @@ async function saveDBNow() {
       saveCollection('expenses', DB.expenses),
       saveCollection('invoices', DB.invoices),
       saveCollection('quotes', DB.quotes || []),
+      saveCollection('catalog', DB.catalog || []),
       saveCollection('editBacklog', DB.editBacklog || []),
       saveCollection('clients', DB.clients.list || []),
       saveCollection('suppliers', DB.suppliers.list || [])
@@ -1590,7 +1619,7 @@ async function loadDB() {
   if (!_uid) return;
   try {
     const userRef = _db.collection('users').doc(_uid);
-    const collections = ['transactions','expenses','invoices','quotes','editBacklog','clients','suppliers'];
+    const collections = ['transactions','expenses','invoices','quotes','catalog','editBacklog','clients','suppliers'];
     let profileSnap;
     let results;
     if (typeof userRef.getCollections === 'function') {
@@ -1608,9 +1637,10 @@ async function loadDB() {
     DB.expenses = results[1].docs.map(d => d.data());
     DB.invoices = results[2].docs.map(d => d.data());
     DB.quotes = results[3].docs.map(d => d.data());
-    DB.editBacklog = results[4].docs.map(d => d.data());
-    DB.clients.list = results[5].docs.map(d => d.data());
-    DB.suppliers.list = results[6].docs.map(d => d.data());
+    DB.catalog = results[4].docs.map(d => d.data());
+    DB.editBacklog = results[5].docs.map(d => d.data());
+    DB.clients.list = results[6].docs.map(d => d.data());
+    DB.suppliers.list = results[7].docs.map(d => d.data());
     normalizeLoadedDBCollections();
     if (restoreDBBackupIfNewer(serverVersion) === 'unsaved') setTimeout(function(){ saveDB(); }, 500);
   } catch(e) { console.error('loadDB error:', e); }
@@ -1857,7 +1887,7 @@ function maybeStartFirstTour(){
 // ════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════
-const pageTitles={dashboard:['Solo Invoice Control System','Create invoices, manage up to 30 customers, track payments, export PDFs, and send by email or WhatsApp.'],invoices:['Invoice Management','Create, send, and track invoices'],clients:['Customer Directory','Manage up to 30 customers and billing contacts'],reports:['Invoice Reports','Invoice summary, paid vs unpaid, overdue invoices, and customer-wise reports'],settings:['Business Settings','Manage your invoice profile and preferences']};
+const pageTitles={dashboard:['Solo Invoice Control System','Create invoices, manage up to 30 customers, track payments, export PDFs, and send by email or WhatsApp.'],invoices:['Invoice Management','Create, send, and track invoices'],catalog:['Products & Services','Your reusable basic invoice catalog'],clients:['Customer Directory','Manage up to 30 customers and billing contacts'],reports:['Invoice Reports','Invoice summary, paid vs unpaid, overdue invoices, and customer-wise reports'],settings:['Business Settings','Manage your invoice profile and preferences']};
 window.nav = window.nav = function nav(view){
   if(view==='team'||view==='backlog') view='dashboard';
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -1869,6 +1899,7 @@ window.nav = window.nav = function nav(view){
   document.getElementById('page-sub').textContent=t[1];
   if(view==='dashboard') renderDashboard();
   if(view==='invoices'){renderInvoices();populateClientSelect();}
+  if(view==='catalog'&&window.renderCatalog)window.renderCatalog();
   if(view==='clients') renderClients();
   if(view==='reports') renderReports();
   if(view==='settings') loadSettings();
@@ -2414,7 +2445,7 @@ window.selectDefaultInvoiceTemplate = function selectDefaultInvoiceTemplate(idx)
   renderSettingsInvoicePreview();
   saveDB();
 }
-window.addLi = function addLi(){const tbody=document.getElementById('li-body');const tr=document.createElement('tr');tr.innerHTML=`<td><textarea class="li-desc" rows="1" placeholder="Service or product description (Enter for a new line)" oninput="calcInv();autoGrowLi(this)" style="width:100%;resize:vertical;min-height:38px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:.82rem;padding:.45rem .6rem;line-height:1.45"></textarea></td><td><input class="li-qty" type="number" value="1" min="1" style="text-align:center" oninput="calcInv()"></td><td><input class="li-price" type="text" placeholder="0.00" oninput="fmtInput(this);calcInv()"></td><td class="li-total-cell">0.00</td><td style="text-align:center"><button type="button" class="btn-rm-li" data-cls-fn="rmLi" data-cls-this="1">✕</button></td>`;tbody.appendChild(tr);}
+window.addLi = function addLi(item){const tbody=document.getElementById('li-body');tbody.appendChild(makeLineItemRow(item||null));}
 window.autoGrowLi = function autoGrowLi(el){el.style.height='auto';el.style.height=(el.scrollHeight+2)+'px';}
 window.rmLi = function rmLi(btn){
   if(!btn||!btn.closest)return;
@@ -2428,6 +2459,7 @@ function makeLineItemRow(line){
     tr.querySelector('.li-qty').value=line.qty||1;
     tr.querySelector('.li-price').value=Number(line.price||0).toLocaleString();
     tr.querySelector('.li-total-cell').textContent=fmtNum(Number(line.total!=null?line.total:((line.qty||1)*(line.price||0))));
+    ['catalogItemId','itemType','itemName','itemCode','category','billingUnit','taxRate','discountEligible','costPrice'].forEach(function(key){if(line[key]!=null)tr.dataset[key]=String(line[key]);});
   }
   return tr;
 }
@@ -2443,7 +2475,7 @@ function fmtNum(n){return n.toLocaleString('en',{minimumFractionDigits:2,maximum
 function calcInv(){let sub=0;document.querySelectorAll('#li-body tr').forEach(row=>{const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');const t=qty*price;const cell=row.querySelector('.li-total-cell');if(cell)cell.textContent=fmtNum(t);sub+=t;});const disc=(parseFloat(document.getElementById('inv-disc').value)||0)/100;const afterDisc=sub*(1-disc);const vrate=(parseFloat(document.getElementById('inv-vatrate').value)||0)/100;const vat=document.getElementById('inv-vat').checked?afterDisc*vrate:0;const grand=afterDisc+vat;const cur=document.getElementById('i-cur').value;document.getElementById('inv-sub').textContent=cur+' '+fmtNum(sub);document.getElementById('inv-grand').textContent=cur+' '+fmtNum(grand);}
 function getInvData(){
   const cur=document.getElementById('i-cur').value;let sub=0;const lines=[];
-  document.querySelectorAll('#li-body tr').forEach(row=>{const dEl=row.querySelector('.li-desc');const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const desc=(dEl&&dEl.value)||'';const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');if(desc||price>0){lines.push({desc,qty,price,total:qty*price});sub+=qty*price;}});
+  document.querySelectorAll('#li-body tr').forEach(row=>{const dEl=row.querySelector('.li-desc');const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const desc=(dEl&&dEl.value)||'';const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');if(desc||price>0){const line={desc,qty,price,total:qty*price};['catalogItemId','itemType','itemName','itemCode','category','billingUnit','taxRate','discountEligible','costPrice'].forEach(function(key){if(row.dataset[key]!=null)line[key]=row.dataset[key];});lines.push(line);sub+=qty*price;}});
   const disc=(parseFloat(document.getElementById('inv-disc').value)||0);const afterDisc=sub*(1-disc/100);const vrate=parseFloat(document.getElementById('inv-vatrate').value)||0;const vatApplied=document.getElementById('inv-vat').checked;const vat=vatApplied?afterDisc*vrate/100:0;
   return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vrate,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:getDefaultInvoiceTemplate()};
 }

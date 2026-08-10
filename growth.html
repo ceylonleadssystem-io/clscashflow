@@ -16,6 +16,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
 <script src="assets/platform.js?v=20260810-invoice-pack5"></script>
+<link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
+<script src="assets/catalog.js?v=20260810-catalog1"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -855,6 +857,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="nav-item" data-view="cashflow"><span class="nav-icon">💸</span>Money In &amp; Out</div>
     <div class="nav-item" data-view="expenses"><span class="nav-icon">📤</span>Expenses</div>
     <div class="nav-item" data-view="invoices"><span class="nav-icon">🧾</span>Invoices</div>
+    <div class="nav-item" data-view="catalog"><span class="nav-icon">📦</span>Products &amp; Services</div>
     <div class="nav-item" data-view="clients"><span class="nav-icon">🤝</span>Customers</div>
     <div class="sb-sec">Business Tools</div>
     <div class="nav-item" data-view="debt"><span class="nav-icon">💰</span>Who Owes Me<span class="nav-badge" id="sb-badge">0</span></div>
@@ -999,6 +1002,9 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="card"><div class="card-head"><span class="card-title">Invoice Register</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('invoices')">↓ Download</button><button class="btn bd" onclick="window.openInvMo()">+ Create Invoice</button></div></div><div class="invoice-status-tabs" role="tablist" aria-label="Invoice payment status"><button class="invoice-status-tab active" id="inv-tab-pending" type="button" role="tab" aria-selected="true" onclick="window.setInvoiceRegisterTab('pending')">Pending <span class="invoice-status-count" id="inv-count-pending">0</span></button><button class="invoice-status-tab" id="inv-tab-partial" type="button" role="tab" aria-selected="false" onclick="window.setInvoiceRegisterTab('partial')">Partially Paid <span class="invoice-status-count" id="inv-count-partial">0</span></button><button class="invoice-status-tab" id="inv-tab-paid" type="button" role="tab" aria-selected="false" onclick="window.setInvoiceRegisterTab('paid')">Paid / Settled <span class="invoice-status-count" id="inv-count-paid">0</span></button></div><div class="table-wrap"><table class="invoice-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Sent</th><th>Due Date</th><th>Status</th><th>Payment</th><th class="tr">Total (LKR)</th><th class="tr">Actions</th></tr></thead><tbody id="inv-body"></tbody></table></div></div>
       <div class="card" style="margin-top:1rem"><div class="card-head"><div><span class="card-title">Quotes &amp; Estimates</span><div class="help" style="margin:.25rem 0 0;padding:0;border:0;background:transparent">Prepare a document, email or download it, and convert the accepted version into an invoice.</div></div><div class="card-actions"><button class="btn bo" onclick="window.openEstimateMo()">+ Estimate</button><button class="btn bd" onclick="window.openQuoteMo()">+ Quote</button></div></div><div class="quote-filter-tools"><div><label for="quote-from">From Date</label><input class="fi" type="date" id="quote-from" onchange="renderQuotes()"></div><div><label for="quote-to">To Date</label><input class="fi" type="date" id="quote-to" onchange="renderQuotes()"></div><div><label for="quote-sort">Sort</label><select class="fi" id="quote-sort" onchange="renderQuotes()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div><div><label for="quote-type-filter">Type</label><select class="fi" id="quote-type-filter" onchange="renderQuotes()"><option value="">All Documents</option><option value="quote">Quotes</option><option value="estimate">Estimates</option></select></div><div><label for="quote-status-filter">Status</label><select class="fi" id="quote-status-filter" onchange="renderQuotes()"><option value="">All Statuses</option><option value="draft">Draft</option><option value="converted">Converted</option></select></div><button class="btn bo" onclick="window.clearBusinessQuoteFilters()">Clear</button></div><div class="table-wrap"><table><thead><tr><th>Document #</th><th>Customer</th><th>Date</th><th>Valid Until</th><th>Status</th><th class="tr">Total</th><th class="tr">Actions</th></tr></thead><tbody id="quote-body"></tbody></table></div></div>
     </div>
+
+    <!-- PRODUCTS & SERVICES -->
+    <div class="view" id="view-catalog"><div id="business-catalog-root"></div></div>
 
     <!-- CUSTOMERS -->
     <div class="view" id="view-clients">
@@ -1289,7 +1295,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     </div>
     <div class="fsec">What Are You Billing For?</div>
     <table class="litbl"><thead><tr><th style="width:44%">Description</th><th style="width:12%">Qty</th><th style="width:20%">Unit Price (LKR)</th><th style="width:18%">Total</th><th style="width:6%"></th></tr></thead><tbody id="li-body"></tbody></table>
-    <button class="li-add" onclick="window.addLi()">+ Add Another Item</button>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="li-add" onclick="window.addLi()">+ Add Another Item</button><button class="li-add" type="button" onclick="window.openCatalogSelector()">Browse Products &amp; Services</button></div>
     <div class="business-invoice-closing">
       <div class="fg" style="margin-bottom:0"><label>Note to Customer (optional)</label><textarea class="fi fi-textarea" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></textarea></div>
       <div>
@@ -1367,6 +1373,7 @@ var D = {
   txns:[],
   invoices:[],
   quotes:[],
+  catalog:[],
   exps:[],
   clients:[],
   staff:[],
@@ -1379,6 +1386,21 @@ var D = {
   _nextInvId:1,
   _nextQuoteId:1
 };
+
+var _catalogModule = null;
+function renderCatalog(){
+  if(!_catalogModule&&window.clsCreateCatalogModule)_catalogModule=window.clsCreateCatalogModule({root:'#business-catalog-root',level:'business',getItems:function(){D.catalog=Array.isArray(D.catalog)?D.catalog:[];return D.catalog;},setItems:function(list){D.catalog=list;},getDocuments:function(){return (D.invoices||[]).concat(D.quotes||[]);},currency:function(){return D.settings.baseCurrency||'LKR';},save:function(){saveData();},audit:function(action,item){D.editLog=Array.isArray(D.editLog)?D.editLog:[];D.editLog.unshift({id:'catalog-'+Date.now(),date:new Date().toISOString(),action:action,item:'Products & Services',details:item&&item.name?item.name:'Catalog update',user:D.settings.user||'Business owner'});},addLine:addCatalogSnapshotToBusinessInvoice});
+  if(_catalogModule)_catalogModule.render();
+}
+function addCatalogSnapshotToBusinessInvoice(line){
+  var tbody=document.getElementById('li-body');if(!tbody)return;
+  var first=tbody.querySelector('tr'),desc=first&&first.querySelector('[data-role="desc"]'),price=first&&first.querySelector('[data-role="price"]');
+  if(first&&tbody.children.length===1&&!String(desc&&desc.value||'').trim()&&!toNum(price&&price.value||0))first.remove();
+  window.addLi(line);
+  calcTotals();
+}
+window.renderCatalog=renderCatalog;
+window.openCatalogSelector=function(){renderCatalog();if(_catalogModule)_catalogModule.openSelector();};
 
 // ===================== UTILS =====================
 var payInvId = null, editInvId = null, selTpl = 0, CH = {}, businessDocumentMode = 'invoice';
@@ -2130,7 +2152,7 @@ function normalizeBusinessData() {
       var qty = toNum(it.qty || it.units || 1) || 1;
       var total = toNum(it.total);
       var price = toNum(it.price || (total ? total / qty : 0));
-      return {desc:it.desc || it.name || 'Invoice item', qty:qty, price:price};
+      return Object.assign({},it,{desc:it.desc || it.name || 'Invoice item', qty:qty, price:price,total:total||qty*price});
     });
     var sub = toNum(inv.sub || items.reduce(function(a,it) { return a + it.qty * it.price; }, 0) || inv.amount);
     var total = toNum(inv.total || inv.amount || sub);
@@ -2146,12 +2168,13 @@ function normalizeBusinessData() {
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   D.quotes = (D.quotes || []).map(function(q, i) {
     var id = q.id || q.num || ('QTE-' + String(i + 1).padStart(4,'0'));
-    var items = (q.items || q.lines || []).map(function(it) { var qty=toNum(it.qty||1)||1;return {desc:it.desc||'Quote item',qty:qty,price:toNum(it.price),total:toNum(it.total||qty*toNum(it.price))}; });
+    var items = (q.items || q.lines || []).map(function(it) { var qty=toNum(it.qty||1)||1;return Object.assign({},it,{desc:it.desc||'Quote item',qty:qty,price:toNum(it.price),total:toNum(it.total||qty*toNum(it.price))}); });
     var sub=toNum(q.sub||items.reduce(function(a,it){return a+it.qty*it.price;},0));var total=toNum(q.total||q.amount||sub);
     return Object.assign({},q,{id:String(id),num:String(id),items:items,lines:items,sub:sub,total:total,amount:total,status:q.status==='converted'?'converted':'draft',documentType:q.documentType==='estimate'?'estimate':'quote'});
   }).sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''));});
   var maxQuoteNo=D.quotes.reduce(function(max,q){var m=String(q.id||'').match(/(\d+)$/);return m?Math.max(max,Number(m[1])):max;},0);
   D._nextQuoteId=maxQuoteNo?Math.max(toNum(D._nextQuoteId)||1,maxQuoteNo+1):1;
+  D.catalog = Array.isArray(D.catalog) ? D.catalog : [];
   D.txns = addDerivedPaymentTransactions(D.txns, D.invoices);
   var maxInvNo = D.invoices.reduce(function(max, inv) {
     var m = String(inv.id || '').match(/(\d+)$/);
@@ -2467,6 +2490,7 @@ var PAGE_META = {
   cashflow: ['Money In & Out', 'Every rupee that enters or leaves your business'],
   expenses: ['Expenses', 'Everything you spend to run your business'],
   invoices: ['Invoices', 'Bills you send and payments you track'],
+  catalog: ['Products & Services', 'Full reusable catalog, imports, performance and audit history'],
   clients: ['Customers', 'Your customer directory and billing contacts'],
   debt: ['Who Owes Me', 'Money owed to you and money you owe'],
   suppliers: ['Suppliers', 'Everyone you buy from'],
@@ -2483,6 +2507,7 @@ var RENDERERS = {
   cashflow: renderCashflow,
   expenses: renderExpenses,
   invoices: renderInvoices,
+  catalog: renderCatalog,
   clients: renderClients,
   debt: renderDebt,
   suppliers: renderSuppliers,
@@ -3663,6 +3688,7 @@ window.addLi = function addLi(item) {
   var tr = document.createElement('tr');
   tr.innerHTML = '<td><textarea data-role="desc" placeholder="Description. Use Shift+Enter or Enter for a new line." oninput="autoGrowTextarea(this);calcTotals()">' + escHtml(item.desc || '') + '</textarea></td><td><input data-role="qty" style="padding:.3rem .42rem;width:100%" type="number" value="' + (item.qty || 1) + '" min="1" oninput="calcTotals()"></td><td><input data-role="price" data-money-input style="padding:.3rem .42rem;width:100%" type="text" inputmode="decimal" value="' + (item.price || 0) + '" oninput="window.formatBusinessMoneyInput(this);calcTotals()"></td><td class="li-tot">LKR 0.00</td><td><button class="li-rm" onclick="this.closest(\'tr\').remove();calcTotals()">✕</button></td>';
   document.getElementById('li-body').appendChild(tr);
+  ['catalogItemId','itemType','itemName','itemCode','category','billingUnit','taxRate','discountEligible','costPrice'].forEach(function(key){if(item[key]!=null)tr.dataset[key]=String(item[key]);});
   window.formatBusinessMoneyInput(tr.querySelector('[data-role="price"]'));
   autoGrowTextarea(tr.querySelector('textarea'));
 }
@@ -3711,7 +3737,7 @@ window.saveInv = function saveInv() {
       invalidLine = true;
       return;
     }
-    if (lineDesc || linePrice) items.push({desc:lineDesc || 'Service or product', qty:lineQty, price:linePrice});
+    if (lineDesc || linePrice) { var line={desc:lineDesc || 'Service or product', qty:lineQty, price:linePrice}; ['catalogItemId','itemType','itemName','itemCode','category','billingUnit','taxRate','discountEligible','costPrice'].forEach(function(key){if(row.dataset[key]!=null)line[key]=row.dataset[key];}); items.push(line); }
   });
   if (invalidLine) { showToast('Invoice quantities must be above 0 and prices cannot be negative.', 'err'); return; }
   if (!items.length) { showToast('Please add at least one item', 'err'); return; }
@@ -4668,6 +4694,8 @@ function currentBusinessSnapshot(version, serverSaved) {
       txns: clonePlain(D.txns || []),
       exps: clonePlain(D.exps || []),
       invoices: clonePlain(D.invoices || []),
+      quotes: clonePlain(D.quotes || []),
+      catalog: clonePlain(D.catalog || []),
       clients: clonePlain(D.clients || []),
       suppliers: clonePlain(D.suppliers || []),
       payables: clonePlain(D.payables || []),
@@ -4707,6 +4735,8 @@ function applyBusinessBackup(backup, updateVersion) {
   D.txns = backup.data.txns || backup.data.transactions || [];
   D.exps = backup.data.exps || backup.data.expenses || [];
   D.invoices = backup.data.invoices || [];
+  D.quotes = backup.data.quotes || [];
+  D.catalog = backup.data.catalog || [];
   D.clients = backup.data.clients || [];
   D.suppliers = backup.data.suppliers || [];
   D.payables = backup.data.payables || [];
@@ -4776,7 +4806,7 @@ async function saveDataNow() {
       footer: D.settings.footer || '',
       growthDataVersion: version
     };
-    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, quotes: D.quotes, clients: D.clients, suppliers: D.suppliers, payables: D.payables, staff: D.staff, editLog: D.editLog };
+    var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, quotes: D.quotes, catalog: D.catalog, clients: D.clients, suppliers: D.suppliers, payables: D.payables, staff: D.staff, editLog: D.editLog };
     var docsFor = function(arr) {
       return (arr || []).map(function(item, i) {
         var id = item && (item.id || item.num || item._id || (item.itemId && item.date ? item.itemId + '-' + item.date : null)) || i;
@@ -4873,8 +4903,8 @@ function saveData() {
 async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);
-    var cols = ['transactions','expenses','invoices','quotes','clients','suppliers','payables','staff','editLog'];
-    var keys = ['txns','exps','invoices','quotes','clients','suppliers','payables','staff','editLog'];
+    var cols = ['transactions','expenses','invoices','quotes','catalog','clients','suppliers','payables','staff','editLog'];
+    var keys = ['txns','exps','invoices','quotes','catalog','clients','suppliers','payables','staff','editLog'];
     var profSnap;
     var snaps;
     if (typeof userRef.getCollections === 'function') {
