@@ -487,7 +487,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260811-visit-map10';
+  const version = '20260811-visit-report11';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
@@ -770,6 +770,12 @@ test('admin visits map groups approximate IP areas and timestamps focus their pi
   assert.match(page,/visit-time-btn/);
   assert.match(page,/focusVisitArea/);
   assert.match(page,/filteredVisits\(visits\)/);
+  assert.match(page,/id="visit-summary"/);
+  assert.match(page,/id="export-visits-pdf"/);
+  assert.match(page,/function exportVisitsPdf/);
+  assert.match(page,/printing-visits/);
+  assert.match(page,/Show all dates/);
+  assert.match(page,/TIMEZONE_LOCATIONS/);
   assert.match(api,/action === 'resolveVisitLocations'/);
   assert.match(api,/https:\/\/ipwho\.is\//);
   assert.match(api,/approximate:true/);
