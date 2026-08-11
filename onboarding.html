@@ -155,6 +155,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
 
 /* Live invoice preview */
 .invoice-preview-card{background:var(--bg2);border:1px solid var(--border);padding:1rem;margin:.85rem 0 1.1rem;border-radius:22px;box-shadow:0 18px 48px rgba(74,59,42,.06)}
+.onboarding-invoice-preview{width:100%;max-width:760px;margin:0 auto;background:#e9e7e2;border:1px solid var(--border);padding:16px;overflow:hidden}
+.onboarding-invoice-preview .cls-invoice-preview-frame{display:block;border:0;background:#fff}
 .invoice-preview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
 .invoice-preview-heading strong{display:block;font-family:var(--font-d);font-size:1.05rem;font-weight:400;letter-spacing:-.02em;color:var(--text)}
 .invoice-preview-label{display:block;font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:.25rem}
@@ -661,56 +663,7 @@ firebase.initializeApp(firebaseConfig);
             <div><span class="invoice-preview-label">Live preview</span><strong>How your invoice will look</strong></div>
             <span class="invoice-preview-template" id="invoice-preview-template">Furniture Pop</span>
           </div>
-          <div class="invoice-preview-page" id="invoice-preview-page" data-style="classic">
-            <div class="invoice-preview-head">
-              <div>
-                <div class="invoice-preview-logo" id="invoice-preview-logo-wrap"><span>Logo</span></div>
-                <div class="invoice-preview-biz" id="invoice-preview-biz">Your Business</div>
-                <div class="invoice-preview-small" id="invoice-preview-email">invoices@yourbusiness.com</div>
-              </div>
-              <div class="invoice-preview-title-block">
-                <div>INVOICE</div>
-                <span id="invoice-preview-number">INV-0001</span>
-              </div>
-            </div>
-            <div class="invoice-preview-rule"></div>
-            <div class="invoice-preview-party-grid">
-              <div>
-                <div class="invoice-preview-k">From</div>
-                <div class="invoice-preview-v" id="invoice-preview-from">Your Business</div>
-                <div class="invoice-preview-muted" id="invoice-preview-address">Business address</div>
-              </div>
-              <div>
-                <div class="invoice-preview-k">Bill To</div>
-                <div class="invoice-preview-v" id="invoice-preview-customer">Sample Customer</div>
-                <div class="invoice-preview-muted" id="invoice-preview-customer-detail">accounts@customer.lk</div>
-              </div>
-              <div class="invoice-preview-meta">
-                <span>Date</span><span id="invoice-preview-date">13 Jun 26</span>
-                <span>Due</span><span id="invoice-preview-due">13 Jul 26</span>
-                <span>Terms</span><span>Net 30</span>
-              </div>
-            </div>
-            <table class="invoice-preview-table">
-              <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Amount</th></tr></thead>
-              <tbody><tr><td>Sample service package</td><td>1</td><td id="invoice-preview-unit">LKR 120,000.00</td><td id="invoice-preview-line">LKR 120,000.00</td></tr></tbody>
-            </table>
-            <div class="invoice-preview-bottom">
-              <div id="invoice-preview-notes-block">
-                <div class="invoice-preview-notes-title">Notes</div>
-                <div class="invoice-preview-notes-body" id="invoice-preview-footer"></div>
-              </div>
-              <div id="invoice-preview-bank-block" style="display:none;margin-top:.65rem">
-                <div class="invoice-preview-notes-title">Bank details</div>
-                <div class="invoice-preview-notes-body" id="invoice-preview-bank" style="white-space:pre-line"></div>
-              </div>
-              <div>
-                <div class="invoice-preview-total-line"><span>Subtotal</span><span id="invoice-preview-subtotal">LKR 120,000.00</span></div>
-                <div class="invoice-preview-total-line" id="invoice-preview-tax-row"><span>VAT</span><span id="invoice-preview-tax">LKR 18,000.00</span></div>
-                <div class="invoice-preview-total-box"><span>Total Due</span><span id="invoice-preview-total">LKR 138,000.00</span></div>
-              </div>
-            </div>
-          </div>
+          <div class="settings-invoice-preview onboarding-invoice-preview" id="invoice-preview-page" aria-live="polite"></div>
         </div>
         </div>
         <div class="ob-nav">
@@ -983,6 +936,35 @@ function updateInvoicePreview(){
   const page=document.getElementById('invoice-preview-page');
   if(!page) return;
   const tpl=allTemplates[normalizeTplIdx(state.selectedTemplate)]||allTemplates[0];
+  if(window.clsBuildInvoicePreviewFrame){
+    const prefix=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(getFieldValue('s4-prefix',state.invoicePrefix||'INV')):String(getFieldValue('s4-prefix',state.invoicePrefix||'INV')).trim().toUpperCase())||'INV';
+    const number=window.clsFormatInvoiceNumber?window.clsFormatInvoiceNumber(prefix,1):prefix+'-0001';
+    const taxRate=Math.max(0,parseFloat(getFieldValue('s4-taxrate','15'))||0);
+    const subtotal=120000;
+    const today=new Date();
+    const due=new Date(today);due.setDate(due.getDate()+30);
+    const customerEmail=getFieldValue('s2-client-email','accounts@customer.lk');
+    const customerPhone=getFieldValue('s2-client-phone','');
+    const settings={
+      biz:getFieldValue('s4-bizname','Your Business'),
+      bizName:getFieldValue('s4-bizname','Your Business'),
+      addr:getFieldValue('s4-addr','Business address'),
+      email:getFieldValue('s4-email',state.email||'invoices@yourbusiness.com'),
+      vat:getFieldValue('s4-vat',''),logo:state.logo||'',
+      bankName:getFieldValue('s4-bank-name',''),bankAccountName:getFieldValue('s4-bank-account-name',''),
+      bankAccountNumber:getFieldValue('s4-bank-account-number',''),bankBranch:getFieldValue('s4-bank-branch',''),
+      invoiceFont:document.getElementById('s4-font')?.value||state.invoiceFont||'classic',
+      invoiceView:document.getElementById('s4-view')?.value||state.invoiceView||'modern'
+    };
+    const inv={num:number,date:today.toISOString().slice(0,10),due:due.toISOString().slice(0,10),terms:'Net 30',
+      client:getFieldValue('s2-client-name','Sample Customer'),cemail:customerEmail,cphone:customerPhone,
+      notes:getFieldValue('s4-footer',''),cur:'LKR',sub:subtotal,vat:subtotal*taxRate/100,
+      amount:subtotal+(subtotal*taxRate/100),lines:[{desc:'Sample service package',qty:1,price:subtotal,total:subtotal}]};
+    page.innerHTML=window.clsBuildInvoicePreviewFrame({inv:inv,settings:settings,templateIndex:normalizeTplIdx(state.selectedTemplate),documentLabel:'Invoice',systemName:'Cashflow System'});
+    const name=document.getElementById('invoice-preview-template');if(name)name.textContent=tpl.name;
+    requestAnimationFrame(function(){if(window.clsFitInvoicePreviewFrame)window.clsFitInvoicePreviewFrame(page);});
+    return;
+  }
   const prefix=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(getFieldValue('s4-prefix',state.invoicePrefix||'INV')):String(getFieldValue('s4-prefix',state.invoicePrefix||'INV')).trim().toUpperCase().replace(/[^A-Z0-9-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,14))||'INV';
   const font=document.getElementById('s4-font')?.value||state.invoiceFont||'classic';
   const view=document.getElementById('s4-view')?.value||state.invoiceView||'modern';

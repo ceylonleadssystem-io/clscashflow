@@ -391,7 +391,8 @@ test('onboarding captures optional bank details for invoice defaults', function(
   assert.match(page, /bankAccountName: state\.bankAccountName/);
   assert.match(page, /bankAccountNumber: state\.bankAccountNumber/);
   assert.match(page, /bankBranch: state\.bankBranch/);
-  assert.match(page, /id="invoice-preview-bank-block"/);
+  assert.match(page, /bankName:getFieldValue\('s4-bank-name'/);
+  assert.match(page, /bankAccountNumber:getFieldValue\('s4-bank-account-number'/);
 });
 
 for (const file of ['solo.html', 'starter.html']) {
@@ -448,6 +449,15 @@ test('settings preview and PDF share one renderer and preserve empty notes', fun
   assert.match(pages[0], /DB\.settings\.footer=document\.getElementById\('set-footer'\)\.value\.trim\(\)/);
   assert.match(pages[1], /DB\.settings\.footer=document\.getElementById\('set-footer'\)\.value\.trim\(\)/);
   assert.match(pages[2], /D\.settings\.footer = document\.getElementById\('s-footer'\)\.value\.trim\(\)/);
+});
+
+test('onboarding uses the current shared A4 invoice template preview', function() {
+  const page = read('onboarding.html');
+  assert.match(page, /const allTemplates = window\.clsInvoiceTemplates/);
+  assert.match(page, /class="settings-invoice-preview onboarding-invoice-preview"/);
+  assert.match(page, /window\.clsBuildInvoicePreviewFrame\(\{inv:inv,settings:settings,templateIndex:/);
+  assert.match(page, /window\.clsFitInvoicePreviewFrame\(page\)/);
+  assert.doesNotMatch(page, /<div class="invoice-preview-head">/);
 });
 
 test('mobile downloads and native sharing use the same branded A4 invoice renderer', function() {
