@@ -77,9 +77,12 @@ async function verifyAdmin(admin, event) {
 }
 
 async function readCollection(db, name, orderField, limit) {
-  // Admin rendering already sorts each view. A plain limited read avoids a
-  // failed indexed query followed by a second full request on older projects.
-  const snap = await db.collection(name).limit(limit).get();
+  // Apply the requested ordering before limiting. Limiting an unordered
+  // collection can return an arbitrary historical slice and hide today's
+  // visits from the admin date-range view.
+  let query = db.collection(name);
+  if (orderField) query = query.orderBy(orderField, 'desc');
+  const snap = await query.limit(limit).get();
   return snap.docs.map(function(doc) {
     return { id: doc.id, data: serialize(doc.data() || {}) };
   });
