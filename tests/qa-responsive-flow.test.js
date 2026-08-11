@@ -487,7 +487,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260811-visit-report11';
+  const version = '20260811-leaflet-map12';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
@@ -776,9 +776,14 @@ test('admin visits map groups approximate IP areas and timestamps focus their pi
   assert.match(page,/printing-visits/);
   assert.match(page,/Show all dates/);
   assert.match(page,/TIMEZONE_LOCATIONS/);
+  assert.match(page,/tile\.openstreetmap\.org/);
+  assert.match(page,/OpenStreetMap/);
+  assert.match(page,/L\.map\('visit-map-canvas'/);
   assert.match(api,/action === 'resolveVisitLocations'/);
   assert.match(api,/https:\/\/ipwho\.is\//);
   assert.match(api,/approximate:true/);
+  assert.match(api,/allIps\.slice\(0,8\)/);
+  assert.match(api,/AbortSignal\.timeout\(2500\)/);
   assert.match(tracker,/latitude: geo\.latitude \|\| null/);
   assert.match(tracker,/longitude: geo\.longitude \|\| null/);
 });

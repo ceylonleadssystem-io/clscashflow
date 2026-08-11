@@ -686,19 +686,21 @@ exports.handler = async function handler(event) {
           if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.|::1$|fc|fd|fe80)/i.test(ip)) return false;
           const m=ip.match(/^172\.(\d+)\./);return !(m&&Number(m[1])>=16&&Number(m[1])<=31);
         };
-        const ips=Array.from(new Set(missing.map(function(row){return String((row.data||{}).ip||'').trim();}).filter(validIp))).slice(0,50);
+        // Keep each admin request comfortably inside the Netlify execution
+        // window. The button is resumable and processes the next batch.
+        const allIps=Array.from(new Set(missing.map(function(row){return String((row.data||{}).ip||'').trim();}).filter(validIp))),ips=allIps.slice(0,8);
         const locations={};
         await Promise.all(ips.map(async function(ip){
           try{
             const url='https://ipwho.is/'+encodeURIComponent(ip)+'?fields=success,message,city,region,country,country_code,latitude,longitude,timezone';
-            const response=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(6000)});
+            const response=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(2500)});
             const result=await response.json();
             if(response.ok&&result.success!==false&&Number.isFinite(Number(result.latitude))&&Number.isFinite(Number(result.longitude))){locations[ip]={city:String(result.city||''),subdivision:String(result.region||''),country:String(result.country||''),countryCode:String(result.country_code||''),timezone:String(result.timezone&&result.timezone.id||result.timezone||''),latitude:Number(result.latitude),longitude:Number(result.longitude),approximate:true,source:'ipwho.is',locatedAtUtc:new Date().toISOString()};}
           }catch(e){}
         }));
         const stamp=admin.firestore.FieldValue.serverTimestamp(),updates=missing.filter(function(row){return locations[String((row.data||{}).ip||'').trim()];});
         await Promise.all(updates.map(function(row){return db.collection('platformVisits').doc(row.id).set({geo:locations[String((row.data||{}).ip||'').trim()],geoUpdatedAt:stamp},{merge:true});}));
-        return {statusCode:200,headers:headers(),body:JSON.stringify({ok:true,visitsUpdated:updates.length,ipsResolved:Object.keys(locations).length,ipsRequested:ips.length})};
+        return {statusCode:200,headers:headers(),body:JSON.stringify({ok:true,visitsUpdated:updates.length,ipsResolved:Object.keys(locations).length,ipsRequested:ips.length,ipsRemaining:Math.max(0,allIps.length-ips.length)})};
       }
 
       if (action === 'applyTicketPlanChange') {
