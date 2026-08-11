@@ -74,6 +74,13 @@ test('landing page presents one unlimited catalog across all plans', () => {
   assert.equal((landing.match(/Unlimited Products &amp; Services catalog/g) || []).length, 3);
 });
 
+test('onboarding presents unlimited Products & Services on every plan', () => {
+  const onboarding = read('onboarding.html');
+  assert.match(onboarding, /<tr><td>Products &amp; Services Catalog<\/td><td><strong>Unlimited items<\/strong><\/td><td><strong>Unlimited items<\/strong><\/td><td><strong>Unlimited items<\/strong><\/td><\/tr>/);
+  assert.equal((onboarding.match(/Unlimited Products &amp; Services/g) || []).length, 3);
+  assert.match(onboarding, /unlimited Products &amp; Services, customers, reports/);
+});
+
 test('product and service forms provide ready-made categories and comma-formatted amounts', () => {
   const module = read('assets/catalog.js');
   assert.match(module, /General Products.*Digital Products.*Equipment.*Materials/);

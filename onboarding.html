@@ -515,7 +515,7 @@ firebase.initializeApp(firebaseConfig);
         <p class="ob-sub">Pick your main use. We will recommend the cleanest plan for that work, but you can still choose Solo, Studio, or Business yourself.</p>
         <div class="ob-field" style="margin-bottom:.5rem"><label>Primary use *</label></div>
         <div class="ob-choices cols-2" id="use-cases">
-          <button class="ob-choice" data-plan="solo" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Invoices, quotes, customers, reports, and PDF export.</div></div></button>
+          <button class="ob-choice" data-plan="solo" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Invoices, quotes, unlimited Products &amp; Services, customers, reports, and PDF export.</div></div></button>
           <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track money in and out</div><div class="ob-choice-desc">Income, expenses, suppliers, business insights, and priority support.</div></div></button>
           <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Manage operations and suppliers</div><div class="ob-choice-desc">Studio adds operational tracking and insights to every Solo feature.</div></div></button>
           <button class="ob-choice" data-plan="business" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">⚙️</span><div><div class="ob-choice-label">Manage payroll and advanced insight</div><div class="ob-choice-desc">Business adds payroll management and advanced business insights.</div></div></button>
@@ -530,16 +530,16 @@ firebase.initializeApp(firebaseConfig);
         <div class="tier-cards">
           <div class="tier-card" data-tier="solo" onclick="window.selectTier('solo',this,true)">
             <div class="tier-name">Solo</div><div class="tier-price">LKR 3,500 / mo</div>
-            <div class="tier-features">• 1 user only<br>• Invoices, quotes &amp; estimates<br>• Customers, reports &amp; PDF export</div>
+            <div class="tier-features">• 1 user only<br>• Invoices, quotes &amp; estimates<br>• Unlimited Products &amp; Services<br>• Customers, reports &amp; PDF export</div>
           </div>
           <div class="tier-card" data-tier="studio" onclick="window.selectTier('studio',this,true)">
             <div class="tier-badge">Most Popular</div>
             <div class="tier-name">Studio</div><div class="tier-price">LKR 5,500 / mo</div>
-            <div class="tier-features">• Up to 5 users<br>• Everything in Solo<br>• Income, expenses &amp; suppliers<br>• Insights &amp; priority support</div>
+            <div class="tier-features">• Up to 5 users<br>• Everything in Solo<br>• Unlimited Products &amp; Services<br>• Income, expenses &amp; suppliers<br>• Insights &amp; priority support</div>
           </div>
           <div class="tier-card" data-tier="business" onclick="window.selectTier('business',this,true)">
             <div class="tier-name">Business</div><div class="tier-price">LKR 8,500 / mo</div>
-            <div class="tier-features">• Unlimited users<br>• Everything in Studio<br>• Payroll management<br>• Advanced business insights</div>
+            <div class="tier-features">• Unlimited users<br>• Everything in Studio<br>• Unlimited Products &amp; Services<br>• Payroll management<br>• Advanced business insights</div>
           </div>
         </div>
         <div class="ob-plan-comparison" aria-label="Plan feature comparison">
@@ -552,6 +552,7 @@ firebase.initializeApp(firebaseConfig);
                 <tr><td>Dashboard</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Create &amp; Send Invoices</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Quotes &amp; Estimates</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Products &amp; Services Catalog</td><td><strong>Unlimited items</strong></td><td><strong>Unlimited items</strong></td><td><strong>Unlimited items</strong></td></tr>
                 <tr><td>Customer Management</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Reports</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>PDF Invoice Export</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
