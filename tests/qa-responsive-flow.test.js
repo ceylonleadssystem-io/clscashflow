@@ -487,7 +487,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260811-invoice-pack8';
+  const version = '20260811-plan-lock9';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
@@ -734,4 +734,28 @@ test('admin console is compact, searchable, payment-aware, and date-maps visits'
   assert.match(api,/applyTicketPlanChange/);
   assert.match(api,/accountPaused:true,paid:false,subscriptionStatus:'paused'/);
   assert.match(api,/admin\.auth\(\)\.deleteUser/);
+});
+
+test('plan upgrades are explicit, deduplicated, payment-gated, and admin controlled', function() {
+  const platform=read('assets/platform.js');
+  const adminPage=read('ceylonry-admin.html');
+  const api=read('netlify/functions/admin-data.js');
+  const solo=read('solo.html');
+  const studio=read('starter.html');
+  assert.doesNotMatch(platform,/source:\s*'paid-plan-lock'/);
+  assert.doesNotMatch(platform,/source:\s*'paid-plan-access-block'/);
+  assert.match(platform,/planRank\(targetPlan\) <= planRank\(currentPlan\)/);
+  assert.match(platform,/pendingOpenRequest/);
+  assert.match(platform,/already pending/);
+  assert.match(platform,/clsCanDirectTrialPlanSwitch=function clsCanDirectTrialPlanSwitch\(\)\{return false;/);
+  assert.match(solo,/source:'solo-upgrade-button'/);
+  assert.match(studio,/source:'studio-upgrade-button'/);
+  assert.match(adminPage,/id="clear-support-tickets"/);
+  assert.match(adminPage,/differencePaid:differencePaid/);
+  assert.doesNotMatch(adminPage,/data-user-action="setPlan(?:Solo|Studio|Business)"/);
+  assert.match(api,/action === 'clearSupportTickets'/);
+  assert.match(api,/differencePaid<difference/);
+  assert.match(api,/source:'admin-plan-upgrade'/);
+  assert.match(api,/batch\.commit\(\)/);
+  assert.match(api,/Plan changes must be completed from a customer upgrade request/);
 });

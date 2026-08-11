@@ -668,20 +668,39 @@ exports.handler = async function handler(event) {
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
       }
 
+      if (action === 'clearSupportTickets') {
+        const rows = await readCollection(db, 'supportTickets', 'createdAt', 5000);
+        await Promise.all(rows.map(function(row) { return db.collection('supportTickets').doc(row.id).delete(); }));
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, ticketsDeleted: rows.length }) };
+      }
+
       if (action === 'applyTicketPlanChange') {
         const ticketId=String(body.ticketId||'').trim(),email=String(body.email||'').trim().toLowerCase(),target=normalizePlan(body.plan);
         if(!ticketId||!email||!target)return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Ticket, email, and target plan are required.'})};
         const snap=await db.collection('users').where('email','==',email).limit(1).get();let userRow=null;snap.forEach(function(doc){userRow={id:doc.id,data:doc.data()||{}};});
         if(!userRow)return {statusCode:404,headers:headers(),body:JSON.stringify({ok:false,error:'No user matches this ticket email.'})};
-        const current=normalizePlan(userRow.data.currentPlan||userRow.data.plan),prices={solo:3500,studio:5500,business:8500},difference=Math.max(0,(prices[target]||0)-(prices[current]||0)),paid=isPaidProfile(userRow.data),stamp=admin.firestore.FieldValue.serverTimestamp();
-        await db.collection('users').doc(userRow.id).set({plan:target,currentPlan:target,lastPlan:target,requestedPlan:target,planMonthlyPrice:prices[target],planChangedAt:stamp,planChangedBy:'platform_admin',planChangeDifferencePaid:paid?difference:0,updatedAt:stamp},{merge:true});
-        await db.collection('supportTickets').doc(ticketId).set({status:'closed',closedAt:stamp,closedBy:'platform_admin',resolvedPlan:target,resolvedDifference:difference,resolution:paid&&difference?'Upgrade difference confirmed paid and plan changed.':'Trial plan changed.',updatedAt:stamp},{merge:true});
-        return {statusCode:200,headers:headers(),body:JSON.stringify({ok:true,difference})};
+        const current=normalizePlan(userRow.data.currentPlan||userRow.data.plan),prices={solo:3500,studio:5500,business:8500},ranks={solo:1,studio:2,business:3};
+        if(!current||ranks[target]<=ranks[current])return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Only an upgrade to a higher plan can be applied from an upgrade request.'})};
+        const difference=Math.max(0,(prices[target]||0)-(prices[current]||0)),differencePaid=Number(body.differencePaid);
+        if(!Number.isFinite(differencePaid)||differencePaid<difference)return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Confirm payment of the full LKR '+difference.toLocaleString('en-LK')+' upgrade difference before changing the system.',difference})};
+        const ticketSnap=await db.collection('supportTickets').doc(ticketId).get(),ticket=ticketSnap.exists?(ticketSnap.data()||{}):{};
+        if(!ticketSnap.exists||String(ticket.type||'').toLowerCase()!=='plan upgrade request')return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'A valid plan upgrade request is required.'})};
+        const stamp=admin.firestore.FieldValue.serverTimestamp(),paymentRef=db.collection('subscriptionPayments').doc();
+        const batch=db.batch();
+        batch.set(db.collection('users').doc(userRow.id),{plan:target,currentPlan:target,lastPlan:target,requestedPlan:target,planMonthlyPrice:prices[target],planChangedAt:stamp,planChangedBy:'platform_admin',planChangeFrom:current,planChangeDifferenceRequired:difference,planChangeDifferencePaid:differencePaid,planChangePaymentRecordedAt:stamp,updatedAt:stamp},{merge:true});
+        batch.set(paymentRef,{uid:userRow.id,email:email,name:userRow.data.name||userRow.data.businessName||'',fromPlan:current,toPlan:target,plan:target,amount:differencePaid,currency:'LKR',status:'paid',source:'admin-plan-upgrade',ticketId:ticketId,receivedAt:stamp,receivedAtUtc:new Date().toISOString(),recordedBy:'platform_admin'});
+        batch.set(db.collection('supportTickets').doc(ticketId),{status:'closed',closedAt:stamp,closedBy:'platform_admin',resolvedPlan:target,resolvedDifference:difference,resolvedDifferencePaid:differencePaid,resolution:'Upgrade difference confirmed paid and plan changed.',updatedAt:stamp},{merge:true});
+        batch.set(db.collection('upgradeRequests').doc('plan-change-'+userRow.id+'-'+target),{status:'closed',closedAt:stamp,closedBy:'platform_admin',differencePaid:differencePaid,resolvedTicketId:ticketId,updatedAt:stamp},{merge:true});
+        await batch.commit();
+        return {statusCode:200,headers:headers(),body:JSON.stringify({ok:true,difference,differencePaid,paymentId:paymentRef.id})};
       }
 
       if (action === 'updateUser') {
         const id = String(body.id || '').trim();
         const updateType = String(body.updateType || '').trim();
+        if (/^setPlan/i.test(updateType)) {
+          return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Plan changes must be completed from a customer upgrade request after the price difference is paid.' }) };
+        }
         const update = userUpdateForAction(admin, updateType);
         if (!id || !update) {
           return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid user update.' }) };

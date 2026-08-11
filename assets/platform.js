@@ -272,13 +272,6 @@
       if (lockedPlan && lockedPlan !== plan) {
         safeSet('cls-last-plan', lockedPlan);
         safeSet('cls-current-plan', lockedPlan);
-        if (typeof window.clsRequestPlanChange === 'function') {
-          window.clsRequestPlanChange(plan, existingProfile, {
-            uid: uid,
-            db: db,
-            source: 'paid-plan-lock'
-          }).catch(function(e) { console.warn('Plan change request could not be recorded:', e); });
-        }
         return lockedPlan;
       }
     } catch (e) {
@@ -335,13 +328,6 @@
     if (routePlan && routePlan !== expectedPlan) {
       safeSet('cls-last-plan', routePlan);
       safeSet('cls-current-plan', routePlan);
-      if (lockedPlan && typeof window.clsRequestPlanChange === 'function') {
-        await window.clsRequestPlanChange(expectedPlan, profile, {
-          uid: opts.uid,
-          db: opts.db,
-          source: 'paid-plan-access-block'
-        });
-      }
       var dest = window.clsPlanFileFor(routePlan);
       var current = (location.pathname || '').split('/').pop() || 'index.html';
       if (current !== dest) window.location.replace(dest);
@@ -1394,6 +1380,10 @@
     if (!targetPlan) return null;
     var currentPlan = paidLockedPlan(profile) || bestPlan(profile, opts.currentPlan);
     if (currentPlan === targetPlan) return null;
+    if (planRank(targetPlan) <= planRank(currentPlan)) {
+      if (opts.silent !== true) alert('Your assigned system is locked. Plan changes can only be completed by the CeylonryLabs administrator.');
+      return null;
+    }
     var user = getAuthUser();
     var uid = opts.uid || (user && user.uid) || profile.uid || profile.ownerUid || '';
     var db = getFirestore(opts.db);
@@ -1426,17 +1416,19 @@
     var requestId = 'plan-change-' + (uid || 'guest') + '-' + targetPlan;
     var sentKey = 'cls-plan-change-request-' + requestId;
     var alreadySent = safeGet(sentKey);
+    var pendingOpenRequest = false;
     try {
       if (db && uid) {
         var ref = db.collection('upgradeRequests').doc(requestId);
         var snap = await ref.get();
+        pendingOpenRequest = !!(snap.exists && String((snap.data() || {}).status || 'open').toLowerCase() !== 'closed');
         if (!snap.exists) {
           payload.createdAt = fieldTimestamp();
           payload.createdAtUtc = nowIso();
         }
         await ref.set(payload, { merge: true });
       }
-      if (!alreadySent || Date.now() - Number(alreadySent || 0) > 86400000) {
+      if (!pendingOpenRequest && (!alreadySent || Date.now() - Number(alreadySent || 0) > 86400000)) {
         try {
           await fetch('/.netlify/functions/submit-ticket', {
             method: 'POST',
@@ -1464,9 +1456,9 @@
         }
         safeSet(sentKey, String(Date.now()));
       }
-      if (opts.silent !== true) {
-        alert('Your ' + direction + ' request has been sent to CeylonryLabs. Your current paid plan stays active until the team confirms the change.');
-      }
+      if (opts.silent !== true) alert(pendingOpenRequest
+        ? 'Your upgrade request is already pending. Your current system remains active until the administrator confirms payment and completes the upgrade.'
+        : 'Your upgrade request has been sent to CeylonryLabs. Your current system remains active until the administrator confirms payment and completes the upgrade.');
       return payload;
     } catch (e) {
       console.warn('Plan change request failed:', e);
@@ -2187,7 +2179,7 @@
     var style = document.createElement('style');
     style.id = 'cls-billing-card-style';
     style.textContent =
-      'body.cls-trial-ended [data-cls-fn="goBackToSolo"],body.cls-trial-ended [data-cls-fn="openStudioUpgrade"],body.cls-trial-ended [data-cls-fn="openBusinessUpgrade"],body.cls-trial-ended .btn-back-Studio,body.cls-trial-ended .btn-upgrade,body.cls-trial-ended [onclick*="goBackToStudio"]{display:none!important}' +
+      'body [data-cls-fn="goBackToSolo"],body .btn-back-Studio,body [onclick*="goBackToStudio"]{display:none!important}' +
       '#cls-billing-widget{margin:0;border:1px solid #DED7CC;background:#fff;border-left:3px solid #1a9e5c;padding:1.35rem 1.45rem;font-family:DM Sans,Inter,Arial,sans-serif;color:#1C1814;min-width:0;border-radius:14px}' +
       '#cls-billing-widget .cls-billing-top{display:grid;grid-template-columns:1fr;gap:1.05rem;align-items:start}' +
       '#cls-billing-widget .cls-billing-kicker{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:#1a9e5c;font-weight:800;margin-bottom:.2rem}' +
@@ -2211,7 +2203,7 @@
     document.head.appendChild(style);
   }
 
-  window.clsCanDirectTrialPlanSwitch=function clsCanDirectTrialPlanSwitch(profile){profile=profile||window._profile||{};var end=dateMs(profile.trialEnd||profile.trialEndsAt);return !isProfilePaidRecord(profile)&&!!end&&Date.now()<end;};
+  window.clsCanDirectTrialPlanSwitch=function clsCanDirectTrialPlanSwitch(){return false;};
   window.clsApplyTrialPlanSwitchVisibility=function clsApplyTrialPlanSwitchVisibility(profile){var allowed=window.clsCanDirectTrialPlanSwitch(profile);document.body.classList.toggle('cls-trial-ended',!allowed);return allowed;};
 
   function mountBillingWidget() {

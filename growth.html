@@ -15,7 +15,7 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260811-invoice-pack8"></script>
+<script src="assets/platform.js?v=20260811-plan-lock9"></script>
 <link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
 <script src="assets/catalog.js?v=20260811-catalog3"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
@@ -1549,7 +1549,7 @@ function maybeStartBusinessTour() {
   }
 }
 	window.goBackToStudio = async function goBackToStudio(btn) {
-	  if(window.clsCanDirectTrialPlanSwitch&&!window.clsCanDirectTrialPlanSwitch(_profile)){alert('Plan switching closes when the free trial ends. Please use Support for any package change.');return;}
+	  alert('Your Business plan is locked. Only a platform administrator can change the assigned system.');return;
 	  if (!_signedInUid) { alert('Please sign in again before switching plans.'); return; }
 	  if (window.clsIsProfilePaid && window.clsIsProfilePaid(_profile)) {
 	    await window.clsRequestPlanChange('studio', _profile || {}, { uid: _signedInUid, db: _fdb, source: 'business-downgrade-button' });

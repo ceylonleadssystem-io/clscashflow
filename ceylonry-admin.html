@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260811-invoice-pack8"></script>
+<script src="assets/platform.js?v=20260811-plan-lock9"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#F7F5F0;color:#1C1814;font-family:'DM Sans',sans-serif}.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:2px solid #1a1714;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}.brand{font-family:'Cormorant Garamond',serif;font-size:30px}.brand span{color:#B8922A}.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8b8176;margin-top:2px}.btn{border:1px solid rgba(184,146,42,.38);background:#fff;color:#1C1814;padding:10px 14px;font:700 11px 'DM Sans';letter-spacing:.12em;text-transform:uppercase;cursor:pointer}.btn.dark{background:#1a1714;color:#fff;border-color:#1a1714}.btn.gold{background:#B8922A;color:#fff;border-color:#B8922A}.btn.red{border-color:#d8a19a;color:#c0392b}.wrap{max-width:1480px;margin:0 auto;padding:28px}.login{max-width:440px;margin:90px auto;background:#fff;border:1px solid #e2d8ca;padding:30px;box-shadow:0 20px 60px rgba(0,0,0,.08)}h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400;margin:0;color:#1C1814}h1{font-size:44px;line-height:1}h2{font-size:30px}.muted{color:#6B6258;line-height:1.6}.field{display:grid;gap:8px;margin-top:16px}.field label,.label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7b6e61;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #d9cec0;background:#F7F5F0;padding:12px 13px;font:500 14px 'DM Sans';outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#B8922A;background:#fff}.grid{display:grid;gap:18px}.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:26px 0}.card{background:#fff;border:1px solid #e2d8ca;padding:22px}.kpi-number{font-family:'Cormorant Garamond',serif;font-size:38px;color:#B8922A;margin-top:8px}.section{margin-top:22px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.table-wrap{overflow:auto;background:#fff;border:1px solid #e2d8ca}.table{width:100%;border-collapse:collapse;min-width:1280px}.table th{background:#1a1714;color:#fff;text-align:left;padding:12px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase}.table td{border-bottom:1px solid #e8dfd4;padding:12px 14px;font-size:13px;vertical-align:top}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;background:#f1eadf;color:#6B6258;font-size:11px;font-weight:700}.pill.ok{background:#e2f5ea;color:#10834c}.pill.warn{background:#fff2db;color:#a66f00}.pill.bad{background:#fde8e4;color:#c0392b}.pill.live{background:#e8f6ef;color:#10834c}.pill.land{background:#fff2db;color:#a66f00}.token{font-weight:800;letter-spacing:.08em;color:#1C1814;white-space:nowrap}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions .btn{padding:8px 10px;font-size:10px}.hidden{display:none!important}.error{margin-top:14px;color:#c0392b;font-size:13px}.utc{font-size:12px;color:#6B6258}.admin-note{background:#fff8ea;border-left:4px solid #B8922A;padding:14px 16px;margin-top:18px;color:#6B6258;line-height:1.6}.ticket-msg{max-width:360px;white-space:pre-wrap;color:#4f443a}.visit-path{max-width:280px;word-break:break-word}.user-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.user-card{background:#fff;border:1px solid #e2d8ca;padding:18px;display:grid;gap:12px}.user-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.user-name{font-weight:800;color:#1C1814}.user-email{font-size:12px;color:#6B6258;word-break:break-word}.user-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.meta-box{background:#F7F5F0;border:1px solid #eee4d8;padding:10px}.meta-box span{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#8b8176;font-weight:800;margin-bottom:4px}.meta-box strong{font-size:12px;color:#1C1814;word-break:break-word}.task-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}.task-list li{border-left:3px solid #B8922A;background:#fff8ea;padding:8px 10px;font-size:12px;color:#4f443a;line-height:1.45}.task-list li.ok{border-left-color:#10834c;background:#eaf7f0;color:#16603d}.task-list li.bad{border-left-color:#c0392b;background:#fdecea;color:#7d251d}.secure-note{font-size:11px;color:#6B6258;line-height:1.5}.loading-note{font-size:12px;color:#6B6258;margin-left:10px}.btn[disabled]{opacity:.55;cursor:not-allowed}@media(max-width:1200px){.user-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.user-breakdown{grid-template-columns:1fr}.top{align-items:flex-start;gap:14px;flex-direction:column}.wrap{padding:18px}}@media(max-width:560px){.kpis{grid-template-columns:1fr}.user-meta{grid-template-columns:1fr}}
 </style>
@@ -159,7 +159,7 @@
     </section>
 
     <section class="section" data-admin-section="tickets">
-      <div class="section-head"><h2>Support Tickets</h2><span class="muted">Chat and bug reports from the Help widget</span></div>
+      <div class="section-head"><div><h2>Support Tickets</h2><span class="muted">Created only when a customer explicitly requests help or a plan upgrade</span></div><button class="btn danger" id="clear-support-tickets" type="button">Delete all tickets</button></div>
       <div class="admin-tools"><div class="field search"><label>Search tickets</label><input id="ticket-search" type="search" placeholder="Email, type or message"></div><div class="field"><label>Status</label><select id="ticket-status-filter"><option value="open">Open / in progress</option><option value="closed">Closed</option><option value="">All tickets</option></select></div></div>
       <div class="table-wrap"><table class="table">
         <thead><tr><th>Status</th><th>Priority</th><th>Type</th><th>Email</th><th>Message</th><th>Page</th><th>UTC</th><th>Actions</th></tr></thead>
@@ -329,9 +329,7 @@ function adminUserActions(row){
     '<button class="btn" data-user-action="resetPassword" data-user-id="'+id+'" data-user-email="'+email+'">Reset login</button>' +
     '<button class="btn gold" data-user-action="markPaid" data-user-id="'+id+'">Manual paid</button>' +
     '<button class="btn" data-user-action="markUnpaid" data-user-id="'+id+'">Mark unpaid</button>' +
-    '<button class="btn" data-user-action="setPlanSolo" data-user-id="'+id+'">Set Solo</button>' +
-    '<button class="btn" data-user-action="setPlanStudio" data-user-id="'+id+'">Set Studio</button>' +
-    '<button class="btn" data-user-action="setPlanBusiness" data-user-id="'+id+'">Set Business</button>';
+    '<div class="muted">Plan upgrades are applied from an approved upgrade ticket after payment.</div>';
   html += paused
     ? '<button class="btn dark" data-user-action="unpause" data-user-id="'+id+'">Unpause</button>'
     : '<button class="btn red" data-user-action="pause" data-user-id="'+id+'">Pause</button>';
@@ -950,7 +948,15 @@ async function updateTicket(id, status){
   }
   await loadAdminData();
 }
-async function applyTicketPlanChange(id,email,plan){await fetchAdminFunction({action:'applyTicketPlanChange',ticketId:id,email:email,plan:plan});await loadAdminData({forceLoading:true});}
+async function applyTicketPlanChange(id,email,plan,differencePaid){var out=await fetchAdminFunction({action:'applyTicketPlanChange',ticketId:id,email:email,plan:plan,differencePaid:differencePaid});await loadAdminData({forceLoading:true});alert('Upgrade completed. LKR '+Number(out.differencePaid||0).toLocaleString('en-LK')+' was recorded and the customer data was preserved.');}
+
+async function clearSupportTickets(){
+  if(!confirm('Permanently delete every support ticket? This cannot be undone.'))return;
+  var out=await fetchAdminFunction({action:'clearSupportTickets'});
+  try{sessionStorage.removeItem(ADMIN_CACHE_KEY);}catch(e){}
+  await loadAdminData({forceLoading:true});
+  alert(Number(out.ticketsDeleted||0)+' support tickets deleted.');
+}
 
 function adminPaymentRequestUpdatePayload(status){
   var stamp = firebase.firestore.FieldValue.serverTimestamp();
@@ -1138,9 +1144,6 @@ function adminUserUpdatePayload(updateType){
   if (updateType === 'unpause') return { accountPaused:false, subscriptionStatus:'active', manualPaymentStatus:'unpaused', unpausedAt:stamp, unpausedBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'markPaid') return { paid:true, accountPaused:false, subscriptionStatus:'manual-paid', manualPaymentStatus:'paid', paidManually:true, paymentVerifiedAtUtc:new Date().toISOString(), planLocked:true, planLockedAt:stamp, manualPaidAt:stamp, lastManualPaymentAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
   if (updateType === 'markUnpaid') return { paid:false, planLocked:false, subscriptionStatus:'manual-unpaid', manualPaymentStatus:'unpaid', paidManually:false, manualUnpaidAt:stamp, manualPaymentBy:'platform_admin', updatedAt:stamp };
-  if (updateType === 'setPlanSolo') return { plan:'solo', currentPlan:'solo', lastPlan:'solo', requestedPlan:'solo', planPrice:36000, planMonthlyPrice:3500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
-  if (updateType === 'setPlanStudio') return { plan:'studio', currentPlan:'studio', lastPlan:'studio', requestedPlan:'studio', planPrice:60000, planMonthlyPrice:5500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
-  if (updateType === 'setPlanBusiness') return { plan:'business', currentPlan:'business', lastPlan:'business', requestedPlan:'business', planPrice:94800, planMonthlyPrice:8500, planChangedBy:'platform_admin', planChangedAt:stamp, updatedAt:stamp };
   if (updateType === 'deleteUser') return { role:'removed', accountStatus:'deleted', deleted:true, accountPaused:true, paid:false, subscriptionStatus:'deleted', manualPaymentStatus:'deleted', deletedAt:stamp, deletedBy:'platform_admin', updatedAt:stamp };
   return null;
 }
@@ -1150,6 +1153,7 @@ async function updateUserAccount(id, updateType){
       ? { action: 'deleteUser', id: id }
       : { action: 'updateUser', id: id, updateType: updateType });
   } catch (serverErr) {
+    if (/^setPlan/i.test(updateType)) throw serverErr;
     var payload = adminUserUpdatePayload(updateType);
     if (!payload) throw new Error('Unknown account action.');
     await db.collection('users').doc(id).set(payload, { merge: true });
@@ -1220,6 +1224,7 @@ $('signout-btn').addEventListener('click', function(){
 if($('visit-clear'))$('visit-clear').addEventListener('click',function(){if($('visit-from'))$('visit-from').value='';if($('visit-to'))$('visit-to').value='';renderVisits(adminPayloadState.visits,adminPayloadState.stats);});
 document.addEventListener('click', function(ev){
   if(ev.target.closest('#clear-payment-data')){clearAllPaymentData().catch(function(e){alert(e.message||'Payment cleanup failed.');});return;}
+  if(ev.target.closest('#clear-support-tickets')){clearSupportTickets().catch(function(e){alert(e.message||'Ticket deletion failed.');});return;}
   var tabBtn = ev.target.closest('[data-admin-tab]');
   if (tabBtn) {
     switchAdminSection(tabBtn.getAttribute('data-admin-tab'));
@@ -1250,7 +1255,7 @@ document.addEventListener('click', function(ev){
     sendPaymentRequestChat(chatPaymentBtn.getAttribute('data-chat-payment')).catch(function(e){ alert(e.message); });
     return;
   }
-  var ticketPlanBtn=ev.target.closest('[data-ticket-plan]');if(ticketPlanBtn){var target=ticketPlanBtn.getAttribute('data-ticket-plan');if(!confirm('Apply the '+target+' plan now? For a paid upgrade, confirm the displayed difference has been received.'))return;applyTicketPlanChange(ticketPlanBtn.getAttribute('data-ticket-id'),ticketPlanBtn.getAttribute('data-ticket-email'),target).catch(function(e){alert(e.message);});return;}
+  var ticketPlanBtn=ev.target.closest('[data-ticket-plan]');if(ticketPlanBtn){var target=ticketPlanBtn.getAttribute('data-ticket-plan'),amount=prompt('Enter the upgrade difference actually received in LKR. The system will reject an unpaid or partial amount.','');if(amount===null)return;var paid=Number(String(amount).replace(/,/g,''));if(!Number.isFinite(paid)||paid<0){alert('Enter a valid paid amount.');return;}if(!confirm('Apply the '+target+' upgrade and record LKR '+paid.toLocaleString('en-LK')+' as paid?'))return;applyTicketPlanChange(ticketPlanBtn.getAttribute('data-ticket-id'),ticketPlanBtn.getAttribute('data-ticket-email'),target,paid).catch(function(e){alert(e.message);});return;}
   var ticketBtn = ev.target.closest('[data-ticket]');
   if (ticketBtn) {
     updateTicket(ticketBtn.getAttribute('data-ticket'), ticketBtn.getAttribute('data-status')).catch(function(e){ alert(e.message); });
@@ -1288,9 +1293,6 @@ document.addEventListener('click', function(ev){
     unpause:'unpause this account',
     markPaid:'mark this account as manually paid and unpause it',
     markUnpaid:'mark this account as unpaid',
-    setPlanSolo:'move this account to Solo',
-    setPlanStudio:'move this account to Studio',
-    setPlanBusiness:'move this account to Business',
     deleteUser:'delete this user from the admin working list and pause access'
   };
   if (!confirm('Confirm: ' + (labels[action] || action) + '?')) return;
