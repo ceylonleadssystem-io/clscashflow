@@ -21,12 +21,14 @@ test('Products & Services is directly below Invoices in all three navigation men
   }
 });
 
-test('Solo receives the limited catalog and Studio and Business receive the full catalog', () => {
+test('all three plans receive the same unlimited full catalog', () => {
   assert.match(read('solo.html'), /root:'#solo-catalog-root',level:'basic'/);
   assert.match(read('starter.html'), /root:'#studio-catalog-root',level:'full'/);
   assert.match(read('growth.html'), /root:'#business-catalog-root',level:'business'/);
   const module = read('assets/catalog.js');
-  assert.match(module, /Solo Basic supports up to 30 active catalog items/);
+  assert.match(module, /function isFull\(\)\{return true;\}/);
+  assert.match(module, /Unlimited catalog · all plans/);
+  assert.doesNotMatch(module, /up to 30 active catalog items/);
   assert.match(module, /Export CSV/);
   assert.match(module, /Import CSV/);
   assert.match(module, /Product &amp; Service Performance/);
@@ -64,13 +66,12 @@ test('catalog switches to mobile cards instead of forcing a horizontal page scro
   assert.match(css, /\.cls-cat-form,\.cls-cat-choice\{grid-template-columns:1fr\}/);
 });
 
-test('landing page clearly describes the catalog differences between plans', () => {
+test('landing page presents one unlimited catalog across all plans', () => {
   const landing = read('index.html');
-  assert.match(landing, /Basic Products &amp; Services catalog <strong>\(up to 30 active items\)<\/strong>/);
-  assert.match(landing, /Full Products &amp; Services catalog with CSV tools and performance insights/);
-  assert.match(landing, /Full catalog analytics with team activity audit/);
-  assert.match(landing, /Products &amp; Services Catalog/);
-  assert.match(landing, /CSV \+ performance \+ team audit/);
+  assert.match(landing, /<tr><td>Products &amp; Services Catalog<\/td><td><strong>Unlimited items<\/strong><\/td><td><strong>Unlimited items<\/strong><\/td><td><strong>Unlimited items<\/strong><\/td><\/tr>/);
+  assert.doesNotMatch(landing, /Catalog CSV, Performance &amp; Audit/);
+  assert.doesNotMatch(landing, /up to 30 active items/);
+  assert.equal((landing.match(/Unlimited Products &amp; Services catalog/g) || []).length, 3);
 });
 
 test('product and service forms provide ready-made categories and comma-formatted amounts', () => {

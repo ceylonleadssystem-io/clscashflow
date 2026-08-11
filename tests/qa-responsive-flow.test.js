@@ -477,7 +477,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260810-invoice-pack5';
+  const version = '20260811-invoice-pack8';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
@@ -490,6 +490,20 @@ test('all application pages load the current invoice renderer without stale cach
 
   const netlify = read('netlify.toml');
   assert.match(netlify, /for = "\/assets\/platform\.js"[\s\S]*Cache-Control = "public, max-age=0, must-revalidate"/);
+});
+
+test('invoice PDFs use current customer address email and mobile while omitting blanks', function() {
+  const platform = read('assets/platform.js');
+  assert.match(platform, /function invoiceCustomerDetails\(inv\)/);
+  assert.match(platform, /filter\(Boolean\)\.join\('<br>'\)/);
+  for (const file of ['solo.html', 'starter.html']) {
+    const html = read(file);
+    assert.match(html, /function invoiceWithCurrentCustomerDetails\(inv\)/);
+    assert.match(html, /caddr:customer\.addr\|\|'',cemail:customer\.email\|\|'',cphone:customer\.phone\|\|''/);
+  }
+  const business = read('growth.html');
+  assert.match(business, /function businessInvoiceWithCurrentCustomerDetails\(inv\)/);
+  assert.match(business, /inv = businessInvoiceWithCurrentCustomerDetails\(inv\)/);
 });
 
 test('public invoice page receives bank details from the sanitized snapshot', function() {

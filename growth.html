@@ -15,9 +15,9 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260810-invoice-pack5"></script>
+<script src="assets/platform.js?v=20260811-invoice-pack8"></script>
 <link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
-<script src="assets/catalog.js?v=20260811-catalog2"></script>
+<script src="assets/catalog.js?v=20260811-catalog3"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -489,6 +489,9 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 
 /* SETTINGS */
 .settings-page-head{width:100%;max-width:1120px;margin:0 auto 1rem;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1rem;align-items:end}
+#view-settings.support-focus-mode .settings-page-head{display:none}
+#view-settings.support-focus-mode .settings-panels{max-width:900px;margin:0 auto}
+#view-settings.support-focus-mode [data-settings-panel="support"]{display:block}
 .settings-eyebrow{font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:800;margin-bottom:.2rem}
 .settings-head-title{font-family:var(--fd);font-size:1.68rem;font-weight:400;color:var(--black);line-height:1}
 .settings-head-copy{font-size:.75rem;color:var(--muted);line-height:1.55;margin-top:.35rem;max-width:660px}
@@ -1243,6 +1246,10 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
             </div>
           </div>
           <div id="settings-security-widgets" class="settings-widget-stack"></div>
+        </section>
+
+        <section class="settings-panel" id="settings-support" data-settings-panel="support" hidden>
+          <div id="settings-support-widgets" class="settings-widget-stack"></div>
         </section>
       </div>
     </div>
@@ -2517,11 +2524,13 @@ var RENDERERS = {
   backlog: renderBacklog
 };
 
-var SETTINGS_TABS = ['profile', 'invoices', 'billing', 'team', 'security'];
+var SETTINGS_TABS = ['profile', 'invoices', 'billing', 'team', 'security', 'support'];
 
 window.showSettingsTab = function showSettingsTab(tab, opts) {
   tab = SETTINGS_TABS.indexOf(tab) >= 0 ? tab : 'profile';
   window._settingsActiveTab = tab;
+  var settingsView = document.getElementById('view-settings');
+  if (settingsView) settingsView.classList.toggle('support-focus-mode', tab === 'support');
   document.querySelectorAll('[data-settings-tab]').forEach(function(btn) {
     var active = btn.getAttribute('data-settings-tab') === tab;
     btn.classList.toggle('active', active);
@@ -2574,10 +2583,15 @@ window.clsGoTo = window.goTo;
 window.openBusinessPrioritySupport=function(){
   window.goTo('settings');
   setTimeout(function(){
+    window.showSettingsTab('support',{noScroll:true});
     if(window.clsMountSupportWidget)window.clsMountSupportWidget();
     var support=document.getElementById('cls-support-widget');
     document.dispatchEvent(new CustomEvent('cls:settings-tab',{detail:{tab:'support'}}));
-    if(support)support.scrollIntoView({behavior:'smooth',block:'start'});
+    if(support){
+      support.scrollIntoView({behavior:'auto',block:'start'});
+      var message=support.querySelector('[name="chatMessage"]');
+      if(message)message.focus();
+    }
   },80);
 };
 
@@ -2746,6 +2760,13 @@ function buildInvoiceCustomerSelect(selected) {
     options.push('<option value="' + escHtml(c.id) + '"' + (isSel ? ' selected' : '') + '>' + escHtml(label) + '</option>');
   });
   sel.innerHTML = options.join('');
+}
+
+function businessInvoiceWithCurrentCustomerDetails(inv) {
+  if (!inv) return inv;
+  var customer=findCustomerByName(inv.client||'') || D.clients.find(function(c){return (inv.cemail&&c.email&&normBusinessKey(inv.cemail)===normBusinessKey(c.email))||(inv.cphone&&c.phone&&safePhone(inv.cphone)===safePhone(c.phone));});
+  if (!customer) return inv;
+  return Object.assign({},inv,{client:customer.name||inv.client||'Customer',caddr:customer.addr||'',cemail:customer.email||'',cphone:customer.phone||''});
 }
 
 window.applyInvoiceCustomer = function applyInvoiceCustomer(id) {
@@ -4410,6 +4431,7 @@ function buildBusinessInvoiceSharePdfFile(inv) {
   return new File([blob], invoicePdfFileNameBusiness(inv), {type:'application/pdf'});
 }
 async function nativeShareBusinessInvoicePdf(inv) {
+  inv = businessInvoiceWithCurrentCustomerDetails(inv);
   if (!navigator.share || !navigator.canShare || typeof File === 'undefined') return false;
   var previewOptions = {inv:inv,settings:D.settings,templateIndex:normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),documentLabel:'Invoice',systemName:'Business Cashflow System'};
   var file = null;
@@ -4615,6 +4637,7 @@ function buildInvoicePrintHtml(inv) {
 window.printInv = async function printInv(id) {
   var inv = D.invoices.find(function(i) { return i.id === id; });
   if (!inv) return;
+  inv = businessInvoiceWithCurrentCustomerDetails(inv);
   if (window.matchMedia && window.matchMedia('(max-width:760px)').matches) {
     var previewOptions = {inv:inv,settings:D.settings,templateIndex:normalizeBusinessTemplate(inv.tpl != null ? inv.tpl : D.settings.defaultTpl),documentLabel:'Invoice',systemName:'Business Cashflow System'};
     var file = null;

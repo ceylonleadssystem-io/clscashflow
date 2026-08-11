@@ -14,9 +14,9 @@
 <!-- Supabase compatibility SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
-<script src="assets/platform.js?v=20260810-invoice-pack5"></script>
+<script src="assets/platform.js?v=20260811-invoice-pack8"></script>
 <link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
-<script src="assets/catalog.js?v=20260811-catalog2"></script>
+<script src="assets/catalog.js?v=20260811-catalog3"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -156,6 +156,9 @@ tr:hover td{background:var(--bg3)}
 .modal-close:hover{color:var(--black)}
 .modal-body{padding:1.35rem}
 .modal-foot{padding:.9rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.65rem;justify-content:flex-end;position:sticky;bottom:0;background:var(--white)}
+#txn-modal .modal-box{display:flex;flex-direction:column;overflow:hidden}
+#txn-modal .modal-head,#txn-modal .modal-foot{flex:0 0 auto;position:relative}
+#txn-modal .modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 
 /* Form inside modals */
 .f-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:.85rem}
@@ -611,6 +614,8 @@ body.is-admin .admin-only{display:flex}
   .modal-body{padding:1rem}
   .modal-foot{padding:.8rem 1rem;display:grid;grid-template-columns:1fr;gap:.55rem}
   .modal-foot .btn-act,.modal-foot .btn-act-outline{width:100%}
+  #txn-modal .modal-box{max-height:calc(100dvh - 1rem)}
+  #txn-modal .modal-foot{padding-bottom:max(.8rem,env(safe-area-inset-bottom))}
   .f-row,.client-select-bar{display:grid!important;grid-template-columns:1fr!important}
   .payroll-results{grid-template-columns:1fr}
   .payroll-head{display:block}
@@ -2261,7 +2266,10 @@ window.openTransactionModal=function openTransactionModal(){
   window.loadPayrollStaffSelection();
   window.handleTransactionPayrollChange();
   window.updateStudioTxnConversionPreview();
-  document.getElementById('txn-modal').classList.add('open');
+  const modal=document.getElementById('txn-modal');
+  modal.classList.add('open');
+  const modalBody=modal.querySelector('.modal-body');
+  if(modalBody) modalBody.scrollTop=0;
 };
 function payrollRound(value){return Math.round((Number(value)||0)*100)/100;}
 function currentPayrollCalculation(){
@@ -4117,6 +4125,7 @@ function buildInvoiceEmailHTML(inv){
   +'</div></div>';
 }
 function buildInvPrintHTML(inv,tplIdx){
+  inv=invoiceWithCurrentCustomerDetails(inv);
   if(window.clsBuildInvoicePrintHtml){
     return window.clsBuildInvoicePrintHtml({inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:getDefaultInvoiceTemplate(),systemName:'Studio Invoice Control System'});
   }
@@ -4255,6 +4264,11 @@ function clientMatchesInvoice(c, inv){
 function findClientForInvoice(inv){
   const list=(DB.clients&&Array.isArray(DB.clients.list))?DB.clients.list:[];
   return list.find(function(c){return clientMatchesInvoice(c,inv);})||null;
+}
+function invoiceWithCurrentCustomerDetails(inv){
+  const customer=findClientForInvoice(inv);
+  if(!customer)return inv;
+  return Object.assign({},inv,{client:customer.name||inv.client||'Customer',caddr:customer.addr||'',cemail:customer.email||'',cphone:customer.phone||''});
 }
 function invoiceContactPhone(inv){
   const c=findClientForInvoice(inv);
@@ -5041,6 +5055,7 @@ function buildInvoiceSharePdfFile(inv, systemName){
   return new File([blob],invoicePdfFileName(inv),{type:'application/pdf'});
 }
 async function downloadInvoicePdf(inv,systemName){
+  inv=invoiceWithCurrentCustomerDetails(inv);
   var previewOptions={inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:DB.settings.defaultTpl,documentLabel:'Invoice',systemName:systemName};
   var file=null;
   try{if(window.clsBuildBrandedInvoicePdfFile)file=await window.clsBuildBrandedInvoicePdfFile(previewOptions,invoicePdfFileName(inv));}catch(e){console.warn('Branded invoice PDF fallback:',e);}
@@ -5058,6 +5073,7 @@ async function downloadInvoicePdf(inv,systemName){
   var url=URL.createObjectURL(file);window.location.href=url;setTimeout(function(){URL.revokeObjectURL(url);},60000);return true;
 }
 async function nativeShareInvoicePdf(inv, systemName){
+  inv=invoiceWithCurrentCustomerDetails(inv);
   if(!navigator.share||!navigator.canShare||typeof File==='undefined')return false;
   var previewOptions={inv:inv,settings:DB.settings,templateIndex:inv.tpl!=null?inv.tpl:DB.settings.defaultTpl,documentLabel:'Invoice',systemName:systemName};
   var file=null;

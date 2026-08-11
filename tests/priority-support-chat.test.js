@@ -42,3 +42,17 @@ test('Studio opens Priority Support without the Settings chrome', function() {
   assert.match(page, /Replies within 30 minutes/);
   assert.match(page, /Fast response:<\/strong> receive a reply within 30 minutes/);
 });
+
+test('Business Priority Support opens the dedicated chat and emails the support inbox', function() {
+  const page = read('growth.html');
+  const platform = read('assets/platform.js');
+  const endpoint = read('netlify/functions/submit-ticket.js');
+
+  assert.match(page, /data-settings-panel="support"/);
+  assert.match(page, /id="settings-support-widgets"/);
+  assert.match(page, /showSettingsTab\('support',\{noScroll:true\}\)/);
+  assert.match(page, /support-focus-mode \.settings-page-head\{display:none\}/);
+  assert.match(platform, /getElementById\('settings-support-widgets'\)/);
+  assert.match(endpoint, /'hello@ceylonrylabs\.io'/);
+  assert.match(endpoint, /New Cashflow Live Chat Message/);
+});

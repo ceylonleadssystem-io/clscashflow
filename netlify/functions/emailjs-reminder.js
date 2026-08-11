@@ -39,20 +39,15 @@ exports.handler = async function handler(event) {
   if (!serviceId || !templateId || !publicKey) {
     return json(500, { ok: false, error: 'EmailJS service ID, template ID, or public key is missing' });
   }
-  if (!privateKey) {
-    return json(501, {
-      ok: false,
-      error: 'Netlify EMAILJS_PRIVATE_KEY is not configured. Add the EmailJS private key as a Netlify environment variable for server-side fallback.'
-    });
-  }
-
   const body = {
     service_id: serviceId,
     template_id: templateId,
     user_id: publicKey,
-    accessToken: privateKey,
     template_params: params
   };
+  // EmailJS permits public-key REST sends. Accounts with private-key enforcement
+  // can still provide EMAILJS_PRIVATE_KEY; do not break the fallback for others.
+  if (privateKey) body.accessToken = privateKey;
 
   try {
     const response = await fetch(EMAILJS_API_URL, {

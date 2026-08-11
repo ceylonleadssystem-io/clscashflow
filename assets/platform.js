@@ -472,6 +472,11 @@
     return invoiceEscape(value).replace(/\n/g, '<br>');
   }
 
+  function invoiceCustomerDetails(inv) {
+    inv = inv || {};
+    return [inv.caddr ? invoiceBreaks(inv.caddr) : '', inv.cemail ? invoiceEscape(inv.cemail) : '', inv.cphone ? invoiceEscape(inv.cphone) : ''].filter(Boolean).join('<br>');
+  }
+
   function invoiceMoney(cur, value) {
     return String(cur || 'LKR') + ' ' + Number(value || 0).toLocaleString('en', {
       minimumFractionDigits: 2,
@@ -668,7 +673,8 @@
 
   function documentEmailHtml(opts) {
     opts = opts || {};
-    var label = /^estimate$/i.test(opts.documentLabel || opts.kind) ? 'Estimate' : 'Quote';
+    var requestedLabel = String(opts.documentLabel || opts.kind || 'Quote');
+    var label = /^invoice$/i.test(requestedLabel) ? 'Invoice' : (/^estimate$/i.test(requestedLabel) ? 'Estimate' : 'Quote');
     var cur = opts.currency || 'LKR';
     var number = opts.documentNumber || opts.invoiceNumber || opts.num || opts.id || '';
     var businessName = opts.businessName || opts.bizName || 'Your Business';
@@ -690,7 +696,7 @@
         '</div>' +
         '<div style="padding:30px 32px;">' +
           '<p style="font-size:16px;line-height:1.6;margin:0 0 18px;">Hi ' + invoiceEscape(customerName) + ',</p>' +
-          '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;color:#6f6258;">Please review the attached details for ' + invoiceEscape(label.toLowerCase()) + ' <strong style="color:#2d2117;">' + invoiceEscape(number) + '</strong>. It is valid until <strong style="color:#2d2117;">' + invoiceEscape(validUntil || '-') + '</strong>.</p>' +
+          '<p style="font-size:16px;line-height:1.6;margin:0 0 22px;color:#6f6258;">Please review the details for ' + invoiceEscape(label.toLowerCase()) + ' <strong style="color:#2d2117;">' + invoiceEscape(number) + '</strong>.' + (label === 'Invoice' ? ' Payment is due by ' : ' It is valid until ') + '<strong style="color:#2d2117;">' + invoiceEscape(validUntil || '-') + '</strong>.</p>' +
           '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:0 0 22px;">' +
             '<thead><tr style="background:' + invoiceEscape(theme.dark) + ';color:#fff;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;"><th align="left" style="padding:12px 10px;">Description</th><th align="center" style="padding:12px 10px;">Qty</th><th align="right" style="padding:12px 10px;">Price</th><th align="right" style="padding:12px 10px;">Amount</th></tr></thead>' +
             '<tbody>' + rows + '</tbody>' +
@@ -742,8 +748,9 @@
     if (!to) throw new Error('No customer email saved for this invoice.');
     var emailKind = String(opts.kind || opts.emailType || opts.type || 'reminder').toLowerCase();
     var isReceipt = emailKind === 'receipt' || emailKind === 'paid' || emailKind === 'payment-received';
-    var isDocument = emailKind === 'quote' || emailKind === 'estimate' || emailKind === 'document';
-    var documentLabel = /^estimate$/i.test(opts.documentLabel || emailKind) ? 'Estimate' : 'Quote';
+    var isDocument = emailKind === 'invoice' || emailKind === 'quote' || emailKind === 'estimate' || emailKind === 'document';
+    var requestedDocumentLabel = String(opts.documentLabel || emailKind);
+    var documentLabel = /^invoice$/i.test(requestedDocumentLabel) ? 'Invoice' : (/^estimate$/i.test(requestedDocumentLabel) ? 'Estimate' : 'Quote');
     var publicKey = settings.ejsKey || window.CLS_EMAILJS_PUBLIC_KEY || 'gCD6W70FKqiN2ATlp';
     var serviceId = settings.ejsService || window.CLS_EMAILJS_SERVICE_ID || 'service_uneb8lv';
     var reminderTemplateId = settings.ejsTemplate || window.CLS_EMAILJS_TEMPLATE_ID || 'template_5xb3yer';
@@ -853,7 +860,7 @@
     var payload = {};
     opts = opts || {};
     Object.keys(opts).forEach(function(k) { payload[k] = opts[k]; });
-    payload.kind = /^estimate$/i.test(payload.documentLabel) ? 'estimate' : 'quote';
+    payload.kind = /^invoice$/i.test(payload.documentLabel) ? 'invoice' : (/^estimate$/i.test(payload.documentLabel) ? 'estimate' : 'quote');
     return window.clsSendPaymentReminderEmail(payload);
   };
 
@@ -993,7 +1000,7 @@
       'corporate-diagonal':
         cls + ' .brand-rule{height:5mm!important;background:linear-gradient(105deg,var(--dark) 0 72%,var(--accent) 72% 88%,#6f9d2a 88%)!important}' +
         cls + ' .invoice-head{background:var(--dark)!important;color:#fff!important;padding:8mm!important;border:0!important}' +
-        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .muted{color:#fff!important}' +
+        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .invoice-head .muted{color:#fff!important}' +
         cls + ' .items th{background:var(--accent)!important;color:#111!important;border-bottom-color:var(--accent)!important}' + cls + ' .grand{background:var(--accent)!important;color:#111!important}' + cls + ' .grand b{color:#111!important}',
       'modern-serif':
         cls + '{background:var(--paper)!important}' + cls + ' .brand-rule{height:2px!important;background:var(--accent)!important}' +
@@ -1001,7 +1008,7 @@
         cls + ' .invoice-head{border-bottom:1px solid var(--dark)!important}' + cls + ' .items th{border-bottom:1px solid var(--dark)!important}' + cls + ' .grand{background:var(--dark)!important}',
       'flame-dark-header':
         cls + ' .brand-rule{height:5px!important;background:var(--accent)!important;margin-bottom:0!important}' + cls + ' .invoice-head{background:var(--dark)!important;color:#fff!important;margin:0 -15mm 9mm!important;padding:9mm 15mm!important;border:0!important}' +
-        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .muted{color:#fff!important}' +
+        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .invoice-head .muted{color:#fff!important}' +
         cls + ' .label,' + cls + ' .line-no{color:#9d7412!important}' + cls + ' .grand{background:var(--dark)!important;border-top:5px solid var(--accent)!important}',
       'dotted-mono':
         cls + '{font-family:"Courier New",Courier,monospace!important}' + cls + ' .brand-rule{height:0!important;border-top:3px dotted #111!important;background:transparent!important}' +
@@ -1013,7 +1020,7 @@
         cls + ' .powered{background:var(--dark)!important;color:#fff!important;margin:8mm -15mm -11mm!important;padding:5mm 15mm!important;border:0!important}' + cls + ' .powered b{color:#fff!important}',
       'geometric-blue':
         cls + ' .brand-rule{height:4mm!important;background:var(--accent)!important}' + cls + ' .invoice-head{background:var(--dark)!important;color:#fff!important;padding:8mm!important;border-bottom:7px solid var(--accent)!important}' +
-        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .muted{color:#fff!important}' +
+        cls + ' .invoice-title h1,' + cls + ' .invoice-title .num,' + cls + ' .invoice-title .meta,' + cls + ' .biz-name,' + cls + ' .invoice-head .muted{color:#fff!important}' +
         cls + ' .items th{background:var(--dark)!important;color:#fff!important;border-bottom-color:var(--dark)!important}' + cls + ' .grand{background:var(--accent)!important}',
       'furniture-pink':
         cls + '{background:var(--paper)!important;border-radius:0!important}' + cls + ' .brand-rule{height:8mm!important;background:linear-gradient(90deg,var(--dark),var(--accent))!important}' +
@@ -1107,7 +1114,7 @@
       '@page{size:A4;margin:0}*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{background:#f2f2f2;color:#17130f;font-family:' + font.body + '}.invoice-page{width:210mm;min-height:297mm;margin:0 auto;background:' + (theme.paper || '#fff') + ';padding:18mm 18mm 14mm;--accent:' + theme.accent + ';--dark:' + theme.dark + ';--line:rgba(23,19,15,.16);font-family:' + font.body + '}.top-rule{height:5px;background:var(--accent);margin-bottom:17mm}.invoice-head{display:grid;grid-template-columns:minmax(0,1fr) 62mm;gap:12mm;align-items:start;margin-bottom:14mm}.brand{display:grid;grid-template-columns:24mm minmax(0,1fr);gap:7mm;align-items:start}.logo-img{max-width:23mm;max-height:18mm;object-fit:contain;display:block}.logo-box{width:23mm;height:16mm;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:3px;color:#978b7f}.biz-name{font-family:' + font.title + ';font-size:22px;font-weight:800;line-height:1.12}.small{font-size:10.5px;line-height:1.55;color:#6b6259;white-space:pre-line}.title{text-align:right}.title h1{font-family:' + font.title + ';font-size:42px;line-height:1;letter-spacing:1px;color:#111}.title .num{margin-top:5mm;font-size:12px;font-weight:800}.meta{margin-top:4mm;font-size:10.5px;line-height:1.65;color:#6b6259}.parties{display:grid;grid-template-columns:minmax(0,1fr) 32mm;gap:11mm;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:9mm 0;margin-bottom:11mm}.label{font-size:9px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:var(--dark);margin-bottom:4mm}.party-name{font-size:14px;font-weight:800;margin-bottom:2mm;line-height:1.3}.status-pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;text-transform:capitalize;margin-bottom:3mm}.items{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:10mm}.items th{background:var(--dark);color:#fff;font-size:9px;letter-spacing:2px;text-transform:uppercase;text-align:left;padding:9px 10px}.items th:nth-child(1){width:52%}.items th:nth-child(2){width:11%}.items th:nth-child(3),.items th:nth-child(4){width:18.5%}.items th:nth-child(n+2),.items td:nth-child(n+2){text-align:right}.items td{border-bottom:1px solid var(--line);padding:10px;font-size:10.5px;line-height:1.4;vertical-align:top}.bottom{display:grid;grid-template-columns:minmax(0,1fr) 76mm;gap:14mm;align-items:start}.note{border-left:4px solid var(--accent);padding-left:6mm;min-height:23mm}.note-text{font-size:10.5px;line-height:1.6;color:#6b6259;white-space:pre-line}.totals{border-top:1px solid var(--line);padding-top:3mm}.row{display:flex;justify-content:space-between;gap:8mm;border-bottom:1px solid var(--line);padding:6px 0;font-size:10.5px;color:#5f554c}.grand{margin-top:5mm;background:var(--dark);color:#fff;border:0;padding:12px 14px;align-items:center}.grand span{font-size:9px;letter-spacing:3px;text-transform:uppercase;font-weight:800}.grand b{font-size:18px;color:#fff}.powered{margin-top:11mm;border-top:1px solid var(--line);padding-top:4mm;text-align:center;font-size:9px;letter-spacing:.08em;color:#90877d}.powered b{color:var(--accent)}.tpl-pop .items th,.tpl-pop .grand{background:var(--accent);color:var(--dark)}.tpl-orange .top-rule{height:9mm;background:var(--dark)}.tpl-cafe .title h1{color:var(--accent)}.tpl-green .items th,.tpl-yellow .items th{background:var(--accent);color:#111}.tpl-architect .top-rule{background:var(--accent)}@media print{body{background:#fff}.invoice-page{margin:0;width:210mm;min-height:297mm;box-shadow:none}}' +
       '</style></head><body><div class="invoice-page tpl-' + cssLayout + '"><div class="top-rule"></div>' +
       '<section class="invoice-head"><div class="brand">' + logo + '<div><div class="biz-name">' + invoiceEscape(s.biz) + '</div><div class="small">' + invoiceBreaks(s.addr) + (s.email ? '<br>' + invoiceEscape(s.email) : '') + (s.vat ? '<br>VAT: ' + invoiceEscape(s.vat) : '') + '</div></div></div><div class="title"><h1>Invoice</h1><div class="num">' + invoiceEscape(title) + '</div><div class="meta"><div>Date: ' + humanDate(inv.date) + '</div><div>Due: ' + humanDate(inv.due) + '</div><div>Terms: ' + invoiceEscape(inv.terms || 'Net 30') + '</div></div></div></section>' +
-      '<section class="parties"><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="small">' + invoiceBreaks(inv.caddr || '') + (inv.cemail ? '<br>' + invoiceEscape(inv.cemail) : '') + (inv.cphone ? '<br>' + invoiceEscape(inv.cphone) : '') + '</div></div><div><div class="label">Status</div><div class="status-pill">' + invoiceEscape(status) + '</div><div class="small">Balance due<br><b>' + invoiceMoney(cur, balance) + '</b></div></div></section>' +
+      '<section class="parties"><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="small">' + invoiceCustomerDetails(inv) + '</div></div><div><div class="label">Status</div><div class="status-pill">' + invoiceEscape(status) + '</div><div class="small">Balance due<br><b>' + invoiceMoney(cur, balance) + '</b></div></div></section>' +
       '<table class="items"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<section class="bottom"><div class="note"><div class="label">Notes</div><div class="note-text">' + invoiceBreaks(note) + '</div></div><div class="totals"><div class="row"><span>Subtotal</span><b>' + invoiceMoney(cur, sub) + '</b></div>' + (discAmount ? '<div class="row"><span>Discount</span><b>- ' + invoiceMoney(cur, discAmount) + '</b></div>' : '') + (vat ? '<div class="row"><span>Tax / VAT</span><b>' + invoiceMoney(cur, vat) + '</b></div>' : '') + '<div class="row grand"><span>Total due</span><b>' + invoiceMoney(cur, total) + '</b></div></div></section>' +
       '<div class="powered"><b>' + DEFAULT_INVOICE_FOOTER + '</b></div></div></body></html>';
@@ -1176,7 +1183,7 @@
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceEscape(title) + '</title><style>' + css + '</style></head><body>' +
       '<div class="invoice-page tpl-' + cssLayout + ' view-' + view + densityClass + '"><div class="brand-rule"></div>' +
       '<section class="invoice-head"><div class="brand">' + logo + '<div class="biz-name">' + invoiceEscape(s.biz) + '</div><div class="muted">' + invoiceBreaks(s.addr) + (s.email ? '<br>' + invoiceEscape(s.email) : '') + (s.vat ? '<br>VAT: ' + invoiceEscape(s.vat) : '') + '</div></div><div class="invoice-title"><h1>' + invoiceEscape(documentLabel) + '</h1><div class="num">' + invoiceEscape(title) + '</div>' + (documentLabel === 'Invoice' ? '<div class="payment-state ' + invoiceEscape(status) + '">' + invoiceEscape(statusLabel) + '</div>' : '') + '<div class="meta"><div>Date: ' + humanDate(inv.date) + '</div><div>' + (documentLabel === 'Invoice' ? 'Due' : 'Valid until') + ': ' + humanDate(inv.due) + '</div><div>Terms: ' + invoiceEscape(inv.terms || 'Net 30') + '</div></div></div></section>' +
-      '<section class="parties"><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="muted">' + invoiceBreaks(inv.caddr || '') + (inv.cemail ? '<br>' + invoiceEscape(inv.cemail) : '') + (inv.cphone ? '<br>' + invoiceEscape(inv.cphone) : '') + '</div></div></section>' +
+      '<section class="parties"><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="muted">' + invoiceCustomerDetails(inv) + '</div></div></section>' +
       '<table class="items"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<section class="invoice-bottom"><div class="notes">' + notesHtml + bankHtml + '</div><div class="totals"><div class="money-row"><span>Subtotal</span><b>' + invoiceMoney(cur, sub) + '</b></div>' + (discAmount ? '<div class="money-row"><span>Discount</span><b>- ' + invoiceMoney(cur, discAmount) + '</b></div>' : '') + (vat ? '<div class="money-row"><span>Tax / VAT</span><b>' + invoiceMoney(cur, vat) + '</b></div>' : '') + (documentLabel === 'Invoice' && paid > 0.01 ? '<div class="money-row"><span>Invoice total</span><b>' + invoiceMoney(cur, total) + '</b></div><div class="money-row"><span>Paid</span><b>- ' + invoiceMoney(cur, paid) + '</b></div>' : '') + '<div class="money-row grand' + (status === 'paid' && documentLabel === 'Invoice' ? ' settled' : '') + '"><span>' + (documentLabel !== 'Invoice' ? 'Total' : (status === 'partial' || status === 'paid' ? 'Balance due' : 'Total due')) + '</span><b>' + invoiceMoney(cur, documentLabel === 'Invoice' && paid > 0.01 ? balance : total) + '</b></div></div></section>' +
       '<div class="powered"><b>' + DEFAULT_INVOICE_FOOTER + '</b></div></div></body></html>';
@@ -2877,7 +2884,7 @@
 	        '<form class="cls-chat-compose" data-chat-form><textarea name="chatMessage" required placeholder="Type your message..."></textarea><button class="cls-sp-submit" type="submit">Send</button></form>' +
 	        '<div class="cls-sp-status" data-chat-status>Messages stay with your account so the conversation can continue here.</div>' +
 	      '</div>';
-    (document.getElementById('settings-security-widgets') || settingsView).appendChild(wrap);
+    (document.getElementById('settings-support-widgets') || document.getElementById('settings-security-widgets') || settingsView).appendChild(wrap);
 
     var supportActivityLoaded = false;
     function loadSupportActivity() {
@@ -2922,7 +2929,7 @@
       });
     }
 
-    var supportPanel = wrap.closest('[data-account-panel="support"]');
+    var supportPanel = wrap.closest('[data-account-panel="support"],[data-settings-panel="support"]');
     if (supportPanel && !supportPanel.hidden) loadSupportActivity();
   }
 
