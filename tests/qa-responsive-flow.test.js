@@ -764,8 +764,10 @@ test('admin visits map groups approximate IP areas and timestamps focus their pi
   const page=read('ceylonry-admin.html');
   const api=read('netlify/functions/admin-data.js');
   const tracker=read('netlify/functions/track-visit.js');
-  assert.match(page,/id="locate-missing-visits"/);
-  assert.match(page,/Pin number = visits in the selected date range/);
+  assert.doesNotMatch(page,/leaflet\.js|leaflet\.css|tile\.openstreetmap\.org|L\.map\(/);
+  assert.match(page,/BlankMap-World-Equirectangular\.svg/);
+  assert.match(page,/Pin number = unique visitors from that area/);
+  assert.match(page,/Object\.keys\(a\.ips\)\.length/);
   assert.match(page,/data-map-area/);
   assert.match(page,/visit-time-btn/);
   assert.match(page,/focusVisitArea/);
@@ -776,9 +778,6 @@ test('admin visits map groups approximate IP areas and timestamps focus their pi
   assert.match(page,/printing-visits/);
   assert.match(page,/Show all dates/);
   assert.match(page,/TIMEZONE_LOCATIONS/);
-  assert.match(page,/tile\.openstreetmap\.org/);
-  assert.match(page,/OpenStreetMap/);
-  assert.match(page,/L\.map\('visit-map-canvas'/);
   assert.match(api,/action === 'resolveVisitLocations'/);
   assert.match(api,/https:\/\/ipwho\.is\//);
   assert.match(api,/approximate:true/);
