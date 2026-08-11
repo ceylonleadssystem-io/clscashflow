@@ -16,7 +16,7 @@
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
 <script src="assets/platform.js?v=20260810-invoice-pack5"></script>
 <link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
-<script src="assets/catalog.js?v=20260810-catalog1"></script>
+<script src="assets/catalog.js?v=20260811-catalog2"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -640,14 +640,16 @@ document.addEventListener('click',function(e){
   var navEl=e.target.closest('[data-nav]');
   if(navEl){
     var view=navEl.getAttribute('data-nav');
-    if(view==='backlog'&&!(document.body&&document.body.classList.contains('is-admin')))return;
+    if(view==='team'||view==='backlog'){
+      if(typeof window.nav==='function')window.nav('dashboard');
+      return;
+    }
     document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
     document.querySelectorAll('[data-nav]').forEach(function(i){i.classList.remove('active');});
     var viewEl=document.getElementById('view-'+view);
     if(viewEl)viewEl.classList.add('active');
     navEl.classList.add('active');
     document.querySelectorAll('[data-nav="'+view+'"]').forEach(function(i){i.classList.add('active');});
-    if(view==='team'||view==='backlog') view='dashboard';
     var titles={dashboard:'Solo Invoice Control System',invoices:'Invoices',catalog:'Products & Services',clients:'Customers',reports:'Reports',settings:'Settings'};
     var titleEl=document.getElementById('page-title');
     if(titleEl&&titles[view])titleEl.textContent=titles[view];
@@ -656,8 +658,6 @@ document.addEventListener('click',function(e){
     if(view==='catalog'&&typeof window.renderCatalog==='function')window.renderCatalog();
     if(view==='clients'&&typeof window.renderClients==='function')window.renderClients();
     if(view==='reports'&&typeof window.renderReports==='function')window.renderReports();
-    if(view==='team'&&typeof window.renderTeamAccess==='function')window.renderTeamAccess();
-    if(view==='backlog'&&typeof window.renderBacklog==='function')window.renderBacklog();
     if(view==='settings'&&typeof window.loadSettings==='function')window.loadSettings();
     return;
   }
@@ -694,11 +694,8 @@ document.addEventListener('click',function(e){
     <a class="sb-item" data-nav="clients"><span class="sb-icon">👥</span> Customers</a>
     <div class="sb-section" data-sidebar-section="insights">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
-    <a class="sb-item solo-hidden" data-nav="team"><span class="sb-icon">🔐</span> Team Access</a>
-    <a class="sb-item solo-hidden" data-nav="backlog"><span class="sb-icon">🗂️</span> Edit Backlog</a>
     <div class="sb-section" data-sidebar-section="account">Account</div>
     <a class="sb-item" data-nav="settings"><span class="sb-icon">⚙️</span> Settings</a>
-    <button class="sb-item mobile-sign-out" type="button" data-cls-fn="clsSignOut"><span class="sb-icon">↪</span> Sign Out</button>
   </div>
   <div class="sb-footer">
     <div class="sb-biz"><strong id="sb-biz-name">My Business</strong><span id="sb-user-email">user@email.com</span></div>
@@ -820,16 +817,6 @@ document.addEventListener('click',function(e){
     <!-- ═ PRODUCTS & SERVICES ═ -->
     <div class="view" id="view-catalog"><div id="solo-catalog-root"></div></div>
 
-    <!-- ═ EDIT BACKLOG ═ -->
-    <div class="view solo-hidden" id="view-backlog">
-      <div class="sum-bar c3" id="backlog-summary"></div>
-      <div class="table-card">
-        <div class="table-header"><div class="table-title">Admin Edit Backlog</div><button class="btn-act-outline" data-cls-fn="renderBacklog">Refresh</button></div>
-        <table><thead><tr><th>Date Edited</th><th>Edited Item</th><th>Previous Value</th><th>New Value</th><th>Edited By</th><th>Reason</th></tr></thead><tbody id="backlog-table"></tbody></table>
-      </div>
-    </div>
-
-
     <!-- ═ CLIENTS ═ -->
     <div class="view" id="view-clients">
       <div class="sum-bar c3" id="client-summary-bar" style="margin-bottom:1.25rem">
@@ -914,28 +901,6 @@ document.addEventListener('click',function(e){
       <div class="table-card">
         <div class="table-header"><div class="table-title">Customer-wise Invoice Report</div></div>
         <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
-      </div>
-    </div>
-
-    <!-- ═ TEAM ACCESS ═ -->
-    <div class="view solo-hidden" id="view-team">
-      <div class="sum-bar c3" id="team-summary-bar" style="margin-bottom:1.25rem">
-        <div class="sum-item"><div class="sum-label">Solo Users</div><div class="sum-val" id="team-user-count">1 Max</div></div>
-        <div class="sum-item"><div class="sum-label">Roles</div><div class="sum-val" style="font-size:1.05rem">Owner / Staff / Accountant / View Only</div></div>
-        <div class="sum-item"><div class="sum-label">Access</div><div class="sum-val" style="color:var(--gold);font-size:1.05rem">Invoice Control</div></div>
-      </div>
-      <div class="table-card" style="max-width:860px">
-        <div class="table-header"><div class="table-title">Team Access</div><a class="btn-act" href="access-admin.html">Manage Team</a></div>
-        <table>
-          <thead><tr><th>Role</th><th>Permissions</th><th>User Limit</th></tr></thead>
-          <tbody id="team-access-table">
-            <tr><td><strong>Owner/Admin</strong></td><td>Full access to invoices, customers, reports, payments, settings, and edit backlog.</td><td style="text-align:right">Included</td></tr>
-            <tr><td><strong>Staff</strong></td><td>Not available on Solo.</td><td style="text-align:right">Upgrade to Studio</td></tr>
-            <tr><td><strong>Accountant</strong></td><td>Not available on Solo.</td><td style="text-align:right">Upgrade to Studio</td></tr>
-            <tr><td><strong>View Only</strong></td><td>Not available on Solo.</td><td style="text-align:right">Upgrade to Studio</td></tr>
-          </tbody>
-        </table>
-        <div style="padding:1rem;font-size:.82rem;color:var(--muted);line-height:1.7">Solo is a one-user plan. Upgrade to Studio when you need team access, more customers, reminders, expenses, and richer cashflow tools.</div>
       </div>
     </div>
 
@@ -1191,7 +1156,7 @@ document.addEventListener('click',function(e){
       <div class="f-group" style="margin-bottom:.85rem"><label>Billing Address</label><input class="f-input" id="c-addr" placeholder="42 Galle Road, Colombo 03"></div>
       <div class="f-row">
         <div class="f-group"><label>Default Payment Terms</label>
-          <select class="f-input f-select" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>On Receipt</option></select>
+          <select class="f-input f-select" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option value="On Receipt">Pay on Receipt</option></select>
         </div>
         <div class="f-group"><label>Notes</label><input class="f-input" id="c-notes" placeholder="VIP, preferred currency..."></div>
       </div>
@@ -1271,11 +1236,11 @@ document.addEventListener('click',function(e){
       <section class="invoice-form-panel">
       <div class="f-section">Invoice Details</div>
       <div class="f-row">
-        <div class="f-group"><label>Invoice Date *</label><input class="f-input" type="date" id="i-date"></div>
+        <div class="f-group"><label>Invoice Date *</label><input class="f-input" type="date" id="i-date" onchange="syncInvoiceDueFromTerms()"></div>
         <div class="f-group"><label>Due Date *</label><input class="f-input" type="date" id="i-due"></div>
       </div>
       <div class="f-row">
-        <div class="f-group"><label>Payment Terms</label><select class="f-input f-select" id="i-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>On Receipt</option></select></div>
+        <div class="f-group"><label>Payment Terms</label><select class="f-input f-select" id="i-terms" onchange="syncInvoiceDueFromTerms()"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option value="On Receipt">Pay on Receipt</option></select></div>
         <div class="f-group"><label>Currency</label><select class="f-input f-select" id="i-cur"><option>LKR</option><option>USD</option></select></div>
       </div>
       </section>
@@ -3275,10 +3240,11 @@ function syncCustomerToOpenInvoices(before,data){
     const invKeys=[inv.client,inv.cemail,inv.cphone].map(normKey).filter(Boolean);
     const matches=invKeys.some(function(k){return keys.indexOf(k)!==-1;});
     if(!matches||invoiceBalance(inv)<=0)return;
+    if(data.name&&(!inv.client||!before||normKey(inv.client)===normKey(before.name||'')||normKey(inv.client)===normKey(before.biz||''))){inv.client=data.name;changed++;}
     if(data.email&&(!inv.cemail||!before||normKey(inv.cemail)===normKey(before.email||''))){inv.cemail=data.email;changed++;}
     if(data.phone&&(!inv.cphone||!before||String(inv.cphone).replace(/\D/g,'')===String(before.phone||'').replace(/\D/g,''))){inv.cphone=data.phone;changed++;}
     if(data.addr&&(!inv.caddr||!before||normKey(inv.caddr)===normKey(before.addr||''))){inv.caddr=data.addr;changed++;}
-    if(data.terms&&(!inv.terms||!before||normKey(inv.terms)===normKey(before.terms||''))){inv.terms=data.terms;changed++;}
+    if(data.terms&&(!inv.terms||!before||normKey(inv.terms)===normKey(before.terms||''))){inv.terms=data.terms;const due=new Date(inv.date||new Date().toISOString().slice(0,10));due.setDate(due.getDate()+paymentTermDays(data.terms));inv.due=due.toISOString().slice(0,10);changed++;}
   });
   return changed;
 }
@@ -3450,6 +3416,7 @@ window.invoiceFromClient = function invoiceFromClient(id){
     document.getElementById('i-caddr').value=c.addr||'';
     document.getElementById('i-cphone').value=c.phone||'';
     if(c.terms) document.getElementById('i-terms').value=c.terms;
+    syncInvoiceDueFromTerms();
     const sel=document.getElementById('i-client-sel');
     if(sel){var idx=DB.clients.list.indexOf(c);if(idx>-1)sel.value=String(idx);}
   },150);
@@ -3482,7 +3449,11 @@ window.fillClientFromSel = function fillClientFromSel(){
   document.getElementById('i-caddr').value=c.addr||'';
   document.getElementById('i-cphone').value=c.phone||'';
   if(c.terms) document.getElementById('i-terms').value=c.terms;
+  syncInvoiceDueFromTerms();
 }
+
+function paymentTermDays(term){const text=String(term||'Net 30');if(/receipt/i.test(text))return 0;const match=text.match(/\d+/);return match?Number(match[0]):30;}
+window.syncInvoiceDueFromTerms=function syncInvoiceDueFromTerms(){const date=document.getElementById('i-date'),terms=document.getElementById('i-terms'),due=document.getElementById('i-due');if(!date||!terms||!due)return;const next=new Date(date.value||new Date().toISOString().slice(0,10));next.setDate(next.getDate()+paymentTermDays(terms.value));due.value=next.toISOString().slice(0,10);};
 
 // ════════════════════════════════
 // LOGO ALIGNMENT

@@ -299,6 +299,10 @@ _auth.onAuthStateChanged(async function(user){
       || localStorage.getItem('cls-current-plan')
       || 'solo');
     _plan = normalizePlan(_plan);
+    if(_plan === 'solo'){
+      window.location.replace('solo.html?notice=team-access-unavailable');
+      return;
+    }
     applyDashboardLinks();
 
     if(!isOwner){

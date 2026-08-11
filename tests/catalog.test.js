@@ -63,3 +63,24 @@ test('catalog switches to mobile cards instead of forcing a horizontal page scro
   assert.match(css, /\.cls-cat-mobile\{display:grid/);
   assert.match(css, /\.cls-cat-form,\.cls-cat-choice\{grid-template-columns:1fr\}/);
 });
+
+test('landing page clearly describes the catalog differences between plans', () => {
+  const landing = read('index.html');
+  assert.match(landing, /Basic Products &amp; Services catalog <strong>\(up to 30 active items\)<\/strong>/);
+  assert.match(landing, /Full Products &amp; Services catalog with CSV tools and performance insights/);
+  assert.match(landing, /Full catalog analytics with team activity audit/);
+  assert.match(landing, /Products &amp; Services Catalog/);
+  assert.match(landing, /CSV \+ performance \+ team audit/);
+});
+
+test('product and service forms provide ready-made categories and comma-formatted amounts', () => {
+  const module = read('assets/catalog.js');
+  assert.match(module, /General Products.*Digital Products.*Equipment.*Materials/);
+  assert.match(module, /General Services.*Consulting.*Professional Services.*Technology & IT/);
+  assert.match(module, /id="cat-category-select"/);
+  assert.match(module, /Create new category/);
+  assert.match(module, /id="cat-category-new"/);
+  assert.match(module, /Select an existing category or create a new one/);
+  assert.match(module, /data-cat-money="true"/);
+  assert.match(module, /toLocaleString\('en-US'\)/);
+});

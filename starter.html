@@ -16,7 +16,7 @@
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
 <script src="assets/platform.js?v=20260810-invoice-pack5"></script>
 <link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
-<script src="assets/catalog.js?v=20260810-catalog1"></script>
+<script src="assets/catalog.js?v=20260811-catalog2"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -729,7 +729,7 @@ document.addEventListener('click',function(e){
     <div class="sb-section" data-sidebar-section="operations">Operations</div>
     <a class="sb-item" data-nav="cashflow"><span class="sb-icon">↕</span> Money In &amp; Out</a>
     <a class="sb-item" data-nav="expenses"><span class="sb-icon">↗</span> Expenses</a>
-    <a class="sb-item" data-nav="suppliers"><span class="sb-icon">▤</span> Suppliers</a>
+    <a class="sb-item" data-nav="suppliers"><span class="sb-icon">▤</span> Supplier / 3 Party Management</a>
     <div class="sb-section" data-sidebar-section="insights">Insights</div>
     <a class="sb-item" data-nav="reports"><span class="sb-icon">📈</span> Reports</a>
     <a class="sb-item" data-nav="insights"><span class="sb-icon">◉</span> Business Insights</a>
@@ -738,7 +738,6 @@ document.addEventListener('click',function(e){
     <div class="sb-section" data-sidebar-section="account">Account</div>
     <a class="sb-item" data-nav="support"><span class="sb-icon">✉</span> Priority Support</a>
     <a class="sb-item" data-nav="settings"><span class="sb-icon">⚙️</span> Settings</a>
-    <button class="sb-item mobile-sign-out" type="button" data-cls-fn="clsSignOut"><span class="sb-icon">↪</span> Sign Out</button>
   </div>
   <div class="sb-footer">
     <div class="sb-biz"><strong id="sb-biz-name">My Business</strong><span id="sb-user-email">user@email.com</span></div>
@@ -925,7 +924,7 @@ document.addEventListener('click',function(e){
       </div>
       <div class="table-card">
         <div class="table-header">
-          <div class="table-title">Supplier Directory</div>
+          <div class="table-title">Supplier / 3 Party Management</div>
           <button class="btn-act" data-cls-fn="openSupplierModal">+ Add Supplier</button>
         </div>
         <div style="padding:1.25rem" id="supplier-grid-wrap">
@@ -1387,7 +1386,7 @@ document.addEventListener('click',function(e){
       <div class="f-group" style="margin-bottom:.85rem"><label>Billing Address</label><input class="f-input" id="c-addr" placeholder="42 Galle Road, Colombo 03"></div>
       <div class="f-row">
         <div class="f-group"><label>Default Payment Terms</label>
-          <select class="f-input f-select" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>On Receipt</option></select>
+          <select class="f-input f-select" id="c-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option value="On Receipt">Pay on Receipt</option></select>
         </div>
         <div class="f-group"><label>Notes</label><input class="f-input" id="c-notes" placeholder="VIP, preferred currency..."></div>
       </div>
@@ -1467,11 +1466,11 @@ document.addEventListener('click',function(e){
       <section class="invoice-form-panel">
       <div class="f-section">Invoice Details</div>
       <div class="f-row">
-        <div class="f-group"><label>Invoice Date *</label><input class="f-input" type="date" id="i-date"></div>
+        <div class="f-group"><label>Invoice Date *</label><input class="f-input" type="date" id="i-date" onchange="syncInvoiceDueFromTerms()"></div>
         <div class="f-group"><label>Due Date *</label><input class="f-input" type="date" id="i-due"></div>
       </div>
       <div class="f-row">
-        <div class="f-group"><label>Payment Terms</label><select class="f-input f-select" id="i-terms"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>On Receipt</option></select></div>
+        <div class="f-group"><label>Payment Terms</label><select class="f-input f-select" id="i-terms" onchange="syncInvoiceDueFromTerms()"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option value="On Receipt">Pay on Receipt</option></select></div>
         <div class="f-group"><label>Currency</label><select class="f-input f-select" id="i-cur"><option>LKR</option><option>USD</option></select></div>
       </div>
       </section>
@@ -2205,7 +2204,7 @@ function maybeStartFirstTour(){
 // ════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════
-const pageTitles={dashboard:['Studio Cashflow Control','Your invoices, cashflow, and operations at a glance'],cashflow:['Money In & Out','Record income and outgoing payments in one register'],expenses:['Expenses','Track business spending by supplier and category'],invoices:['Invoice Management','Create and send invoices, quotes, and estimates'],catalog:['Products & Services','Full reusable catalog, imports and performance'],clients:['Customer Directory','Manage your customers and billing contacts'],suppliers:['Supplier Management','Manage vendors and link them to business spending'],reports:['Reports','Invoice, payment, and customer reporting'],insights:['Business Insights','Simple cashflow and operational checks for better decisions'],team:['Team Access','Control Studio roles for up to 5 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],support:['Priority Support','Chat with Priority Support. Replies within 30 minutes.'],settings:['Business Settings','Manage your invoice profile and preferences']};
+const pageTitles={dashboard:['Studio Cashflow Control','Your invoices, cashflow, and operations at a glance'],cashflow:['Money In & Out','Record income and outgoing payments in one register'],expenses:['Expenses','Track business spending by supplier and category'],invoices:['Invoice Management','Create and send invoices, quotes, and estimates'],catalog:['Products & Services','Full reusable catalog, imports and performance'],clients:['Customer Directory','Manage your customers and billing contacts'],suppliers:['Supplier / 3 Party Management','Manage suppliers, vendors, contractors, and other third parties'],reports:['Reports','Invoice, payment, and customer reporting'],insights:['Business Insights','Simple cashflow and operational checks for better decisions'],team:['Team Access','Control Studio roles for up to 5 users'],backlog:['Edit Backlog','Register of invoice, customer, and payment changes'],support:['Priority Support','Chat with Priority Support. Replies within 30 minutes.'],settings:['Business Settings','Manage your invoice profile and preferences']};
 window.nav = function nav(view){
   if(view==='payroll') view='cashflow';
   if(view==='backlog'&&!isAdminUser()) view='dashboard';
@@ -4289,10 +4288,11 @@ function syncCustomerToOpenInvoices(before,data){
     const invKeys=[inv.client,inv.cemail,inv.cphone].map(normKey).filter(Boolean);
     const matches=invKeys.some(function(k){return keys.indexOf(k)!==-1;});
     if(!matches||invoiceBalance(inv)<=0)return;
+    if(data.name&&(!inv.client||!before||normKey(inv.client)===normKey(before.name||'')||normKey(inv.client)===normKey(before.biz||''))){inv.client=data.name;changed++;}
     if(data.email&&(!inv.cemail||!before||normKey(inv.cemail)===normKey(before.email||''))){inv.cemail=data.email;changed++;}
     if(data.phone&&(!inv.cphone||!before||String(inv.cphone).replace(/\D/g,'')===String(before.phone||'').replace(/\D/g,''))){inv.cphone=data.phone;changed++;}
     if(data.addr&&(!inv.caddr||!before||normKey(inv.caddr)===normKey(before.addr||''))){inv.caddr=data.addr;changed++;}
-    if(data.terms&&(!inv.terms||!before||normKey(inv.terms)===normKey(before.terms||''))){inv.terms=data.terms;changed++;}
+    if(data.terms&&(!inv.terms||!before||normKey(inv.terms)===normKey(before.terms||''))){inv.terms=data.terms;const due=new Date(inv.date||new Date().toISOString().slice(0,10));due.setDate(due.getDate()+paymentTermDays(data.terms));inv.due=due.toISOString().slice(0,10);changed++;}
   });
   return changed;
 }
@@ -4447,6 +4447,7 @@ window.invoiceFromClient = function invoiceFromClient(id){
     document.getElementById('i-caddr').value=c.addr||'';
     document.getElementById('i-cphone').value=c.phone||'';
     if(c.terms) document.getElementById('i-terms').value=c.terms;
+    syncInvoiceDueFromTerms();
     const sel=document.getElementById('i-client-sel');
     if(sel){var idx=DB.clients.list.indexOf(c);if(idx>-1)sel.value=String(idx);}
   },150);
@@ -4479,7 +4480,11 @@ window.fillClientFromSel = function fillClientFromSel(){
   document.getElementById('i-caddr').value=c.addr||'';
   document.getElementById('i-cphone').value=c.phone||'';
   if(c.terms) document.getElementById('i-terms').value=c.terms;
+  syncInvoiceDueFromTerms();
 }
+
+function paymentTermDays(term){const text=String(term||'Net 30');if(/receipt/i.test(text))return 0;const match=text.match(/\d+/);return match?Number(match[0]):30;}
+window.syncInvoiceDueFromTerms=function syncInvoiceDueFromTerms(){const date=document.getElementById('i-date'),terms=document.getElementById('i-terms'),due=document.getElementById('i-due');if(!date||!terms||!due)return;const next=new Date(date.value||new Date().toISOString().slice(0,10));next.setDate(next.getDate()+paymentTermDays(terms.value));due.value=next.toISOString().slice(0,10);};
 
 // ════════════════════════════════
 // LOGO ALIGNMENT

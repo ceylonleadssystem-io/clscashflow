@@ -17,7 +17,7 @@
 <script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
 <script src="assets/platform.js?v=20260810-invoice-pack5"></script>
 <link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
-<script src="assets/catalog.js?v=20260810-catalog1"></script>
+<script src="assets/catalog.js?v=20260811-catalog2"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" id="cls-jspdf"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -113,7 +113,7 @@ img,canvas,svg,video{max-width:100%}
 .db-greet-h{font-family:var(--fd);font-size:1.4rem;font-weight:300;color:var(--black);margin-bottom:.1rem}
 .db-greeting{min-height:92px;gap:1rem}.db-greeting>div:first-child{min-width:0}.db-greet-h,.db-greet-p{overflow-wrap:anywhere}
 .kpi-val,.sum-val,.db-kpi-value{font-size:clamp(1.15rem,2vw,1.85rem)!important;line-height:1.05;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.payroll-actions-cell{width:340px;min-width:340px}.payroll-actions{display:grid;grid-template-columns:repeat(3,minmax(82px,1fr));gap:.38rem;width:100%;max-width:340px;margin-left:auto}.payroll-actions .bsm{width:100%;min-height:34px;margin:0;padding:.35rem .45rem}.payroll-actions .payroll-delete{background:#fff;color:var(--red);border:1px solid rgba(192,57,43,.35)}.payroll-actions .payroll-delete:hover{background:var(--red);color:#fff}
+.payroll-actions-cell{width:310px;min-width:310px}.payroll-actions{display:grid;grid-template-columns:repeat(3,minmax(72px,1fr)) 38px;gap:.38rem;width:100%;max-width:310px;margin-left:auto;align-items:center}.payroll-actions .bsm{width:100%;min-height:36px;margin:0;padding:.35rem .42rem}.payroll-actions .payroll-pdf{background:#111;color:#fff}.payroll-actions .payroll-email{background:#eef6ff;color:#1769aa;border-color:#bad8f5}.payroll-actions .payroll-pay{background:var(--green);color:#fff;border-color:var(--green)}.payroll-actions .payroll-more{position:relative}.payroll-actions .payroll-more summary{height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:7px;cursor:pointer;list-style:none}.payroll-actions .payroll-more-menu{right:0;left:auto;min-width:150px}.payroll-actions .payroll-delete{background:#fff;color:var(--red);border:1px solid rgba(192,57,43,.35)}.payroll-actions .payroll-delete:hover{background:var(--red);color:#fff}
 #view-payroll table{table-layout:auto}#view-payroll td{vertical-align:middle}
 .payroll-view-toggle,.payroll-mobile-grid,.payroll-history-mobile{display:none}
 .payroll-view-toggle{grid-template-columns:1fr 1fr;gap:.35rem;padding:.3rem;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin:.8rem 1rem}
@@ -861,7 +861,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="nav-item" data-view="clients"><span class="nav-icon">🤝</span>Customers</div>
     <div class="sb-sec">Business Tools</div>
     <div class="nav-item" data-view="debt"><span class="nav-icon">💰</span>Who Owes Me<span class="nav-badge" id="sb-badge">0</span></div>
-    <div class="nav-item" data-view="suppliers"><span class="nav-icon">🏭</span>Suppliers</div>
+    <div class="nav-item" data-view="suppliers"><span class="nav-icon">🏭</span>Supplier / 3 Party Management</div>
     <div class="nav-item" data-view="payroll"><span class="nav-icon">🪪</span>Staff &amp; Payroll</div>
     <div class="sb-sec">Reports &amp; Insights</div>
     <div class="nav-item" data-view="reports"><span class="nav-icon">📈</span>Reports</div>
@@ -870,7 +870,6 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="sb-sec">Account</div>
     <div class="nav-item" data-view="backlog"><span class="nav-icon">🗂️</span>Admin Backlog</div>
     <div class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</div>
-    <button class="nav-item mobile-sign-out" type="button" onclick="window.clsSignOut()"><span class="nav-icon">↪</span>Sign Out</button>
   </div>
   <div class="sb-foot">
     <div class="sb-user">
@@ -1026,7 +1025,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 
     <!-- SUPPLIERS -->
     <div class="view" id="view-suppliers">
-      <div class="help"><b>Suppliers</b> — Everyone you buy from. Track your total spend per supplier across the year.</div>
+      <div class="help"><b>Supplier / 3 Party Management</b> — Track suppliers, vendors, contractors, and other third parties in one place.</div>
       <div class="sumbar c3" id="sup-sum"></div>
       <div class="card"><div class="card-head"><span class="card-title">My Suppliers</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV()">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-sup')">+ Add Supplier</button></div></div>
         <div class="customer-tools"><div class="customer-tools-main"><input class="fi" id="supplier-search" placeholder="Search supplier, type, contact or reference" oninput="window.renderSupTable()"><select class="fi" id="supplier-type-filter" onchange="window.renderSupTable()"><option value="">All Supplier Types</option><option>Packaging</option><option>Raw materials</option><option>Technology</option><option>Stationery</option><option>Logistics</option><option>Maintenance</option><option>Other</option></select><select class="fi" id="supplier-sort" onchange="window.renderSupTable()"><option value="newest">Newest First</option><option value="spent-desc">Highest Total Spent</option><option value="name-asc">Supplier Name A-Z</option><option value="outstanding-desc">Highest Outstanding</option></select></div><div class="filter-bar" id="sup-filters"><div class="fpill on" onclick="window.filterSup('all',this)">All</div><div class="fpill" onclick="window.filterSup('active',this)">Active</div><div class="fpill" onclick="window.filterSup('inactive',this)">Inactive</div><button class="btn bo" onclick="window.clearSupplierFilters()">Clear</button></div></div>
@@ -1201,7 +1200,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
               <div class="plan-list">
                 <div class="plan-item"><span class="plan-item-check">✓</span>Money In &amp; Out</div>
                 <div class="plan-item"><span class="plan-item-check">✓</span>Expense Tracking</div>
-                <div class="plan-item"><span class="plan-item-check">✓</span>Supplier Management</div>
+                <div class="plan-item"><span class="plan-item-check">✓</span>Supplier / 3 Party Management</div>
                 <div class="plan-item"><span class="plan-item-check">✓</span>Who Owes Me</div>
                 <div class="plan-item"><span class="plan-item-check">✓</span>Business Reports</div>
                 <div class="plan-item"><span class="plan-item-check">✓</span>Basic Business Insights</div>
@@ -1291,7 +1290,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="fg"><label>Select Saved Customer</label><select class="fi fsel" id="inv-customer-select" onchange="window.applyInvoiceCustomer(this.value)"></select><div class="form-note">Choose a saved customer to fill details, or type a new customer below.</div></div>
     <div class="frow"><div class="fg"><label>Customer Name</label><input class="fi" id="inv-cli" placeholder="Who is this invoice for?"></div><div class="fg"><label>Customer Email</label><input class="fi" type="email" id="inv-cemail" placeholder="customer@email.com"></div></div>
     <div class="frow"><div class="fg"><label>Customer Address</label><textarea class="fi fi-textarea" id="inv-caddr" placeholder="Their billing address"></textarea></div><div class="fg"><label>Customer Phone / WhatsApp</label><input class="fi" id="inv-cphone" placeholder="+94 77 000 0000"></div></div>
-    <div class="frow"><div class="fg"><label>Invoice Date</label><input class="fi" type="date" id="inv-date"></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="inv-due"></div></div>
+    <div class="frow"><div class="fg"><label>Invoice Date</label><input class="fi" type="date" id="inv-date" onchange="window.syncBusinessInvoiceDueFromTerms()"></div><div class="fg"><label>Payment Terms</label><select class="fi fsel" id="inv-terms" onchange="window.syncBusinessInvoiceDueFromTerms()"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>Pay on Receipt</option></select></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="inv-due"></div></div>
     </div>
     <div class="fsec">What Are You Billing For?</div>
     <table class="litbl"><thead><tr><th style="width:44%">Description</th><th style="width:12%">Qty</th><th style="width:20%">Unit Price (LKR)</th><th style="width:18%">Total</th><th style="width:6%"></th></tr></thead><tbody id="li-body"></tbody></table>
@@ -1978,7 +1977,7 @@ function mapStudioExpense(e, i) {
 }
 function mapStudioCustomer(c, i) {
   c = c || {};
-  return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || c.name || 'Customer', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
+  return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || '', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
 }
 function mapStudioSupplier(s, i) {
   s = s || {};
@@ -2182,7 +2181,7 @@ function normalizeBusinessData() {
   }, 0);
   D._nextInvId = maxInvNo ? Math.max(toNum(D._nextInvId) || 1, maxInvNo + 1) : 1;
   D.clients = (D.clients || []).map(function(c, i) {
-    return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || c.name || 'Customer', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
+    return {id:String(c.id || c._id || ('C' + Date.now() + i)), name:c.name || c.client || c.biz || 'Customer', biz:c.biz || c.business || '', email:c.email || c.cemail || '', phone:c.phone || c.cphone || '', addr:c.addr || c.address || c.caddr || '', terms:c.terms || 'Net 30', notes:c.notes || ''};
   });
   D.staff = (D.staff || []).map(function(s, i) {
     var name = s.name || 'Team member';
@@ -2463,7 +2462,7 @@ function renderPayroll(){
   var list=D.staff.filter(function(p){var hay=[p.name,p.employeeId,p.department,p.role].join(' ').toLowerCase();return(!search||hay.indexOf(search)>-1)&&(status==='all'||(status==='active'&&p.active!==false)||(status==='inactive'&&p.active===false));});
   var tableRows=list.map(function(p){
     var c=businessPayrollCalc(p),paid=(p.payments||[]).some(function(x){return x.month===month;}),idArg=jsArg(p.id),state=p.active===false?'Inactive':paid?'Paid':'Pending',stateClass=p.active===false?'pdr':paid?'pse':'pi';
-    return '<tr><td><b>'+escHtml(p.name)+'</b><br><span class="muted">'+escHtml(p.employeeId||'')+' · '+escHtml(p.role||'')+'</span></td><td>'+escHtml(p.department||'—')+'</td><td class="tr">'+fmt(c.gross)+'</td><td class="tr">'+fmt(c.net)+'</td><td class="tr">'+fmt(c.employeeEpf+c.employerEpf+c.etf)+'</td><td class="tr">'+fmt(c.apit)+'</td><td><span class="pill '+stateClass+'">'+state+'</span></td><td class="tr payroll-actions-cell"><div class="payroll-actions"><button class="bsm" onclick="window.downloadPayrollPayslip('+idArg+')">Payslip PDF</button><button class="bsm bsmem" onclick="window.emailPayrollPayslip('+idArg+')">Email payslip</button><button class="bsm" onclick="window.openPayrollPayment('+idArg+')">Record pay</button><button class="bsm bsmo" onclick="window.openPayrollMo('+idArg+')">Edit</button><button class="bsm bsmo" onclick="window.togglePayrollStaff('+idArg+')">'+(p.active===false?'Activate':'Deactivate')+'</button><button class="bsm payroll-delete" onclick="window.deletePayrollStaff('+idArg+')">Delete</button></div></td></tr>';
+    return '<tr><td><b>'+escHtml(p.name)+'</b><br><span class="muted">'+escHtml(p.employeeId||'')+' · '+escHtml(p.role||'')+'</span></td><td>'+escHtml(p.department||'—')+'</td><td class="tr">'+fmt(c.gross)+'</td><td class="tr">'+fmt(c.net)+'</td><td class="tr">'+fmt(c.employeeEpf+c.employerEpf+c.etf)+'</td><td class="tr">'+fmt(c.apit)+'</td><td><span class="pill '+stateClass+'">'+state+'</span></td><td class="tr payroll-actions-cell"><div class="payroll-actions"><button class="bsm payroll-pdf" onclick="window.downloadPayrollPayslip('+idArg+')">PDF</button><button class="bsm payroll-email" onclick="window.emailPayrollPayslip('+idArg+')">Email</button><button class="bsm payroll-pay" onclick="window.openPayrollPayment('+idArg+')">Pay</button><details class="payroll-more"><summary aria-label="More actions for '+escHtml(p.name)+'">⋯</summary><div class="payroll-more-menu"><button onclick="window.openPayrollMo('+idArg+')">Edit</button><button onclick="window.togglePayrollStaff('+idArg+')">'+(p.active===false?'Activate':'Deactivate')+'</button><button class="payroll-delete" onclick="window.deletePayrollStaff('+idArg+')">Delete</button></div></details></div></td></tr>';
   }).join('');
   var body=document.getElementById('payroll-body');
   if(body)body.innerHTML=tableRows||'<tr><td colspan="8" style="text-align:center;padding:2rem">No staff match these filters.</td></tr>';
@@ -2752,24 +2751,22 @@ function buildInvoiceCustomerSelect(selected) {
 window.applyInvoiceCustomer = function applyInvoiceCustomer(id) {
   var c = D.clients.find(function(x) { return x.id === id; });
   if (!c) return;
-  document.getElementById('inv-cli').value = c.biz || c.name || '';
+  document.getElementById('inv-cli').value = c.name || c.biz || '';
   document.getElementById('inv-cemail').value = c.email || '';
   document.getElementById('inv-cphone').value = c.phone || '';
   document.getElementById('inv-caddr').value = c.addr || '';
-  var terms = String(c.terms || 'Net 30').match(/\d+/);
-  if (terms) {
-    var due = new Date(document.getElementById('inv-date').value || today());
-    due.setDate(due.getDate() + Number(terms[0]));
-    document.getElementById('inv-due').valueAsDate = due;
-  }
+  document.getElementById('inv-terms').value = c.terms || 'Net 30';
+  window.syncBusinessInvoiceDueFromTerms();
 }
+
+function businessPaymentTermDays(term) { var text=String(term||'Net 30'); if(/receipt/i.test(text))return 0; var match=text.match(/\d+/); return match?Number(match[0]):30; }
+window.syncBusinessInvoiceDueFromTerms = function syncBusinessInvoiceDueFromTerms(){var dateEl=document.getElementById('inv-date'),termsEl=document.getElementById('inv-terms'),dueEl=document.getElementById('inv-due');if(!dateEl||!termsEl||!dueEl)return;var due=new Date(dateEl.value||today());due.setDate(due.getDate()+businessPaymentTermDays(termsEl.value));dueEl.valueAsDate=due;};
 
 function syncCustomerFromInvoicePayload(payload) {
   var name = payload.client || '';
   if (!name) return;
   var existing = findCustomerByName(name);
   if (existing) {
-    existing.biz = existing.biz || name;
     existing.name = existing.name || name;
     if (payload.cemail) existing.email = payload.cemail;
     if (payload.cphone) existing.phone = payload.cphone;
@@ -2777,7 +2774,7 @@ function syncCustomerFromInvoicePayload(payload) {
     return;
   }
   if (payload.cemail || payload.cphone || payload.caddr) {
-    D.clients.push({id:'C' + Date.now(), name:name, biz:name, email:payload.cemail || '', phone:payload.cphone || '', addr:payload.caddr || '', terms:'Net 30', notes:'Created from invoice'});
+    D.clients.push({id:'C' + Date.now(), name:name, biz:'', email:payload.cemail || '', phone:payload.cphone || '', addr:payload.caddr || '', terms:payload.terms || 'Net 30', notes:'Created from invoice'});
   }
 }
 
@@ -2791,9 +2788,11 @@ function syncCustomerToBusinessInvoices(before, data) {
     var invPhone = safePhone(inv.cphone);
     var matches = invKeys.some(function(k) { return keys.indexOf(k) !== -1; }) || (invPhone && phoneKeys.indexOf(invPhone) !== -1);
     if (!matches || invoiceBalance(inv) <= 0) return;
+    if (data.name && (!inv.client || !before || normBusinessKey(inv.client) === normBusinessKey(before.name) || normBusinessKey(inv.client) === normBusinessKey(before.biz))) { inv.client = data.name; changed++; }
     if (data.email && (!inv.cemail || !before || normBusinessKey(inv.cemail) === normBusinessKey(before.email))) { inv.cemail = data.email; changed++; }
     if (data.phone && (!inv.cphone || !before || safePhone(inv.cphone) === safePhone(before.phone))) { inv.cphone = data.phone; changed++; }
     if (data.addr && (!inv.caddr || !before || normBusinessKey(inv.caddr) === normBusinessKey(before.addr))) { inv.caddr = data.addr; changed++; }
+    if (data.terms && (!inv.terms || !before || normBusinessKey(inv.terms) === normBusinessKey(before.terms))) { inv.terms=data.terms; var due=new Date(inv.date||today()); due.setDate(due.getDate()+businessPaymentTermDays(data.terms)); inv.due=due.toISOString().slice(0,10); changed++; }
   });
   return changed;
 }
@@ -3652,8 +3651,8 @@ window.openInvMo = function openInvMo() {
   selTpl = normalizeBusinessTemplate(D.settings.defaultTpl);
   buildInvoiceCustomerSelect('');
   document.getElementById('inv-date').valueAsDate = new Date();
-  var due = new Date(); due.setDate(due.getDate()+30);
-  document.getElementById('inv-due').valueAsDate = due;
+  document.getElementById('inv-terms').value = 'Net 30';
+  window.syncBusinessInvoiceDueFromTerms();
   ['inv-cli','inv-cemail','inv-cphone','inv-caddr','inv-notes'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
   setFieldValue('inv-notes', D.settings.footer || '');
   document.getElementById('inv-vat').value = D.settings.vatRate != null ? D.settings.vatRate : 0;
@@ -3747,7 +3746,7 @@ window.saveInv = function saveInv() {
   if (!isFinite(discount) || discount < 0) { showToast('Discount cannot be negative.', 'err'); return; }
   var t = calcTotals();
   if (!isFinite(t.sub) || !isFinite(t.total) || t.sub < 0 || t.total < 0) { showToast('Invoice total cannot be negative.', 'err'); return; }
-  var payload = {client:client,cemail:cemail,cphone:cphone,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:vatRate,disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
+  var payload = {client:client,cemail:cemail,cphone:cphone,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,terms:document.getElementById('inv-terms').value,items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:vatRate,disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
   syncCustomerFromInvoicePayload(payload);
   if ((businessDocumentMode === 'quote' || businessDocumentMode === 'estimate') && !editInvId) {
     D._nextQuoteId = Math.max(1, toNum(D._nextQuoteId) || 1);
@@ -3803,6 +3802,7 @@ window.editInv = function editInv(id) {
   document.getElementById('inv-caddr').value = inv.caddr || inv.addr || '';
   document.getElementById('inv-date').value = inv.date || today();
   document.getElementById('inv-due').value = inv.due || today();
+  document.getElementById('inv-terms').value = inv.terms || 'Net 30';
   document.getElementById('inv-notes').value = inv.notes || '';
   document.getElementById('inv-vat').value = inv.vatRate != null ? inv.vatRate : (inv.sub ? ((toNum(inv.vat) / toNum(inv.sub)) * 100).toFixed(2) : (D.settings.vatRate || 0));
   document.getElementById('inv-disc').value = inv.disc || 0;

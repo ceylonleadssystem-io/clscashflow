@@ -515,7 +515,7 @@ firebase.initializeApp(firebaseConfig);
         <p class="ob-sub">Pick your main use. We will recommend the cleanest plan for that work, but you can still choose Solo, Studio, or Business yourself.</p>
         <div class="ob-field" style="margin-bottom:.5rem"><label>Primary use *</label></div>
         <div class="ob-choices cols-2" id="use-cases">
-          <button class="ob-choice" data-plan="solo" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Invoices, quotes, customers, reports, PDF export, and edit backlog.</div></div></button>
+          <button class="ob-choice" data-plan="solo" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">🧾</span><div><div class="ob-choice-label">Create invoices and track payments</div><div class="ob-choice-desc">Invoices, quotes, customers, reports, and PDF export.</div></div></button>
           <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">💰</span><div><div class="ob-choice-label">Track money in and out</div><div class="ob-choice-desc">Income, expenses, suppliers, business insights, and priority support.</div></div></button>
           <button class="ob-choice" data-plan="studio" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">📊</span><div><div class="ob-choice-label">Manage operations and suppliers</div><div class="ob-choice-desc">Studio adds operational tracking and insights to every Solo feature.</div></div></button>
           <button class="ob-choice" data-plan="business" onclick="window.toggleChoice(this)"><span class="ob-choice-icon">⚙️</span><div><div class="ob-choice-label">Manage payroll and advanced insight</div><div class="ob-choice-desc">Business adds payroll management and advanced business insights.</div></div></button>
@@ -530,7 +530,7 @@ firebase.initializeApp(firebaseConfig);
         <div class="tier-cards">
           <div class="tier-card" data-tier="solo" onclick="window.selectTier('solo',this,true)">
             <div class="tier-name">Solo</div><div class="tier-price">LKR 3,500 / mo</div>
-            <div class="tier-features">• 1 user only<br>• Invoices, quotes &amp; estimates<br>• Customers, reports &amp; PDF export<br>• Edit backlog</div>
+            <div class="tier-features">• 1 user only<br>• Invoices, quotes &amp; estimates<br>• Customers, reports &amp; PDF export</div>
           </div>
           <div class="tier-card" data-tier="studio" onclick="window.selectTier('studio',this,true)">
             <div class="tier-badge">Most Popular</div>
@@ -555,9 +555,9 @@ firebase.initializeApp(firebaseConfig);
                 <tr><td>Customer Management</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Reports</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>PDF Invoice Export</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Edit Backlog</td><td><span class="ob-plan-check" aria-label="Included">✓</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Edit Backlog</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Income &amp; Expense Tracking</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Supplier Management</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Supplier / 3 Party Management</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Business Insights</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Priority Support</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check studio" aria-label="Included">✓</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Payroll Management</td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-dash" aria-label="Not included">—</span></td><td><span class="ob-plan-check business" aria-label="Included">✓</span></td></tr>
@@ -1269,7 +1269,7 @@ function saveStepData(step){
 
 // ── CHOICES + PLAN RECOMMENDATION ──
 const planInfo = {
-  solo:{name:'Solo',price:'LKR 3,500 / mo',templates:3,reason:'Best for freelancers and solo business owners who need invoices, quotes and estimates, customers, reports, PDF export, and an invoice edit backlog.'},
+  solo:{name:'Solo',price:'LKR 3,500 / mo',templates:3,reason:'Best for freelancers and solo business owners who need invoices, quotes and estimates, customers, reports, and PDF export.'},
   studio:{name:'Studio',price:'LKR 5,500 / mo',templates:3,reason:'Best for growing businesses and small teams that need every Solo feature plus income and expense tracking, suppliers, business insights, and priority support.'},
   business:{name:'Business',price:'LKR 8,500 / mo',templates:3,reason:'Best for established businesses and larger teams that need every Studio feature plus payroll management and advanced business insights.'}
 };
