@@ -674,6 +674,33 @@ exports.handler = async function handler(event) {
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, ticketsDeleted: rows.length }) };
       }
 
+      if (action === 'resolveVisitLocations') {
+        const rows = await readCollection(db, 'platformVisits', 'createdAt', 500);
+        const missing = rows.filter(function(row) {
+          const data=row.data||{},geo=data.geo||{};
+          return data.ip && (geo.latitude==null || geo.longitude==null || !Number.isFinite(Number(geo.latitude)) || !Number.isFinite(Number(geo.longitude)));
+        });
+        const validIp = function(ip) {
+          ip=String(ip||'').trim();
+          if (!/^[0-9a-f:.]+$/i.test(ip)) return false;
+          if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.|::1$|fc|fd|fe80)/i.test(ip)) return false;
+          const m=ip.match(/^172\.(\d+)\./);return !(m&&Number(m[1])>=16&&Number(m[1])<=31);
+        };
+        const ips=Array.from(new Set(missing.map(function(row){return String((row.data||{}).ip||'').trim();}).filter(validIp))).slice(0,50);
+        const locations={};
+        await Promise.all(ips.map(async function(ip){
+          try{
+            const url='https://ipwho.is/'+encodeURIComponent(ip)+'?fields=success,message,city,region,country,country_code,latitude,longitude,timezone';
+            const response=await fetch(url,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(6000)});
+            const result=await response.json();
+            if(response.ok&&result.success!==false&&Number.isFinite(Number(result.latitude))&&Number.isFinite(Number(result.longitude))){locations[ip]={city:String(result.city||''),subdivision:String(result.region||''),country:String(result.country||''),countryCode:String(result.country_code||''),timezone:String(result.timezone&&result.timezone.id||result.timezone||''),latitude:Number(result.latitude),longitude:Number(result.longitude),approximate:true,source:'ipwho.is',locatedAtUtc:new Date().toISOString()};}
+          }catch(e){}
+        }));
+        const stamp=admin.firestore.FieldValue.serverTimestamp(),updates=missing.filter(function(row){return locations[String((row.data||{}).ip||'').trim()];});
+        await Promise.all(updates.map(function(row){return db.collection('platformVisits').doc(row.id).set({geo:locations[String((row.data||{}).ip||'').trim()],geoUpdatedAt:stamp},{merge:true});}));
+        return {statusCode:200,headers:headers(),body:JSON.stringify({ok:true,visitsUpdated:updates.length,ipsResolved:Object.keys(locations).length,ipsRequested:ips.length})};
+      }
+
       if (action === 'applyTicketPlanChange') {
         const ticketId=String(body.ticketId||'').trim(),email=String(body.email||'').trim().toLowerCase(),target=normalizePlan(body.plan);
         if(!ticketId||!email||!target)return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Ticket, email, and target plan are required.'})};

@@ -487,7 +487,7 @@ test('invoice email line items and bank details are phone-safe presentation tabl
 });
 
 test('all application pages load the current invoice renderer without stale caching', function() {
-  const version = '20260811-plan-lock9';
+  const version = '20260811-visit-map10';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
@@ -758,4 +758,21 @@ test('plan upgrades are explicit, deduplicated, payment-gated, and admin control
   assert.match(api,/source:'admin-plan-upgrade'/);
   assert.match(api,/batch\.commit\(\)/);
   assert.match(api,/Plan changes must be completed from a customer upgrade request/);
+});
+
+test('admin visits map groups approximate IP areas and timestamps focus their pins', function() {
+  const page=read('ceylonry-admin.html');
+  const api=read('netlify/functions/admin-data.js');
+  const tracker=read('netlify/functions/track-visit.js');
+  assert.match(page,/id="locate-missing-visits"/);
+  assert.match(page,/Pin number = visits in the selected date range/);
+  assert.match(page,/data-map-area/);
+  assert.match(page,/visit-time-btn/);
+  assert.match(page,/focusVisitArea/);
+  assert.match(page,/filteredVisits\(visits\)/);
+  assert.match(api,/action === 'resolveVisitLocations'/);
+  assert.match(api,/https:\/\/ipwho\.is\//);
+  assert.match(api,/approximate:true/);
+  assert.match(tracker,/latitude: geo\.latitude \|\| null/);
+  assert.match(tracker,/longitude: geo\.longitude \|\| null/);
 });
