@@ -727,6 +727,47 @@
     return true;
   }
 
+  async function sendDocumentViaSmtp(opts, documentLabel) {
+    if (!window.fetch) throw new Error('Document email service is unavailable in this browser.');
+    opts = opts || {};
+    var settings = opts.settings || {};
+    var lines = opts.lines || opts.items || [];
+    var subtotal = lines.reduce(function(total, line) {
+      var amount = line.total != null ? Number(line.total || 0) : Number(line.qty || 1) * Number(line.price || line.rate || 0);
+      return total + amount;
+    }, 0);
+    var res = await fetch('/.netlify/functions/send-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: String(opts.to || opts.toEmail || '').trim(),
+        documentLabel: documentLabel,
+        documentNumber: opts.documentNumber || opts.invoiceNumber || opts.invoiceNo || opts.num || '',
+        clientName: opts.customerName || opts.clientName || opts.client || 'Customer',
+        bizName: opts.businessName || opts.bizName || settings.bizName || 'Your Business',
+        bizEmail: opts.businessEmail || settings.email || '',
+        bizAddr: opts.businessAddress || settings.addr || settings.address || '',
+        cur: opts.currency || 'LKR',
+        lines: lines,
+        sub: opts.subtotal != null ? opts.subtotal : subtotal,
+        disc: opts.discount || opts.disc || 0,
+        vat: opts.vat || 0,
+        vatRate: opts.vatRate || settings.vatRate || 0,
+        amount: opts.documentTotal != null ? opts.documentTotal : (opts.invoiceTotal != null ? opts.invoiceTotal : opts.total),
+        date: opts.invoiceDate || humanDate(opts.date),
+        due: opts.validUntil || opts.dueDate || humanDate(opts.due),
+        terms: opts.terms || '',
+        notes: opts.notes || '',
+        accent: opts.accent || ''
+      })
+    });
+    var text = await res.text();
+    var data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { error: text }; }
+    if (!res.ok || data.ok === false) throw new Error(data.error || text || ('Email service failed with HTTP ' + res.status));
+    return true;
+  }
+
   window.clsSendPaymentReminderEmail = async function(opts) {
     opts = opts || {};
     var settings = opts.settings || {};
@@ -804,6 +845,17 @@
       bank_details_html: emailJsBankDetailsHtml(settings)
     };
     var config = { publicKey: publicKey, serviceId: serviceId, templateId: templateId };
+    var smtpError = null;
+    // Documents use the authenticated server mailbox first. This avoids
+    // EmailJS browser-origin, template-recipient, and payload-size failures.
+    if (isDocument) {
+      try {
+        return await sendDocumentViaSmtp(opts, documentLabel);
+      } catch (err) {
+        smtpError = err;
+        console.error('Server document email failed; trying EmailJS fallback:', err);
+      }
+    }
     var browserError = null;
     try {
       if ((!window.emailjs || typeof window.emailjs.send !== 'function') && window.clsLoadScriptOnce) {
@@ -824,7 +876,7 @@
     try {
       return await sendEmailJsViaFunction(params, config);
     } catch (fnErr) {
-      var msg = emailJsErrorMessage(browserError) || emailJsErrorMessage(fnErr) || 'Could not send invoice email.';
+      var msg = emailJsErrorMessage(smtpError) || emailJsErrorMessage(browserError) || emailJsErrorMessage(fnErr) || 'Could not send document email.';
       if (/recipient|recipients|address is empty/i.test(msg)) {
         msg += ' In EmailJS, set the template To Email field to {{to_email}} or {{user_email}}.';
       }
