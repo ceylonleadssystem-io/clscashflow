@@ -624,6 +624,12 @@ body.is-admin .admin-only{display:flex}
   .content>*{min-width:0;max-width:100%}
   input,select,textarea,button,img,canvas,iframe{max-width:100%}
   .table-card,.table-wrap{max-width:100%;min-width:0}
+  #client-grid.customer-table-wrap{display:block!important;width:100%;max-width:100%;overflow-x:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
+  #client-grid.customer-table-wrap .customer-directory-table{display:table!important;width:760px!important;min-width:760px!important;table-layout:auto!important}
+  #client-grid.customer-table-wrap thead{display:table-header-group!important}
+  #client-grid.customer-table-wrap tbody{display:table-row-group!important}
+  #client-grid.customer-table-wrap tr{display:table-row!important}
+  #client-grid.customer-table-wrap th,#client-grid.customer-table-wrap td{display:table-cell!important;width:auto!important;white-space:normal!important}
 }
 </style>
 <link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final11">

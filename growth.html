@@ -840,6 +840,23 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   .topbar>div:first-child{display:flex;align-items:flex-start;gap:.7rem;min-width:0}.topbar>div:first-child>div{min-width:0}.pg-title,.pg-sub{overflow-wrap:anywhere}
   .content{overflow-x:hidden;padding-bottom:max(1rem,env(safe-area-inset-bottom))}.content>*{min-width:0;max-width:100%}
   input,select,textarea,button,img,canvas,iframe{max-width:100%}.card,.table-wrap{max-width:100%;min-width:0}
+  #view-clients .customer-tools,#view-suppliers .customer-tools{padding:.8rem;gap:.65rem}
+  #view-clients .customer-tools-main,#view-suppliers .customer-tools-main{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:.55rem;width:100%}
+  #view-clients .customer-search,#view-clients .customer-tools-main>*,#view-suppliers .customer-tools-main>*{grid-column:1!important;width:100%;min-width:0}
+  #view-clients .customer-tools .fi,#view-suppliers .customer-tools .fi{width:100%;min-height:46px;font-size:16px;padding:.7rem .8rem}
+  #view-clients .customer-view-toggle{display:grid;grid-template-columns:1fr 1fr;width:100%;justify-self:stretch}
+  #view-clients .customer-view-toggle button{min-height:44px;width:100%}
+  #view-clients .customer-filter-row,#view-suppliers #sup-filters{display:flex;flex-wrap:wrap;overflow:visible;gap:.45rem;padding:.1rem 0}
+  #view-clients .customer-chip,#view-clients .customer-clear,#view-suppliers #sup-filters .fpill,#view-suppliers #sup-filters .btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;margin:0;flex:1 1 auto}
+  #view-suppliers select.fi{appearance:auto;background-color:var(--white)}
+  #view-payroll[data-payroll-view="table"] .payroll-table-wrap{display:block!important;position:relative;width:calc(100% - 2rem)!important;max-width:calc(100% - 2rem)!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;touch-action:pan-x pan-y}
+  #view-payroll[data-payroll-view="table"] .payroll-staff-table{display:table!important;width:900px!important;min-width:900px!important;max-width:none!important;margin:0}
+  #view-payroll[data-payroll-view="table"] .payroll-staff-table thead{display:table-header-group!important}
+  #view-payroll[data-payroll-view="table"] .payroll-staff-table tbody{display:table-row-group!important}
+  #view-payroll[data-payroll-view="table"] .payroll-staff-table tr{display:table-row!important}
+  #view-payroll[data-payroll-view="table"] .payroll-staff-table th,#view-payroll[data-payroll-view="table"] .payroll-staff-table td{display:table-cell!important;width:auto!important;min-width:110px;white-space:normal!important}
+  #view-payroll[data-payroll-view="table"] .payroll-staff-table th:first-child,#view-payroll[data-payroll-view="table"] .payroll-staff-table td:first-child{position:sticky;left:0;z-index:2;min-width:150px;background:var(--white);box-shadow:1px 0 0 var(--border)}
+  #view-payroll[data-payroll-view="table"] .payroll-staff-table th:first-child{background:var(--dark);color:#fff;z-index:3}
 }
 </style>
 <link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final11">
