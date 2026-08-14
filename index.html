@@ -398,14 +398,15 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 .story-teaser p{font-size:19px;color:#525252;max-width:760px}
 .story-teaser .btn{justify-self:start;grid-column:2;background:transparent;color:#050505;border:0;border-bottom:2px solid #050505;border-radius:0;padding:10px 0;box-shadow:none}
 
-.customer-success{padding:110px 0;background:#0b0b0b;color:#fff;scroll-margin-top:74px}.customer-success .eyebrow{color:#d7a72f}
-.success-head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,.55fr);gap:60px;align-items:end;margin-bottom:52px}
-.success-head h2{margin:0;max-width:900px;font-size:clamp(50px,6.5vw,94px);font-weight:800;letter-spacing:-.07em;line-height:.92}
-.success-business{border-left:3px solid #d7a72f;padding:8px 0 8px 22px;display:grid;gap:7px;color:#bdbdb7;font-size:14px}.success-business strong{color:#fff;font-size:23px;line-height:1.2}
-.success-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:22px}.success-card{border:1px solid rgba(255,255,255,.14);background:#151515;padding:34px;border-radius:18px;min-width:0}
-.success-card h3{margin:0 0 15px;color:#d7a72f;font-size:12px;letter-spacing:.2em;text-transform:uppercase}.success-card p{margin:0;color:#d0d0ca;font-size:16px;line-height:1.75}
-.success-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0;padding:0;list-style:none}.success-features li{position:relative;padding:16px 16px 16px 44px;border:1px solid rgba(255,255,255,.1);background:#0d0d0d;color:#e8e8e4;font-size:14px;line-height:1.5}.success-features li::before{content:'✓';position:absolute;left:16px;top:15px;color:#d7a72f;font-weight:900}
-.success-quote{grid-column:1/-1;background:#fff;color:#111;padding:44px clamp(28px,5vw,68px);border-radius:18px}.success-quote blockquote{margin:0;font-size:clamp(22px,3vw,38px);font-weight:700;line-height:1.35;letter-spacing:-.035em}.success-quote footer{margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:18px;color:#65655f;font-size:14px}.success-quote footer strong{display:block;color:#111;font-size:16px}
+.customer-success{padding:132px 0;background:#fbf8f2;color:#171717;scroll-margin-top:74px;overflow:hidden}.customer-success .eyebrow{color:#642f90}
+.success-hero{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.72fr);gap:72px;align-items:center;margin-bottom:72px}
+.success-copy h2{margin:0;max-width:850px;font-size:clamp(54px,6.5vw,96px);font-weight:850;letter-spacing:-.075em;line-height:.9}.success-copy h2 span{color:#642f90}
+.success-lede{max-width:700px;margin:28px 0 0;color:#5f5a55;font-size:19px;line-height:1.7}
+.success-business{display:flex;flex-wrap:wrap;gap:9px;margin-top:30px}.success-business span{display:inline-flex;align-items:center;min-height:36px;padding:8px 13px;border:1px solid rgba(100,47,144,.18);border-radius:999px;background:#fff;color:#514a54;font-size:12px;font-weight:700}.success-business strong{display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;background:#642f90;color:#fff;font-size:12px;line-height:1.2}
+.success-logo-panel{position:relative;min-height:500px;display:grid;place-items:center;border-radius:52% 48% 46% 54% / 45% 52% 48% 55%;background:#ffd54a;isolation:isolate}.success-logo-panel::before,.success-logo-panel::after{content:'';position:absolute;border-radius:50%;z-index:-1}.success-logo-panel::before{width:170px;height:170px;right:-42px;top:-38px;background:#eb1683}.success-logo-panel::after{width:120px;height:120px;left:-28px;bottom:18px;background:#36a9e1}.success-logo-panel img{width:min(390px,82%);height:auto;filter:drop-shadow(0 22px 22px rgba(50,31,61,.15))}
+.success-journey{display:grid;grid-template-columns:.9fr 1.2fr .9fr;border:1px solid rgba(0,0,0,.12);border-radius:28px;overflow:hidden;background:#fff}.success-card{position:relative;padding:40px 36px;min-width:0;border-right:1px solid rgba(0,0,0,.1)}.success-card:last-child{border-right:0}.success-step{display:block;margin-bottom:30px;color:#642f90;font:800 12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;text-transform:uppercase}.success-card h3{margin:0 0 18px;color:#171717;font-size:24px;letter-spacing:-.035em}.success-card p{margin:0;color:#64605b;font-size:15px;line-height:1.75}
+.success-features{display:grid;gap:0;margin:0;padding:0;list-style:none}.success-features li{position:relative;padding:12px 0 12px 32px;border-bottom:1px solid rgba(0,0,0,.08);color:#33302d;font-size:14px;line-height:1.45}.success-features li:last-child{border-bottom:0}.success-features li::before{content:'✓';position:absolute;left:0;top:11px;width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:#642f90;color:#fff;font-size:11px;font-weight:900}
+.success-quote{margin:26px 0 0;display:grid;grid-template-columns:12px minmax(0,1fr);gap:30px;background:#171717;color:#fff;padding:46px clamp(30px,5vw,70px);border-radius:28px}.success-quote::before{content:'';display:block;width:12px;height:100%;border-radius:999px;background:linear-gradient(#eb1683 0 25%,#ffc914 25% 50%,#4cbc46 50% 75%,#28a2d7 75%)}.success-quote-inner{min-width:0}.success-quote blockquote{margin:0;max-width:1050px;font-size:clamp(23px,3vw,40px);font-weight:750;line-height:1.32;letter-spacing:-.04em}.success-quote footer{margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:18px;color:#aaa49e;font-size:13px}.success-quote footer strong{display:block;color:#fff;font-size:16px}
 
 .product-showcase{padding:128px 0;background:#080808;color:#fff}
 .section-head{max-width:980px;margin-bottom:60px}.section-head h2{font-size:clamp(60px,8vw,112px);font-weight:800;letter-spacing:-.07em}.section-head p{color:#aaa;font-size:20px}.product-showcase .eyebrow{color:#D7A72F}
@@ -442,7 +443,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
   .nav-brand-title{font-size:18px}.nav-logo{width:38px;height:38px}.nav-cta{display:flex;width:auto;max-width:none;justify-self:end;gap:8px}.nav-signin{display:none}.nav-trial{width:auto;min-height:42px;padding:11px 15px;font-size:10px}
   .hero{min-height:auto;padding:132px 0 76px}.hero .container.hero-copy{width:auto;max-width:none;margin:0 18px}.hero h1{font-size:clamp(44px,12.6vw,60px);line-height:.84}.hero-sub{font-size:17px;margin-top:30px}.hero-actions{max-width:340px}.hero-actions .btn{border-radius:999px}.hero-proof{display:flex;max-width:340px}.proof-chip{width:auto;flex:1 1 100%;font-size:10px}
   .story-teaser{padding:76px 0}.story-teaser-card{min-height:0;padding:0;display:grid;grid-template-columns:1fr;gap:30px}.story-teaser-logo{grid-row:auto;width:min(290px,82vw);justify-self:center}.story-teaser h2{font-size:58px}.story-teaser .btn{grid-column:auto}
-  .customer-success{padding:72px 0}.success-head,.success-grid{grid-template-columns:1fr;gap:24px}.success-head{margin-bottom:32px}.success-card{padding:24px}.success-features{grid-template-columns:1fr}.success-quote{grid-column:auto;padding:30px 24px}.success-quote footer{align-items:flex-start;flex-direction:column}
+  .customer-success{padding:78px 0}.success-hero{grid-template-columns:1fr;gap:42px;margin-bottom:42px}.success-copy h2{font-size:clamp(48px,12vw,68px)}.success-lede{font-size:17px;margin-top:22px}.success-logo-panel{min-height:0;aspect-ratio:1;border-radius:42px}.success-logo-panel::before{width:100px;height:100px;right:-24px;top:-20px}.success-logo-panel::after{width:78px;height:78px;left:-18px}.success-journey{grid-template-columns:1fr;border-radius:22px}.success-card{padding:30px 24px;border-right:0;border-bottom:1px solid rgba(0,0,0,.1)}.success-card:last-child{border-bottom:0}.success-step{margin-bottom:20px}.success-quote{grid-template-columns:7px minmax(0,1fr);gap:20px;padding:30px 24px;border-radius:22px}.success-quote footer{align-items:flex-start;flex-direction:column}
   .product-showcase{padding:84px 0}.section-head h2{font-size:60px}.device-stage{border-radius:24px}.device{border-radius:23px}.dash-title{font-size:30px}
   .pricing,.features,.image-band,.faq{padding:84px 0}.pricing-head h2,.features h2,.image-head h2,.faq h2{font-size:54px}.price-card{padding:34px 25px;border-radius:30px;min-height:auto}.price-card:hover,.price-card.featured:hover{transform:none}
   .plan-comparison{border-radius:18px}.feature-grid{gap:28px}.photo-wrap{grid-template-columns:1fr;gap:24px}.photo-card,.photo-card:first-child{aspect-ratio:4/5;border-radius:36px}.photo-card:first-child{border-top-left-radius:90px}.photo-card:nth-child(2){border-top-right-radius:90px;border-bottom-left-radius:52px}
@@ -565,24 +566,28 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 
     <section class="customer-success reveal" id="success-stories" aria-labelledby="poddo-story-title">
       <div class="container">
-        <div class="success-head">
-          <div>
+        <div class="success-hero">
+          <div class="success-copy">
             <p class="eyebrow">Customer Success Story</p>
-            <h2 class="serif" id="poddo-story-title">How Poddo Kids Club manages payroll and tracks cash flow.</h2>
+            <h2 class="serif" id="poddo-story-title">Less admin. <span>More time for kids.</span></h2>
+            <p class="success-lede">See how Poddo Kids Club brought payroll and day-to-day cash flow into one clear system—giving the team more confidence, less paperwork, and more time for the families they serve.</p>
+            <div class="success-business" aria-label="Poddo Kids Club story details">
+              <strong>Poddo Kids Club</strong>
+              <span>Childcare &amp; Kids Entertainment</span>
+              <span>Verona Vaz · Owner</span>
+              <span>Business Plan</span>
+            </div>
           </div>
-          <div class="success-business">
-            <strong>Poddo Kids Club</strong>
-            <span>Childcare &amp; Kids Entertainment</span>
-            <span>Verona Vaz · Owner</span>
-            <span>Cashflow System · Business Plan</span>
-          </div>
+          <div class="success-logo-panel"><img src="assets/poddo-kids-club-logo.png" alt="Poddo Kids Club logo" width="900" height="900"></div>
         </div>
-        <div class="success-grid">
+        <div class="success-journey" aria-label="Poddo Kids Club customer journey">
           <article class="success-card">
+            <span class="success-step">01 · Before</span>
             <h3>The Challenge</h3>
             <p>As Poddo Kids Club grew, staff payroll, income monitoring, and cash-flow tracking required several manual processes. That made it time-consuming to understand the business&rsquo;s financial position at any given moment.</p>
           </article>
           <article class="success-card">
+            <span class="success-step">02 · With Cashflow</span>
             <h3>The Solution</h3>
             <ul class="success-features">
               <li>Process employee payroll accurately and efficiently.</li>
@@ -594,14 +599,17 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
             </ul>
           </article>
           <article class="success-card">
+            <span class="success-step">03 · Today</span>
             <h3>The Outcome</h3>
             <p>Poddo Kids Club has reduced the time spent on payroll administration and gained a much clearer understanding of its financial position. With payroll and cash-flow information together, the team can focus more on exceptional childcare while staying confident about the business&rsquo;s finances.</p>
           </article>
-          <figure class="success-quote">
+        </div>
+        <figure class="success-quote">
+          <div class="success-quote-inner">
             <blockquote>&ldquo;Cashflow System has become an essential part of how we run Poddo Kids Club. The system is simple, reliable, and has saved us a significant amount of administrative work.&rdquo;</blockquote>
             <footer><span><strong>Verona Vaz</strong>Owner, Poddo Kids Club</span><span>Customer Review · Cashflow System Business</span></footer>
-          </figure>
-        </div>
+          </div>
+        </figure>
       </div>
     </section>
 
