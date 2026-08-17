@@ -1109,6 +1109,7 @@ document.addEventListener('click',function(e){
                 <div class="f-group"><label>Your Name</label><input class="f-input" id="set-username" placeholder="Your full name"></div>
               </div>
               <div class="f-group full" style="margin-bottom:.85rem"><label>Business Address</label><input class="f-input" id="set-addr" placeholder="42 Galle Road, Colombo 03"></div>
+              <div class="f-group full" style="margin-bottom:.85rem"><label>Business Registration Number</label><input class="f-input" id="set-registration-number" placeholder="Optional business registration number"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Optional. It appears on invoices only when entered.</div></div>
               <div class="f-group"><label>Invoice Email</label><input class="f-input" type="email" id="set-email" placeholder="invoices@business.com"></div>
             </div>
           </div>
@@ -1588,7 +1589,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-    settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
+    settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',registrationNumber:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -3920,6 +3921,7 @@ function loadSettings(){
   ['bizname','username','addr','email','vat','footer','u1','u2'].forEach(k=>{const el=document.getElementById('set-'+k);if(el)el.value=s[k.replace('bizname','bizName').replace('username','username')]||s[k]||'';});
   document.getElementById('set-bizname').value=s.bizName||'';
   document.getElementById('set-username').value=s.username||'';
+  document.getElementById('set-registration-number').value=s.registrationNumber||'';
   const settingsLogo=document.getElementById('settings-logo-preview');
   const settingsLogoPlaceholder=document.getElementById('logo-upload-placeholder');
   if(s.logo&&settingsLogo){settingsLogo.src=s.logo;settingsLogo.style.display='block';if(settingsLogoPlaceholder)settingsLogoPlaceholder.style.display='none';}
@@ -3947,6 +3949,7 @@ window.saveSettings = function saveSettings(){
   DB.settings.bizName=document.getElementById('set-bizname').value.trim()||'My Business';
   DB.settings.username=document.getElementById('set-username').value.trim();
   DB.settings.addr=document.getElementById('set-addr').value.trim();
+  DB.settings.registrationNumber=document.getElementById('set-registration-number').value.trim();
   DB.settings.email=document.getElementById('set-email').value.trim();
   DB.settings.vat=document.getElementById('set-vat').value.trim();
   DB.settings.bankName=document.getElementById('set-bank-name').value.trim();
@@ -4008,7 +4011,8 @@ function valueOr(id,fallback){const el=document.getElementById(id);return el&&el
 function invoicePreviewSettings(){
   const s=Object.assign({},DB.settings);
   s.bizName=valueOr('set-bizname',s.bizName||'My Business');s.biz=s.bizName;
-  s.addr=valueOr('set-addr',s.addr||'42 Galle Road, Colombo 03');s.email=valueOr('set-email',s.email||'invoices@business.com');
+  s.addr=document.getElementById('set-addr')?document.getElementById('set-addr').value:(s.addr||'');s.email=valueOr('set-email',s.email||'invoices@business.com');
+  s.registrationNumber=document.getElementById('set-registration-number')?document.getElementById('set-registration-number').value:(s.registrationNumber||'');
   s.vat=valueOr('set-vat',s.vat||'');s.footer=document.getElementById('set-footer')?document.getElementById('set-footer').value:s.footer||'';
   s.bankName=valueOr('set-bank-name',s.bankName||'');s.bankAccountName=valueOr('set-bank-account-name',s.bankAccountName||'');
   s.bankAccountNumber=valueOr('set-bank-account-number',s.bankAccountNumber||'');s.bankBranch=valueOr('set-bank-branch',s.bankBranch||'');
@@ -4023,7 +4027,7 @@ function renderSettingsInvoicePreview(){
   requestAnimationFrame(function(){fitSettingsInvoicePreview(box);});
 }
 function fitSettingsInvoicePreview(box){const frame=box&&box.querySelector('.cls-invoice-preview-frame');if(!frame)return;const styles=getComputedStyle(box),pad=(parseFloat(styles.paddingLeft)||0)+(parseFloat(styles.paddingRight)||0),scale=Math.min(1,Math.max(1,box.clientWidth-pad)/794);frame.style.cssText+=';width:794px;height:1123px;max-width:none;margin:0;transform-origin:top left;transform:scale('+scale+')';box.style.height=Math.ceil(1123*scale+(parseFloat(styles.paddingTop)||0)+(parseFloat(styles.paddingBottom)||0))+'px';box.style.minHeight='0';box.style.overflow='hidden';}
-function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-email','set-vat','set-footer','set-bank-name','set-bank-account-name','set-bank-account-number','set-bank-branch','set-invoice-prefix','set-invoice-font','set-invoice-view','set-invoice-currency','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
+function bindSettingsInvoicePreview(){['set-bizname','set-addr','set-registration-number','set-email','set-vat','set-footer','set-bank-name','set-bank-account-name','set-bank-account-number','set-bank-branch','set-invoice-prefix','set-invoice-font','set-invoice-view','set-invoice-currency','set-vatrate'].forEach(function(id){const el=document.getElementById(id);if(!el||el.dataset.previewBound)return;el.dataset.previewBound='1';el.addEventListener('input',renderSettingsInvoicePreview);el.addEventListener('change',renderSettingsInvoicePreview);});}
 
 // ════════════════════════════════
 // INVOICE PDF PRINTING

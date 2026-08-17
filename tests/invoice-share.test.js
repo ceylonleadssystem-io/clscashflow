@@ -214,6 +214,28 @@ test('public invoice snapshots retain sanitized bank details', function() {
   assert.equal(snapshot.bankBranch, 'Colombo 03');
 });
 
+test('cleared business addresses stay blank and optional registration numbers survive public sharing', function() {
+  const invoice = sanitizePublicInvoice({
+    num: 'INV-0046',
+    client: 'Customer',
+    amount: 1200,
+    lines: [{ desc: 'Service', qty: 1, price: 1200 }]
+  }, {
+    addr: 'Old profile address must not return',
+    settings: {
+      bizName: 'Public Business',
+      addr: '',
+      registrationNumber: 'PV 12345'
+    }
+  });
+
+  assert.equal(invoice.businessAddress, '');
+  assert.equal(invoice.registrationNumber, 'PV 12345');
+  const snapshot = sanitizePublicSnapshot(invoice);
+  assert.equal(snapshot.businessAddress, '');
+  assert.equal(snapshot.registrationNumber, 'PV 12345');
+});
+
 test('WhatsApp public invoices preserve the selected new template and exact public link', function() {
   const publicUrl = 'https://ceylonrylabs.io/invoice/' + generatePublicToken() + '/fresh-template';
   const invoice = sanitizePublicInvoice({
