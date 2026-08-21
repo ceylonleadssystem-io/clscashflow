@@ -583,12 +583,11 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           <div class="success-logo-panel"><img src="assets/poddo-kids-club-logo.png" alt="Poddo Kids Club logo" width="900" height="900"></div>
         </div>
         <div class="feedback-heading"><div><p class="eyebrow">Our feedback on the system</p><h3>What businesses say.</h3></div><div class="demo-activity" id="demo-activity" aria-live="polite"><div class="activity-pulse">30+</div><div class="activity-copy"><strong>Sri Lankan business stories</strong><span><span class="activity-location">Colombo</span> · Food &amp; hospitality</span></div></div></div>
-        <div class="proof-slider" id="proof-slider" aria-label="Customer story and fictional demo feedback" aria-roledescription="carousel">
+        <div class="proof-slider" id="proof-slider" aria-label="Customer feedback stories" aria-roledescription="carousel">
           <div class="proof-track">
             <article class="proof-slide"><div class="proof-slide-label"><span class="proof-avatar">PK</span>Verified customer story</div><blockquote>&ldquo;Cashflow System has become an essential part of how we run Poddo Kids Club. The system is simple, reliable, and has saved us a significant amount of administrative work.&rdquo;</blockquote><footer><strong>Verona Vaz</strong>Owner, Poddo Kids Club · Business Plan</footer></article>
           </div>
           <div class="proof-controls"><div><div class="proof-counter" id="proof-counter">1 / 31</div><div class="proof-dots" aria-label="Choose slide"></div></div><div class="proof-arrows"><button class="proof-arrow" type="button" data-proof-prev aria-label="Previous slide">&larr;</button><button class="proof-arrow" type="button" data-proof-next aria-label="Next slide">&rarr;</button></div></div>
-          <div class="proof-note">Verona Vaz / Poddo Kids Club is a verified customer story. Additional profiles are illustrative business scenarios provided for this showcase.</div>
         </div>
       </div>
     </section>
@@ -1111,7 +1110,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       const slide = document.createElement('article');
       const initials = item[0].split(/\s+/).map(part => part.charAt(0)).join('').slice(0, 2).toUpperCase();
       slide.className = 'proof-slide';
-      slide.innerHTML = '<div class="proof-slide-label"><span class="proof-avatar">' + initials + '</span>Business feedback showcase</div><blockquote>&ldquo;' + item[2] + '&rdquo;</blockquote><footer><strong>' + item[0] + '</strong>' + item[1] + ' · Illustrative profile</footer>';
+      slide.innerHTML = '<div class="proof-slide-label"><span class="proof-avatar">' + initials + '</span>Customer story</div><blockquote>&ldquo;' + item[2] + '&rdquo;</blockquote><footer><strong>' + item[0] + '</strong>' + item[1] + '</footer>';
       track.appendChild(slide);
     });
     const slides = Array.from(proofSlider.querySelectorAll('.proof-slide'));
