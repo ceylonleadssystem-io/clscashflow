@@ -1892,7 +1892,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     _trialEnd = trialEnd;
     _isPaid = isPaid;
     if (isPaused) { if (window.clsRenderAccountPaused) window.clsRenderAccountPaused(_profile, { plan: 'studio' }); return; }
-    if (now.getTime() > trialEnd.getTime() + 86400000 && !isPaid) { showPaywall(_profile); return; }
+    if (window.clsEnforceManualPaymentAccess ? window.clsEnforceManualPaymentAccess(_profile, { plan: 'studio' }) : (now.getTime() >= trialEnd.getTime() && !isPaid)) { if (!window.clsEnforceManualPaymentAccess) showPaywall(_profile); return; }
 
     // Apply onboarding invoice profile, then preserve later Settings changes.
     if (_profile.bizName) DB.settings.bizName = _profile.invoiceBiz || _profile.bizName;
@@ -4901,7 +4901,7 @@ window.showPaywall = function showPaywall(profile) {
   const price = prices[plan] || 5500;
   const monthlyPrice = monthlyPrices[plan] || 5500;
   const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
-  const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan (monthly package LKR ' + monthlyPrice.toLocaleString() + '/mo, annual payment LKR ' + price.toLocaleString() + '). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));
+  const waMsg = encodeURIComponent('Hi CeylonryLabs! I\'d like to activate my ' + planName + ' Plan by monthly bank transfer (LKR ' + monthlyPrice.toLocaleString() + '/mo). Please send me payment details.\n\nName: ' + (profile && profile.name ? profile.name : '') + '\nEmail: ' + (profile && profile.email ? profile.email : ''));
   const waNum = '94778815628'; // ← replace
   if (document.getElementById('cls-paywall')) return;
   var ov = document.createElement('div');
@@ -4914,7 +4914,7 @@ window.showPaywall = function showPaywall(profile) {
     '<div style="background:#F7F5F0;border:1px solid rgba(184,146,42,.2);padding:1.5rem;margin-bottom:1.75rem;">' +
       '<div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:.35rem">Your Plan</div>' +
     '<div style="font-family:\'Cormorant Garamond\',serif;font-size:2.2rem;font-weight:300;color:#1a1714">LKR ' + monthlyPrice.toLocaleString() + '<span style="font-size:1rem;color:#6B6258">/mo</span></div>' +
-    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · annual payment LKR ' + price.toLocaleString() + '</div>' +
+    '<div style="font-size:.78rem;color:#6B6258;margin-top:.25rem">' + planName + ' Plan · prepaid monthly bank transfer</div>' +
     '</div>' +
     '<a href="https://wa.me/' + waNum + '?text=' + waMsg + '" target="_blank" style="display:block;background:#1a1714;color:#fff;padding:1rem;text-decoration:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.75rem;">💬 Activate via WhatsApp →</a>' +
     '<button data-cls-fn="clsSignOut" style="width:100%;background:transparent;border:1px solid rgba(184,146,42,.3);color:#6B6258;padding:.75rem;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;">Sign Out</button>' +

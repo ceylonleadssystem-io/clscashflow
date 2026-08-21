@@ -569,7 +569,7 @@ firebase.initializeApp(firebaseConfig);
             </table>
           </div>
         </div>
-        <div class="plan-price-note">Annual billing appears only when activating after the 15-day free trial.</div>
+        <div class="plan-price-note">After the 15-day trial, each month is paid in advance by bank transfer and activated by uploading the payment slip.</div>
         <div class="ob-nav"><button class="btn-back" onclick="window.prevStep(2)">← Back</button><button class="btn-next" onclick="window.nextStep(2)">Continue →</button></div>
       </div>
 
@@ -1638,7 +1638,7 @@ window.launchDashboard = async function launchDashboard(){
         lastPlan: selectedPlan,
         planPrice: prices[selectedPlan] || 36000,
         planMonthlyPrice: monthlyPrices[selectedPlan] || 3500,
-        billingCycle: 'annual',
+        billingCycle: 'monthly',
         nextInvNum: 1,
         nextInvId: 1,
         trialStart: new Date().toISOString(),
@@ -1706,7 +1706,7 @@ window.launchDashboard = async function launchDashboard(){
         lastPlan: requestedPlan,
         planPrice: prices[requestedPlan] || 36000,
         planMonthlyPrice: monthlyPrices[requestedPlan] || 3500,
-        billingCycle: 'annual',
+        billingCycle: 'monthly',
         nextInvNum: 1,
         nextInvId: 1,
         trialStart: new Date().toISOString(),

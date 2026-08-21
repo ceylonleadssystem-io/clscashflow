@@ -16,9 +16,6 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify/functions/send-invoice.js` - built-in SMTP invoice email fallback
 - `netlify/functions/send-invite.js` - team invite email function
 - `netlify/functions/send-welcome.js` - welcome email function
-- `netlify/functions/payable-create-checkout.js` - server-side Payable checkout creator
-- `netlify/functions/payable-webhook.js` - server-side Payable payment confirmation handler
-- `netlify/functions/payable-status.js` - payment return/status checker for signed-in users
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
 - `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
@@ -67,40 +64,11 @@ For Hostinger, the common values are:
 - `SMTP_PASS`: the mailbox password
 - `SMTP_FROM`: optional, usually same as `SMTP_USER`
 
-## Payable Subscription Payments
+## Subscription Payments
 
-Payable credentials must be added only in Netlify environment variables. Do not place keys or tokens in GitHub, HTML, or browser JavaScript.
+The 15-day trial is controlled by each user's `trialEnd` value in Supabase. After it ends, the dashboards require payment unless the user profile has an active paid status.
 
-Required for Payable checkout:
-
-- `PAYABLE_ENV` - `sandbox` while testing, `live` after Payable production approval
-- `PAYABLE_AUTH_URL` - Direct API auth endpoint
-- `PAYABLE_CHECKOUT_URL` - Direct payment API endpoint
-- `PAYABLE_MERCHANT_ID` - from Payable Settings -> API Integration; used as Direct API `merchantKey` unless `PAYABLE_MERCHANT_KEY` is set
-- `PAYABLE_MERCHANT_KEY` - optional alias if Payable gives a separate Merchant Key
-- `PAYABLE_MERCHANT_TOKEN` - from Payable Settings -> API Integration
-- `PAYABLE_BUSINESS_KEY` - from Payable Settings -> Business Integration
-- `PAYABLE_BUSINESS_TOKEN` - from Payable Settings -> Business Integration
-- `PAYABLE_ORIGIN_DOMAIN` - your approved HTTPS site origin, for example `https://www.ceylonrylabs.io`
-- `PAYABLE_PAYMENT_TYPE` - `1` for one-time payment
-- `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
-- `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
-
-Give Payable this callback URL after you choose `PAYABLE_WEBHOOK_SECRET`:
-
-`https://www.ceylonrylabs.io/.netlify/functions/payable-webhook?secret=YOUR_PAYABLE_WEBHOOK_SECRET`
-
-The 15-day trial is controlled by each user's `trialEnd` value in Supabase. After it ends, the dashboards require payment unless the user profile has `paid: true`. The Payable webhook sets `paid: true`, `subscriptionStatus: active`, and the selected plan after a verified paid callback.
-
-Plan checkout amounts are annual:
-
-- Solo: `LKR 36,000`
-- Studio: `LKR 60,000`
-- Business: `LKR 94,800`
-
-If Payable checkout is not ready yet, the expired-trial paywall creates a manual payment request token in the `paymentRequests` document path. The admin panel shows those tokens so the team can manually send an invoice, mark the request as invoiced, mark it paid, or close it.
-
-The Direct API flow first calls Payable auth with `base64(businessKey:businessToken)`, then creates the checkout session using `merchantKey`, `invoiceId`, `checkValue`, `returnUrl`, `originDomain`, and `webhookUrl`. Payable returns `paymentPage`, which the app uses as the customer redirect URL. After the customer returns to `payable-return.html`, the page polls `netlify/functions/payable-status.js` until the Payable webhook marks the payment as paid.
+Customers prepay each month by bank transfer and upload a PDF or image payment slip. The receipt is emailed to the accounts team and recorded in the subscription ledger. Payment may be submitted during the trial; in that case, the paid month begins when the 15-day trial ends. Otherwise the payment popup blocks access at the end of the trial and on each monthly due date until a new slip is uploaded. Expired trials also create a manual payment request in the `paymentRequests` document path so an administrator can send an invoice, mark the request as invoiced, mark it paid, or close it.
 
 ## Team Invites
 

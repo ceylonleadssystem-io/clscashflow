@@ -239,7 +239,7 @@
     profile = profile || {};
     var status = String(profile.subscriptionStatus || '').toLowerCase();
     var due = dateMs(profile.nextPaymentDue || profile.subscriptionCurrentPeriodEnd);
-    if (due && Date.now() > due + 86400000) return false;
+    if (due && Date.now() >= due) return false;
     return profile.paid === true || status === 'active' || status === 'manual-paid';
   }
 
@@ -1365,6 +1365,18 @@
     return isProfilePaidRecord(profile);
   };
 
+  window.clsEnforceManualPaymentAccess = function clsEnforceManualPaymentAccess(profile, opts) {
+    profile = profile || window._profile || {};
+    opts = opts || {};
+    if (!isPortalPath() || document.getElementById('cls-paywall')) return false;
+    if (window.clsIsAccountPaused && window.clsIsAccountPaused(profile)) return false;
+    if (isProfilePaidRecord(profile)) return false;
+    var due = dateMs(profile.nextPaymentDue || profile.subscriptionCurrentPeriodEnd || profile.trialEnd || profile.trialEndsAt);
+    if (!due || Date.now() < due) return false;
+    window.clsRenderSubscriptionPaywall(profile, { plan: opts.plan || planFromPath() || bestPlan(profile) });
+    return true;
+  };
+
   window.clsPaidLockedPlan = paidLockedPlan;
 
   window.clsIsAccountPaused = function clsIsAccountPaused(profile) {
@@ -1528,7 +1540,7 @@
     var user = getAuthUser();
     var msg = encodeURIComponent(
       'Hi CeylonryLabs! I would like to activate my ' + details.name +
-      ' Plan (' + planAnnualLine(details) + ', ' + planMonthlyLine(details) + ').' +
+      ' Plan (' + planMonthlyLine(details) + ', paid monthly in advance by bank transfer).' +
       '\n\nName: ' + profileName(profile, user) +
       '\nEmail: ' + profileEmail(profile, user)
     );
@@ -1544,74 +1556,8 @@
     opts=opts||{};return window.clsOpenBankTransferPayment(plan,opts.profile||window._profile||{});
   };
 
-  window.clsStartPayableCheckout = async function clsStartPayableCheckout(plan, opts) {
-    opts = opts || {};
-    var profile = opts.profile || window._profile || null;
-    plan = bestPlan(profile, plan || opts.plan);
-    var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
-    var monthlyPayLink = paymentLinkFor(profile, plan, 'monthly');
-    var annualPayLink = paymentLinkFor(profile, plan, 'annual');
-    var customPayLink = customPaymentLink(profile, plan, 'monthly') || customPaymentLink(profile, plan, 'annual');
-    var paymentLinkExpiresAt = plainText(profile.paymentLinkExpiresAt || profile.customPaymentLinkExpiresAt || '', 80);
-    if (!opts.forcePayable && details.annualPayLink) {
-      window.clsOpenGeniePayment(plan, 'annual', opts);
-      return;
-    }
-    var user = getAuthUser();
-    if (!user || !user.getIdToken) {
-      alert('Please sign in again before starting payment.');
-      window.location.href = 'signin.html';
-      return;
-    }
-
-    var btn = opts.button || (document.activeElement && document.activeElement.tagName ? document.activeElement : null);
-    var oldText = btn && 'textContent' in btn ? btn.textContent : '';
-    if (btn && 'disabled' in btn) {
-      btn.disabled = true;
-      btn.textContent = 'Opening payment...';
-    }
-
-    try {
-      var token = await user.getIdToken();
-      var res = await fetch('/.netlify/functions/payable-create-checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          plan: plan,
-          amount: details.price,
-          currency: 'LKR',
-          billingCycle: 'monthly',
-          uid: user.uid,
-          email: profileEmail(profile, user),
-          name: profileName(profile, user),
-          returnUrl: location.origin + '/payable-return.html?plan=' + encodeURIComponent(plan),
-          cancelUrl: location.href
-        })
-      });
-      var out = await res.json().catch(function() { return {}; });
-      if (!res.ok || !out.ok) {
-        throw new Error(out.error || 'Could not start checkout.');
-      }
-      if (!out.checkoutUrl) {
-        throw new Error('Payment provider did not return a checkout URL.');
-      }
-      window.location.href = out.checkoutUrl;
-    } catch (e) {
-      console.error('Checkout error:', e);
-      alert((e && e.message ? e.message : 'Could not start checkout.') + '\n\nYou can still activate through WhatsApp while payment is being configured.');
-      window.clsOpenPlanWhatsApp(plan, profile);
-      if (btn && 'disabled' in btn) {
-        btn.disabled = false;
-        btn.textContent = oldText;
-      }
-    }
-  };
-
   window.clsStartCurrentPlanPayment = function clsStartCurrentPlanPayment() {
-    return window.clsStartPayableCheckout();
+    return window.clsOpenBankTransferPayment(null, window._profile || {});
   };
 
   window.clsEnsurePaymentRequest = async function clsEnsurePaymentRequest(profile, opts) {
@@ -1763,9 +1709,18 @@
     profile=profile||{};var paid=isProfilePaidRecord(profile),raw=paid?(profile.nextPaymentDue||profile.subscriptionCurrentPeriodEnd):(profile.trialEnd||profile.trialEndsAt),ms=dateMs(raw);
     return ms?new Date(ms):new Date(Date.now()+(paid?30:0)*86400000);
   }
+  function nextMonthlyDueDate(fromDate) {
+    var from=fromDate instanceof Date?new Date(fromDate.getTime()):new Date();
+    var day=from.getDate(),next=new Date(from.getTime());
+    next.setDate(1);
+    next.setMonth(next.getMonth()+1);
+    var lastDay=new Date(next.getFullYear(),next.getMonth()+1,0).getDate();
+    next.setDate(Math.min(day,lastDay));
+    return next;
+  }
   function paymentTimelineHtml(profile) {
-    profile=profile||{};var paid=isProfilePaidRecord(profile),due=billingDueDate(profile),reminder=new Date(due.getTime()-5*86400000),pause=new Date(due.getTime()+86400000),fmt=function(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
-    return '<div class="cls-payment-timeline"><strong>'+(paid?'Current monthly cycle':'Trial to paid timeline')+'</strong><div><i></i><span><b>'+fmt(reminder)+'</b> · '+(paid?'Monthly payment reminder':'Trial ending reminder')+'</span></div><div><i></i><span><b>'+fmt(due)+'</b> · '+(paid?'Next monthly payment due':'Trial ends · first payment becomes due')+'</span></div><div><i></i><span><b>'+(paid?fmt(pause):'After receipt')+'</b> · '+(paid?'Access pauses if no slip is uploaded':'First paid month begins and the next due date is set one month later')+'</span></div></div>';
+    profile=profile||{};var paid=isProfilePaidRecord(profile),due=billingDueDate(profile),reminder=new Date(due.getTime()-5*86400000),fmt=function(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
+    return '<div class="cls-payment-timeline"><strong>'+(paid?'Current prepaid monthly cycle':'Trial to prepaid monthly plan')+'</strong><div><i></i><span><b>'+fmt(reminder)+'</b> · '+(paid?'Monthly payment reminder':'Trial ending reminder')+'</span></div><div><i></i><span><b>'+fmt(due)+'</b> · '+(paid?'Next month must be paid in advance':'Trial ends · first monthly payment is due')+'</span></div><div><i></i><span><b>'+(paid?fmt(due):'After slip upload')+'</b> · '+(paid?'Payment popup opens until a new slip is uploaded':'Access resumes and the next payment is due one calendar month later')+'</span></div></div>';
   }
   function readReceiptFile(file) { return new Promise(function(resolve,reject){var reader=new FileReader();reader.onload=function(){resolve(String(reader.result||'').split(',')[1]||'');};reader.onerror=function(){reject(new Error('Could not read the payment slip.'));};reader.readAsDataURL(file);}); }
   window.clsSubmitSubscriptionReceipt=async function clsSubmitSubscriptionReceipt(file, profile, plan, statusEl) {
@@ -1777,19 +1732,19 @@
     var base64=await readReceiptFile(file),period=new Date().toISOString().slice(0,7);
     var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,amount:money(details.monthlyPrice),period:period})});
     var out=await res.json().catch(function(){return{};});if(!res.ok||!out.sent)throw new Error(out.error||'Payment slip could not be sent.');
-    var next=new Date();next.setMonth(next.getMonth()+1);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentSlipName:cleanString(file.name,180),lastPaymentSlipType:cleanString(file.type,100),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),updatedAt:fieldTimestamp()};
+    var trialDue=dateMs(profile.trialEnd||profile.trialEndsAt),cycleStart=trialDue&&trialDue>Date.now()?new Date(trialDue):new Date(),next=nextMonthlyDueDate(cycleStart);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentSlipName:cleanString(file.name,180),lastPaymentSlipType:cleanString(file.type,100),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),updatedAt:fieldTimestamp()};
     var db=getFirestore(),uid=profile.ownerUid||(user&&user.uid)||profile.uid||'';
     if(db&&uid){
       await db.collection('users').doc(uid).set(update,{merge:true});
       try{await db.collection('subscriptionPayments').doc(uid+'-'+period).set({uid:uid,email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:plan,period:period,amountLkr:details.monthlyPrice,currency:'LKR',status:'receipt-submitted',source:'bank-receipt',receiptName:cleanString(file.name,180),receivedAt:fieldTimestamp(),receivedAtUtc:nowIso()},{merge:true});}catch(ledgerError){console.warn('Subscription revenue ledger could not be updated:',ledgerError);}
     }
-    Object.assign(profile,update);if(statusEl)statusEl.textContent='Thank you so much — your payment slip was sent to accounts@ceylonrylabs.io and access is active.';setTimeout(function(){var wall=document.getElementById('cls-paywall');if(wall)wall.remove();},1000);return true;
+    Object.assign(profile,update);if(statusEl)statusEl.textContent='Payment slip submitted. Access is active until '+next.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+'.';setTimeout(function(){var wall=document.getElementById('cls-paywall');if(wall)wall.remove();},1000);return true;
   };
   window.clsOpenBankTransferPayment=function clsOpenBankTransferPayment(plan,profile){
-    profile=profile||window._profile||{};var trialMs=dateMs(profile.trialEnd||profile.trialEndsAt);if(!isProfilePaidRecord(profile)&&trialMs&&Date.now()<trialMs){alert('Your free trial is still active. Your first payment becomes due when the 15-day trial ends.');return;}plan=bestPlan(profile,plan);var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,old=document.getElementById('cls-bank-payment-modal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='cls-bank-payment-modal';wrap.className='cls-bank-modal';wrap.innerHTML='<div class="cls-bank-card"><button class="cls-bank-close" aria-label="Close">×</button><div class="cls-billing-kicker">Monthly subscription</div><h2>Start your paid month</h2><p>Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> for your '+escapeHtml(details.name)+' plan, then upload the payment slip. Your first paid month begins when the receipt is submitted.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></label><button class="cls-bank-submit">Upload slip and start monthly cycle</button><div class="cls-bank-status">The attachment will be emailed securely to '+escapeHtml(CLS_BANK.email)+'.</div></div>';document.body.appendChild(wrap);wrap.querySelector('.cls-bank-close').onclick=function(){wrap.remove();};wrap.addEventListener('click',function(e){if(e.target===wrap)wrap.remove();});wrap.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=wrap.querySelector('.cls-bank-status'),file=wrap.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Thank you — monthly cycle started';setTimeout(function(){wrap.remove();},1300);}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};
+    profile=profile||window._profile||{};plan=bestPlan(profile,plan);var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,old=document.getElementById('cls-bank-payment-modal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='cls-bank-payment-modal';wrap.className='cls-bank-modal';wrap.innerHTML='<div class="cls-bank-card"><button class="cls-bank-close" aria-label="Close">×</button><div class="cls-billing-kicker">Prepaid monthly subscription</div><h2>Pay your next month in advance</h2><p>Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> for your '+escapeHtml(details.name)+' plan, then upload the payment slip. If you pay during the trial, the paid month begins when the 15-day trial ends.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" required></label><button class="cls-bank-submit">Upload slip and activate monthly access</button><div class="cls-bank-status">The attachment will be emailed securely to '+escapeHtml(CLS_BANK.email)+'.</div></div>';document.body.appendChild(wrap);wrap.querySelector('.cls-bank-close').onclick=function(){wrap.remove();};wrap.addEventListener('click',function(e){if(e.target===wrap)wrap.remove();});wrap.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=wrap.querySelector('.cls-bank-status'),file=wrap.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Thank you — monthly access activated';setTimeout(function(){wrap.remove();},1300);}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};
   };
   window.clsStartCurrentPlanPayment=function(){return window.clsOpenBankTransferPayment(null,window._profile||{});};
-  window.clsRenderSubscriptionPaywall=function(profile,opts){opts=opts||{};if(document.getElementById('cls-paywall'))return;var plan=bestPlan(profile,opts.plan),details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,ov=document.createElement('div');ov.id='cls-paywall';ov.className='cls-bank-modal';ov.innerHTML='<div class="cls-bank-card cls-bank-paused"><div class="cls-billing-kicker">Payment overdue</div><h2>Access is temporarily paused</h2><p>Your monthly payment is more than one day overdue. Your data is safe. Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> and upload the payment slip to continue.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></label><button class="cls-bank-submit">Upload slip and restore access</button><div class="cls-bank-status">The attachment will be emailed to '+escapeHtml(CLS_BANK.email)+'.</div><button class="cls-bank-signout" onclick="window.clsSignOut&&window.clsSignOut()">Sign out</button></div>';document.body.appendChild(ov);ov.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=ov.querySelector('.cls-bank-status'),file=ov.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Thank you — access restored';}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};};
+  window.clsRenderSubscriptionPaywall=function(profile,opts){opts=opts||{};if(document.getElementById('cls-paywall'))return;profile=profile||{};var plan=bestPlan(profile,opts.plan),details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,hasPaidBefore=!!(profile.lastPaymentSlipAt||profile.lastPaymentSlipAtUtc||profile.nextPaymentDue),ov=document.createElement('div');ov.id='cls-paywall';ov.className='cls-bank-modal';ov.innerHTML='<div class="cls-bank-card cls-bank-paused"><div class="cls-billing-kicker">'+(hasPaidBefore?'Monthly payment due':'15-day trial complete')+'</div><h2>'+(hasPaidBefore?'Pay the next month to continue':'Start your prepaid monthly plan')+'</h2><p>'+(hasPaidBefore?'Your current paid month has ended.':'Your free trial has ended.')+' Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> in advance for the next month, then upload the payment slip. Your data remains safe and the system resumes immediately after the slip is submitted.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" required></label><button class="cls-bank-submit">Upload payment slip and continue</button><div class="cls-bank-status">PDF, PNG, JPG or WebP, up to 3 MB. The slip will be emailed to '+escapeHtml(CLS_BANK.email)+'.</div><button class="cls-bank-signout" onclick="window.clsSignOut&&window.clsSignOut()">Sign out</button></div>';document.body.appendChild(ov);ov.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=ov.querySelector('.cls-bank-status'),file=ov.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Payment submitted — access restored';}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};};
 
   function trialStartForPrompt(profile) {
     profile = profile || {};
@@ -1862,26 +1817,21 @@
         '<div class="cls-trial-copy">If so, shall we proceed to the paid version? Your 15-day trial remains active, but activating now keeps your account uninterrupted after the trial.</div>' +
         '<div class="cls-trial-price"><span>' + escapeHtml(details.name) + ' monthly package</span><strong>' + escapeHtml(money(details.monthlyPrice || 0)) + '<span style="font-family:inherit;font-size:.9rem;color:#6B6258"> / mo</span></strong></div>' +
         '<div class="cls-trial-actions">' +
-          '<button type="button" class="cls-trial-primary" data-trial-pay-monthly>Pay monthly</button>' +
-          '<button type="button" class="cls-trial-secondary" data-trial-pay-annual>Annual option</button>' +
+          '<button type="button" class="cls-trial-primary" data-trial-pay-monthly>Pay next month in advance</button>' +
         '</div>' +
         '<button type="button" class="cls-trial-secondary" data-trial-later style="width:100%;margin-top:.7rem">Not now</button>' +
-        '<div class="cls-trial-status" data-trial-status>We will create an admin payment request so support can follow up if the Bank transfer instructions expires.</div>' +
+        '<div class="cls-trial-status" data-trial-status>Your payment request will also appear in the admin panel for manual follow-up.</div>' +
       '</div>';
     document.body.appendChild(ov);
 
     window.clsEnsurePaymentRequest(profile, { plan: plan, force: true, source: 'trial-day-5' }).then(function(req) {
       var status = ov.querySelector('[data-trial-status]');
-      if (status && req && req.token) status.textContent = 'Payment request token: ' + req.token + '. Admin can update the Bank transfer instructions from the admin panel if it expires.';
+      if (status && req && req.token) status.textContent = 'Payment request token: ' + req.token + '. Admin can follow up and confirm the monthly payment manually.';
     }).catch(function() {});
 
     ov.querySelector('.cls-trial-close').addEventListener('click', function() { dismissTrialPrompt(key); });
     ov.querySelector('[data-trial-later]').addEventListener('click', function() { dismissTrialPrompt(key); });
     ov.querySelector('[data-trial-pay-monthly]').addEventListener('click', function() {
-      safeSet(key, new Date().toISOString().slice(0, 10));
-      window.clsOpenBankTransferPayment(plan, profile);
-    });
-    ov.querySelector('[data-trial-pay-annual]').addEventListener('click', function() {
       safeSet(key, new Date().toISOString().slice(0, 10));
       window.clsOpenBankTransferPayment(plan, profile);
     });
@@ -3709,7 +3659,7 @@
 	    afterFirstPaint(trackVisit, 5000);
 	    afterFirstPaint(mountBillingWidget, 2300);
 	    afterFirstPaint(function(){window.clsApplyTrialPlanSwitchVisibility(window._profile||{});},2600);
-	    setInterval(function(){if(isPortalPath())window.clsApplyTrialPlanSwitchVisibility(window._profile||{});},60000);
+	    setInterval(function(){if(isPortalPath()){window.clsApplyTrialPlanSwitchVisibility(window._profile||{});window.clsEnforceManualPaymentAccess(window._profile||{}, {plan:pathPlan});}},60000);
 	    afterFirstPaint(mountDangerZoneWidget, 2800);
 	    afterFirstPaint(mountSupportWidget, 3500);
 	    afterFirstPaint(function() {
