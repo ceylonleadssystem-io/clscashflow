@@ -15,6 +15,25 @@ exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') return reply(204, {});
   if (event.httpMethod !== 'GET') return reply(405, { valid: false, error: 'Method not allowed.' });
   const code = String((event.queryStringParameters || {}).code || '').trim().toUpperCase();
+  if (!code) {
+    try {
+      const db = firebaseAdminFacade().firestore();
+      const snap = await db.collection('growthPartnerCodes').get();
+      const codes = [];
+      for (const doc of snap.docs) {
+        const data = doc.data() || {};
+        if (String(data.status || '').toUpperCase() !== 'ASSIGNED' || !data.partnerId) continue;
+        const partnerSnap = await db.collection('growthPartners').doc(String(data.partnerId)).get();
+        const partner = partnerSnap.exists ? (partnerSnap.data() || {}) : {};
+        if (String(partner.status || '').toLowerCase() !== 'active') continue;
+        codes.push({ code: data.code || doc.id, partnerName: partner.fullName || partner.name || data.partnerName || 'Growth Partner' });
+      }
+      codes.sort(function(a,b){return a.partnerName.localeCompare(b.partnerName);});
+      return reply(200, { valid: true, codes });
+    } catch (error) {
+      return reply(503, { valid: false, codes: [], error: 'Growth Partner codes are temporarily unavailable.' });
+    }
+  }
   if (!/^CGP-\d{4,6}$/.test(code)) return reply(400, { valid: false, error: 'Use the code format CGP-0001.' });
 
   try {

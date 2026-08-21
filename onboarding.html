@@ -502,7 +502,7 @@ firebase.initializeApp(firebaseConfig);
         </div>
         <div class="ob-field"><label for="s1-email">Email Address *</label><input class="ob-input" type="email" id="s1-email" placeholder="you@yourbusiness.com" autocomplete="email" maxlength="254" required></div>
         <div class="ob-field"><label for="s1-phone">Phone Number *</label><input class="ob-input" type="tel" id="s1-phone" placeholder="+94 77 000 0000" autocomplete="tel" minlength="7" maxlength="20" required></div>
-        <div class="ob-field"><label for="s1-partner-code">Growth Partner Code <span style="font-weight:500;color:var(--muted)">(optional)</span></label><input class="ob-input" id="s1-partner-code" placeholder="CGP-0001" autocomplete="off" maxlength="12" aria-describedby="s1-partner-code-help" oninput="window.handleGrowthPartnerCodeInput(this)" onblur="window.validateGrowthPartnerCode()"><small id="s1-partner-code-help" style="display:block;margin-top:.4rem;color:var(--muted);font-size:.68rem;line-height:1.5">If a Growth Partner introduced you to Ceylonry Labs, enter their unique code here.</small></div>
+        <div class="ob-field"><label for="s1-partner-code">How did you hear about us? <span style="font-weight:500;color:var(--muted)">(optional)</span></label><select class="ob-input" id="s1-partner-code" aria-describedby="s1-partner-code-help" onchange="window.handleGrowthPartnerCodeInput(this);window.validateGrowthPartnerCode()"><option value="">Direct / no Growth Partner</option></select><small id="s1-partner-code-help" style="display:block;margin-top:.4rem;color:var(--muted);font-size:.68rem;line-height:1.5">Choose the Growth Partner who introduced you to Ceylonry Labs.</small></div>
         <div class="ob-input-row">
           <div class="ob-field"><label for="s1-pass">Password *</label><div class="ob-password-wrap"><input class="ob-input" type="password" id="s1-pass" placeholder="Min 8 characters" autocomplete="new-password" minlength="8" maxlength="128" required><button class="ob-password-toggle" type="button" aria-label="Show password" aria-controls="s1-pass" aria-pressed="false" onclick="window.togglePasswordVisibility('s1-pass',this)">Show</button></div></div>
           <div class="ob-field"><label for="s1-pass2">Confirm Password *</label><div class="ob-password-wrap"><input class="ob-input" type="password" id="s1-pass2" placeholder="Repeat password" autocomplete="new-password" minlength="8" maxlength="128" required><button class="ob-password-toggle" type="button" aria-label="Show confirmed password" aria-controls="s1-pass2" aria-pressed="false" onclick="window.togglePasswordVisibility('s1-pass2',this)">Show</button></div></div>
@@ -1153,6 +1153,14 @@ window.handleGrowthPartnerCodeInput=function(input){
   const help=document.getElementById('s1-partner-code-help');
   if(help){help.textContent=input.value?'We will verify this code before you continue.':'If a Growth Partner introduced you to Ceylonry Labs, enter their unique code here.';help.style.color='var(--muted)';}
 };
+async function loadGrowthPartnerCodes(){
+  const select=document.getElementById('s1-partner-code');if(!select)return;
+  try{
+    const response=await fetch('/.netlify/functions/growth-partner-code');
+    const result=await response.json();
+    (result.codes||[]).forEach(function(item){const option=document.createElement('option');option.value=item.code;option.textContent=(item.partnerName||'Growth Partner')+' — '+item.code;select.appendChild(option);});
+  }catch(e){console.warn('Growth Partner list unavailable:',e);}
+}
 window.validateGrowthPartnerCode=async function(showError){
   const input=document.getElementById('s1-partner-code');
   const help=document.getElementById('s1-partner-code-help');
@@ -1878,6 +1886,7 @@ window.launchDashboard = async function launchDashboard(){
 
 // ── INIT ──
 buildTemplateGrid(3);
+loadGrowthPartnerCodes();
 bindInvoicePreviewInputs();
 // Pick up pre-fill data from landing page free-month form
 (function() {

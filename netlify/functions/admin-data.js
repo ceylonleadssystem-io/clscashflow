@@ -174,6 +174,11 @@ function paymentAmount(data) {
   return plan === 'business' ? 8500 : plan === 'studio' ? 5500 : plan === 'solo' ? 3500 : 0;
 }
 
+function isInternalOrTestUser(row) {
+  const data = (row && row.data) || {};
+  return data.isInternalTeam === true || data.isTestAccount === true || ['team', 'test', 'internal'].indexOf(String(data.customerType || '').toLowerCase()) !== -1;
+}
+
 function buildRevenueStats(users, paymentRequests, subscriptionPayments) {
   const now = new Date();
   const monthKey = now.toISOString().slice(0, 7);
@@ -225,6 +230,7 @@ function buildRevenueStats(users, paymentRequests, subscriptionPayments) {
 
 function buildStats(users, visits, tickets, paymentRequests, chats, subscriptionPayments) {
   users = users || [];
+  const customerUsers = users.filter(function(row) { return !isInternalOrTestUser(row); });
   visits = visits || [];
   tickets = tickets || [];
   paymentRequests = paymentRequests || [];
@@ -249,7 +255,7 @@ function buildStats(users, visits, tickets, paymentRequests, chats, subscription
   });
 
   return Object.assign({
-    usersTotal: users.length,
+    usersTotal: customerUsers.length,
     visitsTotal: visits.length,
     uniqueVisitorsTotal: uniqueVisitors.size,
     recentVisitsShown: visits.length,
@@ -271,7 +277,7 @@ function buildStats(users, visits, tickets, paymentRequests, chats, subscription
     landingVisitsTotal: landingVisitsRecent,
     landingVisitsRecent,
     lastVisitAt
-  }, buildRevenueStats(users, paymentRequests, subscriptionPayments));
+  }, buildRevenueStats(customerUsers, paymentRequests.filter(function(row){return customerUsers.some(function(user){return user.id===String((row.data||{}).uid||'');});}), subscriptionPayments.filter(function(row){return customerUsers.some(function(user){return user.id===String((row.data||{}).uid||'');});})));
 }
 
 function readBody(event) {
@@ -446,6 +452,8 @@ async function ensureExpiredTrialPaymentRequests(admin, db, users) {
 
 function userUpdateForAction(admin, updateType) {
   const stamp = admin.firestore.FieldValue.serverTimestamp();
+  if (updateType === 'markTeam') return { isInternalTeam: true, isTestAccount: true, customerType: 'team', paid: false, paymentVerifiedAtUtc: admin.firestore.FieldValue.delete(), updatedAt: stamp, classifiedBy: 'platform_admin' };
+  if (updateType === 'markCustomer') return { isInternalTeam: false, isTestAccount: false, customerType: 'customer', updatedAt: stamp, classifiedBy: 'platform_admin' };
   if (updateType === 'pause') {
     return {
       accountPaused: true,
@@ -619,6 +627,31 @@ exports.handler = async function handler(event) {
     if (event.httpMethod === 'POST') {
       const body = readBody(event);
       const action = String(body.action || '').trim();
+      if (action === 'setRevenueOverride') {
+        const month = String(body.month || '').trim();
+        const amount = Number(body.amount);
+        if (!/^\d{4}-\d{2}$/.test(month) || !Number.isFinite(amount) || amount < 0) return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Enter a valid month and non-negative revenue amount.' }) };
+        await db.collection('adminSettings').doc('revenue').set({ month, amount, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedBy: 'platform_admin' }, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+      if (action === 'createGrowthPartner') {
+        const name = String(body.name || '').trim();
+        const code = String(body.code || '').trim().toUpperCase();
+        if (name.length < 2 || !/^CGP-\d{4,6}$/.test(code)) return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Enter a partner name and a code such as CGP-0001.' }) };
+        const existing = await db.collection('growthPartnerCodes').doc(code).get();
+        if (existing.exists && String((existing.data() || {}).partnerId || '')) return { statusCode: 409, headers: headers(), body: JSON.stringify({ ok: false, error: 'That unique code is already assigned.' }) };
+        const partnerRef = db.collection('growthPartners').doc();
+        const stamp = admin.firestore.FieldValue.serverTimestamp();
+        await partnerRef.set({ fullName: name, code, status: 'active', createdAt: stamp, createdBy: 'platform_admin' });
+        await db.collection('growthPartnerCodes').doc(code).set({ code, partnerId: partnerRef.id, partnerName: name, status: 'ASSIGNED', assignedAt: stamp, assignedBy: 'platform_admin' }, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, partnerId: partnerRef.id, code }) };
+      }
+      if (action === 'markCurrentUsersTeam') {
+        const rows = await readCollection(db, 'users', 'createdAt', 5000);
+        const update = userUpdateForAction(admin, 'markTeam');
+        await Promise.all(rows.filter(function(row){return !isInternalAdmin(row.data||{});}).map(function(row){return db.collection('users').doc(row.id).set(update,{merge:true});}));
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, updated: rows.length }) };
+      }
       if (action === 'clearAllPaymentData') {
         const rows = await Promise.all([
           readCollection(db, 'users', 'createdAt', 5000),
@@ -1056,7 +1089,10 @@ exports.handler = async function handler(event) {
       readCollection(db, 'supportTickets', 'createdAt', 160),
       readChats(db, false),
       readCollection(db, 'paymentRequests', 'createdAt', 160),
-      readCollection(db, 'subscriptionPayments', 'receivedAtUtc', 500)
+      readCollection(db, 'subscriptionPayments', 'receivedAtUtc', 500),
+      readCollection(db, 'growthPartners', 'createdAt', 500),
+      readCollection(db, 'growthPartnerCodes', 'assignedAt', 500),
+      db.collection('adminSettings').doc('revenue').get()
     ]);
     const users = await synchronizedUsers(admin, db, initialRows[0]);
     const visits = initialRows[1];
@@ -1064,10 +1100,20 @@ exports.handler = async function handler(event) {
     const chats = initialRows[3];
     const paymentRequests = initialRows[4];
     const subscriptionPayments = initialRows[5];
+    const growthPartners = initialRows[6];
+    const growthPartnerCodes = initialRows[7];
+    const revenueSetting = initialRows[8] && initialRows[8].exists ? serialize(initialRows[8].data() || {}) : {};
     // Never block the dashboard read with per-user billing writes. Overdue
     // enforcement belongs to the billing event/scheduled path; doing it here
     // made the first admin response exceed the browser and Netlify timeouts.
     const stats = buildStats(users, visits, tickets, paymentRequests, chats, subscriptionPayments);
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    if (revenueSetting.month === currentMonth && Number.isFinite(Number(revenueSetting.amount))) {
+      stats.revenueThisMonth = Number(revenueSetting.amount);
+      stats.confirmedPaymentsThisMonth = Number(revenueSetting.amount) > 0 ? stats.confirmedPaymentsThisMonth : 0;
+      const currentBucket = (stats.monthlyRevenue || []).find(function(row){ return row.month === currentMonth; });
+      if (currentBucket) currentBucket.revenue = Number(revenueSetting.amount);
+    }
 
     return {
       statusCode: 200,
@@ -1079,6 +1125,8 @@ exports.handler = async function handler(event) {
         tickets: slimRows(tickets),
         paymentRequests: slimRows(paymentRequests),
         subscriptionPayments: slimRows(subscriptionPayments),
+        growthPartners: slimRows(growthPartners),
+        growthPartnerCodes: slimRows(growthPartnerCodes),
         chats: slimRows(chats),
         stats
       })
