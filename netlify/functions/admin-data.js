@@ -176,7 +176,8 @@ function paymentAmount(data) {
 
 function isInternalOrTestUser(row) {
   const data = (row && row.data) || {};
-  return data.isInternalTeam === true || data.isTestAccount === true || ['team', 'test', 'internal'].indexOf(String(data.customerType || '').toLowerCase()) !== -1;
+  const type = String(data.customerType || '').toLowerCase();
+  return type !== 'customer' || data.isInternalTeam === true || data.isTestAccount === true || ['team', 'test', 'internal'].indexOf(type) !== -1;
 }
 
 function buildRevenueStats(users, paymentRequests, subscriptionPayments) {

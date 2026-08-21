@@ -109,7 +109,7 @@
     </nav>
 
     <div class="grid kpis" data-admin-section="overview">
-      <div class="card"><div class="label">Users</div><div class="kpi-number" id="kpi-users">0</div><p class="muted">Signed-in accounts</p></div>
+      <div class="card"><div class="label">Customers</div><div class="kpi-number" id="kpi-users">0</div><p class="muted">Excludes team and test accounts</p></div>
       <div class="card"><div class="label">Visitors</div><div class="kpi-number" id="kpi-visitors">0</div><p class="muted">Unique website visitors</p></div>
       <div class="card"><div class="label">Page views</div><div class="kpi-number" id="kpi-visits">0</div><p class="muted">Total tracked visits</p></div>
       <div class="card"><div class="label">Landing visits</div><div class="kpi-number" id="kpi-landing">0</div><p class="muted">Homepage entries</p></div>
@@ -312,7 +312,7 @@ function paymentPill(u){
 }
 function accountPill(u){
   u = u || {};
-  if (u.isInternalTeam === true || u.isTestAccount === true) return '<span class="pill">team/test</span>';
+  if (String(u.customerType||'').toLowerCase()!=='customer' || u.isInternalTeam === true || u.isTestAccount === true) return '<span class="pill">team/test</span>';
   if (u.accountPaused === true || String(u.subscriptionStatus || '').toLowerCase() === 'paused') return '<span class="pill bad">paused</span>';
   if (isDeletedUser({ data: u })) return '<span class="pill bad">removed</span>';
   return '<span class="pill ok">active</span>';
@@ -340,7 +340,7 @@ function adminUserActions(row){
     '<button class="btn" data-user-action="resetPassword" data-user-id="'+id+'" data-user-email="'+email+'">Reset login</button>' +
     '<button class="btn gold" data-user-action="markPaid" data-user-id="'+id+'">Manual paid</button>' +
     '<button class="btn" data-user-action="markUnpaid" data-user-id="'+id+'">Mark unpaid</button>' +
-    (u.isInternalTeam===true||u.isTestAccount===true?'<button class="btn" data-user-action="markCustomer" data-user-id="'+id+'">Count as customer</button>':'<button class="btn" data-user-action="markTeam" data-user-id="'+id+'">Mark team/test</button>') +
+    (String(u.customerType||'').toLowerCase()!=='customer'||u.isInternalTeam===true||u.isTestAccount===true?'<button class="btn" data-user-action="markCustomer" data-user-id="'+id+'">Count as customer</button>':'<button class="btn" data-user-action="markTeam" data-user-id="'+id+'">Mark team/test</button>') +
     '<div class="muted">Plan upgrades are applied from an approved upgrade ticket after payment.</div>';
   html += paused
     ? '<button class="btn dark" data-user-action="unpause" data-user-id="'+id+'">Unpause</button>'
@@ -817,7 +817,8 @@ function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stat
   var localStats = Object.assign({}, stats || {});
   // The overview must always use the exact same canonical profile rows shown
   // in the Users table. Auth-only/stale identities must never inflate it.
-  localStats.usersTotal = visibleUsers.filter(function(row){var u=row.data||{};return u.isInternalTeam!==true&&u.isTestAccount!==true;}).length;
+  localStats.usersTotal = visibleUsers.filter(function(row){var u=row.data||{};return String(u.customerType||'').toLowerCase()==='customer'&&u.isInternalTeam!==true&&u.isTestAccount!==true;}).length;
+  localStats.activeMrr = visibleUsers.reduce(function(total,row){var u=row.data||{},status=String(u.subscriptionStatus||'').toLowerCase(),isCustomer=String(u.customerType||'').toLowerCase()==='customer'&&u.isInternalTeam!==true&&u.isTestAccount!==true,paid=!!u.paymentVerifiedAtUtc&&(u.paid===true||status==='active'||status==='manual-paid');return total+(isCustomer&&paid&&u.accountPaused!==true?Number(u.planMonthlyPrice||0):0);},0);
   adminUserRows = visibleUsers;
   adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:localStats,growthPartners:growthPartners||[],growthPartnerCodes:growthPartnerCodes||[]};
   renderUsers(visibleUsers, localStats);

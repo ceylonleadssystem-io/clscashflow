@@ -1736,6 +1736,9 @@ window.launchDashboard = async function launchDashboard(){
       googleTrialEnd.setDate(googleTrialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(user.uid).set({
         name: state.fname + ' ' + state.lname,
+        customerType: 'customer',
+        isInternalTeam: false,
+        isTestAccount: false,
         email: state.email,
         phone: state.phone || '',
         bizName: state.bizName || '',
@@ -1816,6 +1819,9 @@ window.launchDashboard = async function launchDashboard(){
       trialEnd.setDate(trialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(uid).set({
         name: state.fname + ' ' + state.lname,
+        customerType: 'customer',
+        isInternalTeam: false,
+        isTestAccount: false,
         role: 'owner',
         email: state.email,
         phone: state.phone || '',
