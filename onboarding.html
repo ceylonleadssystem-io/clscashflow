@@ -867,8 +867,16 @@ firebase.initializeApp(firebaseConfig);
             <div class="tour-card"><div class="tour-card-icon">🧾</div><div class="tour-card-title">Send Invoices</div><div class="tour-card-text">Create branded LKR invoices with customer details and payment status.</div></div>
             <div class="tour-card"><div class="tour-card-icon">👥</div><div class="tour-card-title">Manage Customers</div><div class="tour-card-text">Keep contact details, invoice history, and notes in one place.</div></div>
           </div>
+          <div class="summary-box" id="terms-acceptance-panel" style="text-align:left;margin-top:1.25rem">
+            <div class="summary-box-label">Terms acceptance</div>
+            <div class="ob-field" style="margin-top:.85rem"><label for="acceptance-full-name">Full Name of Person Accepting Agreement *</label><input class="ob-input" id="acceptance-full-name" autocomplete="name" maxlength="140" required oninput="window.syncAcceptanceConfirmation()"></div>
+            <label style="display:flex;align-items:flex-start;gap:.75rem;margin-top:.8rem;color:var(--text);font-size:.78rem;line-height:1.6;cursor:pointer"><input type="checkbox" id="acceptance-checkbox" style="margin-top:.3rem;flex:0 0 auto"> <span>I have read and agree to the <a href="terms.html" target="_blank" rel="noopener">Ceylonry Labs Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>. I understand that my account includes a 15-day free trial and that continued access afterward requires a prepaid monthly bank transfer and payment-slip upload.</span></label>
+            <p id="acceptance-confirmation" style="margin:.85rem 0 0;color:var(--muted);font-size:.74rem;line-height:1.55"></p>
+            <p id="acceptance-price" style="margin:.85rem 0 0;color:var(--text);font-size:.78rem;font-weight:700"></p>
+            <p style="margin:.6rem 0 0;color:var(--dim);font-size:.68rem;line-height:1.5">Contracting entity: Ceylonry Life Care (Pvt) Ltd (PV00355958), trading as Ceylonry Labs.</p>
+          </div>
           <div class="launch-choice" style="grid-template-columns:1fr">
-            <button class="btn-next" id="launch-btn" onclick="window.launchDashboard()">Start Free Trial →</button>
+            <button class="btn-next" id="launch-btn" onclick="window.launchDashboard()">I Agree &amp; Start My 15-Day Free Trial</button>
           </div>
           <p style="font-size:.7rem;color:var(--dim);margin-top:.75rem;text-align:center">Works best on laptop or desktop at normal browser zoom.</p>
         </div>
@@ -1424,8 +1432,21 @@ function buildSuccess(){
     ['Show-around',showAroundLabel],
   ];
   document.getElementById('account-summary').innerHTML=rows.map(r=>`<div class="summary-row"><strong>${r[0]}</strong>${r[1]}</div>`).join('');
+  const acceptanceName=document.getElementById('acceptance-full-name');
+  if(acceptanceName&&!acceptanceName.value.trim())acceptanceName.value=(state.fname+' '+state.lname).trim();
+  window.syncAcceptanceConfirmation();
   syncShowAroundUi();
 }
+
+window.syncAcceptanceConfirmation=function syncAcceptanceConfirmation(){
+  const name=((document.getElementById('acceptance-full-name')||{}).value||'').trim();
+  const plan=String(state.tier||state.suggestedTier||'solo').toLowerCase();
+  const labels={solo:'LKR 3,500',studio:'LKR 5,500',business:'LKR 8,500'};
+  const confirmation=document.getElementById('acceptance-confirmation');
+  const price=document.getElementById('acceptance-price');
+  if(confirmation)confirmation.textContent='By clicking “I Agree & Start My 15-Day Free Trial”, I confirm that I am '+(name||'[full name required]')+' and that I am authorised to accept these Terms personally or on behalf of the business associated with this account.';
+  if(price)price.textContent='15 days free. Then '+(labels[plan]||labels.solo)+' per month, prepaid manually by bank transfer to continue.';
+};
 
 function syncShowAroundUi(){
   const book=document.getElementById('showaround-book');
@@ -1589,9 +1610,44 @@ async function sendWelcomeEmail(payload){
   if(!response.ok)throw new Error(result.error||('Welcome email failed with HTTP '+response.status));
   return result;
 }
+const TERMS_VERSION='TERMS-2026-08-21-V1';
+const TERMS_EFFECTIVE_DATE='2026-08-21';
+const PRIVACY_VERSION='PRIVACY-2026-08-21-V1';
+function acceptanceInput(){
+  const fullName=((document.getElementById('acceptance-full-name')||{}).value||'').trim().replace(/\s+/g,' ');
+  const accepted=!!((document.getElementById('acceptance-checkbox')||{}).checked);
+  return {fullName,accepted};
+}
+function newAcceptanceId(){
+  try{if(window.crypto&&crypto.randomUUID)return 'accept-'+crypto.randomUUID();}catch(e){}
+  return 'accept-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12);
+}
+async function saveTermsAcceptance(uid,plan,trialStart,trialEnd){
+  const consent=acceptanceInput();
+  const monthlyPrices={solo:3500,studio:5500,business:8500};
+  const acceptedAt=new Date().toISOString();
+  const acceptanceId=newAcceptanceId();
+  const record={
+    acceptanceId:acceptanceId,userId:uid,accountId:uid,
+    fullNameAtAcceptance:consent.fullName,emailAtAcceptance:state.email,
+    businessNameAtAcceptance:state.invoiceBiz||state.bizName||'',
+    subscriptionPlan:plan,subscriptionPrice:monthlyPrices[plan]||3500,currency:'LKR',billingCycle:'monthly-prepaid-manual',
+    trialStartDatetime:trialStart,trialEndDatetime:trialEnd,firstBillingDatetime:trialEnd,
+    termsVersion:TERMS_VERSION,termsEffectiveDate:TERMS_EFFECTIVE_DATE,privacyPolicyVersion:PRIVACY_VERSION,
+    acceptedTerms:true,acceptedPrivacy:true,recurringBillingAuthorised:false,
+    acceptedAt:acceptedAt,userAgent:navigator.userAgent||'',deviceBrowserInformation:navigator.platform||'',
+    paymentCustomerReference:'',paymentMethodReference:'',contractingEntity:'Ceylonry Life Care (Pvt) Ltd',companyRegistrationNumber:'PV00355958',tradingAs:'Ceylonry Labs'
+  };
+  await firebase.firestore().collection('users').doc(uid).collection('termsAcceptances').doc(acceptanceId).set(record);
+  return record;
+}
 window.launchDashboard = async function launchDashboard(){
   const btn = document.getElementById('launch-btn');
-  if(btn){ btn.textContent = 'Saving your details…'; btn.disabled = true; }
+  const consent=acceptanceInput();
+  if(!consent.fullName){showStepError(4,'Enter the full name of the person accepting the agreement.',['acceptance-full-name']);return;}
+  if(consent.fullName.length<3){showStepError(4,'Enter a valid full name for the person accepting the agreement.',['acceptance-full-name']);return;}
+  if(!consent.accepted){showStepError(4,'You must read and agree to the Terms of Service and Privacy Policy before starting the trial.',['acceptance-checkbox']);return;}
+  if(btn){ btn.textContent = 'Saving your agreement…'; btn.disabled = true; }
 
   try {
     const prices = { solo: 36000, studio: 60000, business: 94800 };
@@ -1619,7 +1675,8 @@ window.launchDashboard = async function launchDashboard(){
         existingProfile.lastPlan,
         requestedPlan
       );
-      var googleTrialEnd = new Date();
+      var googleTrialStart = new Date();
+      var googleTrialEnd = new Date(googleTrialStart.getTime());
       googleTrialEnd.setDate(googleTrialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(user.uid).set({
         name: state.fname + ' ' + state.lname,
@@ -1641,7 +1698,7 @@ window.launchDashboard = async function launchDashboard(){
         billingCycle: 'monthly',
         nextInvNum: 1,
         nextInvId: 1,
-        trialStart: new Date().toISOString(),
+        trialStart: googleTrialStart.toISOString(),
         trialEnd: googleTrialEnd.toISOString(),
         paid: false,
         selectedTemplate: normalizeTplIdx(state.selectedTemplate),
@@ -1656,13 +1713,18 @@ window.launchDashboard = async function launchDashboard(){
         setupTasks: state.setupTasks,
         ...showAroundPayload(),
         onboardingComplete: true,
+        termsAccepted: true,
+        termsAcceptedName: consent.fullName,
+        termsVersion: TERMS_VERSION,
+        privacyPolicyVersion: PRIVACY_VERSION,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+      const acceptanceRecord=await saveTermsAcceptance(user.uid,selectedPlan,googleTrialStart.toISOString(),googleTrialEnd.toISOString());
       runBackground('Invite accept failed:', function(){ return acceptOnboardingInvite(user.uid,state.email); });
       runBackground('Onboarding seed failed:', function(){ return seedOnboardingData(user.uid); });
       if(btn)btn.textContent='Sending your welcome email…';
       try{
-        const welcomeResult=await withTimeout(sendWelcomeEmail({to:state.email,name:state.fname+' '+state.lname,plan:selectedPlan,biz:state.bizName||'your business',trialEnd:googleTrialEnd.toISOString()}),8000,null);
+        const welcomeResult=await withTimeout(sendWelcomeEmail({to:state.email,name:state.fname+' '+state.lname,plan:selectedPlan,biz:state.bizName||'your business',trialStart:googleTrialStart.toISOString(),trialEnd:googleTrialEnd.toISOString(),acceptance:acceptanceRecord}),8000,null);
         if(welcomeResult&&welcomeResult.sent)await firebase.firestore().collection('users').doc(user.uid).set({welcomeEmailSentAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
       }catch(emailErr){console.warn('Welcome email failed:',emailErr);}
       if (window.clsRememberPlan) runBackground('Plan remember failed:', function(){ return window.clsRememberPlan(selectedPlan, user.uid, firebase.firestore()); });
@@ -1686,7 +1748,8 @@ window.launchDashboard = async function launchDashboard(){
       } catch(profileErr) {
         console.warn('Profile metadata update skipped:', profileErr);
       }
-      const trialEnd = new Date();
+      const trialStart = new Date();
+      const trialEnd = new Date(trialStart.getTime());
       trialEnd.setDate(trialEnd.getDate() + 15);
       await firebase.firestore().collection('users').doc(uid).set({
         name: state.fname + ' ' + state.lname,
@@ -1709,7 +1772,7 @@ window.launchDashboard = async function launchDashboard(){
         billingCycle: 'monthly',
         nextInvNum: 1,
         nextInvId: 1,
-        trialStart: new Date().toISOString(),
+        trialStart: trialStart.toISOString(),
         trialEnd: trialEnd.toISOString(),
         paid: false,
         selectedTemplate: normalizeTplIdx(state.selectedTemplate),
@@ -1724,13 +1787,18 @@ window.launchDashboard = async function launchDashboard(){
         setupTasks: state.setupTasks,
         ...showAroundPayload(),
         onboardingComplete: true,
+        termsAccepted: true,
+        termsAcceptedName: consent.fullName,
+        termsVersion: TERMS_VERSION,
+        privacyPolicyVersion: PRIVACY_VERSION,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+      const acceptanceRecord=await saveTermsAcceptance(uid,requestedPlan,trialStart.toISOString(),trialEnd.toISOString());
       runBackground('Invite accept failed:', function(){ return acceptOnboardingInvite(uid,state.email); });
       runBackground('Onboarding seed failed:', function(){ return seedOnboardingData(uid); });
       if(btn)btn.textContent='Sending your welcome email…';
       try{
-        const welcomeResult=await withTimeout(sendWelcomeEmail({to:state.email,name:state.fname+' '+state.lname,plan:requestedPlan,biz:state.bizName||'your business',trialEnd:trialEnd.toISOString()}),8000,null);
+        const welcomeResult=await withTimeout(sendWelcomeEmail({to:state.email,name:state.fname+' '+state.lname,plan:requestedPlan,biz:state.bizName||'your business',trialStart:trialStart.toISOString(),trialEnd:trialEnd.toISOString(),acceptance:acceptanceRecord}),8000,null);
         if(welcomeResult&&welcomeResult.sent)await firebase.firestore().collection('users').doc(uid).set({welcomeEmailSentAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
       }catch(emailErr){console.warn('Welcome email failed:',emailErr);}
       if (window.clsRememberPlan) runBackground('Plan remember failed:', function(){ return window.clsRememberPlan(requestedPlan, uid, firebase.firestore()); });
@@ -1739,7 +1807,7 @@ window.launchDashboard = async function launchDashboard(){
 
   } catch(err) {
     console.error(err);
-    if(btn){ btn.textContent = 'Start Free Trial →'; btn.disabled = false; }
+    if(btn){ btn.textContent = 'I Agree & Start My 15-Day Free Trial'; btn.disabled = false; }
     if(err.code === 'auth/email-already-in-use' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'){
       showStepError(4,'An account with this email already exists. Please sign in instead, or use the correct password to continue setup.');
     } else {

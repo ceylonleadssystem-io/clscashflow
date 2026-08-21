@@ -24,7 +24,14 @@ exports.handler = async function handler(event) {
   const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
   const plan    = planAliases[rawPlan] || rawPlan;
   const biz     = (data.biz || 'CLS CashFlow').trim();
+  const trialStart = (data.trialStart || '').trim();
   const trialEnd = (data.trialEnd || '').trim();
+  const acceptance = data.acceptance && typeof data.acceptance === 'object' ? data.acceptance : {};
+  const acceptedName = String(acceptance.fullNameAtAcceptance || name || '').trim();
+  const termsVersion = String(acceptance.termsVersion || '').trim();
+  const acceptedAt = String(acceptance.acceptedAt || '').trim();
+  const forwardedFor = event.headers && (event.headers['x-forwarded-for'] || event.headers['X-Forwarded-For']);
+  const onboardingIp = String(forwardedFor || (event.headers && event.headers['client-ip']) || '').split(',')[0].trim();
 
   if (!to) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Missing recipient email' }) };
@@ -68,6 +75,8 @@ exports.handler = async function handler(event) {
     planLabel + ' Plan\n' +
     'Monthly prepaid price: LKR ' + monthlyPrice + '/mo\n' +
     '15-day free trial — no payment required until: ' + trialEndFmt + '\n\n' +
+    'Terms accepted by: ' + acceptedName + '\n' +
+    'Terms version: ' + termsVersion + '\n\n' +
     'After your trial ends, transfer the monthly payment to our bank account and upload the payment slip to continue using the system.\n\n' +
     'If you have any questions, reply to this email or contact us on WhatsApp.\n\n' +
     'See you inside,\nThe CeylonryLabs Team';
@@ -104,6 +113,7 @@ exports.handler = async function handler(event) {
               'Monthly prepaid price: <strong style="color:#1a1714">LKR ' + esc(monthlyPrice) + '/mo</strong>' +
             '</p>' +
             '<p style="margin:0;font-size:13px;color:#6B6258">✓ 15-day free trial · No payment required now<br>✓ Trial ends: <strong style="color:#1a1714">' + esc(trialEndFmt) + '</strong></p>' +
+            '<p style="margin:10px 0 0;font-size:12px;color:#6B6258">Accepted by: <strong style="color:#1a1714">' + esc(acceptedName) + '</strong><br>Terms version: ' + esc(termsVersion) + '</p>' +
           '</div>' +
 
           // CTA button
@@ -135,10 +145,31 @@ exports.handler = async function handler(event) {
       text,
       html
     });
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || ('"Cashflow Onboarding" <' + user + '>'),
+      replyTo: to,
+      to: 'hello@ceylonrylabs.io',
+      subject: 'New Cashflow client onboarded · ' + planLabel + ' · ' + (biz || acceptedName),
+      text: [
+        'A new Cashflow System client completed onboarding.',
+        'Accepted by: ' + acceptedName,
+        'Customer email: ' + to,
+        'Business: ' + biz,
+        'Plan: ' + planLabel,
+        'Monthly price: LKR ' + monthlyPrice,
+        'Trial start: ' + trialStart,
+        'Trial end: ' + trialEnd,
+        'Accepted at: ' + acceptedAt,
+        'Terms version: ' + termsVersion,
+        'Onboarding IP: ' + onboardingIp,
+        'Acceptance ID: ' + String(acceptance.acceptanceId || '')
+      ].join('\n'),
+      html: '<div style="font-family:Arial,sans-serif"><h2>New Cashflow client onboarded</h2><p><b>Accepted by:</b> '+esc(acceptedName)+'</p><p><b>Customer email:</b> '+esc(to)+'</p><p><b>Business:</b> '+esc(biz)+'</p><p><b>Plan:</b> '+esc(planLabel)+'</p><p><b>Monthly price:</b> LKR '+esc(monthlyPrice)+'</p><p><b>Trial start:</b> '+esc(trialStart)+'</p><p><b>Trial end:</b> '+esc(trialEnd)+'</p><p><b>Accepted at:</b> '+esc(acceptedAt)+'</p><p><b>Terms version:</b> '+esc(termsVersion)+'</p><p><b>Onboarding IP:</b> '+esc(onboardingIp)+'</p><p><b>Acceptance ID:</b> '+esc(acceptance.acceptanceId||'')+'</p></div>'
+    });
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sent: true, to })
+      body: JSON.stringify({ sent: true, adminNotified: true, to })
     };
   } catch (err) {
     console.error('send-welcome error:', err.message);
