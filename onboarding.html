@@ -502,6 +502,7 @@ firebase.initializeApp(firebaseConfig);
         </div>
         <div class="ob-field"><label for="s1-email">Email Address *</label><input class="ob-input" type="email" id="s1-email" placeholder="you@yourbusiness.com" autocomplete="email" maxlength="254" required></div>
         <div class="ob-field"><label for="s1-phone">Phone Number *</label><input class="ob-input" type="tel" id="s1-phone" placeholder="+94 77 000 0000" autocomplete="tel" minlength="7" maxlength="20" required></div>
+        <div class="ob-field"><label for="s1-partner-code">Growth Partner Code <span style="font-weight:500;color:var(--muted)">(optional)</span></label><input class="ob-input" id="s1-partner-code" placeholder="CGP-0001" autocomplete="off" maxlength="12" aria-describedby="s1-partner-code-help" oninput="window.handleGrowthPartnerCodeInput(this)" onblur="window.validateGrowthPartnerCode()"><small id="s1-partner-code-help" style="display:block;margin-top:.4rem;color:var(--muted);font-size:.68rem;line-height:1.5">If a Growth Partner introduced you to Ceylonry Labs, enter their unique code here.</small></div>
         <div class="ob-input-row">
           <div class="ob-field"><label for="s1-pass">Password *</label><div class="ob-password-wrap"><input class="ob-input" type="password" id="s1-pass" placeholder="Min 8 characters" autocomplete="new-password" minlength="8" maxlength="128" required><button class="ob-password-toggle" type="button" aria-label="Show password" aria-controls="s1-pass" aria-pressed="false" onclick="window.togglePasswordVisibility('s1-pass',this)">Show</button></div></div>
           <div class="ob-field"><label for="s1-pass2">Confirm Password *</label><div class="ob-password-wrap"><input class="ob-input" type="password" id="s1-pass2" placeholder="Repeat password" autocomplete="new-password" minlength="8" maxlength="128" required><button class="ob-password-toggle" type="button" aria-label="Show confirmed password" aria-controls="s1-pass2" aria-pressed="false" onclick="window.togglePasswordVisibility('s1-pass2',this)">Show</button></div></div>
@@ -890,7 +891,7 @@ firebase.initializeApp(firebaseConfig);
 let currentStep = 1;
 const totalSteps = 4;
 const state = {
-  fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',
+  fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',growthPartnerCode:'',growthPartnerId:'',growthPartnerName:'',
   bizName:'',industry:'',tier:'',suggestedTier:'solo',planTouched:false,useCases:[],firstClient:null,expLevel:'',
   setupTasks:{profile:true,payroll:false,notifications:false},
   logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',selectedTemplate:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',
@@ -1050,8 +1051,12 @@ window.togglePasswordVisibility = function togglePasswordVisibility(inputId, but
 };
 
 // ── NAVIGATION ──
-window.nextStep = function nextStep(from,skip=false){
+window.nextStep = async function nextStep(from,skip=false){
   clearStepErrors();
+  if(!skip && from===1 && String((document.getElementById('s1-partner-code')||{}).value||'').trim()){
+    const partnerValidation=await window.validateGrowthPartnerCode(true);
+    if(!partnerValidation) return;
+  }
   if(!skip && !validateStep(from)) return;
   if(!skip) saveStepData(from);
   const next=getNextStep(from);
@@ -1135,6 +1140,49 @@ function showStepError(step,message,fieldIds){
 function isEmail(v){return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
 function isPhone(v){return !v || /^[+0-9 ()-]{7,20}$/.test(v);}
 function isName(v){return /^[A-Za-z][A-Za-z .'-]{1,59}$/.test(String(v||'').trim());}
+function normalizeGrowthPartnerCode(value){
+  const compact=String(value||'').toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9-]/g,'');
+  const digits=compact.replace(/^CGP-?/,'').replace(/\D/g,'');
+  return digits ? 'CGP-'+digits.slice(0,6) : compact.slice(0,12);
+}
+let growthPartnerValidation={code:'',valid:false,pending:false};
+window.handleGrowthPartnerCodeInput=function(input){
+  input.value=normalizeGrowthPartnerCode(input.value);
+  growthPartnerValidation={code:input.value,valid:false,pending:false};
+  state.growthPartnerCode='';state.growthPartnerId='';state.growthPartnerName='';
+  const help=document.getElementById('s1-partner-code-help');
+  if(help){help.textContent=input.value?'We will verify this code before you continue.':'If a Growth Partner introduced you to Ceylonry Labs, enter their unique code here.';help.style.color='var(--muted)';}
+};
+window.validateGrowthPartnerCode=async function(showError){
+  const input=document.getElementById('s1-partner-code');
+  const help=document.getElementById('s1-partner-code-help');
+  const code=normalizeGrowthPartnerCode(input&&input.value);
+  if(input)input.value=code;
+  if(!code){growthPartnerValidation={code:'',valid:true,pending:false};state.growthPartnerCode='';state.growthPartnerId='';state.growthPartnerName='';return true;}
+  if(!/^CGP-\d{4,6}$/.test(code)){
+    if(help){help.textContent='Use the code format CGP-0001.';help.style.color='#b42318';}
+    if(showError)showStepError(1,'Enter a valid Growth Partner code in the format CGP-0001.',['s1-partner-code']);
+    return false;
+  }
+  if(growthPartnerValidation.code===code&&growthPartnerValidation.valid)return true;
+  growthPartnerValidation={code:code,valid:false,pending:true};
+  if(help){help.textContent='Checking Growth Partner code…';help.style.color='var(--muted)';}
+  try{
+    const response=await fetch('/.netlify/functions/growth-partner-code?code='+encodeURIComponent(code));
+    const result=await response.json().catch(function(){return{};});
+    if(!response.ok||!result.valid)throw new Error(result.error||'This Growth Partner code is not active.');
+    growthPartnerValidation={code:code,valid:true,pending:false};
+    state.growthPartnerCode=code;state.growthPartnerId=result.partnerId||'';state.growthPartnerName=result.partnerName||'';
+    if(help){help.textContent='Code verified'+(state.growthPartnerName?' for '+state.growthPartnerName:'')+'.';help.style.color='#147a45';}
+    return true;
+  }catch(err){
+    growthPartnerValidation={code:code,valid:false,pending:false};
+    state.growthPartnerCode='';state.growthPartnerId='';state.growthPartnerName='';
+    if(help){help.textContent=err.message||'This Growth Partner code is not active.';help.style.color='#b42318';}
+    if(showError)showStepError(1,err.message||'This Growth Partner code is not active.',['s1-partner-code']);
+    return false;
+  }
+};
 
 // ── VALIDATION ──
 function validateStep(step){
@@ -1717,6 +1765,11 @@ window.launchDashboard = async function launchDashboard(){
         termsAcceptedName: consent.fullName,
         termsVersion: TERMS_VERSION,
         privacyPolicyVersion: PRIVACY_VERSION,
+        growthPartnerCode: existingProfile.growthPartnerCode || state.growthPartnerCode || '',
+        growthPartnerId: existingProfile.growthPartnerId || state.growthPartnerId || '',
+        growthPartnerName: existingProfile.growthPartnerName || state.growthPartnerName || '',
+        growthPartnerAttributionStatus: existingProfile.growthPartnerAttributionStatus || (state.growthPartnerCode ? 'validated' : 'direct'),
+        growthPartnerAttributedAtUtc: existingProfile.growthPartnerAttributedAtUtc || (state.growthPartnerCode ? new Date().toISOString() : ''),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       const acceptanceRecord=await saveTermsAcceptance(user.uid,selectedPlan,googleTrialStart.toISOString(),googleTrialEnd.toISOString());
@@ -1743,6 +1796,8 @@ window.launchDashboard = async function launchDashboard(){
         }
       }
       const uid = cred.user.uid;
+      const priorDoc = await withTimeout(firebase.firestore().collection('users').doc(uid).get(), 5000, null);
+      const priorProfile = priorDoc && priorDoc.exists ? priorDoc.data() : {};
       try {
         await cred.user.updateProfile({ displayName: state.fname + ' ' + state.lname });
       } catch(profileErr) {
@@ -1791,6 +1846,11 @@ window.launchDashboard = async function launchDashboard(){
         termsAcceptedName: consent.fullName,
         termsVersion: TERMS_VERSION,
         privacyPolicyVersion: PRIVACY_VERSION,
+        growthPartnerCode: priorProfile.growthPartnerCode || state.growthPartnerCode || '',
+        growthPartnerId: priorProfile.growthPartnerId || state.growthPartnerId || '',
+        growthPartnerName: priorProfile.growthPartnerName || state.growthPartnerName || '',
+        growthPartnerAttributionStatus: priorProfile.growthPartnerAttributionStatus || (state.growthPartnerCode ? 'validated' : 'direct'),
+        growthPartnerAttributedAtUtc: priorProfile.growthPartnerAttributedAtUtc || (state.growthPartnerCode ? new Date().toISOString() : ''),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       const acceptanceRecord=await saveTermsAcceptance(uid,requestedPlan,trialStart.toISOString(),trialEnd.toISOString());

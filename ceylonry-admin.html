@@ -101,6 +101,7 @@
     <nav class="admin-tabs" id="admin-tabs" aria-label="Admin sections">
       <button class="admin-tab active" type="button" data-admin-tab="overview">Overview</button>
       <button class="admin-tab" type="button" data-admin-tab="users">Users</button>
+      <button class="admin-tab" type="button" data-admin-tab="growth-partners">Growth Partners</button>
       <button class="admin-tab" type="button" data-admin-tab="payments">Payments</button>
       <button class="admin-tab" type="button" data-admin-tab="chats">Chats</button>
       <button class="admin-tab" type="button" data-admin-tab="tickets">Tickets</button>
@@ -141,9 +142,15 @@
       <div class="user-breakdown" id="user-breakdown"></div>
       <div class="admin-tools"><div class="field search"><label>Search users</label><input id="user-search" type="search" placeholder="Name, email, business or ID"></div><div class="field"><label>Plan</label><select id="user-plan-filter"><option value="">All plans</option><option>solo</option><option>studio</option><option>business</option></select></div><div class="field"><label>Status</label><select id="user-status-filter"><option value="">All statuses</option><option value="new">New this week</option><option value="trial">Trial</option><option value="paid">Paid</option><option value="paused">Paused</option><option value="receipt">Receipt uploaded</option></select></div></div>
       <div class="table-wrap"><table class="table compact-users">
-        <thead><tr><th>User</th><th>Plan</th><th>Billing</th><th>Account</th><th>Joined</th><th>Last seen</th><th>Actions</th></tr></thead>
+        <thead><tr><th>User</th><th>Plan</th><th>Growth Partner</th><th>Billing</th><th>Account</th><th>Joined</th><th>Last seen</th><th>Actions</th></tr></thead>
         <tbody id="users-body"></tbody>
       </table></div>
+    </section>
+
+    <section class="section" data-admin-section="growth-partners">
+      <div class="section-head"><h2>Growth Partner Attributions</h2><span class="muted">Validated partner codes captured during onboarding</span></div>
+      <div class="grid kpis" style="margin-bottom:16px"><div class="card"><div class="label">Referred customers</div><div class="kpi-number" id="kpi-partner-customers">0</div></div><div class="card"><div class="label">Active codes used</div><div class="kpi-number" id="kpi-partner-codes">0</div></div></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Code</th><th>Growth Partner</th><th>Customers</th><th>Trial</th><th>Paid</th><th>Latest signup</th></tr></thead><tbody id="growth-partners-body"></tbody></table></div>
     </section>
 
     <section class="section" data-admin-section="visits">
@@ -534,14 +541,23 @@ async function fetchAdminFunction(body, forceRefresh){
 function renderUsers(users, stats){
   users = users || [];
   var q=String(($('user-search')||{}).value||'').toLowerCase(),planFilter=String(($('user-plan-filter')||{}).value||'').toLowerCase(),statusFilter=String(($('user-status-filter')||{}).value||'').toLowerCase(),weekAgo=Date.now()-7*86400000;
-  users=users.filter(function(row){var u=row.data||{},plan=normalizePlan(u.currentPlan||u.plan||u.lastPlan),status=String(u.subscriptionStatus||'').toLowerCase(),hay=[u.name,u.displayName,u.bizName,u.businessName,u.email,row.id].join(' ').toLowerCase(),created=dateMs(u.createdAt||u.createdAtUtc);if(q&&hay.indexOf(q)<0)return false;if(planFilter&&plan!==planFilter)return false;if(statusFilter==='new'&&created<weekAgo)return false;if(statusFilter==='trial'&&(u.paid===true||status==='active'||status==='manual-paid'))return false;if(statusFilter==='paid'&&!(u.paid===true||status==='active'||status==='manual-paid'||status==='receipt-submitted'))return false;if(statusFilter==='paused'&&!(u.accountPaused===true||status==='paused'))return false;if(statusFilter==='receipt'&&!u.lastPaymentSlipAtUtc)return false;return true;}).sort(function(a,b){return dateMs((b.data||{}).createdAt||(b.data||{}).createdAtUtc)-dateMs((a.data||{}).createdAt||(a.data||{}).createdAtUtc);});
+  users=users.filter(function(row){var u=row.data||{},plan=normalizePlan(u.currentPlan||u.plan||u.lastPlan),status=String(u.subscriptionStatus||'').toLowerCase(),hay=[u.name,u.displayName,u.bizName,u.businessName,u.email,u.growthPartnerCode,u.growthPartnerName,row.id].join(' ').toLowerCase(),created=dateMs(u.createdAt||u.createdAtUtc);if(q&&hay.indexOf(q)<0)return false;if(planFilter&&plan!==planFilter)return false;if(statusFilter==='new'&&created<weekAgo)return false;if(statusFilter==='trial'&&(u.paid===true||status==='active'||status==='manual-paid'))return false;if(statusFilter==='paid'&&!(u.paid===true||status==='active'||status==='manual-paid'||status==='receipt-submitted'))return false;if(statusFilter==='paused'&&!(u.accountPaused===true||status==='paused'))return false;if(statusFilter==='receipt'&&!u.lastPaymentSlipAtUtc)return false;return true;}).sort(function(a,b){return dateMs((b.data||{}).createdAt||(b.data||{}).createdAtUtc)-dateMs((a.data||{}).createdAt||(a.data||{}).createdAtUtc);});
   stats = stats || clientStats(users, [], []);
   $('kpi-users').textContent = fmtInt(stats.usersTotal == null ? users.length : stats.usersTotal);
   $('users-body').innerHTML = users.map(function(row){
     var u = row.data || {};
     var plan = u.currentPlan || u.plan || u.lastPlan || '';
-    var due=u.nextPaymentDue||u.subscriptionCurrentPeriodEnd||u.trialEnd||'';return '<tr><td><b>'+esc(u.name||u.displayName||u.bizName||'Unnamed user')+'</b><br><span class="muted">'+esc(u.email||'')+'</span><br><small class="muted">'+esc(row.id)+'</small></td><td>'+planPill(plan)+'</td><td>'+paymentPill(u)+'<br><small class="muted">Due '+esc(shortDate(due))+'</small>'+(u.lastPaymentSlipAtUtc?'<br><span class="pill ok">receipt received</span>':'')+'</td><td>'+accountPill(u)+'</td><td>'+esc(shortDate(u.createdAt||u.createdAtUtc))+'</td><td>'+esc(shortDate(u.lastSeenUtc||u.lastSeenAt))+'<br><small class="muted">'+esc(u.lastSeenPath||'')+'</small></td><td>'+adminUserActions(row)+'</td></tr>';
-  }).join('') || '<tr><td colspan="7" class="muted">No users match these filters.</td></tr>';
+    var due=u.nextPaymentDue||u.subscriptionCurrentPeriodEnd||u.trialEnd||'';var partner=u.growthPartnerCode?'<span class="pill ok">'+esc(u.growthPartnerCode)+'</span><br><small class="muted">'+esc(u.growthPartnerName||u.growthPartnerId||'Validated')+'</small>':'<span class="muted">Direct</span>';return '<tr><td><b>'+esc(u.name||u.displayName||u.bizName||'Unnamed user')+'</b><br><span class="muted">'+esc(u.email||'')+'</span><br><small class="muted">'+esc(row.id)+'</small></td><td>'+planPill(plan)+'</td><td>'+partner+'</td><td>'+paymentPill(u)+'<br><small class="muted">Due '+esc(shortDate(due))+'</small>'+(u.lastPaymentSlipAtUtc?'<br><span class="pill ok">receipt received</span>':'')+'</td><td>'+accountPill(u)+'</td><td>'+esc(shortDate(u.createdAt||u.createdAtUtc))+'</td><td>'+esc(shortDate(u.lastSeenUtc||u.lastSeenAt))+'<br><small class="muted">'+esc(u.lastSeenPath||'')+'</small></td><td>'+adminUserActions(row)+'</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="muted">No users match these filters.</td></tr>';
+}
+
+function renderGrowthPartners(users){
+  var groups={};
+  (users||[]).forEach(function(row){var u=row.data||{},code=String(u.growthPartnerCode||'').trim();if(!code)return;var g=groups[code]||(groups[code]={code:code,name:u.growthPartnerName||u.growthPartnerId||'Assigned partner',customers:0,trials:0,paid:0,latest:0});g.customers+=1;var status=String(u.subscriptionStatus||'').toLowerCase();if(u.paid===true||status==='active'||status==='manual-paid')g.paid+=1;else g.trials+=1;g.latest=Math.max(g.latest,dateMs(u.createdAt||u.createdAtUtc));});
+  var rows=Object.values(groups).sort(function(a,b){return b.customers-a.customers||b.latest-a.latest;});
+  if($('kpi-partner-customers'))$('kpi-partner-customers').textContent=fmtInt(rows.reduce(function(n,r){return n+r.customers;},0));
+  if($('kpi-partner-codes'))$('kpi-partner-codes').textContent=fmtInt(rows.length);
+  if($('growth-partners-body'))$('growth-partners-body').innerHTML=rows.map(function(r){return '<tr><td><span class="pill ok">'+esc(r.code)+'</span></td><td>'+esc(r.name)+'</td><td>'+fmtInt(r.customers)+'</td><td>'+fmtInt(r.trials)+'</td><td>'+fmtInt(r.paid)+'</td><td>'+esc(shortDate(r.latest))+'</td></tr>';}).join('')||'<tr><td colspan="6" class="muted">No customers have onboarded with a validated Growth Partner code yet.</td></tr>';
 }
 
 function renderReceipts(users){var host=$('receipt-grid');if(!host)return;var rows=(users||[]).filter(function(r){return !!((r.data||{}).lastPaymentSlipAtUtc);}).sort(function(a,b){return dateMs((b.data||{}).lastPaymentSlipAtUtc)-dateMs((a.data||{}).lastPaymentSlipAtUtc);});host.innerHTML=rows.slice(0,12).map(function(r){var u=r.data||{};return '<article class="receipt-card"><strong>'+esc(u.name||u.displayName||u.email||'Customer')+'</strong><span>'+esc(u.email||'')+' · '+esc(normalizePlan(u.currentPlan||u.plan))+'</span><span>Received '+esc(shortDate(u.lastPaymentSlipAtUtc))+' · '+esc(u.lastPaymentPeriod||'')+'</span><span>'+esc(u.lastPaymentSlipName||'Payment slip emailed to accounts@ceylonrylabs.io')+'</span></article>';}).join('')||'<div class="card muted">No payment receipts uploaded yet.</div>';}
@@ -801,6 +817,7 @@ function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stat
   adminUserRows = visibleUsers;
   adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:localStats};
   renderUsers(visibleUsers, localStats);
+  renderGrowthPartners(visibleUsers);
   renderReceipts(visibleUsers);
   renderPaymentRequests(paymentRequests || [], localStats);
   renderUserBreakdown(visibleUsers, visits || [], tickets || [], paymentRequests || [], chats || []);
