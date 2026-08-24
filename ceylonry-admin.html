@@ -148,9 +148,11 @@
     </section>
 
     <section class="section" data-admin-section="growth-partners">
-      <div class="section-head"><div><h2>Growth Partner Attributions</h2><span class="muted">Create partners and make their unique codes available during onboarding</span></div><button class="btn gold" id="add-growth-partner" type="button">Add Growth Partner</button></div>
-      <div class="grid kpis" style="margin-bottom:16px"><div class="card"><div class="label">Referred customers</div><div class="kpi-number" id="kpi-partner-customers">0</div></div><div class="card"><div class="label">Active codes used</div><div class="kpi-number" id="kpi-partner-codes">0</div></div></div>
-      <div class="table-wrap"><table class="table"><thead><tr><th>Code</th><th>Growth Partner</th><th>Customers</th><th>Trial</th><th>Paid</th><th>Latest signup</th></tr></thead><tbody id="growth-partners-body"></tbody></table></div>
+      <div class="section-head"><div><h2>Growth Partners</h2><span class="muted">LKR 1,000 is earned only after each customer payment, for up to six paid months</span></div><button class="btn gold" id="add-growth-partner" type="button">Add Growth Partner</button></div>
+      <div class="grid kpis" style="margin-bottom:16px"><div class="card"><div class="label">Referred customers</div><div class="kpi-number" id="kpi-partner-customers">0</div></div><div class="card"><div class="label">Active partners</div><div class="kpi-number" id="kpi-partner-codes">0</div></div><div class="card"><div class="label">Commission payable</div><div class="kpi-number" id="kpi-partner-payable">LKR 0</div></div></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Code</th><th>Growth Partner</th><th>Email</th><th>Customers</th><th>Trial</th><th>Paid</th><th>Commission progress</th><th>Actions</th></tr></thead><tbody id="growth-partners-body"></tbody></table></div>
+      <div class="section-head" style="margin-top:24px"><div><h2>Commission payments</h2><span class="muted">One entry per paid customer month; no entry is created when a customer does not pay</span></div></div>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Status</th><th>Partner</th><th>Customer</th><th>Billing month</th><th>Timeline</th><th>Amount</th><th>Pay by</th><th>Notification</th><th>Actions</th></tr></thead><tbody id="growth-commissions-body"></tbody></table></div>
     </section>
 
     <section class="section" data-admin-section="visits">
@@ -553,16 +555,19 @@ function renderUsers(users, stats){
   }).join('') || '<tr><td colspan="8" class="muted">No users match these filters.</td></tr>';
 }
 
-function renderGrowthPartners(users,partners,codes){
+function renderGrowthPartners(users,partners,codes,commissions){
   var groups={};
-  var partnerMap={};(partners||[]).forEach(function(row){partnerMap[row.id]=row.data||{};});
-  (codes||[]).forEach(function(row){var d=row.data||{},code=d.code||row.id;if(!code)return;groups[code]={code:code,name:d.partnerName||(partnerMap[d.partnerId]||{}).fullName||d.partnerId||'Assigned partner',customers:0,trials:0,paid:0,latest:0};});
+  var partnerMap={};(partners||[]).forEach(function(row){var p=row.data||{};partnerMap[row.id]=p;if(String(p.status||'active').toLowerCase()==='active'){var code=String(p.code||'').trim();if(code)groups[code]={id:row.id,code:code,name:p.fullName||p.name||'Growth Partner',email:p.email||'',customers:0,trials:0,paid:0,latest:0,commissionCount:0};}});
+  (codes||[]).forEach(function(row){var d=row.data||{},p=partnerMap[d.partnerId]||{},code=d.code||row.id;if(!code||String(d.status||'').toUpperCase()!=='ASSIGNED'||String(p.status||'active').toLowerCase()!=='active')return;groups[code]=groups[code]||{id:d.partnerId,code:code,name:d.partnerName||p.fullName||d.partnerId||'Assigned partner',email:p.email||'',customers:0,trials:0,paid:0,latest:0,commissionCount:0};});
   (users||[]).forEach(function(row){var u=row.data||{},code=String(u.growthPartnerCode||'').trim();if(!code)return;var g=groups[code]||(groups[code]={code:code,name:u.growthPartnerName||u.growthPartnerId||'Assigned partner',customers:0,trials:0,paid:0,latest:0});g.customers+=1;var status=String(u.subscriptionStatus||'').toLowerCase();if(u.paid===true||status==='active'||status==='manual-paid')g.paid+=1;else g.trials+=1;g.latest=Math.max(g.latest,dateMs(u.createdAt||u.createdAtUtc));});
+  (commissions||[]).forEach(function(row){var c=row.data||{},g=groups[c.partnerCode];if(g&&String(c.status||'').toLowerCase()!=='void')g.commissionCount+=1;});
   var rows=Object.values(groups).sort(function(a,b){return b.customers-a.customers||b.latest-a.latest;});
   if($('kpi-partner-customers'))$('kpi-partner-customers').textContent=fmtInt(rows.reduce(function(n,r){return n+r.customers;},0));
   if($('kpi-partner-codes'))$('kpi-partner-codes').textContent=fmtInt(rows.length);
-  if($('growth-partners-body'))$('growth-partners-body').innerHTML=rows.map(function(r){return '<tr><td><span class="pill ok">'+esc(r.code)+'</span></td><td>'+esc(r.name)+'</td><td>'+fmtInt(r.customers)+'</td><td>'+fmtInt(r.trials)+'</td><td>'+fmtInt(r.paid)+'</td><td>'+esc(shortDate(r.latest))+'</td></tr>';}).join('')||'<tr><td colspan="6" class="muted">No customers have onboarded with a validated Growth Partner code yet.</td></tr>';
+  if($('growth-partners-body'))$('growth-partners-body').innerHTML=rows.map(function(r){return '<tr><td><span class="pill ok">'+esc(r.code)+'</span></td><td><b>'+esc(r.name)+'</b></td><td>'+esc(r.email||'No email')+'</td><td>'+fmtInt(r.customers)+'</td><td>'+fmtInt(r.trials)+'</td><td>'+fmtInt(r.paid)+'</td><td>'+fmtInt(r.commissionCount)+' earned entries</td><td><button class="btn red" data-delete-partner="'+esc(r.id)+'" data-partner-name="'+esc(r.name)+'">Delete</button></td></tr>';}).join('')||'<tr><td colspan="8" class="muted">No Growth Partners added yet.</td></tr>';
+  renderGrowthCommissions(commissions||[]);
 }
+function renderGrowthCommissions(rows){rows=(rows||[]).slice().sort(function(a,b){return dateMs((b.data||{}).createdAtUtc||(b.data||{}).createdAt)-dateMs((a.data||{}).createdAtUtc||(a.data||{}).createdAt);});var payable=rows.filter(function(r){return String((r.data||{}).status||'payable')==='payable';}).reduce(function(n,r){return n+Number((r.data||{}).amountLkr||1000);},0);if($('kpi-partner-payable'))$('kpi-partner-payable').textContent=money(payable);if($('growth-commissions-body'))$('growth-commissions-body').innerHTML=rows.map(function(row){var c=row.data||{},status=String(c.status||'payable').toLowerCase();return '<tr><td>'+requestStatusPill(status)+'</td><td><b>'+esc(c.partnerName||c.partnerCode)+'</b><br><small class="muted">'+esc(c.partnerEmail||'')+'</small></td><td>'+esc(c.customerName||c.customerEmail)+'</td><td>'+esc(c.period||'')+'</td><td>Month '+fmtInt(c.commissionMonth)+' of 6</td><td>'+money(c.amountLkr||1000)+'</td><td>'+esc(shortDate(c.payableByUtc))+'</td><td>'+esc(c.notificationStatus||'not sent')+'</td><td>'+(status==='payable'?'<button class="btn gold" data-commission-id="'+esc(row.id)+'" data-commission-status="paid">Mark paid</button>':'')+'</td></tr>';}).join('')||'<tr><td colspan="9" class="muted">Commission entries appear after referred customers pay their monthly bill.</td></tr>';}
 
 function renderReceipts(users){var host=$('receipt-grid');if(!host)return;var rows=(users||[]).filter(function(r){return !!((r.data||{}).lastPaymentSlipAtUtc);}).sort(function(a,b){return dateMs((b.data||{}).lastPaymentSlipAtUtc)-dateMs((a.data||{}).lastPaymentSlipAtUtc);});host.innerHTML=rows.slice(0,12).map(function(r){var u=r.data||{};return '<article class="receipt-card"><strong>'+esc(u.name||u.displayName||u.email||'Customer')+'</strong><span>'+esc(u.email||'')+' · '+esc(normalizePlan(u.currentPlan||u.plan))+'</span><span>Received '+esc(shortDate(u.lastPaymentSlipAtUtc))+' · '+esc(u.lastPaymentPeriod||'')+'</span><span>'+esc(u.lastPaymentSlipName||'Payment slip emailed to accounts@ceylonrylabs.io')+'</span></article>';}).join('')||'<div class="card muted">No payment receipts uploaded yet.</div>';}
 
@@ -811,7 +816,7 @@ function switchAdminSection(section){
     btn.classList.toggle('active', btn.getAttribute('data-admin-tab') === adminActiveSection);
   });
 }
-function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stats, growthPartners, growthPartnerCodes){
+function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stats, growthPartners, growthPartnerCodes, growthPartnerCommissions){
   users = users || [];
   var visibleUsers = users.filter(function(row){ return !isDeletedUser(row); });
   var localStats = Object.assign({}, stats || {});
@@ -820,9 +825,9 @@ function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stat
   localStats.usersTotal = visibleUsers.filter(function(row){var u=row.data||{};return String(u.customerType||'').toLowerCase()==='customer'&&u.isInternalTeam!==true&&u.isTestAccount!==true;}).length;
   localStats.activeMrr = visibleUsers.reduce(function(total,row){var u=row.data||{},status=String(u.subscriptionStatus||'').toLowerCase(),isCustomer=String(u.customerType||'').toLowerCase()==='customer'&&u.isInternalTeam!==true&&u.isTestAccount!==true,paid=!!u.paymentVerifiedAtUtc&&(u.paid===true||status==='active'||status==='manual-paid');return total+(isCustomer&&paid&&u.accountPaused!==true?Number(u.planMonthlyPrice||0):0);},0);
   adminUserRows = visibleUsers;
-  adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:localStats,growthPartners:growthPartners||[],growthPartnerCodes:growthPartnerCodes||[]};
+  adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:localStats,growthPartners:growthPartners||[],growthPartnerCodes:growthPartnerCodes||[],growthPartnerCommissions:growthPartnerCommissions||[]};
   renderUsers(visibleUsers, localStats);
-  renderGrowthPartners(visibleUsers,growthPartners||[],growthPartnerCodes||[]);
+  renderGrowthPartners(visibleUsers,growthPartners||[],growthPartnerCodes||[],growthPartnerCommissions||[]);
   renderReceipts(visibleUsers);
   renderPaymentRequests(paymentRequests || [], localStats);
   renderUserBreakdown(visibleUsers, visits || [], tickets || [], paymentRequests || [], chats || []);
@@ -851,7 +856,7 @@ async function loadAdminData(opts){
     var cached = !adminHasRendered ? readAdminCache() : null;
     if (cached) {
       var cachedPayload = cached.payload;
-      renderAdminPayload(cachedPayload.users || [], cachedPayload.visits || [], cachedPayload.tickets || [], cachedPayload.paymentRequests || [], cachedPayload.chats || [], cachedPayload.stats || {}, cachedPayload.growthPartners || [], cachedPayload.growthPartnerCodes || []);
+      renderAdminPayload(cachedPayload.users || [], cachedPayload.visits || [], cachedPayload.tickets || [], cachedPayload.paymentRequests || [], cachedPayload.chats || [], cachedPayload.stats || {}, cachedPayload.growthPartners || [], cachedPayload.growthPartnerCodes || [], cachedPayload.growthPartnerCommissions || []);
       adminHasData = true;
       setDataStatus('loading', 'Showing saved data while checking for updates…');
     } else if (!adminHasRendered) {
@@ -871,7 +876,7 @@ async function loadAdminData(opts){
     var adminFunctionError = '';
     try {
       var payload = await fetchAdminFunction();
-      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {}, payload.growthPartners || [], payload.growthPartnerCodes || []);
+      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {}, payload.growthPartners || [], payload.growthPartnerCodes || [], payload.growthPartnerCommissions || []);
       adminHasData = true;
       writeAdminCache(payload);
       setDataStatus('ok', 'Up to date · loaded ' + new Date().toLocaleTimeString());
@@ -1228,8 +1233,9 @@ async function editMonthRevenue(){
 }
 async function addGrowthPartner(){
   var name=prompt('Growth Partner full name:','');if(name===null)return;name=String(name).trim();
+  var email=prompt('Growth Partner email (commission notifications):','');if(email===null)return;email=String(email).trim().toLowerCase();
   var code=prompt('Unique code (example CGP-0001):','CGP-');if(code===null)return;code=String(code).trim().toUpperCase();
-  await fetchAdminFunction({action:'createGrowthPartner',name:name,code:code});await loadAdminData({forceLoading:true});
+  await fetchAdminFunction({action:'createGrowthPartner',name:name,email:email,code:code});await loadAdminData({forceLoading:true});
 }
 async function markCurrentUsersTeam(){
   if(!confirm('Mark every current non-admin account as team/test? They will remain accessible but will no longer count as onboarded customers or revenue.'))return;
@@ -1300,6 +1306,8 @@ if($('visit-clear'))$('visit-clear').addEventListener('click',function(){if($('v
 document.addEventListener('click', function(ev){
   if(ev.target.closest('#edit-month-revenue')){editMonthRevenue().catch(function(e){alert(e.message||'Revenue could not be updated.');});return;}
   if(ev.target.closest('#add-growth-partner')){addGrowthPartner().catch(function(e){alert(e.message||'Growth Partner could not be added.');});return;}
+  var deletePartner=ev.target.closest('[data-delete-partner]');if(deletePartner){if(confirm('Delete '+deletePartner.getAttribute('data-partner-name')+'? Their code will disappear from onboarding immediately. Existing commission history will remain.'))fetchAdminFunction({action:'deleteGrowthPartner',id:deletePartner.getAttribute('data-delete-partner')}).then(function(){return loadAdminData({forceLoading:true});}).catch(function(e){alert(e.message||'Growth Partner could not be deleted.');});return;}
+  var commissionBtn=ev.target.closest('[data-commission-id]');if(commissionBtn){fetchAdminFunction({action:'updateGrowthPartnerCommission',id:commissionBtn.getAttribute('data-commission-id'),status:commissionBtn.getAttribute('data-commission-status')}).then(function(){return loadAdminData({forceLoading:true});}).catch(function(e){alert(e.message||'Commission could not be updated.');});return;}
   if(ev.target.closest('#mark-current-users-team')){markCurrentUsersTeam().catch(function(e){alert(e.message||'Users could not be classified.');});return;}
   if(ev.target.closest('#clear-payment-data')){clearAllPaymentData().catch(function(e){alert(e.message||'Payment cleanup failed.');});return;}
   if(ev.target.closest('#clear-support-tickets')){clearSupportTickets().catch(function(e){alert(e.message||'Ticket deletion failed.');});return;}

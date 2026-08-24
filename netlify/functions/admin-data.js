@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const { firebaseAdminFacade } = require('../lib/supabase');
 
 async function getAdmin() {
@@ -604,6 +605,53 @@ function paymentRequestUpdateForStatus(admin, status) {
   return null;
 }
 
+const PARTNER_COMMISSION_LKR = 1000;
+const PARTNER_COMMISSION_MONTHS = 6;
+
+async function createPartnerCommission(admin, db, uid, payment) {
+  const userSnap = await db.collection('users').doc(String(uid)).get();
+  if (!userSnap.exists) return null;
+  const user = userSnap.data() || {};
+  const partnerId = String(user.growthPartnerId || '').trim();
+  const code = String(user.growthPartnerCode || '').trim().toUpperCase();
+  if (!partnerId || !code || user.deleted === true || String(user.accountStatus || '').toLowerCase() === 'deleted') return null;
+  const partnerSnap = await db.collection('growthPartners').doc(partnerId).get();
+  if (!partnerSnap.exists) return null;
+  const partner = partnerSnap.data() || {};
+  if (String(partner.status || '').toLowerCase() !== 'active') return null;
+  const paidAt = String(payment.paymentVerifiedAtUtc || new Date().toISOString());
+  const period = String(payment.period || payment.billingPeriod || paidAt.slice(0, 7));
+  const commissionId = [partnerId, uid, period].join('__');
+  const ref = db.collection('growthPartnerCommissions').doc(commissionId);
+  const existing = await ref.get();
+  if (existing.exists) return serialize(existing.data() || {});
+  const prior = await db.collection('growthPartnerCommissions').where('customerId', '==', String(uid)).get();
+  const earnedMonths = prior.docs.filter(function(doc) { return String((doc.data() || {}).status || '').toLowerCase() !== 'void'; }).length;
+  if (earnedMonths >= PARTNER_COMMISSION_MONTHS) return null;
+  const now = new Date(), due = new Date(now.getTime() + 86400000);
+  const payload = {
+    partnerId, partnerCode: code, partnerName: partner.fullName || partner.name || user.growthPartnerName || '',
+    partnerEmail: String(partner.email || '').trim().toLowerCase(), customerId: String(uid),
+    customerName: user.name || user.bizName || user.email || '', customerEmail: String(user.email || '').toLowerCase(),
+    period, commissionMonth: earnedMonths + 1, commissionMonthsTotal: PARTNER_COMMISSION_MONTHS,
+    amountLkr: PARTNER_COMMISSION_LKR, currency: 'LKR', status: 'payable',
+    customerPaymentId: String(payment.id || payment.token || ''), customerPaidAtUtc: paidAt,
+    payableByUtc: due.toISOString(), createdAt: admin.firestore.FieldValue.serverTimestamp(), createdAtUtc: now.toISOString()
+  };
+  await ref.set(payload);
+  if (payload.partnerEmail && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const port = Number(process.env.SMTP_PORT || 465);
+      const transporter = nodemailer.createTransport({ host: process.env.SMTP_HOST || 'smtp.hostinger.com', port, secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE !== 'false' : port === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } });
+      await transporter.sendMail({ from: process.env.SMTP_FROM || ('"CeylonryLabs Growth Partners" <' + process.env.SMTP_USER + '>'), replyTo: process.env.SMTP_REPLY_TO || process.env.SMTP_USER, to: payload.partnerEmail, subject: 'LKR 1,000 Growth Partner commission earned', text: 'Hi ' + (payload.partnerName || 'Growth Partner') + ',\n\n' + payload.customerName + ' has paid their ' + period + ' bill. Your LKR 1,000 commission (month ' + payload.commissionMonth + ' of 6) is now payable and will be paid within the next day.\n\nCeylonryLabs.io' });
+      await ref.set({ notificationStatus: 'sent', notifiedAtUtc: new Date().toISOString() }, { merge: true });
+    } catch (error) {
+      await ref.set({ notificationStatus: 'failed', notificationError: String(error.message || error).slice(0, 300) }, { merge: true });
+    }
+  } else if (payload.partnerEmail) await ref.set({ notificationStatus: 'not-configured' }, { merge: true });
+  return payload;
+}
+
 exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: headers(), body: '' };
@@ -637,15 +685,26 @@ exports.handler = async function handler(event) {
       }
       if (action === 'createGrowthPartner') {
         const name = String(body.name || '').trim();
+        const email = String(body.email || '').trim().toLowerCase();
         const code = String(body.code || '').trim().toUpperCase();
-        if (name.length < 2 || !/^CGP-\d{4,6}$/.test(code)) return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Enter a partner name and a code such as CGP-0001.' }) };
+        if (name.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^CGP-\d{4,6}$/.test(code)) return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Enter a partner name, valid email, and a code such as CGP-0001.' }) };
         const existing = await db.collection('growthPartnerCodes').doc(code).get();
         if (existing.exists && String((existing.data() || {}).partnerId || '')) return { statusCode: 409, headers: headers(), body: JSON.stringify({ ok: false, error: 'That unique code is already assigned.' }) };
         const partnerRef = db.collection('growthPartners').doc();
         const stamp = admin.firestore.FieldValue.serverTimestamp();
-        await partnerRef.set({ fullName: name, code, status: 'active', createdAt: stamp, createdBy: 'platform_admin' });
+        await partnerRef.set({ fullName: name, email, code, status: 'active', commissionAmountLkr: PARTNER_COMMISSION_LKR, commissionMonths: PARTNER_COMMISSION_MONTHS, createdAt: stamp, createdBy: 'platform_admin' });
         await db.collection('growthPartnerCodes').doc(code).set({ code, partnerId: partnerRef.id, partnerName: name, status: 'ASSIGNED', assignedAt: stamp, assignedBy: 'platform_admin' }, { merge: true });
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, partnerId: partnerRef.id, code }) };
+      }
+      if (action === 'deleteGrowthPartner') {
+        const id = String(body.id || '').trim();
+        if (!id) return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Missing Growth Partner id.' }) };
+        const ref = db.collection('growthPartners').doc(id), snap = await ref.get();
+        if (!snap.exists) return { statusCode: 404, headers: headers(), body: JSON.stringify({ ok: false, error: 'Growth Partner not found.' }) };
+        const partner = snap.data() || {}, code = String(partner.code || '').trim().toUpperCase(), stamp = admin.firestore.FieldValue.serverTimestamp();
+        await ref.set({ status: 'deleted', deletedAt: stamp, deletedBy: 'platform_admin' }, { merge: true });
+        if (code) await db.collection('growthPartnerCodes').doc(code).set({ status: 'REVOKED', revokedAt: stamp, revokedBy: 'platform_admin' }, { merge: true });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
       }
       if (action === 'markCurrentUsersTeam') {
         const rows = await readCollection(db, 'users', 'createdAt', 5000);
@@ -772,6 +831,17 @@ exports.handler = async function handler(event) {
           return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid user update.' }) };
         }
         await db.collection('users').doc(id).set(update, { merge: true });
+        if (updateType === 'markPaid') await createPartnerCommission(admin, db, id, { id: 'manual-' + new Date().toISOString().slice(0, 10), paymentVerifiedAtUtc: new Date().toISOString() });
+        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
+      }
+
+      if (action === 'updateGrowthPartnerCommission') {
+        const id = String(body.id || '').trim(), status = String(body.status || '').trim().toLowerCase();
+        if (!id || ['payable', 'paid', 'void'].indexOf(status) === -1) return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Invalid commission update.' }) };
+        const update = { status, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedBy: 'platform_admin' };
+        if (status === 'paid') { update.paidAt = admin.firestore.FieldValue.serverTimestamp(); update.paidAtUtc = new Date().toISOString(); }
+        if (status === 'void') { update.voidedAt = admin.firestore.FieldValue.serverTimestamp(); update.voidedReason = String(body.reason || 'Customer left / commission cancelled').slice(0, 200); }
+        await db.collection('growthPartnerCommissions').doc(id).set(update, { merge: true });
         return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
       }
 
@@ -787,6 +857,10 @@ exports.handler = async function handler(event) {
           return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Platform admin account cannot be deleted from this panel.' }) };
         }
         await userRef.set(userUpdateForAction(admin, 'deleteUser'), { merge: true });
+        const commissions = await db.collection('growthPartnerCommissions').where('customerId', '==', id).get();
+        await Promise.all(commissions.docs.filter(function(doc) { return String((doc.data() || {}).status || '').toLowerCase() === 'payable'; }).map(function(doc) {
+          return doc.ref.set({ status: 'void', voidedAt: admin.firestore.FieldValue.serverTimestamp(), voidedReason: 'Customer left', updatedBy: 'platform_admin' }, { merge: true });
+        }));
         let authDeleted = false;
         let authDeleteError = '';
         try {
@@ -846,6 +920,7 @@ exports.handler = async function handler(event) {
 	            }
 	          }
           await db.collection('users').doc(String(request.uid)).set(userUpdate, { merge: true });
+          if (status === 'paid') await createPartnerCommission(admin, db, String(request.uid), Object.assign({ id }, request, update));
         }
 	        return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true }) };
 	      }
@@ -1093,9 +1168,12 @@ exports.handler = async function handler(event) {
       readCollection(db, 'subscriptionPayments', 'receivedAtUtc', 500),
       readCollection(db, 'growthPartners', 'createdAt', 500),
       readCollection(db, 'growthPartnerCodes', 'assignedAt', 500),
+      readCollection(db, 'growthPartnerCommissions', 'createdAt', 1000),
       db.collection('adminSettings').doc('revenue').get()
     ]);
-    const users = await synchronizedUsers(admin, db, initialRows[0]);
+    // User profiles already contain all dashboard fields. Avoid an expensive
+    // Auth listUsers round trip on every refresh.
+    const users = initialRows[0];
     const visits = initialRows[1];
     const tickets = initialRows[2];
     const chats = initialRows[3];
@@ -1103,7 +1181,8 @@ exports.handler = async function handler(event) {
     const subscriptionPayments = initialRows[5];
     const growthPartners = initialRows[6];
     const growthPartnerCodes = initialRows[7];
-    const revenueSetting = initialRows[8] && initialRows[8].exists ? serialize(initialRows[8].data() || {}) : {};
+    const growthPartnerCommissions = initialRows[8];
+    const revenueSetting = initialRows[9] && initialRows[9].exists ? serialize(initialRows[9].data() || {}) : {};
     // Never block the dashboard read with per-user billing writes. Overdue
     // enforcement belongs to the billing event/scheduled path; doing it here
     // made the first admin response exceed the browser and Netlify timeouts.
@@ -1128,6 +1207,7 @@ exports.handler = async function handler(event) {
         subscriptionPayments: slimRows(subscriptionPayments),
         growthPartners: slimRows(growthPartners),
         growthPartnerCodes: slimRows(growthPartnerCodes),
+        growthPartnerCommissions: slimRows(growthPartnerCommissions),
         chats: slimRows(chats),
         stats
       })
