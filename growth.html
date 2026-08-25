@@ -1011,7 +1011,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="view" id="view-expenses">
       <div class="help"><b>Expenses</b> — Everything you spend to run your business. Rent, electricity, packaging, marketing, and more.</div>
       <div class="sumbar c3" id="exp-sum"></div>
-      <div class="card"><div class="card-head"><span class="card-title">All Expenses</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('expenses')">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-exp')">+ Add Expense</button></div></div><div class="cashflow-filter-tools"><div><label for="exp-from">From Date</label><input class="fi" type="date" id="exp-from" onchange="renderExpenses()"></div><div><label for="exp-to">To Date</label><input class="fi" type="date" id="exp-to" onchange="renderExpenses()"></div><div><label for="exp-sort">Sort</label><select class="fi" id="exp-sort" onchange="renderExpenses()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div><div><label for="exp-category-filter">Category</label><select class="fi" id="exp-category-filter" onchange="renderExpenses()"><option value="">All Categories</option></select></div><button class="btn bo" onclick="window.clearBusinessExpenseFilters()">Clear</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Paid To</th><th>Category</th><th class="tr">Amount (LKR)</th></tr></thead><tbody id="exp-body"></tbody></table></div></div>
+      <div class="card"><div class="card-head"><span class="card-title">All Expenses</span><div class="card-actions"><button class="btn bo" onclick="window.exportCSV('expenses')">↓ Download</button><button class="btn bd" onclick="window.openMo('mo-exp')">+ Add Expense</button></div></div><div class="cashflow-filter-tools"><div><label for="exp-from">From Date</label><input class="fi" type="date" id="exp-from" onchange="renderExpenses()"></div><div><label for="exp-to">To Date</label><input class="fi" type="date" id="exp-to" onchange="renderExpenses()"></div><div><label for="exp-sort">Sort</label><select class="fi" id="exp-sort" onchange="renderExpenses()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div><div><label for="exp-category-filter">Category</label><select class="fi" id="exp-category-filter" onchange="renderExpenses()"><option value="">All Categories</option></select></div><button class="btn bo" onclick="window.clearBusinessExpenseFilters()">Clear</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Paid To</th><th>Category</th><th class="tr">Amount</th></tr></thead><tbody id="exp-body"></tbody></table></div></div>
     </div>
 
     <!-- INVOICES -->
@@ -1147,6 +1147,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="fg"><label>Revenue Entry Default</label><select class="fi fsel" id="s-revenue-currency"><option value="LKR">LKR — Sri Lankan Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — British Pound</option></select></div>
                 <div class="fg"><label>Reporting Currency</label><select class="fi fsel" id="s-base-currency"><option value="LKR">LKR — Sri Lankan Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — British Pound</option></select></div>
               </div>
+              <div class="frow"><div class="fg"><label>Payroll Currency</label><select class="fi fsel" id="s-payroll-currency"><option value="LKR">LKR — Sri Lankan Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option><option value="GBP">GBP — British Pound</option></select><div class="template-helper">Used for salaries, deductions, and employer payroll costs.</div></div></div>
               <div class="frow">
                 <div class="fg"><label>USD to LKR</label><input class="fi" id="s-rate-usd" type="number" min="0" step="0.01" placeholder="300"></div>
                 <div class="fg"><label>EUR to LKR</label><input class="fi" id="s-rate-eur" type="number" min="0" step="0.01" placeholder="325"></div>
@@ -1407,7 +1408,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',registrationNumber:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',invoiceCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',registrationNumber:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',invoiceCurrency:'LKR',payrollCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1,
   _nextQuoteId:1
 };
@@ -1934,6 +1935,7 @@ function mapStudioSettings(src) {
   out.baseCurrency = safeCurrency(src.baseCurrency || out.baseCurrency || 'LKR');
   out.revenueDefaultCurrency = safeCurrency(src.revenueDefaultCurrency || src.defaultRevenueCurrency || out.revenueDefaultCurrency || out.baseCurrency || 'LKR');
   out.invoiceCurrency = safeCurrency(src.invoiceCurrency || out.invoiceCurrency || out.revenueDefaultCurrency || out.baseCurrency || 'LKR');
+  out.payrollCurrency = safeCurrency(src.payrollCurrency || out.payrollCurrency || out.baseCurrency || 'LKR');
   out.exchangeRates = Object.assign({}, DEFAULT_EXCHANGE_RATES, out.exchangeRates || {}, src.exchangeRates || {});
   out.exchangeRates.LKR = 1;
   currencyCodes().forEach(function(code) {
@@ -2401,7 +2403,8 @@ function businessPayrollCalc(person){
 function payrollField(id){var el=document.getElementById(id);return el?el.value:'';}
 window.updateBusinessPayrollPreview=function(){
   var calc=businessPayrollCalc({basicSalary:payrollField('payroll-basic'),allowances:payrollField('payroll-allowances'),deductions:payrollField('payroll-deductions'),statutoryEnabled:!!(document.getElementById('payroll-statutory')||{}).checked,secondaryEmployment:!!(document.getElementById('payroll-secondary')||{}).checked});
-  var el=document.getElementById('payroll-preview');if(el)el.innerHTML='<b>Gross '+fmt(calc.gross)+'</b> · Net '+fmt(calc.net)+'<br>Employee EPF '+fmt(calc.employeeEpf)+' · Employer EPF '+fmt(calc.employerEpf)+' · ETF '+fmt(calc.etf)+' · APIT '+fmt(calc.apit)+'<br><b>Total employer cost '+fmt(calc.ctc)+'</b>';
+  var payrollCurrency=safeCurrency(D.settings.payrollCurrency||D.settings.baseCurrency||'LKR');
+  var el=document.getElementById('payroll-preview');if(el)el.innerHTML='<b>Gross '+fmtCurrency(calc.gross,payrollCurrency)+'</b> · Net '+fmtCurrency(calc.net,payrollCurrency)+'<br>Employee EPF '+fmtCurrency(calc.employeeEpf,payrollCurrency)+' · Employer EPF '+fmtCurrency(calc.employerEpf,payrollCurrency)+' · ETF '+fmtCurrency(calc.etf,payrollCurrency)+' · APIT '+fmtCurrency(calc.apit,payrollCurrency)+'<br><b>Total employer cost '+fmtCurrency(calc.ctc,payrollCurrency)+'</b>';
   return calc;
 };
 window.openPayrollMo=function(id){
@@ -2416,10 +2419,10 @@ window.savePayrollStaff=function(){
   saveData();window.closeMo('mo-payroll');renderPayroll();showToast('Employee saved.','ok');
 };
 window.openPayrollPayment=function(id){
-  var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;var c=businessPayrollCalc(p);setFieldValue('payroll-pay-id',p.id);setFieldValue('payroll-pay-month',businessPayrollMonth());setFieldValue('payroll-pay-date',today());setFieldValue('payroll-pay-ref','');document.getElementById('payroll-pay-summary').innerHTML='<b>'+escHtml(p.name)+'</b><br>Net salary '+fmt(c.net)+' · Total employer cost '+fmt(c.ctc);window.openMo('mo-payroll-pay');
+  var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;var c=businessPayrollCalc(p),payrollCurrency=safeCurrency(D.settings.payrollCurrency||D.settings.baseCurrency||'LKR');setFieldValue('payroll-pay-id',p.id);setFieldValue('payroll-pay-month',businessPayrollMonth());setFieldValue('payroll-pay-date',today());setFieldValue('payroll-pay-ref','');document.getElementById('payroll-pay-summary').innerHTML='<b>'+escHtml(p.name)+'</b><br>Net salary '+fmtCurrency(c.net,payrollCurrency)+' · Total employer cost '+fmtCurrency(c.ctc,payrollCurrency);window.openMo('mo-payroll-pay');
 };
 window.commitPayrollPayment=function(){
-  var p=(D.staff||[]).find(function(x){return String(x.id)===String(payrollField('payroll-pay-id'));}),month=payrollField('payroll-pay-month'),date=payrollField('payroll-pay-date'),ref=payrollField('payroll-pay-ref').trim();if(!p||!month||!date||!ref){showToast('Month, date and payment reference are required.','err');return;}var c=businessPayrollCalc(p);p.payments=Array.isArray(p.payments)?p.payments:[];p.payments=p.payments.filter(function(x){return x.month!==month;});p.payments.push({id:'PAY'+Date.now(),month:month,date:date,method:payrollField('payroll-pay-method'),reference:ref,amount:c.net,gross:c.gross,ctc:c.ctc});var tx={id:'T'+Date.now(),date:date,desc:p.name+' salary - '+month,type:'out',cat:'Payroll',amount:c.ctc,sourceAmount:c.ctc,sourceCurrency:'LKR',exchangeRate:1,ref:ref,purpose:'Payroll',paidTo:p.name,payrollStaffId:p.id,payroll:c,source:'payroll'};D.txns.unshift(tx);D.exps.unshift({id:'E'+Date.now(),date:date,desc:tx.desc,vendor:p.name,cat:'Payroll',amount:c.ctc,sourceTransactionId:tx.id,payrollStaffId:p.id,payroll:c,purpose:'Payroll',source:'payroll'});saveData();window.closeMo('mo-payroll-pay');renderPayroll();renderCashflow();renderExpenses();showToast('Salary payment recorded.','ok');
+  var p=(D.staff||[]).find(function(x){return String(x.id)===String(payrollField('payroll-pay-id'));}),month=payrollField('payroll-pay-month'),date=payrollField('payroll-pay-date'),ref=payrollField('payroll-pay-ref').trim();if(!p||!month||!date||!ref){showToast('Month, date and payment reference are required.','err');return;}var c=businessPayrollCalc(p),payrollCurrency=safeCurrency(D.settings.payrollCurrency||D.settings.baseCurrency||'LKR'),payrollRate=exchangeRateToLkr(payrollCurrency),ctcLkr=toLkrAmount(c.ctc,payrollCurrency,payrollRate);p.payments=Array.isArray(p.payments)?p.payments:[];p.payments=p.payments.filter(function(x){return x.month!==month;});p.payments.push({id:'PAY'+Date.now(),month:month,date:date,method:payrollField('payroll-pay-method'),reference:ref,amount:c.net,gross:c.gross,ctc:c.ctc,currency:payrollCurrency,exchangeRate:payrollRate});var tx={id:'T'+Date.now(),date:date,desc:p.name+' salary - '+month,type:'out',cat:'Payroll',amount:ctcLkr,sourceAmount:c.ctc,sourceCurrency:payrollCurrency,exchangeRate:payrollRate,ref:ref,purpose:'Payroll',paidTo:p.name,payrollStaffId:p.id,payroll:c,source:'payroll'};D.txns.unshift(tx);D.exps.unshift({id:'E'+Date.now(),date:date,desc:tx.desc,vendor:p.name,cat:'Payroll',amount:ctcLkr,sourceAmount:c.ctc,sourceCurrency:payrollCurrency,exchangeRate:payrollRate,sourceTransactionId:tx.id,payrollStaffId:p.id,payroll:c,purpose:'Payroll',source:'payroll'});saveData();window.closeMo('mo-payroll-pay');renderPayroll();renderCashflow();renderExpenses();showToast('Salary payment recorded.','ok');
 };
 window.togglePayrollStaff=function(id){var p=(D.staff||[]).find(function(x){return String(x.id)===String(id);});if(!p)return;p.active=p.active===false;saveData();renderPayroll();};
 window.deletePayrollStaff=function(id){
@@ -3997,17 +4000,18 @@ window.openPayMo = function openPayMo(id) {
   if (!inv) return;
   var balance = invoiceBalance(inv);
   var days = invoiceDueDays(inv);
+  var invoiceCurrency = safeCurrency(inv.cur || 'LKR');
   document.getElementById('pay-mo-bd').innerHTML =
     '<div class="payment-summary">' +
       '<div class="payment-title"><strong>' + escHtml(inv.id) + '</strong><span>' + escHtml(inv.client) + '</span></div>' +
       '<div class="payment-metrics">' +
-        '<div class="payment-metric"><span>Total invoice</span><b>' + fmt(inv.total) + '</b></div>' +
-        '<div class="payment-metric"><span>Already paid</span><b class="pos">' + fmt(inv.paid) + '</b></div>' +
-        '<div class="payment-metric"><span>Still owed</span><b class="gld">' + fmt(balance) + '</b></div>' +
+        '<div class="payment-metric"><span>Total invoice</span><b>' + fmtCurrency(inv.total,invoiceCurrency) + '</b></div>' +
+        '<div class="payment-metric"><span>Already paid</span><b class="pos">' + fmtCurrency(inv.paid,invoiceCurrency) + '</b></div>' +
+        '<div class="payment-metric"><span>Still owed</span><b class="gld">' + fmtCurrency(balance,invoiceCurrency) + '</b></div>' +
       '</div>' +
       '<div class="form-note">' + escHtml(dueLabel(days)) + ' · Due ' + escHtml(formatDateHuman(inv.due)) + '</div>' +
     '</div>' +
-    '<div class="frow"><div class="fg"><label>Amount Being Paid (LKR)</label><input class="fi" type="text" inputmode="decimal" data-money-input id="pm-amt" value="' + fmtN(balance) + '" oninput="window.formatBusinessMoneyInput(this)"></div><div class="fg"><label>Payment Method</label><select class="fi fsel" id="pm-method"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Online Payment</option><option>Credit Card</option><option>Debit Card</option><option>Bank Deposit</option></select></div></div>' +
+    '<div class="frow"><div class="fg"><label>Amount Being Paid (' + invoiceCurrency + ')</label><input class="fi" type="text" inputmode="decimal" data-money-input id="pm-amt" value="' + fmtN(balance) + '" oninput="window.formatBusinessMoneyInput(this)"></div><div class="fg"><label>Payment Method</label><select class="fi fsel" id="pm-method"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Online Payment</option><option>Credit Card</option><option>Debit Card</option><option>Bank Deposit</option></select></div></div>' +
     '<div class="frow"><div class="fg"><label>Date of Payment</label><input class="fi" type="date" id="pm-date" value="' + today() + '"></div><div class="fg"><label>Reference / Transaction ID</label><input class="fi" id="pm-ref" placeholder="e.g. slip no, card ref, cheque no"></div></div>' +
     '<div class="fg payment-slip"><label>Payment Slip / Receipt</label><input class="fi" type="file" id="pm-slip" accept="image/*,.pdf"><div class="form-note">The file name is saved for tracking. Attach the slip in your records or email thread.</div></div>' +
     '<div class="fg" style="margin-bottom:0"><label>Payment Notes</label><textarea class="fi fi-textarea" id="pm-note" placeholder="Optional note for card payment, bank branch, payer name, or follow-up details."></textarea></div>';
@@ -4033,7 +4037,8 @@ window.confirmPay = function confirmPay() {
   inv.paid = Math.min(toNum(inv.paid) + amt, inv.total);
   inv.paidAmount = inv.paid;
   inv.status = inv.paid >= inv.total ? 'paid' : 'partial';
-  D.txns.unshift({id:'T' + Date.now(), date:payDate, desc:'Payment received - ' + inv.client, type:'in', cat:'Invoice Payment', amount:amt, sourceAmount:amt, sourceCurrency:'LKR', exchangeRate:1, ref:inv.id, purpose:'Invoice Payment', paidTo:inv.client, method:method, slipName:slipName, note:payNote, source:'invoice-payment'});
+  var paymentCurrency=safeCurrency(inv.cur||'LKR'),paymentRate=exchangeRateToLkr(paymentCurrency);
+  D.txns.unshift({id:'T' + Date.now(), date:payDate, desc:'Payment received - ' + inv.client, type:'in', cat:'Invoice Payment', amount:toLkrAmount(amt,paymentCurrency,paymentRate), sourceAmount:amt, sourceCurrency:paymentCurrency, exchangeRate:paymentRate, ref:inv.id, purpose:'Invoice Payment', paidTo:inv.client, method:method, slipName:slipName, note:payNote, source:'invoice-payment'});
   closeMo('mo-pay');
   syncBusinessComputedData();
   renderInvoices();
@@ -4041,7 +4046,7 @@ window.confirmPay = function confirmPay() {
   renderDebt();
   renderDashboard();
   saveData();
-  showToast('Payment of ' + fmt(amt) + ' recorded. Use Receipt on the paid invoice if the customer needs confirmation.', 'ok');
+  showToast('Payment of ' + fmtCurrency(amt,paymentCurrency) + ' recorded. Use Receipt on the paid invoice if the customer needs confirmation.', 'ok');
 }
 
 // ===================== MUTATIONS =====================
@@ -4551,8 +4556,10 @@ window.saveSettings = async function saveSettings() {
   D.settings.ejsReceiptTemplate = ejsReceiptTemplateEl ? (ejsReceiptTemplateEl.value || '').trim() : (D.settings.ejsReceiptTemplate || '');
   var baseCurrencyEl = document.getElementById('s-base-currency');
   var revenueCurrencyEl = document.getElementById('s-revenue-currency');
+  var payrollCurrencyEl = document.getElementById('s-payroll-currency');
   if (baseCurrencyEl) D.settings.baseCurrency = safeCurrency(baseCurrencyEl.value);
   if (revenueCurrencyEl) D.settings.revenueDefaultCurrency = safeCurrency(revenueCurrencyEl.value);
+  if (payrollCurrencyEl) D.settings.payrollCurrency = safeCurrency(payrollCurrencyEl.value);
   D.settings.exchangeRates = D.settings.exchangeRates || {};
   [['USD','s-rate-usd'],['EUR','s-rate-eur'],['GBP','s-rate-gbp']].forEach(function(pair) {
     var rateEl = document.getElementById(pair[1]);
@@ -5207,6 +5214,8 @@ _fauth.onAuthStateChanged(async function(user) {
     if (baseCurrencyField) baseCurrencyField.value = reportingCurrency();
     var revenueCurrencyField = document.getElementById('s-revenue-currency');
     if (revenueCurrencyField) revenueCurrencyField.value = defaultRevenueCurrency();
+    var payrollCurrencyField = document.getElementById('s-payroll-currency');
+    if (payrollCurrencyField) payrollCurrencyField.value = safeCurrency(s.payrollCurrency || reportingCurrency());
     [['s-rate-usd','USD'],['s-rate-eur','EUR'],['s-rate-gbp','GBP']].forEach(function(pair) {
       var field = document.getElementById(pair[0]);
       if (field) field.value = exchangeRateToLkr(pair[1]);

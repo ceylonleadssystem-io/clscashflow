@@ -768,7 +768,7 @@ document.addEventListener('click',function(e){
           <div class="f-group"><label>Type</label><select class="f-input f-select" id="cf-type-filter" onchange="renderCashflow()"><option value="">All</option><option value="in">Cash In</option><option value="out">Cash Out</option></select></div>
           <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="cf">Clear</button>
         </div>
-        <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Reference</th><th>Type</th><th>Amount (LKR)</th><th>Actions</th></tr></thead><tbody id="cf-table"></tbody></table>
+        <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Reference</th><th>Type</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="cf-table"></tbody></table>
       </div>
     </div>
 
@@ -784,7 +784,7 @@ document.addEventListener('click',function(e){
           <div class="f-group"><label>Category</label><select class="f-input f-select" id="exp-cat-filter" onchange="renderExpenses()"><option value="">All Categories</option></select></div>
           <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="exp">Clear</button>
         </div>
-        <table><thead><tr><th>Date</th><th>Description</th><th>Vendor / Supplier</th><th>Category</th><th>Amount (LKR)</th><th>Actions</th></tr></thead><tbody id="exp-table"></tbody></table>
+        <table><thead><tr><th>Date</th><th>Description</th><th>Vendor / Supplier</th><th>Category</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="exp-table"></tbody></table>
       </div>
     </div>
 
@@ -804,7 +804,7 @@ document.addEventListener('click',function(e){
           <div class="f-group"><label>Sort</label><select class="f-input f-select" id="inv-sort" onchange="renderInvoices()"><option value="date-desc">Newest Date</option><option value="date-asc">Oldest Date</option><option value="amount-desc">Amount High to Low</option><option value="amount-asc">Amount Low to High</option></select></div>
           <button class="btn-act-outline" data-cls-fn="clearTableFilters" data-cls-arg="inv">Clear</button>
         </div>
-        <table class="register-table invoice-register-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Total (LKR)</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
+        <table class="register-table invoice-register-table"><thead><tr><th>Invoice #</th><th>Customer</th><th>Date</th><th>Due Date</th><th>Status</th><th>Payment</th><th>Invoice Total</th><th>Actions</th></tr></thead><tbody id="inv-table"></tbody></table>
       </div>
       <div class="table-card" style="margin-top:1rem">
         <div class="table-header"><div><div class="table-title">Quotes &amp; Estimates</div><div style="font-size:.7rem;color:var(--muted);margin-top:.15rem">Prepare a document, download it, then convert the accepted version into an invoice.</div></div><div style="display:flex;gap:.5rem"><button class="btn-act-outline" data-cls-fn="openEstimateModal">+ Raise Estimate</button><button class="btn-act" data-cls-fn="openQuoteModal">+ Raise Quote</button></div></div>
@@ -1323,7 +1323,7 @@ document.addEventListener('click',function(e){
         <button class="pay-type-btn" id="pbt-part" data-cls-fn="setPayType" data-cls-arg="partial">Partial Payment</button>
       </div>
       <div class="f-row">
-        <div class="f-group"><label>Amount Received (LKR) *</label><input class="f-input" type="text" id="pm-amount" placeholder="0" oninput="fmtInput(this);updatePayRemain()"></div>
+        <div class="f-group"><label id="pm-amount-label">Amount Received *</label><input class="f-input" type="text" id="pm-amount" placeholder="0" oninput="fmtInput(this);updatePayRemain()"></div>
         <div class="f-group"><label>Payment Date</label><input class="f-input" type="date" id="pm-date"></div>
       </div>
       <div class="f-row">
@@ -2763,26 +2763,28 @@ window.openPayModal = function openPayModal(num){
   const paid=currentPayInv.paidAmount||0;const bal=currentPayInv.amount-paid;
   document.getElementById('pm-num').textContent=currentPayInv.num;
   document.getElementById('pm-client').textContent=currentPayInv.client;
-  document.getElementById('pm-total').textContent=fmtAmt(currentPayInv.amount);
-  document.getElementById('pm-balance').textContent=fmtAmt(bal);
-  document.getElementById('pm-paid').textContent=fmtAmt(paid);
+  document.getElementById('pm-total').textContent=soloInvoiceAmount(currentPayInv,currentPayInv.amount);
+  document.getElementById('pm-balance').textContent=soloInvoiceAmount(currentPayInv,bal);
+  document.getElementById('pm-paid').textContent=soloInvoiceAmount(currentPayInv,paid);
+  const paymentLabel=document.getElementById('pm-amount-label');if(paymentLabel)paymentLabel.textContent='Amount Received ('+soloCurrency(currentPayInv.cur)+') *';
   document.getElementById('pm-amount').value=bal.toLocaleString();
   document.getElementById('pm-date').value=todayStr();
   document.getElementById('pm-remain-alert').style.display='none';
   setPayType('full');openModal('pay-modal');
 }
 window.setPayType = function setPayType(type){payType=type;document.getElementById('pbt-full').classList.toggle('active',type==='full');document.getElementById('pbt-part').classList.toggle('active',type==='partial');if(type==='full'&&currentPayInv){const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);document.getElementById('pm-amount').value=bal.toLocaleString();}updatePayRemain();}
-window.updatePayRemain = function updatePayRemain(){if(!currentPayInv)return;const entered=parseAmt(document.getElementById('pm-amount').value);const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);const rem=bal-entered;const alert=document.getElementById('pm-remain-alert');if(rem>0&&entered>0){alert.style.display='block';document.getElementById('pm-remain-amt').textContent=fmtAmt(rem);}else{alert.style.display='none';}}
+window.updatePayRemain = function updatePayRemain(){if(!currentPayInv)return;const entered=parseAmt(document.getElementById('pm-amount').value);const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);const rem=bal-entered;const alert=document.getElementById('pm-remain-alert');if(rem>0&&entered>0){alert.style.display='block';document.getElementById('pm-remain-amt').textContent=soloInvoiceAmount(currentPayInv,rem);}else{alert.style.display='none';}}
 window.recordPayment = function recordPayment(){
   if(!currentPayInv)return;const amount=parseAmt(document.getElementById('pm-amount').value);const date=document.getElementById('pm-date').value;const method=document.getElementById('pm-method').value;const ref=document.getElementById('pm-ref').value;
   if(!amount||amount<=0){alert('Please enter a payment amount.');return;}
   const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);
-  if(amount>bal+0.01){alert('Amount exceeds the remaining balance of '+fmtAmt(bal)+'.');return;}
+  if(amount>bal+0.01){alert('Amount exceeds the remaining balance of '+soloInvoiceAmount(currentPayInv,bal)+'.');return;}
   const idx=DB.invoices.findIndex(i=>i.num===currentPayInv.num);
   const before=idx>-1?snapshotForLog(DB.invoices[idx]):snapshotForLog(currentPayInv);
   let newBal=bal-amount;
   if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';}
-  DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),id:Date.now()});
+  const paymentCurrency=soloCurrency(currentPayInv.cur);const paymentRate=SOLO_CURRENCY_RATES[paymentCurrency]||1;
+  DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount:amount*paymentRate,sourceAmount:amount,sourceCurrency:paymentCurrency,exchangeRate:paymentRate,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),id:Date.now()});
   if(idx>-1)addEditBacklog('payment',currentPayInv.num,currentPayInv.num+' · '+currentPayInv.client,'Payment recorded'+(ref?' · '+ref:''),before,snapshotForLog(DB.invoices[idx]));
   saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('pay-modal');
   alert('Payment recorded. Use Receipt on the paid invoice if the customer needs a confirmation email.');
