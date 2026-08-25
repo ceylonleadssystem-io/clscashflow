@@ -1148,7 +1148,6 @@ document.addEventListener('click',function(e){
                 <div class="f-group"><label>Main Currency</label><select class="f-input f-select" id="set-main-currency"></select><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Default currency for money in and out records.</div></div>
                 <div class="f-group"><label>Invoice Currency</label><select class="f-input f-select" id="set-invoice-currency"></select><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Default currency for invoices, quotes, and estimates.</div></div>
               </div>
-              <div class="f-row"><div class="f-group"><label>Payroll Currency</label><select class="f-input f-select" id="set-payroll-currency"></select><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Currency used for salaries and employer payroll costs.</div></div></div>
               <div class="f-row">
                 <div class="f-group"><label>Template View</label><select class="f-input f-select" id="set-invoice-view"><option value="modern">Modern</option><option value="classic">Classic</option><option value="olden">Olden</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select></div>
                 <div class="f-group"><label>Default VAT / Tax Rate (%)</label><input class="f-input" type="number" id="set-vatrate" min="0" max="100" step="0.01" placeholder="15"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Used as the percentage on every new invoice.</div></div>
@@ -1591,7 +1590,7 @@ let _isPaid = false;
 const DEMO_MODE = new URLSearchParams(window.location.search).get('demo') === '1';
 
 var DB = {
-    settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',registrationNumber:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',payrollCurrency:'LKR',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
+    settings:{bizName:'My Business',username:'',addr:'',email:'',vat:'',registrationNumber:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',logo:'',u1:'',u2:'',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,defaultTpl:0,vatRate:15,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n'},
   transactions:[],
   expenses:[],
   invoices:[],
@@ -2022,13 +2021,16 @@ function studioInvoiceLkr(inv,value){return Number(value||0)*studioExchangeRate(
 function studioInvoiceAmount(inv,value){return currencyMoney(value,studioCurrency(inv&&inv.cur||'LKR'));}
 function studioCurrencyOptionsHtml(longLabel){return Object.keys(STUDIO_CURRENCY_RATES).map(function(code){return '<option value="'+code+'">'+code+(longLabel?' - '+STUDIO_CURRENCY_LABELS[code]:'')+'</option>';}).join('');}
 function hydrateStudioCurrencySelect(id,longLabel){const el=document.getElementById(id);if(!el)return;const current=el.value||el.getAttribute('data-default')||'LKR';el.innerHTML=studioCurrencyOptionsHtml(longLabel);el.value=studioCurrency(current);}
-function hydrateStudioCurrencySelects(){['t-currency','edit-currency','i-cur'].forEach(function(id){hydrateStudioCurrencySelect(id,false);});['set-main-currency','set-invoice-currency','set-payroll-currency'].forEach(function(id){hydrateStudioCurrencySelect(id,true);});}
+function hydrateStudioCurrencySelects(){['t-currency','edit-currency','i-cur'].forEach(function(id){hydrateStudioCurrencySelect(id,false);});['set-main-currency','set-invoice-currency'].forEach(function(id){hydrateStudioCurrencySelect(id,true);});}
 function studioTxnMoney(txn){
-  const currency=studioCurrency(txn&&txn.sourceCurrency);
+  const legacyInvoice=txn&&!txn.sourceCurrency&&txn.cat==='Invoice Payment'?(DB.invoices||[]).find(function(inv){return String(txn.ref||'').indexOf(String(inv.num||''))===0||String(txn.desc||'').indexOf(String(inv.num||''))>-1;}):null;
+  const currency=studioCurrency(txn&&txn.sourceCurrency||(legacyInvoice&&legacyInvoice.cur)||'LKR');
   const rate=currency==='LKR'?1:(Number(txn&&txn.exchangeRate)||studioExchangeRate(currency));
-  const lkrAmount=Number(txn&&txn.amount)||0;
-  const sourceAmount=Number(txn&&txn.sourceAmount)||(currency==='LKR'?lkrAmount:(rate?lkrAmount/rate:0));
-  return{currency,rate,sourceAmount,lkrAmount:lkrAmount||(sourceAmount*rate)};
+  const storedAmount=Number(txn&&txn.amount)||0;
+  const legacyForeignPayment=!!(legacyInvoice&&currency!=='LKR');
+  const sourceAmount=Number(txn&&txn.sourceAmount)||(legacyForeignPayment?storedAmount:(currency==='LKR'?storedAmount:(rate?storedAmount/rate:0)));
+  const lkrAmount=legacyForeignPayment?sourceAmount*rate:(storedAmount||(sourceAmount*rate));
+  return{currency,rate,sourceAmount,lkrAmount};
 }
 function formatStudioTxnAmount(txn){
   const money=studioTxnMoney(txn);
@@ -2310,7 +2312,7 @@ function currentPayrollCalculation(){
     totalEmployerCost:payrollRound(gross+employerEpf+etf)
   };
 }
-function studioPayrollCurrency(){return studioCurrency(DB.settings.payrollCurrency||DB.settings.mainCurrency||'LKR');}
+function studioPayrollCurrency(){return studioCurrency(DB.settings.mainCurrency||'LKR');}
 function studioPayrollMoney(value){return currencyMoney(value,studioPayrollCurrency());}
 function populatePayrollStaffSelect(selectedId){
   const select=document.getElementById('p-staff');if(!select)return;
@@ -2603,7 +2605,7 @@ function renderDashboard(){
   const overdue=DB.invoices.filter(i=>i.status!=='paid'&&new Date(i.due)<todayMs);
   const monthPredicate=function(item){const d=new Date(item.date);return d.getMonth()===mo&&d.getFullYear()===yr;};
   const monthExpenses=cashOutTotal(monthPredicate);
-  const recordedIncome=DB.transactions.filter(function(t){return t.type==='in';}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
+  const recordedIncome=DB.transactions.filter(function(t){return t.type==='in';}).reduce(function(sum,t){return sum+studioTxnMoney(t).lkrAmount;},0);
   const recordedOut=cashOutTotal();
   const netCash=recordedIncome-recordedOut;
   animCount('kpi-total-invoiced',totalInvoiced);
@@ -2692,7 +2694,7 @@ function buildCharts(){
     const d=new Date(today.getFullYear(),today.getMonth()-i,1);
     const mo=d.getMonth(),yr=d.getFullYear();
     months.push(d.toLocaleDateString('en',{month:'short',year:'2-digit'}));
-    inData.push(DB.transactions.filter(t=>t.type==='in'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+t.amount,0));
+    inData.push(DB.transactions.filter(t=>t.type==='in'&&new Date(t.date).getMonth()===mo&&new Date(t.date).getFullYear()===yr).reduce((a,t)=>a+studioTxnMoney(t).lkrAmount,0));
     outData.push(cashOutTotal(function(item){const date=new Date(item.date);return date.getMonth()===mo&&date.getFullYear()===yr;}));
   }
   const cats={};DB.expenses.filter(function(e){const d=new Date(e.date);return d.getMonth()===today.getMonth()&&d.getFullYear()===today.getFullYear();}).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount;});
@@ -2970,7 +2972,7 @@ function ensureTransactionExpenses(){
 }
 function cashOutTotal(predicate){
   var matches=typeof predicate==='function'?predicate:function(){return true;};
-  var transactionOut=DB.transactions.filter(function(txn){return txn.type==='out'&&matches(txn);}).reduce(function(sum,txn){return sum+Number(txn.amount||0);},0);
+  var transactionOut=DB.transactions.filter(function(txn){return txn.type==='out'&&matches(txn);}).reduce(function(sum,txn){return sum+studioTxnMoney(txn).lkrAmount;},0);
   var unlinkedExpenses=DB.expenses.filter(function(expense){return !linkedExpenseTransaction(expense)&&matches(expense);}).reduce(function(sum,expense){return sum+Number(expense.amount||0);},0);
   return transactionOut+unlinkedExpenses;
 }
@@ -2979,7 +2981,7 @@ function cashOutTotal(predicate){
 // CASHFLOW
 // ════════════════════════════════
 function renderCashflow(){
-  const allIn=DB.transactions.filter(t=>t.type==='in').reduce((a,t)=>a+t.amount,0);
+  const allIn=DB.transactions.filter(t=>t.type==='in').reduce((a,t)=>a+studioTxnMoney(t).lkrAmount,0);
   const allOut=cashOutTotal();
   document.getElementById('cf-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Cash In</div><div class="sum-val" style="color:var(--green)">${fmtAmt(allIn)}</div></div><div class="sum-item"><div class="sum-label">Total Cash Out</div><div class="sum-val" style="color:var(--red)">${fmtAmt(allOut)}</div></div><div class="sum-item"><div class="sum-label">Net Cashflow</div><div class="sum-val" style="color:var(--gold)">${fmtAmt(allIn-allOut)}</div></div>`;
   const typeFilter=(document.getElementById('cf-type-filter')||{}).value||'';
@@ -3005,7 +3007,7 @@ window.addTransaction = function addTransaction(){
     const calc=currentPayrollCalculation();
     if(!date||!staffName||!calc.gross){alert('Please enter the payroll date, staff name and gross monthly earnings.');return;}
     desc=desc||staffName+' salary payment';
-    sourceCurrency=studioCurrency(DB.settings.payrollCurrency||DB.settings.mainCurrency||'LKR');exchangeRate=studioExchangeRate(sourceCurrency);sourceAmount=calc.totalEmployerCost;amount=sourceAmount*exchangeRate;
+    sourceCurrency=studioPayrollCurrency();exchangeRate=studioExchangeRate(sourceCurrency);sourceAmount=calc.totalEmployerCost;amount=sourceAmount*exchangeRate;
     if(document.getElementById('p-save-staff').checked)payrollStaffId=savePayrollStaffProfile(staffName,epfNo,calc);
     else{const selected=(document.getElementById('p-staff')||{}).value;payrollStaffId=selected&&selected!=='new'?selected:null;}
     payroll=Object.assign({staffId:payrollStaffId,staffName,epfNo},calc);
@@ -3044,7 +3046,7 @@ function renderExpenses(){
 }
 
 function renderBusinessInsights(){
-  const income=DB.transactions.filter(function(t){return t.type==='in';}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
+  const income=DB.transactions.filter(function(t){return t.type==='in';}).reduce(function(sum,t){return sum+studioTxnMoney(t).lkrAmount;},0);
   const totalOut=cashOutTotal();
   const net=income-totalOut;
   const outstanding=DB.invoices.reduce(function(sum,inv){return sum+Math.max(0,Number(inv.amount||0)-Number(inv.paidAmount||0));},0);
@@ -3059,7 +3061,7 @@ function renderBusinessInsights(){
   const expenseRatio=income>0?Math.round(totalOut/income*100):0;
   const currentMonth=new Date();
   const currentMonthMatch=function(item){const d=new Date(item.date);return d.getMonth()===currentMonth.getMonth()&&d.getFullYear()===currentMonth.getFullYear();};
-  const monthIncome=DB.transactions.filter(function(t){return t.type==='in'&&currentMonthMatch(t);}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
+  const monthIncome=DB.transactions.filter(function(t){return t.type==='in'&&currentMonthMatch(t);}).reduce(function(sum,t){return sum+studioTxnMoney(t).lkrAmount;},0);
   const monthOut=cashOutTotal(currentMonthMatch);
   const monthNet=monthIncome-monthOut;
   const overdueShare=DB.invoices.length?overdue.length/DB.invoices.length:0;
@@ -3103,7 +3105,7 @@ function buildInsightCharts(){
     const matches=function(item){const value=new Date(item.date);return value.getMonth()===mo&&value.getFullYear()===yr;};
     labels.push(d.toLocaleDateString('en',{month:'short',year:'2-digit'}));
     invoiced.push(DB.invoices.filter(matches).reduce(function(sum,inv){return sum+Number(inv.amount||0);},0));
-    cashIn.push(DB.transactions.filter(function(t){return t.type==='in'&&matches(t);}).reduce(function(sum,t){return sum+Number(t.amount||0);},0));
+    cashIn.push(DB.transactions.filter(function(t){return t.type==='in'&&matches(t);}).reduce(function(sum,t){return sum+studioTxnMoney(t).lkrAmount;},0));
     expenses.push(cashOutTotal(matches));
   }
   const categories={};DB.expenses.forEach(function(e){const key=e.cat||'Other';categories[key]=(categories[key]||0)+Number(e.amount||0);});
@@ -3670,7 +3672,7 @@ function renderReports(){
   const todayMs=new Date().setHours(0,0,0,0);
   const overdue=invoices.filter(i=>i.status!=='paid'&&new Date(i.due)<todayMs);
   const expenses=DB.expenses.filter(function(e){return inRange(e.date);});
-  const cashIn=DB.transactions.filter(function(t){return t.type==='in'&&inRange(t.date);}).reduce(function(sum,t){return sum+Number(t.amount||0);},0);
+  const cashIn=DB.transactions.filter(function(t){return t.type==='in'&&inRange(t.date);}).reduce(function(sum,t){return sum+studioTxnMoney(t).lkrAmount;},0);
   const cashOut=cashOutTotal(function(item){return inRange(item.date);});
   const netCash=cashIn-cashOut;
   const collectionRate=totalIssued>0?Math.round(totalPaid/totalIssued*100):0;
@@ -3958,7 +3960,6 @@ function loadSettings(){
   var viewEl=document.getElementById('set-invoice-view');if(viewEl)viewEl.value=s.invoiceView||'modern';
   var mainCurrencyEl=document.getElementById('set-main-currency');if(mainCurrencyEl)mainCurrencyEl.value=studioCurrency(s.mainCurrency||'LKR');
   var invoiceCurrencyEl=document.getElementById('set-invoice-currency');if(invoiceCurrencyEl)invoiceCurrencyEl.value=studioCurrency(s.invoiceCurrency||s.mainCurrency||'LKR');
-  var payrollCurrencyEl=document.getElementById('set-payroll-currency');if(payrollCurrencyEl)payrollCurrencyEl.value=studioCurrency(s.payrollCurrency||s.mainCurrency||'LKR');
   syncTemplatePickers(tpl);
   loadLogoAlign();
   loadLogoSize();
@@ -4002,7 +4003,6 @@ window.saveSettings = function saveSettings(){
   var viewEl=document.getElementById('set-invoice-view');DB.settings.invoiceView=viewEl&&viewEl.value?viewEl.value:'modern';
   var mainCurrencyEl=document.getElementById('set-main-currency');DB.settings.mainCurrency=studioCurrency(mainCurrencyEl&&mainCurrencyEl.value);
   var invoiceCurrencyEl=document.getElementById('set-invoice-currency');DB.settings.invoiceCurrency=studioCurrency(invoiceCurrencyEl&&invoiceCurrencyEl.value);
-  var payrollCurrencyEl=document.getElementById('set-payroll-currency');DB.settings.payrollCurrency=studioCurrency(payrollCurrencyEl&&payrollCurrencyEl.value);
   setInvoiceTemplate(DB.settings.defaultTpl);
   DB.invoices.forEach(function(inv){inv.tpl=DB.settings.defaultTpl;});
   saveDB();applySettings();alert('✓ Settings saved successfully. All invoices will use the '+templateName(DB.settings.defaultTpl)+' template.');
