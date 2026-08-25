@@ -193,7 +193,7 @@ tr:hover td{background:var(--bg3)}
 
 /* Invoice line items */
 .li-table{width:100%;border-collapse:collapse;margin-bottom:.65rem}
-.li-table th{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:.45rem .5rem;text-align:left;background:var(--bg3);border:1px solid var(--border)}
+.li-table th{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:#fff;padding:.5rem .55rem;text-align:left;background:#171512;border:1px solid #49443d;font-weight:800}
 .li-table td{border:1px solid var(--border);padding:.35rem .4rem}
 .li-table td input{background:var(--bg);border:none;padding:.35rem .45rem;color:var(--text);font-family:var(--font-b);font-size:.81rem;width:100%;outline:none}
 .li-table td input:focus{background:var(--white)}
@@ -1027,7 +1027,7 @@ document.addEventListener('click',function(e){
       </div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Customer-wise Invoice Report</div></div>
-        <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
+        <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (dashboard currency)</th><th>Outstanding (dashboard currency)</th><th>Total (dashboard currency)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
       </div>
       <div class="table-card">
         <div class="table-header"><div><div class="table-title">Expense Category Report</div><div class="report-section-copy">Recorded spending grouped by category for the selected period</div></div></div>
@@ -2005,14 +2005,16 @@ async function ensureRecentStudioWelcomeEmail(){
 
 const today = new Date();
 const fmtD = d => new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'});
-const fmtAmt = n => 'LKR '+Math.round(n).toLocaleString();
-const fmtAmtFull = n => 'LKR '+parseFloat(n).toLocaleString('en',{minimumFractionDigits:2});
+const fmtAmt = n => {const cur=studioCurrency(DB.settings.mainCurrency||'LKR');return cur+' '+Math.round(Number(n||0)/studioExchangeRate(cur)).toLocaleString();};
+const fmtAmtFull = n => {const cur=studioCurrency(DB.settings.mainCurrency||'LKR');return cur+' '+(Number(n||0)/studioExchangeRate(cur)).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});};
 window.fmtInput = function fmtInput(el){const v=el.value.replace(/[^0-9.]/g,'');const parts=v.split('.');let int=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');el.value=parts.length>1?int+'.'+parts[1]:int;}
 function parseAmt(s){return parseFloat((s||'0').replace(/,/g,''))||0;}
 const STUDIO_CURRENCY_RATES={LKR:1,USD:300,EUR:325,GBP:380,AUD:195,CAD:220,SGD:225,INR:3.6,AED:81.7,JPY:2,CHF:340,NZD:180};
 const STUDIO_CURRENCY_LABELS={LKR:'Sri Lankan Rupee',USD:'US Dollar',EUR:'Euro',GBP:'British Pound',AUD:'Australian Dollar',CAD:'Canadian Dollar',SGD:'Singapore Dollar',INR:'Indian Rupee',AED:'UAE Dirham',JPY:'Japanese Yen',CHF:'Swiss Franc',NZD:'New Zealand Dollar'};
 function studioCurrency(code){code=String(code||'LKR').toUpperCase();return STUDIO_CURRENCY_RATES[code]?code:'LKR';}
 function studioExchangeRate(code){return STUDIO_CURRENCY_RATES[studioCurrency(code)]||1;}
+function studioInvoiceLkr(inv,value){return Number(value||0)*studioExchangeRate(inv&&inv.cur||'LKR');}
+function studioInvoiceAmount(inv,value){const cur=studioCurrency(inv&&inv.cur||'LKR');return cur+' '+Number(value||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function studioCurrencyOptionsHtml(longLabel){return Object.keys(STUDIO_CURRENCY_RATES).map(function(code){return '<option value="'+code+'">'+code+(longLabel?' - '+STUDIO_CURRENCY_LABELS[code]:'')+'</option>';}).join('');}
 function hydrateStudioCurrencySelect(id,longLabel){const el=document.getElementById(id);if(!el)return;const current=el.value||el.getAttribute('data-default')||'LKR';el.innerHTML=studioCurrencyOptionsHtml(longLabel);el.value=studioCurrency(current);}
 function hydrateStudioCurrencySelects(){['t-currency','edit-currency','i-cur'].forEach(function(id){hydrateStudioCurrencySelect(id,false);});['set-main-currency','set-invoice-currency'].forEach(function(id){hydrateStudioCurrencySelect(id,true);});}
@@ -2586,9 +2588,9 @@ function renderDashboard(){
   const now=new Date();
   const mo=now.getMonth(), yr=now.getFullYear();
   const todayMs=new Date().setHours(0,0,0,0);
-  const totalInvoiced=DB.invoices.reduce((a,i)=>a+(i.amount||0),0);
-  const paidAmount=DB.invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
-  const outstanding=DB.invoices.reduce((a,i)=>a+Math.max(0,(i.amount||0)-(i.paidAmount||0)),0);
+  const totalInvoiced=DB.invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.amount),0);
+  const paidAmount=DB.invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.paidAmount),0);
+  const outstanding=DB.invoices.reduce((a,i)=>a+studioInvoiceLkr(i,Math.max(0,(i.amount||0)-(i.paidAmount||0))),0);
   const overdue=DB.invoices.filter(i=>i.status!=='paid'&&new Date(i.due)<todayMs);
   const monthPredicate=function(item){const d=new Date(item.date);return d.getMonth()===mo&&d.getFullYear()===yr;};
   const monthExpenses=cashOutTotal(monthPredicate);
@@ -3328,8 +3330,8 @@ window.setInvoiceRegisterTab=function setInvoiceRegisterTab(tab){
   renderInvoices();
 };
 function renderInvoices(){
-  const total=DB.invoices.reduce((a,i)=>a+i.amount,0);
-  const collected=DB.invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
+  const total=DB.invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.amount),0);
+  const collected=DB.invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.paidAmount),0);
   document.getElementById('inv-summary').innerHTML=`<div class="sum-item"><div class="sum-label">Total Invoiced</div><div class="sum-val">${fmtAmt(total)}</div></div><div class="sum-item"><div class="sum-label">Collected</div><div class="sum-val" style="color:var(--green)">${fmtAmt(collected)}</div></div><div class="sum-item"><div class="sum-label">Outstanding</div><div class="sum-val" style="color:var(--amber)">${fmtAmt(total-collected)}</div></div>`;
   ['pending','partial','paid'].forEach(function(state){const el=document.getElementById('inv-count-'+state);if(el)el.textContent=DB.invoices.filter(function(inv){return invoiceRegisterState(inv)===state;}).length;});
   const filtered=DB.invoices.filter(getFilterRange('inv')).filter(function(inv){return invoiceRegisterState(inv)===invoiceRegisterTab;});
@@ -3340,8 +3342,8 @@ function renderInvoices(){
     return`<tr>
       <td><strong>${inv.num}</strong>${window.clsInvoiceReminderMeta&&window.clsInvoiceReminderMeta(inv)?`<div style="font-size:.62rem;color:var(--muted);margin-top:.3rem;white-space:nowrap">${escHTML(window.clsInvoiceReminderMeta(inv))}</div>`:''}</td><td>${inv.client}</td><td>${fmtD(inv.date)}</td><td>${fmtD(inv.due)}</td>
       <td><span class="pill ${sc}">${inv.status.charAt(0).toUpperCase()+inv.status.slice(1)}</span></td>
-      <td><div class="pay-info-wrap"><div class="pay-bar"><div class="pay-bar-fill${inv.status==='partial'?' partial':''}" style="width:${pct}%"></div></div><span style="font-size:.7rem;color:var(--muted)">${pct}%</span></div>${inv.status==='partial'?`<div class="pay-pending">↻ ${fmtAmt(bal)} pending</div>`:''}</td>
-      <td style="text-align:right" class="amount-gold"><strong>${fmtAmt(inv.amount)}</strong></td>
+      <td><div class="pay-info-wrap"><div class="pay-bar"><div class="pay-bar-fill${inv.status==='partial'?' partial':''}" style="width:${pct}%"></div></div><span style="font-size:.7rem;color:var(--muted)">${pct}%</span></div>${inv.status==='partial'?`<div class="pay-pending">↻ ${studioInvoiceAmount(inv,bal)} pending</div>`:''}</td>
+      <td style="text-align:right" class="amount-gold"><strong>${studioInvoiceAmount(inv,inv.amount)}</strong></td>
       <td><div class="inv-action-row clean">
         ${invoiceRegisterState(inv)==='paid'?`<button class="btn-sm btn-sm-green" data-cls-fn="emailPaidReceipt" data-cls-arg="${inv.num}" title="Send paid receipt">Send receipt</button>`:`<button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${inv.num}">${invoiceRegisterState(inv)==='partial'?'Add payment':'Record payment'}</button>`}
         <button class="btn-sm btn-sm-dark invoice-icon-action" data-cls-fn="viewPrintInvoice" data-cls-arg="${inv.num}" title="Open invoice PDF" aria-label="Open invoice PDF">↓ PDF</button>

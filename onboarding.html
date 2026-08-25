@@ -617,6 +617,10 @@ firebase.initializeApp(firebaseConfig);
             </select>
           </div>
         </div>
+        <div class="ob-input-row">
+          <div class="ob-field"><label>Dashboard Currency *</label><select class="ob-input ob-select" id="s4-main-currency"><option value="LKR">Sri Lankan Rupee (LKR)</option><option value="USD">US Dollar (USD)</option><option value="GBP">British Pound (GBP)</option><option value="EUR">Euro (EUR)</option></select><div class="ob-field-hint">All dashboard totals are converted to this currency.</div></div>
+          <div class="ob-field"><label>Default Invoice Currency *</label><select class="ob-input ob-select" id="s4-invoice-currency"><option value="LKR">Sri Lankan Rupee (LKR)</option><option value="USD">US Dollar (USD)</option><option value="GBP">British Pound (GBP)</option><option value="EUR">Euro (EUR)</option></select><div class="ob-field-hint">You can still change the currency on each invoice.</div></div>
+        </div>
         <div class="logo-upload-area" onclick="document.getElementById('logo-file').click()">
           <img class="logo-preview" id="logo-preview-img" style="display:none" src="" alt="Logo">
           <div id="logo-placeholder"><div style="font-size:1.5rem;margin-bottom:.35rem">🏢</div>
@@ -894,7 +898,7 @@ const state = {
   fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',growthPartnerCode:'',growthPartnerId:'',growthPartnerName:'',
   bizName:'',industry:'',tier:'',suggestedTier:'solo',planTouched:false,useCases:[],firstClient:null,expLevel:'',
   setupTasks:{profile:true,payroll:false,notifications:false},
-  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',selectedTemplate:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',
+  logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',exchangeRates:{LKR:1,USD:300,GBP:380,EUR:325},selectedTemplate:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',
   empCount:0,employees:[],payFreq:'Monthly',
   channels:[],reminders:[],notifEmail:'',notifSms:'',notifWa:'',
   showAround:'not-needed',showAroundUrl:'https://cal.com/cashflowsystem/show-around',customerSuccessManager:'Sasuni'
@@ -1280,6 +1284,8 @@ function saveStepData(step){
     state.bankAccountName=document.getElementById('s4-bank-account-name').value.trim();
     state.bankAccountNumber=document.getElementById('s4-bank-account-number').value.trim();
     state.bankBranch=document.getElementById('s4-bank-branch').value.trim();
+    state.mainCurrency=document.getElementById('s4-main-currency').value || 'LKR';
+    state.invoiceCurrency=document.getElementById('s4-invoice-currency').value || state.mainCurrency;
     state.invoicePrefix=(window.clsSanitizeInvoicePrefix?window.clsSanitizeInvoicePrefix(document.getElementById('s4-prefix').value):document.getElementById('s4-prefix').value.trim())||'INV';
     state.invoiceFont=document.getElementById('s4-font').value || 'classic';
     state.invoiceView=document.getElementById('s4-view').value || 'modern';
@@ -1574,6 +1580,11 @@ function buildInvoiceSettingsPayload(){
     bankAccountName: state.bankAccountName || '',
     bankAccountNumber: state.bankAccountNumber || '',
     bankBranch: state.bankBranch || '',
+    mainCurrency: state.mainCurrency || 'LKR',
+    invoiceCurrency: state.invoiceCurrency || state.mainCurrency || 'LKR',
+    baseCurrency: state.mainCurrency || 'LKR',
+    revenueDefaultCurrency: state.invoiceCurrency || state.mainCurrency || 'LKR',
+    exchangeRates: state.exchangeRates || {LKR:1,USD:300,GBP:380,EUR:325},
     logo: state.logo || '',
     logoAlign: 'left',
     logoSize: 'M',
@@ -1764,6 +1775,10 @@ window.launchDashboard = async function launchDashboard(){
         invoicePrefix: state.invoicePrefix || 'INV',
         invoiceFont: state.invoiceFont || 'classic',
         invoiceView: state.invoiceView || 'modern',
+        mainCurrency: state.mainCurrency || 'LKR',
+        invoiceCurrency: state.invoiceCurrency || state.mainCurrency || 'LKR',
+        baseCurrency: state.mainCurrency || 'LKR',
+        revenueDefaultCurrency: state.invoiceCurrency || state.mainCurrency || 'LKR',
         settings: buildInvoiceSettingsPayload(),
         payFreq: state.payFreq,
         employees: state.employees,
@@ -1848,6 +1863,10 @@ window.launchDashboard = async function launchDashboard(){
         invoicePrefix: state.invoicePrefix || 'INV',
         invoiceFont: state.invoiceFont || 'classic',
         invoiceView: state.invoiceView || 'modern',
+        mainCurrency: state.mainCurrency || 'LKR',
+        invoiceCurrency: state.invoiceCurrency || state.mainCurrency || 'LKR',
+        baseCurrency: state.mainCurrency || 'LKR',
+        revenueDefaultCurrency: state.invoiceCurrency || state.mainCurrency || 'LKR',
         settings: buildInvoiceSettingsPayload(),
         payFreq: state.payFreq,
         employees: state.employees,
