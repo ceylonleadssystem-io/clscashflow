@@ -942,6 +942,7 @@
     return {
       biz: biz,
       user: settings.username || settings.user || '',
+      accountEmail: String(settings.accountEmail || settings.ownerEmail || settings.userEmail || '').trim().toLowerCase(),
       addr: settings.addr || settings.address || '',
       email: email,
       vat: settings.vat || '',
@@ -1181,6 +1182,11 @@
     var theme = invoiceTemplate(idx);
     var view = invoiceView(s.invoiceView).id;
     var font = invoiceFont(s.invoiceFont);
+    var accountEmail = String(opts.accountEmail || s.accountEmail || '').trim().toLowerCase();
+    if (!accountEmail) {
+      try { accountEmail = String(firebase.auth().currentUser.email || '').trim().toLowerCase(); } catch (e) {}
+    }
+    var accountClass = accountEmail === 'pasan@studioniceone.com' ? ' account-pasan-studio' : '';
     var cur = inv.cur || inv.currency || 'LKR';
     var lines = invoiceLineItems(inv);
     var sub = lines.reduce(function(sum, line) { return sum + (Number(line.total) || 0); }, 0) || Number(inv.sub || inv.amount || inv.total || 0) || 0;
@@ -1232,9 +1238,10 @@
     css += '.items th{background:#fff!important;color:#18130f!important;border-bottom:2px solid var(--dark)!important}';
     css += 'body{background:#fff!important}@media print{html,body{background:#fff!important}}';
     css += invoiceCustomTemplateCss(theme.layout);
+    css += '.account-pasan-studio .powered,.account-pasan-studio .powered b{background:transparent!important;color:#a8aaad!important;font-weight:500!important;opacity:.52!important}';
     var notesHtml = note ? '<div class="label">Notes</div><div class="note-text">' + invoiceBreaks(note) + '</div>' : '';
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + invoiceEscape(title) + '</title><style>' + css + '</style></head><body>' +
-      '<div class="invoice-page tpl-' + cssLayout + ' view-' + view + densityClass + '"><div class="brand-rule"></div>' +
+      '<div class="invoice-page tpl-' + cssLayout + ' view-' + view + densityClass + accountClass + '"><div class="brand-rule"></div>' +
       '<section class="invoice-head"><div class="brand">' + logo + '<div class="biz-name">' + invoiceEscape(s.biz) + '</div><div class="muted">' + (s.addr ? invoiceBreaks(s.addr) : '') + (s.email ? (s.addr ? '<br>' : '') + invoiceEscape(s.email) : '') + (s.registrationNumber ? ((s.addr || s.email) ? '<br>' : '') + 'Business registration: ' + invoiceEscape(s.registrationNumber) : '') + (s.vat ? ((s.addr || s.email || s.registrationNumber) ? '<br>' : '') + 'VAT: ' + invoiceEscape(s.vat) : '') + '</div></div><div class="invoice-title"><h1>' + invoiceEscape(documentLabel) + '</h1><div class="num">' + invoiceEscape(title) + '</div>' + (documentLabel === 'Invoice' ? '<div class="payment-state ' + invoiceEscape(status) + '">' + invoiceEscape(statusLabel) + '</div>' : '') + '<div class="meta"><div>Date: ' + humanDate(inv.date) + '</div><div>' + (documentLabel === 'Invoice' ? 'Due' : 'Valid until') + ': ' + humanDate(inv.due) + '</div><div>Terms: ' + invoiceEscape(inv.terms || 'Net 30') + '</div></div></div></section>' +
       '<section class="parties"><div><div class="label">Bill To</div><div class="party-name">' + invoiceEscape(inv.client || 'Customer') + '</div><div class="muted">' + invoiceCustomerDetails(inv) + '</div></div></section>' +
       '<table class="items"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +

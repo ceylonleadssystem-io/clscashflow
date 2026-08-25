@@ -1913,6 +1913,7 @@ if (!DEMO_MODE) _auth.onAuthStateChanged(async function(user) {
     if (_profile.nextInvNum) DB.nextInvNum = _profile.nextInvNum;
     if (_profile.nextQuoteNum) DB.nextQuoteNum = _profile.nextQuoteNum;
     if (_profile.settings) Object.assign(DB.settings, _profile.settings);
+    DB.settings.accountEmail=String((_profile&&_profile.email)||(_fauth.currentUser&&_fauth.currentUser.email)||'').trim().toLowerCase();
 
     // Load data then render
     if (restoreDBBackupPreview()) init();
