@@ -1246,6 +1246,7 @@ document.addEventListener('click',function(e){
       </section>
       <section class="invoice-form-panel">
       <div class="f-section">Invoice Details</div>
+      <div class="f-group" style="margin-bottom:.65rem"><label>Invoice Number <span style="font-weight:400;text-transform:none">(optional)</span></label><input class="f-input" id="i-number" maxlength="40" placeholder="Leave blank for automatic sequence"><div style="font-size:.65rem;color:var(--dim);margin-top:.25rem">Enter your own reference, or leave blank to generate the next number automatically.</div></div>
       <div class="f-row">
         <div class="f-group"><label>Invoice Date *</label><input class="f-input" type="date" id="i-date" onchange="syncInvoiceDueFromTerms()"></div>
         <div class="f-group"><label>Due Date *</label><input class="f-input" type="date" id="i-due"></div>
@@ -2375,7 +2376,7 @@ function resetInvoiceModal(){
   const reasonSec=document.getElementById('i-edit-reason-section');if(reasonSec)reasonSec.style.display='none';
   const reasonWrap=document.getElementById('i-edit-reason-wrap');if(reasonWrap)reasonWrap.style.display='none';
   const reason=document.getElementById('i-edit-reason');if(reason)reason.value='';
-  ['i-client','i-cemail','i-caddr','i-cphone','i-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['i-number','i-client','i-cemail','i-caddr','i-cphone','i-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const defaultNotes=document.getElementById('i-notes');if(defaultNotes)defaultNotes.value=DB.settings.footer||'';
   document.getElementById('i-terms').value='Net 30';
   document.getElementById('i-cur').value=soloCurrency(DB.settings.invoiceCurrency||DB.settings.mainCurrency||'LKR');
@@ -2462,7 +2463,7 @@ function getInvData(){
   const cur=document.getElementById('i-cur').value;let sub=0;const lines=[];
   document.querySelectorAll('#li-body tr').forEach(row=>{const dEl=row.querySelector('.li-desc');const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const desc=(dEl&&dEl.value)||'';const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');if(desc||price>0){const line={desc,qty,price,total:qty*price};['catalogItemId','itemType','itemName','itemCode','category','billingUnit','taxRate','discountEligible','costPrice'].forEach(function(key){if(row.dataset[key]!=null)line[key]=row.dataset[key];});lines.push(line);sub+=qty*price;}});
   const disc=(parseFloat(document.getElementById('inv-disc').value)||0);const afterDisc=sub*(1-disc/100);const vrate=parseFloat(document.getElementById('inv-vatrate').value)||0;const vatApplied=document.getElementById('inv-vat').checked;const vat=vatApplied?afterDisc*vrate/100:0;
-  return {client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vrate,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:getDefaultInvoiceTemplate()};
+  return {customNum:String((document.getElementById('i-number')||{}).value||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,40),client:document.getElementById('i-client').value.trim(),cemail:document.getElementById('i-cemail').value,caddr:document.getElementById('i-caddr').value,cphone:document.getElementById('i-cphone').value,date:document.getElementById('i-date').value,due:document.getElementById('i-due').value,terms:document.getElementById('i-terms').value,cur,lines,sub,disc,afterDisc,vat,vatRate:vrate,grand:afterDisc+vat,notes:document.getElementById('i-notes').value,tpl:getDefaultInvoiceTemplate()};
 }
 window.saveInvoice = function saveInvoice(){
   const d=getInvData();if(!d.client){alert('Please enter a customer name.');return;}
@@ -2483,8 +2484,11 @@ window.saveInvoice = function saveInvoice(){
     const before=snapshotForLog(DB.invoices[idx]);
     const oldPaid=DB.invoices[idx].paidAmount||0;
     const oldStatus=DB.invoices[idx].status||'unpaid';
+    const nextNum=d.customNum||editNum;
+    if(DB.invoices.some(function(inv,i){return i!==idx&&String(inv.num||'').toLowerCase()===nextNum.toLowerCase();})){alert('Invoice number '+nextNum+' is already in use.');return;}
     DB.invoices[idx]={
       ...DB.invoices[idx],
+      num:nextNum,
       client:d.client,cemail:d.cemail,caddr:d.caddr,cphone:d.cphone,
       date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,
       amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,tpl:d.tpl,notes:d.notes,
@@ -2493,13 +2497,17 @@ window.saveInvoice = function saveInvoice(){
     if(oldStatus==='paid'&&DB.invoices[idx].paidAmount>=d.grand-0.01) DB.invoices[idx].status='paid';
     else if(DB.invoices[idx].paidAmount>0) DB.invoices[idx].status='partial';
     else DB.invoices[idx].status='unpaid';
-    addEditBacklog('invoice',editNum,editNum+' · '+d.client,reason,before,snapshotForLog(DB.invoices[idx]));
+    (DB.transactions||[]).forEach(function(t){if(String(t.ref||'')===editNum)t.ref=nextNum;});
+    addEditBacklog('invoice',editNum,nextNum+' · '+d.client,reason,before,snapshotForLog(DB.invoices[idx]));
     saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('inv-modal');
     alert('Invoice updated and added to the admin backlog.');
     return;
   }
   refreshNextInvoiceNumber();
-  const num=formatInvoiceNumber(DB.nextInvNum);DB.nextInvNum++;
+  let num=d.customNum||formatInvoiceNumber(DB.nextInvNum);
+  while(!d.customNum&&DB.invoices.some(function(inv){return String(inv.num||'').toLowerCase()===num.toLowerCase();})){DB.nextInvNum++;num=formatInvoiceNumber(DB.nextInvNum);}
+  if(DB.invoices.some(function(inv){return String(inv.num||'').toLowerCase()===num.toLowerCase();})){alert('Invoice number '+num+' is already in use.');return;}
+  if(!d.customNum)DB.nextInvNum++;
   DB.invoices.unshift({num,client:d.client,cemail:d.cemail,caddr:d.caddr,cphone:d.cphone,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,paidAmount:0,status:'unpaid',tpl:d.tpl,notes:d.notes,id:Date.now()});
   saveDB();renderInvoices();closeModal('inv-modal');
 }
@@ -2596,6 +2604,7 @@ window.openInvoiceEditModal=function openInvoiceEditModal(num){
   resetInvoiceModal();
   populateClientSelect();
   document.getElementById('i-edit-num').value=inv.num;
+  document.getElementById('i-number').value=inv.num||'';
   document.getElementById('inv-modal-title').textContent='Edit Invoice '+inv.num;
   document.getElementById('inv-save-btn').textContent='Save Invoice Edit';
   document.getElementById('i-edit-reason-section').style.display='block';
@@ -3216,7 +3225,7 @@ window.viewPrintInvoice = async function viewPrintInvoice(num){
   const finalHTML=printHTML.slice(0,bodyPos+6)+downloadBar+printHTML.slice(bodyPos+6);
   w.document.write(finalHTML);w.document.close();
 }
-window.printInvoiceFromModal = async function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a customer name first.');return;}if(!String(d.cemail||'').trim()||!isValidOptionalEmail(d.cemail))return showInputError('i-cemail','Please enter a valid customer email address.');if(!isValidRequiredPhone(d.cphone))return showInputError('i-cphone','Please enter a valid customer phone number between 7 and 15 digits.');const fakeInv={num:formatInvoiceNumber(DB.nextInvNum||1),client:d.client,cemail:d.cemail,caddr:d.caddr,cphone:d.cphone,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};if(window.matchMedia&&window.matchMedia('(max-width:760px)').matches){await downloadInvoicePdf(fakeInv,'Solo Invoice Control System');return;}const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,getDefaultInvoiceTemplate()));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
+window.printInvoiceFromModal = async function printInvoiceFromModal(){const d=getInvData();if(!d.client){alert('Please enter a customer name first.');return;}if(!String(d.cemail||'').trim()||!isValidOptionalEmail(d.cemail))return showInputError('i-cemail','Please enter a valid customer email address.');if(!isValidRequiredPhone(d.cphone))return showInputError('i-cphone','Please enter a valid customer phone number between 7 and 15 digits.');const fakeInv={num:d.customNum||((document.getElementById('i-edit-num')||{}).value)||formatInvoiceNumber(DB.nextInvNum||1),client:d.client,cemail:d.cemail,caddr:d.caddr,cphone:d.cphone,date:d.date,due:d.due,terms:d.terms,cur:d.cur,lines:d.lines,amount:d.grand,disc:d.disc,vat:d.vat,vatRate:d.vatRate,notes:d.notes};if(window.matchMedia&&window.matchMedia('(max-width:760px)').matches){await downloadInvoicePdf(fakeInv,'Solo Invoice Control System');return;}const w=window.open('','_blank','width=850,height=700');w.document.write(buildInvPrintHTML(fakeInv,getDefaultInvoiceTemplate()));w.document.close();w.onload=()=>{setTimeout(()=>w.print(),500);};}
 
 
 // ════════════════════════════════

@@ -1312,6 +1312,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   <div class="mo-bd invoice-mo-body">
     <div class="fsec">Customer &amp; Dates</div>
     <div class="business-invoice-fields">
+    <div class="fg"><label>Invoice Number (optional)</label><input class="fi" id="inv-number" maxlength="40" placeholder="Leave blank for automatic sequence"><div class="form-note">Enter your own reference, or leave blank to generate the next number automatically.</div></div>
     <div class="fg"><label>Select Saved Customer</label><select class="fi fsel" id="inv-customer-select" onchange="window.applyInvoiceCustomer(this.value)"></select><div class="form-note">Choose a saved customer to fill details, or type a new customer below.</div></div>
     <div class="frow"><div class="fg"><label>Customer Name</label><input class="fi" id="inv-cli" placeholder="Who is this invoice for?"></div><div class="fg"><label>Customer Email</label><input class="fi" type="email" id="inv-cemail" placeholder="customer@email.com"></div></div>
     <div class="frow"><div class="fg"><label>Customer Address</label><textarea class="fi fi-textarea" id="inv-caddr" placeholder="Their billing address"></textarea></div><div class="fg"><label>Customer Phone / WhatsApp</label><input class="fi" id="inv-cphone" placeholder="+94 77 000 0000"></div></div>
@@ -3694,7 +3695,7 @@ window.openInvMo = function openInvMo() {
   document.getElementById('inv-date').valueAsDate = new Date();
   document.getElementById('inv-terms').value = 'Net 30';
   window.syncBusinessInvoiceDueFromTerms();
-  ['inv-cli','inv-cemail','inv-cphone','inv-caddr','inv-notes'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  ['inv-number','inv-cli','inv-cemail','inv-cphone','inv-caddr','inv-notes'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
   setFieldValue('inv-notes', D.settings.footer || '');
   document.getElementById('inv-vat').value = D.settings.vatRate != null ? D.settings.vatRate : 0;
   document.getElementById('inv-disc').value = 0;
@@ -3789,6 +3790,7 @@ window.saveInv = function saveInv() {
   if (!isFinite(discount) || discount < 0) { showToast('Discount cannot be negative.', 'err'); return; }
   var t = calcTotals();
   if (!isFinite(t.sub) || !isFinite(t.total) || t.sub < 0 || t.total < 0) { showToast('Invoice total cannot be negative.', 'err'); return; }
+  var customNumber=String((document.getElementById('inv-number')||{}).value||'').trim().replace(/[<>\u0000-\u001f]/g,'').slice(0,40);
   var payload = {client:client,cemail:cemail,cphone:cphone,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,terms:document.getElementById('inv-terms').value,cur:safeCurrency(document.getElementById('inv-cur').value),items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:vatRate,disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
   syncCustomerFromInvoicePayload(payload);
   if ((businessDocumentMode === 'quote' || businessDocumentMode === 'estimate') && !editInvId) {
@@ -3807,14 +3809,21 @@ window.saveInv = function saveInv() {
   if (id) {
     var existing = D.invoices.find(function(inv) { return inv.id === id; });
     if (!existing) { showToast('Invoice not found', 'err'); return; }
+    var nextId=customNumber||id;
+    if(D.invoices.some(function(inv){return inv!==existing&&String(inv.id||inv.num||'').toLowerCase()===nextId.toLowerCase();})){showToast('Invoice number '+nextId+' is already in use.','err');return;}
     Object.assign(existing, payload);
+    existing.id=nextId;existing.num=nextId;
+    (D.txns||[]).forEach(function(tx){if(String(tx.ref||'')===id)tx.ref=nextId;});
+    id=nextId;
     existing.paid = Math.min(toNum(existing.paid), existing.total);
     existing.paidAmount = existing.paid;
     existing.status = existing.paid >= existing.total ? 'paid' : (existing.paid > 0 ? 'partial' : invoiceStatus(existing));
   } else {
     normalizeBusinessData();
-    id = formatBusinessInvoiceNumber(D._nextInvId || (D.invoices.length + 1));
-    D._nextInvId = (D._nextInvId || (D.invoices.length + 1)) + 1;
+    id = customNumber || formatBusinessInvoiceNumber(D._nextInvId || (D.invoices.length + 1));
+    while(!customNumber&&D.invoices.some(function(inv){return String(inv.id||inv.num||'').toLowerCase()===id.toLowerCase();})){D._nextInvId=(D._nextInvId||1)+1;id=formatBusinessInvoiceNumber(D._nextInvId);}
+    if(D.invoices.some(function(inv){return String(inv.id||inv.num||'').toLowerCase()===id.toLowerCase();})){showToast('Invoice number '+id+' is already in use.','err');return;}
+    if(!customNumber)D._nextInvId = (D._nextInvId || (D.invoices.length + 1)) + 1;
     D.invoices.unshift(Object.assign({id:id,num:id,status:'unpaid',paid:0,paidAmount:0}, payload));
   }
   editInvId = null;
@@ -3846,6 +3855,7 @@ window.editInv = function editInv(id) {
   document.getElementById('inv-date').value = inv.date || today();
   document.getElementById('inv-due').value = inv.due || today();
   document.getElementById('inv-terms').value = inv.terms || 'Net 30';
+  document.getElementById('inv-number').value = inv.num || inv.id || '';
   document.getElementById('inv-cur').value = safeCurrency(inv.cur || D.settings.invoiceCurrency || D.settings.revenueDefaultCurrency || 'LKR');
   document.getElementById('inv-notes').value = inv.notes || '';
   document.getElementById('inv-vat').value = inv.vatRate != null ? inv.vatRate : (inv.sub ? ((toNum(inv.vat) / toNum(inv.sub)) * 100).toFixed(2) : (D.settings.vatRate || 0));
