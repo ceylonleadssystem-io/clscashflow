@@ -1315,10 +1315,10 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="fg"><label>Select Saved Customer</label><select class="fi fsel" id="inv-customer-select" onchange="window.applyInvoiceCustomer(this.value)"></select><div class="form-note">Choose a saved customer to fill details, or type a new customer below.</div></div>
     <div class="frow"><div class="fg"><label>Customer Name</label><input class="fi" id="inv-cli" placeholder="Who is this invoice for?"></div><div class="fg"><label>Customer Email</label><input class="fi" type="email" id="inv-cemail" placeholder="customer@email.com"></div></div>
     <div class="frow"><div class="fg"><label>Customer Address</label><textarea class="fi fi-textarea" id="inv-caddr" placeholder="Their billing address"></textarea></div><div class="fg"><label>Customer Phone / WhatsApp</label><input class="fi" id="inv-cphone" placeholder="+94 77 000 0000"></div></div>
-    <div class="frow"><div class="fg"><label>Invoice Date</label><input class="fi" type="date" id="inv-date" onchange="window.syncBusinessInvoiceDueFromTerms()"></div><div class="fg"><label>Payment Terms</label><select class="fi fsel" id="inv-terms" onchange="window.syncBusinessInvoiceDueFromTerms()"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>Pay on Receipt</option></select></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="inv-due"></div></div>
+    <div class="frow"><div class="fg"><label>Invoice Date</label><input class="fi" type="date" id="inv-date" onchange="window.syncBusinessInvoiceDueFromTerms()"></div><div class="fg"><label>Payment Terms</label><select class="fi fsel" id="inv-terms" onchange="window.syncBusinessInvoiceDueFromTerms()"><option>Net 7</option><option>Net 14</option><option selected>Net 30</option><option>Net 60</option><option>Pay on Receipt</option></select></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="inv-due"></div><div class="fg"><label>Currency</label><select class="fi fsel" id="inv-cur" onchange="calcTotals()"><option value="LKR">LKR</option><option value="USD">USD — $</option><option value="GBP">GBP — £</option><option value="EUR">EUR — €</option></select></div></div>
     </div>
     <div class="fsec">What Are You Billing For?</div>
-    <table class="litbl"><thead><tr><th style="width:44%">Description</th><th style="width:12%">Qty</th><th style="width:20%">Unit Price (LKR)</th><th style="width:18%">Total</th><th style="width:6%"></th></tr></thead><tbody id="li-body"></tbody></table>
+    <table class="litbl"><thead><tr><th style="width:44%">Description</th><th style="width:12%">Qty</th><th style="width:20%">Unit Price</th><th style="width:18%">Total</th><th style="width:6%"></th></tr></thead><tbody id="li-body"></tbody></table>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="li-add" onclick="window.addLi()">+ Add Another Item</button><button class="li-add" type="button" onclick="window.openCatalogSelector()">Browse Products &amp; Services</button></div>
     <div class="business-invoice-closing">
       <div class="fg" style="margin-bottom:0"><label>Note to Customer (optional)</label><textarea class="fi fi-textarea" id="inv-notes" placeholder="e.g. Bank transfer to Sampath 0079..."></textarea></div>
@@ -1406,7 +1406,7 @@ var D = {
   suppliers:[],
   autos:[],
   editLog:[],
-  settings:{biz:'',user:'',addr:'',email:'',vat:'',registrationNumber:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
+  settings:{biz:'',user:'',addr:'',email:'',vat:'',registrationNumber:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',logo:'',monthlyReport:false,vatRate:15,defaultTpl:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',logoAlign:'left',logoSize:'M',logoX:8,logoY:5,ejsKey:'gCD6W70FKqiN2ATlp',ejsService:'service_uneb8lv',ejsTemplate:'template_5xb3yer',ejsReceiptTemplate:'template_avm444n',baseCurrency:'LKR',revenueDefaultCurrency:'LKR',invoiceCurrency:'LKR',exchangeRates:{LKR:1,USD:300,EUR:325,GBP:380},u1:'',u2:'',u3:'',u4:'',u5:'',u6:'',u7:'',u8:''},
   _nextInvId:1,
   _nextQuoteId:1
 };
@@ -1932,6 +1932,7 @@ function mapStudioSettings(src) {
   out.vatRate = toNum(src.vatRate != null ? src.vatRate : out.vatRate || 15);
   out.baseCurrency = safeCurrency(src.baseCurrency || out.baseCurrency || 'LKR');
   out.revenueDefaultCurrency = safeCurrency(src.revenueDefaultCurrency || src.defaultRevenueCurrency || out.revenueDefaultCurrency || out.baseCurrency || 'LKR');
+  out.invoiceCurrency = safeCurrency(src.invoiceCurrency || out.invoiceCurrency || out.revenueDefaultCurrency || out.baseCurrency || 'LKR');
   out.exchangeRates = Object.assign({}, DEFAULT_EXCHANGE_RATES, out.exchangeRates || {}, src.exchangeRates || {});
   out.exchangeRates.LKR = 1;
   currencyCodes().forEach(function(code) {
@@ -3697,6 +3698,7 @@ window.openInvMo = function openInvMo() {
   setFieldValue('inv-notes', D.settings.footer || '');
   document.getElementById('inv-vat').value = D.settings.vatRate != null ? D.settings.vatRate : 0;
   document.getElementById('inv-disc').value = 0;
+  document.getElementById('inv-cur').value = safeCurrency(D.settings.invoiceCurrency || D.settings.revenueDefaultCurrency || D.settings.baseCurrency || 'LKR');
   document.getElementById('li-body').innerHTML = '';
   addLi();
   calcTotals();
@@ -3734,6 +3736,7 @@ window.addLi = function addLi(item) {
 
 function calcTotals() {
   var sub = 0;
+  var cur = safeCurrency((document.getElementById('inv-cur') || {}).value || D.settings.invoiceCurrency || 'LKR');
   document.querySelectorAll('#li-body tr').forEach(function(row) {
     var qty = row.querySelector('[data-role="qty"]');
     var price = row.querySelector('[data-role="price"]');
@@ -3741,7 +3744,7 @@ function calcTotals() {
       var v = toNum(qty.value||1) * toNum(price.value||0);
       sub += v;
       var td = row.querySelector('.li-tot');
-      if (td) td.textContent = 'LKR ' + fmtN(v);
+      if (td) td.textContent = fmtCurrency(v, cur);
     }
   });
   var vat = sub * (Number(document.getElementById('inv-vat').value||0)/100);
@@ -3749,10 +3752,10 @@ function calcTotals() {
   var total = sub + vat - disc;
   var el = document.getElementById('inv-totals');
   if (el) el.innerHTML =
-    '<div class="itr"><span class="tl">Subtotal</span><span class="tv">LKR ' + fmtN(sub) + '</span></div>' +
-    (vat > 0 ? '<div class="itr"><span class="tl">VAT</span><span class="tv">LKR ' + fmtN(vat) + '</span></div>' : '') +
-    (disc > 0 ? '<div class="itr"><span class="tl">Discount</span><span class="tv" style="color:var(--green)">− LKR ' + fmtN(disc) + '</span></div>' : '') +
-    '<div class="itr grand"><span class="tl">Total</span><span class="tv">LKR ' + fmtN(total) + '</span></div>';
+    '<div class="itr"><span class="tl">Subtotal</span><span class="tv">' + fmtCurrency(sub,cur) + '</span></div>' +
+    (vat > 0 ? '<div class="itr"><span class="tl">VAT</span><span class="tv">' + fmtCurrency(vat,cur) + '</span></div>' : '') +
+    (disc > 0 ? '<div class="itr"><span class="tl">Discount</span><span class="tv" style="color:var(--green)">− ' + fmtCurrency(disc,cur) + '</span></div>' : '') +
+    '<div class="itr grand"><span class="tl">Total</span><span class="tv">' + fmtCurrency(total,cur) + '</span></div>';
   return {sub:sub, vat:vat, disc:disc, total:total};
 }
 
@@ -3786,7 +3789,7 @@ window.saveInv = function saveInv() {
   if (!isFinite(discount) || discount < 0) { showToast('Discount cannot be negative.', 'err'); return; }
   var t = calcTotals();
   if (!isFinite(t.sub) || !isFinite(t.total) || t.sub < 0 || t.total < 0) { showToast('Invoice total cannot be negative.', 'err'); return; }
-  var payload = {client:client,cemail:cemail,cphone:cphone,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,terms:document.getElementById('inv-terms').value,items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:vatRate,disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
+  var payload = {client:client,cemail:cemail,cphone:cphone,caddr:document.getElementById('inv-caddr').value,date:document.getElementById('inv-date').value,due:document.getElementById('inv-due').value,terms:document.getElementById('inv-terms').value,cur:safeCurrency(document.getElementById('inv-cur').value),items:items,lines:items,sub:t.sub,vat:t.vat,vatRate:vatRate,disc:t.disc,total:t.total,amount:t.total,tpl:normalizeBusinessTemplate(D.settings.defaultTpl),notes:document.getElementById('inv-notes').value};
   syncCustomerFromInvoicePayload(payload);
   if ((businessDocumentMode === 'quote' || businessDocumentMode === 'estimate') && !editInvId) {
     D._nextQuoteId = Math.max(1, toNum(D._nextQuoteId) || 1);
@@ -3843,6 +3846,7 @@ window.editInv = function editInv(id) {
   document.getElementById('inv-date').value = inv.date || today();
   document.getElementById('inv-due').value = inv.due || today();
   document.getElementById('inv-terms').value = inv.terms || 'Net 30';
+  document.getElementById('inv-cur').value = safeCurrency(inv.cur || D.settings.invoiceCurrency || D.settings.revenueDefaultCurrency || 'LKR');
   document.getElementById('inv-notes').value = inv.notes || '';
   document.getElementById('inv-vat').value = inv.vatRate != null ? inv.vatRate : (inv.sub ? ((toNum(inv.vat) / toNum(inv.sub)) * 100).toFixed(2) : (D.settings.vatRate || 0));
   document.getElementById('inv-disc').value = inv.disc || 0;
@@ -4596,24 +4600,26 @@ function invoiceLogoMarkup(settings) {
 }
 
 function invoiceRowsMarkup(inv) {
+  var cur = safeCurrency(inv.cur || 'LKR');
   return (inv.items || inv.lines || []).map(function(it) {
     var qty = toNum(it.qty || 1);
     var price = toNum(it.price);
     var q = qty % 1 === 0 ? String(qty) : qty.toLocaleString('en-LK', {maximumFractionDigits:2});
-    return '<tr><td class="inv-desc">' + escHtml(it.desc || 'Service or product') + '</td><td>' + q + '</td><td>LKR ' + fmtN(price) + '</td><td>LKR ' + fmtN(qty * price) + '</td></tr>';
+    return '<tr><td class="inv-desc">' + escHtml(it.desc || 'Service or product') + '</td><td>' + q + '</td><td>' + fmtCurrency(price,cur) + '</td><td>' + fmtCurrency(qty * price,cur) + '</td></tr>';
   }).join('');
 }
 
 function invoiceTotalsMarkup(inv) {
+  var cur = safeCurrency(inv.cur || 'LKR');
   var sub = toNum(inv.sub);
   if (!sub) sub = (inv.items || inv.lines || []).reduce(function(a,it){ return a + toNum(it.qty || 1) * toNum(it.price); }, 0);
   var vat = toNum(inv.vat);
   var disc = toNum(inv.disc);
   return '<div class="inv-totals-print">' +
-    '<div><span>Subtotal</span><b>LKR ' + fmtN(sub) + '</b></div>' +
-    (vat ? '<div><span>VAT</span><b>LKR ' + fmtN(vat) + '</b></div>' : '') +
-    (disc ? '<div><span>Discount</span><b>- LKR ' + fmtN(disc) + '</b></div>' : '') +
-    '<div class="inv-grand"><span>Total due</span><b>LKR ' + fmtN(inv.total) + '</b></div>' +
+    '<div><span>Subtotal</span><b>' + fmtCurrency(sub,cur) + '</b></div>' +
+    (vat ? '<div><span>VAT</span><b>' + fmtCurrency(vat,cur) + '</b></div>' : '') +
+    (disc ? '<div><span>Discount</span><b>- ' + fmtCurrency(disc,cur) + '</b></div>' : '') +
+    '<div class="inv-grand"><span>Total due</span><b>' + fmtCurrency(inv.total,cur) + '</b></div>' +
   '</div>';
 }
 
@@ -4647,7 +4653,7 @@ function buildInvoicePrintHtml(inv) {
         '<div class="inv-brand">' + logo + '<div class="inv-business">' + escHtml(s.biz || 'Your Business') + '</div><div class="inv-small">' + escHtml(s.email || '') + '</div></div>' +
         '<div class="inv-title"><h1>Invoice</h1><b>' + escHtml(inv.id) + '</b><div class="inv-meta"><div><span>Date:</span> ' + escHtml(formatDateHuman(inv.date)) + '</div><div><span>Due:</span> ' + escHtml(formatDateHuman(inv.due)) + '</div><div><span>VAT:</span> ' + escHtml(s.vat || 'Optional') + '</div></div></div>' +
       '</section>' +
-      '<section class="inv-parties"><div><div class="inv-label">From</div><div class="inv-name">' + escHtml(s.biz || '') + '</div><div class="inv-small">' + escHtml(s.addr || '') + '<br>' + escHtml(s.email || '') + '</div></div><div><div class="inv-label">Bill To</div><div class="inv-name">' + escHtml(inv.client || '') + '</div><div class="inv-small">' + escHtml(inv.caddr || '') + '<br>' + escHtml(inv.cemail || '') + '</div></div><div><div class="inv-label">Status</div><div class="inv-status">' + escHtml(status) + '</div><div class="inv-small">Balance due<br><b>LKR ' + fmtN(balance) + '</b></div></div></section>' +
+      '<section class="inv-parties"><div><div class="inv-label">From</div><div class="inv-name">' + escHtml(s.biz || '') + '</div><div class="inv-small">' + escHtml(s.addr || '') + '<br>' + escHtml(s.email || '') + '</div></div><div><div class="inv-label">Bill To</div><div class="inv-name">' + escHtml(inv.client || '') + '</div><div class="inv-small">' + escHtml(inv.caddr || '') + '<br>' + escHtml(inv.cemail || '') + '</div></div><div><div class="inv-label">Status</div><div class="inv-status">' + escHtml(status) + '</div><div class="inv-small">Balance due<br><b>' + fmtCurrency(balance,safeCurrency(inv.cur||'LKR')) + '</b></div></div></section>' +
       '<table class="inv-table"><thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
       '<section class="inv-bottom"><div><div class="inv-note-label">Notes</div><div class="inv-note">' + escHtml(noteText) + '</div></div>' + totals + '</section>' +
       '<div class="inv-brand-foot"><b>Invoice by Cashflow System - Ceylonry Labs.io</b></div>' +

@@ -1726,12 +1726,14 @@ function isAdminUser(){
 
 const today = new Date();
 const fmtD = d => new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'});
-const fmtAmt = n => {const cur=soloCurrency(DB.settings.mainCurrency||'LKR');return cur+' '+Math.round(Number(n||0)/(SOLO_CURRENCY_RATES[cur]||1)).toLocaleString();};
-const fmtAmtFull = n => {const cur=soloCurrency(DB.settings.mainCurrency||'LKR');return cur+' '+(Number(n||0)/(SOLO_CURRENCY_RATES[cur]||1)).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});};
+const currencySymbol = code => window.clsCurrencySymbol?window.clsCurrencySymbol(code):({LKR:'LKR ',USD:'$',GBP:'£',EUR:'€'}[String(code||'LKR').toUpperCase()]||String(code||'LKR').toUpperCase()+' ');
+const currencyMoney = (value,code) => window.clsFormatCurrency?window.clsFormatCurrency(value,code):currencySymbol(code)+Number(value||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtAmt = n => {const cur=soloCurrency(DB.settings.mainCurrency||'LKR');return currencySymbol(cur)+Math.round(Number(n||0)/(SOLO_CURRENCY_RATES[cur]||1)).toLocaleString();};
+const fmtAmtFull = n => {const cur=soloCurrency(DB.settings.mainCurrency||'LKR');return currencyMoney(Number(n||0)/(SOLO_CURRENCY_RATES[cur]||1),cur);};
 const SOLO_CURRENCY_RATES={LKR:1,USD:300,GBP:380,EUR:325};
 function soloCurrency(code){code=String(code||'LKR').toUpperCase();return SOLO_CURRENCY_RATES[code]?code:'LKR';}
 function soloInvoiceLkr(inv,value){return Number(value||0)*(SOLO_CURRENCY_RATES[soloCurrency(inv&&inv.cur)]||1);}
-function soloInvoiceAmount(inv,value){const cur=soloCurrency(inv&&inv.cur);return cur+' '+Number(value||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function soloInvoiceAmount(inv,value){return currencyMoney(value,soloCurrency(inv&&inv.cur));}
 window.fmtInput = function fmtInput(el){const v=el.value.replace(/[^0-9.]/g,'');const parts=v.split('.');let int=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,',');el.value=parts.length>1?int+'.'+parts[1]:int;}
 function parseAmt(s){return parseFloat((s||'0').replace(/,/g,''))||0;}
 function todayStr(){return today.toISOString().split('T')[0];}
@@ -2455,7 +2457,7 @@ function setInvoiceLines(lines){
   calcInv();
 }
 function fmtNum(n){return n.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function calcInv(){let sub=0;document.querySelectorAll('#li-body tr').forEach(row=>{const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');const t=qty*price;const cell=row.querySelector('.li-total-cell');if(cell)cell.textContent=fmtNum(t);sub+=t;});const disc=(parseFloat(document.getElementById('inv-disc').value)||0)/100;const afterDisc=sub*(1-disc);const vrate=(parseFloat(document.getElementById('inv-vatrate').value)||0)/100;const vat=document.getElementById('inv-vat').checked?afterDisc*vrate:0;const grand=afterDisc+vat;const cur=document.getElementById('i-cur').value;document.getElementById('inv-sub').textContent=cur+' '+fmtNum(sub);document.getElementById('inv-grand').textContent=cur+' '+fmtNum(grand);}
+function calcInv(){let sub=0;document.querySelectorAll('#li-body tr').forEach(row=>{const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');const t=qty*price;const cell=row.querySelector('.li-total-cell');if(cell)cell.textContent=currencyMoney(t,(document.getElementById('i-cur')||{}).value);sub+=t;});const disc=(parseFloat(document.getElementById('inv-disc').value)||0)/100;const afterDisc=sub*(1-disc);const vrate=(parseFloat(document.getElementById('inv-vatrate').value)||0)/100;const vat=document.getElementById('inv-vat').checked?afterDisc*vrate:0;const grand=afterDisc+vat;const cur=document.getElementById('i-cur').value;document.getElementById('inv-sub').textContent=currencyMoney(sub,cur);document.getElementById('inv-grand').textContent=currencyMoney(grand,cur);}
 function getInvData(){
   const cur=document.getElementById('i-cur').value;let sub=0;const lines=[];
   document.querySelectorAll('#li-body tr').forEach(row=>{const dEl=row.querySelector('.li-desc');const q=row.querySelector('.li-qty');const p=row.querySelector('.li-price');const desc=(dEl&&dEl.value)||'';const qty=parseFloat(q&&q.value)||0;const price=parseAmt((p&&p.value)||'');if(desc||price>0){const line={desc,qty,price,total:qty*price};['catalogItemId','itemType','itemName','itemCode','category','billingUnit','taxRate','discountEligible','costPrice'].forEach(function(key){if(row.dataset[key]!=null)line[key]=row.dataset[key];});lines.push(line);sub+=qty*price;}});
@@ -2994,7 +2996,7 @@ const tplDefs=window.clsInvoiceTemplates||[
 ];
 function buildInvoiceEmailHTML(inv){
   const s=DB.settings;
-  const cur=inv.cur||'LKR';
+  const cur=currencySymbol(inv.cur||'LKR');
   const ac=(tplDefs[getDefaultInvoiceTemplate()]||tplDefs[0]).accent||'#B8922A';
   const m=n=>Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -3108,7 +3110,7 @@ function buildInvPrintHTML(inv,tplIdx){
   const textAlign=align==='center'?'center':align==='right'?'right':'left';
   // Line items
   const fmtP=n=>parseFloat(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const cur=inv.cur||'LKR';
+  const cur=currencySymbol(inv.cur||'LKR');
   const linesHTML=(inv.lines||[{desc:'Professional Services',qty:1,price:inv.amount,total:inv.amount}]).map((l,i)=>`<tr><td class="d"><span class="ln">${(l.desc||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span></td><td class="c">${l.qty||1}</td><td class="r">${cur} ${fmtP(l.price)}</td><td class="r b">${cur} ${fmtP(l.total!=null?l.total:inv.amount)}</td></tr>`).join('');
   const sub=(inv.lines||[]).reduce((a,l)=>a+(l.total||0),0)||inv.amount;
   const disc=inv.disc||0;const afterDisc=sub*(1-disc/100);const vat=inv.vat||0;const grand=inv.amount||sub;
@@ -3968,7 +3970,7 @@ function buildInvoiceSharePdfFile(inv, systemName){
   var cur=inv.cur||'LKR';
   var lines=inv.lines&&inv.lines.length?inv.lines:[{desc:'Professional Services',qty:1,price:inv.amount,total:inv.amount}];
   var x=48,y=54,w=499;
-  var money=function(n){return cur+' '+Number(n||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});};
+  var money=function(n){return currencyMoney(n,cur);};
   var text=function(value,max){return doc.splitTextToSize(String(value==null?'':value),max||w);};
   doc.setTextColor(28,24,20);
   doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(s.bizName||'Your Business',x,y);

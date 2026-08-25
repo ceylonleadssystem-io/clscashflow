@@ -1,4 +1,18 @@
 (function() {
+  var CURRENCY_SYMBOLS = {LKR:'LKR ',USD:'$',GBP:'£',EUR:'€',AUD:'A$',CAD:'C$',SGD:'S$',INR:'₹',AED:'د.إ',JPY:'¥',CHF:'CHF ',NZD:'NZ$'};
+  window.clsCurrencySymbol = window.clsCurrencySymbol || function(code) {
+    code = String(code || 'LKR').toUpperCase();
+    return CURRENCY_SYMBOLS[code] || code;
+  };
+  window.clsFormatCurrency = window.clsFormatCurrency || function(value, code, options) {
+    code = String(code || 'LKR').toUpperCase();
+    options = options || {};
+    var number = Number(value || 0).toLocaleString(options.locale || 'en', {
+      minimumFractionDigits: options.minimumFractionDigits == null ? 2 : options.minimumFractionDigits,
+      maximumFractionDigits: options.maximumFractionDigits == null ? 2 : options.maximumFractionDigits
+    });
+    return window.clsCurrencySymbol(code) + (code === 'AED' ? ' ' : '') + number;
+  };
   var VALID_PLANS = { solo: true, studio: true, business: true };
   var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
@@ -3518,7 +3532,7 @@
       return amount.toLocaleString('en', { minimumFractionDigits:2, maximumFractionDigits:2 });
     };
     var currency = ascii(options.currency || 'LKR');
-    var money = function(value) { return currency + ' ' + number(value); };
+    var money = function(value) { return window.clsCurrencySymbol(currency) + (currency === 'AED' ? ' ' : '') + number(value); };
     var lines = Array.isArray(options.lines) && options.lines.length ? options.lines : [
       { desc:'Professional Services', qty:1, price:options.total || 0, total:options.total || 0 }
     ];

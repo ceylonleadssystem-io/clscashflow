@@ -4,7 +4,7 @@ var api=null,state={tab:'all',search:'',category:'',status:'all',tax:'all',editi
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function num(v){v=Number(String(v==null?'':v).replace(/[^0-9.-]/g,''));return isFinite(v)?v:0;}
 function formatAmount(v){var raw=String(v==null?'':v).replace(/,/g,'').replace(/[^0-9.]/g,'');if(!raw)return'';var dot=raw.indexOf('.'),whole=(dot<0?raw:raw.slice(0,dot)).replace(/^0+(?=\d)/,'')||'0',decimal=dot<0?'':raw.slice(dot+1).replace(/\./g,'').slice(0,2);return Number(whole).toLocaleString('en-US')+(dot>=0?'.'+decimal:'');}
-function money(v){return (api&&api.currency?api.currency():'LKR')+' '+num(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function money(v){var cur=api&&api.currency?api.currency():'LKR';return window.clsFormatCurrency?window.clsFormatCurrency(v,cur):(cur+' '+num(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}));}
 function items(){var list=api&&api.getItems?api.getItems():[];return Array.isArray(list)?list:[];}
 function docs(){var list=api&&api.getDocuments?api.getDocuments():[];return Array.isArray(list)?list:[];}
 function isFull(){return true;}

@@ -16,6 +16,11 @@ function money(value) {
   return Math.round((number(value) + Number.EPSILON) * 100) / 100;
 }
 
+function currencySymbol(code) {
+  code = text(code || 'LKR', 12).toUpperCase();
+  return ({ LKR: 'LKR ', USD: '$', GBP: '£', EUR: '€', AUD: 'A$', CAD: 'C$', SGD: 'S$', INR: '₹', AED: 'د.إ ', JPY: '¥', CHF: 'CHF ', NZD: 'NZ$' })[code] || (code + ' ');
+}
+
 function normalizeWhatsAppNumber(value) {
   const raw = text(value, 40);
   if (!raw) return { ok: false, reason: 'missing', number: '' };
@@ -281,21 +286,21 @@ function buildReminderMessage(invoice, publicUrl) {
   if (status === 'paid') {
     return 'Hi ' + (invoice.customerName || 'there') + ',\n\n' +
       'Thank you for your payment for Invoice #' + invoice.invoiceNumber + ' from ' + invoice.businessName + '.\n\n' +
-      'Paid amount: ' + invoice.currency + ' ' + formatAmount(total) + '\nStatus: Paid and settled\n\n' +
+      'Paid amount: ' + currencySymbol(invoice.currency) + formatAmount(total) + '\nStatus: Paid and settled\n\n' +
       'You can view or download your paid invoice here:\n' + publicUrl + '\n\n' +
       'Thank you,\n' + invoice.businessName;
   }
   if (status === 'partial') {
     return 'Hi ' + (invoice.customerName || 'there') + ',\n\n' +
       'Thank you for your initial payment for Invoice #' + invoice.invoiceNumber + ' from ' + invoice.businessName + '.\n\n' +
-      'Amount paid: ' + invoice.currency + ' ' + formatAmount(paid) + '\n' +
-      'Remaining amount to pay: ' + invoice.currency + ' ' + formatAmount(outstanding) + dueLine + '\n\n' +
+      'Amount paid: ' + currencySymbol(invoice.currency) + formatAmount(paid) + '\n' +
+      'Remaining amount to pay: ' + currencySymbol(invoice.currency) + formatAmount(outstanding) + dueLine + '\n\n' +
       'You can view the updated invoice here:\n' + publicUrl + '\n\n' +
       'Thank you,\n' + invoice.businessName;
   }
   return 'Hi ' + (invoice.customerName || 'there') + ',\n\n' +
     'This is a friendly reminder regarding Invoice #' + invoice.invoiceNumber + ' from ' + invoice.businessName + '.\n\n' +
-    'Outstanding amount: ' + invoice.currency + ' ' + formatAmount(invoice.outstanding) + dueLine + '\n\n' +
+    'Outstanding amount: ' + currencySymbol(invoice.currency) + formatAmount(invoice.outstanding) + dueLine + '\n\n' +
     'You can view your invoice here:\n' + publicUrl + '\n\n' +
     'Please disregard this message if payment has already been completed.\n\n' +
     'Thank you,\n' + invoice.businessName;
