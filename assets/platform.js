@@ -1959,6 +1959,14 @@
         items.push({ cls: '', title: invoiceNo(inv) + ' is pending', meta: customer(inv) + ' · ' + formatAmount(bal) + ' outstanding' });
       }
     });
+    (Array.isArray(opts.extraItems) ? opts.extraItems : []).forEach(function(item) {
+      if (!item) return;
+      items.push({
+        cls: item.cls === 'bad' || item.cls === 'warn' ? item.cls : '',
+        title: cleanString(item.title || 'Account reminder', 140),
+        meta: cleanString(item.meta || '', 220)
+      });
+    });
 
     items.sort(function(a, b) {
       var order = { bad: 0, warn: 1, '': 2 };
@@ -1995,10 +2003,10 @@
         (!muted && count ? '<span class="cls-notify-badge">' + (count > 99 ? '99+' : count) + '</span>' : '') +
       '</button>' +
       '<div class="cls-notify-panel">' +
-        '<div class="cls-notify-head"><div><div class="cls-notify-title">Invoice alerts</div><div class="cls-notify-copy">' + (count ? count + ' invoice' + (count === 1 ? '' : 's') + ' need attention.' : 'Nothing urgent right now.') + '</div></div><button type="button" class="cls-notify-mute">' + (muted ? 'Unmute' : 'Mute') + '</button></div>' +
+        '<div class="cls-notify-head"><div><div class="cls-notify-title">Account alerts</div><div class="cls-notify-copy">' + (count ? count + ' item' + (count === 1 ? '' : 's') + ' need attention.' : 'Nothing urgent right now.') + '</div></div><button type="button" class="cls-notify-mute">' + (muted ? 'Unmute' : 'Mute') + '</button></div>' +
         '<div class="cls-notify-list">' + (count ? items.slice(0, 12).map(function(item) {
           return '<div class="cls-notify-item ' + item.cls + '" data-notification-id="' + escapeHtml(item.id) + '"><button type="button" class="cls-notify-dismiss" aria-label="Dismiss ' + escapeHtml(item.title) + '">×</button><strong>' + escapeHtml(item.title) + '</strong><div class="cls-notify-meta">' + escapeHtml(item.meta) + '</div></div>';
-        }).join('') : '<div class="cls-notify-copy">Paid and pending invoices will appear here when they need follow-up.</div>') + '</div>' +
+        }).join('') : '<div class="cls-notify-copy">Invoice and obligation reminders will appear here when they need attention.</div>') + '</div>' +
       '</div>';
     wrap.querySelector('.cls-notify-btn').addEventListener('click', function(ev) {
       ev.stopPropagation();
@@ -2027,6 +2035,23 @@
         if (node && !node.contains(ev.target)) node.classList.remove('open');
       });
     }
+  };
+
+  window.clsReadRecordAttachment = function clsReadRecordAttachment(file) {
+    return new Promise(function(resolve, reject) {
+      if (!file) { resolve(null); return; }
+      var allowed = /^(application\/pdf|image\/(png|jpeg|webp))$/i;
+      if (!allowed.test(String(file.type || ''))) { reject(new Error('Please upload a PDF, PNG, JPG, or WebP file.')); return; }
+      if (file.size > 2 * 1024 * 1024) { reject(new Error('The attachment must be 2 MB or smaller.')); return; }
+      var reader = new FileReader();
+      reader.onload = function() { resolve({name:cleanString(file.name,180),type:cleanString(file.type,100),size:Number(file.size||0),data:String(reader.result||'')}); };
+      reader.onerror = function() { reject(new Error('The attachment could not be read.')); };
+      reader.readAsDataURL(file);
+    });
+  };
+  window.clsRecordAttachmentLink = function clsRecordAttachmentLink(attachment, className) {
+    if (!attachment || !attachment.data) return '';
+    return '<a class="' + escapeHtml(className || '') + '" href="' + escapeHtml(attachment.data) + '" target="_blank" rel="noopener" download="' + escapeHtml(attachment.name || 'attachment') + '">📎 View file</a>';
   };
 
   window.clsMountTrialCountdown = function clsMountTrialCountdown(opts) {

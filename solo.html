@@ -1077,7 +1077,8 @@ document.addEventListener('click',function(e){
         <div class="f-group"><label>Supplier</label><select class="f-input f-select" id="t-supplier" onchange="onSupplierPick('t')"></select></div>
         <div class="f-group" id="t-supplier-new-wrap" style="display:none"><label>New Supplier Name</label><input class="f-input" id="t-supplier-new" placeholder="e.g. Studio Nova"></div>
       </div>
-      <div class="f-group" style="margin-bottom:0"><label>Reference / Note</label><input class="f-input" id="t-ref" placeholder="e.g. Receipt #001, INV-001"></div>
+      <div class="f-group"><label>Reference / Note</label><input class="f-input" id="t-ref" placeholder="e.g. Receipt #001, INV-001"></div>
+      <div class="f-group" style="margin-bottom:0"><label>Invoice / Receipt / Proof (optional)</label><input class="f-input" type="file" id="t-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="logo-area-hint">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
     </div>
     <div class="modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="txn-modal">Cancel</button>
@@ -1104,7 +1105,8 @@ document.addEventListener('click',function(e){
         <div class="f-group"><label>Vendor / Supplier</label><select class="f-input f-select" id="e-supplier" onchange="onSupplierPick('e')"></select></div>
         <div class="f-group"><label id="e-amount-label">Amount *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
-      <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:0"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
+      <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:.85rem"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
+      <div class="f-group" style="margin-bottom:0"><label>Expense Invoice / Receipt (optional)</label><input class="f-input" type="file" id="e-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="logo-area-hint">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
     </div>
     <div class="modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="exp-modal">Cancel</button>
@@ -1331,6 +1333,7 @@ document.addEventListener('click',function(e){
         <div class="f-group"><label>Payment Method</label><select class="f-input f-select" id="pm-method"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Online Payment</option><option>Card</option></select></div>
         <div class="f-group"><label>Reference / Note</label><input class="f-input" id="pm-ref" placeholder="Transfer ref, receipt #"></div>
       </div>
+      <div class="f-group"><label>Paid Receipt / Payment Proof (optional)</label><input class="f-input" type="file" id="pm-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="logo-area-hint">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
       <div class="pay-remain-alert" id="pm-remain-alert">⏰ Follow-up: remaining balance of <strong id="pm-remain-amt">LKR 0</strong> will be flagged in the invoice register.</div>
     </div>
     <div class="modal-foot">
@@ -2301,9 +2304,9 @@ function renderCashflow(){
   const typeFilter=(document.getElementById('cf-type-filter')||{}).value||'';
   const filtered=DB.transactions.filter(getFilterRange('cf')).filter(function(t){return !typeFilter||t.type===typeFilter;});
   const sorted=sortRecords(filtered,'cf');
-  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${escHTML(t.desc)}</td><td>${escHTML(t.cat)}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${escHTML(t.supplierName)}${t.ref?' · '+escHTML(t.ref):''}`:(escHTML(t.ref)||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="transaction:${t.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No transactions match the selected filters.</td></tr>';
+  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${escHTML(t.desc)}${window.clsRecordAttachmentLink?'<div class="form-note">'+window.clsRecordAttachmentLink(t.attachment)+'</div>':''}</td><td>${escHTML(t.cat)}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${escHTML(t.supplierName)}${t.ref?' · '+escHTML(t.ref):''}`:(escHTML(t.ref)||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${fmtAmt(t.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="transaction:${t.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No transactions match the selected filters.</td></tr>';
 }
-window.addTransaction = function addTransaction(){
+window.addTransaction = async function addTransaction(){
   const date=document.getElementById('t-date').value;
   const desc=document.getElementById('t-desc').value.trim();
   const type=document.getElementById('t-type').value;
@@ -2314,10 +2317,12 @@ window.addTransaction = function addTransaction(){
   var supplier=null;
   try{supplier=resolveSupplierFromPicker('t','transaction');}
   catch(e){alert(e.message);return;}
-  DB.transactions.unshift({date,desc,type,amount,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',id:Date.now()});
+  var attachment=null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('t-attachment').files||[])[0]);}catch(e){alert(e.message);return;}
+  DB.transactions.unshift({date,desc,type,amount,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',attachment,id:Date.now()});
   saveDB();renderCashflow();renderRecentTable();closeModal('txn-modal');
   refreshSupplierSelects();renderSuppliers();
   document.getElementById('t-desc').value='';document.getElementById('t-amount').value='';document.getElementById('t-ref').value='';clearSupplierPicker('t');
+  document.getElementById('t-attachment').value='';
 }
 
 // ════════════════════════════════
@@ -2333,9 +2338,9 @@ function renderExpenses(){
   const catFilter=(document.getElementById('exp-cat-filter')||{}).value||'';
   const filtered=DB.expenses.filter(getFilterRange('exp')).filter(function(e){return !catFilter||e.cat===catFilter;});
   const sorted=sortRecords(filtered,'exp');
-  document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(e=>`<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(e.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No expenses match the selected filters.</td></tr>';
+  document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(e=>`<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}${window.clsRecordAttachmentLink?'<div class="form-note">'+window.clsRecordAttachmentLink(e.attachment)+'</div>':''}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(e.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No expenses match the selected filters.</td></tr>';
 }
-window.addExpense = function addExpense(){
+window.addExpense = async function addExpense(){
   const date=document.getElementById('e-date').value;
   const desc=document.getElementById('e-desc').value.trim();
   const cat=document.getElementById('e-cat').value;
@@ -2348,10 +2353,12 @@ window.addExpense = function addExpense(){
   try{supplier=resolveSupplierFromPicker('e','expense');}
   catch(e){alert(e.message);return;}
   const vendor=supplier?supplier.name:'';
-  DB.expenses.unshift({date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,sourceAmount,sourceCurrency,exchangeRate,id:Date.now()});
+  var attachment=null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('e-attachment').files||[])[0]);}catch(e){alert(e.message);return;}
+  DB.expenses.unshift({date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,sourceAmount,sourceCurrency,exchangeRate,attachment,id:Date.now()});
   saveDB();renderExpenses();closeModal('exp-modal');
   renderRecentTable();refreshSupplierSelects();renderSuppliers();
   document.getElementById('e-desc').value='';document.getElementById('e-amount').value='';clearSupplierPicker('e');
+  document.getElementById('e-attachment').value='';
 }
 
 // ════════════════════════════════
@@ -2773,22 +2780,24 @@ window.openPayModal = function openPayModal(num){
   const paymentLabel=document.getElementById('pm-amount-label');if(paymentLabel)paymentLabel.textContent='Amount Received ('+soloCurrency(currentPayInv.cur)+') *';
   document.getElementById('pm-amount').value=bal.toLocaleString();
   document.getElementById('pm-date').value=todayStr();
+  document.getElementById('pm-attachment').value='';
   document.getElementById('pm-remain-alert').style.display='none';
   setPayType('full');openModal('pay-modal');
 }
 window.setPayType = function setPayType(type){payType=type;document.getElementById('pbt-full').classList.toggle('active',type==='full');document.getElementById('pbt-part').classList.toggle('active',type==='partial');if(type==='full'&&currentPayInv){const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);document.getElementById('pm-amount').value=bal.toLocaleString();}updatePayRemain();}
 window.updatePayRemain = function updatePayRemain(){if(!currentPayInv)return;const entered=parseAmt(document.getElementById('pm-amount').value);const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);const rem=bal-entered;const alert=document.getElementById('pm-remain-alert');if(rem>0&&entered>0){alert.style.display='block';document.getElementById('pm-remain-amt').textContent=soloInvoiceAmount(currentPayInv,rem);}else{alert.style.display='none';}}
-window.recordPayment = function recordPayment(){
+window.recordPayment = async function recordPayment(){
   if(!currentPayInv)return;const amount=parseAmt(document.getElementById('pm-amount').value);const date=document.getElementById('pm-date').value;const method=document.getElementById('pm-method').value;const ref=document.getElementById('pm-ref').value;
   if(!amount||amount<=0){alert('Please enter a payment amount.');return;}
   const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);
   if(amount>bal+0.01){alert('Amount exceeds the remaining balance of '+soloInvoiceAmount(currentPayInv,bal)+'.');return;}
+  let attachment=null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('pm-attachment').files||[])[0]);}catch(e){alert(e.message);return;}
   const idx=DB.invoices.findIndex(i=>i.num===currentPayInv.num);
   const before=idx>-1?snapshotForLog(DB.invoices[idx]):snapshotForLog(currentPayInv);
   let newBal=bal-amount;
   if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';}
   const paymentCurrency=soloCurrency(currentPayInv.cur);const paymentRate=SOLO_CURRENCY_RATES[paymentCurrency]||1;
-  DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount:amount*paymentRate,sourceAmount:amount,sourceCurrency:paymentCurrency,exchangeRate:paymentRate,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),id:Date.now()});
+  DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount:amount*paymentRate,sourceAmount:amount,sourceCurrency:paymentCurrency,exchangeRate:paymentRate,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),attachment,id:Date.now()});
   if(idx>-1)addEditBacklog('payment',currentPayInv.num,currentPayInv.num+' · '+currentPayInv.client,'Payment recorded'+(ref?' · '+ref:''),before,snapshotForLog(DB.invoices[idx]));
   saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('pay-modal');
   alert('Payment recorded. Use Receipt on the paid invoice if the customer needs a confirmation email.');

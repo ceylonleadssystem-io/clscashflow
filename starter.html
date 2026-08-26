@@ -804,7 +804,7 @@ document.addEventListener('click',function(e){
       </div>
       <div class="dashboard-followup-grid">
         <div class="reminder-panel">
-          <div class="table-header"><div class="table-title" style="color:var(--amber)">Due Invoice Reminders</div><button class="btn-act-outline" data-nav="invoices">View All</button></div>
+          <div class="table-header"><div class="table-title" style="color:var(--amber)">Payment Reminders</div><button class="btn-act-outline" data-nav="suppliers">View Obligations</button></div>
           <div class="reminder-list" id="due-reminder-list"><div class="dashboard-empty">No invoice reminders due right now.</div></div>
         </div>
         <div class="aging-panel">
@@ -1244,14 +1244,16 @@ document.addEventListener('click',function(e){
 
 <div class="modal-overlay" id="supplier-obligation-modal">
   <div class="modal-box" style="max-width:620px">
-    <div class="modal-head"><div class="modal-title">Add Third-Party Obligation</div><button class="modal-close" onclick="window.closeModal('supplier-obligation-modal')">×</button></div>
+    <div class="modal-head"><div class="modal-title" id="supplier-obligation-modal-title">Add Third-Party Obligation</div><button class="modal-close" onclick="window.closeModal('supplier-obligation-modal')">×</button></div>
     <div class="modal-body">
       <input type="hidden" id="so-supplier-id">
+      <input type="hidden" id="so-obligation-id">
       <div class="f-row"><div class="f-group"><label>Who owes whom? *</label><select class="f-input f-select" id="so-direction"><option value="we_owe">We owe them</option><option value="they_owe">They owe us</option></select></div><div class="f-group"><label>Type *</label><select class="f-input f-select" id="so-kind"><option>Product</option><option>Service</option><option>Deposit / Advance</option><option>Refund</option><option>Loan / Reimbursement</option><option>Other</option></select></div></div>
       <div class="f-group full" style="margin-bottom:.85rem"><label>What was purchased, supplied, or owed? *</label><input class="f-input" id="so-desc" placeholder="e.g. Website hosting service for August"></div>
       <div class="f-row"><div class="f-group"><label>Transaction Date *</label><input class="f-input" type="date" id="so-date"></div><div class="f-group"><label>Payment Due Date *</label><input class="f-input" type="date" id="so-due"></div></div>
       <div class="f-row"><div class="f-group"><label>Amount *</label><input class="f-input" type="number" min="0" step="0.01" id="so-amount"></div><div class="f-group"><label>Currency</label><select class="f-input f-select" id="so-currency" onchange="window.updateSupplierObligationRate()"></select></div></div>
       <div class="f-row"><div class="f-group"><label>Exchange Rate to LKR</label><input class="f-input" type="number" min="0" step="0.01" id="so-rate"></div><div class="f-group"><label>Bill / Reference Number</label><input class="f-input" id="so-ref" placeholder="Invoice, bill, PO, or agreement #"></div></div>
+      <div class="f-group full"><label>Supplier Invoice / Agreement (optional)</label><input class="f-input" type="file" id="so-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="logo-area-hint" id="so-attachment-current">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
     </div>
     <div class="modal-foot"><button class="btn-act-outline" onclick="window.closeModal('supplier-obligation-modal')">Cancel</button><button class="btn-act" onclick="window.saveSupplierObligation()">Save Obligation</button></div>
   </div>
@@ -1327,7 +1329,8 @@ document.addEventListener('click',function(e){
         <div class="payroll-results" id="payroll-results" aria-live="polite"></div>
         <label class="payroll-save"><input type="checkbox" id="p-save-staff" checked><span>Save or update this salaried staff member for future payroll Cash Out entries.</span></label>
       </section>
-      <div class="f-group" style="margin-bottom:0"><label>Reference / Note</label><input class="f-input" id="t-ref" placeholder="e.g. Receipt #001, INV-001"></div>
+      <div class="f-group"><label>Reference / Note</label><input class="f-input" id="t-ref" placeholder="e.g. Receipt #001, INV-001"></div>
+      <div class="f-group" style="margin-bottom:0"><label>Invoice / Receipt / Proof (optional)</label><input class="f-input" type="file" id="t-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="logo-area-hint">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
     </div>
     <div class="modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="txn-modal">Cancel</button>
@@ -1354,7 +1357,8 @@ document.addEventListener('click',function(e){
         <div class="f-group" id="e-supplier-group"><label>Vendor / Supplier</label><select class="f-input f-select" id="e-supplier" onchange="onSupplierPick('e')"></select></div>
         <div class="f-group" id="e-amount-group"><label id="e-amount-label">Amount *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
-      <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:0"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
+      <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:.85rem"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
+      <div class="f-group" style="margin-bottom:0"><label>Expense Invoice / Receipt (optional)</label><input class="f-input" type="file" id="e-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="logo-area-hint">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
     </div>
     <div class="modal-foot">
       <button class="btn-act-outline" data-cls-fn="closeModal" data-cls-arg="exp-modal">Cancel</button>
@@ -1585,6 +1589,7 @@ document.addEventListener('click',function(e){
         <div class="f-group"><label>Payment Method</label><select class="f-input f-select" id="pm-method"><option>Bank Transfer</option><option>Cash</option><option>Cheque</option><option>Online Payment</option><option>Card</option></select></div>
         <div class="f-group"><label>Reference / Note</label><input class="f-input" id="pm-ref" placeholder="Transfer ref, receipt #"></div>
       </div>
+      <div class="f-group"><label>Paid Receipt / Payment Proof (optional)</label><input class="f-input" type="file" id="pm-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="logo-area-hint">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
       <div class="pay-remain-alert" id="pm-remain-alert">⏰ Follow-up: remaining balance of <strong id="pm-remain-amt">LKR 0</strong> will be flagged in the invoice register.</div>
     </div>
     <div class="modal-foot">
@@ -2609,13 +2614,24 @@ function invoiceDueMs(inv){
 }
 function refreshInvoiceNotifications(){
   if(window.clsMountInvoiceNotifications){
+    const todayStart=new Date();todayStart.setHours(0,0,0,0);
+    const obligationAlerts=[];
+    (DB.suppliers&&DB.suppliers.list||[]).forEach(function(s){(s.obligations||[]).forEach(function(o){
+      const balance=Math.max(0,Number(o.sourceAmount||0)-Number(o.paidAmount||0));
+      if(o.direction!=='we_owe'||balance<=.01)return;
+      const dueMs=Date.parse(String(o.due||'').slice(0,10)+'T00:00:00');
+      const diff=Number.isFinite(dueMs)?Math.floor((dueMs-todayStart.getTime())/MS_DAY):null;
+      if(diff==null||diff>7)return;
+      obligationAlerts.push({cls:diff<0?'bad':'warn',title:diff<0?'Payment to '+s.name+' is overdue':diff===0?'Payment to '+s.name+' is due today':'Payment to '+s.name+' is due soon',meta:(diff<0?Math.abs(diff)+' day'+(Math.abs(diff)===1?'':'s')+' late':diff===0?'Due today':'Due in '+diff+' day'+(diff===1?'':'s'))+' · '+currencyMoney(balance,o.currency)+' · '+(o.description||o.kind||'Obligation')});
+    });});
     window.clsMountInvoiceNotifications({
       invoices: DB.invoices.map(function(inv){return Object.assign({},inv,{amount:studioInvoiceLkr(inv,inv.amount),paidAmount:studioInvoiceLkr(inv,inv.paidAmount)});}),
       plan: 'studio',
       target: '.top-bar-right',
       formatAmount: fmtAmt,
       getNumber: function(inv){ return inv.num; },
-      getCustomer: function(inv){ return inv.client; }
+      getCustomer: function(inv){ return inv.client; },
+      extraItems: obligationAlerts
     });
   }
 }
@@ -2657,11 +2673,12 @@ function renderDashboardReminders(unpaid,todayMs){
   const el=document.getElementById('due-reminder-list');if(!el)return;
   const soonLimit=todayMs+(7*MS_DAY);
   const reminders=unpaid.filter(function(inv){return invoiceBalance(inv)>0&&invoiceDueMs(inv)<=soonLimit;}).sort(function(a,b){return invoiceDueMs(a)-invoiceDueMs(b);});
-  if(!reminders.length){
-    el.innerHTML='<div class="dashboard-empty">No overdue or due-soon invoices right now.</div>';
+  const obligations=[];(DB.suppliers&&DB.suppliers.list||[]).forEach(function(s){(s.obligations||[]).forEach(function(o){const balance=Math.max(0,Number(o.sourceAmount||0)-Number(o.paidAmount||0)),dueMs=Date.parse(String(o.due||'').slice(0,10)+'T00:00:00');if(o.direction==='we_owe'&&balance>.01&&Number.isFinite(dueMs)&&dueMs<=soonLimit)obligations.push({supplier:s,obligation:o,balance:balance,dueMs:dueMs});});});obligations.sort(function(a,b){return a.dueMs-b.dueMs;});
+  if(!reminders.length&&!obligations.length){
+    el.innerHTML='<div class="dashboard-empty">No overdue or due-soon invoices or obligations right now.</div>';
     return;
   }
-  el.innerHTML=reminders.slice(0,6).map(function(inv){
+  const invoiceRows=reminders.map(function(inv){
     const dueMs=invoiceDueMs(inv);
     const diff=Math.floor((dueMs-todayMs)/MS_DAY);
     const overdue=diff<0;
@@ -2677,7 +2694,9 @@ function renderDashboardReminders(unpaid,todayMs){
         <button class="btn-sm btn-sm-pay" data-cls-fn="openPayModal" data-cls-arg="${escHTML(inv.num)}">Record Payment</button>
       </div>
     </div>`;
-  }).join('');
+  });
+  const obligationRows=obligations.map(function(item){const s=item.supplier,o=item.obligation,diff=Math.floor((item.dueMs-todayMs)/MS_DAY),overdue=diff<0,badge=overdue?'Overdue '+Math.abs(diff)+' day'+(Math.abs(diff)!==1?'s':''):diff===0?'Due Today':'Due in '+diff+' day'+(diff!==1?'s':'');return `<div class="reminder-row"><div class="reminder-main"><div class="reminder-title">Pay ${escHTML(s.name)} · ${escHTML(o.description||o.kind||'Obligation')}</div><div class="reminder-meta"><span class="reminder-badge ${overdue?'overdue':''}">${badge}</span><span>${fmtD(o.due)}</span><span>${currencyMoney(item.balance,o.currency)}</span></div></div><div class="reminder-actions"><button class="btn-sm btn-sm-pay" onclick="window.openSupplierSettlement(${escHTML(JSON.stringify(String(s.id)))},${escHTML(JSON.stringify(String(o.id)))})">Record Payment</button><button class="btn-sm btn-sm-out" data-nav="suppliers">View</button></div></div>`;});
+  el.innerHTML=invoiceRows.concat(obligationRows).sort(function(a,b){return 0;}).slice(0,6).join('');
 }
 function renderInvoiceAging(unpaid,todayMs){
   const el=document.getElementById('invoice-aging-list');if(!el)return;
@@ -2925,6 +2944,7 @@ function expenseTransactionFields(expense){
     ref:'Expense Log',
     supplierId:expense.supplierId||null,
     supplierName:expense.supplierName||expense.vendor||'',
+    attachment:expense.attachment||null,
     source:'expense',
     expenseId:expense.id,
     payrollStaffId:expense.payrollStaffId||null
@@ -2965,11 +2985,13 @@ function transactionExpenseFields(txn){
     vendor:txn.supplierName||'',
     supplierId:txn.supplierId||null,
     supplierName:txn.supplierName||'',
+    obligationId:txn.obligationId||null,
     ref:txn.ref||'',
     source:'transaction',
     sourceTransactionId:txn.id,
     payrollStaffId:txn.payrollStaffId||null,
-    payroll:txn.payroll||null
+    payroll:txn.payroll||null,
+    attachment:txn.attachment||null
   };
 }
 function syncTransactionExpense(txn){
@@ -3011,9 +3033,9 @@ function renderCashflow(){
   const typeFilter=(document.getElementById('cf-type-filter')||{}).value||'';
   const filtered=DB.transactions.filter(getFilterRange('cf')).filter(function(t){return !typeFilter||t.type===typeFilter;});
   const sorted=sortRecords(filtered,'cf');
-  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${escHTML(t.desc)}</td><td>${escHTML(t.cat)}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${escHTML(t.supplierName)}${t.ref?' · '+escHTML(t.ref):''}`:(escHTML(t.ref)||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${formatStudioTxnAmount(t)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="${t.source==='expense'&&t.expenseId!=null?'expense:'+t.expenseId:'transaction:'+t.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No transactions match the selected filters.</td></tr>';
+  document.getElementById('cf-table').innerHTML=sorted.length?sorted.map(t=>`<tr><td>${fmtD(t.date)}</td><td>${escHTML(t.desc)}${window.clsRecordAttachmentLink?'<div class="form-note">'+window.clsRecordAttachmentLink(t.attachment)+'</div>':''}</td><td>${escHTML(t.cat)}</td><td style="color:var(--dim)">${t.supplierName?`Supplier: ${escHTML(t.supplierName)}${t.ref?' · '+escHTML(t.ref):''}`:(escHTML(t.ref)||'—')}</td><td><span class="pill ${t.type==='in'?'pill-in':'pill-out'}">${t.type==='in'?'↑ In':'↓ Out'}</span></td><td style="text-align:right" class="${t.type==='in'?'amount-pos':'amount-neg'}">${formatStudioTxnAmount(t)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="${t.source==='expense'&&t.expenseId!=null?'expense:'+t.expenseId:'transaction:'+t.id}">Edit</button></div></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No transactions match the selected filters.</td></tr>';
 }
-window.addTransaction = function addTransaction(){
+window.addTransaction = async function addTransaction(){
   const date=document.getElementById('t-date').value;
   let desc=document.getElementById('t-desc').value.trim();
   const type=document.getElementById('t-type').value;
@@ -3041,12 +3063,14 @@ window.addTransaction = function addTransaction(){
     try{supplier=resolveSupplierFromPicker('t','transaction');}
     catch(e){alert(e.message);return;}
   }
-  var transaction={date,desc,type,amount,sourceAmount,sourceCurrency,exchangeRate,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',payrollStaffId,payroll,id:Date.now()};
+  var attachment=null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('t-attachment').files||[])[0]);}catch(e){alert(e.message);return;}
+  var transaction={date,desc,type,amount,sourceAmount,sourceCurrency,exchangeRate,cat,ref,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',payrollStaffId,payroll,attachment,id:Date.now()};
   DB.transactions.unshift(transaction);
   syncTransactionExpense(transaction);
   saveDB();renderCashflow();renderRecentTable();closeModal('txn-modal');
   refreshSupplierSelects();renderSuppliers();
   document.getElementById('t-desc').value='';document.getElementById('t-amount').value='';document.getElementById('t-ref').value='';clearSupplierPicker('t');window.updateStudioTxnConversionPreview();
+  document.getElementById('t-attachment').value='';
 }
 
 // ════════════════════════════════
@@ -3065,7 +3089,7 @@ function renderExpenses(){
   document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(function(e){
     const payroll=e.payroll||null;
     const payrollMeta=payroll?`<div class="expense-payroll-meta"><strong>Gross ${fmtAmt(payroll.gross)}</strong> · Net ${fmtAmt(payroll.netSalary)}<br>Employee EPF ${fmtAmt(payroll.employeeEpf)} · Employer EPF ${fmtAmt(payroll.employerEpf)} · ETF ${fmtAmt(payroll.etf)}</div>`:'';
-    return `<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}${payrollMeta}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${formatStudioTxnAmount(e)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`;
+    return `<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}${payrollMeta}${window.clsRecordAttachmentLink?'<div class="form-note">'+window.clsRecordAttachmentLink(e.attachment)+'</div>':''}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${formatStudioTxnAmount(e)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`;
   }).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No expenses match the selected filters.</td></tr>';
 }
 
@@ -3162,7 +3186,7 @@ function savePayrollStaffProfile(name,epfNo,calc){
   Object.assign(person,{name,epfNo,grossEarnings:calc.gross,employeeEpfRate:calc.employeeEpfRate,employerEpfRate:calc.employerEpfRate,etfRate:calc.etfRate,salaried:true,active:true,lastPayrollAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
   return person.id;
 }
-window.addExpense = function addExpense(){
+window.addExpense = async function addExpense(){
   const date=document.getElementById('e-date').value;
   let desc=document.getElementById('e-desc').value.trim();
   const cat=document.getElementById('e-cat').value;
@@ -3194,12 +3218,14 @@ window.addExpense = function addExpense(){
     catch(e){alert(e.message);return;}
     vendor=supplier?supplier.name:'';
   }
-  const expense={date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,sourceAmount,sourceCurrency,exchangeRate,payrollStaffId,payroll,id:Date.now()};
+  let attachment=null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('e-attachment').files||[])[0]);}catch(e){alert(e.message);return;}
+  const expense={date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,sourceAmount,sourceCurrency,exchangeRate,payrollStaffId,payroll,attachment,id:Date.now()};
   DB.expenses.unshift(expense);
   syncExpenseTransaction(expense);
   saveDB();renderExpenses();renderCashflow();renderDashboard();renderBusinessInsights();closeModal('exp-modal');
   renderRecentTable();refreshSupplierSelects();renderSuppliers();
   document.getElementById('e-desc').value='';document.getElementById('e-amount').value='';clearSupplierPicker('e');populatePayrollStaffSelect('new');
+  document.getElementById('e-attachment').value='';
 }
 
 // ════════════════════════════════
@@ -3643,22 +3669,24 @@ window.openPayModal = function openPayModal(num){
   const paymentLabel=document.getElementById('pm-amount-label');if(paymentLabel)paymentLabel.textContent='Amount Received ('+studioCurrency(currentPayInv.cur)+') *';
   document.getElementById('pm-amount').value=bal.toLocaleString();
   document.getElementById('pm-date').value=todayStr();
+  document.getElementById('pm-attachment').value='';
   document.getElementById('pm-remain-alert').style.display='none';
   setPayType('full');openModal('pay-modal');
 }
 window.setPayType = function setPayType(type){payType=type;document.getElementById('pbt-full').classList.toggle('active',type==='full');document.getElementById('pbt-part').classList.toggle('active',type==='partial');if(type==='full'&&currentPayInv){const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);document.getElementById('pm-amount').value=bal.toLocaleString();}updatePayRemain();}
 window.updatePayRemain = function updatePayRemain(){if(!currentPayInv)return;const entered=parseAmt(document.getElementById('pm-amount').value);const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);const rem=bal-entered;const alert=document.getElementById('pm-remain-alert');if(rem>0&&entered>0){alert.style.display='block';document.getElementById('pm-remain-amt').textContent=studioInvoiceAmount(currentPayInv,rem);}else{alert.style.display='none';}}
-window.recordPayment = function recordPayment(){
+window.recordPayment = async function recordPayment(){
   if(!currentPayInv)return;const amount=parseAmt(document.getElementById('pm-amount').value);const date=document.getElementById('pm-date').value;const method=document.getElementById('pm-method').value;const ref=document.getElementById('pm-ref').value;
   if(!amount||amount<=0){alert('Please enter a payment amount.');return;}
   const bal=currentPayInv.amount-(currentPayInv.paidAmount||0);
   if(amount>bal+0.01){alert('Amount exceeds the remaining balance of '+studioInvoiceAmount(currentPayInv,bal)+'.');return;}
+  let attachment=null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('pm-attachment').files||[])[0]);}catch(e){alert(e.message);return;}
   const idx=DB.invoices.findIndex(i=>i.num===currentPayInv.num);
   const before=idx>-1?snapshotForLog(DB.invoices[idx]):snapshotForLog(currentPayInv);
   let newBal=bal-amount;
   if(idx>-1){DB.invoices[idx].paidAmount=(DB.invoices[idx].paidAmount||0)+amount;newBal=DB.invoices[idx].amount-DB.invoices[idx].paidAmount;DB.invoices[idx].status=newBal<=0.01?'paid':'partial';}
   const paymentCurrency=studioCurrency(currentPayInv.cur);const paymentRate=studioExchangeRate(paymentCurrency);
-  DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount:amount*paymentRate,sourceAmount:amount,sourceCurrency:paymentCurrency,exchangeRate:paymentRate,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),id:Date.now()});
+  DB.transactions.unshift({date,desc:'Payment received — '+currentPayInv.num+' ('+currentPayInv.client+')',type:'in',amount:amount*paymentRate,sourceAmount:amount,sourceCurrency:paymentCurrency,exchangeRate:paymentRate,cat:'Invoice Payment',ref:currentPayInv.num+(ref?' · '+ref:''),attachment,id:Date.now()});
   if(idx>-1)addEditBacklog('payment',currentPayInv.num,currentPayInv.num+' · '+currentPayInv.client,'Payment recorded'+(ref?' · '+ref:''),before,snapshotForLog(DB.invoices[idx]));
   saveDB();renderInvoices();renderDashboard();renderBacklog();closeModal('pay-modal');
   alert('Payment recorded. Use Receipt on the paid invoice if the customer needs a confirmation email.');
@@ -4769,7 +4797,7 @@ function renderSuppliers(){
         <button class="btn-sm btn-sm-out" onclick="CLS_RUN('deleteSupplier',${s.id})" style="border-color:rgba(192,57,43,.3);color:var(--red)">Remove</button>
       </div>
     </div>`).join('');
-  const ledger=document.getElementById('supplier-ledger-body');if(ledger)ledger.innerHTML=obligations.length?obligations.sort(function(a,b){return String(a.obligation.due).localeCompare(String(b.obligation.due));}).map(function(x){const s=x.supplier,o=x.obligation,balance=Math.max(0,Number(o.sourceAmount||0)-Number(o.paidAmount||0)),today=todayStr(),status=balance<=.01?'Paid':(Number(o.paidAmount||0)>0?'Partially paid':(o.due&&o.due<today?'Overdue':'Unpaid')),money=currencyMoney(balance,o.currency);return '<tr><td><strong>'+escHTML(s.name)+'</strong></td><td>'+(o.direction==='we_owe'?'<span class="pill pill-overdue">We owe them</span>':'<span class="pill pill-paid">They owe us</span>')+'</td><td>'+escHTML(o.kind)+'<br><span style="font-size:.65rem;color:var(--muted)">'+escHTML(o.description)+(o.reference?' · '+escHTML(o.reference):'')+'</span></td><td>'+fmtD(o.date)+'</td><td>'+fmtD(o.due)+'</td><td>'+status+'</td><td style="text-align:right"><strong>'+money+'</strong></td><td>'+(balance>.01?'<button class="btn-sm btn-sm-pay" onclick="window.openSupplierSettlement('+escHTML(JSON.stringify(String(s.id)))+','+escHTML(JSON.stringify(String(o.id)))+')">Record payment</button>':'<span class="pill pill-paid">Settled</span>')+'</td></tr>';}).join(''):'<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--dim)">No amounts owed yet. Use “+ Owed item” on a third party.</td></tr>';
+  const ledger=document.getElementById('supplier-ledger-body');if(ledger)ledger.innerHTML=obligations.length?obligations.sort(function(a,b){return String(a.obligation.due).localeCompare(String(b.obligation.due));}).map(function(x){const s=x.supplier,o=x.obligation,balance=Math.max(0,Number(o.sourceAmount||0)-Number(o.paidAmount||0)),today=todayStr(),status=balance<=.01?'Paid':(Number(o.paidAmount||0)>0?'Partially paid':(o.due&&o.due<today?'Overdue':'Unpaid')),money=currencyMoney(balance,o.currency),sid=escHTML(JSON.stringify(String(s.id))),oid=escHTML(JSON.stringify(String(o.id)));return '<tr><td><strong>'+escHTML(s.name)+'</strong></td><td>'+(o.direction==='we_owe'?'<span class="pill pill-overdue">We owe them</span>':'<span class="pill pill-paid">They owe us</span>')+'</td><td>'+escHTML(o.kind)+'<br><span style="font-size:.65rem;color:var(--muted)">'+escHTML(o.description)+(o.reference?' · '+escHTML(o.reference):'')+'</span></td><td>'+fmtD(o.date)+'</td><td>'+fmtD(o.due)+'</td><td>'+status+'</td><td style="text-align:right"><strong>'+money+'</strong></td><td><div class="row-actions">'+(balance>.01?'<button class="btn-sm btn-sm-pay" onclick="window.openSupplierSettlement('+sid+','+oid+')">Record payment</button>':'<span class="pill pill-paid">Settled</span>')+'<button class="btn-sm btn-sm-dark" onclick="window.openSupplierObligation('+sid+','+oid+')">Edit</button><button class="btn-sm btn-sm-out" onclick="window.deleteSupplierObligation('+sid+','+oid+')">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--dim)">No amounts owed yet. Use “+ Owed item” on a third party.</td></tr>';
 }
 window.openSupplierModal = function openSupplierModal(){
   if(!DB.suppliers) DB.suppliers={list:[],nextId:1};
@@ -4827,10 +4855,11 @@ window.saveSupplier = function saveSupplier(){
   saveDB();renderSuppliers();refreshSupplierSelects();renderExpenses();renderCashflow();renderRecentTable();closeModal('supplier-modal');
 }
 window.updateSupplierObligationRate=function(){const cur=studioCurrency((document.getElementById('so-currency')||{}).value);const rate=document.getElementById('so-rate');if(rate)rate.value=studioExchangeRate(cur);};
-window.openSupplierObligation=function(supplierId){const s=DB.suppliers&&DB.suppliers.list.find(function(x){return String(x.id)===String(supplierId);});if(!s)return;hydrateStudioCurrencySelect('so-currency',false);document.getElementById('so-supplier-id').value=s.id;document.getElementById('so-direction').value='we_owe';document.getElementById('so-kind').value='Product';document.getElementById('so-desc').value='';document.getElementById('so-date').value=todayStr();const due=new Date();due.setDate(due.getDate()+30);document.getElementById('so-due').value=due.toISOString().slice(0,10);document.getElementById('so-amount').value='';document.getElementById('so-currency').value=studioCurrency(DB.settings.mainCurrency||'LKR');window.updateSupplierObligationRate();document.getElementById('so-ref').value='';openModal('supplier-obligation-modal');};
-window.saveSupplierObligation=function(){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(document.getElementById('so-supplier-id').value);});if(!s)return;const description=document.getElementById('so-desc').value.trim(),date=document.getElementById('so-date').value,due=document.getElementById('so-due').value,sourceAmount=Number(document.getElementById('so-amount').value)||0,currency=studioCurrency(document.getElementById('so-currency').value),exchangeRate=currency==='LKR'?1:(Number(document.getElementById('so-rate').value)||studioExchangeRate(currency));if(!description||!date||!due||!sourceAmount){alert('Please enter the description, dates, and amount.');return;}s.obligations=Array.isArray(s.obligations)?s.obligations:[];s.obligations.unshift({id:'OB-'+Date.now(),direction:document.getElementById('so-direction').value,kind:document.getElementById('so-kind').value,description,date,due,sourceAmount,currency,exchangeRate,paidAmount:0,reference:document.getElementById('so-ref').value.trim(),payments:[],createdAt:new Date().toISOString()});saveDB();renderSuppliers();closeModal('supplier-obligation-modal');};
+window.openSupplierObligation=function(supplierId,obligationId){const s=DB.suppliers&&DB.suppliers.list.find(function(x){return String(x.id)===String(supplierId);});if(!s)return;const o=obligationId&&(s.obligations||[]).find(function(x){return String(x.id)===String(obligationId);});hydrateStudioCurrencySelect('so-currency',false);document.getElementById('so-supplier-id').value=s.id;document.getElementById('so-obligation-id').value=o?o.id:'';document.getElementById('supplier-obligation-modal-title').textContent=o?'Edit Third-Party Obligation':'Add Third-Party Obligation';document.getElementById('so-direction').value=o?o.direction:'we_owe';document.getElementById('so-kind').value=o?o.kind:'Product';document.getElementById('so-desc').value=o?o.description:'';document.getElementById('so-date').value=o?o.date:todayStr();const due=new Date();due.setDate(due.getDate()+30);document.getElementById('so-due').value=o?o.due:due.toISOString().slice(0,10);document.getElementById('so-amount').value=o?o.sourceAmount:'';document.getElementById('so-currency').value=o?studioCurrency(o.currency):studioCurrency(DB.settings.mainCurrency||'LKR');document.getElementById('so-rate').value=o?Number(o.exchangeRate||1):studioExchangeRate(document.getElementById('so-currency').value);document.getElementById('so-ref').value=o?(o.reference||''):'';document.getElementById('so-attachment').value='';document.getElementById('so-attachment-current').innerHTML=o&&o.attachment&&window.clsRecordAttachmentLink?'Current: '+window.clsRecordAttachmentLink(o.attachment):'PDF, PNG, JPG or WebP · Max 2 MB';openModal('supplier-obligation-modal');};
+window.saveSupplierObligation=async function(){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(document.getElementById('so-supplier-id').value);});if(!s)return;const editId=document.getElementById('so-obligation-id').value,o=editId&&(s.obligations||[]).find(function(x){return String(x.id)===String(editId);}),description=document.getElementById('so-desc').value.trim(),date=document.getElementById('so-date').value,due=document.getElementById('so-due').value,sourceAmount=Number(document.getElementById('so-amount').value)||0,currency=studioCurrency(document.getElementById('so-currency').value),exchangeRate=currency==='LKR'?1:(Number(document.getElementById('so-rate').value)||studioExchangeRate(currency)),direction=document.getElementById('so-direction').value;if(!description||!date||!due||!sourceAmount){alert('Please enter the description, dates, and amount.');return;}if(o&&sourceAmount<Number(o.paidAmount||0)){alert('The obligation amount cannot be lower than the amount already paid.');return;}if(o&&Number(o.paidAmount||0)>0&&(currency!==o.currency||direction!==o.direction)){alert('Currency and direction cannot be changed after a payment has been recorded.');return;}let attachment=o?o.attachment:null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('so-attachment').files||[])[0])||attachment;}catch(e){alert(e.message);return;}s.obligations=Array.isArray(s.obligations)?s.obligations:[];const data={direction:direction,kind:document.getElementById('so-kind').value,description,date,due,sourceAmount,currency,exchangeRate,reference:document.getElementById('so-ref').value.trim(),attachment,updatedAt:new Date().toISOString()};if(o){Object.assign(o,data);DB.transactions.forEach(function(t){if(String(t.obligationId)===String(o.id)){t.desc=(t.type==='out'?'Payment to ':'Payment from ')+s.name+' — '+description;t.ref=data.reference;}});}else{s.obligations.unshift(Object.assign({id:'OB-'+Date.now(),paidAmount:0,payments:[],createdAt:new Date().toISOString()},data));}saveDB();renderSuppliers();renderCashflow();renderExpenses();renderDashboard();renderReports();closeModal('supplier-obligation-modal');};
+window.deleteSupplierObligation=function(supplierId,obligationId){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(supplierId);}),o=s&&(s.obligations||[]).find(function(x){return String(x.id)===String(obligationId);});if(!o)return;if(!confirm('Delete this obligation? Any payments created from it will also be removed from Money In & Out, Expenses, and reports.'))return;const transactionIds=DB.transactions.filter(function(t){return String(t.obligationId||'')===String(o.id);}).map(function(t){return String(t.id);});DB.transactions=DB.transactions.filter(function(t){return String(t.obligationId||'')!==String(o.id);});DB.expenses=DB.expenses.filter(function(e){return String(e.obligationId||'')!==String(o.id)&&transactionIds.indexOf(String(e.sourceTransactionId||e.sourceTxnId||''))===-1;});s.obligations=s.obligations.filter(function(x){return String(x.id)!==String(o.id);});saveDB();renderSuppliers();renderCashflow();renderExpenses();renderDashboard();renderReports();};
 window.openSupplierSettlement=function(supplierId,obligationId){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(supplierId);}),o=s&&s.obligations.find(function(x){return String(x.id)===String(obligationId);});if(!o)return;const balance=Math.max(0,Number(o.sourceAmount)-Number(o.paidAmount||0));document.getElementById('ss-supplier-id').value=s.id;document.getElementById('ss-obligation-id').value=o.id;document.getElementById('ss-summary').innerHTML='<strong>'+escHTML(s.name)+'</strong><br>'+(o.direction==='we_owe'?'We owe them':'They owe us')+' for '+escHTML(o.description)+'<br>Remaining: <strong>'+currencyMoney(balance,o.currency)+'</strong>';document.getElementById('ss-amount').value=balance;document.getElementById('ss-date').value=todayStr();document.getElementById('ss-ref').value='';openModal('supplier-settlement-modal');};
-window.recordSupplierSettlement=function(){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(document.getElementById('ss-supplier-id').value);}),o=s&&s.obligations.find(function(x){return String(x.id)===String(document.getElementById('ss-obligation-id').value);});if(!o)return;const amount=Number(document.getElementById('ss-amount').value)||0,balance=Math.max(0,Number(o.sourceAmount)-Number(o.paidAmount||0)),date=document.getElementById('ss-date').value;if(!date||amount<=0||amount>balance+.01){alert('Enter a valid payment amount up to '+currencyMoney(balance,o.currency)+'.');return;}o.paidAmount=Number(o.paidAmount||0)+amount;o.payments=Array.isArray(o.payments)?o.payments:[];const reference=document.getElementById('ss-ref').value.trim(),method=document.getElementById('ss-method').value;o.payments.push({id:'OP-'+Date.now(),date,amount,method,reference});const type=o.direction==='we_owe'?'out':'in',txn={date,desc:(type==='out'?'Payment to ':'Payment from ')+s.name+' — '+o.description,type,amount:amount*Number(o.exchangeRate||1),sourceAmount:amount,sourceCurrency:o.currency,exchangeRate:Number(o.exchangeRate||1),cat:'Third Party Payment',ref:o.reference+(reference?' · '+reference:''),supplierId:s.id,supplierName:s.name,obligationId:o.id,id:Date.now()};DB.transactions.unshift(txn);if(type==='out')syncTransactionExpense(txn);saveDB();renderSuppliers();renderCashflow();renderExpenses();renderDashboard();closeModal('supplier-settlement-modal');};
+window.recordSupplierSettlement=function(){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(document.getElementById('ss-supplier-id').value);}),o=s&&s.obligations.find(function(x){return String(x.id)===String(document.getElementById('ss-obligation-id').value);});if(!o)return;const amount=Number(document.getElementById('ss-amount').value)||0,balance=Math.max(0,Number(o.sourceAmount)-Number(o.paidAmount||0)),date=document.getElementById('ss-date').value;if(!date||amount<=0||amount>balance+.01){alert('Enter a valid payment amount up to '+currencyMoney(balance,o.currency)+'.');return;}o.paidAmount=Number(o.paidAmount||0)+amount;o.payments=Array.isArray(o.payments)?o.payments:[];const reference=document.getElementById('ss-ref').value.trim(),method=document.getElementById('ss-method').value;o.payments.push({id:'OP-'+Date.now(),date,amount,method,reference});const type=o.direction==='we_owe'?'out':'in',txn={date,desc:(type==='out'?'Payment to ':'Payment from ')+s.name+' — '+o.description,type,amount:amount*Number(o.exchangeRate||1),sourceAmount:amount,sourceCurrency:o.currency,exchangeRate:Number(o.exchangeRate||1),cat:'Third Party Payment',ref:o.reference+(reference?' · '+reference:''),supplierId:s.id,supplierName:s.name,obligationId:o.id,id:Date.now()};DB.transactions.unshift(txn);if(type==='out')syncTransactionExpense(txn);saveDB();renderSuppliers();renderCashflow();renderExpenses();renderDashboard();renderReports();closeModal('supplier-settlement-modal');};
 window.deleteSupplier = function deleteSupplier(id){
   const target=DB.suppliers&&DB.suppliers.list.find(function(s){return String(s.id)===String(id);});
   const open=target&&Array.isArray(target.obligations)&&target.obligations.some(function(o){return Number(o.sourceAmount||0)-Number(o.paidAmount||0)>.01;});

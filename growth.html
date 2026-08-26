@@ -961,7 +961,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
       <div class="db-tables-row">
         <div class="db-table-card">
           <div class="db-tcard-head">
-            <span class="db-tcard-title">Due Invoice Reminders</span>
+            <span class="db-tcard-title">Payment Reminders</span>
             <button class="btn bo" onclick="window.clsGoTo('debt')">View All</button>
           </div>
           <div class="reminder-list" id="d-reminders"></div>
@@ -1300,8 +1300,10 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 </div></div>
 
 <div class="mo" id="mo-obligation"><div class="mob" style="max-width:640px">
-  <div class="mo-hd"><span class="mo-title">Add Third-Party Obligation</span><button class="mo-x" onclick="window.closeMo('mo-obligation')">×</button></div>
+  <div class="mo-hd"><span class="mo-title" id="bo-modal-title">Add Third-Party Obligation</span><button class="mo-x" onclick="window.closeMo('mo-obligation')">×</button></div>
+  <input type="hidden" id="bo-obligation-id">
   <div class="mo-bd"><input type="hidden" id="bo-supplier-id"><div class="frow"><div class="fg"><label>Who owes whom?</label><select class="fi fsel" id="bo-direction"><option value="we_owe">We owe them</option><option value="they_owe">They owe us</option></select></div><div class="fg"><label>Type</label><select class="fi fsel" id="bo-kind"><option>Product</option><option>Service</option><option>Deposit / Advance</option><option>Refund</option><option>Loan / Reimbursement</option><option>Other</option></select></div></div><div class="fg"><label>What was purchased, supplied, or owed?</label><input class="fi" id="bo-desc"></div><div class="frow"><div class="fg"><label>Transaction Date</label><input class="fi" type="date" id="bo-date"></div><div class="fg"><label>Due Date</label><input class="fi" type="date" id="bo-due"></div></div><div class="frow"><div class="fg"><label>Amount</label><input class="fi" type="number" min="0" step="0.01" id="bo-amount"></div><div class="fg"><label>Currency</label><select class="fi fsel" id="bo-currency" onchange="window.updateBusinessObligationRate()"><option>LKR</option><option>USD</option><option>GBP</option><option>EUR</option></select></div></div><div class="frow"><div class="fg"><label>Exchange Rate to LKR</label><input class="fi" type="number" min="0" step="0.01" id="bo-rate"></div><div class="fg"><label>Bill / Reference</label><input class="fi" id="bo-ref"></div></div></div>
+  <div class="fg" style="padding:0 1.25rem"><label>Supplier Invoice / Agreement (optional)</label><input class="fi" type="file" id="bo-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="form-note" id="bo-attachment-current">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-obligation')">Cancel</button><button class="btn bd" onclick="window.saveBusinessObligation()">Save Obligation</button></div>
 </div></div>
 
@@ -1318,6 +1320,7 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
     <div class="fg"><label>What did you spend on?</label><input class="fi" id="e-desc" placeholder="e.g. Electricity bill for June"></div>
     <div class="frow"><div class="fg"><label>Paid to (Supplier / Person)</label><input class="fi" id="e-vendor" list="supplier-options" placeholder="Choose or type a new supplier"><datalist id="supplier-options"></datalist></div><div class="fg"><label id="e-amt-label">Amount</label><input class="fi" type="text" inputmode="decimal" data-money-input id="e-amt" placeholder="0.00" oninput="window.formatBusinessMoneyInput(this)"></div></div>
     <div class="frow"><div class="fg"><label>Currency</label><select class="fi fsel" id="e-currency" onchange="window.handleExpenseCurrencyChange()"><option value="LKR">LKR</option><option value="USD">USD — $</option><option value="GBP">GBP — £</option><option value="EUR">EUR — €</option></select></div><div class="fg"><label>Exchange Rate to LKR</label><input class="fi" type="number" min="0" step="0.01" id="e-rate" value="1"></div></div>
+    <div class="fg"><label>Expense Invoice / Receipt (optional)</label><input class="fi" type="file" id="e-attachment" accept="application/pdf,image/png,image/jpeg,image/webp"><div class="form-note">PDF, PNG, JPG or WebP · Max 2 MB</div></div>
   </div>
   <div class="mo-ft"><button class="btn bo" onclick="window.closeMo('mo-exp')">Cancel</button><button class="btn bd" onclick="window.addExp()">Save Expense</button></div>
 </div></div>
@@ -2189,10 +2192,10 @@ function normalizeBusinessData() {
   ensureCurrencySettings();
   D.txns = (D.txns || []).map(function(t, i) {
     var money = normalizeTxnCurrencyFields(t);
-    return {id:String(t.id || t._id || ('T' + Date.now() + i)), date:t.date || today(), desc:t.desc || t.description || 'Transaction', type:t.type === 'out' ? 'out' : 'in', cat:t.cat || t.category || 'Other', amount:money.amount, sourceAmount:money.sourceAmount, sourceCurrency:money.sourceCurrency, exchangeRate:money.exchangeRate, ref:t.ref || t.reference || '', purpose:t.purpose || t.outPurpose || '', paidTo:t.paidTo || t.vendor || t.supplier || '', supplierId:t.supplierId || '', method:t.method || '', slipName:t.slipName || '', note:t.note || '', source:t.source || ''};
+    return {id:String(t.id || t._id || ('T' + Date.now() + i)), date:t.date || today(), desc:t.desc || t.description || 'Transaction', type:t.type === 'out' ? 'out' : 'in', cat:t.cat || t.category || 'Other', amount:money.amount, sourceAmount:money.sourceAmount, sourceCurrency:money.sourceCurrency, exchangeRate:money.exchangeRate, ref:t.ref || t.reference || '', purpose:t.purpose || t.outPurpose || '', paidTo:t.paidTo || t.vendor || t.supplier || '', supplierId:t.supplierId || '', method:t.method || '', slipName:t.slipName || '', attachment:t.attachment||null, note:t.note || '', source:t.source || ''};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   D.exps = (D.exps || []).map(function(e, i) {
-    return {id:String(e.id || e._id || ('E' + Date.now() + i)), date:e.date || today(), desc:e.desc || e.description || 'Expense', vendor:e.vendor || e.supplierName || e.supplier || '', cat:e.cat || e.category || 'Other', amount:toNum(e.amount), supplierId:e.supplierId || '', purpose:e.purpose || 'Operating Expense', ref:e.ref || e.reference || '', slipName:e.slipName || '', method:e.method || '', sourceTxnId:e.sourceTxnId || '', source:e.source || ''};
+    return {id:String(e.id || e._id || ('E' + Date.now() + i)), date:e.date || today(), desc:e.desc || e.description || 'Expense', vendor:e.vendor || e.supplierName || e.supplier || '', cat:e.cat || e.category || 'Other', amount:toNum(e.amount), sourceAmount:e.sourceAmount, sourceCurrency:e.sourceCurrency, exchangeRate:e.exchangeRate, supplierId:e.supplierId || '', purpose:e.purpose || 'Operating Expense', ref:e.ref || e.reference || '', slipName:e.slipName || '', attachment:e.attachment||null, method:e.method || '', sourceTxnId:e.sourceTxnId || '', source:e.source || ''};
   }).sort(function(a,b) { return String(b.date).localeCompare(String(a.date)); });
   D.invoices = (D.invoices || []).map(function(inv, i) {
     var id = inv.id || inv.num || ('INV-' + String(i + 1).padStart(4,'0'));
@@ -2930,14 +2933,19 @@ function renderDashboardInvoiceControls() {
   var rem = document.getElementById('d-reminders');
   if (rem) {
     var rows = invoiceReminderRows().slice(0, 4);
-    rem.innerHTML = rows.length ? rows.map(function(item) {
+    var invoiceHtml = rows.map(function(item) {
       var inv = item.inv;
       var dueText = item.days > 0 ? 'Overdue ' + item.days + ' day' + (item.days === 1 ? '' : 's') : (item.days === 0 ? 'Due today' : 'Due in ' + Math.abs(item.days) + ' day' + (Math.abs(item.days) === 1 ? '' : 's'));
       return '<div class="reminder-row">' +
         '<div class="reminder-main"><div class="reminder-title">' + escHtml(inv.client) + ' · ' + escHtml(inv.id) + '</div><div class="reminder-meta' + (item.days > 0 ? ' overdue' : '') + '">' + dueText + ' · ' + escHtml(inv.due || '') + ' · ' + fmt(item.balance) + '</div></div>' +
         '<div class="reminder-actions"><button class="bsm bsmwa" onclick="window.waRemind(\'' + escHtml(inv.id) + '\')">WA</button><button class="bsm bsmem" onclick="window.emailInv(\'' + escHtml(inv.id) + '\')">Email</button><button class="bsm bsmgr" onclick="window.openPayMo(\'' + escHtml(inv.id) + '\')">Record Payment</button></div>' +
       '</div>';
-    }).join('') : emptyState('No due reminders', 'Unpaid and overdue invoices will appear here automatically.', 'Create Invoice', 'window.openInvMo()');
+    }).join('');
+    var nowStart=new Date();nowStart.setHours(0,0,0,0);var obligationRows=[];
+    D.suppliers.forEach(function(s){(s.obligations||[]).forEach(function(o){var balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount)),dueMs=Date.parse(String(o.due||'').slice(0,10)+'T00:00:00'),diff=Number.isFinite(dueMs)?Math.floor((dueMs-nowStart.getTime())/86400000):null;if(o.direction==='we_owe'&&balance>.01&&diff!=null&&diff<=7)obligationRows.push({s:s,o:o,balance:balance,diff:diff});});});
+    obligationRows.sort(function(a,b){return a.diff-b.diff;});
+    var obligationHtml=obligationRows.map(function(x){var dueText=x.diff<0?'Overdue '+Math.abs(x.diff)+' day'+(Math.abs(x.diff)===1?'':'s'):x.diff===0?'Due today':'Due in '+x.diff+' day'+(x.diff===1?'':'s');return '<div class="reminder-row"><div class="reminder-main"><div class="reminder-title">Pay '+escHtml(x.s.name)+' · '+escHtml(x.o.description||x.o.kind||'Obligation')+'</div><div class="reminder-meta'+(x.diff<0?' overdue':'')+'">'+dueText+' · '+escHtml(x.o.due||'')+' · '+fmtCurrency(x.balance,x.o.currency)+'</div></div><div class="reminder-actions"><button class="bsm bsmgr" onclick="window.openBusinessObligationPayment('+jsArg(x.s.id)+','+jsArg(x.o.id)+')">Record Payment</button><button class="bsm bsmo" onclick="window.clsGoTo(\'suppliers\')">View</button></div></div>';}).join('');
+    rem.innerHTML=(invoiceHtml+obligationHtml)||emptyState('No due reminders','Unpaid invoices and supplier obligations will appear here automatically.','View Suppliers',"window.clsGoTo('suppliers')");
   }
   var aging = document.getElementById('d-aging');
   if (aging) {
@@ -3034,6 +3042,7 @@ function renderCashflow() {
 
   document.getElementById('cf-body').innerHTML = visible.map(function(t) {
     var detail = t.paidTo ? '<div class="form-note">Paid to ' + escHtml(t.paidTo) + '</div>' : (t.method ? '<div class="form-note">' + escHtml(t.method) + '</div>' : '');
+    if(t.attachment&&window.clsRecordAttachmentLink)detail+='<div class="form-note">'+window.clsRecordAttachmentLink(t.attachment)+'</div>';
     var locked = t.source === 'invoice-payment';
     var actions = locked ? '<span class="form-note">Linked to invoice</span>' : '<div class="txn-actions"><button class="bsm" onclick="window.editTxn(\'' + escHtml(t.id) + '\')">Edit</button><button class="bsm danger" onclick="window.deleteTxn(\'' + escHtml(t.id) + '\')">Delete</button></div>';
     return '<tr><td>' + escHtml(t.date) + '</td><td class="mono" style="font-size:.71rem;color:var(--muted)">' + escHtml(t.ref||'—') + '</td><td>' + escHtml(t.desc) + detail + '</td><td><span class="purpose-chip">' + escHtml(transactionPurposeLabel(t)) + '</span></td><td><span style="background:var(--bg3);padding:.1rem .4rem;font-size:.68rem">' + escHtml(t.cat) + '</span></td><td><span class="pill ' + (t.type==='in' ? 'pi' : 'po') + '">' + (t.type==='in' ? 'In' : 'Out') + '</span></td><td class="tr ' + (t.type==='in' ? 'pos' : 'neg') + '">' + formatTxnAmount(t) + '</td><td class="tr">' + actions + '</td></tr>';
@@ -3064,6 +3073,7 @@ function renderExpenses() {
 
   document.getElementById('exp-body').innerHTML = visible.map(function(e) {
     var meta = (e.ref ? 'Ref: ' + escHtml(e.ref) : '') + (e.slipName ? (e.ref ? ' · ' : '') + 'Slip: ' + escHtml(e.slipName) : '');
+    if(e.attachment&&window.clsRecordAttachmentLink)meta+=(meta?' · ':'')+window.clsRecordAttachmentLink(e.attachment);
     var money=normalizeTxnCurrencyFields(e);
     return '<tr><td>' + escHtml(e.date) + '</td><td>' + escHtml(e.desc) + (meta ? '<div class="form-note">' + meta + '</div>' : '') + '</td><td>' + escHtml(e.vendor || '—') + '</td><td><span style="background:var(--bg3);padding:.1rem .4rem;font-size:.68rem">' + escHtml(e.cat) + '</span></td><td class="tr mono neg">− ' + fmtCurrency(money.sourceAmount,money.sourceCurrency) + '</td></tr>';
   }).join('') || emptyRow(5, D.exps.length?'No expenses in this date range':'No expenses recorded', D.exps.length?'Change or clear the date filters to see more expenses.':'Add operating costs, supplier bills, rent, marketing, utilities, and other operations costs here.', D.exps.length?'Clear Filters':'Add Expense', D.exps.length?'window.clearBusinessExpenseFilters()':"window.openMo('mo-exp')");
@@ -3083,6 +3093,8 @@ function invoiceStatus(i) {
 
 function refreshInvoiceNotifications() {
   if (window.clsMountInvoiceNotifications) {
+    var obligationAlerts=[],todayStart=new Date();todayStart.setHours(0,0,0,0);
+    D.suppliers.forEach(function(s){(s.obligations||[]).forEach(function(o){var balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount));if(o.direction!=='we_owe'||balance<=.01)return;var dueMs=Date.parse(String(o.due||'').slice(0,10)+'T00:00:00'),diff=Number.isFinite(dueMs)?Math.floor((dueMs-todayStart.getTime())/86400000):null;if(diff==null||diff>7)return;obligationAlerts.push({cls:diff<0?'bad':'warn',title:diff<0?'Payment to '+s.name+' is overdue':diff===0?'Payment to '+s.name+' is due today':'Payment to '+s.name+' is due soon',meta:(diff<0?Math.abs(diff)+' day'+(Math.abs(diff)===1?'':'s')+' late':diff===0?'Due today':'Due in '+diff+' day'+(diff===1?'':'s'))+' · '+fmtCurrency(balance,o.currency)+' · '+(o.description||o.kind||'Obligation')});});});
     window.clsMountInvoiceNotifications({
       invoices: D.invoices.map(function(inv) {
         return Object.assign({}, inv, {
@@ -3095,7 +3107,8 @@ function refreshInvoiceNotifications() {
       target: '.tb-right',
       formatAmount: fmt,
       getNumber: function(inv) { return inv.id || inv.num; },
-      getCustomer: function(inv) { return inv.client; }
+      getCustomer: function(inv) { return inv.client; },
+      extraItems: obligationAlerts
     });
   }
 }
@@ -3325,7 +3338,7 @@ function renderSuppliers() {
   renderBusinessObligationLedger(entries);
 }
 
-function renderBusinessObligationLedger(entries){var body=document.getElementById('business-obligation-body');if(!body)return;entries=entries||[];body.innerHTML=entries.length?entries.slice().sort(function(a,b){return String(a.obligation.due).localeCompare(String(b.obligation.due));}).map(function(x){var s=x.supplier,o=x.obligation,balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount)),status=balance<=.01?'Paid':(toNum(o.paidAmount)>0?'Partially paid':(o.due&&o.due<today()?'Overdue':'Unpaid'));return '<tr><td><strong>'+escHtml(s.name)+'</strong></td><td><span class="pill '+(o.direction==='we_owe'?'pov':'pp')+'">'+(o.direction==='we_owe'?'We owe them':'They owe us')+'</span></td><td>'+escHtml(o.kind||'Other')+'<div class="form-note">'+escHtml(o.description||'')+(o.reference?' · '+escHtml(o.reference):'')+'</div></td><td>'+escHtml(o.date||'')+'</td><td>'+escHtml(o.due||'')+'</td><td>'+escHtml(status)+'</td><td class="tr mono">'+fmtCurrency(balance,o.currency||'LKR')+'</td><td class="tr">'+(balance>.01?'<button class="bsm bsmgr" onclick="window.openBusinessObligationPayment('+jsArg(s.id)+','+jsArg(o.id)+')">Record payment</button>':'<span class="pill pp">Settled</span>')+'</td></tr>';}).join(''):emptyRow(8,'No amounts owed yet','Use “+ Owed item” beside a third party to record a payable or receivable.','','');}
+function renderBusinessObligationLedger(entries){var body=document.getElementById('business-obligation-body');if(!body)return;entries=entries||[];body.innerHTML=entries.length?entries.slice().sort(function(a,b){return String(a.obligation.due).localeCompare(String(b.obligation.due));}).map(function(x){var s=x.supplier,o=x.obligation,balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount)),status=balance<=.01?'Paid':(toNum(o.paidAmount)>0?'Partially paid':(o.due&&o.due<today()?'Overdue':'Unpaid'));return '<tr><td><strong>'+escHtml(s.name)+'</strong></td><td><span class="pill '+(o.direction==='we_owe'?'pov':'pp')+'">'+(o.direction==='we_owe'?'We owe them':'They owe us')+'</span></td><td>'+escHtml(o.kind||'Other')+'<div class="form-note">'+escHtml(o.description||'')+(o.reference?' · '+escHtml(o.reference):'')+'</div></td><td>'+escHtml(o.date||'')+'</td><td>'+escHtml(o.due||'')+'</td><td>'+escHtml(status)+'</td><td class="tr mono">'+fmtCurrency(balance,o.currency||'LKR')+'</td><td class="tr"><span style="display:inline-flex;gap:.3rem;justify-content:flex-end;flex-wrap:wrap">'+(balance>.01?'<button class="bsm bsmgr" onclick="window.openBusinessObligationPayment('+jsArg(s.id)+','+jsArg(o.id)+')">Record payment</button>':'<span class="pill pp">Settled</span>')+'<button class="bsm bsmo" onclick="window.openBusinessObligation('+jsArg(s.id)+','+jsArg(o.id)+')">Edit</button><button class="bsm bsmdel" onclick="window.deleteBusinessObligation('+jsArg(s.id)+','+jsArg(o.id)+')">Delete</button></span></td></tr>';}).join(''):emptyRow(8,'No amounts owed yet','Use “+ Owed item” beside a third party to record a payable or receivable.','','');}
 
 var supplierStatusFilter='all';
 window.filterSup = function filterSup(v, el) {
@@ -4046,7 +4059,7 @@ window.openPayMo = function openPayMo(id) {
   openMo('mo-pay');
 }
 
-window.confirmPay = function confirmPay() {
+window.confirmPay = async function confirmPay() {
   var inv = D.invoices.find(function(i) { return i.id === payInvId; });
   if (!inv) return;
   var amt = toNum(document.getElementById('pm-amt').value||0);
@@ -4059,14 +4072,15 @@ window.confirmPay = function confirmPay() {
   var payRef = document.getElementById('pm-ref').value.trim();
   var payNote = document.getElementById('pm-note').value.trim();
   var slipInput = document.getElementById('pm-slip');
-  var slipName = slipInput && slipInput.files && slipInput.files[0] ? slipInput.files[0].name : '';
+  var attachment=null;try{attachment=await window.clsReadRecordAttachment(slipInput&&slipInput.files?slipInput.files[0]:null);}catch(e){showToast(e.message,'err');return;}
+  var slipName = attachment ? attachment.name : '';
   inv.payments = inv.payments || [];
-  inv.payments.push({id:'PAY' + Date.now(), date:payDate, amount:amt, method:method, ref:payRef, note:payNote, slipName:slipName});
+  inv.payments.push({id:'PAY' + Date.now(), date:payDate, amount:amt, method:method, ref:payRef, note:payNote, slipName:slipName, attachment:attachment});
   inv.paid = Math.min(toNum(inv.paid) + amt, inv.total);
   inv.paidAmount = inv.paid;
   inv.status = inv.paid >= inv.total ? 'paid' : 'partial';
   var paymentCurrency=safeCurrency(inv.cur||'LKR'),paymentRate=exchangeRateToLkr(paymentCurrency);
-  D.txns.unshift({id:'T' + Date.now(), date:payDate, desc:'Payment received - ' + inv.client, type:'in', cat:'Invoice Payment', amount:toLkrAmount(amt,paymentCurrency,paymentRate), sourceAmount:amt, sourceCurrency:paymentCurrency, exchangeRate:paymentRate, ref:inv.id, purpose:'Invoice Payment', paidTo:inv.client, method:method, slipName:slipName, note:payNote, source:'invoice-payment'});
+  D.txns.unshift({id:'T' + Date.now(), date:payDate, desc:'Payment received - ' + inv.client, type:'in', cat:'Invoice Payment', amount:toLkrAmount(amt,paymentCurrency,paymentRate), sourceAmount:amt, sourceCurrency:paymentCurrency, exchangeRate:paymentRate, ref:inv.id, purpose:'Invoice Payment', paidTo:inv.client, method:method, slipName:slipName, attachment:attachment, note:payNote, source:'invoice-payment'});
   closeMo('mo-pay');
   syncBusinessComputedData();
   renderInvoices();
@@ -4156,6 +4170,7 @@ function syncExpenseForTxn(txn) {
     purpose:txn.purpose,
     ref:txn.ref,
     slipName:txn.slipName,
+    attachment:txn.attachment||null,
     sourceTxnId:txn.id,
     source:'money-out'
   });
@@ -4188,6 +4203,15 @@ window.addTxn = async function addTxn() {
   if (!tx) {
     showToast('Please fill in all fields', 'err');
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? 'Save Changes' : 'Save Transaction'; }
+    return;
+  }
+  try {
+    var uploadedAttachment=await window.clsReadRecordAttachment((document.getElementById('t-slip').files||[])[0]);
+    tx.attachment=uploadedAttachment||(existing?existing.attachment:null);
+    tx.slipName=tx.attachment?tx.attachment.name:(tx.slipName||'');
+  } catch(e) {
+    showToast(e.message,'err');
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent=editId?'Save Changes':'Save Transaction';}
     return;
   }
   if (isSupplierPaymentTxn(tx)) {
@@ -4260,13 +4284,14 @@ window.deleteTxn = function deleteTxn(id) {
   refreshAfterTxnChange('Transaction deleted.', 'ok');
 }
 
-window.addExp = function addExp() {
+window.addExp = async function addExp() {
   var d = document.getElementById('e-date').value;
   var desc = document.getElementById('e-desc').value.trim();
   var sourceAmount = toNum(document.getElementById('e-amt').value);
   var sourceCurrency=safeCurrency(document.getElementById('e-currency').value),exchangeRate=sourceCurrency==='LKR'?1:(toNum(document.getElementById('e-rate').value)||exchangeRateToLkr(sourceCurrency));
   var amt=toLkrAmount(sourceAmount,sourceCurrency,exchangeRate);
   if (!d || !desc || !sourceAmount) { showToast('Please fill in all fields', 'err'); return; }
+  var attachment=null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('e-attachment').files||[])[0]);}catch(e){showToast(e.message,'err');return;}
   var vendor = document.getElementById('e-vendor').value.trim();
   var cat = document.getElementById('e-cat').value;
   var supplier = vendor ? D.suppliers.find(function(s) { return s.name.toLowerCase() === vendor.toLowerCase(); }) : null;
@@ -4277,8 +4302,8 @@ window.addExp = function addExp() {
   }
   if (supplier) supplier.ytd = toNum(supplier.ytd) + amt;
   var txId = 'T' + Date.now();
-  D.exps.unshift({id:'E'+Date.now(), date:d, desc:desc, vendor:vendor, cat:cat, amount:amt, sourceAmount:sourceAmount, sourceCurrency:sourceCurrency, exchangeRate:exchangeRate, supplierId:supplier ? supplier.id : '', purpose:'Operating Expense', ref:vendor, sourceTxnId:txId, source:'expense'});
-  D.txns.unshift({id:txId, date:d, desc:desc, type:'out', cat:cat, amount:amt, sourceAmount:sourceAmount, sourceCurrency:sourceCurrency, exchangeRate:exchangeRate, ref:vendor, purpose:'Operating Expense', paidTo:vendor, source:'expense'});
+  D.exps.unshift({id:'E'+Date.now(), date:d, desc:desc, vendor:vendor, cat:cat, amount:amt, sourceAmount:sourceAmount, sourceCurrency:sourceCurrency, exchangeRate:exchangeRate, supplierId:supplier ? supplier.id : '', purpose:'Operating Expense', ref:vendor, attachment:attachment, slipName:attachment?attachment.name:'', sourceTxnId:txId, source:'expense'});
+  D.txns.unshift({id:txId, date:d, desc:desc, type:'out', cat:cat, amount:amt, sourceAmount:sourceAmount, sourceCurrency:sourceCurrency, exchangeRate:exchangeRate, ref:vendor, purpose:'Operating Expense', paidTo:vendor, attachment:attachment, slipName:attachment?attachment.name:'', source:'expense'});
   closeMo('mo-exp');
   syncBusinessComputedData();
   renderExpenses();
@@ -4287,6 +4312,7 @@ window.addExp = function addExp() {
   renderDashboard();
   renderReports();
   showToast('Expense saved!', 'ok');
+  document.getElementById('e-attachment').value='';
   saveData();
 }
 
@@ -4344,8 +4370,9 @@ window.deleteClient = function deleteClient(id) {
 }
 
 window.updateBusinessObligationRate=function(){var cur=safeCurrency((document.getElementById('bo-currency')||{}).value);setFieldValue('bo-rate',exchangeRateToLkr(cur));};
-window.openBusinessObligation=function(supplierId){var s=D.suppliers.find(function(x){return String(x.id)===String(supplierId);});if(!s)return;setFieldValue('bo-supplier-id',s.id);setFieldValue('bo-direction','we_owe');setFieldValue('bo-kind','Product');setFieldValue('bo-desc','');setFieldValue('bo-date',today());var due=new Date();due.setDate(due.getDate()+30);setFieldValue('bo-due',due.toISOString().slice(0,10));setFieldValue('bo-amount','');setFieldValue('bo-currency',reportingCurrency());window.updateBusinessObligationRate();setFieldValue('bo-ref','');openMo('mo-obligation');};
-window.saveBusinessObligation=function(){var s=D.suppliers.find(function(x){return String(x.id)===String((document.getElementById('bo-supplier-id')||{}).value);});if(!s)return;var description=document.getElementById('bo-desc').value.trim(),date=document.getElementById('bo-date').value,due=document.getElementById('bo-due').value,sourceAmount=toNum(document.getElementById('bo-amount').value),currency=safeCurrency(document.getElementById('bo-currency').value),exchangeRate=currency==='LKR'?1:(toNum(document.getElementById('bo-rate').value)||exchangeRateToLkr(currency));if(!description||!date||!due||!sourceAmount){showToast('Description, dates, and amount are required.','err');return;}s.obligations=Array.isArray(s.obligations)?s.obligations:[];s.obligations.unshift({id:'OB-'+Date.now(),direction:document.getElementById('bo-direction').value,kind:document.getElementById('bo-kind').value,description:description,date:date,due:due,sourceAmount:sourceAmount,currency:currency,exchangeRate:exchangeRate,paidAmount:0,reference:document.getElementById('bo-ref').value.trim(),payments:[],createdAt:new Date().toISOString()});closeMo('mo-obligation');syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();saveData();showToast('Third-party obligation saved.','ok');};
+window.openBusinessObligation=function(supplierId,obligationId){var s=D.suppliers.find(function(x){return String(x.id)===String(supplierId);});if(!s)return;var o=obligationId&&(s.obligations||[]).find(function(x){return String(x.id)===String(obligationId);});setFieldValue('bo-supplier-id',s.id);setFieldValue('bo-obligation-id',o?o.id:'');document.getElementById('bo-modal-title').textContent=o?'Edit Third-Party Obligation':'Add Third-Party Obligation';setFieldValue('bo-direction',o?o.direction:'we_owe');setFieldValue('bo-kind',o?o.kind:'Product');setFieldValue('bo-desc',o?o.description:'');setFieldValue('bo-date',o?o.date:today());var due=new Date();due.setDate(due.getDate()+30);setFieldValue('bo-due',o?o.due:due.toISOString().slice(0,10));setFieldValue('bo-amount',o?o.sourceAmount:'');setFieldValue('bo-currency',o?safeCurrency(o.currency):reportingCurrency());setFieldValue('bo-rate',o?toNum(o.exchangeRate):exchangeRateToLkr((document.getElementById('bo-currency')||{}).value));setFieldValue('bo-ref',o?(o.reference||''):'');document.getElementById('bo-attachment').value='';document.getElementById('bo-attachment-current').innerHTML=o&&o.attachment&&window.clsRecordAttachmentLink?'Current: '+window.clsRecordAttachmentLink(o.attachment):'PDF, PNG, JPG or WebP · Max 2 MB';openMo('mo-obligation');};
+window.saveBusinessObligation=async function(){var s=D.suppliers.find(function(x){return String(x.id)===String((document.getElementById('bo-supplier-id')||{}).value);});if(!s)return;var editId=(document.getElementById('bo-obligation-id')||{}).value,o=editId&&(s.obligations||[]).find(function(x){return String(x.id)===String(editId);}),description=document.getElementById('bo-desc').value.trim(),date=document.getElementById('bo-date').value,due=document.getElementById('bo-due').value,sourceAmount=toNum(document.getElementById('bo-amount').value),currency=safeCurrency(document.getElementById('bo-currency').value),exchangeRate=currency==='LKR'?1:(toNum(document.getElementById('bo-rate').value)||exchangeRateToLkr(currency)),direction=document.getElementById('bo-direction').value;if(!description||!date||!due||!sourceAmount){showToast('Description, dates, and amount are required.','err');return;}if(o&&sourceAmount<toNum(o.paidAmount)){showToast('The obligation amount cannot be lower than the amount already paid.','err');return;}if(o&&toNum(o.paidAmount)>0&&(currency!==o.currency||direction!==o.direction)){showToast('Currency and direction cannot change after payment.','err');return;}var attachment=o?o.attachment:null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('bo-attachment').files||[])[0])||attachment;}catch(e){showToast(e.message,'err');return;}s.obligations=Array.isArray(s.obligations)?s.obligations:[];var data={direction:direction,kind:document.getElementById('bo-kind').value,description:description,date:date,due:due,sourceAmount:sourceAmount,currency:currency,exchangeRate:exchangeRate,reference:document.getElementById('bo-ref').value.trim(),attachment:attachment,updatedAt:new Date().toISOString()};if(o){Object.assign(o,data);D.txns.forEach(function(t){if(String(t.obligationId||'')===String(o.id)){t.desc=(t.type==='out'?'Payment to ':'Payment from ')+s.name+' — '+description;t.ref=data.reference;}});D.exps.forEach(function(e){if(String(e.obligationId||'')===String(o.id)){e.desc=description;e.ref=data.reference;}});}else{s.obligations.unshift(Object.assign({id:'OB-'+Date.now(),paidAmount:0,payments:[],createdAt:new Date().toISOString()},data));}closeMo('mo-obligation');syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();renderCashflow();renderExpenses();renderReports();saveData();showToast(o?'Obligation updated.':'Third-party obligation saved.','ok');};
+window.deleteBusinessObligation=function(supplierId,obligationId){var s=D.suppliers.find(function(x){return String(x.id)===String(supplierId);}),o=s&&(s.obligations||[]).find(function(x){return String(x.id)===String(obligationId);});if(!o)return;if(!confirm('Delete this obligation? Linked payments, expenses, and report entries will also be removed.'))return;D.txns=D.txns.filter(function(t){return String(t.obligationId||'')!==String(o.id);});D.exps=D.exps.filter(function(e){return String(e.obligationId||'')!==String(o.id);});s.obligations=s.obligations.filter(function(x){return String(x.id)!==String(o.id);});syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();renderCashflow();renderExpenses();renderReports();saveData();showToast('Obligation deleted.','ok');};
 window.openBusinessObligationPayment=function(supplierId,obligationId){var s=D.suppliers.find(function(x){return String(x.id)===String(supplierId);}),o=s&&s.obligations.find(function(x){return String(x.id)===String(obligationId);});if(!o)return;var balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount));setFieldValue('bop-supplier-id',s.id);setFieldValue('bop-obligation-id',o.id);document.getElementById('bop-summary').innerHTML='<strong>'+escHtml(s.name)+'</strong><br>'+(o.direction==='we_owe'?'We owe them':'They owe us')+' for '+escHtml(o.description)+'<br>Remaining: <strong>'+fmtCurrency(balance,o.currency)+'</strong>';setFieldValue('bop-amount',balance);setFieldValue('bop-date',today());setFieldValue('bop-ref','');openMo('mo-obligation-pay');};
 window.recordBusinessObligationPayment=function(){var s=D.suppliers.find(function(x){return String(x.id)===String((document.getElementById('bop-supplier-id')||{}).value);}),o=s&&s.obligations.find(function(x){return String(x.id)===String((document.getElementById('bop-obligation-id')||{}).value);});if(!o)return;var sourceAmount=toNum(document.getElementById('bop-amount').value),balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount)),date=document.getElementById('bop-date').value;if(!date||sourceAmount<=0||sourceAmount>balance+.01){showToast('Enter a valid payment amount up to '+fmtCurrency(balance,o.currency)+'.','err');return;}o.paidAmount=toNum(o.paidAmount)+sourceAmount;o.payments=Array.isArray(o.payments)?o.payments:[];var method=document.getElementById('bop-method').value,reference=document.getElementById('bop-ref').value.trim(),amount=toLkrAmount(sourceAmount,o.currency,o.exchangeRate),type=o.direction==='we_owe'?'out':'in',txId='T'+Date.now();o.payments.push({id:'OP-'+Date.now(),date:date,amount:sourceAmount,method:method,reference:reference});D.txns.unshift({id:txId,date:date,desc:(type==='out'?'Payment to ':'Payment from ')+s.name+' — '+o.description,type:type,cat:'Third Party Payment',amount:amount,sourceAmount:sourceAmount,sourceCurrency:o.currency,exchangeRate:o.exchangeRate,ref:o.reference+(reference?' · '+reference:''),purpose:'Third Party Settlement',paidTo:s.name,supplierId:s.id,obligationId:o.id,method:method,source:'third-party-obligation'});if(type==='out')D.exps.unshift({id:'E'+Date.now(),date:date,desc:o.description,vendor:s.name,cat:o.kind||'Third Party',amount:amount,sourceAmount:sourceAmount,sourceCurrency:o.currency,exchangeRate:o.exchangeRate,supplierId:s.id,purpose:'Third Party Settlement',ref:o.reference,sourceTxnId:txId,obligationId:o.id,source:'third-party-obligation'});closeMo('mo-obligation-pay');syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();renderCashflow();renderExpenses();renderReports();saveData();showToast('Payment recorded and cashflow updated.','ok');};
 
