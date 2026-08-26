@@ -1027,8 +1027,8 @@ document.addEventListener('click',function(e){
         </div>
       </div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title">Customer-wise Invoice Report</div></div>
-        <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (dashboard currency)</th><th>Outstanding (dashboard currency)</th><th>Total (dashboard currency)</th></tr></thead><tbody id="cat-report-table"></tbody></table>
+        <div class="table-header"><div><div class="table-title">Customer-wise Invoice Report</div><div class="report-section-copy" id="customer-report-currency-note">Amounts shown in the selected dashboard currency</div></div></div>
+        <table class="customer-report-table"><thead><tr><th>Customer</th><th>Invoices</th><th>Paid</th><th>Outstanding</th><th>Total</th></tr></thead><tbody id="cat-report-table"></tbody></table>
       </div>
       <div class="table-card">
         <div class="table-header"><div><div class="table-title">Expense Category Report</div><div class="report-section-copy">Recorded spending grouped by category for the selected period</div></div></div>
@@ -3691,6 +3691,9 @@ function renderReports(){
     to=tv?new Date(tv+'T23:59:59'):new Date();
   }
   const inRange=d=>new Date(d)>=from&&new Date(d)<=to;
+  const reportCurrency=studioCurrency(DB.settings.mainCurrency||'LKR');
+  const currencyNote=document.getElementById('customer-report-currency-note');
+  if(currencyNote)currencyNote.textContent='All amounts shown in '+reportCurrency+'.';
   const invoices=DB.invoices.filter(i=>inRange(i.date));
   const totalIssued=invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.amount),0);
   const totalPaid=invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.paidAmount),0);
@@ -3754,7 +3757,7 @@ function renderReports(){
   document.getElementById('monthly-performance-table').innerHTML=months.map(function(key){
     const monthMatch=function(item){return String(item.date||'').slice(0,7)===key;};
     const monthInvoiced=invoices.filter(monthMatch).reduce(function(sum,item){return sum+studioInvoiceLkr(item,Number(item.amount||0));},0);
-    const monthIn=DB.transactions.filter(function(item){return item.type==='in'&&inRange(item.date)&&monthMatch(item);}).reduce(function(sum,item){return sum+Number(item.amount||0);},0);
+    const monthIn=DB.transactions.filter(function(item){return item.type==='in'&&inRange(item.date)&&monthMatch(item);}).reduce(function(sum,item){return sum+studioTxnMoney(item).lkrAmount;},0);
     const monthOut=cashOutTotal(function(item){return inRange(item.date)&&monthMatch(item);});
     const monthDate=new Date(key+'-01T00:00:00');
     return `<tr><td>${monthDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</td><td style="text-align:right" class="amount-gold">${fmtAmt(monthInvoiced)}</td><td style="text-align:right" class="amount-pos">${fmtAmt(monthIn)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(monthOut)}</td><td style="text-align:right" class="${monthIn-monthOut>=0?'amount-pos':'amount-neg'}">${fmtAmt(monthIn-monthOut)}</td></tr>`;
@@ -4762,11 +4765,11 @@ function renderSuppliers(){
         ${s.phone?`<button class="btn-sm btn-sm-wa" onclick="CLS_RUN('waSupplier',${s.id})">💬 WA</button>`:''}
         ${s.email?`<button class="btn-sm btn-sm-green" onclick="CLS_RUN('emailSupplier',${s.id})">✉ Email</button>`:''}
         <button class="btn-sm btn-sm-dark" onclick="CLS_RUN('editSupplier',${s.id})">Edit</button>
-        <button class="btn-sm btn-sm-pay" onclick="window.openSupplierObligation(${JSON.stringify(String(s.id))})">+ Owed item</button>
+        <button class="btn-sm btn-sm-pay" onclick="window.openSupplierObligation(${escHTML(JSON.stringify(String(s.id)))})">+ Owed item</button>
         <button class="btn-sm btn-sm-out" onclick="CLS_RUN('deleteSupplier',${s.id})" style="border-color:rgba(192,57,43,.3);color:var(--red)">Remove</button>
       </div>
     </div>`).join('');
-  const ledger=document.getElementById('supplier-ledger-body');if(ledger)ledger.innerHTML=obligations.length?obligations.sort(function(a,b){return String(a.obligation.due).localeCompare(String(b.obligation.due));}).map(function(x){const s=x.supplier,o=x.obligation,balance=Math.max(0,Number(o.sourceAmount||0)-Number(o.paidAmount||0)),today=todayStr(),status=balance<=.01?'Paid':(Number(o.paidAmount||0)>0?'Partially paid':(o.due&&o.due<today?'Overdue':'Unpaid')),money=currencyMoney(balance,o.currency);return '<tr><td><strong>'+escHTML(s.name)+'</strong></td><td>'+(o.direction==='we_owe'?'<span class="pill pill-overdue">We owe them</span>':'<span class="pill pill-paid">They owe us</span>')+'</td><td>'+escHTML(o.kind)+'<br><span style="font-size:.65rem;color:var(--muted)">'+escHTML(o.description)+(o.reference?' · '+escHTML(o.reference):'')+'</span></td><td>'+fmtD(o.date)+'</td><td>'+fmtD(o.due)+'</td><td>'+status+'</td><td style="text-align:right"><strong>'+money+'</strong></td><td>'+(balance>.01?'<button class="btn-sm btn-sm-pay" onclick="window.openSupplierSettlement('+JSON.stringify(String(s.id))+','+JSON.stringify(String(o.id))+')">Record payment</button>':'<span class="pill pill-paid">Settled</span>')+'</td></tr>';}).join(''):'<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--dim)">No amounts owed yet. Use “+ Owed item” on a third party.</td></tr>';
+  const ledger=document.getElementById('supplier-ledger-body');if(ledger)ledger.innerHTML=obligations.length?obligations.sort(function(a,b){return String(a.obligation.due).localeCompare(String(b.obligation.due));}).map(function(x){const s=x.supplier,o=x.obligation,balance=Math.max(0,Number(o.sourceAmount||0)-Number(o.paidAmount||0)),today=todayStr(),status=balance<=.01?'Paid':(Number(o.paidAmount||0)>0?'Partially paid':(o.due&&o.due<today?'Overdue':'Unpaid')),money=currencyMoney(balance,o.currency);return '<tr><td><strong>'+escHTML(s.name)+'</strong></td><td>'+(o.direction==='we_owe'?'<span class="pill pill-overdue">We owe them</span>':'<span class="pill pill-paid">They owe us</span>')+'</td><td>'+escHTML(o.kind)+'<br><span style="font-size:.65rem;color:var(--muted)">'+escHTML(o.description)+(o.reference?' · '+escHTML(o.reference):'')+'</span></td><td>'+fmtD(o.date)+'</td><td>'+fmtD(o.due)+'</td><td>'+status+'</td><td style="text-align:right"><strong>'+money+'</strong></td><td>'+(balance>.01?'<button class="btn-sm btn-sm-pay" onclick="window.openSupplierSettlement('+escHTML(JSON.stringify(String(s.id)))+','+escHTML(JSON.stringify(String(o.id)))+')">Record payment</button>':'<span class="pill pill-paid">Settled</span>')+'</td></tr>';}).join(''):'<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--dim)">No amounts owed yet. Use “+ Owed item” on a third party.</td></tr>';
 }
 window.openSupplierModal = function openSupplierModal(){
   if(!DB.suppliers) DB.suppliers={list:[],nextId:1};
@@ -4998,6 +5001,7 @@ window.exportReportPDF=function(){
   var p=document.getElementById('report-period');
   var pt=p?p.options[p.selectedIndex].text:'All Time';
   var s=DB.settings;
+  var reportCurrency=studioCurrency(s.mainCurrency||'LKR');
   var pl=(document.getElementById('pl-report')||{}).innerHTML||'';
   var cf=(document.getElementById('cf-report')||{}).innerHTML||'';
   var er=(document.getElementById('expense-report')||{}).innerHTML||'';
@@ -5041,10 +5045,10 @@ window.exportReportPDF=function(){
    +'<div class="card"><h3>Paid vs Unpaid</h3>'+cf+'</div></div>'
    +'<div class="cards"><div class="card"><h3>Expense Summary</h3>'+er+'</div>'
    +'<div class="card"><h3>Cash Position</h3>'+cr+'</div></div>'
-   +'<div class="sec-title">Customer-wise Invoice Report</div>'
-   +'<table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid (LKR)</th><th>Outstanding (LKR)</th><th>Total (LKR)</th></tr></thead><tbody>'+cat+'</tbody></table>'
+   +'<div class="sec-title">Customer-wise Invoice Report</div><div style="font-size:.72rem;color:#8a8378;margin-bottom:.35rem">All amounts shown in '+reportCurrency+'.</div>'
+   +'<table><thead><tr><th>Customer</th><th>Invoices</th><th>Paid</th><th>Outstanding</th><th>Total</th></tr></thead><tbody>'+cat+'</tbody></table>'
    +'<div class="sec-title">Expense Category Report</div>'
-   +'<table><thead><tr><th>Category</th><th>Records</th><th>Share</th><th>Amount (LKR)</th></tr></thead><tbody>'+expCat+'</tbody></table>'
+   +'<table><thead><tr><th>Category</th><th>Records</th><th>Share</th><th>Amount ('+reportCurrency+')</th></tr></thead><tbody>'+expCat+'</tbody></table>'
    +'<div class="sec-title">Monthly Performance</div>'
    +'<table><thead><tr><th>Month</th><th>Invoiced</th><th>Cash In</th><th>Expenses</th><th>Net Cash</th></tr></thead><tbody>'+monthly+'</tbody></table>'
    +'<div class="powered">Report generated by Studio Invoice Control System - <b>CeylonryLabs.io</b></div>'
