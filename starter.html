@@ -918,7 +918,7 @@ document.addEventListener('click',function(e){
             <select class="f-input f-select" id="customer-sort" onchange="renderClients()"><option value="billed-desc">Highest billed</option><option value="billed-asc">Lowest billed</option><option value="name-asc">Name A-Z</option><option value="newest">Newest first</option></select>
             <div class="customer-view-toggle" aria-label="Customer view"><button id="customer-view-grid" class="active" type="button" onclick="window.setCustomerView('grid')">▦ Grid</button><button id="customer-view-table" type="button" onclick="window.setCustomerView('table')">☷ Table</button></div>
           </div>
-          <div class="customer-filter-row"><button class="customer-chip active" data-customer-filter="all" onclick="window.setCustomerFilter('all')">All Customers</button><button class="customer-chip" data-customer-filter="unpaid" onclick="window.setCustomerFilter('unpaid')">Outstanding Unpaid</button><button class="customer-chip" data-customer-filter="high-value" onclick="window.setCustomerFilter('high-value')">High Value (&gt; LKR 100k)</button><button class="customer-clear-filters" type="button" onclick="window.clearCustomerFilters()">Clear filters</button></div>
+          <div class="customer-filter-row"><button class="customer-chip active" data-customer-filter="all" onclick="window.setCustomerFilter('all')">All Customers</button><button class="customer-chip" data-customer-filter="unpaid" onclick="window.setCustomerFilter('unpaid')">Outstanding Unpaid</button><button class="customer-chip" data-customer-filter="high-value" onclick="window.setCustomerFilter('high-value')">High Value</button><button class="customer-clear-filters" type="button" onclick="window.clearCustomerFilters()">Clear filters</button></div>
         </div>
         <div style="padding:1.25rem" id="client-grid-wrap">
           <div class="client-grid" id="client-grid"></div>
@@ -930,17 +930,18 @@ document.addEventListener('click',function(e){
     <div class="view" id="view-suppliers">
       <div class="sum-bar c3" id="supplier-summary-bar" style="margin-bottom:1.25rem">
         <div class="sum-item"><div class="sum-label">Total Suppliers</div><div class="sum-val" id="supplier-count-val">0</div></div>
-        <div class="sum-item"><div class="sum-label">With Email</div><div class="sum-val" id="supplier-email-count" style="color:var(--green)">0</div></div>
-        <div class="sum-item"><div class="sum-label">With WhatsApp</div><div class="sum-val" id="supplier-wa-count" style="color:var(--gold)">0</div></div>
+        <div class="sum-item"><div class="sum-label">We Owe</div><div class="sum-val" id="supplier-we-owe" style="color:var(--red)">LKR 0</div></div>
+        <div class="sum-item"><div class="sum-label">Owed To Us</div><div class="sum-val" id="supplier-owes-us" style="color:var(--green)">LKR 0</div></div>
       </div>
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">Supplier / 3 Party Management</div>
-          <button class="btn-act" data-cls-fn="openSupplierModal">+ Add Supplier</button>
+          <button class="btn-act" data-cls-fn="openSupplierModal">+ Add Supplier / Third Party</button>
         </div>
         <div style="padding:1.25rem" id="supplier-grid-wrap">
           <div class="supplier-grid" id="supplier-grid"></div>
         </div>
+        <div style="padding:0 1.25rem 1.25rem"><div class="table-title" style="margin-bottom:.75rem">Third-Party Account Ledger</div><div style="overflow-x:auto"><table><thead><tr><th>Third Party</th><th>Direction</th><th>Purchase / Service</th><th>Date</th><th>Due</th><th>Status</th><th style="text-align:right">Balance</th><th>Actions</th></tr></thead><tbody id="supplier-ledger-body"></tbody></table></div></div>
       </div>
     </div>
 
@@ -1241,6 +1242,29 @@ document.addEventListener('click',function(e){
   </div>
 </div>
 
+<div class="modal-overlay" id="supplier-obligation-modal">
+  <div class="modal-box" style="max-width:620px">
+    <div class="modal-head"><div class="modal-title">Add Third-Party Obligation</div><button class="modal-close" onclick="window.closeModal('supplier-obligation-modal')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="so-supplier-id">
+      <div class="f-row"><div class="f-group"><label>Who owes whom? *</label><select class="f-input f-select" id="so-direction"><option value="we_owe">We owe them</option><option value="they_owe">They owe us</option></select></div><div class="f-group"><label>Type *</label><select class="f-input f-select" id="so-kind"><option>Product</option><option>Service</option><option>Deposit / Advance</option><option>Refund</option><option>Loan / Reimbursement</option><option>Other</option></select></div></div>
+      <div class="f-group full" style="margin-bottom:.85rem"><label>What was purchased, supplied, or owed? *</label><input class="f-input" id="so-desc" placeholder="e.g. Website hosting service for August"></div>
+      <div class="f-row"><div class="f-group"><label>Transaction Date *</label><input class="f-input" type="date" id="so-date"></div><div class="f-group"><label>Payment Due Date *</label><input class="f-input" type="date" id="so-due"></div></div>
+      <div class="f-row"><div class="f-group"><label>Amount *</label><input class="f-input" type="number" min="0" step="0.01" id="so-amount"></div><div class="f-group"><label>Currency</label><select class="f-input f-select" id="so-currency" onchange="window.updateSupplierObligationRate()"></select></div></div>
+      <div class="f-row"><div class="f-group"><label>Exchange Rate to LKR</label><input class="f-input" type="number" min="0" step="0.01" id="so-rate"></div><div class="f-group"><label>Bill / Reference Number</label><input class="f-input" id="so-ref" placeholder="Invoice, bill, PO, or agreement #"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn-act-outline" onclick="window.closeModal('supplier-obligation-modal')">Cancel</button><button class="btn-act" onclick="window.saveSupplierObligation()">Save Obligation</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="supplier-settlement-modal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head"><div class="modal-title">Record Third-Party Payment</div><button class="modal-close" onclick="window.closeModal('supplier-settlement-modal')">×</button></div>
+    <div class="modal-body"><input type="hidden" id="ss-supplier-id"><input type="hidden" id="ss-obligation-id"><div id="ss-summary" class="payroll-modal-preview"></div><div class="f-row"><div class="f-group"><label>Amount *</label><input class="f-input" type="number" min="0" step="0.01" id="ss-amount"></div><div class="f-group"><label>Payment Date *</label><input class="f-input" type="date" id="ss-date"></div></div><div class="f-row"><div class="f-group"><label>Payment Method</label><select class="f-input f-select" id="ss-method"><option>Bank Transfer</option><option>Cash</option><option>Card</option><option>Cheque</option><option>Other</option></select></div><div class="f-group"><label>Payment Reference</label><input class="f-input" id="ss-ref"></div></div></div>
+    <div class="modal-foot"><button class="btn-act-outline" onclick="window.closeModal('supplier-settlement-modal')">Cancel</button><button class="btn-act" onclick="window.recordSupplierSettlement()">Record Payment</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="salary-paid-modal" hidden>
   <div class="modal-box" style="max-width:520px">
     <div class="modal-head"><div class="modal-title">Mark Salary as Paid</div><button class="modal-close" onclick="window.closeModal('salary-paid-modal')">×</button></div>
@@ -1415,13 +1439,13 @@ document.addEventListener('click',function(e){
 <div class="modal-overlay" id="supplier-modal">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-head">
-      <div class="modal-title" id="supplier-modal-title">Add Supplier</div>
+      <div class="modal-title" id="supplier-modal-title">Add Supplier / Third Party</div>
       <button class="modal-close" data-cls-fn="closeModal" data-cls-arg="supplier-modal">×</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="s-edit-id">
       <div class="f-row">
-        <div class="f-group"><label>Supplier Name *</label><input class="f-input" id="s-name" placeholder="Supplier or company name"></div>
+        <div class="f-group"><label>Supplier / Third-Party Name *</label><input class="f-input" id="s-name" placeholder="Business or person name"></div>
         <div class="f-group"><label>Category</label><select class="f-input f-select" id="s-cat">
           <option>Raw Materials</option><option>Packaging</option><option>Equipment</option>
           <option>Utilities</option><option>Services</option><option>Logistics</option>
@@ -2166,7 +2190,7 @@ const tourSteps=[
   {view:'clients',title:'Customers',body:'<p>Customers are reusable billing records for invoices.</p><div class="tour-list"><div><strong>Save details:</strong> name, business, email, WhatsApp, billing address, notes, and terms.</div><div><strong>Create faster:</strong> start a new invoice from a customer card.</div></div>'},
   {view:'cashflow',title:'Money In & Out',body:'<p>Record income and outgoing payments in one register.</p><div class="tour-list"><div><strong>Classify activity:</strong> use categories and references to keep entries organised.</div><div><strong>See the net:</strong> Studio calculates cash in, cash out, and net cashflow.</div></div>'},
   {view:'expenses',title:'Expenses',body:'<p>Track business spending separately from invoice income.</p><div class="tour-list"><div><strong>Review costs:</strong> filter expenses by date and category.</div><div><strong>Connect suppliers:</strong> link each expense to a saved supplier.</div></div>'},
-  {view:'suppliers',title:'Suppliers',body:'<p>Keep reusable vendor contacts for spending and payments.</p><div class="tour-list"><div><strong>Save details:</strong> supplier name, contact, email, WhatsApp, category, and address.</div></div>'},
+  {view:'suppliers',title:'Suppliers & Third Parties',body:'<p>Keep contacts and a two-way account ledger for suppliers, contractors, and other third parties.</p><div class="tour-list"><div><strong>Add owed items:</strong> record what you owe them or what they owe you, with the purchase/service, currency, reference, and due date.</div><div><strong>Settle balances:</strong> full and partial payments update Money In & Out only when payment is recorded.</div></div>'},
   {view:'reports',title:'Reports',body:'<p>Review invoice and payment performance.</p><div class="tour-list"><div><strong>Review:</strong> paid, unpaid, outstanding, overdue, and customer-wise totals.</div><div><strong>Export:</strong> download a clean report PDF.</div></div>'},
   {view:'insights',title:'Business Insights',body:'<p>Studio turns your recorded data into practical checks.</p><div class="tour-list"><div><strong>Monitor:</strong> cash position, margin, outstanding invoices, overdue invoices, and top expenses.</div><div><strong>Act:</strong> use the next-step prompts to focus attention.</div></div>'},
   {view:'team',title:'Team Access',body:'<p>Studio team access is simple and limited to five users.</p><div class="tour-list"><div><strong>Owner/Admin:</strong> full access.</div><div><strong>Staff:</strong> create invoices, manage customers, and mark payments.</div><div><strong>Accountant:</strong> dashboard, invoices, customers, and reports only.</div><div><strong>View Only:</strong> dashboard and reports only.</div></div>'},
@@ -2586,7 +2610,7 @@ function invoiceDueMs(inv){
 function refreshInvoiceNotifications(){
   if(window.clsMountInvoiceNotifications){
     window.clsMountInvoiceNotifications({
-      invoices: DB.invoices,
+      invoices: DB.invoices.map(function(inv){return Object.assign({},inv,{amount:studioInvoiceLkr(inv,inv.amount),paidAmount:studioInvoiceLkr(inv,inv.paidAmount)});}),
       plan: 'studio',
       target: '.top-bar-right',
       formatAmount: fmtAmt,
@@ -3049,14 +3073,14 @@ function renderBusinessInsights(){
   const income=DB.transactions.filter(function(t){return t.type==='in';}).reduce(function(sum,t){return sum+studioTxnMoney(t).lkrAmount;},0);
   const totalOut=cashOutTotal();
   const net=income-totalOut;
-  const outstanding=DB.invoices.reduce(function(sum,inv){return sum+Math.max(0,Number(inv.amount||0)-Number(inv.paidAmount||0));},0);
+  const outstanding=DB.invoices.reduce(function(sum,inv){return sum+studioInvoiceLkr(inv,Math.max(0,Number(inv.amount||0)-Number(inv.paidAmount||0)));},0);
   const overdue=DB.invoices.filter(function(inv){return Math.max(0,Number(inv.amount||0)-Number(inv.paidAmount||0))>0&&invoiceDueMs(inv)<new Date().setHours(0,0,0,0);});
   const categoryTotals={};
   DB.expenses.forEach(function(e){var key=e.cat||'Other';categoryTotals[key]=(categoryTotals[key]||0)+Number(e.amount||0);});
   const topCategory=Object.entries(categoryTotals).sort(function(a,b){return b[1]-a[1];})[0];
   const margin=income>0?Math.round(net/income*100):0;
-  const invoiceTotal=DB.invoices.reduce(function(sum,inv){return sum+Number(inv.amount||0);},0);
-  const invoicePaid=DB.invoices.reduce(function(sum,inv){return sum+Number(inv.paidAmount||0);},0);
+  const invoiceTotal=DB.invoices.reduce(function(sum,inv){return sum+studioInvoiceLkr(inv,Number(inv.amount||0));},0);
+  const invoicePaid=DB.invoices.reduce(function(sum,inv){return sum+studioInvoiceLkr(inv,Number(inv.paidAmount||0));},0);
   const collectionRate=invoiceTotal>0?Math.round(invoicePaid/invoiceTotal*100):0;
   const expenseRatio=income>0?Math.round(totalOut/income*100):0;
   const currentMonth=new Date();
@@ -3086,7 +3110,7 @@ function renderBusinessInsights(){
   if(!supplierCount)actions.push('<div class="report-row"><span>Add suppliers to organise spending</span><span>Start</span></div>');
   if(!actions.length)actions.push('<div class="report-row pos"><span>Your recorded cashflow is currently clear</span><span>Healthy</span></div>');
   const actionEl=document.getElementById('insight-actions');if(actionEl)actionEl.innerHTML=actions.join('');
-  const topCustomer=Object.entries(DB.invoices.reduce(function(map,inv){const key=inv.client||'Unknown Customer';map[key]=(map[key]||0)+Number(inv.amount||0);return map;},{})).sort(function(a,b){return b[1]-a[1];})[0];
+  const topCustomer=Object.entries(DB.invoices.reduce(function(map,inv){const key=inv.client||'Unknown Customer';map[key]=(map[key]||0)+studioInvoiceLkr(inv,Number(inv.amount||0));return map;},{})).sort(function(a,b){return b[1]-a[1];})[0];
   const snapshot=document.getElementById('insight-snapshot');
   if(snapshot)snapshot.innerHTML=`<div class="report-grid" style="margin-bottom:0">
     <div><div class="report-row"><span>Largest customer by invoice value</span><span>${topCustomer?escHTML(topCustomer[0]):'No data'}</span></div><div class="report-row"><span>Top customer value</span><span>${topCustomer?fmtAmt(topCustomer[1]):fmtAmt(0)}</span></div></div>
@@ -3104,7 +3128,7 @@ function buildInsightCharts(){
     const d=new Date(today.getFullYear(),today.getMonth()-i,1),mo=d.getMonth(),yr=d.getFullYear();
     const matches=function(item){const value=new Date(item.date);return value.getMonth()===mo&&value.getFullYear()===yr;};
     labels.push(d.toLocaleDateString('en',{month:'short',year:'2-digit'}));
-    invoiced.push(DB.invoices.filter(matches).reduce(function(sum,inv){return sum+Number(inv.amount||0);},0));
+    invoiced.push(DB.invoices.filter(matches).reduce(function(sum,inv){return sum+studioInvoiceLkr(inv,Number(inv.amount||0));},0));
     cashIn.push(DB.transactions.filter(function(t){return t.type==='in'&&matches(t);}).reduce(function(sum,t){return sum+studioTxnMoney(t).lkrAmount;},0));
     expenses.push(cashOutTotal(matches));
   }
@@ -3386,7 +3410,7 @@ function renderQuotes(){
     const status=q.status==='converted'?'converted':'draft';
     return (!typeFilter||type===typeFilter)&&(!statusFilter||status===statusFilter);
   }),'quote');
-  body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+fmtAmt(q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" data-cls-fn="printQuote" data-cls-arg="'+num+'">PDF</button><button class="btn-sm btn-sm-green" data-cls-fn="emailQuote" data-cls-arg="'+num+'">Email</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" data-cls-fn="convertQuoteToInvoice" data-cls-arg="'+num+'">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="deleteQuote" data-cls-arg="'+num+'">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates match the selected filters.</td></tr>';
+  body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+studioInvoiceAmount(q,q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" data-cls-fn="printQuote" data-cls-arg="'+num+'">PDF</button><button class="btn-sm btn-sm-green" data-cls-fn="emailQuote" data-cls-arg="'+num+'">Email</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" data-cls-fn="convertQuoteToInvoice" data-cls-arg="'+num+'">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="deleteQuote" data-cls-arg="'+num+'">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates match the selected filters.</td></tr>';
 }
 window.printQuote=function printQuote(num){const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q)return;const w=window.open('','_blank','width=900,height=760');w.document.write(window.clsBuildInvoicePrintHtml({inv:q,settings:DB.settings,templateIndex:q.tpl,documentLabel:q.documentType==='estimate'?'Estimate':'Quote'}));w.document.close();w.onload=function(){setTimeout(function(){w.print();},300);};};
 window.emailQuote=async function emailQuote(num){
@@ -3457,7 +3481,7 @@ window.openDeleteInvoiceModal=function openDeleteInvoiceModal(num){
   const inv=DB.invoices.find(function(i){return i.num===num;});
   if(!inv){alert('Could not find this invoice to delete.');return;}
   document.getElementById('del-inv-num').value=inv.num;
-  document.getElementById('del-inv-label').textContent=inv.num+' · '+inv.client+' · '+fmtAmt(inv.amount||0);
+  document.getElementById('del-inv-label').textContent=inv.num+' · '+inv.client+' · '+studioInvoiceAmount(inv,inv.amount||0);
   document.getElementById('del-inv-reason').value='';
   openModal('delete-inv-modal');
 };
@@ -3668,9 +3692,9 @@ function renderReports(){
   }
   const inRange=d=>new Date(d)>=from&&new Date(d)<=to;
   const invoices=DB.invoices.filter(i=>inRange(i.date));
-  const totalIssued=invoices.reduce((a,i)=>a+(i.amount||0),0);
-  const totalPaid=invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
-  const outstanding=invoices.reduce((a,i)=>a+Math.max(0,(i.amount||0)-(i.paidAmount||0)),0);
+  const totalIssued=invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.amount),0);
+  const totalPaid=invoices.reduce((a,i)=>a+studioInvoiceLkr(i,i.paidAmount),0);
+  const outstanding=invoices.reduce((a,i)=>a+studioInvoiceLkr(i,Math.max(0,(i.amount||0)-(i.paidAmount||0))),0);
   const unpaid=invoices.filter(i=>i.status==='unpaid').length;
   const partial=invoices.filter(i=>i.status==='partial').length;
   const paid=invoices.filter(i=>i.status==='paid').length;
@@ -3712,9 +3736,9 @@ function renderReports(){
     const key=inv.client||'Unknown Customer';
     if(!byCustomer[key])byCustomer[key]={count:0,total:0,paid:0,outstanding:0};
     byCustomer[key].count++;
-    byCustomer[key].total+=inv.amount||0;
-    byCustomer[key].paid+=inv.paidAmount||0;
-    byCustomer[key].outstanding+=Math.max(0,(inv.amount||0)-(inv.paidAmount||0));
+    byCustomer[key].total+=studioInvoiceLkr(inv,inv.amount);
+    byCustomer[key].paid+=studioInvoiceLkr(inv,inv.paidAmount);
+    byCustomer[key].outstanding+=studioInvoiceLkr(inv,Math.max(0,(inv.amount||0)-(inv.paidAmount||0)));
   });
   document.getElementById('cat-report-table').innerHTML=Object.entries(byCustomer).sort((a,b)=>b[1].total-a[1].total).map(([customer,data])=>`<tr><td>${escHTML(customer)}</td><td>${data.count}</td><td style="text-align:right" class="amount-pos">${fmtAmt(data.paid)}</td><td style="text-align:right" class="${data.outstanding>0?'amount-neg':'amount-pos'}">${fmtAmt(data.outstanding)}</td><td style="text-align:right" class="amount-gold">${fmtAmt(data.total)}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No invoices in this period</td></tr>';
   document.getElementById('expense-category-table').innerHTML=categoryEntries.map(function(entry){
@@ -3729,7 +3753,7 @@ function renderReports(){
   const months=Object.keys(monthKeys).filter(Boolean).sort().reverse().slice(0,12);
   document.getElementById('monthly-performance-table').innerHTML=months.map(function(key){
     const monthMatch=function(item){return String(item.date||'').slice(0,7)===key;};
-    const monthInvoiced=invoices.filter(monthMatch).reduce(function(sum,item){return sum+Number(item.amount||0);},0);
+    const monthInvoiced=invoices.filter(monthMatch).reduce(function(sum,item){return sum+studioInvoiceLkr(item,Number(item.amount||0));},0);
     const monthIn=DB.transactions.filter(function(item){return item.type==='in'&&inRange(item.date)&&monthMatch(item);}).reduce(function(sum,item){return sum+Number(item.amount||0);},0);
     const monthOut=cashOutTotal(function(item){return inRange(item.date)&&monthMatch(item);});
     const monthDate=new Date(key+'-01T00:00:00');
@@ -4362,8 +4386,8 @@ window.clearCustomerFilters=function(){customerDirectoryState.filter='all';var s
 function clientDirectoryMetrics(client){
   const keys=[client.name,client.biz,client.email,client.phone].map(normKey).filter(Boolean);
   const invs=(DB.invoices||[]).filter(function(inv){return [inv.client,inv.cemail,inv.cphone].map(normKey).some(function(key){return keys.indexOf(key)!==-1;});});
-  const billed=invs.reduce(function(sum,inv){return sum+Number(inv.amount||inv.total||0);},0);
-  const outstanding=invs.reduce(function(sum,inv){return sum+invoiceBalance(inv);},0);
+  const billed=invs.reduce(function(sum,inv){return sum+studioInvoiceLkr(inv,Number(inv.amount||inv.total||0));},0);
+  const outstanding=invs.reduce(function(sum,inv){return sum+studioInvoiceLkr(inv,invoiceBalance(inv));},0);
   return{invoices:invs.length,billed:billed,outstanding:outstanding};
 }
 function renderClients(){
@@ -4396,7 +4420,7 @@ function renderClients(){
   }
   if(customerDirectoryState.view==='table'){
     grid.className='customer-table-wrap';
-    grid.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th>Total Billed</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHTML(c.name||'Customer')+'</strong><br><span style="font-size:.68rem">'+escHTML(c.biz||'Individual')+'</span></td><td>'+escHTML(c.email||'—')+'<br>'+escHTML(c.phone||'')+'</td><td>'+m.invoices+'</td><td>'+fmtAmt(m.billed)+'</td><td class="'+(m.outstanding?'amount-neg':'amount-pos')+'">'+fmtAmt(m.outstanding)+'</td><td><button class="btn-sm btn-sm-dark" onclick="CLS_RUN(\'editClient\','+c.id+')">Edit</button> <button class="btn-sm btn-sm-out" onclick="CLS_RUN(\'invoiceFromClient\','+c.id+')">+ Invoice</button></td></tr>';}).join('')+'</tbody></table>';
+    grid.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th>Total Billed</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHTML(c.name||'Customer')+'</strong><br><span style="font-size:.68rem">'+escHTML(c.biz||'Individual')+'</span></td><td>'+escHTML(c.email||'—')+'<br>'+escHTML(c.phone||'')+'</td><td>'+m.invoices+'</td><td>'+fmtAmtFull(m.billed)+'</td><td class="'+(m.outstanding?'amount-neg':'amount-pos')+'">'+fmtAmtFull(m.outstanding)+'</td><td><button class="btn-sm btn-sm-dark" onclick="CLS_RUN(\'editClient\','+c.id+')">Edit</button> <button class="btn-sm btn-sm-out" onclick="CLS_RUN(\'invoiceFromClient\','+c.id+')">+ Invoice</button></td></tr>';}).join('')+'</tbody></table>';
     return;
   }
   grid.className='client-grid';
@@ -4410,7 +4434,7 @@ function renderClients(){
         ${c.addr?`📍 ${c.addr}<br>`:''}
         ${c.notes?`<em style="color:var(--dim)">${c.notes}</em>`:''}
       </div>
-      <div class="expense-payroll-meta"><strong>${m.invoices} invoice${m.invoices===1?'':'s'} · ${fmtAmt(m.billed)} billed</strong><br>${m.outstanding?fmtAmt(m.outstanding)+' outstanding':'Fully settled'}</div>
+      <div class="expense-payroll-meta"><strong>${m.invoices} invoice${m.invoices===1?'':'s'} · ${fmtAmtFull(m.billed)} billed</strong><br>${m.outstanding?fmtAmtFull(m.outstanding)+' outstanding':'Fully settled'}</div>
       <div class="client-card-actions">
         <button class="btn-sm btn-sm-dark" onclick="CLS_RUN('editClient',${c.id})">Edit</button>
         <button class="btn-sm btn-sm-out" onclick="CLS_RUN('invoiceFromClient',${c.id})">+ Invoice</button>
@@ -4654,7 +4678,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(num){
   const s=DB.settings;
   const cur=inv.cur||'LKR';
   const balance=typeof invoiceBalance==='function'?invoiceBalance(inv):Math.max(0,(inv.amount||0)-(inv.paidAmount||0));
-  if(balance>0.01&&!confirm('This invoice still has '+fmtAmt(balance)+' outstanding. Send a paid receipt anyway?'))return;
+  if(balance>0.01&&!confirm('This invoice still has '+studioInvoiceAmount(inv,balance)+' outstanding. Send a paid receipt anyway?'))return;
   if(!confirm('Send paid receipt for invoice '+inv.num+' to '+email+'?'))return;
   const paidTotal=inv.paidAmount||inv.amount||0;
   try{
@@ -4709,12 +4733,17 @@ function renderSuppliers(){
   if(!DB.suppliers) DB.suppliers={list:[],nextId:1};
   const list=DB.suppliers.list||[];
   document.getElementById('supplier-count-val').textContent=list.length;
-  document.getElementById('supplier-email-count').textContent=list.filter(s=>s.email).length;
-  document.getElementById('supplier-wa-count').textContent=list.filter(s=>s.phone).length;
+  const obligations=[];list.forEach(function(s){s.obligations=Array.isArray(s.obligations)?s.obligations:[];s.obligations.forEach(function(o){obligations.push({supplier:s,obligation:o});});});
+  const openBalance=function(entry){return Math.max(0,Number(entry.obligation.sourceAmount||0)-Number(entry.obligation.paidAmount||0))*Number(entry.obligation.exchangeRate||studioExchangeRate(entry.obligation.currency));};
+  const weOwe=obligations.filter(function(x){return x.obligation.direction==='we_owe';}).reduce(function(sum,x){return sum+openBalance(x);},0);
+  const owesUs=obligations.filter(function(x){return x.obligation.direction==='they_owe';}).reduce(function(sum,x){return sum+openBalance(x);},0);
+  document.getElementById('supplier-we-owe').textContent=fmtAmt(weOwe);
+  document.getElementById('supplier-owes-us').textContent=fmtAmt(owesUs);
   const grid=document.getElementById('supplier-grid');
   if(!list.length){
     grid.innerHTML='';
     document.getElementById('supplier-grid-wrap').innerHTML='<div class="supplier-empty"><div class="client-empty-icon">🏭</div><div class="client-empty-text">No suppliers added yet. Add your first supplier to get started.</div><button class="btn-act" data-cls-fn="openSupplierModal">+ Add Supplier</button></div>';
+    const ledger=document.getElementById('supplier-ledger-body');if(ledger)ledger.innerHTML='<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--dim)">Add a supplier, then record what either party owes.</td></tr>';
     return;
   }
   document.getElementById('supplier-grid-wrap').innerHTML='<div class="supplier-grid" id="supplier-grid"></div>';
@@ -4733,9 +4762,11 @@ function renderSuppliers(){
         ${s.phone?`<button class="btn-sm btn-sm-wa" onclick="CLS_RUN('waSupplier',${s.id})">💬 WA</button>`:''}
         ${s.email?`<button class="btn-sm btn-sm-green" onclick="CLS_RUN('emailSupplier',${s.id})">✉ Email</button>`:''}
         <button class="btn-sm btn-sm-dark" onclick="CLS_RUN('editSupplier',${s.id})">Edit</button>
+        <button class="btn-sm btn-sm-pay" onclick="window.openSupplierObligation(${JSON.stringify(String(s.id))})">+ Owed item</button>
         <button class="btn-sm btn-sm-out" onclick="CLS_RUN('deleteSupplier',${s.id})" style="border-color:rgba(192,57,43,.3);color:var(--red)">Remove</button>
       </div>
     </div>`).join('');
+  const ledger=document.getElementById('supplier-ledger-body');if(ledger)ledger.innerHTML=obligations.length?obligations.sort(function(a,b){return String(a.obligation.due).localeCompare(String(b.obligation.due));}).map(function(x){const s=x.supplier,o=x.obligation,balance=Math.max(0,Number(o.sourceAmount||0)-Number(o.paidAmount||0)),today=todayStr(),status=balance<=.01?'Paid':(Number(o.paidAmount||0)>0?'Partially paid':(o.due&&o.due<today?'Overdue':'Unpaid')),money=currencyMoney(balance,o.currency);return '<tr><td><strong>'+escHTML(s.name)+'</strong></td><td>'+(o.direction==='we_owe'?'<span class="pill pill-overdue">We owe them</span>':'<span class="pill pill-paid">They owe us</span>')+'</td><td>'+escHTML(o.kind)+'<br><span style="font-size:.65rem;color:var(--muted)">'+escHTML(o.description)+(o.reference?' · '+escHTML(o.reference):'')+'</span></td><td>'+fmtD(o.date)+'</td><td>'+fmtD(o.due)+'</td><td>'+status+'</td><td style="text-align:right"><strong>'+money+'</strong></td><td>'+(balance>.01?'<button class="btn-sm btn-sm-pay" onclick="window.openSupplierSettlement('+JSON.stringify(String(s.id))+','+JSON.stringify(String(o.id))+')">Record payment</button>':'<span class="pill pill-paid">Settled</span>')+'</td></tr>';}).join(''):'<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--dim)">No amounts owed yet. Use “+ Owed item” on a third party.</td></tr>';
 }
 window.openSupplierModal = function openSupplierModal(){
   if(!DB.suppliers) DB.suppliers={list:[],nextId:1};
@@ -4748,7 +4779,7 @@ window.openSupplierModal = function openSupplierModal(){
   document.getElementById('s-addr').value='';
   document.getElementById('s-terms').value='Net 30';
   document.getElementById('s-notes').value='';
-  document.getElementById('supplier-modal-title').textContent='Add Supplier';
+  document.getElementById('supplier-modal-title').textContent='Add Supplier / Third Party';
   openModal('supplier-modal');
 }
 function editSupplier(id){
@@ -4780,7 +4811,8 @@ window.saveSupplier = function saveSupplier(){
     email:document.getElementById('s-email').value.trim(),
     addr:document.getElementById('s-addr').value.trim(),
     terms:document.getElementById('s-terms').value,
-    notes:document.getElementById('s-notes').value.trim()
+    notes:document.getElementById('s-notes').value.trim(),
+    obligations:editId&&DB.suppliers.list.find(function(s){return s.id===editId;})?DB.suppliers.list.find(function(s){return s.id===editId;}).obligations||[]:[]
   };
   if(editId){
     const i=DB.suppliers.list.findIndex(s=>s.id===editId);
@@ -4791,7 +4823,15 @@ window.saveSupplier = function saveSupplier(){
   else DB.suppliers.list.push(data);
   saveDB();renderSuppliers();refreshSupplierSelects();renderExpenses();renderCashflow();renderRecentTable();closeModal('supplier-modal');
 }
+window.updateSupplierObligationRate=function(){const cur=studioCurrency((document.getElementById('so-currency')||{}).value);const rate=document.getElementById('so-rate');if(rate)rate.value=studioExchangeRate(cur);};
+window.openSupplierObligation=function(supplierId){const s=DB.suppliers&&DB.suppliers.list.find(function(x){return String(x.id)===String(supplierId);});if(!s)return;hydrateStudioCurrencySelect('so-currency',false);document.getElementById('so-supplier-id').value=s.id;document.getElementById('so-direction').value='we_owe';document.getElementById('so-kind').value='Product';document.getElementById('so-desc').value='';document.getElementById('so-date').value=todayStr();const due=new Date();due.setDate(due.getDate()+30);document.getElementById('so-due').value=due.toISOString().slice(0,10);document.getElementById('so-amount').value='';document.getElementById('so-currency').value=studioCurrency(DB.settings.mainCurrency||'LKR');window.updateSupplierObligationRate();document.getElementById('so-ref').value='';openModal('supplier-obligation-modal');};
+window.saveSupplierObligation=function(){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(document.getElementById('so-supplier-id').value);});if(!s)return;const description=document.getElementById('so-desc').value.trim(),date=document.getElementById('so-date').value,due=document.getElementById('so-due').value,sourceAmount=Number(document.getElementById('so-amount').value)||0,currency=studioCurrency(document.getElementById('so-currency').value),exchangeRate=currency==='LKR'?1:(Number(document.getElementById('so-rate').value)||studioExchangeRate(currency));if(!description||!date||!due||!sourceAmount){alert('Please enter the description, dates, and amount.');return;}s.obligations=Array.isArray(s.obligations)?s.obligations:[];s.obligations.unshift({id:'OB-'+Date.now(),direction:document.getElementById('so-direction').value,kind:document.getElementById('so-kind').value,description,date,due,sourceAmount,currency,exchangeRate,paidAmount:0,reference:document.getElementById('so-ref').value.trim(),payments:[],createdAt:new Date().toISOString()});saveDB();renderSuppliers();closeModal('supplier-obligation-modal');};
+window.openSupplierSettlement=function(supplierId,obligationId){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(supplierId);}),o=s&&s.obligations.find(function(x){return String(x.id)===String(obligationId);});if(!o)return;const balance=Math.max(0,Number(o.sourceAmount)-Number(o.paidAmount||0));document.getElementById('ss-supplier-id').value=s.id;document.getElementById('ss-obligation-id').value=o.id;document.getElementById('ss-summary').innerHTML='<strong>'+escHTML(s.name)+'</strong><br>'+(o.direction==='we_owe'?'We owe them':'They owe us')+' for '+escHTML(o.description)+'<br>Remaining: <strong>'+currencyMoney(balance,o.currency)+'</strong>';document.getElementById('ss-amount').value=balance;document.getElementById('ss-date').value=todayStr();document.getElementById('ss-ref').value='';openModal('supplier-settlement-modal');};
+window.recordSupplierSettlement=function(){const s=DB.suppliers.list.find(function(x){return String(x.id)===String(document.getElementById('ss-supplier-id').value);}),o=s&&s.obligations.find(function(x){return String(x.id)===String(document.getElementById('ss-obligation-id').value);});if(!o)return;const amount=Number(document.getElementById('ss-amount').value)||0,balance=Math.max(0,Number(o.sourceAmount)-Number(o.paidAmount||0)),date=document.getElementById('ss-date').value;if(!date||amount<=0||amount>balance+.01){alert('Enter a valid payment amount up to '+currencyMoney(balance,o.currency)+'.');return;}o.paidAmount=Number(o.paidAmount||0)+amount;o.payments=Array.isArray(o.payments)?o.payments:[];const reference=document.getElementById('ss-ref').value.trim(),method=document.getElementById('ss-method').value;o.payments.push({id:'OP-'+Date.now(),date,amount,method,reference});const type=o.direction==='we_owe'?'out':'in',txn={date,desc:(type==='out'?'Payment to ':'Payment from ')+s.name+' — '+o.description,type,amount:amount*Number(o.exchangeRate||1),sourceAmount:amount,sourceCurrency:o.currency,exchangeRate:Number(o.exchangeRate||1),cat:'Third Party Payment',ref:o.reference+(reference?' · '+reference:''),supplierId:s.id,supplierName:s.name,obligationId:o.id,id:Date.now()};DB.transactions.unshift(txn);if(type==='out')syncTransactionExpense(txn);saveDB();renderSuppliers();renderCashflow();renderExpenses();renderDashboard();closeModal('supplier-settlement-modal');};
 window.deleteSupplier = function deleteSupplier(id){
+  const target=DB.suppliers&&DB.suppliers.list.find(function(s){return String(s.id)===String(id);});
+  const open=target&&Array.isArray(target.obligations)&&target.obligations.some(function(o){return Number(o.sourceAmount||0)-Number(o.paidAmount||0)>.01;});
+  if(open){alert('Settle or clear this third party’s open obligations before removing them.');return;}
   if(!confirm('Remove this supplier?'))return;
   if(!DB.suppliers)return;
   DB.suppliers.list=DB.suppliers.list.filter(s=>s.id!==id);

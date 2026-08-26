@@ -841,7 +841,7 @@ document.addEventListener('click',function(e){
             <select class="f-input f-select" id="customer-sort" onchange="renderClients()"><option value="billed-desc">Highest billed</option><option value="billed-asc">Lowest billed</option><option value="name-asc">Name A-Z</option><option value="newest">Newest first</option></select>
             <div class="customer-view-toggle" aria-label="Customer view"><button id="customer-view-grid" class="active" type="button" onclick="window.setCustomerView('grid')">▦ Grid</button><button id="customer-view-table" type="button" onclick="window.setCustomerView('table')">☷ Table</button></div>
           </div>
-          <div class="customer-filter-row"><button class="customer-chip active" data-customer-filter="all" onclick="window.setCustomerFilter('all')">All Customers</button><button class="customer-chip" data-customer-filter="unpaid" onclick="window.setCustomerFilter('unpaid')">Outstanding Unpaid</button><button class="customer-chip" data-customer-filter="high-value" onclick="window.setCustomerFilter('high-value')">High Value (&gt; LKR 100k)</button><button class="customer-clear-filters" type="button" onclick="window.clearCustomerFilters()">Clear filters</button></div>
+          <div class="customer-filter-row"><button class="customer-chip active" data-customer-filter="all" onclick="window.setCustomerFilter('all')">All Customers</button><button class="customer-chip" data-customer-filter="unpaid" onclick="window.setCustomerFilter('unpaid')">Outstanding Unpaid</button><button class="customer-chip" data-customer-filter="high-value" onclick="window.setCustomerFilter('high-value')">High Value</button><button class="customer-clear-filters" type="button" onclick="window.clearCustomerFilters()">Clear filters</button></div>
         </div>
         <div style="padding:1.25rem" id="client-grid-wrap">
           <div class="client-grid" id="client-grid"></div>
@@ -2028,7 +2028,7 @@ function invoiceDueMs(inv){
 function refreshInvoiceNotifications(){
   if(window.clsMountInvoiceNotifications){
     window.clsMountInvoiceNotifications({
-      invoices: DB.invoices,
+      invoices: DB.invoices.map(function(inv){return Object.assign({},inv,{amount:soloInvoiceLkr(inv,inv.amount),paidAmount:soloInvoiceLkr(inv,inv.paidAmount)});}),
       plan: 'solo',
       target: '.top-bar-right',
       formatAmount: fmtAmt,
@@ -2133,7 +2133,7 @@ function buildCharts(){
   }
   const ctx1=chartCanvas.getContext('2d');
   if(cfChart) cfChart.destroy();
-  cfChart=new Chart(ctx1,{type:'bar',data:{labels:months,datasets:[{label:'Cash In',data:inData,backgroundColor:'rgba(26,158,92,.65)',borderRadius:3},{label:'Cash Out',data:outData,backgroundColor:'rgba(192,57,43,.25)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6258',font:{size:10},boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9},callback:v=>v>=1000000?'LKR '+(v/1000000).toFixed(1)+'M':v>=1000?'LKR '+(v/1000).toFixed(0)+'K':'LKR '+v}}}}});
+  cfChart=new Chart(ctx1,{type:'bar',data:{labels:months,datasets:[{label:'Cash In',data:inData,backgroundColor:'rgba(26,158,92,.65)',borderRadius:3},{label:'Cash Out',data:outData,backgroundColor:'rgba(192,57,43,.25)',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B6258',font:{size:10},boxWidth:10,padding:12}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#6B6258',font:{size:9},callback:v=>fmtAmt(v)}}}}});
   // Expense donut
   const cats={};DB.expenses.filter(e=>new Date(e.date).getMonth()===today.getMonth()).forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount;});
   const catNames=Object.keys(cats);const catVals=Object.values(cats);
@@ -2563,7 +2563,7 @@ function renderQuotes(){
     const status=q.status==='converted'?'converted':'draft';
     return (!typeFilter||type===typeFilter)&&(!statusFilter||status===statusFilter);
   }),'quote');
-  body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+fmtAmt(q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" data-cls-fn="printQuote" data-cls-arg="'+num+'">PDF</button><button class="btn-sm btn-sm-green" data-cls-fn="emailQuote" data-cls-arg="'+num+'">Email</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" data-cls-fn="convertQuoteToInvoice" data-cls-arg="'+num+'">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="deleteQuote" data-cls-arg="'+num+'">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates match the selected filters.</td></tr>';
+  body.innerHTML=quotes.length?quotes.map(function(q){const num=escHTML(q.num),converted=q.status==='converted',type=q.documentType==='estimate'?'Estimate':'Quote';return '<tr><td><strong>'+num+'</strong><div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">'+type+'</div></td><td>'+escHTML(q.client||'Customer')+'</td><td>'+fmtD(q.date)+'</td><td>'+fmtD(q.due)+'</td><td><span class="pill '+(converted?'pill-paid':'pill-unpaid')+'">'+(converted?'Converted':'Draft')+'</span></td><td style="text-align:right" class="amount-gold"><strong>'+soloInvoiceAmount(q,q.amount)+'</strong></td><td><div class="inv-action-row"><button class="btn-sm btn-sm-dark" data-cls-fn="printQuote" data-cls-arg="'+num+'">PDF</button><button class="btn-sm btn-sm-green" data-cls-fn="emailQuote" data-cls-arg="'+num+'">Email</button>'+(converted?'<span style="font-size:.65rem;color:var(--green)">Invoice '+escHTML(q.convertedInvoiceNum||'')+'</span>':'<button class="btn-sm btn-sm-pay" data-cls-fn="convertQuoteToInvoice" data-cls-arg="'+num+'">Convert to Invoice</button>')+'<button class="btn-sm" style="background:transparent;border:1px solid rgba(192,57,43,.3);color:var(--red)" data-cls-fn="deleteQuote" data-cls-arg="'+num+'">Delete</button></div></td></tr>';}).join(''):'<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--dim)">No quotes or estimates match the selected filters.</td></tr>';
 }
 window.printQuote=function printQuote(num){const q=(DB.quotes||[]).find(function(item){return item.num===num;});if(!q)return;const w=window.open('','_blank','width=900,height=760');w.document.write(window.clsBuildInvoicePrintHtml({inv:q,settings:DB.settings,templateIndex:q.tpl,documentLabel:q.documentType==='estimate'?'Estimate':'Quote'}));w.document.close();w.onload=function(){setTimeout(function(){w.print();},300);};};
 window.emailQuote=async function emailQuote(num){
@@ -2634,7 +2634,7 @@ window.openDeleteInvoiceModal=function openDeleteInvoiceModal(num){
   const inv=DB.invoices.find(function(i){return i.num===num;});
   if(!inv){alert('Could not find this invoice to delete.');return;}
   document.getElementById('del-inv-num').value=inv.num;
-  document.getElementById('del-inv-label').textContent=inv.num+' · '+inv.client+' · '+fmtAmt(inv.amount||0);
+  document.getElementById('del-inv-label').textContent=inv.num+' · '+inv.client+' · '+soloInvoiceAmount(inv,inv.amount||0);
   document.getElementById('del-inv-reason').value='';
   openModal('delete-inv-modal');
 };
@@ -2821,9 +2821,9 @@ function renderReports(){
   }
   const inRange=d=>new Date(d)>=from&&new Date(d)<=to;
   const invoices=DB.invoices.filter(i=>inRange(i.date));
-  const totalIssued=invoices.reduce((a,i)=>a+(i.amount||0),0);
-  const totalPaid=invoices.reduce((a,i)=>a+(i.paidAmount||0),0);
-  const outstanding=invoices.reduce((a,i)=>a+Math.max(0,(i.amount||0)-(i.paidAmount||0)),0);
+  const totalIssued=invoices.reduce((a,i)=>a+soloInvoiceLkr(i,i.amount),0);
+  const totalPaid=invoices.reduce((a,i)=>a+soloInvoiceLkr(i,i.paidAmount),0);
+  const outstanding=invoices.reduce((a,i)=>a+soloInvoiceLkr(i,Math.max(0,(i.amount||0)-(i.paidAmount||0))),0);
   const unpaid=invoices.filter(i=>i.status==='unpaid').length;
   const partial=invoices.filter(i=>i.status==='partial').length;
   const paid=invoices.filter(i=>i.status==='paid').length;
@@ -2844,9 +2844,9 @@ function renderReports(){
     const key=inv.client||'Unknown Customer';
     if(!byCustomer[key])byCustomer[key]={count:0,total:0,paid:0,outstanding:0};
     byCustomer[key].count++;
-    byCustomer[key].total+=inv.amount||0;
-    byCustomer[key].paid+=inv.paidAmount||0;
-    byCustomer[key].outstanding+=Math.max(0,(inv.amount||0)-(inv.paidAmount||0));
+    byCustomer[key].total+=soloInvoiceLkr(inv,inv.amount);
+    byCustomer[key].paid+=soloInvoiceLkr(inv,inv.paidAmount);
+    byCustomer[key].outstanding+=soloInvoiceLkr(inv,Math.max(0,(inv.amount||0)-(inv.paidAmount||0)));
   });
   document.getElementById('cat-report-table').innerHTML=Object.entries(byCustomer).sort((a,b)=>b[1].total-a[1].total).map(([customer,data])=>`<tr><td>${escHTML(customer)}</td><td>${data.count}</td><td style="text-align:right" class="amount-pos">${fmtAmt(data.paid)}</td><td style="text-align:right" class="${data.outstanding>0?'amount-neg':'amount-pos'}">${fmtAmt(data.outstanding)}</td><td style="text-align:right" class="amount-gold">${fmtAmt(data.total)}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--dim)">No invoices in this period</td></tr>';
 }
@@ -3304,8 +3304,8 @@ window.clearCustomerFilters=function(){customerDirectoryState.filter='all';var s
 function clientDirectoryMetrics(client){
   const keys=[client.name,client.biz,client.email,client.phone].map(normKey).filter(Boolean);
   const invs=(DB.invoices||[]).filter(function(inv){return [inv.client,inv.cemail,inv.cphone].map(normKey).some(function(key){return keys.indexOf(key)!==-1;});});
-  const billed=invs.reduce(function(sum,inv){return sum+Number(inv.amount||inv.total||0);},0);
-  const outstanding=invs.reduce(function(sum,inv){return sum+invoiceBalance(inv);},0);
+  const billed=invs.reduce(function(sum,inv){return sum+soloInvoiceLkr(inv,Number(inv.amount||inv.total||0));},0);
+  const outstanding=invs.reduce(function(sum,inv){return sum+soloInvoiceLkr(inv,invoiceBalance(inv));},0);
   return{invoices:invs.length,billed:billed,outstanding:outstanding};
 }
 function renderClients(){
@@ -3338,7 +3338,7 @@ function renderClients(){
   }
   if(customerDirectoryState.view==='table'){
     grid.className='customer-table-wrap';
-    grid.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th>Total Billed</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHTML(c.name||'Customer')+'</strong><br><span style="font-size:.68rem">'+escHTML(c.biz||'Individual')+'</span></td><td>'+escHTML(c.email||'—')+'<br>'+escHTML(c.phone||'')+'</td><td>'+m.invoices+'</td><td>'+fmtAmt(m.billed)+'</td><td class="'+(m.outstanding?'amount-neg':'amount-pos')+'">'+fmtAmt(m.outstanding)+'</td><td><button class="btn-sm btn-sm-dark" data-cls-fn="editClient" data-cls-arg="'+c.id+'">Edit</button> <button class="btn-sm btn-sm-out" data-cls-fn="invoiceFromClient" data-cls-arg="'+c.id+'">+ Invoice</button></td></tr>';}).join('')+'</tbody></table>';
+    grid.innerHTML='<table class="customer-directory-table"><thead><tr><th>Customer</th><th>Contact</th><th>Invoices</th><th>Total Billed</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>'+rows.map(function(row){var c=row.client,m=row.metrics;return '<tr><td><strong>'+escHTML(c.name||'Customer')+'</strong><br><span style="font-size:.68rem">'+escHTML(c.biz||'Individual')+'</span></td><td>'+escHTML(c.email||'—')+'<br>'+escHTML(c.phone||'')+'</td><td>'+m.invoices+'</td><td>'+fmtAmtFull(m.billed)+'</td><td class="'+(m.outstanding?'amount-neg':'amount-pos')+'">'+fmtAmtFull(m.outstanding)+'</td><td><button class="btn-sm btn-sm-dark" data-cls-fn="editClient" data-cls-arg="'+c.id+'">Edit</button> <button class="btn-sm btn-sm-out" data-cls-fn="invoiceFromClient" data-cls-arg="'+c.id+'">+ Invoice</button></td></tr>';}).join('')+'</tbody></table>';
     return;
   }
   grid.className='client-grid';
@@ -3352,7 +3352,7 @@ function renderClients(){
         ${c.addr?`📍 ${c.addr}<br>`:''}
         ${c.notes?`<em style="color:var(--dim)">${c.notes}</em>`:''}
       </div>
-      <div style="font-size:.65rem;color:var(--muted);line-height:1.5;margin-top:.25rem"><strong>${m.invoices} invoice${m.invoices===1?'':'s'} · ${fmtAmt(m.billed)} billed</strong><br>${m.outstanding?fmtAmt(m.outstanding)+' outstanding':'Fully settled'}</div>
+      <div style="font-size:.65rem;color:var(--muted);line-height:1.5;margin-top:.25rem"><strong>${m.invoices} invoice${m.invoices===1?'':'s'} · ${fmtAmtFull(m.billed)} billed</strong><br>${m.outstanding?fmtAmtFull(m.outstanding)+' outstanding':'Fully settled'}</div>
       <div class="client-card-actions">
         <button class="btn-sm btn-sm-dark" type="button" data-cls-fn="editClient" data-cls-arg="${c.id}">Edit</button>
         <button class="btn-sm btn-sm-out" type="button" data-cls-fn="invoiceFromClient" data-cls-arg="${c.id}">+ Invoice</button>
@@ -3613,7 +3613,7 @@ window.emailPaidReceipt = async function emailPaidReceipt(num){
   const s=DB.settings;
   const cur=inv.cur||'LKR';
   const balance=typeof invoiceBalance==='function'?invoiceBalance(inv):Math.max(0,(inv.amount||0)-(inv.paidAmount||0));
-  if(balance>0.01&&!confirm('This invoice still has '+fmtAmt(balance)+' outstanding. Send a paid receipt anyway?'))return;
+  if(balance>0.01&&!confirm('This invoice still has '+soloInvoiceAmount(inv,balance)+' outstanding. Send a paid receipt anyway?'))return;
   if(!confirm('Send paid receipt for invoice '+inv.num+' to '+email+'?'))return;
   const paidTotal=inv.paidAmount||inv.amount||0;
   try{
