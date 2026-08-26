@@ -1101,7 +1101,7 @@ document.addEventListener('click',function(e){
       <div class="f-group full" style="margin-bottom:.85rem"><label>Description *</label><input class="f-input" id="e-desc" placeholder="e.g. Electricity bill — May"></div>
       <div class="f-row">
         <div class="f-group"><label>Vendor / Supplier</label><select class="f-input f-select" id="e-supplier" onchange="onSupplierPick('e')"></select></div>
-        <div class="f-group"><label>Amount (LKR) *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
+        <div class="f-group"><label id="e-amount-label">Amount *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
       <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:0"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
     </div>
@@ -2338,13 +2338,16 @@ window.addExpense = function addExpense(){
   const date=document.getElementById('e-date').value;
   const desc=document.getElementById('e-desc').value.trim();
   const cat=document.getElementById('e-cat').value;
-  const amount=parseAmt(document.getElementById('e-amount').value);
+  const sourceAmount=parseAmt(document.getElementById('e-amount').value);
+  const sourceCurrency=soloCurrency(DB.settings.mainCurrency||'LKR');
+  const exchangeRate=SOLO_CURRENCY_RATES[sourceCurrency]||1;
+  const amount=sourceAmount*exchangeRate;
   if(!date||!desc||!amount){alert('Please fill in date, description and amount.');return;}
   var supplier=null;
   try{supplier=resolveSupplierFromPicker('e','expense');}
   catch(e){alert(e.message);return;}
   const vendor=supplier?supplier.name:'';
-  DB.expenses.unshift({date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,id:Date.now()});
+  DB.expenses.unshift({date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,sourceAmount,sourceCurrency,exchangeRate,id:Date.now()});
   saveDB();renderExpenses();closeModal('exp-modal');
   renderRecentTable();refreshSupplierSelects();renderSuppliers();
   document.getElementById('e-desc').value='';document.getElementById('e-amount').value='';clearSupplierPicker('e');
@@ -2954,6 +2957,7 @@ function applySettings(){
   const logoWrap=document.getElementById('sb-logo-img-wrap');
   if(DB.settings.logo){logoWrap.innerHTML=`<img src="${DB.settings.logo}" class="sb-logo-img" alt="">`;}
   else{logoWrap.innerHTML='';}
+  const expenseAmountLabel=document.getElementById('e-amount-label');if(expenseAmountLabel)expenseAmountLabel.textContent='Amount ('+soloCurrency(DB.settings.mainCurrency||'LKR')+') *';
 }
 window.previewSettingsLogo = async function previewSettingsLogo(input){
   if(!input.files||!input.files[0])return;

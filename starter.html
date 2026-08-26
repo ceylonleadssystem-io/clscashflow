@@ -1328,7 +1328,7 @@ document.addEventListener('click',function(e){
       <div class="f-group full" style="margin-bottom:.85rem"><label>Description *</label><input class="f-input" id="e-desc" placeholder="e.g. Electricity bill — May"></div>
       <div class="f-row">
         <div class="f-group" id="e-supplier-group"><label>Vendor / Supplier</label><select class="f-input f-select" id="e-supplier" onchange="onSupplierPick('e')"></select></div>
-        <div class="f-group" id="e-amount-group"><label id="e-amount-label">Amount (LKR) *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
+        <div class="f-group" id="e-amount-group"><label id="e-amount-label">Amount *</label><input class="f-input" type="text" id="e-amount" placeholder="0" oninput="fmtInput(this)"></div>
       </div>
       <div class="f-group" id="e-supplier-new-wrap" style="display:none;margin-bottom:0"><label>New Supplier Name</label><input class="f-input" id="e-supplier-new" placeholder="e.g. Studio Nova"></div>
     </div>
@@ -3041,7 +3041,7 @@ function renderExpenses(){
   document.getElementById('exp-table').innerHTML=sorted.length?sorted.map(function(e){
     const payroll=e.payroll||null;
     const payrollMeta=payroll?`<div class="expense-payroll-meta"><strong>Gross ${fmtAmt(payroll.gross)}</strong> · Net ${fmtAmt(payroll.netSalary)}<br>Employee EPF ${fmtAmt(payroll.employeeEpf)} · Employer EPF ${fmtAmt(payroll.employerEpf)} · ETF ${fmtAmt(payroll.etf)}</div>`:'';
-    return `<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}${payrollMeta}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${fmtAmt(e.amount)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`;
+    return `<tr><td>${fmtD(e.date)}</td><td>${escHTML(e.desc)}${payrollMeta}</td><td style="color:var(--muted)">${escHTML(e.vendor)||'—'}</td><td>${escHTML(e.cat)}</td><td style="text-align:right" class="amount-neg">${formatStudioTxnAmount(e)}</td><td><div class="row-actions"><button class="btn-sm btn-sm-out" data-cls-fn="openEditRecord" data-cls-arg="expense:${e.id}">Edit</button></div></td></tr>`;
   }).join(''):'<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--dim)">No expenses match the selected filters.</td></tr>';
 }
 
@@ -3142,7 +3142,10 @@ window.addExpense = function addExpense(){
   const date=document.getElementById('e-date').value;
   let desc=document.getElementById('e-desc').value.trim();
   const cat=document.getElementById('e-cat').value;
-  let amount=parseAmt(document.getElementById('e-amount').value);
+  let sourceAmount=parseAmt(document.getElementById('e-amount').value);
+  const sourceCurrency=studioCurrency(DB.settings.mainCurrency||'LKR');
+  const exchangeRate=studioExchangeRate(sourceCurrency);
+  let amount=sourceAmount*exchangeRate;
   let payroll=null;
   var supplier=null;
   let vendor='';
@@ -3152,7 +3155,7 @@ window.addExpense = function addExpense(){
     const epfNo=document.getElementById('p-epf-no').value.trim();
     const calc=currentPayrollCalculation();
     if(!date||!staffName||!calc.gross){alert('Please enter the payroll date, staff name and gross monthly earnings.');return;}
-    amount=calc.totalEmployerCost;
+    sourceAmount=calc.totalEmployerCost;amount=sourceAmount*exchangeRate;
     desc=desc||staffName+' salary payment';
     vendor=staffName;
     if(document.getElementById('p-save-staff').checked)payrollStaffId=savePayrollStaffProfile(staffName,epfNo,calc);
@@ -3167,7 +3170,7 @@ window.addExpense = function addExpense(){
     catch(e){alert(e.message);return;}
     vendor=supplier?supplier.name:'';
   }
-  const expense={date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,payrollStaffId,payroll,id:Date.now()};
+  const expense={date,desc,cat,vendor,supplierId:supplier?supplier.id:null,supplierName:supplier?supplier.name:'',amount,sourceAmount,sourceCurrency,exchangeRate,payrollStaffId,payroll,id:Date.now()};
   DB.expenses.unshift(expense);
   syncExpenseTransaction(expense);
   saveDB();renderExpenses();renderCashflow();renderDashboard();renderBusinessInsights();closeModal('exp-modal');
@@ -3505,9 +3508,9 @@ window.openEditRecord=function openEditRecord(arg){
   document.getElementById('edit-kind').value=kind;
   document.getElementById('edit-id').value=id;
   document.getElementById('edit-date').value=item.date||'';
-  const txnMoney=kind==='transaction'?studioTxnMoney(item):null;
+  const txnMoney=(kind==='transaction'||kind==='expense')?studioTxnMoney(item):null;
   document.getElementById('edit-amount').value=Number(txnMoney?txnMoney.sourceAmount:item.amount||0).toLocaleString();
-  document.getElementById('edit-amount-label').textContent=kind==='transaction'?'Source Amount *':'Amount (LKR) *';
+  document.getElementById('edit-amount-label').textContent=kind==='transaction'||kind==='expense'?'Amount ('+txnMoney.currency+') *':'Invoice Amount *';
   document.getElementById('edit-desc').value=kind==='invoice'?(item.client||''):(item.desc||'');
   document.getElementById('edit-type').value=item.type||'in';
   document.getElementById('edit-cat').value=item.cat||'';
@@ -3521,7 +3524,7 @@ window.openEditRecord=function openEditRecord(arg){
   document.getElementById('edit-reason').value='';
   document.getElementById('edit-modal-title').textContent='Edit '+(kind==='transaction'?'Transaction':kind==='expense'?'Expense':'Invoice');
   document.getElementById('edit-txn-row').style.display=kind==='transaction'?'grid':'none';
-  document.getElementById('edit-txn-currency-row').style.display=kind==='transaction'?'grid':'none';
+  document.getElementById('edit-txn-currency-row').style.display=(kind==='transaction'||kind==='expense')?'grid':'none';
   document.getElementById('edit-exp-row').style.display=kind==='expense'?'grid':'none';
   document.getElementById('edit-inv-row').style.display=kind==='invoice'?'grid':'none';
   document.getElementById('edit-ref').closest('.f-group').style.display=kind==='transaction'?'flex':'none';
@@ -3548,7 +3551,9 @@ window.saveRecordEdit=function saveRecordEdit(){
     item.ref=document.getElementById('edit-ref').value.trim();
     syncTransactionExpense(item);
   }else if(kind==='expense'){
-    item.date=date;item.amount=amount;item.desc=desc;
+    const sourceCurrency=studioCurrency(document.getElementById('edit-currency').value);
+    const exchangeRate=sourceCurrency==='LKR'?1:(Number(document.getElementById('edit-rate').value)||studioExchangeRate(sourceCurrency));
+    item.date=date;item.sourceAmount=amount;item.sourceCurrency=sourceCurrency;item.exchangeRate=exchangeRate;item.amount=amount*exchangeRate;item.desc=desc;
     item.vendor=document.getElementById('edit-vendor').value.trim();
     item.supplierName=item.vendor;
     item.cat=document.getElementById('edit-exp-cat').value.trim()||'Other';
@@ -4018,6 +4023,7 @@ function applySettings(){
   const logoWrap=document.getElementById('sb-logo-img-wrap');
   if(DB.settings.logo){logoWrap.innerHTML=`<img src="${DB.settings.logo}" class="sb-logo-img" alt="">`;}
   else{logoWrap.innerHTML='';}
+  const expenseAmountLabel=document.getElementById('e-amount-label');if(expenseAmountLabel)expenseAmountLabel.textContent='Amount ('+studioCurrency(DB.settings.mainCurrency||'LKR')+') *';
 }
 window.previewSettingsLogo = async function previewSettingsLogo(input){
   if(!input.files||!input.files[0])return;
