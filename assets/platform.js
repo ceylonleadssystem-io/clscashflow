@@ -1594,6 +1594,9 @@
 
     var plan = bestPlan(profile, opts.plan);
     var details = PLAN_DETAILS[plan] || PLAN_DETAILS.solo;
+    var cycle = billingCycleFor(profile, opts.billingCycle);
+    var chargeAmount = cycle === 'annual' ? details.price : details.monthlyPrice;
+    var selectedPayLink = planPaymentLink(details, cycle) || '';
     var storageKey = 'cls-payment-request-' + user.uid + '-' + plan;
     var token = plainText(profile.paymentRequestToken || safeGet(storageKey), 80);
     if (!token) {
@@ -1610,19 +1613,17 @@
       businessName: plainText(profile.bizName || profile.invoiceBiz || profile.businessName || '', 180),
       plan: plan,
       planName: details.name,
-      amount: details.monthlyPrice || 0,
+      amount: chargeAmount || 0,
       monthlyAmount: details.monthlyPrice || 0,
       annualAmount: details.price,
-      monthlyPayLink: monthlyPayLink || '',
-      annualPayLink: annualPayLink || '',
+      monthlyPayLink: details.monthlyPayLink || '',
+      annualPayLink: details.annualPayLink || '',
       defaultMonthlyPayLink: details.monthlyPayLink || '',
       defaultAnnualPayLink: details.annualPayLink || '',
-	      paymentLink: monthlyPayLink || '',
-	      customPaymentLink: customPayLink || '',
-	      paymentLinkCycle: 'monthly',
-	      paymentLinkExpiresAt: paymentLinkExpiresAt,
+	      paymentLink: selectedPayLink,
+	      paymentLinkCycle: cycle,
       paymentProvider: 'bank-transfer',
-      billingCycle: 'monthly',
+      billingCycle: cycle,
       currency: 'LKR',
       trialEnd: trialEnd && !isNaN(trialEnd.getTime()) ? trialEnd.toISOString() : '',
       status: 'pending',
@@ -1635,17 +1636,15 @@
       paymentRequestToken: token,
       paymentRequestStatus: 'pending',
       paymentRequestPlan: plan,
-      paymentRequestAmount: details.monthlyPrice || 0,
+      paymentRequestAmount: chargeAmount || 0,
       paymentRequestMonthlyAmount: details.monthlyPrice || 0,
       paymentRequestAnnualAmount: details.price,
       paymentProvider: 'bank-transfer',
-      paymentMonthlyPayLink: monthlyPayLink || '',
-      paymentAnnualPayLink: annualPayLink || '',
-	      paymentLink: monthlyPayLink || '',
-	      customPaymentLink: customPayLink || '',
-	      paymentLinkCycle: 'monthly',
-	      paymentLinkExpiresAt: paymentLinkExpiresAt,
-      billingCycle: 'monthly',
+      paymentMonthlyPayLink: details.monthlyPayLink || '',
+      paymentAnnualPayLink: details.annualPayLink || '',
+	      paymentLink: selectedPayLink,
+	      paymentLinkCycle: cycle,
+      billingCycle: cycle,
       manualPaymentStatus: 'payment-requested',
       updatedAt: fieldTimestamp()
     };
@@ -1668,11 +1667,11 @@
       profile.paymentRequestToken = token;
       profile.paymentRequestStatus = userUpdate.paymentRequestStatus;
       profile.paymentRequestPlan = plan;
-      profile.paymentRequestAmount = details.monthlyPrice || 0;
+      profile.paymentRequestAmount = chargeAmount || 0;
       return request;
     } catch (e) {
       console.warn('Payment request token could not be saved:', e);
-      return { token: token, plan: plan, planName: details.name, amount: details.monthlyPrice || 0, unsaved: true };
+      return { token: token, plan: plan, planName: details.name, amount: chargeAmount || 0, billingCycle: cycle, unsaved: true };
     }
   };
 
@@ -1730,6 +1729,10 @@
     profile=profile||{};var paid=isProfilePaidRecord(profile),raw=paid?(profile.nextPaymentDue||profile.subscriptionCurrentPeriodEnd):(profile.trialEnd||profile.trialEndsAt),ms=dateMs(raw);
     return ms?new Date(ms):new Date(Date.now()+(paid?30:0)*86400000);
   }
+  function billingCycleFor(profile,requested) {
+    var value=String(requested||(profile&&profile.billingCycle)||'monthly').toLowerCase();
+    return value.indexOf('annual')===0||value.indexOf('year')===0?'annual':'monthly';
+  }
   function nextMonthlyDueDate(fromDate) {
     var from=fromDate instanceof Date?new Date(fromDate.getTime()):new Date();
     var day=from.getDate(),next=new Date(from.getTime());
@@ -1739,33 +1742,39 @@
     next.setDate(Math.min(day,lastDay));
     return next;
   }
-  function paymentTimelineHtml(profile) {
-    profile=profile||{};var paid=isProfilePaidRecord(profile),due=billingDueDate(profile),reminder=new Date(due.getTime()-5*86400000),fmt=function(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
-    return '<div class="cls-payment-timeline"><strong>'+(paid?'Current prepaid monthly cycle':'Trial to prepaid monthly plan')+'</strong><div><i></i><span><b>'+fmt(reminder)+'</b> · '+(paid?'Monthly payment reminder':'Trial ending reminder')+'</span></div><div><i></i><span><b>'+fmt(due)+'</b> · '+(paid?'Next month must be paid in advance':'Trial ends · first monthly payment is due')+'</span></div><div><i></i><span><b>'+(paid?fmt(due):'After slip upload')+'</b> · '+(paid?'Payment popup opens until a new slip is uploaded':'Access resumes and the next payment is due one calendar month later')+'</span></div></div>';
+  function nextAnnualDueDate(fromDate) {
+    var from=fromDate instanceof Date?new Date(fromDate.getTime()):new Date(),next=new Date(from.getTime());
+    next.setFullYear(next.getFullYear()+1);
+    return next;
+  }
+  function nextBillingDueDate(fromDate,cycle) { return cycle==='annual'?nextAnnualDueDate(fromDate):nextMonthlyDueDate(fromDate); }
+  function paymentTimelineHtml(profile,requestedCycle) {
+    profile=profile||{};var cycle=billingCycleFor(profile,requestedCycle),annual=cycle==='annual',paid=isProfilePaidRecord(profile),due=billingDueDate(profile),reminder=new Date(due.getTime()-(annual?30:5)*86400000),unit=annual?'year':'month',fmt=function(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
+    return '<div class="cls-payment-timeline"><strong>'+(paid?'Current prepaid '+cycle+' cycle':'Trial to prepaid '+cycle+' plan')+'</strong><div><i></i><span><b>'+fmt(reminder)+'</b> · '+(paid?(annual?'Annual renewal reminder':'Monthly payment reminder'):'Trial ending reminder')+'</span></div><div><i></i><span><b>'+fmt(due)+'</b> · '+(paid?'Next '+unit+' must be paid in advance':'Trial ends · first '+cycle+' payment is due')+'</span></div><div><i></i><span><b>'+(paid?fmt(due):'After slip upload')+'</b> · '+(paid?'Payment popup opens until a new slip is uploaded':'Access resumes and the next payment is due one calendar '+unit+' later')+'</span></div></div>';
   }
   function readReceiptFile(file) { return new Promise(function(resolve,reject){var reader=new FileReader();reader.onload=function(){resolve(String(reader.result||'').split(',')[1]||'');};reader.onerror=function(){reject(new Error('Could not read the payment slip.'));};reader.readAsDataURL(file);}); }
-  window.clsSubmitSubscriptionReceipt=async function clsSubmitSubscriptionReceipt(file, profile, plan, statusEl) {
-    profile=profile||window._profile||{};var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,user=getAuthUser();
+  window.clsSubmitSubscriptionReceipt=async function clsSubmitSubscriptionReceipt(file, profile, plan, statusEl, requestedCycle) {
+    profile=profile||window._profile||{};var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,user=getAuthUser(),cycle=billingCycleFor(profile,requestedCycle),annual=cycle==='annual',chargeAmount=annual?details.price:details.monthlyPrice;
     if(!file)throw new Error('Choose a PDF or image of the payment slip.');
     if(file.size>3000000)throw new Error('Payment slip must be smaller than 3 MB.');
     var allowed=/^(application\/pdf|image\/(png|jpe?g|webp))$/i;if(!allowed.test(file.type))throw new Error('Upload a PDF, PNG, JPG, or WebP payment slip.');
     if(statusEl)statusEl.textContent='Uploading payment slip…';
-    var base64=await readReceiptFile(file),period=new Date().toISOString().slice(0,7);
-    var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,amount:money(details.monthlyPrice),period:period})});
+    var base64=await readReceiptFile(file),period=annual?(new Date().getFullYear()+'-annual'):new Date().toISOString().slice(0,7);
+    var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,amount:money(chargeAmount),period:period,billingCycle:cycle})});
     var out=await res.json().catch(function(){return{};});if(!res.ok||!out.sent)throw new Error(out.error||'Payment slip could not be sent.');
-    var trialDue=dateMs(profile.trialEnd||profile.trialEndsAt),cycleStart=trialDue&&trialDue>Date.now()?new Date(trialDue):new Date(),next=nextMonthlyDueDate(cycleStart);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentSlipName:cleanString(file.name,180),lastPaymentSlipType:cleanString(file.type,100),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),updatedAt:fieldTimestamp()};
+    var trialDue=dateMs(profile.trialEnd||profile.trialEndsAt),cycleStart=trialDue&&trialDue>Date.now()?new Date(trialDue):new Date(),next=nextBillingDueDate(cycleStart,cycle);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',billingCycle:cycle,lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentSlipName:cleanString(file.name,180),lastPaymentSlipType:cleanString(file.type,100),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),subscriptionCurrentPeriodEnd:next.toISOString(),updatedAt:fieldTimestamp()};
     var db=getFirestore(),uid=profile.ownerUid||(user&&user.uid)||profile.uid||'';
     if(db&&uid){
       await db.collection('users').doc(uid).set(update,{merge:true});
-      try{await db.collection('subscriptionPayments').doc(uid+'-'+period).set({uid:uid,email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:plan,period:period,amountLkr:details.monthlyPrice,currency:'LKR',status:'receipt-submitted',source:'bank-receipt',receiptName:cleanString(file.name,180),receivedAt:fieldTimestamp(),receivedAtUtc:nowIso()},{merge:true});}catch(ledgerError){console.warn('Subscription revenue ledger could not be updated:',ledgerError);}
+      try{await db.collection('subscriptionPayments').doc(uid+'-'+period).set({uid:uid,email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:plan,period:period,billingCycle:cycle,amountLkr:chargeAmount,currency:'LKR',status:'receipt-submitted',source:'bank-receipt',receiptName:cleanString(file.name,180),receivedAt:fieldTimestamp(),receivedAtUtc:nowIso()},{merge:true});}catch(ledgerError){console.warn('Subscription revenue ledger could not be updated:',ledgerError);}
     }
     Object.assign(profile,update);if(statusEl)statusEl.textContent='Payment slip submitted. Access is active until '+next.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+'.';setTimeout(function(){var wall=document.getElementById('cls-paywall');if(wall)wall.remove();},1000);return true;
   };
-  window.clsOpenBankTransferPayment=function clsOpenBankTransferPayment(plan,profile){
-    profile=profile||window._profile||{};plan=bestPlan(profile,plan);var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,old=document.getElementById('cls-bank-payment-modal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='cls-bank-payment-modal';wrap.className='cls-bank-modal';wrap.innerHTML='<div class="cls-bank-card"><button class="cls-bank-close" aria-label="Close">×</button><div class="cls-billing-kicker">Prepaid monthly subscription</div><h2>Pay your next month in advance</h2><p>Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> for your '+escapeHtml(details.name)+' plan, then upload the payment slip. If you pay during the trial, the paid month begins when the 15-day trial ends.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" required></label><button class="cls-bank-submit">Upload slip and activate monthly access</button><div class="cls-bank-status">The attachment will be emailed securely to '+escapeHtml(CLS_BANK.email)+'.</div></div>';document.body.appendChild(wrap);wrap.querySelector('.cls-bank-close').onclick=function(){wrap.remove();};wrap.addEventListener('click',function(e){if(e.target===wrap)wrap.remove();});wrap.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=wrap.querySelector('.cls-bank-status'),file=wrap.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Thank you — monthly access activated';setTimeout(function(){wrap.remove();},1300);}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};
+  window.clsOpenBankTransferPayment=function clsOpenBankTransferPayment(plan,profile,requestedCycle){
+    profile=profile||window._profile||{};plan=bestPlan(profile,plan);var details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,cycle=billingCycleFor(profile,requestedCycle),annual=cycle==='annual',chargeAmount=annual?details.price:details.monthlyPrice,unit=annual?'year':'month',old=document.getElementById('cls-bank-payment-modal');if(old)old.remove();var wrap=document.createElement('div');wrap.id='cls-bank-payment-modal';wrap.className='cls-bank-modal';wrap.innerHTML='<div class="cls-bank-card"><button class="cls-bank-close" aria-label="Close">×</button><div class="cls-billing-kicker">Prepaid '+cycle+' subscription</div><h2>Pay your next '+unit+' in advance</h2><p>Transfer <b>'+escapeHtml(money(chargeAmount))+'</b> for your '+escapeHtml(details.name)+' plan, then upload the payment slip. If you pay during the trial, the paid '+unit+' begins when the 15-day trial ends.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile,cycle)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" required></label><button class="cls-bank-submit">Upload slip and activate '+cycle+' access</button><div class="cls-bank-status">The attachment will be emailed securely to '+escapeHtml(CLS_BANK.email)+'.</div></div>';document.body.appendChild(wrap);wrap.querySelector('.cls-bank-close').onclick=function(){wrap.remove();};wrap.addEventListener('click',function(e){if(e.target===wrap)wrap.remove();});wrap.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=wrap.querySelector('.cls-bank-status'),file=wrap.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status,cycle);btn.textContent='Thank you — '+cycle+' access activated';setTimeout(function(){wrap.remove();},1300);}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};
   };
   window.clsStartCurrentPlanPayment=function(){return window.clsOpenBankTransferPayment(null,window._profile||{});};
-  window.clsRenderSubscriptionPaywall=function(profile,opts){opts=opts||{};if(document.getElementById('cls-paywall'))return;profile=profile||{};var plan=bestPlan(profile,opts.plan),details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,hasPaidBefore=!!(profile.lastPaymentSlipAt||profile.lastPaymentSlipAtUtc||profile.nextPaymentDue),ov=document.createElement('div');ov.id='cls-paywall';ov.className='cls-bank-modal';ov.innerHTML='<div class="cls-bank-card cls-bank-paused"><div class="cls-billing-kicker">'+(hasPaidBefore?'Monthly payment due':'15-day trial complete')+'</div><h2>'+(hasPaidBefore?'Pay the next month to continue':'Start your prepaid monthly plan')+'</h2><p>'+(hasPaidBefore?'Your current paid month has ended.':'Your free trial has ended.')+' Transfer <b>'+escapeHtml(money(details.monthlyPrice))+'</b> in advance for the next month, then upload the payment slip. Your data remains safe and the system resumes immediately after the slip is submitted.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" required></label><button class="cls-bank-submit">Upload payment slip and continue</button><div class="cls-bank-status">PDF, PNG, JPG or WebP, up to 3 MB. The slip will be emailed to '+escapeHtml(CLS_BANK.email)+'.</div><button class="cls-bank-signout" onclick="window.clsSignOut&&window.clsSignOut()">Sign out</button></div>';document.body.appendChild(ov);ov.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=ov.querySelector('.cls-bank-status'),file=ov.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status);btn.textContent='Payment submitted — access restored';}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};};
+  window.clsRenderSubscriptionPaywall=function(profile,opts){opts=opts||{};if(document.getElementById('cls-paywall'))return;profile=profile||{};var plan=bestPlan(profile,opts.plan),details=PLAN_DETAILS[plan]||PLAN_DETAILS.solo,cycle=billingCycleFor(profile),annual=cycle==='annual',chargeAmount=annual?details.price:details.monthlyPrice,unit=annual?'year':'month',hasPaidBefore=!!(profile.lastPaymentSlipAt||profile.lastPaymentSlipAtUtc||profile.nextPaymentDue),ov=document.createElement('div');ov.id='cls-paywall';ov.className='cls-bank-modal';ov.innerHTML='<div class="cls-bank-card cls-bank-paused"><div class="cls-billing-kicker">'+(hasPaidBefore?(annual?'Annual renewal due':'Monthly payment due'):'15-day trial complete')+'</div><h2>'+(hasPaidBefore?'Pay the next '+unit+' to continue':'Start your prepaid '+cycle+' plan')+'</h2><p>'+(hasPaidBefore?'Your current paid '+unit+' has ended.':'Your free trial has ended.')+' Transfer <b>'+escapeHtml(money(chargeAmount))+'</b> in advance for the next '+unit+', then upload the payment slip. Your data remains safe and the system resumes immediately after the slip is submitted.</p>'+bankDetailsHtml()+paymentTimelineHtml(profile,cycle)+'<label class="cls-receipt-upload">Payment slip<input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" required></label><button class="cls-bank-submit">Upload payment slip and continue</button><div class="cls-bank-status">PDF, PNG, JPG or WebP, up to 3 MB. The slip will be emailed to '+escapeHtml(CLS_BANK.email)+'.</div><button class="cls-bank-signout" onclick="window.clsSignOut&&window.clsSignOut()">Sign out</button></div>';document.body.appendChild(ov);ov.querySelector('.cls-bank-submit').onclick=async function(){var btn=this,status=ov.querySelector('.cls-bank-status'),file=ov.querySelector('input').files[0];try{btn.disabled=true;await window.clsSubmitSubscriptionReceipt(file,profile,plan,status,cycle);btn.textContent='Payment submitted — access restored';}catch(e){status.textContent=e.message||'Upload failed.';btn.disabled=false;}};};
 
   function trialStartForPrompt(profile) {
     profile = profile || {};
@@ -2236,6 +2245,9 @@
       '#cls-billing-widget .cls-billing-copy{font-size:.82rem;line-height:1.65;color:#6B6258;max-width:none}' +
       '#cls-billing-widget .cls-billing-price{font-family:Cormorant Garamond,Georgia,serif;font-size:2.15rem;line-height:1;color:#1C1814;margin-top:1rem}' +
       '#cls-billing-widget .cls-billing-sub{font-size:.76rem;color:#6B6258;margin-top:.35rem;line-height:1.45}' +
+      '#cls-billing-widget .cls-cycle-picker{display:inline-flex;gap:4px;padding:4px;margin-top:.9rem;border:1px solid #DED7CC;border-radius:999px;background:#F7F5F0}' +
+      '#cls-billing-widget .cls-cycle-picker button{border:0;border-radius:999px;background:transparent;color:#6B6258;padding:.55rem .8rem;font:800 .62rem DM Sans,Inter,Arial,sans-serif;cursor:pointer}' +
+      '#cls-billing-widget .cls-cycle-picker button.active{background:#1C1814;color:#fff}' +
       '#cls-billing-widget .cls-billing-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;align-items:stretch;width:100%}' +
       '#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{border:0;background:#1C1814;color:#fff;padding:.82rem .9rem;font-family:inherit;font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:800;cursor:pointer;white-space:normal;min-height:44px;text-align:center}' +
       '#cls-billing-widget .cls-billing-monthly{background:#B8922A;color:#fff}' +
@@ -2247,7 +2259,7 @@
       '.cls-bank-modal{position:fixed;inset:0;background:rgba(8,8,8,.78);backdrop-filter:blur(8px);z-index:10000;display:grid;place-items:center;padding:1rem;overflow:auto}.cls-bank-card{position:relative;width:min(560px,100%);background:#fff;border-radius:22px;padding:clamp(1.25rem,4vw,2.3rem);box-shadow:0 24px 80px rgba(0,0,0,.28);font-family:Inter,Arial,sans-serif}.cls-bank-card h2{font-size:clamp(1.8rem,5vw,2.7rem);letter-spacing:-.055em;line-height:1;margin:.35rem 0 .8rem}.cls-bank-card>p{color:#60605b;line-height:1.55;font-size:.88rem}.cls-bank-close{position:absolute;right:1rem;top:1rem;border:0;background:#f1f0ec;border-radius:50%;width:36px;height:36px;font-size:1.4rem;cursor:pointer}.cls-bank-details{background:#f5f2ea;border-left:4px solid #d7a72f;padding:1rem;margin:1.1rem 0}.cls-bank-details>strong,.cls-payment-timeline>strong{display:block;margin-bottom:.65rem}.cls-bank-details>div{display:flex;justify-content:space-between;gap:1rem;padding:.27rem 0;font-size:.8rem}.cls-bank-details span{color:#68645d}.cls-bank-details b{text-align:right}.cls-payment-timeline{border:1px solid #dedbd4;border-radius:14px;padding:1rem;margin:1rem 0}.cls-payment-timeline>div{display:flex;gap:.65rem;align-items:center;padding:.28rem 0;font-size:.76rem;color:#605f5a}.cls-payment-timeline i{display:block;width:9px;height:9px;border-radius:50%;background:#d7a72f;flex:0 0 auto}.cls-receipt-upload{display:grid;gap:.4rem;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-top:1rem}.cls-receipt-upload input{width:100%;border:1px dashed #b8b3a9;border-radius:12px;padding:.85rem;background:#faf9f6}.cls-bank-submit{width:100%;margin-top:.8rem;border:0;border-radius:999px;background:#080808;color:#fff;padding:1rem;font:800 .72rem Inter,Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}.cls-bank-submit:disabled{opacity:.55}.cls-bank-status{margin-top:.75rem;font-size:.72rem;line-height:1.5;color:#68645d;text-align:center}.cls-bank-signout{display:block;margin:.75rem auto 0;border:0;background:none;color:#a23d32;cursor:pointer}.cls-billing-bank{margin-top:1rem;display:grid;gap:.75rem}.cls-billing-bank .cls-bank-details,.cls-billing-bank .cls-payment-timeline{margin:0}.cls-billing-bank .cls-bank-details{border-radius:12px}' +
       '.business-billing-clean,.studio-billing-clean{grid-template-columns:1fr!important}.business-plan-summary,.studio-billing-clean>div:first-child{display:none!important}' +
       '@media(min-width:1180px){#settings-billing-widgets #cls-billing-widget{padding:1.5rem 1.65rem}}' +
-      '@media(max-width:760px){#settings-billing-widgets{margin-top:1rem!important}#cls-billing-widget{margin:0 0 1rem;padding:1.1rem}#cls-billing-widget .cls-billing-actions{grid-template-columns:1fr;gap:.8rem;margin-top:.2rem}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
+      '@media(max-width:760px){#settings-billing-widgets{margin-top:1rem!important}#cls-billing-widget{margin:0 0 1rem;padding:1.1rem}#cls-billing-widget .cls-cycle-picker{display:flex;width:100%}#cls-billing-widget .cls-cycle-picker button{flex:1}#cls-billing-widget .cls-billing-actions{grid-template-columns:1fr;gap:.8rem;margin-top:.2rem}#cls-billing-widget .cls-billing-pay,#cls-billing-widget .cls-billing-monthly,#cls-billing-widget .cls-billing-wa{width:100%}}' +
       '@media print{#cls-billing-widget{display:none!important}}';
     document.head.appendChild(style);
   }
@@ -2272,33 +2284,46 @@
 	    var nextPlan = canDirectSwitch?(plan === 'solo' ? 'studio' : (plan === 'studio' ? 'business' : '')):'';
 	    var trialEndMs=dateMs(profile.trialEnd||profile.trialEndsAt),canPay=paid||!trialEndMs||Date.now()>=trialEndMs;
 	    var nextDetails = nextPlan ? (PLAN_DETAILS[nextPlan] || PLAN_DETAILS.business) : null;
+	    var selectedCycle = billingCycleFor(profile);
 	    var periodEnd = profile.subscriptionCurrentPeriodEnd ? new Date(profile.subscriptionCurrentPeriodEnd) : null;
 	    var periodCopy = periodEnd && !isNaN(periodEnd.getTime())
 	      ? 'Active until ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
-	      : (paid ? 'Your paid subscription is active.' : 'Your first payment becomes due when the 15-day trial ends. The monthly cycle begins after your receipt is submitted.');
-	    var title = 'Monthly bank transfer';
-	    var copy = 'Pay your CLS ' + details.name + ' monthly package directly to our Commercial Bank account. Upload the payment slip after transfer so it reaches our accounts team.';
-	    var actionHtml = '<button type="button" class="cls-billing-monthly" data-billing-monthly'+(canPay?'':' disabled')+'>'+(canPay?'Pay by bank transfer':'Payment opens when trial ends')+'</button>'+(nextPlan?'<button type="button" class="cls-billing-pay" data-billing-request="'+escapeHtml(nextPlan)+'">Switch trial to '+escapeHtml(nextDetails.name)+'</button>':'');
+	      : (paid ? 'Your paid subscription is active.' : 'Your first payment becomes due when the 15-day trial ends. Choose a monthly or annual prepaid cycle.');
+	    var actionHtml = '<button type="button" class="cls-billing-monthly" data-billing-submit'+(canPay?'':' disabled')+'>'+(canPay?'Pay by bank transfer':'Payment opens when trial ends')+'</button>'+(nextPlan?'<button type="button" class="cls-billing-pay" data-billing-request="'+escapeHtml(nextPlan)+'">Switch trial to '+escapeHtml(nextDetails.name)+'</button>':'');
 	    var wrap = document.createElement('div');
 	    wrap.id = BILLING_ID;
 	    wrap.innerHTML =
 	      '<div class="cls-billing-top">' +
 	        '<div>' +
 	          '<div class="cls-billing-kicker">Billing</div>' +
-	          '<div class="cls-billing-title">' + escapeHtml(title) + '</div>' +
-	          '<div class="cls-billing-copy">' + escapeHtml(copy) + '</div>' +
-	          '<div class="cls-billing-price">' + escapeHtml(money(details.monthlyPrice || 0)) + '<span style="font-size:.9rem;color:#6B6258"> / mo</span></div>' +
-	          '<div class="cls-billing-sub">' + escapeHtml(periodCopy) + '</div><div class="cls-billing-bank">'+bankDetailsHtml()+paymentTimelineHtml(profile)+'</div>' +
+	          '<div class="cls-cycle-picker" role="group" aria-label="Billing cycle"><button type="button" data-billing-cycle="monthly">Pay monthly</button><button type="button" data-billing-cycle="annual">Pay annually</button></div>' +
+	          '<div class="cls-billing-title" data-billing-title></div>' +
+	          '<div class="cls-billing-copy" data-billing-copy></div>' +
+	          '<div class="cls-billing-price"><span data-billing-price></span><span data-billing-term style="font-size:.9rem;color:#6B6258"></span></div>' +
+	          '<div class="cls-billing-sub">' + escapeHtml(periodCopy) + '</div><div class="cls-billing-bank">'+bankDetailsHtml()+'<div data-billing-timeline></div></div>' +
 	        '</div>' +
 	        '<div class="cls-billing-actions">' + actionHtml + '</div>' +
 	      '</div>' +
 	      '<div class="cls-billing-status" data-billing-status>After transfer, upload a PDF or image of the payment slip. It will be attached to an email sent to accounts@ceylonrylabs.io.</div>';
 	    (document.getElementById('settings-billing-widgets') || settingsView).appendChild(wrap);
-	    var monthlyBtn = wrap.querySelector('[data-billing-monthly]');
-	    var annualBtn = wrap.querySelector('[data-billing-pay]');
+	    var submitBtn = wrap.querySelector('[data-billing-submit]');
+	    var cycleBtns = wrap.querySelectorAll('[data-billing-cycle]');
 	    var requestBtn = wrap.querySelector('[data-billing-request]');
 	    var waBtn = wrap.querySelector('[data-billing-wa]');
-	    if (monthlyBtn&&!monthlyBtn.disabled) monthlyBtn.addEventListener('click', function() { window.clsOpenBankTransferPayment(plan,window._profile||profile); });
+	    function renderCycle() {
+	      var annual = selectedCycle === 'annual';
+	      var charge = annual ? details.price : details.monthlyPrice;
+	      wrap.querySelector('[data-billing-title]').textContent = annual ? 'Annual bank transfer' : 'Monthly bank transfer';
+	      wrap.querySelector('[data-billing-copy]').textContent = 'Pay your CLS ' + details.name + ' ' + selectedCycle + ' package directly to our Commercial Bank account. Upload the payment slip after transfer so it reaches our accounts team.';
+	      wrap.querySelector('[data-billing-price]').textContent = money(charge || 0);
+	      wrap.querySelector('[data-billing-term]').textContent = annual ? ' / yr' : ' / mo';
+	      wrap.querySelector('[data-billing-timeline]').innerHTML = paymentTimelineHtml(profile, selectedCycle);
+	      Array.prototype.forEach.call(cycleBtns, function(btn) { var active=btn.getAttribute('data-billing-cycle')===selectedCycle;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',active?'true':'false'); });
+	      if (submitBtn && !submitBtn.disabled) submitBtn.textContent = annual ? 'Pay annually by bank transfer' : 'Pay monthly by bank transfer';
+	    }
+	    Array.prototype.forEach.call(cycleBtns, function(btn) { btn.addEventListener('click', function(){ selectedCycle=this.getAttribute('data-billing-cycle')==='annual'?'annual':'monthly';renderCycle(); }); });
+	    renderCycle();
+	    if (submitBtn&&!submitBtn.disabled) submitBtn.addEventListener('click', function() { window.clsOpenBankTransferPayment(plan,window._profile||profile,selectedCycle); });
 	    if (requestBtn) requestBtn.addEventListener('click', function() {
 	      var target = this.getAttribute('data-billing-request');
 	      window.clsRequestPlanChange(target, window._profile || profile, { source: 'settings-billing-widget' });

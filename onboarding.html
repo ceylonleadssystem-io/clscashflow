@@ -896,7 +896,7 @@ let currentStep = 1;
 const totalSteps = 4;
 const state = {
   fname:'',lname:'',email:'',phone:'',inviteToken:'',inviteOwner:'',growthPartnerCode:'',growthPartnerId:'',growthPartnerName:'',
-  bizName:'',industry:'',tier:'',suggestedTier:'solo',planTouched:false,useCases:[],firstClient:null,expLevel:'',
+  bizName:'',industry:'',tier:'',suggestedTier:'solo',planTouched:false,billingCycle:'monthly',useCases:[],firstClient:null,expLevel:'',
   setupTasks:{profile:true,payroll:false,notifications:false},
   logo:'',invoiceBiz:'',regno:'',addr:'',invEmail:'',vat:'',taxRate:'',footer:'',bankName:'',bankAccountName:'',bankAccountNumber:'',bankBranch:'',mainCurrency:'LKR',invoiceCurrency:'LKR',exchangeRates:{LKR:1,USD:300,GBP:380,EUR:325},selectedTemplate:0,invoiceFont:'classic',invoiceView:'modern',invoicePrefix:'INV',
   empCount:0,employees:[],payFreq:'Monthly',
@@ -1691,14 +1691,14 @@ function newAcceptanceId(){
 }
 async function saveTermsAcceptance(uid,plan,trialStart,trialEnd){
   const consent=acceptanceInput();
-  const monthlyPrices={solo:3500,studio:5500,business:8500};
+  const monthlyPrices={solo:3500,studio:5500,business:8500},annualPrices={solo:36000,studio:60000,business:94800};
   const acceptedAt=new Date().toISOString();
   const acceptanceId=newAcceptanceId();
   const record={
     acceptanceId:acceptanceId,userId:uid,accountId:uid,
     fullNameAtAcceptance:consent.fullName,emailAtAcceptance:state.email,
     businessNameAtAcceptance:state.invoiceBiz||state.bizName||'',
-    subscriptionPlan:plan,subscriptionPrice:monthlyPrices[plan]||3500,currency:'LKR',billingCycle:'monthly-prepaid-manual',
+    subscriptionPlan:plan,subscriptionPrice:state.billingCycle==='annual'?(annualPrices[plan]||36000):(monthlyPrices[plan]||3500),currency:'LKR',billingCycle:state.billingCycle+'-prepaid-manual',
     trialStartDatetime:trialStart,trialEndDatetime:trialEnd,firstBillingDatetime:trialEnd,
     termsVersion:TERMS_VERSION,termsEffectiveDate:TERMS_EFFECTIVE_DATE,privacyPolicyVersion:PRIVACY_VERSION,
     acceptedTerms:true,acceptedPrivacy:true,recurringBillingAuthorised:false,
@@ -1765,7 +1765,7 @@ window.launchDashboard = async function launchDashboard(){
         lastPlan: selectedPlan,
         planPrice: prices[selectedPlan] || 36000,
         planMonthlyPrice: monthlyPrices[selectedPlan] || 3500,
-        billingCycle: 'monthly',
+        billingCycle: state.billingCycle,
         nextInvNum: 1,
         nextInvId: 1,
         trialStart: googleTrialStart.toISOString(),
@@ -1853,7 +1853,7 @@ window.launchDashboard = async function launchDashboard(){
         lastPlan: requestedPlan,
         planPrice: prices[requestedPlan] || 36000,
         planMonthlyPrice: monthlyPrices[requestedPlan] || 3500,
-        billingCycle: 'monthly',
+        billingCycle: state.billingCycle,
         nextInvNum: 1,
         nextInvId: 1,
         trialStart: trialStart.toISOString(),
@@ -1957,6 +1957,7 @@ bindInvoicePreviewInputs();
     if (sub) sub.textContent = 'Create your account to accept your team invite and access the shared business dashboard.';
   }
   var plan = params.get('plan');
+  state.billingCycle = params.get('billing') === 'annual' ? 'annual' : 'monthly';
   if (plan) {
     plan = normalizeTier(plan);
     var cards = document.querySelectorAll('.tier-card');
