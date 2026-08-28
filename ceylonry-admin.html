@@ -569,7 +569,7 @@ function renderGrowthPartners(users,partners,codes,commissions){
 }
 function renderGrowthCommissions(rows){rows=(rows||[]).slice().sort(function(a,b){return dateMs((b.data||{}).createdAtUtc||(b.data||{}).createdAt)-dateMs((a.data||{}).createdAtUtc||(a.data||{}).createdAt);});var payable=rows.filter(function(r){return String((r.data||{}).status||'payable')==='payable';}).reduce(function(n,r){return n+Number((r.data||{}).amountLkr||1000);},0);if($('kpi-partner-payable'))$('kpi-partner-payable').textContent=money(payable);if($('growth-commissions-body'))$('growth-commissions-body').innerHTML=rows.map(function(row){var c=row.data||{},status=String(c.status||'payable').toLowerCase();return '<tr><td>'+requestStatusPill(status)+'</td><td><b>'+esc(c.partnerName||c.partnerCode)+'</b><br><small class="muted">'+esc(c.partnerEmail||'')+'</small></td><td>'+esc(c.customerName||c.customerEmail)+'</td><td>'+esc(c.period||'')+'</td><td>Month '+fmtInt(c.commissionMonth)+' of 6</td><td>'+money(c.amountLkr||1000)+'</td><td>'+esc(shortDate(c.payableByUtc))+'</td><td>'+esc(c.notificationStatus||'not sent')+'</td><td>'+(status==='payable'?'<button class="btn gold" data-commission-id="'+esc(row.id)+'" data-commission-status="paid">Mark paid</button>':'')+'</td></tr>';}).join('')||'<tr><td colspan="9" class="muted">Commission entries appear after referred customers pay their monthly bill.</td></tr>';}
 
-function renderReceipts(users){var host=$('receipt-grid');if(!host)return;var rows=(users||[]).filter(function(r){return !!((r.data||{}).lastPaymentSlipAtUtc);}).sort(function(a,b){return dateMs((b.data||{}).lastPaymentSlipAtUtc)-dateMs((a.data||{}).lastPaymentSlipAtUtc);});host.innerHTML=rows.slice(0,12).map(function(r){var u=r.data||{};return '<article class="receipt-card"><strong>'+esc(u.name||u.displayName||u.email||'Customer')+'</strong><span>'+esc(u.email||'')+' · '+esc(normalizePlan(u.currentPlan||u.plan))+'</span><span>Received '+esc(shortDate(u.lastPaymentSlipAtUtc))+' · '+esc(u.lastPaymentPeriod||'')+'</span><span>'+esc(u.lastPaymentSlipName||'Payment slip emailed to accounts@ceylonrylabs.io')+'</span></article>';}).join('')||'<div class="card muted">No payment receipts uploaded yet.</div>';}
+function renderReceipts(users,payments){var host=$('receipt-grid');if(!host)return;var rows=(payments||[]).map(function(r){var p=r.data||{};return{name:p.name||p.businessName||p.email,email:p.email,plan:p.plan,cycle:p.billingCycle||'monthly',received:p.receivedAtUtc||p.receivedAt,period:p.period,file:p.receiptName,status:p.emailSent===true?'Emailed to accounts':'Receipt recorded'};});if(!rows.length)rows=(users||[]).filter(function(r){return!!((r.data||{}).lastPaymentSlipAtUtc);}).map(function(r){var u=r.data||{};return{name:u.name||u.displayName||u.email,email:u.email,plan:u.currentPlan||u.plan,cycle:u.billingCycle||'monthly',received:u.lastPaymentSlipAtUtc,period:u.lastPaymentPeriod,file:u.lastPaymentSlipName,status:'Emailed to accounts'};});rows.sort(function(a,b){return dateMs(b.received)-dateMs(a.received);});host.innerHTML=rows.slice(0,24).map(function(u){return'<article class="receipt-card"><strong>'+esc(u.name||'Customer')+'</strong><span>'+esc(u.email||'')+' · '+esc(normalizePlan(u.plan))+' · '+esc(u.cycle)+'</span><span>Received '+esc(shortDate(u.received))+' · '+esc(u.period||'')+'</span><span>'+esc(u.file||'Payment slip')+' · '+esc(u.status)+'</span></article>';}).join('')||'<div class="card muted">No payment receipts uploaded yet.</div>';}
 
 var COUNTRY_POINTS={LK:[80.7,7.9],IN:[78,21],GB:[-2,54],US:[-98,39],CA:[-106,56],AU:[134,-25],CN:[104,35],SG:[104,1.3],AE:[54,24],DE:[10,51],FR:[2,46],JP:[138,37]};
 var TIMEZONE_LOCATIONS={'ASIA/COLOMBO':{lat:7.9,lon:80.7,city:'Colombo area',country:'Sri Lanka'},'ASIA/KOLKATA':{lat:21,lon:78,city:'India',country:'India'},'EUROPE/LONDON':{lat:54,lon:-2,city:'United Kingdom',country:'United Kingdom'},'ASIA/SINGAPORE':{lat:1.3,lon:104,city:'Singapore',country:'Singapore'},'ASIA/DUBAI':{lat:24,lon:54,city:'Dubai area',country:'United Arab Emirates'},'AUSTRALIA/SYDNEY':{lat:-33.9,lon:151.2,city:'Sydney area',country:'Australia'},'AMERICA/NEW_YORK':{lat:40.7,lon:-74,city:'New York area',country:'United States'},'AMERICA/LOS_ANGELES':{lat:34,lon:-118.2,city:'Los Angeles area',country:'United States'}};
@@ -816,7 +816,7 @@ function switchAdminSection(section){
     btn.classList.toggle('active', btn.getAttribute('data-admin-tab') === adminActiveSection);
   });
 }
-function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stats, growthPartners, growthPartnerCodes, growthPartnerCommissions){
+function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stats, growthPartners, growthPartnerCodes, growthPartnerCommissions, subscriptionPayments){
   users = users || [];
   var visibleUsers = users.filter(function(row){ return !isDeletedUser(row); });
   var localStats = Object.assign({}, stats || {});
@@ -828,7 +828,7 @@ function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stat
   adminPayloadState={users:visibleUsers,visits:visits||[],tickets:tickets||[],paymentRequests:paymentRequests||[],chats:chats||[],stats:localStats,growthPartners:growthPartners||[],growthPartnerCodes:growthPartnerCodes||[],growthPartnerCommissions:growthPartnerCommissions||[]};
   renderUsers(visibleUsers, localStats);
   renderGrowthPartners(visibleUsers,growthPartners||[],growthPartnerCodes||[],growthPartnerCommissions||[]);
-  renderReceipts(visibleUsers);
+  renderReceipts(visibleUsers,subscriptionPayments||[]);
   renderPaymentRequests(paymentRequests || [], localStats);
   renderUserBreakdown(visibleUsers, visits || [], tickets || [], paymentRequests || [], chats || []);
   renderVisits(visits || [], localStats, visibleUsers);
@@ -856,7 +856,7 @@ async function loadAdminData(opts){
     var cached = !adminHasRendered ? readAdminCache() : null;
     if (cached) {
       var cachedPayload = cached.payload;
-      renderAdminPayload(cachedPayload.users || [], cachedPayload.visits || [], cachedPayload.tickets || [], cachedPayload.paymentRequests || [], cachedPayload.chats || [], cachedPayload.stats || {}, cachedPayload.growthPartners || [], cachedPayload.growthPartnerCodes || [], cachedPayload.growthPartnerCommissions || []);
+      renderAdminPayload(cachedPayload.users || [], cachedPayload.visits || [], cachedPayload.tickets || [], cachedPayload.paymentRequests || [], cachedPayload.chats || [], cachedPayload.stats || {}, cachedPayload.growthPartners || [], cachedPayload.growthPartnerCodes || [], cachedPayload.growthPartnerCommissions || [], cachedPayload.subscriptionPayments || []);
       adminHasData = true;
       setDataStatus('loading', 'Showing saved data while checking for updates…');
     } else if (!adminHasRendered) {
@@ -876,7 +876,7 @@ async function loadAdminData(opts){
     var adminFunctionError = '';
     try {
       var payload = await fetchAdminFunction();
-      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {}, payload.growthPartners || [], payload.growthPartnerCodes || [], payload.growthPartnerCommissions || []);
+      renderAdminPayload(payload.users || [], payload.visits || [], payload.tickets || [], payload.paymentRequests || [], payload.chats || [], payload.stats || {}, payload.growthPartners || [], payload.growthPartnerCodes || [], payload.growthPartnerCommissions || [], payload.subscriptionPayments || []);
       adminHasData = true;
       writeAdminCache(payload);
       setDataStatus('ok', 'Up to date · loaded ' + new Date().toLocaleTimeString());

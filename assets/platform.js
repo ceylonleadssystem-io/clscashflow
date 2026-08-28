@@ -1760,7 +1760,7 @@
     var allowed=/^(application\/pdf|image\/(png|jpe?g|webp))$/i;if(!allowed.test(file.type))throw new Error('Upload a PDF, PNG, JPG, or WebP payment slip.');
     if(statusEl)statusEl.textContent='Uploading payment slip…';
     var base64=await readReceiptFile(file),period=annual?(new Date().getFullYear()+'-annual'):new Date().toISOString().slice(0,7);
-    var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,amount:money(chargeAmount),period:period,billingCycle:cycle})});
+    var res=await fetch('/.netlify/functions/submit-subscription-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:(user&&user.uid)||profile.uid||profile.ownerUid||'',fileBase64:base64,fileName:file.name,mimeType:file.type,name:profileName(profile,user),email:profileEmail(profile,user),businessName:profile.bizName||profile.invoiceBiz||profile.businessName||'',plan:details.name,planKey:plan,amount:money(chargeAmount),amountLkr:chargeAmount,period:period,billingCycle:cycle})});
     var out=await res.json().catch(function(){return{};});if(!res.ok||!out.sent)throw new Error(out.error||'Payment slip could not be sent.');
     var trialDue=dateMs(profile.trialEnd||profile.trialEndsAt),cycleStart=trialDue&&trialDue>Date.now()?new Date(trialDue):new Date(),next=nextBillingDueDate(cycleStart,cycle);var update={paid:true,accountPaused:false,subscriptionStatus:'receipt-submitted',manualPaymentStatus:'receipt-submitted',billingCycle:cycle,lastPaymentSlipAt:fieldTimestamp(),lastPaymentSlipAtUtc:nowIso(),lastPaymentSlipName:cleanString(file.name,180),lastPaymentSlipType:cleanString(file.type,100),lastPaymentPeriod:period,nextPaymentDue:next.toISOString(),subscriptionCurrentPeriodEnd:next.toISOString(),updatedAt:fieldTimestamp()};
     var db=getFirestore(),uid=profile.ownerUid||(user&&user.uid)||profile.uid||'';
@@ -2287,7 +2287,7 @@
 	    var selectedCycle = billingCycleFor(profile);
 	    var periodEnd = profile.subscriptionCurrentPeriodEnd ? new Date(profile.subscriptionCurrentPeriodEnd) : null;
 	    var periodCopy = periodEnd && !isNaN(periodEnd.getTime())
-	      ? 'Active until ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
+	      ? 'Next ' + (selectedCycle === 'annual' ? 'annual renewal' : 'monthly payment') + ' due: ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
 	      : (paid ? 'Your paid subscription is active.' : 'Your first payment becomes due when the 15-day trial ends. Choose a monthly or annual prepaid cycle.');
 	    var actionHtml = '<button type="button" class="cls-billing-monthly" data-billing-submit'+(canPay?'':' disabled')+'>'+(canPay?'Pay by bank transfer':'Payment opens when trial ends')+'</button>'+(nextPlan?'<button type="button" class="cls-billing-pay" data-billing-request="'+escapeHtml(nextPlan)+'">Switch trial to '+escapeHtml(nextDetails.name)+'</button>':'');
 	    var wrap = document.createElement('div');
