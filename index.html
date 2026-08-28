@@ -439,6 +439,20 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 
 .footer{padding:110px 0 32px;background:#090909}.footer-grid{gap:48px}.footer-brand{font-family:var(--sans);font-size:44px;font-weight:800;letter-spacing:-.06em}.footer-brand span{font-size:12px}.footer-form input,.footer-form button{border-radius:999px}.footer-col h3{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.footer-col a,.footer-col span,.footer-link-button{font-size:16px}
 
+/* Keep the editorial look comfortable on laptop and desktop screens. */
+@media(min-width:901px){
+  .container{width:min(1280px,calc(100% - 64px))}.narrow{width:min(920px,calc(100% - 64px))}
+  .nav-inner{height:72px;grid-template-columns:minmax(250px,1fr) auto minmax(250px,1fr)}
+  .nav-logo{width:40px;height:40px}.nav-brand-title{font-size:19px}.nav-links{gap:28px}.nav-links a{font-size:10px}.nav-trial{padding:11px 18px}
+  .hero{min-height:100svh;padding:112px 0 64px}.hero-copy{max-width:1120px}.hero h1{font-size:clamp(68px,9.2vw,132px)}.hero-sub{max-width:720px;margin-top:30px;font-size:clamp(17px,1.35vw,21px)}.hero-actions{margin-top:32px}.hero-proof{margin-top:34px}
+  .story-teaser{padding:82px 0}.story-teaser-card{min-height:410px;padding:34px 42px;grid-template-columns:minmax(260px,.65fr) minmax(0,1fr);gap:58px}.story-teaser-logo{width:min(330px,100%)}.story-teaser h2{font-size:clamp(48px,5.5vw,76px)}.story-teaser p{font-size:17px}
+  .customer-success{padding:70px 0}.success-copy h2{font-size:clamp(48px,5.4vw,76px)}.success-lede{font-size:17px}.success-logo-panel{min-height:240px}.success-journey .success-card{padding:30px 28px}
+  .product-showcase{padding:88px 0}.section-head{margin-bottom:42px}.section-head h2{font-size:clamp(52px,6.2vw,82px)}.section-head p{font-size:18px}.trusted{padding:36px 0}
+  .pricing{padding:72px 0 82px;scroll-margin-top:72px}.pricing-head{margin-bottom:40px}.pricing-head h2{font-size:clamp(48px,5.8vw,76px)}.pricing-head p{margin-top:12px;font-size:16px}.toggle-stack{margin-top:24px;gap:12px}.segmented button{padding:8px 16px;font-size:13px}
+  .pricing-grid{gap:20px}.price-card{min-height:500px;padding:30px 28px;border-radius:30px}.price-kicker{margin-bottom:18px;font-size:11px}.price-card h3{font-size:30px}.price-main{font-size:36px}.price-term{font-size:13px}.billing-line{font-size:11px}.plan-desc{margin:18px 0 12px;font-size:14px}.price-card ul{gap:10px;font-size:13px}.price-card li{gap:9px}.price-actions{padding-top:20px}.price-actions .btn{padding:12px 18px;font-size:10px}.price-card .trial-small{margin-top:8px;font-size:10px}.popular-pill{top:17px;right:18px;padding:5px 13px;font-size:9px}
+  .plan-comparison{margin-top:34px}.features,.image-band,.faq{padding:88px 0}.features h2,.image-head h2,.faq h2{font-size:clamp(48px,6vw,80px)}.feature-grid{gap:26px}.feature{padding-top:24px}.feature h3{font-size:24px}.feature p{font-size:14px}.photo-wrap{gap:26px}.footer{padding-top:82px}.footer-brand{font-size:38px}
+}
+
 @media(max-width:900px){
   .container,.narrow{width:auto;margin-left:18px;margin-right:18px}.site-nav{position:fixed}
   .nav-inner{width:auto;max-width:none;height:74px;margin:0 18px;padding:0;grid-template-columns:minmax(0,1fr) auto;gap:12px}
