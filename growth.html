@@ -947,6 +947,23 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
   }
   #view-payroll .payroll-actions .payroll-more summary{height:32px}
 }
+/* Business logo controls and large dashboard totals. */
+#logo-upload-area{position:relative;min-height:142px;overflow:hidden}
+#logo-upload-area #logo-prev{position:absolute;display:none;margin:0!important;z-index:2;transition:left .18s ease,top .18s ease,width .18s ease;transform:translate(-50%,-50%)}
+#logo-upload-area #logo-hint{position:absolute;inset:0;display:grid;align-content:center;justify-items:center;padding:1rem}
+#view-dashboard .db-kpi-row .kpi{min-width:0;overflow:hidden}
+#view-dashboard .db-kpi-row .kpi-val{
+  display:block;
+  max-width:100%;
+  white-space:nowrap!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  font-size:clamp(.88rem,1.35vw,1.4rem)!important;
+  letter-spacing:-.055em!important;
+}
+@media(max-width:760px){
+  #view-dashboard .db-kpi-row .kpi-val{font-size:clamp(1rem,5.3vw,1.35rem)!important}
+}
 </style>
 </head>
 <body>
@@ -1313,18 +1330,18 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
                 <div class="settings-invoice-preview" id="settings-invoice-preview"></div>
               </div>
               <div class="fsec">Your Business Logo</div>
-              <label for="logo-inp" style="display:block;border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)">
+              <label for="logo-inp" id="logo-upload-area" style="display:block;border:2px dashed var(--bacc);padding:1.3rem;text-align:center;cursor:pointer;background:var(--bg);border-radius:var(--r)">
                 <img id="logo-prev" style="display:none;margin:0 auto .45rem;object-fit:contain" src="" alt="">
                 <div id="logo-hint"><div style="font-size:1.3rem;margin-bottom:.3rem">🏢</div><div style="font-size:.79rem;color:var(--muted)">Click to upload your logo</div><div style="font-size:.67rem;color:var(--dim);margin-top:.18rem">PNG, JPG, or WebP · Max 5MB · Optimized automatically</div></div>
                 <input type="file" id="logo-inp" accept="image/*" style="display:none" onchange="previewLogo(this)">
               </label>
               <div class="frow" style="margin-top:.85rem;margin-bottom:0">
-                <div class="fg"><label>Logo Alignment</label><select class="fi fsel" id="s-logo-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></div>
+                <div class="fg"><label>Logo Alignment</label><select class="fi fsel" id="s-logo-align" onchange="window.changeBusinessLogoAlignment(this.value)"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option><option value="custom">Custom Position</option></select></div>
                 <div class="fg"><label>Logo Size</label><select class="fi fsel" id="s-logo-size"><option value="S">Small</option><option value="M">Medium</option><option value="L">Large</option></select></div>
               </div>
               <div class="frow" style="margin-top:.85rem;margin-bottom:0">
-                <div class="fg"><label>Logo Horizontal Position <span id="s-logo-x-label">8%</span></label><input class="fi" id="s-logo-x" type="range" min="0" max="100" step="1"></div>
-                <div class="fg"><label>Logo Vertical Position <span id="s-logo-y-label">5%</span></label><input class="fi" id="s-logo-y" type="range" min="0" max="24" step="1"></div>
+                <div class="fg"><label>Logo Horizontal Position <span id="s-logo-x-label">8%</span></label><input class="fi" id="s-logo-x" type="range" min="0" max="100" step="1" oninput="window.changeBusinessLogoPosition()"></div>
+                <div class="fg"><label>Logo Vertical Position <span id="s-logo-y-label">5%</span></label><input class="fi" id="s-logo-y" type="range" min="0" max="24" step="1" oninput="window.changeBusinessLogoPosition()"></div>
               </div>
             </div>
           </div>
@@ -2427,10 +2444,19 @@ function syncBusinessComputedData() {
       supplier.payableRef = p.ref || '';
     }
   });
-  D.payables = D.suppliers.filter(function(s) {
-    return toNum(s.payableAmount) > 0;
-  }).map(function(s) {
-    return {id:'PAY-' + s.id, supplierId:s.id, supplier:s.name, amount:toNum(s.payableAmount), days:toNum(s.payableDays), ref:s.payableRef || 'Supplier payable'};
+  var payableToday=new Date(today()+'T00:00:00');
+  D.payables=[];
+  D.suppliers.forEach(function(s) {
+    var legacyBalance=Math.max(0,toNum(s.payableAmount)-toNum(s.payablePaidAmount));
+    if(legacyBalance>0.01)D.payables.push({id:'PAY-'+s.id,supplierId:s.id,supplier:s.name,amount:legacyBalance,days:toNum(s.payableDays),ref:s.payableRef||'Supplier payable',legacy:true});
+    (Array.isArray(s.obligations)?s.obligations:[]).forEach(function(o){
+      if(o.direction!=='we_owe')return;
+      var sourceBalance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount));
+      if(sourceBalance<=.01)return;
+      var dueDate=new Date((o.due||today())+'T00:00:00');
+      var days=isNaN(dueDate.getTime())?0:Math.ceil((dueDate-payableToday)/86400000);
+      D.payables.push({id:'PAY-'+s.id+'-'+o.id,supplierId:s.id,supplier:s.name,obligationId:o.id,amount:toLkrAmount(sourceBalance,o.currency||'LKR',o.exchangeRate||1),sourceAmount:sourceBalance,currency:o.currency||'LKR',exchangeRate:o.exchangeRate||1,due:o.due||'',days:days,ref:o.reference||o.description||'Third-party obligation',description:o.description||'',attachment:o.attachment||null,legacy:false});
+    });
   });
 }
 
@@ -2760,6 +2786,8 @@ window.showSettingsTab = function showSettingsTab(tab, opts) {
     panel.hidden = !active;
   });
   if (tab === 'invoices') {
+    updateBusinessLogoPositionLabels();
+    updateBusinessLogoControlPreview();
     renderSettingsTemplatePicker();
     renderSettingsInvoicePreview();
     requestAnimationFrame(function() { fitSettingsInvoicePreview(document.getElementById('settings-invoice-preview')); });
@@ -3142,6 +3170,7 @@ function renderDashboard() {
     kpi('Net Profit', fmtReporting(inc-out), inc-out >= 0 ? 'You are profitable!' : 'Expenses exceed income', 'gr') +
     kpi('Outstanding', fmtReporting(outstd), overdue + ' overdue invoice' + (overdue !== 1 ? 's' : ''), 'am') +
     kpi('Cash Position', fmtReporting(inc-out), inc-out >= 0 ? 'Money in is ahead' : 'Expenses are ahead', inc-out >= 0 ? 'gr' : 'rd');
+  requestAnimationFrame(fitBusinessDashboardKpis);
 
   document.getElementById('d-recv').innerHTML = D.recv.length ? D.recv.slice(0,4).map(function(r) {
     var color = r.days > 30 ? 'var(--red)' : r.days > 14 ? 'var(--amber)' : 'var(--green)';
@@ -3177,6 +3206,17 @@ function renderDashboard() {
   refreshInvoiceNotifications();
   scheduleDashboardCharts();
 }
+
+function fitBusinessDashboardKpis(){
+  document.querySelectorAll('#d-kpis .kpi-val').forEach(function(value){
+    value.style.fontSize='';
+    var available=Math.max(1,value.parentElement.clientWidth-2);
+    var size=parseFloat(getComputedStyle(value).fontSize)||20;
+    while(value.scrollWidth>available&&size>12){size-=.5;value.style.fontSize=size+'px';}
+  });
+}
+var businessKpiResizeTimer;
+window.addEventListener('resize',function(){clearTimeout(businessKpiResizeTimer);businessKpiResizeTimer=setTimeout(fitBusinessDashboardKpis,100);});
 
 function kpiMini(lbl, val, sub, ico, accent) {
   return '<div class="db-gm '+accent+'">' +
@@ -3462,12 +3502,15 @@ function renderClients() {
 }
 
 function renderDebt() {
+  syncBusinessComputedData();
   var rows = invoiceReminderRows();
   var tr = rows.reduce(function(a,r) { return a+r.balance; }, 0);
   var tp = D.payables.reduce(function(a,p) { return a+p.amount; }, 0);
-  var ov = rows.filter(function(r) { return r.days > 0; }).length;
+  var receivableOverdue = rows.filter(function(r) { return r.days > 0; }).length;
+  var payableOverdue = D.payables.filter(function(p){return p.due&&p.days<0;}).length;
+  var ov = receivableOverdue+payableOverdue;
 
-  document.getElementById('sb-badge').textContent = ov || rows.filter(function(r) { return r.days === 0; }).length;
+  document.getElementById('sb-badge').textContent = ov || (rows.filter(function(r) { return r.days === 0; }).length+D.payables.filter(function(p){return p.due&&p.days===0;}).length);
 
   document.getElementById('debt-sum').innerHTML =
     sumItem('Money Owed to You', fmt(tr), 'var(--green)') +
@@ -3491,8 +3534,11 @@ function renderDebt() {
     return '<div class="debt-row clean"><div><div class="debt-name">' + escHtml(inv.client) + '</div><div class="debt-inv">' + escHtml(inv.id) + ' · Due ' + escHtml(formatDateHuman(inv.due)) + '</div><span class="debt-age-tag ' + (overdue ? 'overdue' : '') + '">' + dueLabel(item.days) + '</span></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.86rem;font-weight:700;color:var(--green)">' + fmt(item.balance) + '</div><div class="debt-actions"><button class="bsm bsmwa" onclick="window.waRemind(\'' + escHtml(inv.id) + '\')">WA Reminder</button><button class="bsm bsmem" onclick="window.emailInv(\'' + escHtml(inv.id) + '\')">Email</button><button class="bsm bsmgr" onclick="window.openPayMo(\'' + escHtml(inv.id) + '\')">Record Payment</button></div></div></div>';
   }).join('') || emptyState('No money outstanding', 'Unpaid invoices will appear here when customers still owe you.', 'Create Invoice', 'window.openInvMo()');
 
-  document.getElementById('pay-list').innerHTML = D.payables.map(function(p) {
-    return '<div class="debt-row"><div><div class="debt-name">' + escHtml(p.supplier) + '</div><div class="debt-days">Due in ' + escHtml(p.days) + ' days · ' + escHtml(p.ref) + '</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><button class="bsm bsmgr" style="margin-top:.25rem" onclick="window.openSupplierPayment(' + jsArg(p.supplierId || p.supplier) + ',' + toNum(p.amount) + ',' + jsArg(p.ref || '') + ')">Pay</button></div></div>';
+  document.getElementById('pay-list').innerHTML = D.payables.slice().sort(function(a,b){return String(a.due||'9999').localeCompare(String(b.due||'9999'));}).map(function(p) {
+    var dueText=p.due?(p.days<0?'Overdue '+Math.abs(p.days)+' day'+(Math.abs(p.days)===1?'':'s'):p.days===0?'Due today':'Due in '+p.days+' day'+(p.days===1?'':'s')):'Due in '+p.days+' days';
+    var payAction=p.obligationId?'<button class="bsm bsmgr" onclick="window.openBusinessObligationPayment('+jsArg(p.supplierId)+','+jsArg(p.obligationId)+')">Record Payment</button>':'<button class="bsm bsmgr" onclick="window.openSupplierPayment(' + jsArg(p.supplierId || p.supplier) + ',' + toNum(p.amount) + ',' + jsArg(p.ref || '') + ')">Pay</button>';
+    var fileAction=p.attachment&&window.clsRecordAttachmentLink?window.clsRecordAttachmentLink(p.attachment,'bsm bsmem'):'';
+    return '<div class="debt-row"><div><div class="debt-name">' + escHtml(p.supplier) + '</div><div class="debt-days '+(p.days<0?'neg':'')+'">'+escHtml(dueText)+(p.due?' · '+escHtml(formatDateHuman(p.due)):'')+' · '+escHtml(p.ref)+'</div></div><div style="text-align:right"><div style="font-family:var(--fm);font-size:.81rem;font-weight:600;color:var(--red)">' + fmt(p.amount) + '</div><div class="debt-actions" style="margin-top:.3rem">'+fileAction+payAction+'</div></div></div>';
   }).join('') || emptyState('No supplier payments due', 'Future payable tracking will appear here as supplier payments are scheduled.', 'Add Supplier', "window.openMo('mo-sup')");
 }
 
@@ -3751,11 +3797,28 @@ function formatBusinessInvoiceNumber(num) {
 function updateBusinessLogoPositionLabels() {
   var x = document.getElementById('s-logo-x');
   var y = document.getElementById('s-logo-y');
+  var align = document.getElementById('s-logo-align');
   var xl = document.getElementById('s-logo-x-label');
   var yl = document.getElementById('s-logo-y-label');
   if (xl && x) xl.textContent = String(x.value || 8) + '%';
   if (yl && y) yl.textContent = String(y.value || 5) + '%';
+  if (align && x) {
+    var xv=toNum(x.value),next=Math.abs(xv-8)<=1?'left':(Math.abs(xv-50)<=1?'center':(Math.abs(xv-92)<=1?'right':'custom'));
+    if(align.value!==next)align.value=next;
+  }
 }
+window.changeBusinessLogoAlignment=function(value){
+  var x=document.getElementById('s-logo-x');
+  if(x&&value!=='custom')x.value=logoXForAlign(value||'left');
+  updateBusinessLogoPositionLabels();
+  updateBusinessLogoControlPreview();
+  renderSettingsInvoicePreview();
+};
+window.changeBusinessLogoPosition=function(){
+  updateBusinessLogoPositionLabels();
+  updateBusinessLogoControlPreview();
+  renderSettingsInvoicePreview();
+};
 
 function collectSettingsDraft() {
   function val(id, fallback) {
@@ -3869,7 +3932,7 @@ function bindSettingsPreviewInputs() {
     el.addEventListener('change', function() {
       if (id === 's-logo-align') {
         var x = document.getElementById('s-logo-x');
-        if (x) x.value = logoXForAlign(el.value || 'left');
+        if (x && el.value !== 'custom') x.value = logoXForAlign(el.value || 'left');
         updateBusinessLogoPositionLabels();
       }
       if (id === 's-logo-x' || id === 's-logo-y') updateBusinessLogoPositionLabels();
@@ -3885,14 +3948,16 @@ function updateBusinessLogoControlPreview() {
   var preview = document.getElementById('logo-prev');
   if (!preview) return;
   var sizeField = document.getElementById('s-logo-size');
-  var alignField = document.getElementById('s-logo-align');
+  var xField = document.getElementById('s-logo-x');
+  var yField = document.getElementById('s-logo-y');
   var size = sizeField ? sizeField.value : (D.settings.logoSize || 'M');
   var widths = { S: 72, M: 120, L: 180 };
   preview.style.width = (widths[size] || widths.M) + 'px';
   preview.style.maxWidth = '80%';
   preview.style.maxHeight = Math.round((widths[size] || widths.M) * .65) + 'px';
-  preview.style.marginLeft = alignField && alignField.value === 'right' ? 'auto' : (alignField && alignField.value === 'center' ? 'auto' : '0');
-  preview.style.marginRight = alignField && alignField.value === 'left' ? 'auto' : (alignField && alignField.value === 'center' ? 'auto' : '0');
+  preview.style.left = Math.max(4,Math.min(96,toNum(xField?xField.value:(D.settings.logoX!=null?D.settings.logoX:8)))) + '%';
+  preview.style.top = Math.max(18,Math.min(82,28+toNum(yField?yField.value:(D.settings.logoY!=null?D.settings.logoY:5))*2.1)) + '%';
+  preview.style.transform = 'translate(-50%,-50%)';
 }
 
 window.openInvMo = function openInvMo() {
@@ -4542,7 +4607,7 @@ window.openBusinessObligation=function(supplierId,obligationId){var s=D.supplier
 window.saveBusinessObligation=async function(){var s=D.suppliers.find(function(x){return String(x.id)===String((document.getElementById('bo-supplier-id')||{}).value);});if(!s)return;var editId=(document.getElementById('bo-obligation-id')||{}).value,o=editId&&(s.obligations||[]).find(function(x){return String(x.id)===String(editId);}),description=document.getElementById('bo-desc').value.trim(),date=document.getElementById('bo-date').value,due=document.getElementById('bo-due').value,sourceAmount=toNum(document.getElementById('bo-amount').value),currency=safeCurrency(document.getElementById('bo-currency').value),exchangeRate=currency==='LKR'?1:(toNum(document.getElementById('bo-rate').value)||exchangeRateToLkr(currency)),direction=document.getElementById('bo-direction').value;if(!description||!date||!due||!sourceAmount){showToast('Description, dates, and amount are required.','err');return;}if(o&&sourceAmount<toNum(o.paidAmount)){showToast('The obligation amount cannot be lower than the amount already paid.','err');return;}if(o&&toNum(o.paidAmount)>0&&(currency!==o.currency||direction!==o.direction)){showToast('Currency and direction cannot change after payment.','err');return;}var attachment=o?o.attachment:null;try{attachment=await window.clsReadRecordAttachment((document.getElementById('bo-attachment').files||[])[0])||attachment;}catch(e){showToast(e.message,'err');return;}s.obligations=Array.isArray(s.obligations)?s.obligations:[];var data={direction:direction,kind:document.getElementById('bo-kind').value,description:description,date:date,due:due,sourceAmount:sourceAmount,currency:currency,exchangeRate:exchangeRate,reference:document.getElementById('bo-ref').value.trim(),attachment:attachment,updatedAt:new Date().toISOString()};if(o){Object.assign(o,data);D.txns.forEach(function(t){if(String(t.obligationId||'')===String(o.id)){t.desc=(t.type==='out'?'Payment to ':'Payment from ')+s.name+' — '+description;t.ref=data.reference;}});D.exps.forEach(function(e){if(String(e.obligationId||'')===String(o.id)){e.desc=description;e.ref=data.reference;}});}else{s.obligations.unshift(Object.assign({id:'OB-'+Date.now(),paidAmount:0,payments:[],createdAt:new Date().toISOString()},data));}closeMo('mo-obligation');syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();renderCashflow();renderExpenses();renderReports();saveData();showToast(o?'Obligation updated.':'Third-party obligation saved.','ok');};
 window.deleteBusinessObligation=function(supplierId,obligationId){var s=D.suppliers.find(function(x){return String(x.id)===String(supplierId);}),o=s&&(s.obligations||[]).find(function(x){return String(x.id)===String(obligationId);});if(!o)return;if(!confirm('Delete this obligation? Linked payments, expenses, and report entries will also be removed.'))return;D.txns=D.txns.filter(function(t){return String(t.obligationId||'')!==String(o.id);});D.exps=D.exps.filter(function(e){return String(e.obligationId||'')!==String(o.id);});s.obligations=s.obligations.filter(function(x){return String(x.id)!==String(o.id);});syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();renderCashflow();renderExpenses();renderReports();saveData();showToast('Obligation deleted.','ok');};
 window.openBusinessObligationPayment=function(supplierId,obligationId){var s=D.suppliers.find(function(x){return String(x.id)===String(supplierId);}),o=s&&s.obligations.find(function(x){return String(x.id)===String(obligationId);});if(!o)return;var balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount));setFieldValue('bop-supplier-id',s.id);setFieldValue('bop-obligation-id',o.id);document.getElementById('bop-summary').innerHTML='<strong>'+escHtml(s.name)+'</strong><br>'+(o.direction==='we_owe'?'We owe them':'They owe us')+' for '+escHtml(o.description)+'<br>Remaining: <strong>'+fmtCurrency(balance,o.currency)+'</strong>';setBusinessMoneyField('bop-amount',balance);setFieldValue('bop-date',today());setFieldValue('bop-ref','');openMo('mo-obligation-pay');};
-window.recordBusinessObligationPayment=function(){var s=D.suppliers.find(function(x){return String(x.id)===String((document.getElementById('bop-supplier-id')||{}).value);}),o=s&&s.obligations.find(function(x){return String(x.id)===String((document.getElementById('bop-obligation-id')||{}).value);});if(!o)return;var sourceAmount=toNum(document.getElementById('bop-amount').value),balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount)),date=document.getElementById('bop-date').value;if(!date||sourceAmount<=0||sourceAmount>balance+.01){showToast('Enter a valid payment amount up to '+fmtCurrency(balance,o.currency)+'.','err');return;}o.paidAmount=toNum(o.paidAmount)+sourceAmount;o.payments=Array.isArray(o.payments)?o.payments:[];var method=document.getElementById('bop-method').value,reference=document.getElementById('bop-ref').value.trim(),amount=toLkrAmount(sourceAmount,o.currency,o.exchangeRate),type=o.direction==='we_owe'?'out':'in',txId='T'+Date.now();o.payments.push({id:'OP-'+Date.now(),date:date,amount:sourceAmount,method:method,reference:reference});D.txns.unshift({id:txId,date:date,desc:(type==='out'?'Payment to ':'Payment from ')+s.name+' — '+o.description,type:type,cat:'Third Party Payment',amount:amount,sourceAmount:sourceAmount,sourceCurrency:o.currency,exchangeRate:o.exchangeRate,ref:o.reference+(reference?' · '+reference:''),purpose:'Third Party Settlement',paidTo:s.name,supplierId:s.id,obligationId:o.id,method:method,source:'third-party-obligation'});if(type==='out')D.exps.unshift({id:'E'+Date.now(),date:date,desc:o.description,vendor:s.name,cat:o.kind||'Third Party',amount:amount,sourceAmount:sourceAmount,sourceCurrency:o.currency,exchangeRate:o.exchangeRate,supplierId:s.id,purpose:'Third Party Settlement',ref:o.reference,sourceTxnId:txId,obligationId:o.id,source:'third-party-obligation'});closeMo('mo-obligation-pay');syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();renderCashflow();renderExpenses();renderReports();saveData();showToast('Payment recorded and cashflow updated.','ok');};
+window.recordBusinessObligationPayment=function(){var s=D.suppliers.find(function(x){return String(x.id)===String((document.getElementById('bop-supplier-id')||{}).value);}),o=s&&s.obligations.find(function(x){return String(x.id)===String((document.getElementById('bop-obligation-id')||{}).value);});if(!o)return;var sourceAmount=toNum(document.getElementById('bop-amount').value),balance=Math.max(0,toNum(o.sourceAmount)-toNum(o.paidAmount)),date=document.getElementById('bop-date').value;if(!date||sourceAmount<=0||sourceAmount>balance+.01){showToast('Enter a valid payment amount up to '+fmtCurrency(balance,o.currency)+'.','err');return;}o.paidAmount=toNum(o.paidAmount)+sourceAmount;o.payments=Array.isArray(o.payments)?o.payments:[];var method=document.getElementById('bop-method').value,reference=document.getElementById('bop-ref').value.trim(),amount=toLkrAmount(sourceAmount,o.currency,o.exchangeRate),type=o.direction==='we_owe'?'out':'in',txId='T'+Date.now(),attachment=o.attachment||null;o.payments.push({id:'OP-'+Date.now(),date:date,amount:sourceAmount,method:method,reference:reference,attachment:attachment});D.txns.unshift({id:txId,date:date,desc:(type==='out'?'Payment to ':'Payment from ')+s.name+' — '+o.description,type:type,cat:'Third Party Payment',amount:amount,sourceAmount:sourceAmount,sourceCurrency:o.currency,exchangeRate:o.exchangeRate,ref:o.reference+(reference?' · '+reference:''),purpose:'Third Party Settlement',paidTo:s.name,supplierId:s.id,obligationId:o.id,method:method,attachment:attachment,slipName:attachment?attachment.name:'',source:'third-party-obligation'});if(type==='out')D.exps.unshift({id:'E'+Date.now(),date:date,desc:o.description,vendor:s.name,cat:o.kind||'Third Party',amount:amount,sourceAmount:sourceAmount,sourceCurrency:o.currency,exchangeRate:o.exchangeRate,supplierId:s.id,purpose:'Third Party Settlement',ref:o.reference,sourceTxnId:txId,obligationId:o.id,attachment:attachment,slipName:attachment?attachment.name:'',source:'third-party-obligation'});closeMo('mo-obligation-pay');syncBusinessComputedData();renderSuppliers();renderDebt();renderDashboard();renderCashflow();renderExpenses();renderReports();saveData();showToast('Payment recorded and cashflow updated.','ok');};
 
 window.addSup = function addSup() {
   var name = document.getElementById('sp-name').value.trim();
