@@ -41,15 +41,15 @@ a{color:inherit}
 .btn.soft{background:#E9DCD2;color:var(--ink);border-color:#E9DCD2}
 
 /* Nav */
-.site-nav{position:sticky;top:0;z-index:30;background:rgba(247,239,229,.88);backdrop-filter:blur(18px);border-bottom:1px solid rgba(42,28,19,.08)}
-.nav-inner{height:74px;display:grid;grid-template-columns:minmax(300px,1fr) auto minmax(260px,1fr);align-items:center;gap:20px}
+.site-nav{position:sticky;top:0;z-index:30;background:rgba(247,239,229,.92);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-bottom:1px solid rgba(42,28,19,.08)}
+.nav-inner{height:74px;display:grid;grid-template-columns:minmax(370px,.9fr) minmax(500px,auto) minmax(420px,1fr);align-items:center;gap:16px}
 .nav-brand{justify-self:start;display:flex;align-items:center;gap:13px;text-decoration:none;color:var(--ink);min-width:0}
 .nav-logo{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:0 0 auto}
 .nav-brand-copy{display:flex;flex-direction:column;line-height:1;min-width:0}
-.nav-brand-title{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:-.035em;color:#514438;white-space:nowrap}
+.nav-brand-title{font-family:var(--serif);font-size:18px;font-weight:700;letter-spacing:-.025em;color:#171512;white-space:nowrap}
 .nav-brand-sub{margin-top:5px;font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:#7D6F63;font-weight:800;white-space:nowrap}
-.nav-links{justify-self:center;display:flex;align-items:center;gap:30px;white-space:nowrap}
-.nav-links a{font-size:16px;color:#65584E;text-decoration:none;font-weight:500;transition:color .2s ease}
+.nav-links{min-width:0;justify-self:center;display:flex;align-items:center;gap:17px;white-space:nowrap}
+.nav-links a{font-size:12px;color:#65584E;text-decoration:none;font-weight:650;transition:color .2s ease}
 .nav-links a:hover{color:var(--ink)}
 .nav-cta{justify-self:end;display:flex;align-items:center;gap:18px}
 .nav-pos-signin{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 15px;border:1px solid rgba(5,5,5,.24);border-radius:999px;color:#050505;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}.nav-pos-signin:hover{border-color:#a87916;color:#a87916}
@@ -493,9 +493,9 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
   body.mobile-menu-open{overflow:hidden!important}
 }
 /* Refined POS device presentation */
-.nav-inner{grid-template-columns:minmax(300px,.9fr) auto minmax(400px,1.1fr);gap:18px}.nav-brand-title{font-size:18px;letter-spacing:-.02em}.nav-links{gap:22px}.nav-cta{gap:10px}.nav-account-links{display:flex;align-items:center;border:1px solid rgba(5,5,5,.18);border-radius:999px;background:rgba(255,255,255,.58);overflow:hidden}.nav-account-links .nav-signin,.nav-account-links .nav-pos-signin{display:flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:0;border-radius:0;color:#171512;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}.nav-account-links .nav-signin{border-right:1px solid rgba(5,5,5,.12)}.nav-account-links a:hover{background:#fff;color:#9d7415}.nav-trial{min-height:44px;padding:11px 17px;border-radius:999px;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.nav-inner{grid-template-columns:minmax(370px,.9fr) minmax(500px,auto) minmax(420px,1fr);gap:16px}.nav-brand-title{font-size:18px;letter-spacing:-.02em}.nav-links{gap:17px}.nav-cta{gap:10px}.nav-account-links{display:flex;align-items:center;border:1px solid rgba(5,5,5,.18);border-radius:999px;background:rgba(255,255,255,.58);overflow:hidden}.nav-account-links .nav-signin,.nav-account-links .nav-pos-signin{display:flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:0;border-radius:0;color:#171512;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}.nav-account-links .nav-signin{border-right:1px solid rgba(5,5,5,.12)}.nav-account-links a:hover{background:#fff;color:#9d7415}.nav-trial{min-height:44px;padding:11px 17px;border-radius:999px;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 @media(max-width:1180px){.nav-brand-title{font-size:16px}.nav-brand-sub{font-size:8px}.nav-links{gap:18px}.nav-links a{font-size:14px}}
-@media(min-width:901px) and (max-width:1600px){.nav-inner{grid-template-columns:minmax(250px,.75fr) auto minmax(350px,1fr);gap:12px}.nav-logo{width:35px;height:35px}.nav-brand{gap:9px}.nav-brand-title{font-size:14px}.nav-brand-sub{font-size:7px;letter-spacing:.16em}.nav-links{gap:13px}.nav-links a{font-size:10px}.nav-account-links .nav-signin,.nav-account-links .nav-pos-signin{min-height:38px;padding:0 10px;font-size:8px}.nav-trial{min-height:40px;padding:9px 13px;font-size:9px}}
+@media(min-width:901px) and (max-width:1700px){.nav-inner{grid-template-columns:minmax(285px,.8fr) minmax(430px,auto) minmax(365px,1fr);gap:12px}.nav-logo{width:35px;height:35px}.nav-brand{gap:9px}.nav-brand-title{font-size:14px}.nav-brand-sub{font-size:7px;letter-spacing:.16em}.nav-links{gap:12px}.nav-links a{font-size:10px}.nav-account-links .nav-signin,.nav-account-links .nav-pos-signin{min-height:38px;padding:0 10px;font-size:8px}.nav-trial{min-height:40px;padding:9px 13px;font-size:9px}}
 .hero h1{font-size:clamp(50px,7.2vw,104px);line-height:.92}.hero-sub{max-width:760px}
 .pos-screen{position:relative;border:8px solid #292826;border-radius:26px;padding:0;background:#ebe7df;box-shadow:0 28px 70px rgba(0,0,0,.48)}
 .pos-screen:after{content:"";position:absolute;left:50%;bottom:-5px;width:42px;height:3px;transform:translateX(-50%);border-radius:99px;background:#5d5a55}
