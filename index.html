@@ -495,7 +495,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 /* Refined POS device presentation */
 .nav-inner{grid-template-columns:minmax(300px,.9fr) auto minmax(400px,1.1fr);gap:18px}.nav-brand-title{font-size:18px;letter-spacing:-.02em}.nav-links{gap:22px}.nav-cta{gap:10px}.nav-account-links{display:flex;align-items:center;border:1px solid rgba(5,5,5,.18);border-radius:999px;background:rgba(255,255,255,.58);overflow:hidden}.nav-account-links .nav-signin,.nav-account-links .nav-pos-signin{display:flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:0;border-radius:0;color:#171512;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}.nav-account-links .nav-signin{border-right:1px solid rgba(5,5,5,.12)}.nav-account-links a:hover{background:#fff;color:#9d7415}.nav-trial{min-height:44px;padding:11px 17px;border-radius:999px;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 @media(max-width:1180px){.nav-brand-title{font-size:16px}.nav-brand-sub{font-size:8px}.nav-links{gap:18px}.nav-links a{font-size:14px}}
-@media(min-width:901px) and (max-width:1350px){.nav-inner{grid-template-columns:minmax(245px,.78fr) auto minmax(350px,1.05fr);gap:10px}.nav-logo{width:35px;height:35px}.nav-brand{gap:8px}.nav-brand-title{font-size:14px}.nav-brand-sub{font-size:7px;letter-spacing:.16em}.nav-links{gap:12px}.nav-links a{font-size:10px}.nav-account-links .nav-signin,.nav-account-links .nav-pos-signin{min-height:38px;padding:0 10px;font-size:8px}.nav-trial{min-height:40px;padding:9px 13px;font-size:9px}}
+@media(min-width:901px) and (max-width:1600px){.nav-inner{grid-template-columns:minmax(250px,.75fr) auto minmax(350px,1fr);gap:12px}.nav-logo{width:35px;height:35px}.nav-brand{gap:9px}.nav-brand-title{font-size:14px}.nav-brand-sub{font-size:7px;letter-spacing:.16em}.nav-links{gap:13px}.nav-links a{font-size:10px}.nav-account-links .nav-signin,.nav-account-links .nav-pos-signin{min-height:38px;padding:0 10px;font-size:8px}.nav-trial{min-height:40px;padding:9px 13px;font-size:9px}}
 .hero h1{font-size:clamp(50px,7.2vw,104px);line-height:.92}.hero-sub{max-width:760px}
 .pos-screen{position:relative;border:8px solid #292826;border-radius:26px;padding:0;background:#ebe7df;box-shadow:0 28px 70px rgba(0,0,0,.48)}
 .pos-screen:after{content:"";position:absolute;left:50%;bottom:-5px;width:42px;height:3px;transform:translateX(-50%);border-radius:99px;background:#5d5a55}
@@ -565,7 +565,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <div class="nav-cta">
         <div class="nav-account-links" aria-label="Account sign in">
           <a class="nav-signin" href="signin.html">Cashflow Sign In</a>
-          <a class="nav-pos-signin" href="pos-system/pos-system.html">POS Sign In</a>
+          <a class="nav-pos-signin" href="pos-system/pos-system.html?login=business">POS Sign In</a>
         </div>
         <a class="btn nav-trial" href="onboarding.html">Start free trial</a>
       </div>
@@ -592,7 +592,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     </nav>
     <div class="mobile-drawer-actions">
       <a class="mobile-drawer-signin" href="signin.html">Cashflow Sign In</a>
-      <a class="mobile-drawer-signin" href="pos-system/pos-system.html">POS Sign In</a>
+      <a class="mobile-drawer-signin" href="pos-system/pos-system.html?login=business">POS Sign In</a>
       <a class="mobile-drawer-trial" href="onboarding.html">Start Free Trial</a>
     </div>
   </aside>
@@ -899,7 +899,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           <p class="eyebrow">Ceylonry POS</p>
           <h2 class="serif">Run every sale with confidence.</h2>
           <p>One fast, touch-ready checkout for restaurants, cafés, retailers and service businesses. Manage products, modifiers, customers, kitchen tickets, inventory, staff and reporting without switching systems.</p>
-          <div class="pos-intro-actions"><a class="btn" href="pos-onboarding.html">Start POS free, 15 days →</a><a class="btn light" href="pos-system/pos-system.html">POS sign in</a></div>
+          <div class="pos-intro-actions"><a class="btn" href="pos-onboarding.html">Start POS free, 15 days →</a><a class="btn light" href="pos-system/pos-system.html?login=business">POS sign in</a></div>
           <div class="pos-trial-note">LKR 3,500/month after the trial · Up to 5 users · No card required</div>
         </div>
         <div class="pos-screen" aria-label="Ceylonry POS checkout system preview"><div class="pos-screen-top"><strong>New Sale</strong><span>Touch-ready checkout · Live demo</span></div><div class="pos-screen-body"><div class="pos-products"><div class="pos-product"><div class="pos-product-photo tea"></div><small>Drinks</small><strong>Milk Tea</strong><span>LKR 250</span></div><div class="pos-product"><div class="pos-product-photo sandwich"></div><small>Food</small><strong>Chicken Sandwich</strong><span>LKR 850</span></div><div class="pos-product"><div class="pos-product-photo coffee"></div><small>Drinks</small><strong>Iced Coffee</strong><span>LKR 550</span></div><div class="pos-product"><div class="pos-product-photo cake"></div><small>Desserts</small><strong>Butter Cake</strong><span>LKR 650</span></div></div><div class="pos-order"><h3>Current Order</h3><div class="pos-order-line">1 × Chicken Sandwich</div><div class="pos-order-line">+ Large · No onion</div><div class="pos-order-line">1 × Iced Coffee</div><div class="pos-total">LKR 1,400.00</div></div></div></div>
