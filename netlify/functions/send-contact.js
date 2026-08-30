@@ -8,6 +8,7 @@ const JSON_HEADERS = {
 };
 
 const ALLOWED_TOPICS = new Set([
+  'POS discovery call',
   'Product question',
   'Plans and pricing',
   'Technical support',
@@ -54,12 +55,13 @@ exports.handler = async function handler(event) {
   const data = {
     fullName: clean(body.fullName, 100),
     email: clean(body.email, 160).toLowerCase(),
+    mobile: clean(body.mobile, 30),
     businessName: clean(body.businessName, 120),
     topic: clean(body.topic, 80),
     message: clean(body.message, 4000)
   };
 
-  if (!data.fullName || !data.email || !data.topic || !data.message) {
+  if (!data.fullName || !data.email || !data.mobile || !data.topic || !data.message) {
     return response(400, { ok: false, error: 'Please complete all required fields.' });
   }
   if (!validEmail(data.email)) {
@@ -96,6 +98,7 @@ exports.handler = async function handler(event) {
     '',
     'Name: ' + data.fullName,
     'Email: ' + data.email,
+    'Mobile: ' + data.mobile,
     'Business: ' + businessLine,
     'Topic: ' + data.topic,
     '',
@@ -112,6 +115,7 @@ exports.handler = async function handler(event) {
         '<div style="padding:28px 32px;color:#3b2b20;font-size:15px;line-height:1.7">' +
           '<p style="margin:0 0 6px"><strong>Name:</strong> ' + escapeHtml(data.fullName) + '</p>' +
           '<p style="margin:0 0 6px"><strong>Email:</strong> ' + escapeHtml(data.email) + '</p>' +
+          '<p style="margin:0 0 6px"><strong>Mobile:</strong> ' + escapeHtml(data.mobile) + '</p>' +
           '<p style="margin:0 0 6px"><strong>Business:</strong> ' + escapeHtml(businessLine) + '</p>' +
           '<p style="margin:0 0 20px"><strong>Topic:</strong> ' + escapeHtml(data.topic) + '</p>' +
           '<div style="white-space:pre-wrap;background:#fffcf7;border:1px solid #ded3c8;padding:18px">' + escapeHtml(data.message) + '</div>' +
