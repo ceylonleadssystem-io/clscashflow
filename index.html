@@ -494,12 +494,17 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 /* Refined POS device presentation */
 .nav-inner{grid-template-columns:minmax(285px,.9fr) auto minmax(230px,.8fr);gap:14px}.nav-brand-title{font-size:18px;letter-spacing:-.02em}.nav-links{gap:24px}
 @media(max-width:1180px){.nav-brand-title{font-size:16px}.nav-brand-sub{font-size:8px}.nav-links{gap:18px}.nav-links a{font-size:14px}}
+.hero h1{font-size:clamp(50px,7.2vw,104px);line-height:.92}.hero-sub{max-width:760px}
 .pos-screen{position:relative;border:8px solid #292826;border-radius:26px;padding:0;background:#ebe7df;box-shadow:0 28px 70px rgba(0,0,0,.48)}
 .pos-screen:after{content:"";position:absolute;left:50%;bottom:-5px;width:42px;height:3px;transform:translateX(-50%);border-radius:99px;background:#5d5a55}
 .pos-screen-top{min-height:56px;padding:0 18px;border:0;background:#292826;color:#fff}
 .pos-screen-top strong{font-size:17px}.pos-screen-top span{color:#bdb9b1}
 .pos-screen-body{padding:12px;background:#ebe7df}.pos-product,.pos-order{border-color:#d6d0c7;box-shadow:0 2px 8px rgba(23,21,18,.05)}
 .pos-product-photo{filter:saturate(.9) contrast(.98)}
+.pos-demo-grid{align-items:stretch}.pos-demo-item{display:flex;flex-direction:column}.pos-demo-image{width:100%;aspect-ratio:4/3;background-color:#292826}.pos-demo-info{display:flex;flex:1;flex-direction:column;justify-content:flex-end;min-height:108px}
+.pos-billing-card .btn.light{background:#171512;color:#fff;border-color:#171512;box-shadow:none}.pos-billing-card .btn.light:hover{background:#312e29;border-color:#312e29}
+.story-teaser-logo.story-portraits{grid-row:1 / span 2;display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(440px,100%);aspect-ratio:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}.story-portraits figure{min-width:0;margin:0;padding:8px 8px 12px;border:1px solid rgba(42,28,19,.1);border-radius:22px;background:#fff;box-shadow:0 18px 45px rgba(42,28,19,.1)}.story-portraits figure:nth-child(2){transform:translateY(30px)}.story-portraits img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:15px}.story-portraits figcaption{padding:10px 4px 0;color:#655d56;font-size:11px;font-weight:800;text-align:center}.story-teaser-card>div:nth-child(2){align-self:end}.story-teaser-card>.btn{align-self:start}
+@media(max-width:760px){.story-teaser-logo.story-portraits{grid-row:auto;width:min(360px,100%);justify-self:center}.story-portraits figure:nth-child(2){transform:translateY(18px)}.story-teaser-card>div:nth-child(2){align-self:auto}}
 @media(max-width:520px){.pos-screen{border-width:5px}.pos-screen-top{padding:0 12px}.pos-screen-top span{display:none}}
 </style>
 </head>
@@ -557,13 +562,13 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
   <main id="top">
     <section class="hero">
       <div class="container hero-copy">
-        <p class="eyebrow">Cashflow and invoicing</p>
-        <h1 class="serif" aria-label="Get paid, effortlessly">
-          <span class="hero-word">Get</span>
-          <span class="hero-word">paid,</span><br>
-          <span class="hero-word">effortlessly</span>
+        <p class="eyebrow">Cashflow · Invoicing · Point of Sale</p>
+        <h1 class="serif" aria-label="Track cashflow, invoice faster, and check out smarter">
+          <span class="hero-word">Track cashflow.</span><br>
+          <span class="hero-word">Invoice faster.</span><br>
+          <span class="hero-word">Check out smarter.</span>
         </h1>
-        <p class="hero-sub"><strong>Your Business Health, at a Glance</strong></p>
+        <p class="hero-sub"><strong>Cashflow, invoicing and checkout—working together in one practical business system.</strong></p>
         <div class="hero-actions">
           <a class="btn" href="onboarding.html">Start free - 15 days -></a>
           <a class="btn light" href="#pricing">View pricing</a>
@@ -580,15 +585,16 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <section class="story-teaser reveal" aria-label="Mrs. Gamage story">
       <div class="container">
         <div class="story-teaser-card">
-          <div class="story-teaser-logo">
-            <img src="assets/mrs-gamage-cashflow.png" alt="Cashflow System brand mark">
+          <div class="story-teaser-logo story-portraits" aria-label="Mrs. Gamage and founder Pasan Yasas">
+            <figure><img src="assets/mrs-gamage-cashflow.png" alt="Mrs. Gamage, representing the everyday entrepreneur"><figcaption>Mrs. Gamage</figcaption></figure>
+            <figure><img src="assets/pasan-yasas-founder.jpg" alt="Pasan Yasas, Founder of Ceylonry Labs.io"><figcaption>Pasan Yasas · Founder</figcaption></figure>
           </div>
           <div>
-            <p class="eyebrow">The story behind the system</p>
-            <h2 class="serif">Meet Mrs. Gamage</h2>
-            <p>Her butter cakes are loved, her WhatsApp orders keep coming, and her kitchen is always busy. Cashflow System was created for business owners like her who need invoices, payment tracking, customer records, and a clearer view of where the money goes.</p>
+            <p class="eyebrow">The Story Behind the System</p>
+            <h2 class="serif">Mrs. Gamage’s Story</h2>
+            <p>Mrs. Gamage represents the everyday entrepreneur. Her story resonated with founder Pasan Yasas, who learned the importance of cashflow the hard way — when sales were coming in, but somehow the money was never enough. Expensive POS systems and disconnected tools led to a simple idea: bring Cashflow + Invoicing + POS together in one practical, transparently priced system.</p>
           </div>
-          <a class="btn light" href="mrs-gamage-story.html">Read her story -></a>
+          <a class="btn light" href="mrs-gamage-story.html">Read our story →</a>
         </div>
       </div>
     </section>
@@ -905,8 +911,8 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <div class="container">
       <div class="footer-grid">
         <div>
-          <div class="footer-brand">Cashflow <span>System</span></div>
-          <p class="footer-intro">Invoicing and cash flow, built for small businesses. By CeylonryLabs.io - Plan. Track. Grow.</p>
+          <div class="footer-brand">Cashflow <span>Invoicing &amp; POS</span></div>
+          <p class="footer-intro">Cashflow, invoicing and point of sale—one connected system built for growing businesses. By CeylonryLabs.io.</p>
           <form class="footer-form" action="onboarding.html">
             <input type="email" name="email" placeholder="you@yourbusiness.com" aria-label="Business email">
             <button type="submit">Start free</button>
