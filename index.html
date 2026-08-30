@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cashflow System &amp; POS by CeylonryLabs.io</title>
+<title>Cashflow, Invoicing &amp; POS System by CeylonryLabs.io</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -491,6 +491,16 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
   .mobile-drawer-trial{display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:999px;background:#050505;color:#fff;text-decoration:none;font-size:14px;font-weight:800}
   body.mobile-menu-open{overflow:hidden!important}
 }
+/* Refined POS device presentation */
+.nav-inner{grid-template-columns:minmax(285px,.9fr) auto minmax(230px,.8fr);gap:14px}.nav-brand-title{font-size:18px;letter-spacing:-.02em}.nav-links{gap:24px}
+@media(max-width:1180px){.nav-brand-title{font-size:16px}.nav-brand-sub{font-size:8px}.nav-links{gap:18px}.nav-links a{font-size:14px}}
+.pos-screen{position:relative;border:8px solid #292826;border-radius:26px;padding:0;background:#ebe7df;box-shadow:0 28px 70px rgba(0,0,0,.48)}
+.pos-screen:after{content:"";position:absolute;left:50%;bottom:-5px;width:42px;height:3px;transform:translateX(-50%);border-radius:99px;background:#5d5a55}
+.pos-screen-top{min-height:56px;padding:0 18px;border:0;background:#292826;color:#fff}
+.pos-screen-top strong{font-size:17px}.pos-screen-top span{color:#bdb9b1}
+.pos-screen-body{padding:12px;background:#ebe7df}.pos-product,.pos-order{border-color:#d6d0c7;box-shadow:0 2px 8px rgba(23,21,18,.05)}
+.pos-product-photo{filter:saturate(.9) contrast(.98)}
+@media(max-width:520px){.pos-screen{border-width:5px}.pos-screen-top{padding:0 12px}.pos-screen-top span{display:none}}
 </style>
 </head>
 <body>
@@ -500,7 +510,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <a class="nav-brand" href="#top" aria-label="Cashflow System home">
         <img class="nav-logo" src="assets/mrs-gamage-cashflow.png" alt="">
         <span class="nav-brand-copy">
-          <span class="nav-brand-title">Cashflow System &amp; POS</span>
+          <span class="nav-brand-title">Cashflow, Invoicing &amp; POS System</span>
           <span class="nav-brand-sub">By Ceylonry Labs.io</span>
         </span>
       </a>
@@ -525,7 +535,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <div class="mobile-drawer-head">
       <a class="mobile-drawer-brand" href="#top">
         <img src="assets/mrs-gamage-cashflow.png" alt="">
-        <span><strong>Cashflow System &amp; POS</strong><small>By CeylonryLabs.io</small></span>
+        <span><strong>Cashflow, Invoicing &amp; POS System</strong><small>By CeylonryLabs.io</small></span>
       </a>
       <button class="mobile-menu-close" type="button" aria-label="Close navigation">×</button>
     </div>
