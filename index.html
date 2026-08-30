@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cashflow System by CeylonryLabs.io</title>
+<title>Cashflow System &amp; POS by CeylonryLabs.io</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -173,6 +173,7 @@ a{color:inherit}
 .feature:hover svg{stroke:var(--ink);transform:translateX(3px)}
 .feature h3{font-family:var(--serif);font-weight:500;font-size:30px;line-height:1.05;letter-spacing:-.03em;margin:0 0 12px}
 .feature p{margin:0;color:var(--muted);font-size:15px;line-height:1.65}
+.pos-intro{padding:110px 0;background:#10100f;color:#fff}.pos-intro-grid{display:grid;grid-template-columns:minmax(0,.82fr) minmax(420px,1.18fr);gap:70px;align-items:center}.pos-intro .eyebrow{color:#d7a72f}.pos-intro h2{margin:0;font-size:clamp(54px,7vw,96px);color:#fff}.pos-intro-copy>p:not(.eyebrow){margin:26px 0 0;color:#c7c2ba;font-size:18px;line-height:1.7}.pos-intro-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}.pos-intro .btn{background:#d7a72f;color:#111;border-color:#d7a72f}.pos-intro .btn.light{background:transparent;color:#fff;border-color:#5b5751}.pos-screen{background:#f5f3ee;color:#171512;border-radius:28px;padding:24px;box-shadow:0 30px 90px #0008}.pos-screen-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #d9d3c9;padding-bottom:15px}.pos-screen-top strong{font-size:20px}.pos-screen-body{display:grid;grid-template-columns:1.4fr .7fr;gap:12px;padding-top:14px}.pos-products{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.pos-product,.pos-order{background:#fff;border:1px solid #ddd7cd;border-radius:12px;padding:15px}.pos-product strong{display:block;margin-top:22px}.pos-product span{display:block;color:#a37919;font-weight:800;margin-top:8px}.pos-order{display:flex;flex-direction:column}.pos-order h3{margin:0 0 14px}.pos-order-line{border-top:1px solid #e4dfd7;padding:11px 0;font-size:13px}.pos-total{margin-top:auto;border-top:2px solid #171512;padding-top:14px;font-size:20px;font-weight:800}.pos-trial-note{margin-top:15px;color:#aaa;font-size:12px}.nav-pos{color:#a87916!important;font-weight:800!important}@media(max-width:850px){.pos-intro-grid{grid-template-columns:1fr}.pos-screen{padding:14px}.pos-screen-body{grid-template-columns:1fr}.pos-intro{padding:75px 0}}
 
 /* Image band */
 .image-band{padding:72px 0 108px;background:var(--sand)}
@@ -499,13 +500,14 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <a class="nav-brand" href="#top" aria-label="Cashflow System home">
         <img class="nav-logo" src="assets/mrs-gamage-cashflow.png" alt="">
         <span class="nav-brand-copy">
-          <span class="nav-brand-title">Cashflow System</span>
+          <span class="nav-brand-title">Cashflow System &amp; POS</span>
           <span class="nav-brand-sub">By Ceylonry Labs.io</span>
         </span>
       </a>
       <div class="nav-links" aria-label="Primary navigation">
         <a href="#how-it-works">How it works</a>
         <a href="#features">Features</a>
+        <a class="nav-pos" href="#pos">POS</a>
         <a href="#success-stories">Success Story</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
@@ -523,13 +525,14 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <div class="mobile-drawer-head">
       <a class="mobile-drawer-brand" href="#top">
         <img src="assets/mrs-gamage-cashflow.png" alt="">
-        <span><strong>Cashflow System</strong><small>By CeylonryLabs.io</small></span>
+        <span><strong>Cashflow System &amp; POS</strong><small>By CeylonryLabs.io</small></span>
       </a>
       <button class="mobile-menu-close" type="button" aria-label="Close navigation">×</button>
     </div>
     <nav class="mobile-drawer-links" aria-label="Mobile navigation">
       <a href="#how-it-works">How it works</a>
       <a href="#features">Features</a>
+      <a href="#pos">POS</a>
       <a href="#success-stories">Success Story</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
@@ -561,6 +564,19 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           <span class="proof-chip">WhatsApp sharing</span>
           <span class="proof-chip">Cash flow dashboard</span>
         </div>
+      </div>
+    </section>
+
+    <section class="pos-intro" id="pos">
+      <div class="container pos-intro-grid">
+        <div class="pos-intro-copy">
+          <p class="eyebrow">Ceylonry POS</p>
+          <h2 class="serif">Sell, serve and stay in control.</h2>
+          <p>A fast touch-ready POS for restaurants, cafés, retail and service businesses—with products, modifiers, customers, KOTs, inventory, staff shifts and business reporting.</p>
+          <div class="pos-intro-actions"><a class="btn" href="pos-onboarding.html">Start POS free — 15 days →</a><a class="btn light" href=".pos-system/pos-system.html">POS sign in</a></div>
+          <div class="pos-trial-note">LKR 3,500/month after the trial · Up to 5 users · No card required</div>
+        </div>
+        <div class="pos-screen" aria-label="POS checkout preview"><div class="pos-screen-top"><strong>Checkout</strong><span>Touch register</span></div><div class="pos-screen-body"><div class="pos-products"><div class="pos-product">Drinks<strong>Milk Tea</strong><span>LKR 250</span></div><div class="pos-product">Food<strong>Chicken Sandwich</strong><span>LKR 850</span></div><div class="pos-product">Services<strong>Delivery Fee</strong><span>LKR 350</span></div><div class="pos-product">Modifiers<strong>Add-ons &amp; sizes</strong><span>Optional</span></div></div><div class="pos-order"><h3>Current Order</h3><div class="pos-order-line">1 × Chicken Sandwich</div><div class="pos-order-line">+ Large · No onion</div><div class="pos-total">LKR 850.00</div></div></div></div>
       </div>
     </section>
 

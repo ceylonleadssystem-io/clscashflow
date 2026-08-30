@@ -13,8 +13,8 @@
     });
     return window.clsCurrencySymbol(code) + (code === 'AED' ? ' ' : '') + number;
   };
-  var VALID_PLANS = { solo: true, studio: true, business: true };
-  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
+  var VALID_PLANS = { solo: true, studio: true, business: true, pos: true };
+  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: '.pos-system/pos-system.html' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
   var PLAN_DETAILS = {
     solo: {
@@ -43,9 +43,18 @@
       price: 94800,
       file: 'growth.html',
       monthlyPayLink: '', annualPayLink: ''
+    },
+    pos: {
+      name: 'POS',
+      userLimit: 5,
+      userLabel: 'Up to 5 users',
+      monthlyPrice: 3500,
+      price: 42000,
+      file: '.pos-system/pos-system.html',
+      monthlyPayLink: '', annualPayLink: ''
     }
   };
-  var PLAN_RANK = { solo: 1, studio: 2, business: 3 };
+  var PLAN_RANK = { solo: 1, studio: 2, business: 3, pos: 1 };
   var BILLING_ID = 'cls-billing-widget';
   var CLS_BANK = {accountName:'Ceylonry Life Care',bank:'Commercial Bank',accountNumber:'1001069904',branch:'City Office',email:'accounts@ceylonrylabs.io'};
   var SUPPORT_ID = 'cls-support-widget';
@@ -2799,7 +2808,14 @@
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + token
-      },
+    },
+    pos: {
+      name: 'POS',
+      price: 42000,
+      monthlyPrice: 3500,
+      monthlyPayLink: '',
+      annualPayLink: ''
+    },
       body: JSON.stringify({
         action: flow.action,
         plan: planFromPath() || rememberedPlan(),

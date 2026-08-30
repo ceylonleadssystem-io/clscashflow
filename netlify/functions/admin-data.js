@@ -214,7 +214,7 @@ function buildRevenueStats(users, paymentRequests, subscriptionPayments) {
     const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
     months.push({ month: date.toISOString().slice(0, 7), revenue: 0, payments: 0 });
   }
-  const byPlan = { solo: 0, studio: 0, business: 0, unknown: 0 };
+  const byPlan = { solo: 0, studio: 0, business: 0, pos: 0, unknown: 0 };
   ledger.forEach(function(item) {
     const bucket = months.find(function(row) { return row.month === item.period; });
     if (bucket) { bucket.revenue += item.amount; bucket.payments += 1; }
@@ -291,6 +291,13 @@ function readBody(event) {
 }
 
 const PLAN_DETAILS = {
+  pos: {
+    name: 'POS',
+    price: 42000,
+    monthlyPrice: 3500,
+    monthlyPayLink: '',
+    annualPayLink: ''
+  },
   solo: {
     name: 'Solo',
     price: 36000,
