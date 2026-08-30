@@ -503,7 +503,39 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 .pos-product-photo{filter:saturate(.9) contrast(.98)}
 .pos-demo-grid{align-items:stretch}.pos-demo-item{display:flex;flex-direction:column}.pos-demo-image{width:100%;aspect-ratio:4/3;background-color:#292826}.pos-demo-info{display:flex;flex:1;flex-direction:column;justify-content:flex-end;min-height:108px}
 .pos-billing-card .btn.light{background:#171512;color:#fff;border-color:#171512;box-shadow:none}.pos-billing-card .btn.light:hover{background:#312e29;border-color:#312e29}
-.story-teaser-logo.story-portraits{grid-row:1 / span 2;display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(440px,100%);aspect-ratio:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}.story-portraits figure{min-width:0;margin:0;padding:8px 8px 12px;border:1px solid rgba(42,28,19,.1);border-radius:22px;background:#fff;box-shadow:0 18px 45px rgba(42,28,19,.1)}.story-portraits figure:nth-child(2){transform:translateY(30px)}.story-portraits img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:15px}.story-portraits figcaption{padding:10px 4px 0;color:#655d56;font-size:11px;font-weight:800;text-align:center}.story-teaser-card>div:nth-child(2){align-self:end}.story-teaser-card>.btn{align-self:start}
+/* Polished POS showcase */
+.pos-intro{padding:86px 0 94px;background:#f4efe6;color:#171512}
+.pos-intro-grid{grid-template-columns:minmax(330px,.74fr) minmax(560px,1.26fr);gap:62px;align-items:center}
+.pos-intro .eyebrow{color:#9d7415}
+.pos-intro h2{max-width:530px;color:#171512;font-size:clamp(50px,5vw,72px);line-height:.94;letter-spacing:-.055em}
+.pos-intro-copy>p:not(.eyebrow){max-width:520px;color:#625b52;font-size:17px;line-height:1.68}
+.pos-intro-actions{margin-top:30px;gap:12px}
+.pos-intro-actions .btn{min-height:54px;padding:14px 23px;border-radius:999px}
+.pos-intro .btn{background:#171512;color:#fff;border-color:#171512}
+.pos-intro .btn:hover{background:#322e29;border-color:#322e29}
+.pos-intro .btn.light{background:transparent;color:#171512;border-color:#9d9488}
+.pos-intro .btn.light:hover{background:#fff;border-color:#171512}
+.pos-trial-note{margin-top:16px;color:#756d63;font-size:12px;font-weight:650;letter-spacing:.02em}
+.pos-screen{border:1px solid #d1c8bb;border-radius:24px;padding:12px;background:#e6dfd4;box-shadow:0 30px 70px rgba(64,45,23,.18)}
+.pos-screen:after{display:none}
+.pos-screen-top{min-height:54px;padding:0 8px 11px;border-bottom:1px solid #d1c8bb;background:transparent;color:#171512}
+.pos-screen-top strong{font-size:20px}.pos-screen-top span{color:#726b62;font-size:12px}
+.pos-screen-body{padding:12px 0 0;background:transparent;gap:12px}
+.pos-product,.pos-order{border-color:#d3ccc1;border-radius:13px;box-shadow:0 5px 14px rgba(45,34,20,.06)}
+.pos-product{padding:0 12px 12px}.pos-product-photo{height:91px;margin:0 -12px 11px}
+.pos-product small{font-size:12px}.pos-product strong{font-size:15px}.pos-product span{font-size:14px}
+.pos-order{padding:16px}.pos-order h3{font-size:18px}.pos-order-line{padding:11px 0;font-size:12px}.pos-total{font-size:21px}
+.pos-demo{margin-top:76px;padding-top:66px;border-top:1px solid #d7cec1;color:#171512}
+.pos-demo-head{max-width:760px}.pos-demo-head p{color:#665f56}.pos-demo-head h3{letter-spacing:-.04em}
+.pos-demo-grid{gap:16px}.pos-demo-item{border-color:#d5ccbf;border-radius:16px;background:#fff;box-shadow:0 14px 34px rgba(64,45,23,.08)}
+.pos-demo-info{min-height:104px}.pos-demo-info small{color:#746d64}.pos-demo-info span{color:#9d7415}
+.pos-billing{margin-top:66px;padding:36px;border:0;border-radius:24px;background:#181715;color:#fff;box-shadow:0 24px 54px rgba(36,25,14,.16)}
+.pos-billing-head p{color:#aaa39a}.pos-billing-head .eyebrow{color:#d8aa36}.pos-billing-toggle{border-color:#514e49}
+.pos-billing-card{padding:28px;border-radius:17px}.pos-billing-card .btn{background:#d8aa36;color:#171512;border-color:#d8aa36}.pos-billing-card .btn.light{background:#171512;color:#fff;border-color:#171512}
+@media(max-width:1000px){.pos-intro-grid{grid-template-columns:1fr;gap:46px}.pos-intro-copy{text-align:center}.pos-intro h2,.pos-intro-copy>p:not(.eyebrow){margin-left:auto;margin-right:auto}.pos-intro-actions{justify-content:center}.pos-screen{max-width:780px;margin:auto}.pos-trial-note{text-align:center}}
+@media(max-width:700px){.pos-intro{padding:66px 0 72px}.pos-screen{padding:9px;border-radius:19px}.pos-screen-body{grid-template-columns:1fr}.pos-products{grid-template-columns:repeat(2,1fr)}.pos-order{min-height:230px}.pos-demo{margin-top:58px;padding-top:52px}.pos-billing{padding:24px}}
+@media(max-width:430px){.pos-intro h2{font-size:46px}.pos-products,.pos-demo-grid{grid-template-columns:1fr}.pos-product-photo{height:142px}.pos-billing{padding:20px}.pos-billing-card{padding:22px}.pos-billing-actions .btn{width:100%}}
+.story-teaser-logo.story-portraits{grid-row:1 / span 2;display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(440px,100%);aspect-ratio:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}.story-portraits figure{min-width:0;margin:0;padding:8px 8px 12px;border:1px solid rgba(42,28,19,.1);border-radius:22px;background:#fff;box-shadow:0 18px 45px rgba(42,28,19,.1)}.story-portraits figure:nth-child(2){transform:translateY(30px)}.story-portraits img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:15px}.story-portraits figure:nth-child(2) img{object-position:center top}.story-portraits figcaption{padding:10px 4px 0;color:#655d56;font-size:11px;font-weight:800;text-align:center}.story-teaser-card>div:nth-child(2){align-self:end}.story-teaser-card>.btn{align-self:start}
 @media(max-width:760px){.story-teaser-logo.story-portraits{grid-row:auto;width:min(360px,100%);justify-self:center}.story-portraits figure:nth-child(2){transform:translateY(18px)}.story-teaser-card>div:nth-child(2){align-self:auto}}
 @media(max-width:520px){.pos-screen{border-width:5px}.pos-screen-top{padding:0 12px}.pos-screen-top span{display:none}}
 </style>
@@ -568,7 +600,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           <span class="hero-word">Invoice faster.</span><br>
           <span class="hero-word">Check out smarter.</span>
         </h1>
-        <p class="hero-sub"><strong>Cashflow, invoicing and checkout—working together in one practical business system.</strong></p>
+        <p class="hero-sub"><strong>Cashflow, invoicing and checkout, working together in one practical business system.</strong></p>
         <div class="hero-actions">
           <a class="btn" href="onboarding.html">Start free - 15 days -></a>
           <a class="btn light" href="#pricing">View pricing</a>
@@ -592,7 +624,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           <div>
             <p class="eyebrow">The Story Behind the System</p>
             <h2 class="serif">Mrs. Gamage’s Story</h2>
-            <p>Mrs. Gamage represents the everyday entrepreneur. Her story resonated with founder Pasan Yasas, who learned the importance of cashflow the hard way — when sales were coming in, but somehow the money was never enough. Expensive POS systems and disconnected tools led to a simple idea: bring Cashflow + Invoicing + POS together in one practical, transparently priced system.</p>
+            <p>Mrs. Gamage represents the everyday entrepreneur. Her story resonated with founder Pasan Yasas, who learned the importance of cashflow the hard way. Sales were coming in, but somehow the money was never enough. Expensive POS systems and disconnected tools led to a simple idea: bring Cashflow + Invoicing + POS together in one practical, transparently priced system.</p>
           </div>
           <a class="btn light" href="mrs-gamage-story.html">Read our story →</a>
         </div>
@@ -605,7 +637,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           <div class="success-copy">
             <p class="eyebrow">Customer Success Story</p>
             <h2 class="serif" id="poddo-story-title">Less admin. <span>More time for kids.</span></h2>
-            <p class="success-lede">See how Poddo Kids Club brought payroll and day-to-day cash flow into one clear system—giving the team more confidence, less paperwork, and more time for the families they serve.</p>
+            <p class="success-lede">See how Poddo Kids Club brought payroll and day-to-day cash flow into one clear system, giving the team more confidence, less paperwork, and more time for the families they serve.</p>
             <div class="success-business" aria-label="Poddo Kids Club story details">
               <strong>Poddo Kids Club</strong>
               <span>Childcare &amp; Kids Entertainment</span>
@@ -785,13 +817,13 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
                 <tr><td>Customer Management</td><td><span class="plan-included" aria-label="Included">✓</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
                 <tr><td>Reports</td><td><span class="plan-included" aria-label="Included">✓</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
                 <tr><td>PDF Invoice Export</td><td><span class="plan-included" aria-label="Included">✓</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Edit Backlog <small>(edit previously created invoices)</small></td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Income &amp; Expense Tracking</td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Supplier / 3rd Party Management</td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Business Insights</td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Priority Support</td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Payroll Management</td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
-                <tr><td>Advanced Business Insights</td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-not-included" aria-label="Not included">—</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Edit Backlog <small>(edit previously created invoices)</small></td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Income &amp; Expense Tracking</td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Supplier / 3rd Party Management</td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Business Insights</td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Priority Support</td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-included studio" aria-label="Included">✓</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Payroll Management</td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
+                <tr><td>Advanced Business Insights</td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-not-included" aria-label="Not included">×</span></td><td><span class="plan-included business" aria-label="Included">✓</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -859,9 +891,9 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <div class="container pos-intro-grid">
         <div class="pos-intro-copy">
           <p class="eyebrow">Ceylonry POS</p>
-          <h2 class="serif">Sell, serve and stay in control.</h2>
-          <p>A fast touch-ready POS for restaurants, cafés, retail and service businesses—with products, modifiers, customers, KOTs, inventory, staff shifts and business reporting.</p>
-          <div class="pos-intro-actions"><a class="btn" href="pos-onboarding.html">Start POS free — 15 days →</a><a class="btn light" href=".pos-system/pos-system.html">POS sign in</a></div>
+          <h2 class="serif">Run every sale with confidence.</h2>
+          <p>One fast, touch-ready checkout for restaurants, cafés, retailers and service businesses. Manage products, modifiers, customers, kitchen tickets, inventory, staff and reporting without switching systems.</p>
+          <div class="pos-intro-actions"><a class="btn" href="pos-onboarding.html">Start POS free, 15 days →</a><a class="btn light" href=".pos-system/pos-system.html">POS sign in</a></div>
           <div class="pos-trial-note">LKR 3,500/month after the trial · Up to 5 users · No card required</div>
         </div>
         <div class="pos-screen" aria-label="Ceylonry POS checkout system preview"><div class="pos-screen-top"><strong>New Sale</strong><span>Touch-ready checkout · Live demo</span></div><div class="pos-screen-body"><div class="pos-products"><div class="pos-product"><div class="pos-product-photo tea"></div><small>Drinks</small><strong>Milk Tea</strong><span>LKR 250</span></div><div class="pos-product"><div class="pos-product-photo sandwich"></div><small>Food</small><strong>Chicken Sandwich</strong><span>LKR 850</span></div><div class="pos-product"><div class="pos-product-photo coffee"></div><small>Drinks</small><strong>Iced Coffee</strong><span>LKR 550</span></div><div class="pos-product"><div class="pos-product-photo cake"></div><small>Desserts</small><strong>Butter Cake</strong><span>LKR 650</span></div></div><div class="pos-order"><h3>Current Order</h3><div class="pos-order-line">1 × Chicken Sandwich</div><div class="pos-order-line">+ Large · No onion</div><div class="pos-order-line">1 × Iced Coffee</div><div class="pos-total">LKR 1,400.00</div></div></div></div>
@@ -882,20 +914,88 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
         <h2 class="serif">Questions before you start?</h2>
         <div class="faq-list">
           <details class="faq-item">
-            <summary>Can I start without a card?<span class="faq-plus">+</span></summary>
-            <p>Yes. Every plan starts with a 15-day free trial and no credit card required. When the trial ends, you can activate the plan by bank transfer and upload your payment slip securely.</p>
+            <summary>Can I try the system without entering my card details?<span class="faq-plus">+</span></summary>
+            <p>Yes. Every plan starts with a 15-day free trial with no credit card required. Explore the system, use the features and decide whether it works for your business before paying anything.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What happens after my 15-day free trial?<span class="faq-plus">+</span></summary>
+            <p>There is no automatic card charge. If you want to continue, make a bank transfer to our company account and upload your payment slip through the system or share it with us. Once the payment is verified, your subscription is activated.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How do I pay for my subscription?<span class="faq-plus">+</span></summary>
+            <p>Make a bank transfer directly to our company account, then upload the payment slip through the system or share it with us for verification. No complicated checkout process or card details are required.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What is included in the system?<span class="faq-plus">+</span></summary>
+            <p>The platform brings together Cashflow, Invoicing and POS to help you manage everyday business finances, sales and customer transactions without depending on multiple disconnected systems.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Do I need to purchase a separate POS system?<span class="faq-plus">+</span></summary>
+            <p>Not necessarily. Our POS works alongside the Cashflow and Invoicing system, keeping your sales and financial information connected. Additional POS requirements can also be accommodated depending on your business needs.</p>
           </details>
           <details class="faq-item">
             <summary>Can I send invoices through WhatsApp?<span class="faq-plus">+</span></summary>
-            <p>Yes. You can download the invoice PDF and share a clean WhatsApp message with the customer from the dashboard.</p>
+            <p>Yes. From your dashboard, you can share a direct invoice link through WhatsApp. Your customer simply taps the link to open and view the invoice online. No PDF attachment is required.</p>
           </details>
           <details class="faq-item">
-            <summary>Do you support customers outside Sri Lanka?<span class="faq-plus">+</span></summary>
-            <p>The system supports multi-currency workflows. Sri Lanka pricing is live first, and international pricing can be enabled as payment support expands.</p>
+            <summary>Can I track unpaid and partially paid invoices?<span class="faq-plus">+</span></summary>
+            <p>Yes. You can record full and partial payments and monitor outstanding and overdue invoices, giving you a clear picture of what has been paid and what is still owed.</p>
           </details>
           <details class="faq-item">
-            <summary>What if I outgrow my plan?<span class="faq-plus">+</span></summary>
-            <p>You can move from Solo to Studio or Business when your customer count, team size, or reporting needs grow. Your saved data stays with the account.</p>
+            <summary>Can I create quotations as well as invoices?<span class="faq-plus">+</span></summary>
+            <p>Yes. You can create quotations for customers and convert them into invoices when the customer is ready to proceed.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I track my income and expenses?<span class="faq-plus">+</span></summary>
+            <p>Yes. Record your income and expenses, then use the dashboard and reports to understand what is coming in, what is going out and where your money is going.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Do I need accounting knowledge to use the system?<span class="faq-plus">+</span></summary>
+            <p>No. The system is designed for business owners, not only accountants. You do not need advanced accounting knowledge to understand your sales, expenses, outstanding payments and cashflow.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can my accountant use the system too?<span class="faq-plus">+</span></summary>
+            <p>Yes. Depending on your plan and user access, your accountant or finance team can access relevant financial information and reports to support your business.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can multiple staff members use the system?<span class="faq-plus">+</span></summary>
+            <p>Yes. Multi-user access is available depending on your subscription plan. As your business and team grow, you can upgrade to support additional users and more advanced requirements.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What happens if I outgrow my current plan?<span class="faq-plus">+</span></summary>
+            <p>You can move from Solo to Studio or Business as your customer count, team size or reporting requirements increase. Your existing business data stays with your account.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Are there any hidden charges?<span class="faq-plus">+</span></summary>
+            <p>No. Your subscription price and included features are shown upfront. If you request an optional service, additional POS setup or functionality with an extra charge, the cost will be communicated clearly before you proceed.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Why not use separate invoicing, cashflow and POS software?<span class="faq-plus">+</span></summary>
+            <p>Separate tools can mean multiple subscriptions, multiple systems and disconnected information. Our goal is to bring Cashflow, Invoicing and POS together so you can manage more of your business from one place.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Who is the system designed for?<span class="faq-plus">+</span></summary>
+            <p>It is designed for freelancers, entrepreneurs, studios, service businesses, retailers and growing companies that want a simpler way to manage their day-to-day business finances and sales.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I use it if I do not have a physical shop?<span class="faq-plus">+</span></summary>
+            <p>Absolutely. Freelancers, consultants, agencies, studios and service businesses can use the Cashflow and Invoicing features without needing a retail store or using POS.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Does the system support different currencies?<span class="faq-plus">+</span></summary>
+            <p>Yes. The system supports multi-currency workflows, making it suitable for businesses that invoice or work with customers in different currencies.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Is the system only for businesses in Sri Lanka?<span class="faq-plus">+</span></summary>
+            <p>No. The platform can support businesses working internationally. Sri Lankan pricing and payment support are currently our primary offering, with international payment options expanding as we grow.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Will I lose my information if I upgrade my plan?<span class="faq-plus">+</span></summary>
+            <p>No. Your existing customers, invoices and business records remain with your account when you upgrade.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Why do you offer a no-card trial?<span class="faq-plus">+</span></summary>
+            <p>We do not believe you should have to provide card details just to discover whether a business system works for you. Try it first, understand it and then decide whether it is worth paying for.</p>
           </details>
         </div>
         <div class="faq-cta">
@@ -912,7 +1012,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <div class="footer-grid">
         <div>
           <div class="footer-brand">Cashflow <span>Invoicing &amp; POS</span></div>
-          <p class="footer-intro">Cashflow, invoicing and point of sale—one connected system built for growing businesses. By CeylonryLabs.io.</p>
+          <p class="footer-intro">Cashflow, invoicing and point of sale in one connected system built for growing businesses. By CeylonryLabs.io.</p>
           <form class="footer-form" action="onboarding.html">
             <input type="email" name="email" placeholder="you@yourbusiness.com" aria-label="Business email">
             <button type="submit">Start free</button>
