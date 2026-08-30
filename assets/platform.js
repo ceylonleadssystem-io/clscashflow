@@ -14,7 +14,7 @@
     return window.clsCurrencySymbol(code) + (code === 'AED' ? ' ' : '') + number;
   };
   var VALID_PLANS = { solo: true, studio: true, business: true, pos: true };
-  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: '.pos-system/pos-system.html' };
+  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: 'pos-system/pos-system.html' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
   var PLAN_DETAILS = {
     solo: {
@@ -50,7 +50,7 @@
       userLabel: 'Up to 5 users',
       monthlyPrice: 3500,
       price: 42000,
-      file: '.pos-system/pos-system.html',
+      file: 'pos-system/pos-system.html',
       monthlyPayLink: '', annualPayLink: ''
     }
   };
