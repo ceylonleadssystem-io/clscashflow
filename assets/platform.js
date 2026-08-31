@@ -3243,14 +3243,24 @@
 
   function initMobileDataTables() {
     mobileizeDataTables(document);
+    if (!document.body) {
+      document.addEventListener('DOMContentLoaded', initMobileDataTables, { once: true });
+      return;
+    }
     if (!window.MutationObserver || document.documentElement.dataset.mobileTableObserver === 'true') return;
-    document.documentElement.dataset.mobileTableObserver = 'true';
     var queued = false;
-    new MutationObserver(function() {
+    var tableObserver = new MutationObserver(function() {
       if (queued) return;
       queued = true;
       requestAnimationFrame(function() { queued = false; mobileizeDataTables(document); });
-    }).observe(document.body, { childList:true, subtree:true });
+    });
+    try {
+      tableObserver.observe(document.body, { childList:true, subtree:true });
+      document.documentElement.dataset.mobileTableObserver = 'true';
+    } catch (error) {
+      window.addEventListener('load', initMobileDataTables, { once: true });
+      return;
+    }
     window.addEventListener('resize', function() { mobileizeDataTables(document); }, { passive:true });
   }
 
