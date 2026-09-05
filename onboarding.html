@@ -1971,5 +1971,25 @@ bindInvoicePreviewInputs();
   updateInvoicePreview();
 })();
 </script>
+<style>
+  .product-choice-overlay{position:fixed;inset:0;z-index:99999;background:rgba(20,18,15,.72);display:grid;place-items:center;padding:24px;overflow:auto}
+  .product-choice-card{width:min(780px,100%);background:#fff;border:1px solid #ded7ca;border-radius:24px;padding:clamp(24px,4vw,48px);box-shadow:0 30px 80px rgba(0,0,0,.25);color:#171512}
+  .product-choice-card h1{font-family:Georgia,serif;font-size:clamp(30px,4vw,46px);margin:0 0 10px}.product-choice-card>p{color:#6c675f;margin:0 0 28px;font-size:17px}
+  .product-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.product-choice-option{appearance:none;text-decoration:none;text-align:left;background:#fff;border:2px solid #e2ddd3;border-radius:18px;padding:24px;color:inherit;cursor:pointer;transition:.18s ease;font:inherit}
+  .product-choice-option:hover,.product-choice-option:focus-visible{border-color:#bf8f1d;box-shadow:0 8px 24px rgba(191,143,29,.13);transform:translateY(-2px);outline:none}.product-choice-option strong{display:block;font-family:Georgia,serif;font-size:25px;margin:8px 0}.product-choice-option span{display:block;color:#6c675f;line-height:1.55}.product-choice-icon{font-size:27px;color:#bf8f1d}
+  @media(max-width:620px){.product-choice-grid{grid-template-columns:1fr}.product-choice-overlay{padding:12px}.product-choice-card{border-radius:18px}}
+</style>
+<script>
+(function installProductChoice(){
+  var params=new URLSearchParams(location.search),product=params.get('product');
+  if(product==='pos'){location.replace('pos-onboarding.html');return}
+  if(product==='cashflow'||params.get('plan')||params.get('invite'))return;
+  var overlay=document.createElement('div');overlay.className='product-choice-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-labelledby','product-choice-title');
+  overlay.innerHTML='<section class="product-choice-card"><h1 id="product-choice-title">What would you like to start?</h1><p>Choose a system and we will show the correct setup steps for your business.</p><div class="product-choice-grid"><button class="product-choice-option" id="choose-cashflow" type="button"><span class="product-choice-icon">↗</span><strong>Cashflow System</strong><span>Set up invoicing, income, expenses, customers and business reporting.</span></button><a class="product-choice-option" id="choose-pos" href="pos-onboarding.html"><span class="product-choice-icon">▣</span><strong>POS System</strong><span>Set up your counter, business category, products, inventory, staff and checkout.</span></a></div></section>';
+  document.body.appendChild(overlay);document.body.style.overflow='hidden';
+  document.getElementById('choose-cashflow').onclick=function(){history.replaceState(null,'','onboarding.html?product=cashflow');overlay.remove();document.body.style.overflow=''};
+  setTimeout(function(){document.getElementById('choose-cashflow')?.focus()},0);
+})();
+</script>
 </body>
 </html>
