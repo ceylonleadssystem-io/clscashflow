@@ -13,6 +13,10 @@ async function getAdmin() {
 function headers() {
   return {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    'Netlify-CDN-Cache-Control': 'no-store',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
@@ -1176,7 +1180,9 @@ exports.handler = async function handler(event) {
       readCollection(db, 'growthPartners', 'createdAt', 500),
       readCollection(db, 'growthPartnerCodes', 'assignedAt', 500),
       readCollection(db, 'growthPartnerCommissions', 'createdAt', 1000),
-      db.collection('adminSettings').doc('revenue').get()
+      db.collection('adminSettings').doc('revenue').get(),
+      countQuery(db.collection('platformVisits')),
+      countQuery(db.collection('platformVisits').where('isLanding', '==', true))
     ]);
     // User profiles already contain all dashboard fields. Avoid an expensive
     // Auth listUsers round trip on every refresh.
@@ -1194,6 +1200,10 @@ exports.handler = async function handler(event) {
     // enforcement belongs to the billing event/scheduled path; doing it here
     // made the first admin response exceed the browser and Netlify timeouts.
     const stats = buildStats(users, visits, tickets, paymentRequests, chats, subscriptionPayments);
+    // The visit table is intentionally bounded for a fast response, but the
+    // overview cards are lifetime totals and must not freeze at that limit.
+    if (initialRows[10] != null) stats.visitsTotal = initialRows[10];
+    if (initialRows[11] != null) stats.landingVisitsTotal = initialRows[11];
     const currentMonth = new Date().toISOString().slice(0, 7);
     if (revenueSetting.month === currentMonth && Number.isFinite(Number(revenueSetting.amount))) {
       stats.revenueThisMonth = Number(revenueSetting.amount);

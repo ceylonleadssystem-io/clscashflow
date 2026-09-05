@@ -512,7 +512,8 @@ async function fetchAdminFunction(body, forceRefresh){
   var token = await user.getIdToken(!!forceRefresh);
   var options = {
     method: body ? 'POST' : 'GET',
-    headers: { Authorization: 'Bearer ' + token }
+    headers: { Authorization: 'Bearer ' + token, 'Cache-Control': 'no-cache' },
+    cache: 'no-store'
   };
   if (body) {
     options.headers['Content-Type'] = 'application/json';
@@ -524,7 +525,8 @@ async function fetchAdminFunction(body, forceRefresh){
   if (controller) options.signal = controller.signal;
   var res;
   try {
-    res = await fetch('/.netlify/functions/admin-data', options);
+    var endpoint = '/.netlify/functions/admin-data' + (body ? '' : '?fresh=' + Date.now());
+    res = await fetch(endpoint, options);
   } catch (e) {
     if (e && e.name === 'AbortError') throw new Error('The admin server took too long to respond.');
     throw e;
@@ -780,6 +782,7 @@ var adminPayloadState={users:[],visits:[],tickets:[],paymentRequests:[],chats:[]
 var ADMIN_CACHE_KEY = 'cls-admin-dashboard-cache-v3-profile-count';
 var ADMIN_CACHE_MAX_AGE_MS = 30 * 60 * 1000;
 var ADMIN_REQUEST_TIMEOUT_MS = 15000;
+var ADMIN_SYNC_INTERVAL_MS = 15000;
 function setDataStatus(kind, message){
   var node = $('data-status');
   if (!node) return;
@@ -1396,7 +1399,13 @@ function updateUtcClock(){
 }
 updateUtcClock();
 setInterval(updateUtcClock, 1000);
-setInterval(function(){if(!document.hidden&&auth.currentUser&&!adminLoading)loadAdminData().catch(function(){});},60000);
+setInterval(function(){if(!document.hidden&&auth.currentUser&&!adminLoading)loadAdminData().catch(function(){});},ADMIN_SYNC_INTERVAL_MS);
+document.addEventListener('visibilitychange',function(){
+  if(!document.hidden&&auth.currentUser&&!adminLoading)loadAdminData().catch(function(){});
+});
+window.addEventListener('focus',function(){
+  if(auth.currentUser&&!adminLoading)loadAdminData().catch(function(){});
+});
 
 auth.onAuthStateChanged(function(user){
   if (!user) { showLogin(); return; }
