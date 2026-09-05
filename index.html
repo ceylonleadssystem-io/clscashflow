@@ -540,6 +540,9 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
 .story-teaser-logo.story-portraits{grid-row:1 / span 2;display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(440px,100%);aspect-ratio:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}.story-portraits figure{min-width:0;margin:0;padding:8px 8px 12px;border:1px solid rgba(42,28,19,.1);border-radius:22px;background:#fff;box-shadow:0 18px 45px rgba(42,28,19,.1)}.story-portraits figure:nth-child(2){transform:translateY(30px)}.story-portraits img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:15px}.story-portraits figure:nth-child(2) img{object-position:center top}.story-portraits figcaption{padding:10px 4px 0;color:#655d56;font-size:11px;font-weight:800;text-align:center}.story-teaser-card>div:nth-child(2){align-self:end}.story-teaser-card>.btn{align-self:start}
 @media(max-width:760px){.story-teaser-logo.story-portraits{grid-row:auto;width:min(360px,100%);justify-self:center}.story-portraits figure:nth-child(2){transform:translateY(18px)}.story-teaser-card>div:nth-child(2){align-self:auto}}
 @media(max-width:520px){.pos-screen{border-width:5px}.pos-screen-top{padding:0 12px}.pos-screen-top span{display:none}}
+.nav-account-links.signin-launch{appearance:none;display:inline-flex!important;align-items:center;justify-content:center;gap:9px;min-height:42px;padding:0 18px!important;border:1px solid rgba(5,5,5,.22)!important;border-radius:999px!important;background:#fff!important;color:#171512!important;font:800 10px var(--sans);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;cursor:pointer;transition:.2s ease}.nav-account-links.signin-launch:hover{border-color:#a87916!important;color:#8a6410!important;transform:translateY(-1px)}.signin-launch-icon{font-size:14px;line-height:1}.mobile-drawer-signin.signin-launch{border:1px solid rgba(42,28,19,.16);border-radius:999px;background:#fff;cursor:pointer}
+.signin-choice-modal[hidden]{display:none}.signin-choice-modal{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:20px;background:rgba(24,20,17,.72);backdrop-filter:blur(8px)}.signin-choice-card{position:relative;width:min(680px,100%);background:#fff;border-radius:24px;padding:clamp(24px,4vw,42px);box-shadow:0 30px 90px rgba(0,0,0,.28)}.signin-choice-close{position:absolute;right:16px;top:16px;width:38px;height:38px;border:1px solid rgba(42,28,19,.14);border-radius:50%;background:#fff;font-size:23px;cursor:pointer}.signin-choice-card h2{margin:0 42px 8px 0;font-family:var(--serif);font-size:clamp(34px,5vw,50px);font-weight:500;letter-spacing:-.04em}.signin-choice-card>p{margin:0 0 25px;color:var(--muted);font-size:16px}.signin-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.signin-choice-option{display:flex;flex-direction:column;min-height:190px;padding:23px;border:2px solid rgba(42,28,19,.1);border-radius:18px;color:var(--ink);text-decoration:none;background:var(--paper);transition:.2s ease}.signin-choice-option:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 15px 34px rgba(42,28,19,.09)}.signin-choice-option small{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#9a741a;font-weight:800}.signin-choice-option strong{display:block;margin:15px 0 8px;font-family:var(--serif);font-size:26px}.signin-choice-option span{color:var(--muted);font-size:14px;line-height:1.55}.signin-choice-option b{margin-top:auto;padding-top:18px;font-size:13px}.signin-choice-open{overflow:hidden}
+@media(max-width:620px){.signin-choice-modal{align-items:end;padding:10px}.signin-choice-card{border-radius:22px 22px 12px 12px}.signin-choice-grid{grid-template-columns:1fr}.signin-choice-option{min-height:145px}.nav-account-links.signin-launch{display:none!important}}
 </style>
 </head>
 <body>
@@ -556,17 +559,14 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
       <div class="nav-links" aria-label="Primary navigation">
         <a href="#how-it-works">How it works</a>
         <a href="#features">Features</a>
-        <a class="nav-pos" href="#pos">POS</a>
+        <a class="nav-pos" href="pos.html">POS</a>
         <a href="#success-stories">Success Story</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
         <a href="growth.html?demo=1">Demo</a>
       </div>
       <div class="nav-cta">
-        <div class="nav-account-links" aria-label="Account sign in">
-          <a class="nav-signin" href="signin.html">Cashflow Sign In</a>
-          <a class="nav-pos-signin" href="pos-system/pos-system.html?login=business">POS Sign In</a>
-        </div>
+        <button class="nav-account-links signin-launch" type="button" data-signin-open aria-haspopup="dialog"><span class="signin-launch-icon">↗</span> Sign In</button>
         <a class="btn nav-trial" href="onboarding.html">Start free trial</a>
       </div>
       <button class="mobile-menu-toggle" type="button" aria-label="Open navigation" aria-controls="mobile-drawer" aria-expanded="false"><span></span></button>
@@ -584,18 +584,29 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     <nav class="mobile-drawer-links" aria-label="Mobile navigation">
       <a href="#how-it-works">How it works</a>
       <a href="#features">Features</a>
-      <a href="#pos">POS</a>
+      <a href="pos.html">POS</a>
       <a href="#success-stories">Success Story</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
       <a href="growth.html?demo=1">Demo</a>
     </nav>
     <div class="mobile-drawer-actions">
-      <a class="mobile-drawer-signin" href="signin.html">Cashflow Sign In</a>
-      <a class="mobile-drawer-signin" href="pos-system/pos-system.html?login=business">POS Sign In</a>
+      <button class="mobile-drawer-signin signin-launch" type="button" data-signin-open aria-haspopup="dialog">Sign In</button>
       <a class="mobile-drawer-trial" href="onboarding.html">Start Free Trial</a>
     </div>
   </aside>
+
+  <div class="signin-choice-modal" id="signin-choice-modal" hidden>
+    <section class="signin-choice-card" role="dialog" aria-modal="true" aria-labelledby="signin-choice-title">
+      <button class="signin-choice-close" type="button" aria-label="Close sign in options" data-signin-close>×</button>
+      <h2 id="signin-choice-title">Which system are you signing in to?</h2>
+      <p>Select your workspace to continue to the correct secure sign-in page.</p>
+      <div class="signin-choice-grid">
+        <a class="signin-choice-option" href="signin.html"><small>Accounts workspace</small><strong>Cashflow System</strong><span>Cashflow, invoices, expenses, customers and business reporting.</span><b>Continue to Cashflow →</b></a>
+        <a class="signin-choice-option" href="pos-system/pos-system.html?login=business"><small>Counter workspace</small><strong>POS System</strong><span>Checkout, orders, products, stock, staff and register management.</span><b>Continue to POS →</b></a>
+      </div>
+    </section>
+  </div>
 
   <main id="top">
     <section class="hero">
@@ -899,7 +910,7 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
           <p class="eyebrow">Ceylonry POS</p>
           <h2 class="serif">Run every sale with confidence.</h2>
           <p>One fast, touch-ready checkout for restaurants, cafés, retailers and service businesses. Manage products, modifiers, customers, kitchen tickets, inventory, staff and reporting without switching systems.</p>
-          <div class="pos-intro-actions"><a class="btn" href="pos-onboarding.html">Start POS free, 15 days →</a><a class="btn light" href="pos-system/pos-system.html?login=business">POS sign in</a></div>
+          <div class="pos-intro-actions"><a class="btn" href="pos.html">Explore the full POS system →</a><a class="btn light" href="pos-onboarding.html">Start POS free, 15 days</a></div>
           <div class="pos-trial-note">LKR 3,500/month after the trial · Up to 5 users · No card required</div>
         </div>
         <div class="pos-screen" aria-label="Ceylonry POS checkout system preview"><div class="pos-screen-top"><strong>New Sale</strong><span>Touch-ready checkout · Live demo</span></div><div class="pos-screen-body"><div class="pos-products"><div class="pos-product"><div class="pos-product-photo tea"></div><small>Drinks</small><strong>Milk Tea</strong><span>LKR 250</span></div><div class="pos-product"><div class="pos-product-photo sandwich"></div><small>Food</small><strong>Chicken Sandwich</strong><span>LKR 850</span></div><div class="pos-product"><div class="pos-product-photo coffee"></div><small>Drinks</small><strong>Iced Coffee</strong><span>LKR 550</span></div><div class="pos-product"><div class="pos-product-photo cake"></div><small>Desserts</small><strong>Butter Cake</strong><span>LKR 650</span></div></div><div class="pos-order"><h3>Current Order</h3><div class="pos-order-line">1 × Chicken Sandwich</div><div class="pos-order-line">+ Large · No onion</div><div class="pos-order-line">1 × Iced Coffee</div><div class="pos-total">LKR 1,400.00</div></div></div></div>
@@ -1443,6 +1454,25 @@ body{background:#fff;color:#050505;font-family:var(--sans)}
     term.textContent=annual?'/ month, paid annually':'/ month';
     copy.textContent=annual?'LKR 33,600 billed annually. You save LKR 8,400 per year. Includes up to 5 users; additional users are LKR 500 each per month.':'Billed monthly. Includes up to 5 users; additional users are LKR 500 each per month.';
   })});
+})();
+
+(function(){
+  const modal=document.getElementById('signin-choice-modal');
+  if(!modal)return;
+  let opener=null;
+  function openSignInChoice(event){
+    opener=event.currentTarget;
+    modal.hidden=false;
+    document.body.classList.add('signin-choice-open');
+    const drawer=document.getElementById('mobile-drawer');
+    if(drawer){drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true')}
+    window.setTimeout(function(){modal.querySelector('.signin-choice-option')?.focus()},0);
+  }
+  function closeSignInChoice(){modal.hidden=true;document.body.classList.remove('signin-choice-open');if(opener)opener.focus()}
+  document.querySelectorAll('[data-signin-open]').forEach(function(button){button.addEventListener('click',openSignInChoice)});
+  modal.querySelectorAll('[data-signin-close]').forEach(function(button){button.addEventListener('click',closeSignInChoice)});
+  modal.addEventListener('click',function(event){if(event.target===modal)closeSignInChoice()});
+  document.addEventListener('keydown',function(event){if(event.key==='Escape'&&!modal.hidden)closeSignInChoice()});
 })();
 </script>
 </body>
