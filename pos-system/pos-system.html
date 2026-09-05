@@ -62,6 +62,22 @@ body.full #view-checkout .cart{grid-template-rows:auto auto minmax(0,1fr)}body.f
 @media(min-height:1000px){body.full #view-checkout .cart-list{max-height:34vh}body.full #view-checkout .cart-list:has(.empty){max-height:150px}body.full #view-checkout .product{min-height:160px}body.full #view-checkout .product-img,body.full #view-checkout .product-placeholder{height:88px}}
 .account-home{display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;color:#625b52;text-decoration:none;font-size:11px;font-weight:800}.account-home:hover{color:#b58b25}.account-password-wrap{position:relative}.account-password-wrap .input{padding-right:68px}.account-password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);border:0;border-radius:6px;padding:7px 9px;background:#eee9df;color:#171512;font-size:10px;font-weight:800;cursor:pointer}
 </style>
+<style>
+:root{--ceylonry-orange:#ff5a00;--ceylonry-orange-dark:#d94c00;--ceylonry-orange-soft:#fff1e8}
+.brand{height:82px;background:url('../assets/ceylonry-pos-logo.png') center top/contain no-repeat;font-size:0;padding:0 8px 12px}
+.brand span{display:none}.brand .plan{font-size:9px;padding-top:64px;color:#ff8a3d;text-align:center}
+.account-card h1,.login-brand{width:260px;max-width:100%;height:104px;margin:0 auto 8px;background:url('../assets/ceylonry-pos-logo.png') center/contain no-repeat;font-size:0!important;color:transparent}
+.account-card h1 span,.login-brand span{display:none}
+.btn.gold{background:var(--ceylonry-orange);color:#fff}.input:focus{border-color:var(--ceylonry-orange);box-shadow:0 0 0 3px #ff5a0024}
+.product:hover{border-color:var(--ceylonry-orange)}.price,.line-modifiers{color:var(--ceylonry-orange-dark)}
+.chip.active,.settings-tab.active{background:var(--ceylonry-orange);border-color:var(--ceylonry-orange);color:#fff}
+.payment-bar span{background:var(--ceylonry-orange)}
+#discount-fields[hidden]{display:none!important}.discount-toggle{display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer}.discount-toggle input{width:18px;height:18px;accent-color:var(--ceylonry-orange)}
+body.apple-kiosk.full .side{display:none!important}body.apple-kiosk.full .app{display:block!important;grid-template-columns:1fr!important}
+body.apple-kiosk.full .top{display:flex!important;top:0!important;height:64px!important}
+body.apple-kiosk.full #sidebar-toggle{display:none!important}
+body.apple-kiosk.full #full-btn{width:48px;height:48px;min-width:48px;padding:0;border-radius:50%;font-size:30px;line-height:1;color:#171512;background:#fff}
+</style>
 </head>
 <body><script>function toggleAccountPassword(button){let input=document.getElementById('account-password'),show=input.type==='password';input.type=show?'text':'password';button.textContent=show?'Hide':'Show';button.setAttribute('aria-label',show?'Hide password':'Show password')}</script><div class="app">
 <aside class="side"><div class="brand">Ceylonry<span>POS</span><small class="plan">POS · LKR 3,500 / month · 5 users</small></div><div class="session-user" id="session-user"><strong>Not signed in</strong><span>Staff session</span></div><nav class="nav" id="nav"><button data-view="dashboard" class="active">▦ Dashboard</button><button data-view="checkout">▣ Checkout</button><button data-view="products">□ Products & Services</button><button data-view="modifiers">＋ Modifiers</button><button data-view="customers">♙ Customers</button><button data-view="crm">♡ CRM & Feedback</button><button data-view="sales">↗ Sales History</button><button data-view="reports">▤ Reports</button><button data-view="staff">◷ Staff & Shifts</button><button data-view="settings">⚙ Settings</button></nav><div class="side-foot"><strong id="side-business">My Business</strong><br>Standalone POS System<br><button class="btn out" style="margin-top:10px;width:100%" onclick="staffLogout()">Lock POS</button><button class="btn out" style="margin-top:7px;width:100%" onclick="businessLogout()">Sign Out Business</button></div></aside>
@@ -281,7 +297,7 @@ save();document.getElementById('side-business').textContent=db.settings.business
   var normalPosSubmit=businessAccountSubmit;businessAccountSubmit=async function(){var email=document.getElementById('account-email').value.trim().toLowerCase(),password=document.getElementById('account-password').value,error=document.getElementById('account-error');if(email===DEVELOPER_EMAIL)return normalPosSubmit();try{error.textContent='Signing in securely…';var cred=await firebase.auth().signInWithEmailAndPassword(email,password);error.textContent='';await activateCloud(cred.user)}catch(e){error.textContent=e?.message||'Incorrect POS email or password.'}};
   var note=document.createElement('div');note.className='pos-auth-note';note.innerHTML='New to POS? <a href="../pos-onboarding.html">Start a 15-day POS trial</a> · Your sales are stored on this device if the internet drops and sync when it returns.';document.querySelector('#account-gate .account-card')?.append(note);document.getElementById('account-heading').textContent='POS business sign in';document.getElementById('account-copy').textContent='Enter your business email and password to continue.';document.getElementById('account-confirm-field').hidden=true;document.getElementById('account-submit').textContent='Sign In to POS';
   firebase.auth().onAuthStateChanged(async function(user){if(requireFreshBusinessLogin){if(user){await firebase.auth().signOut();return}requireFreshBusinessLogin=false;document.getElementById('account-gate').hidden=false;document.getElementById('login-gate').hidden=true;return}if(user)activateCloud(user).catch(function(e){document.getElementById('account-error').textContent=e?.message||'Could not load the POS account.'})});
-  window.addEventListener('online',function(){updateConnectionStatus();syncCloud()});window.addEventListener('offline',updateConnectionStatus);window.addEventListener('beforeunload',function(){syncCloud()});
+  window.clsSyncPosNow=syncCloud;window.addEventListener('online',function(){updateConnectionStatus();syncCloud()});window.addEventListener('offline',updateConnectionStatus);window.addEventListener('beforeunload',function(){syncCloud()});
 })();
 </script>
 <style>
@@ -434,5 +450,61 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
   panels.forEach(function(panel){content.querySelector('[data-settings-section="'+groupFor(panel)+'"]').append(panel)});root.prepend(nav,content);if(saveButton){saveButton.classList.add('settings-tab-save');root.append(saveButton)}
   function selectSettingsTab(id){nav.querySelectorAll('.settings-tab').forEach(function(button){var active=button.dataset.settingsTab===id;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1});content.querySelectorAll('.settings-tab-section').forEach(function(section){section.classList.toggle('active',section.dataset.settingsSection===id);if(section.dataset.settingsSection===id)section.scrollTop=0})}
   nav.addEventListener('click',function(event){var button=event.target.closest('.settings-tab');if(button)selectSettingsTab(button.dataset.settingsTab)});nav.addEventListener('keydown',function(event){if(!['ArrowLeft','ArrowRight'].includes(event.key))return;var buttons=Array.from(nav.querySelectorAll('.settings-tab')),current=buttons.indexOf(document.activeElement),next=(current+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;buttons[next].click();buttons[next].focus()});selectSettingsTab('business');
+})();
+</script>
+<script>
+(function installCheckoutWorkflowFixes(){
+  var discountPanel=document.getElementById('discount-panel');
+  if(discountPanel){
+    discountPanel.innerHTML='<label class="discount-toggle"><input type="checkbox" id="use-order-discount" onchange="toggleOrderDiscount(this.checked)"> Add an order discount</label><div id="discount-fields" hidden><div class="customer-lookup" style="margin-top:8px"><select class="input" id="discount-type" aria-label="Discount type"><option value="percent">Percentage %</option><option value="fixed">Fixed LKR</option></select><input class="input" id="discount-value" type="number" min="0" step="0.01" placeholder="Value" aria-label="Discount value"><button class="btn out" type="button" onclick="applyDiscount()">Apply</button></div><div class="plan-settings-note" id="discount-note" style="margin-top:7px">No discount applied.</div></div>';
+  }
+  window.toggleOrderDiscount=function(on){var fields=document.getElementById('discount-fields');if(fields)fields.hidden=!on;if(!on){activeDiscount={type:'percent',value:0};var value=document.getElementById('discount-value');if(value)value.value='';renderCart()}};
+  var checkoutApplyDiscount=applyDiscount;applyDiscount=function(){var enabled=document.getElementById('use-order-discount');if(enabled&&!enabled.checked)return;checkoutApplyDiscount()};
+  var checkoutClearDiscount=clearDiscount;clearDiscount=function(){checkoutClearDiscount();var enabled=document.getElementById('use-order-discount');if(enabled)enabled.checked=false;toggleOrderDiscount(false)};
+  var workflowRenderCart=renderCart;renderCart=function(){workflowRenderCart();var enabled=document.getElementById('use-order-discount'),fields=document.getElementById('discount-fields'),hasDiscount=(+activeDiscount.value||0)>0;if(enabled&&hasDiscount)enabled.checked=true;if(fields)fields.hidden=!(enabled&&enabled.checked)};
+
+  /* Presets provide defaults; they never hide user-created categories. */
+  renderCheckout=function(){
+    var search=document.getElementById('product-search'),q=(search&&search.value||'').trim().toLowerCase(),configured=Array.isArray(db.categories)?db.categories:[],derived=db.products.map(function(product){return product.category}),cats=['All'].concat(Array.from(new Set(configured.concat(derived).map(function(name){return String(name||'').trim()}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b)}));
+    if(!cats.includes(category))category='All';
+    document.getElementById('categories').innerHTML=cats.map(function(name){return '<button type="button" class="chip '+(name===category?'active':'')+'" data-category="'+esc(name)+'">'+esc(name)+'</button>'}).join('');
+    document.querySelectorAll('#categories .chip').forEach(function(button){button.onclick=function(){setCategory(button.dataset.category)}});
+    var products=db.products.filter(function(product){return(category==='All'||product.category===category)&&(!q||(String(product.name||'')+' '+String(product.code||'')+' '+String(product.category||'')).toLowerCase().includes(q))});
+    document.getElementById('product-grid').innerHTML=products.map(function(product){return '<button type="button" class="product" onclick="addCart(\''+product.id+'\')">'+(product.image?'<img class="product-img" src="'+product.image+'" alt="">':'<div class="product-placeholder">◇</div>')+'<span class="product-copy"><span><strong>'+esc(product.name)+'</strong><br><small class="muted">'+esc(product.category)+' · '+esc(product.code)+'</small></span><span class="price">'+money(product.price)+'</span></span></button>'}).join('')||'<div class="empty">No products found in this category.</div>';
+    var select=document.getElementById('sale-customer'),old=select.value;select.innerHTML='<option value="">Walk-in customer</option>'+db.customers.map(function(customer){return '<option value="'+customer.id+'">'+esc(customer.name)+'</option>'}).join('');select.value=db.customers.some(function(customer){return customer.id===old})?old:'';renderCustomerTab();renderCart();
+  };
+
+  function kitchenDestination(){return String(db.settings.kotPrinter||'').trim()||'Kitchen POS'}
+  function queueKitchenTicket(order){
+    db.kitchenTickets=Array.isArray(db.kitchenTickets)?db.kitchenTickets:[];
+    var destination=kitchenDestination(),ticket={id:'kot-'+Date.now(),orderId:order.id||'',orderNumber:order.orderNumber||order.receipt,reference:order.orderReference||'',destination:destination,status:destination==='Kitchen POS'?'sent-to-kitchen-pos':'sent-to-printer',createdAt:new Date().toISOString(),lines:JSON.parse(JSON.stringify(order.lines||[]))};
+    db.kitchenTickets.unshift(ticket);save();
+    if(destination!=='Kitchen POS'&&typeof window.clsPrintKitchenTicket==='function'){Promise.resolve(window.clsPrintKitchenTicket(ticket)).catch(function(){ticket.status='printer-unavailable';save();notice('Kitchen printer unavailable. Ticket sent to the Kitchen POS instead.')})}
+    else if(destination!=='Kitchen POS')ticket.status='queued-for-'+destination;
+    return destination;
+  }
+  printOpenOrderKot=function(order){var destination=queueKitchenTicket(order);notice(destination==='Kitchen POS'?'No kitchen printer is configured. Ticket sent to the Kitchen POS.':'Kitchen ticket sent to '+destination+'.')};
+  printKot=function(id){var sale=db.sales.find(function(item){return item.id===id});if(!sale)return alert('Order not found.');var destination=queueKitchenTicket(sale);notice(destination==='Kitchen POS'?'No kitchen printer is configured. Ticket sent to the Kitchen POS.':'Kitchen ticket sent to '+destination+'.')};
+  printTestKot=function(){var destination=kitchenDestination();notice(destination==='Kitchen POS'?'No kitchen printer is configured. Test ticket sent to the Kitchen POS.':'Test kitchen ticket queued for '+destination+'.')};
+
+  var syncedCompleteSale=completeSale;completeSale=async function(){var before=db.sales[0]&&db.sales[0].id;await syncedCompleteSale();var latest=db.sales[0];if(latest&&latest.id!==before){renderDashboard();if(window.clsSyncPosNow)await window.clsSyncPosNow()}};
+  window.addEventListener('storage',function(event){if(event.key!==storageKey||!event.newValue)return;try{db=JSON.parse(event.newValue);var active=document.querySelector('.view.active');if(active&&active.id==='view-dashboard')renderDashboard();if(active&&active.id==='view-checkout')renderCheckout()}catch(ignore){}});
+  renderCheckout();
+})();
+
+(function installIPadKioskControls(){
+  var appleTouch=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(!appleTouch)return;
+  var button=document.getElementById('full-btn'),start=null;
+  document.body.classList.add('apple-kiosk');
+  function keyboardIsOpen(){var field=document.activeElement,editing=field&&/^(INPUT|TEXTAREA|SELECT)$/.test(field.tagName);return editing||(window.visualViewport&&window.visualViewport.height<window.innerHeight*.78)}
+  function setKiosk(on){document.body.classList.toggle('full',on);document.body.classList.toggle('sidebar-collapsed',on);document.body.classList.toggle('touch-kiosk-active',on);document.body.classList.remove('ios-install-required','mobile-cart-open');button.textContent=on?'×':'Full Screen';button.setAttribute('aria-label',on?'Exit full screen':'Enter full screen');button.title=on?'Exit full screen':'Enter full screen'}
+  /* CSS kiosk mode stays active while iPad's software keyboard opens. */
+  toggleFull=function(){setKiosk(!document.body.classList.contains('full'));return Promise.resolve()};
+  if(document.body.classList.contains('full'))setKiosk(true);
+  document.addEventListener('touchstart',function(event){if(!document.body.classList.contains('full')||keyboardIsOpen()||event.touches.length!==1)return;var touch=event.touches[0];if(touch.clientY>90||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;start={x:touch.clientX,y:touch.clientY}},{passive:true});
+  document.addEventListener('touchmove',function(event){if(!start)return;var touch=event.touches[0],dx=Math.abs(touch.clientX-start.x),dy=touch.clientY-start.y;if(dy>24&&dy>dx)event.preventDefault()},{passive:false});
+  document.addEventListener('touchend',function(event){if(!start)return;var touch=event.changedTouches[0],dx=Math.abs(touch.clientX-start.x),dy=touch.clientY-start.y;start=null;if(dy>=120&&dy>dx*1.4&&!keyboardIsOpen())setKiosk(false)},{passive:true});
+  document.addEventListener('touchcancel',function(){start=null},{passive:true});
 })();
 </script></body></html>
