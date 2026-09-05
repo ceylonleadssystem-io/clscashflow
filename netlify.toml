@@ -23,6 +23,16 @@
   to = "/invoice-public.html?token=:token&v=:version"
   status = 200
 
+[[redirects]]
+  from = "/app"
+  to = "/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/install"
+  to = "/app/index.html"
+  status = 200
+
 # Standard security headers (no restrictive CSP, so inline scripts keep working)
 [[headers]]
   for = "/*"
@@ -67,6 +77,18 @@
   [headers.values]
     Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
     Netlify-CDN-Cache-Control = "no-store"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=300, must-revalidate"
 
 # A short browser cache makes switching Solo, Studio, and Business feel
 # immediate without leaving users on stale HTML after an update.

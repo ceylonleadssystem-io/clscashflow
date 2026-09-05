@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171512">
+<meta name="description" content="Install or open the Ceylonry POS System.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CeylonryPOS">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="192x192" href="/assets/icons/ceylonry-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/ceylonry-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<title>Install CeylonryPOS</title>
+<style>
+:root{--ink:#171512;--gold:#c49324;--paper:#fff;--sand:#f6f2e9;--muted:#716a61;--line:#ded7cc;--green:#168b5b}*{box-sizing:border-box}html{background:var(--ink)}body{margin:0;min-height:100dvh;background:radial-gradient(circle at 50% 5%,#fff 0,#f8f4ec 38%,#efe8dc 100%);color:var(--ink);font-family:'DM Sans',sans-serif;padding:max(22px,env(safe-area-inset-top)) 18px max(22px,env(safe-area-inset-bottom));display:grid;place-items:center}.shell{width:min(440px,100%);text-align:center}.brand-card{background:rgba(255,255,255,.92);border:1px solid rgba(65,50,31,.12);border-radius:30px;padding:clamp(25px,7vw,42px);box-shadow:0 30px 90px rgba(47,35,20,.15);backdrop-filter:blur(16px)}.logo-wrap{width:112px;height:112px;margin:0 auto 22px;border-radius:28px;display:grid;place-items:center;border:1px solid #2b2824;box-shadow:0 14px 32px rgba(47,35,20,.2);background:var(--ink);color:#fff;font:700 53px/1 'Playfair Display';letter-spacing:-.08em}.logo-wrap span{color:var(--gold);font:800 17px/1 'DM Sans';align-self:end;margin:0 0 20px -5px;letter-spacing:0}.eyebrow{margin:0;color:#987015;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.2em}.brand-card h1{margin:11px 0 6px;font:700 clamp(35px,10vw,46px)/1.02 'Playfair Display';letter-spacing:-.04em}.brand-card h1 span{color:var(--gold)}.product-name{margin:0 0 13px;color:#504a43;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.subtitle{margin:0 auto;color:var(--muted);font-size:15px;line-height:1.6;max-width:330px}.tagline{margin:21px 0 0;font-weight:800;font-size:17px}.actions{display:grid;gap:10px;margin-top:27px}.button{width:100%;min-height:55px;border:1px solid var(--ink);border-radius:15px;background:var(--ink);color:#fff;font:800 14px 'DM Sans';cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px}.button:active{transform:scale(.985)}.button.install{background:var(--gold);border-color:var(--gold);color:var(--ink)}.button.secondary{background:#fff;border-color:var(--line);color:var(--ink)}.button[hidden]{display:none}.installed-copy{margin:20px 0 8px;color:var(--muted);font-size:12px}.device-copy{margin:22px 0 0;color:#817a71;font-size:11px}.status{min-height:20px;margin:12px 0 0;color:var(--green);font-size:12px;font-weight:700}.ios-guide{margin-top:15px;padding:15px;border:1px solid #dec98f;border-radius:14px;background:#fff9e9;text-align:left}.ios-guide[hidden]{display:none}.ios-guide strong{display:block;margin-bottom:5px;font-size:13px}.ios-guide p{margin:0;color:#675f55;font-size:12px;line-height:1.6}.tenant-note{margin:18px 10px 0;color:#7c756c;font-size:10px;line-height:1.55}.tenant-note strong{color:#524c45}.mini-logo{display:inline-flex;align-items:center;gap:5px;margin-bottom:15px;font:700 16px 'Playfair Display'}.mini-logo span{color:var(--gold)}
+@media(min-width:700px){body{padding:35px}.brand-card{padding:42px}.shell{width:min(460px,100%)}}
+@media(display-mode:standalone){body{background:linear-gradient(155deg,#f9f5ed,#e9dfd0)}.installed-copy{display:none}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="brand-card">
+    <div class="mini-logo">Ceylonry<span>Labs.io</span></div>
+    <div class="logo-wrap" aria-label="Ceylonry POS logo">C<span>POS</span></div>
+    <p class="eyebrow">Point of Sale</p>
+    <h1>Ceylonry<span>POS</span></h1>
+    <p class="product-name">Point of Sale System</p>
+    <p class="subtitle">Access your Ceylonry POS business system from your phone.</p>
+    <p class="tagline">Run your POS from anywhere.</p>
+    <div class="actions">
+      <button class="button" type="button" id="open-ceylonry">Open CeylonryPOS <span>→</span></button>
+      <button class="button install" type="button" id="install-app" hidden>Install App</button>
+    </div>
+    <p class="installed-copy">Already installed?</p>
+    <button class="button secondary" type="button" id="open-installed">Open POS</button>
+    <div class="ios-guide" id="ios-guide" hidden><strong>Install CeylonryPOS on iPhone or iPad</strong><p>Tap the Share button → Add to Home Screen → Add.</p></div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <p class="device-copy">Works on iPhone, Android, tablet and desktop.</p>
+  </section>
+  <p class="tenant-note"><strong>One secure multi-tenant Ceylonry platform.</strong> Your login opens only your organisation, branches, staff, products, stock, POS orders, reports and settings according to your permissions.</p>
+</main>
+<script>
+(function(){
+  var installPrompt=null,installButton=document.getElementById('install-app'),iosGuide=document.getElementById('ios-guide'),status=document.getElementById('status');
+  var standalone=matchMedia('(display-mode:standalone)').matches||navigator.standalone===true;
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  function openCeylonry(){status.textContent='Opening your secure POS…';location.href='/pos-system/pos-system.html'}
+  document.getElementById('open-ceylonry').addEventListener('click',openCeylonry);document.getElementById('open-installed').addEventListener('click',openCeylonry);
+  if(standalone){document.getElementById('open-ceylonry').textContent='Open CeylonryPOS →';document.getElementById('open-installed').hidden=true;status.textContent='CeylonryPOS is installed on this device.'}
+  else if(ios){installButton.hidden=false;iosGuide.hidden=false;installButton.addEventListener('click',function(){iosGuide.hidden=false;iosGuide.scrollIntoView({behavior:'smooth',block:'nearest'})})}
+  window.addEventListener('beforeinstallprompt',function(event){event.preventDefault();installPrompt=event;installButton.hidden=false});
+  installButton.addEventListener('click',async function(){if(!installPrompt)return;installButton.disabled=true;installPrompt.prompt();var choice=await installPrompt.userChoice;if(choice.outcome==='accepted'){status.textContent='CeylonryPOS was installed successfully.';installButton.hidden=true}else{installButton.disabled=false}installPrompt=null});
+  window.addEventListener('appinstalled',function(){status.textContent='CeylonryPOS was installed successfully.';installButton.hidden=true});
+  if('serviceWorker'in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(error){console.warn('Ceylonry service worker was not registered',error)})});
+})();
+</script>
+</body>
+</html>

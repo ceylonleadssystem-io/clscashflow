@@ -1,0 +1,23 @@
+{
+  "id": "/app/",
+  "name": "Ceylonry",
+  "short_name": "Ceylonry",
+  "description": "Ceylonry Point of Sale System for your business.",
+  "start_url": "/app/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone"],
+  "orientation": "any",
+  "background_color": "#f6f2e9",
+  "theme_color": "#171512",
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {"name": "Open POS", "short_name": "POS", "url": "/pos-system/pos-system.html?source=pwa", "icons": [{"src": "/assets/icons/ceylonry-192.png", "sizes": "192x192", "type": "image/png"}]}
+  ],
+  "icons": [
+    {"src": "/assets/icons/ceylonry-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/assets/icons/ceylonry-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "/assets/icons/ceylonry-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/assets/icons/ceylonry-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
