@@ -95,6 +95,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 
 .footer-links a:hover{color:var(--brown)}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
 .reveal.in{opacity:1;transform:translateY(0)}
+.team-photo{margin:0}
 @media(max-width:980px){
   .nav-inner{grid-template-columns:1fr auto}
   .nav-links{display:none}
@@ -190,6 +191,7 @@ input,select,textarea{border:1px solid #cfcfca;border-radius:12px;background:#ff
 input:focus,select:focus,textarea:focus{border-color:#080808;box-shadow:0 0 0 4px rgba(215,167,47,.24)}
 .footer{border-top:1px solid #deded9;background:#080808;color:#aaa;padding:42px 0}
 .footer-links a{color:#ddd}
+.team{padding:20px 0 100px}.team-head{display:grid;grid-template-columns:minmax(0,.78fr) minmax(320px,.42fr);gap:50px;align-items:end;margin-bottom:42px}.team-head h2{max-width:820px;margin:0;font-family:var(--sans);font-size:clamp(54px,7vw,104px);font-weight:900;line-height:.88;letter-spacing:-.075em}.team-head>p{margin:0;color:#5f5f5b;font-size:17px;line-height:1.7}.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.team-card{display:grid;grid-template-columns:minmax(210px,.7fr) minmax(0,1fr);min-width:0;border:1px solid #deded9;background:#f5f5f2}.team-card:first-child{background:#080808;color:#fff;border-color:#080808}.team-photo{min-height:100%;overflow:hidden;background:#ddd}.team-photo img{width:100%;height:100%;min-height:440px;object-fit:cover;object-position:center top;filter:saturate(.88) contrast(1.03)}.team-card:first-child .team-photo img{object-position:center 24%}.team-content{display:flex;flex-direction:column;padding:clamp(26px,3vw,42px)}.team-number{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#a27b19;font-size:11px;font-weight:800;letter-spacing:.18em}.team-card:first-child .team-number{color:#d7a72f}.team-content h3{margin:28px 0 5px;font-size:clamp(28px,3vw,42px);font-weight:900;line-height:.98;letter-spacing:-.045em}.team-role{margin:0;color:#9a741a;font-size:11px;font-weight:850;line-height:1.45;letter-spacing:.1em;text-transform:uppercase}.team-card:first-child .team-role{color:#d7a72f}.team-bio{margin:26px 0 0;color:#5f5f5b;font-size:14px;line-height:1.72}.team-card:first-child .team-bio{color:#c9c9c3}.team-brand{margin-top:auto;padding-top:28px;color:#777;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.team-card:first-child .team-brand{color:#888}
 
 @media(max-width:980px){
   .container{width:min(100% - 40px,920px)}
@@ -197,6 +199,7 @@ input:focus,select:focus,textarea:focus{border-color:#080808;box-shadow:0 0 0 4p
   .hero-grid{grid-template-columns:1fr}
   .brand-portrait{max-width:520px;margin:10px auto 0}
   .story-card,.form-shell{grid-template-columns:1fr}
+  .team-head{grid-template-columns:1fr}.team-grid{grid-template-columns:1fr}.team-card{grid-template-columns:minmax(230px,.55fr) minmax(0,1fr)}
 }
 @media(max-width:640px){
   .container{width:calc(100% - 28px)}
@@ -217,6 +220,7 @@ input:focus,select:focus,textarea:focus{border-color:#080808;box-shadow:0 0 0 4p
   .movement-art img{height:250px}
   .form-section{padding-bottom:70px}
   .form-shell{gap:38px}
+  .team{padding:10px 0 64px}.team-head{gap:18px;margin-bottom:28px}.team-head h2{font-size:52px}.team-card{grid-template-columns:1fr}.team-photo img{height:auto;min-height:0;aspect-ratio:4/3}.team-content{min-height:390px}.team-bio{font-size:14px}
 }
 </style>
 <script src="assets/platform.js?v=20260811-leaflet-map12"></script>
@@ -235,6 +239,7 @@ input:focus,select:focus,textarea:focus{border-color:#080808;box-shadow:0 0 0 4p
       <a href="index.html#pricing">Pricing</a>
       <a href="#story">Story</a>
       <a href="#mission">Mission</a>
+      <a href="#team">Team</a>
       <a href="#movement">Join the Movement</a>
     </div>
     <div class="nav-cta">
@@ -307,6 +312,37 @@ input:focus,select:focus,textarea:focus{border-color:#080808;box-shadow:0 0 0 4p
         <p>We believe thousands of talented women are running businesses from kitchens, homes, shops, salons, studios, and small offices, but many do not have access to the right systems, funding guidance, or business structure.</p>
         <p>We want to help them grow from survival mode to confident, structured, profitable businesses.</p>
       </article>
+    </div>
+  </section>
+
+  <section class="team reveal" id="team">
+    <div class="container">
+      <div class="team-head">
+        <div><p class="label">Meet the Team</p><h2>The people behind the system.</h2></div>
+        <p>Quality, operations and customer experience come together through a team focused on making Cashflow System reliable, practical and easier to use every day.</p>
+      </div>
+      <div class="team-grid">
+        <article class="team-card">
+          <figure class="team-photo"><img src="assets/sasuni-dilrukshi.jpg" loading="lazy" alt="Sasuni Dilrukshi, Quality Assurance Intern at Ceylonry Labs"></figure>
+          <div class="team-content">
+            <span class="team-number">01 / QUALITY</span>
+            <h3>Sasuni Dilrukshi</h3>
+            <p class="team-role">Quality Assurance Intern<br>Cashflow System · Ceylonry Labs</p>
+            <p class="team-bio">Sasuni contributes to the quality and continuous improvement of Cashflow System. She tests features, identifies and documents bugs, verifies fixes, and conducts functional, UI/UX, responsive and regression testing across different devices and screen sizes. Her work helps the development team maintain a reliable, stable and user-friendly experience.</p>
+            <span class="team-brand">Ceylonry Labs.io</span>
+          </div>
+        </article>
+        <article class="team-card">
+          <figure class="team-photo"><img src="assets/chathumi-herath.jpg" loading="lazy" alt="Chathumi Herath, Operations Intern at Ceylonry Labs"></figure>
+          <div class="team-content">
+            <span class="team-number">02 / OPERATIONS</span>
+            <h3>Chathumi Herath</h3>
+            <p class="team-role">Operations Intern<br>Cashflow System · Ceylonry Labs</p>
+            <p class="team-bio">Chathumi supports Ceylonry Labs’ daily operations by managing Growth Partner activities, assisting with customer onboarding and relationships, and tracking leads and conversions. She also coordinates customer complaints and reported system issues with the QA team so customers receive organised, timely support.</p>
+            <span class="team-brand">Ceylonry Labs.io</span>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 
