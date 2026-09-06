@@ -44,7 +44,7 @@ function serialize(value) {
 function stripLargeAdminFields(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return data || {};
   const out = Object.assign({}, data);
-  ['logo', 'logoData', 'businessLogo', 'invoiceLogo', 'signature', 'signatureData', 'profileImage', 'avatar'].forEach(function(key) {
+  ['logo', 'logoData', 'businessLogo', 'invoiceLogo', 'signature', 'signatureData', 'profileImage', 'avatar', 'receiptData'].forEach(function(key) {
     if (typeof out[key] === 'string' && out[key].length > 1000) delete out[key];
   });
   if (out.settings && typeof out.settings === 'object' && !Array.isArray(out.settings)) {

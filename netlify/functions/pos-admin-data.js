@@ -71,6 +71,17 @@ function paymentState(data) {
   };
 }
 
+function isTestAccount(data) {
+  return data && (data.posIsTestAccount === true || data.isTestAccount === true || String(data.customerType || '').toLowerCase() === 'test');
+}
+
+function addBillingPeriod(start, cycle) {
+  const date = new Date(start);
+  if (cycle === 'annual') date.setUTCFullYear(date.getUTCFullYear() + 1);
+  else date.setUTCMonth(date.getUTCMonth() + 1);
+  return date.toISOString();
+}
+
 function defaultWorkspace(uid, profile) {
   return {
     accountUid: uid,
@@ -130,6 +141,7 @@ exports.handler = async function(event) {
 
     if (action === 'list') {
       const rows = (await readRows(db, 'users', 'createdAt', 1000)).filter(function(row) { return isPosUser(row.data); });
+      const paymentRows = (await readRows(db, 'subscriptionPayments', 'receivedAtUtc', 1000)).filter(function(row) { return String((row.data || {}).plan || '').toLowerCase() === 'pos'; });
       const users = await Promise.all(rows.map(async function(row) {
         const workspace = await loadWorkspace(db, row.id, row.data).catch(function() { return { payload: {} }; });
         const payload = workspace.payload || {};
@@ -139,10 +151,15 @@ exports.handler = async function(event) {
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
           products: (payload.products || []).length, categories: (payload.categories || []).length,
-          updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data)
+          updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: isTestAccount(row.data), paused: row.data.posAccountPaused === true
         };
       }));
-      return response(200, { ok: true, users });
+      const realIds = new Set(rows.filter(function(row){ return !isTestAccount(row.data); }).map(function(row){ return String(row.id); }));
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const confirmed = paymentRows.filter(function(row){ const data=row.data||{}; return realIds.has(String(data.uid||'')) && ['paid','confirmed','verified'].includes(String(data.status||'').toLowerCase()) && String(data.verifiedAtUtc||data.receivedAtUtc||'').slice(0,7)===currentMonth; });
+      const revenueThisMonth = confirmed.reduce(function(total,row){ const data=row.data||{}; return total+(Number(data.amountLkr)||((data.billingCycle==='annual')?42000:3500)); },0);
+      const receipts = paymentRows.map(function(row){ const data=row.data||{}; return {id:row.id,uid:data.uid||'',email:data.email||'',businessName:data.businessName||'',billingCycle:data.billingCycle||'monthly',amountLkr:Number(data.amountLkr)||0,period:data.period||'',status:data.status||'receipt-submitted',receiptName:data.receiptName||'',receiptAvailable:!!data.receiptData,receivedAtUtc:data.receivedAtUtc||'',verifiedAtUtc:data.verifiedAtUtc||''}; });
+      return response(200, { ok: true, users, receipts, stats: { realCustomers: realIds.size, testAccounts: rows.length-realIds.size, revenueThisMonth, confirmedPaymentsThisMonth: confirmed.length } });
     }
 
     const uid = clean(body.userId || params.userId, 100);
@@ -153,6 +170,46 @@ exports.handler = async function(event) {
     const workspace = await loadWorkspace(db, uid, profile);
 
     if (action === 'get') return response(200, { ok: true, user: { id: uid, profile, payment: paymentState(profile) }, workspace: workspace.payload });
+
+    if (action === 'markTest') {
+      const test = body.test === true;
+      await db.collection('users').doc(uid).set({ posIsTestAccount:test, posTestAccountUpdatedAtUtc:new Date().toISOString(), posTestAccountUpdatedBy:ADMIN_EMAIL }, { merge:true });
+      return response(200,{ok:true,test});
+    }
+
+    if (action === 'setAccess') {
+      const paused = body.paused === true, now = new Date().toISOString();
+      await db.collection('users').doc(uid).set({ posAccountPaused:paused, posSubscriptionStatus:paused?'paused':(profile.posPaid===true?'active':'trial'), posAccessUpdatedAtUtc:now, posAccessUpdatedBy:ADMIN_EMAIL }, { merge:true });
+      return response(200,{ok:true,paused});
+    }
+
+    if (action === 'confirmPayment') {
+      const receiptId=clean(body.receiptId,240),cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)|| (cycle==='annual'?42000:3500);
+      if(!receiptId)return response(400,{ok:false,error:'Select a payment receipt.'});
+      await db.collection('subscriptionPayments').doc(receiptId).set({status:'verified',verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL,billingCycle:cycle,amountLkr:amount},{merge:true});
+      await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:addBillingPeriod(now,cycle),posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return response(200,{ok:true,nextPaymentDue:addBillingPeriod(now,cycle)});
+    }
+
+    if (action === 'getReceipt') {
+      const receiptId=clean(body.receiptId,240),snap=await db.collection('subscriptionPayments').doc(receiptId).get(),data=snap.exists?serialize(snap.data()||{}):{};
+      if(String(data.uid||'')!==uid||!data.receiptData)return response(404,{ok:false,error:'Payment slip file is not available. Older slips were delivered by email only.'});
+      return response(200,{ok:true,name:data.receiptName||'payment-slip',type:data.receiptType||'',data:data.receiptData});
+    }
+
+    if (action === 'addCategory') {
+      const name=clean(body.name,100);if(!name)return response(400,{ok:false,error:'Category name is required.'});
+      const categories=Array.from(new Set((workspace.payload.categories||[]).concat([name]))).sort(),payload=Object.assign({},workspace.payload,{categories});
+      await workspace.ref.set({ownerUid:uid,payload,updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return response(200,{ok:true,categories:categories.length});
+    }
+
+    if (action === 'addProduct') {
+      const item=normalizeProduct(body.product||{},0),before=Array.isArray(workspace.payload.products)?workspace.payload.products:[],match=productKey(item),products=before.filter(function(product){return productKey(product)!==match;});products.push(item);
+      const categories=Array.from(new Set((workspace.payload.categories||[]).concat([item.category]))).sort(),payload=Object.assign({},workspace.payload,{products,categories});
+      await workspace.ref.set({ownerUid:uid,payload,updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return response(200,{ok:true,products:products.length,categories:categories.length});
+    }
 
     if (action === 'saveCatalog') {
       const incoming = Array.isArray(body.products) ? body.products.map(normalizeProduct) : [];

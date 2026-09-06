@@ -27,7 +27,7 @@ exports.handler = async function(event) {
     try {
       const admin=firebaseAdminFacade(),stamp=admin.firestore.FieldValue.serverTimestamp();
       const receiptId=(uid||email.replace(/[^a-z0-9]/gi,'-')||'receipt')+'-'+(period||Date.now());
-      await admin.firestore().collection('subscriptionPayments').doc(receiptId).set({uid,email,name,businessName,plan:planKey||plan,billingCycle,amountLkr:Number.isFinite(amountLkr)?amountLkr:0,currency:'LKR',period,status:'receipt-submitted',source:'bank-receipt-email',receiptName:fileName,emailRecipient:'accounts@ceylonrylabs.io',emailSent:true,receivedAt:stamp,receivedAtUtc:new Date().toISOString()},{merge:true});
+      await admin.firestore().collection('subscriptionPayments').doc(receiptId).set({uid,email,name,businessName,plan:planKey||plan,billingCycle,amountLkr:Number.isFinite(amountLkr)?amountLkr:0,currency:'LKR',period,status:'receipt-submitted',source:'bank-receipt-email',receiptName:fileName,receiptType:mimeType,receiptData:'data:'+mimeType+';base64,'+fileBase64,emailRecipient:'accounts@ceylonrylabs.io',emailSent:true,receivedAt:stamp,receivedAtUtc:new Date().toISOString()},{merge:true});
       adminStored=true;
     } catch(storageError) { console.warn('Subscription receipt admin record failed:',storageError&&storageError.message); }
     return {statusCode:200,body:JSON.stringify({ok:true,sent:true,adminStored})};
