@@ -821,7 +821,7 @@ function switchAdminSection(section){
 }
 function renderAdminPayload(users, visits, tickets, paymentRequests, chats, stats, growthPartners, growthPartnerCodes, growthPartnerCommissions, subscriptionPayments){
   users = users || [];
-  var visibleUsers = users.filter(function(row){ return !isDeletedUser(row); });
+  var visibleUsers = users.filter(function(row){var u=row.data||{},product=String(u.product||'').toLowerCase(),posOnly=product==='pos'||(product!=='cashflow-pos'&&u.posEnabled===true&&(String(u.plan||'').toLowerCase()==='pos'||String(u.currentPlan||'').toLowerCase()==='pos'));return !isDeletedUser(row)&&!posOnly;});
   var localStats = Object.assign({}, stats || {});
   // The overview must always use the exact same canonical profile rows shown
   // in the Users table. Auth-only/stale identities must never inflate it.

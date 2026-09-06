@@ -64,7 +64,7 @@ body.full #view-checkout .cart{grid-template-rows:auto auto minmax(0,1fr)}body.f
 </style>
 <style>
 :root{--ceylonry-gold:#b58b25;--ceylonry-gold-dark:#8d6818;--ceylonry-gold-soft:#fffaf0}
-.brand{height:88px;background:url('../assets/ceylonry-pos-logo.png') center/contain no-repeat;font-size:0;padding:0;margin:0 8px 14px}
+.brand,body.full .brand{height:88px;background:url('../assets/ceylonry-pos-logo.png') center/contain no-repeat;font-size:0!important;color:transparent!important;text-indent:-9999px;overflow:hidden;padding:0;margin:0 8px 14px}
 .brand span,.brand .plan{display:none}
 .account-card h1,.login-brand{width:260px;max-width:100%;height:104px;margin:0 auto 8px;background:url('../assets/ceylonry-pos-logo.png') center/contain no-repeat;font-size:0!important;color:transparent}
 .account-card h1 span,.login-brand span{display:none}
@@ -493,4 +493,23 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
   renderCheckout();
 })();
 
+</script>
+<script>
+(function installStableIPadKiosk(){
+  var appleTouch=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(!appleTouch)return;
+  var button=document.getElementById('full-btn'),menuButton=document.getElementById('sidebar-toggle');
+  function setKiosk(on){
+    document.body.classList.toggle('full',on);
+    document.body.classList.toggle('sidebar-collapsed',on);
+    document.body.classList.toggle('touch-kiosk-active',on);
+    document.body.classList.remove('ios-install-required','mobile-cart-open');
+    if(button){button.textContent=on?'Exit Full Screen':'Full Screen';button.setAttribute('aria-pressed',String(on))}
+    if(menuButton){menuButton.textContent=on?'Show Menu':'Hide Menu';menuButton.setAttribute('aria-pressed',String(on))}
+  }
+  /* iPad native fullscreen reserves swipe-down as an exit gesture. Use the
+     POS viewport-locked kiosk instead so ordinary vertical scrolling is safe. */
+  toggleFull=function(){setKiosk(!document.body.classList.contains('full'));return Promise.resolve()};
+  if(matchMedia('(display-mode:standalone)').matches||navigator.standalone===true)setKiosk(true);
+})();
 </script></body></html>

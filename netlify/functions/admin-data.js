@@ -185,6 +185,13 @@ function isInternalOrTestUser(row) {
   return type !== 'customer' || data.isInternalTeam === true || data.isTestAccount === true || ['team', 'test', 'internal'].indexOf(type) !== -1;
 }
 
+function isPosOnlyUser(row) {
+  const data = (row && row.data) || {};
+  const product = String(data.product || '').toLowerCase();
+  if (product === 'cashflow-pos') return false;
+  return product === 'pos' || (data.posEnabled === true && (String(data.plan || '').toLowerCase() === 'pos' || String(data.currentPlan || '').toLowerCase() === 'pos'));
+}
+
 function buildRevenueStats(users, paymentRequests, subscriptionPayments) {
   const now = new Date();
   const monthKey = now.toISOString().slice(0, 7);
@@ -1199,7 +1206,17 @@ exports.handler = async function handler(event) {
     // Never block the dashboard read with per-user billing writes. Overdue
     // enforcement belongs to the billing event/scheduled path; doing it here
     // made the first admin response exceed the browser and Netlify timeouts.
-    const stats = buildStats(users, visits, tickets, paymentRequests, chats, subscriptionPayments);
+    const cashflowUsers = users.filter(function(row) { return !isPosOnlyUser(row); });
+    const cashflowUserIds = new Set(cashflowUsers.map(function(row) { return String(row.id); }));
+    const cashflowPaymentRequests = paymentRequests.filter(function(row) {
+      const data = row.data || {}, plan = String(data.plan || data.currentPlan || '').toLowerCase(), uid = String(data.uid || data.userUid || '');
+      return plan !== 'pos' && (!uid || cashflowUserIds.has(uid));
+    });
+    const cashflowSubscriptionPayments = subscriptionPayments.filter(function(row) {
+      const data = row.data || {}, plan = String(data.plan || data.currentPlan || '').toLowerCase(), uid = String(data.uid || data.userUid || '');
+      return plan !== 'pos' && (!uid || cashflowUserIds.has(uid));
+    });
+    const stats = buildStats(cashflowUsers, visits, tickets, cashflowPaymentRequests, chats, cashflowSubscriptionPayments);
     // The visit table is intentionally bounded for a fast response, but the
     // overview cards are lifetime totals and must not freeze at that limit.
     if (initialRows[10] != null) stats.visitsTotal = initialRows[10];
@@ -1217,11 +1234,11 @@ exports.handler = async function handler(event) {
       headers: headers(),
       body: JSON.stringify({
         ok: true,
-        users: slimRows(users),
+        users: slimRows(cashflowUsers),
         visits: slimRows(visits),
         tickets: slimRows(tickets),
-        paymentRequests: slimRows(paymentRequests),
-        subscriptionPayments: slimRows(subscriptionPayments),
+        paymentRequests: slimRows(cashflowPaymentRequests),
+        subscriptionPayments: slimRows(cashflowSubscriptionPayments),
         growthPartners: slimRows(growthPartners),
         growthPartnerCodes: slimRows(growthPartnerCodes),
         growthPartnerCommissions: slimRows(growthPartnerCommissions),
