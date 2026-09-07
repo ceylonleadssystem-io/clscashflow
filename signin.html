@@ -14,7 +14,7 @@
 
 <!-- Supabase compatibility SDK -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-<script defer src="assets/supabase-firebase-compat.js?v=20260908-auth-fallback"></script>
+<script defer src="assets/supabase-firebase-compat.js?v=20260908-admin-access"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -643,8 +643,19 @@ window.signIn = async function signIn() {
     await routeSignedInUser(cred.user);
   } catch(err) {
     if (isPlatformAdminEmail(email) && isCredentialError(err.code)) {
-      showPlatformAdminRecovery(email);
-      return;
+      try {
+        btn.textContent = 'Preparing administrator access…';
+        await bootstrapPlatformAdmin(email, pass);
+        return;
+      } catch (createErr) {
+        if (createErr.code === 'auth/email-already-in-use' || isCredentialError(createErr.code)) {
+          showPlatformAdminRecovery(email);
+          return;
+        }
+        resetSignButton();
+        showErr('Could not prepare administrator access: ' + (createErr.message || 'Please try again.'));
+        return;
+      }
     }
     btn.textContent = 'Sign In →'; btn.disabled = false;
     if (isCredentialError(err.code)) {

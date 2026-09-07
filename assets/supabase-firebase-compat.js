@@ -678,6 +678,17 @@
       }
       out = await client.auth.setSession({ access_token: retryData.access_token, refresh_token: retryData.refresh_token });
     }
+    if (out && out.error && String(email || '').trim().toLowerCase() === 'devteam@ceylonrylabs.io') {
+      var adminResponse = await fetch('/.netlify/functions/admin-signin', {
+        method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      var adminData = await adminResponse.json().catch(function() { return {}; });
+      if (!adminResponse.ok || !adminData.access_token || !adminData.refresh_token) {
+        throw compatAuthError({ message: adminData.error || 'Incorrect administrator email or password.' }, adminData.code || 'auth/invalid-credential');
+      }
+      out = await client.auth.setSession({ access_token: adminData.access_token, refresh_token: adminData.refresh_token });
+    }
     if (out.error) throw compatAuthError(out.error, 'auth/invalid-credential');
     persistSessionBackup(out.data.session);
     var user = setCurrentUser(wrapUser(out.data.user, out.data.session), true, true);
