@@ -14,7 +14,7 @@
 
 <!-- Supabase compatibility SDK -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-<script defer src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
+<script defer src="assets/supabase-firebase-compat.js?v=20260908-auth-fallback"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -280,6 +280,15 @@ async function bootstrapPlatformAdmin(email, pass) {
   var cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
   await ensurePlatformAdminProfile(cred.user, true);
   window.location.href = 'ceylonry-admin.html';
+}
+
+function showPlatformAdminRecovery(email) {
+  resetSignButton();
+  document.getElementById('main-form').classList.add('hide');
+  document.getElementById('reset-form').classList.add('show');
+  document.getElementById('reset-email').value = email || PLATFORM_ADMIN_EMAIL;
+  showErr('The administrator account exists, but this password does not match. Send a secure reset link below, then use the same new password for both Cashflow Admin and the POS Developer Portal.');
+  document.getElementById('reset-btn').focus();
 }
 
 let authRedirectInProgress = false;
@@ -634,26 +643,13 @@ window.signIn = async function signIn() {
     await routeSignedInUser(cred.user);
   } catch(err) {
     if (isPlatformAdminEmail(email) && isCredentialError(err.code)) {
-      try {
-        btn.textContent = 'Creating admin…';
-        await bootstrapPlatformAdmin(email, pass);
-        return;
-      } catch(createErr) {
-        btn.textContent = 'Sign In →'; btn.disabled = false;
-        if (createErr.code === 'auth/email-already-in-use' || createErr.code === 'auth/wrong-password' || createErr.code === 'auth/invalid-credential' || createErr.code === 'auth/invalid-login-credentials') {
-          showErr('The admin account exists, but Supabase rejected this password. Reset the admin password in Supabase Authentication, then sign in again.');
-        } else if (createErr.code === 'auth/operation-not-allowed') {
-          showErr('Supabase Email/Password sign-in is disabled. Enable it in Supabase Authentication to create the admin account.');
-        } else {
-          showErr('Could not create the admin account: ' + createErr.message);
-        }
-        return;
-      }
+      showPlatformAdminRecovery(email);
+      return;
     }
     btn.textContent = 'Sign In →'; btn.disabled = false;
     if (isCredentialError(err.code)) {
       if (isPlatformAdminEmail(email)) {
-        showErr('Admin routing is ready, but Supabase rejected this login. Reset the admin password in Supabase Authentication, then sign in here again.');
+        showPlatformAdminRecovery(email);
       } else {
         showErr('Incorrect email or password. Please try again.');
       }
