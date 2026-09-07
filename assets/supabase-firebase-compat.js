@@ -651,7 +651,33 @@
   };
   AuthCompat.prototype.signInWithEmailAndPassword = async function(email, password) {
     var client = await getClient();
-    var out = await client.auth.signInWithPassword({ email: email, password: password });
+    var out;
+    try {
+      out = await client.auth.signInWithPassword({ email: email, password: password });
+    } catch (networkError) {
+      var response = await fetch('/.netlify/functions/supabase-signin', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      var fallback = await response.json().catch(function() { return {}; });
+      if (!response.ok || !fallback.access_token || !fallback.refresh_token) {
+        throw compatAuthError({ message: fallback.error || networkError.message }, fallback.code || 'auth/network-request-failed');
+      }
+      out = await client.auth.setSession({ access_token: fallback.access_token, refresh_token: fallback.refresh_token });
+    }
+    if (out && out.error && /network|fetch|load failed|connection/i.test(String(out.error.message || ''))) {
+      var retryResponse = await fetch('/.netlify/functions/supabase-signin', {
+        method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      var retryData = await retryResponse.json().catch(function() { return {}; });
+      if (!retryResponse.ok || !retryData.access_token || !retryData.refresh_token) {
+        throw compatAuthError({ message: retryData.error || out.error.message }, retryData.code || 'auth/network-request-failed');
+      }
+      out = await client.auth.setSession({ access_token: retryData.access_token, refresh_token: retryData.refresh_token });
+    }
     if (out.error) throw compatAuthError(out.error, 'auth/invalid-credential');
     persistSessionBackup(out.data.session);
     var user = setCurrentUser(wrapUser(out.data.user, out.data.session), true, true);
