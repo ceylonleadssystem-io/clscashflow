@@ -93,9 +93,9 @@
     }
     async function load(){
       try{const user=new URLSearchParams(location.search).get('user');if(!user)throw Error('No customer was selected.');const current=firebase.auth().currentUser;if(!current)throw Error('Sign in to the developer portal again.');const token=await current.getIdToken();const response=await fetch(`${API}?action=get&userId=${encodeURIComponent(user)}`,{credentials:'same-origin',headers:{Authorization:'Bearer '+token}});const data=await response.json();if(!response.ok)throw Error(data.error||'Unable to load customer.');workspace=data.workspace||{};workspace.profile=Object.assign({},data.user&&data.user.profile||{},data.user&&data.user.payment||{});render();$('app').hidden=false;$('status').textContent='Preview loaded · customer data remains read-only';}
-      catch(error){$('status').textContent=error.message;if(/authori|sign in|session/i.test(error.message))setTimeout(()=>location.href='pos-admin-login.html',900)}
+      catch(error){$('status').textContent=error.message;if(/authori|sign in|session/i.test(error.message))setTimeout(()=>location.href='pos-system.html',900)}
     }
-    firebase.auth().onAuthStateChanged(user=>{if(user)load();else{$('status').textContent='Sign in to the POS Developer Portal to continue.';setTimeout(()=>location.href='pos-admin-login.html',900)}});
+    firebase.auth().onAuthStateChanged(user=>{if(user)load();else{$('status').textContent='Sign in to the POS Developer Portal to continue.';setTimeout(()=>location.href='pos-system.html',900)}});
   })();
   </script>
 </body>
