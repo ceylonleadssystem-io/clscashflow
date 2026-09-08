@@ -31,3 +31,46 @@ test('imported products remain editable and retain image controls', () => {
   assert.match(html, /imageFit:'cover',imagePositionX:50,imagePositionY:50/);
   assert.match(html, /id="p-image-fit"/);
 });
+
+test('catalogue list and thumbnail views are mutually exclusive', () => {
+  assert.match(html, /#view-products \.table-wrap\[hidden\],#product-management-grid\[hidden\]\{display:none!important\}/);
+  assert.match(html, /productManagementView=mode/);
+});
+
+test('product images can be positioned by dragging the preview', () => {
+  assert.match(html, /draggable-image-preview/);
+  assert.match(html, /addEventListener\('pointerdown'/);
+  assert.match(html, /addEventListener\('pointermove'/);
+});
+
+test('cloud merge preserves catalogue and inventory deletions', () => {
+  assert.match(html, /deletedIds:\{products:\[\],modifiers:\[\],inventory:\[\]\}/);
+  assert.match(html, /function markDeleted\(group,id\)/);
+  assert.match(html, /saveCloudSnapshotLocally/);
+});
+
+test('sync saves offline first and cannot remain stuck indefinitely', () => {
+  assert.match(html, /Offline · saved on this device/);
+  assert.match(html, /withSyncTimeout/);
+  assert.match(html, /cloudUnsubscribe=setInterval\(pull,5000\)/);
+});
+
+test('split bill takes and records every payment separately', () => {
+  assert.match(html, /function installSplitPaymentCheckout/);
+  assert.match(html, /takeSplitPayment/);
+  assert.match(html, /payment\.paid=true/);
+  assert.match(html, /Take each split payment before completing the sale/);
+});
+
+test('modern UI is additive and offers three cached themes', () => {
+  assert.match(html, /assets\/pos-modern\.css/);
+  assert.match(html, /id:'ceylonry'/);
+  assert.match(html, /id:'graphite'/);
+  assert.match(html, /id:'sand'/);
+  const css = fs.readFileSync(path.join(__dirname, '..', 'assets', 'pos-modern.css'), 'utf8');
+  assert.match(css, /data-pos-theme="ceylonry"/);
+  assert.match(css, /data-pos-theme="graphite"/);
+  assert.match(css, /data-pos-theme="sand"/);
+  const worker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  assert.match(worker, /\/assets\/pos-modern\.css/);
+});

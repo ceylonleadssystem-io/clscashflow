@@ -1,5 +1,5 @@
-const CACHE_NAME='ceylonry-pos-app-shell-v3';
-const PUBLIC_SHELL=['/app/','/app/index.html','/manifest.webmanifest','/pos-system/pos-system.html','/assets/supabase-firebase-compat.js','/assets/platform.js','/assets/pos-industry-tools.js','/assets/icons/ceylonry-192.png','/assets/icons/ceylonry-192-maskable.png','/assets/icons/ceylonry-512.png','/assets/icons/ceylonry-512-maskable.png'];
+const CACHE_NAME='ceylonry-pos-app-shell-v9';
+const PUBLIC_SHELL=['/app/','/app/index.html','/manifest.webmanifest','/pos-system/pos-system.html','/assets/pos-modern.css','/assets/supabase-firebase-compat.js','/assets/platform.js','/assets/pos-industry-tools.js','/assets/icons/ceylonry-192.png','/assets/icons/ceylonry-192-maskable.png','/assets/icons/ceylonry-512.png','/assets/icons/ceylonry-512-maskable.png'];
 
 self.addEventListener('install',function(event){event.waitUntil(caches.open(CACHE_NAME).then(function(cache){return cache.addAll(PUBLIC_SHELL)}));self.skipWaiting()});
 self.addEventListener('activate',function(event){event.waitUntil(caches.keys().then(function(keys){return Promise.all(keys.filter(function(key){return key!==CACHE_NAME}).map(function(key){return caches.delete(key)}))}));self.clients.claim()});
