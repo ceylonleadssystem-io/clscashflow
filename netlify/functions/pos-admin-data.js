@@ -140,18 +140,36 @@ exports.handler = async function(event) {
     const action = clean(body.action || params.action || 'list');
 
     if (action === 'list') {
-      const rows = (await readRows(db, 'users', 'createdAt', 1000)).filter(function(row) { return isPosUser(row.data); });
-      const paymentRows = (await readRows(db, 'subscriptionPayments', 'receivedAtUtc', 1000)).filter(function(row) { return String((row.data || {}).plan || '').toLowerCase() === 'pos'; });
+      const baseReads = await Promise.all([
+        readRows(db, 'users', 'createdAt', 1000),
+        readRows(db, 'subscriptionPayments', 'receivedAtUtc', 1000)
+      ]);
+      const rows = baseReads[0].filter(function(row) { return isPosUser(row.data); });
+      const paymentRows = baseReads[1].filter(function(row) { return String((row.data || {}).plan || '').toLowerCase() === 'pos'; });
+      let authAvailable = true, authUsers = [];
+      try {
+        const authPage = await admin.auth().listUsers(1000);
+        authUsers = authPage.users || [];
+      } catch (error) {
+        authAvailable = false;
+        console.error('POS auth reconciliation unavailable:', error);
+      }
+      const authById = new Map(authUsers.map(function(user) { return [String(user.uid), user]; }));
+      const authByEmail = new Map(authUsers.map(function(user) { return [clean(user.email).toLowerCase(), user]; }));
       const users = await Promise.all(rows.map(async function(row) {
         const workspace = await loadWorkspace(db, row.id, row.data).catch(function() { return { payload: {} }; });
         const payload = workspace.payload || {};
+        const email = clean(row.data.email).toLowerCase();
+        const authUser = authById.get(String(row.id)) || authByEmail.get(email) || null;
         return {
           id: row.id,
           name: row.data.name || row.data.displayName || '', email: row.data.email || '',
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
           products: (payload.products || []).length, categories: (payload.categories || []).length,
-          updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: isTestAccount(row.data), paused: row.data.posAccountPaused === true
+          updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: isTestAccount(row.data), paused: row.data.posAccountPaused === true,
+          authStatus: !authAvailable ? 'unavailable' : !authUser ? 'missing' : authUser.disabled ? 'disabled' : 'ready',
+          authLastSignInAt: authUser && authUser.metadata && authUser.metadata.lastSignInTime || ''
         };
       }));
       const realIds = new Set(rows.filter(function(row){ return !isTestAccount(row.data); }).map(function(row){ return String(row.id); }));
@@ -159,7 +177,7 @@ exports.handler = async function(event) {
       const confirmed = paymentRows.filter(function(row){ const data=row.data||{}; return realIds.has(String(data.uid||'')) && ['paid','confirmed','verified'].includes(String(data.status||'').toLowerCase()) && String(data.verifiedAtUtc||data.receivedAtUtc||'').slice(0,7)===currentMonth; });
       const revenueThisMonth = confirmed.reduce(function(total,row){ const data=row.data||{}; return total+(Number(data.amountLkr)||((data.billingCycle==='annual')?42000:3500)); },0);
       const receipts = paymentRows.map(function(row){ const data=row.data||{}; return {id:row.id,uid:data.uid||'',email:data.email||'',businessName:data.businessName||'',billingCycle:data.billingCycle||'monthly',amountLkr:Number(data.amountLkr)||0,period:data.period||'',status:data.status||'receipt-submitted',receiptName:data.receiptName||'',receiptAvailable:!!data.receiptData,receivedAtUtc:data.receivedAtUtc||'',verifiedAtUtc:data.verifiedAtUtc||''}; });
-      return response(200, { ok: true, users, receipts, stats: { realCustomers: realIds.size, testAccounts: rows.length-realIds.size, revenueThisMonth, confirmedPaymentsThisMonth: confirmed.length } });
+      return response(200, { ok: true, users, receipts, stats: { realCustomers: realIds.size, testAccounts: rows.length-realIds.size, revenueThisMonth, confirmedPaymentsThisMonth: confirmed.length, authAvailable, missingAuthAccounts: users.filter(function(user){ return user.authStatus === 'missing'; }).length, disabledAuthAccounts: users.filter(function(user){ return user.authStatus === 'disabled'; }).length } });
     }
 
     const uid = clean(body.userId || params.userId, 100);

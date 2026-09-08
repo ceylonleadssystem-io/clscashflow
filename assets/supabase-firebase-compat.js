@@ -680,9 +680,14 @@
       });
       var retryData = await retryResponse.json().catch(function() { return {}; });
       if (!retryResponse.ok || !retryData.access_token || !retryData.refresh_token) {
-        throw compatAuthError({ message: retryData.error || out.error.message }, retryData.code || 'auth/network-request-failed');
+        // The platform administrator has a separate server-side recovery path
+        // below. Do not throw here before that path gets a chance to run.
+        if (String(email || '').trim().toLowerCase() !== 'devteam@ceylonrylabs.io') {
+          throw compatAuthError({ message: retryData.error || out.error.message }, retryData.code || 'auth/network-request-failed');
+        }
+      } else {
+        out = await client.auth.setSession({ access_token: retryData.access_token, refresh_token: retryData.refresh_token });
       }
-      out = await client.auth.setSession({ access_token: retryData.access_token, refresh_token: retryData.refresh_token });
     }
     if (out && out.error && String(email || '').trim().toLowerCase() === 'devteam@ceylonrylabs.io') {
       var adminResponse = await fetch('/.netlify/functions/admin-signin', {
