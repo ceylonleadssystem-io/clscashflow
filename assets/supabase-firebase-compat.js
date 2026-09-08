@@ -652,6 +652,12 @@
   AuthCompat.prototype.signInWithEmailAndPassword = async function(email, password) {
     var client = await getClient();
     var out;
+    function isTransientAuthError(error) {
+      var status = Number(error && (error.status || error.statusCode));
+      var message = String(error && error.message || '');
+      return status === 408 || status === 429 || status >= 500 ||
+        /network|fetch|load failed|connection|timeout|timed out|gateway|temporarily unavailable/i.test(message);
+    }
     try {
       out = await client.auth.signInWithPassword({ email: email, password: password });
     } catch (networkError) {
@@ -667,7 +673,7 @@
       }
       out = await client.auth.setSession({ access_token: fallback.access_token, refresh_token: fallback.refresh_token });
     }
-    if (out && out.error && /network|fetch|load failed|connection/i.test(String(out.error.message || ''))) {
+    if (out && out.error && isTransientAuthError(out.error)) {
       var retryResponse = await fetch('/.netlify/functions/supabase-signin', {
         method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, password: password })

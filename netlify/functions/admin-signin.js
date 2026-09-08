@@ -15,6 +15,23 @@ function correctAdminCredential(email, password) {
   return received.length === expected.length && crypto.timingSafeEqual(received, expected);
 }
 
+function isTransient(error) {
+  const status = Number(error && (error.status || error.statusCode));
+  const message = String(error && error.message || '').toLowerCase();
+  return status === 408 || status === 429 || status >= 500 ||
+    /timeout|timed out|gateway|network|fetch|temporarily unavailable|connection/.test(message);
+}
+
+async function signInWithRetry(supabase, email, password) {
+  let result;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    result = await supabase.auth.signInWithPassword({ email, password });
+    if (!result.error || !isTransient(result.error)) return result;
+    await new Promise(resolve => setTimeout(resolve, 250 * (attempt + 1)));
+  }
+  return result;
+}
+
 exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') return response(204, {});
   if (event.httpMethod !== 'POST') return response(405, { error: 'Method not allowed' });
@@ -24,7 +41,7 @@ exports.handler = async function handler(event) {
     const password = String(body.password || '');
     if (!correctAdminCredential(email, password)) return response(401, { error: 'Incorrect administrator email or password.', code: 'auth/invalid-credential' });
     const supabase = service();
-    let signedIn = await supabase.auth.signInWithPassword({ email, password });
+    let signedIn = await signInWithRetry(supabase, email, password);
     if (signedIn.error || !signedIn.data || !signedIn.data.session) {
       const listed = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
       if (listed.error) throw listed.error;
@@ -39,12 +56,12 @@ exports.handler = async function handler(event) {
         user = created.data.user;
       }
       await upsertDocument('users', user.id, { uid:user.id,name:'Ceylonry Labs Admin',email:ADMIN_EMAIL,role:'platform_admin',accountType:'platform_admin',plan:'admin',currentPlan:'admin',paid:true,onboardingComplete:true,adminAccess:true,updatedAt:new Date().toISOString() }, true);
-      signedIn = await supabase.auth.signInWithPassword({ email, password });
+      signedIn = await signInWithRetry(supabase, email, password);
     }
     if (signedIn.error || !signedIn.data || !signedIn.data.session) throw signedIn.error || new Error('Administrator session could not be created.');
     return response(200, { ok:true,access_token:signedIn.data.session.access_token,refresh_token:signedIn.data.session.refresh_token });
   } catch (error) {
     console.error('admin-signin:', error);
-    return response(500, { error: 'Administrator sign-in could not be completed.' });
+    return response(isTransient(error) ? 503 : 500, { error: isTransient(error) ? 'Sign-in service is temporarily unavailable. Please try again.' : 'Administrator sign-in could not be completed.', code: isTransient(error) ? 'auth/service-unavailable' : 'auth/admin-signin-failed' });
   }
 };
