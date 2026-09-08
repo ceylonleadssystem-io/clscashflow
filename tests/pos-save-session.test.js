@@ -8,9 +8,13 @@ const source = fs.readFileSync(
   'utf8'
 );
 
-test('manual POS sign-in disables the one-time fresh-login guard before authentication', () => {
-  const guard = source.indexOf('requireFreshBusinessLogin=false;var cred=await firebase.auth().signInWithEmailAndPassword');
-  assert.notEqual(guard, -1, 'fresh-login guard must be cleared before Supabase emits SIGNED_IN');
+test('refreshing the business-login URL never invalidates an authenticated session', () => {
+  assert.match(source, /var requireFreshBusinessLogin=false/);
+  assert.doesNotMatch(source, /if\(requireFreshBusinessLogin\).*firebase\.auth\(\)\.signOut/s);
+});
+
+test('only explicit business logout signs out of Supabase', () => {
+  assert.match(source, /businessLogout=async function\(\).*firebase\.auth\(\)\.signOut\(\)/s);
 });
 
 test('POS saves locally and immediately queues cloud persistence', () => {

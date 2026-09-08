@@ -265,7 +265,9 @@ save();document.getElementById('side-business').textContent=db.settings.business
 (function(){
   if(!window.firebase)return;
   firebase.initializeApp({});
-  var requireFreshBusinessLogin=new URLSearchParams(location.search).get('login')==='business';if(requireFreshBusinessLogin){sessionStorage.removeItem('ceylonry-business-auth');sessionStorage.removeItem('ceylonry-pos-user')}
+  // The login query selects the business sign-in entry point; it must never
+  // invalidate an already authenticated session during a normal refresh.
+  var requireFreshBusinessLogin=false;
   var basePosReceiptSubmit=window.clsSubmitSubscriptionReceipt;window.clsSubmitSubscriptionReceipt=async function(file,profile,plan,statusEl,cycle){var ok=await basePosReceiptSubmit(file,profile,plan,statusEl,cycle);if(ok&&plan==='pos'){var user=firebase.auth().currentUser,next=profile.nextPaymentDue||'';if(user)await firebase.firestore().collection('users').doc(user.uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'receipt-submitted',posPaymentReminderStatus:'submitted',posLastPaymentSlipAt:new Date().toISOString(),posNextPaymentDue:next,posBillingCycle:cycle||'monthly',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}return ok};
   var cloudUser=null,cloudProfile=null,cloudRef=null,lastCloudJson='',syncTimer=null,cloudUnsubscribe=null,syncInFlight=false,syncAgain=false;
   function posAccessProfile(profile,user){return{uid:user.uid,email:user.email||'',name:profile.name||'',bizName:profile.posBusinessName||profile.bizName||'',plan:'pos',currentPlan:'pos',planMonthlyPrice:3500,planPrice:42000,billingCycle:profile.posBillingCycle||'monthly',trialStart:profile.posTrialStart||profile.trialStart,trialEnd:profile.posTrialEnd||profile.trialEnd,paid:profile.posPaid===true,subscriptionStatus:profile.posSubscriptionStatus||'trial',accountPaused:profile.posAccountPaused===true,paymentRequestToken:profile.posPaymentRequestToken||'',lastPaymentSlipAt:profile.posLastPaymentSlipAt||'',nextPaymentDue:profile.posNextPaymentDue||''}}
@@ -301,9 +303,10 @@ save();document.getElementById('side-business').textContent=db.settings.business
     if(!accessAllowed(window._profile)){try{await userRef.set({posSubscriptionStatus:'payment-required',posAccountPaused:true,posPaymentReminderStatus:'due',posPaymentReminderAt:new Date().toISOString()},{merge:true})}catch(ignore){}window.clsRenderSubscriptionPaywall&&window.clsRenderSubscriptionPaywall(window._profile,{plan:'pos'})}
     else{window.clsMaybeShowDay5PaymentPrompt&&window.clsMaybeShowDay5PaymentPrompt(window._profile,{plan:'pos'});if(!syncTimer)syncTimer=setInterval(syncCloud,2500)}
   }
-  var POS_DEVELOPER_EMAIL='devteam@ceylonrylabs.io',normalPosSubmit=businessAccountSubmit;businessAccountSubmit=async function(){var email=document.getElementById('account-email').value.trim().toLowerCase(),password=document.getElementById('account-password').value,error=document.getElementById('account-error');try{error.textContent='Signing in securely…';requireFreshBusinessLogin=false;var cred=await firebase.auth().signInWithEmailAndPassword(email,password);error.textContent='';if(email===POS_DEVELOPER_EMAIL){location.href='pos-admin.html';return}await activateCloud(cred.user)}catch(e){error.textContent=e?.message||'Incorrect POS email or password.'}};
+  var POS_DEVELOPER_EMAIL='devteam@ceylonrylabs.io',normalPosSubmit=businessAccountSubmit;businessAccountSubmit=async function(){var email=document.getElementById('account-email').value.trim().toLowerCase(),password=document.getElementById('account-password').value,error=document.getElementById('account-error');try{error.textContent='Signing in securely…';var cred=await firebase.auth().signInWithEmailAndPassword(email,password);error.textContent='';if(email===POS_DEVELOPER_EMAIL){location.href='pos-admin.html';return}await activateCloud(cred.user)}catch(e){error.textContent=e?.message||'Incorrect POS email or password.'}};
   var note=document.createElement('div');note.id='pos-new-account-note';note.className='pos-auth-note';note.innerHTML='New to POS? <a href="../pos-onboarding.html">Start a 15-day POS trial</a> · Your sales are stored on this device if the internet drops and sync when it returns.';document.querySelector('#account-gate .account-card')?.append(note);document.getElementById('account-heading').textContent='POS business sign in';document.getElementById('account-copy').textContent='Enter your business email and password to continue.';document.getElementById('account-confirm-field').hidden=true;document.getElementById('account-submit').textContent='Sign In to POS';var accountEmail=document.getElementById('account-email');accountEmail.addEventListener('input',function(){var developer=accountEmail.value.trim().toLowerCase()===POS_DEVELOPER_EMAIL;note.hidden=developer;document.getElementById('account-heading').textContent=developer?'POS developer sign in':'POS business sign in';document.getElementById('account-copy').textContent=developer?'Sign in to open the separate POS Developer Portal.':'Enter your business email and password to continue.'});
-  firebase.auth().onAuthStateChanged(async function(user){if(requireFreshBusinessLogin){if(user){await firebase.auth().signOut();return}requireFreshBusinessLogin=false;document.getElementById('account-gate').hidden=false;document.getElementById('login-gate').hidden=true;return}if(user)activateCloud(user).catch(function(e){document.getElementById('account-error').textContent=e?.message||'Could not load the POS account.'})});
+  var localBusinessLogout=businessLogout;businessLogout=async function(){if(syncTimer){clearInterval(syncTimer);syncTimer=null}if(cloudUnsubscribe){clearInterval(cloudUnsubscribe);cloudUnsubscribe=null}cloudRef=null;cloudUser=null;cloudProfile=null;try{await firebase.auth().signOut()}catch(error){console.warn('Cloud sign-out will finish when the connection returns',error)}localBusinessLogout();document.getElementById('account-gate').hidden=false;document.getElementById('login-gate').hidden=true};
+  firebase.auth().onAuthStateChanged(function(user){if(user){activateCloud(user).catch(function(e){document.getElementById('account-error').textContent=e?.message||'Could not load the POS account.'});return}sessionStorage.removeItem('ceylonry-business-auth');sessionStorage.removeItem('ceylonry-pos-user');currentUserId='';document.getElementById('account-gate').hidden=false;document.getElementById('login-gate').hidden=true});
   window.clsSyncPosNow=syncCloud;window.addEventListener('online',function(){updateConnectionStatus();syncCloud()});window.addEventListener('offline',updateConnectionStatus);window.addEventListener('focus',syncCloud);document.addEventListener('visibilitychange',function(){if(!document.hidden)syncCloud()});window.addEventListener('beforeunload',function(){syncCloud()});
 })();
 </script>
@@ -533,4 +536,20 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
     return sendReceipt(options);
   };
 })();
-</script></body></html>
+</script>
+<style>
+/* Final sidebar hierarchy: client first, product attribution second. */
+@media(min-width:1101px){
+  .side,body.full .side{padding:16px 14px!important;gap:0}
+  .side-business-logo,body.full .side-business-logo,
+  body.full:has(#view-dashboard.active) .side-business-logo{order:0;width:100%!important;height:104px!important;margin:0 0 8px!important;padding:9px!important;border:1px solid #39352f;border-radius:10px;background:#fff;object-fit:contain}
+  .brand,body.full .brand,body.full:has(#view-dashboard.active) .brand{order:1;height:31px!important;margin:0 8px 10px!important;padding:0!important;background-size:76px auto!important;background-position:center bottom!important;opacity:.72}
+  .brand::before{top:0;font-size:6px;color:#8f8981}
+  .session-user,body.full .session-user,body.full:has(#view-dashboard.active) .session-user{order:2;margin:0 0 8px!important;padding:9px 10px!important;border-color:#39352f;background:#201e1a}
+  .side .nav,body.full .side .nav{order:3;gap:3px!important;padding:3px 2px 6px!important}
+  .side .nav button,body.full .side .nav button,body.full:has(#view-dashboard.active) .nav button{min-height:36px!important;padding:8px 10px!important;border-radius:7px;font-size:12px!important;line-height:1.25}
+  .side .nav button.active{background:#34302a;box-shadow:inset 3px 0 #d4aa43}
+  .side-foot,body.full .side-foot,body.full:has(#view-dashboard.active) .side-foot{order:4;margin-top:auto!important;padding:10px 6px 0!important;font-size:10px!important;line-height:1.45;border-color:#39352f}
+  .side-foot .btn,body.full .side-foot .btn{min-height:34px!important;margin-top:6px!important;padding:7px!important;font-size:10px!important}
+}
+</style></body></html>
