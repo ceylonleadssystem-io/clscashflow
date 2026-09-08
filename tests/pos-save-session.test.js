@@ -27,3 +27,10 @@ test('temporary device-storage errors do not discard the in-memory POS change', 
   assert.match(source, /catch\(error\)\{console\.error\('POS device storage failed'/);
   assert.match(source, /return savedLocally/);
 });
+
+test('first-login POS setup can be permanently dismissed and remains available in Settings', () => {
+  assert.match(source, /id="setup-dont-ask" checked/);
+  assert.match(source, /db\.settings\.onboardingDismissed=true/);
+  assert.match(source, /!db\.settings\.onboardingComplete&&!db\.settings\.onboardingDismissed/);
+  assert.match(source, /onclick="openPosSetup\(\)"/);
+});
