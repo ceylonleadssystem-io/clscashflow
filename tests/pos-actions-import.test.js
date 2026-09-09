@@ -61,12 +61,17 @@ test('an empty sync cannot silently erase an existing catalogue', () => {
   assert.match(html, /function recoverMissingCatalogue\(current,candidates,profile,user\)/);
   assert.match(html, /Your saved POS items were restored/);
   assert.match(html, /if\(preferLocal\).*merged\.deletedIds\[key\]=merged\.deletedIds\[key\]\.filter/s);
+  assert.match(html, /Recover the account-bound device catalogue before the first write/);
+  assert.match(html, /if\(localPayload&&typeof localPayload==='object'&&!localPayload\.accountUid\)localPayload\.accountUid=user\.uid/);
+  assert.match(html, /preSyncRecovered=recoverMissingCatalogue.*await syncCloud\(\)/s);
 });
 
 test('sync saves offline first and cannot remain stuck indefinitely', () => {
   assert.match(html, /Offline · saved on this device/);
   assert.match(html, /withSyncTimeout/);
   assert.match(html, /cloudUnsubscribe=setInterval\(pull,5000\)/);
+  assert.match(html, /POS is online · cloud synced/);
+  assert.doesNotMatch(html, /id="pos-connection-label">POS is online</);
 });
 
 test('split bill takes and records every payment separately', () => {
@@ -78,6 +83,7 @@ test('split bill takes and records every payment separately', () => {
 
 test('full-screen checkout keeps totals and completion controls reachable', () => {
   assert.match(html, /Checkout visibility repair/);
+  assert.match(html, /body\.full #view-checkout \.cart\{position:relative!important;top:0!important;height:100%!important;max-height:100%!important\}/);
   assert.match(html, /body\.full #view-checkout \.cart-foot\{display:grid!important;grid-template-rows:minmax\(0,1fr\) repeat\(6,auto\)!important/s);
   assert.match(html, /body\.full #view-checkout #complete-btn\{position:relative!important;bottom:auto!important/s);
   assert.match(html, /cartList\.scrollTop=0/);
