@@ -833,4 +833,22 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
   function finishBillingSettings(){var widget=document.getElementById('cls-billing-widget');if(!widget)return false;var planSection=document.getElementById('settings-section-plan');if(planSection){var host=document.getElementById('settings-billing-widgets');if(!host){host=document.createElement('div');host.id='settings-billing-widgets';planSection.prepend(host)}if(widget.parentElement!==host)host.append(widget)}if(!document.querySelector('.billing-settings-note')){var note=document.createElement('div');note.className='billing-settings-note';note.textContent='Monthly renewals show the next monthly due date. Annual renewals show the next yearly due date. Warnings begin three days before payment is due; the due date has a one-day grace period before access pauses.';widget.after(note)}return true}if(!finishBillingSettings()){var billingTimer=setInterval(function(){if(finishBillingSettings())clearInterval(billingTimer)},600);setTimeout(function(){clearInterval(billingTimer)},12000)}
 })();
 </script>
+<style>
+/* Checkout visibility repair: one predictable scroll area per pane, with payment
+   totals and the sale action always reachable in full-screen register mode. */
+@media(min-width:901px){
+  body.full #view-checkout .cart{grid-template-rows:auto minmax(120px,min(25vh,230px)) auto minmax(0,1fr)!important}
+  body.full #view-checkout .cart-list{min-height:120px!important;max-height:min(25vh,230px)!important;overflow-y:auto!important}
+  body.full #view-checkout .cart-foot{display:block!important;min-height:0!important;overflow-y:auto!important;padding:10px 14px 14px!important;scrollbar-gutter:stable}
+  body.full #view-checkout .checkout-fields{overflow:visible!important;max-height:none!important;padding-right:0!important}
+  body.full #view-checkout #complete-btn{position:sticky!important;bottom:0!important;z-index:5!important;margin-top:8px!important;box-shadow:0 -12px 18px var(--ui-surface,#fff)!important}
+  body.full #view-checkout .grand{position:sticky;bottom:46px;z-index:4;background:var(--ui-surface,#fff);padding:8px 0 6px;margin-bottom:0}
+}
+@media(min-width:901px) and (max-height:820px){
+  body.full #view-checkout .cart{grid-template-rows:auto minmax(96px,19vh) auto minmax(0,1fr)!important}
+  body.full #view-checkout .cart-list{min-height:96px!important;max-height:19vh!important}
+  body.full #view-checkout .customer-find-note{display:none}
+  body.full #view-checkout .checkout-fields{gap:5px!important;margin:4px 0!important}
+}
+</style>
 </body></html>

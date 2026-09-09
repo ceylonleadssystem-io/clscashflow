@@ -68,6 +68,12 @@ test('split bill takes and records every payment separately', () => {
   assert.match(html, /Take each split payment before completing the sale/);
 });
 
+test('full-screen checkout keeps totals and completion controls reachable', () => {
+  assert.match(html, /Checkout visibility repair/);
+  assert.match(html, /body\.full #view-checkout \.cart-foot\{display:block!important;.*overflow-y:auto!important/s);
+  assert.match(html, /body\.full #view-checkout #complete-btn\{position:sticky!important;bottom:0!important/s);
+});
+
 test('modern UI is additive and offers three cached themes', () => {
   assert.match(html, /assets\/pos-modern\.css/);
   assert.match(html, /id:'ceylonry'/);
