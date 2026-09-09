@@ -43,9 +43,12 @@ test('product images can be positioned by dragging the preview', () => {
   assert.match(html, /addEventListener\('pointermove'/);
 });
 
-test('cloud merge preserves catalogue and inventory deletions', () => {
-  assert.match(html, /deletedIds:\{products:\[\],modifiers:\[\],inventory:\[\]\}/);
+test('cloud merge preserves catalogue, category and inventory deletions', () => {
+  assert.match(html, /deletedIds:\{products:\[\],modifiers:\[\],inventory:\[\],categories:\[\],subcategories:\[\]\}/);
   assert.match(html, /function markDeleted\(group,id\)/);
+  assert.match(html, /merged\.deletedIds\.categories/);
+  assert.match(html, /deletePosCategory=function\(name\).*db\.deletedIds\.categories/s);
+  assert.match(html, /window\.deletePosSubcategory=function\(id\).*db\.deletedIds\.subcategories/s);
   assert.match(html, /saveCloudSnapshotLocally/);
 });
 
