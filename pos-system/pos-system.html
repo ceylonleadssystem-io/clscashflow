@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="CeylonryPOS"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#171512"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" sizes="192x192" href="/assets/icons/ceylonry-192.png">
 <title>CeylonryLabs POS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/pos-modern.css?v=20260909-ui1">
+<link rel="stylesheet" href="../assets/pos-modern.css?v=20260909-ui2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
 <script src="../assets/supabase-firebase-compat.js?v=20260908-auth-recovery"></script>
 <script src="../assets/platform.js?v=20260901-pos-modal"></script>
@@ -466,7 +466,7 @@ body.full #view-checkout .cart-list{overflow:hidden!important;max-height:none!im
   var cartPage=0,lastCartLength=0;
   window.changeCartPage=function(delta){var size=cartPageSize(),pages=Math.max(1,Math.ceil(cart.length/size));cartPage=Math.max(0,Math.min(pages-1,cartPage+delta));renderCart()};
   function cartPageSize(){return innerHeight<760?3:innerHeight<1000?4:6}
-  function lineHtml(line){return '<div class="line"><div><strong>'+esc(line.name)+'</strong>'+((line.modifiers||[]).length?'<div class="line-modifiers">'+line.modifiers.map(function(m){return esc(m.groupName+': '+m.optionName)+(m.price?' (+'+money(m.price)+')':'')}).join('<br>')+'</div><button class="line-edit" onclick="openModifierPicker(\''+line.productId+'\',\''+line.key+'\')">Edit modifiers</button>':'')+'<div class="muted">'+money(line.price*line.qty)+'</div></div><div class="qty"><button onclick="qty(\''+line.key+'\',-1)">-</button>'+line.qty+'<button onclick="qty(\''+line.key+'\',1)">+</button></div></div>'}
+  function lineHtml(line){return '<div class="line">'+(line.image?'<img class="cart-line-image" src="'+line.image+'" alt="">':'<span class="cart-line-placeholder" aria-hidden="true">◇</span>')+'<div class="cart-line-copy"><strong>'+esc(line.name)+'</strong>'+((line.modifiers||[]).length?'<div class="line-modifiers">'+line.modifiers.map(function(m){return esc(m.groupName+': '+m.optionName)+(m.price?' (+'+money(m.price)+')':'')}).join('<br>')+'</div><button class="line-edit" onclick="openModifierPicker(\''+line.productId+'\',\''+line.key+'\')">Edit modifiers</button>':'')+'<div class="muted">'+money(line.price*line.qty)+'</div></div><div class="qty"><button onclick="qty(\''+line.key+'\',-1)">-</button>'+line.qty+'<button onclick="qty(\''+line.key+'\',1)">+</button></div></div>'}
   var originalRenderCart=renderCart;renderCart=function(){originalRenderCart();var size=cartPageSize();if(cart.length>lastCartLength)cartPage=Math.max(0,Math.ceil(cart.length/size)-1);lastCartLength=cart.length;var pages=Math.max(1,Math.ceil(cart.length/size));cartPage=Math.min(cartPage,pages-1);var visible=cart.slice(cartPage*size,cartPage*size+size);cartList.innerHTML=visible.map(lineHtml).join('')||'<div class="empty">Select a product to begin.</div>';cartList.scrollTop=0;if(!cart.length){var checkoutFields=document.querySelector('#view-checkout .checkout-fields');if(checkoutFields)checkoutFields.scrollTop=0}pager.hidden=cart.length<=size;pager.innerHTML='<button class="btn out" onclick="changeCartPage(-1)" '+(cartPage===0?'disabled':'')+'>Previous</button><span>'+(cart.length?'Items '+(cartPage*size+1)+'-'+Math.min(cart.length,(cartPage+1)*size)+' of '+cart.length:'No items')+'</span><button class="btn out" onclick="changeCartPage(1)" '+(cartPage>=pages-1?'disabled':'')+'>Next</button>';var subtotal=chargeableSubtotal(),discount=discountAmount(),charge=serviceChargeAmount(),rate=+db.settings.serviceChargeRate||0;document.getElementById('cart-subtotal').textContent=money(subtotal);discountRow.hidden=!discount;document.getElementById('cart-discount').textContent='- '+money(discount);serviceRow.hidden=!charge;document.getElementById('cart-service-label').textContent='Service charge ('+rate+'%)';document.getElementById('cart-service-charge').textContent=money(charge);document.getElementById('cart-total').textContent=money(Math.max(0,subtotal-discount+charge));renderSplitSummary()};
   var originalCompleteSale=completeSale;completeSale=async function(){var amount=serviceChargeAmount(),rate=+db.settings.serviceChargeRate||0,before=db.sales[0]?.id;if(amount)cart.push({id:'service-charge',productId:'',key:'service-charge-'+Date.now(),name:'Service Charge ('+rate+'%)',code:'SERVICE',category:'Service Charge',cost:0,price:amount,qty:1,isServiceCharge:true,recipe:[],modifiers:[]});try{await originalCompleteSale();var sale=db.sales[0];if(sale&&sale.id!==before){sale.serviceCharge={enabled:amount>0,rate:rate,amount:amount};save()}}finally{cart=cart.filter(function(line){return !line.isServiceCharge});renderCart()}};
   addEventListener('resize',function(){renderCart()});
@@ -866,5 +866,34 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
   body.full #view-checkout .customer-find-note{display:none}
   body.full #view-checkout .checkout-fields{gap:5px!important;margin:4px 0!important}
 }
+/* Browser zoom reduces the CSS viewport width. Between tablet and desktop widths
+   the catalogue is stacked, so it must use a scrolling document instead of the
+   fixed-height two-column kiosk geometry. */
+@media(min-width:650px) and (max-width:1100px){
+  #view-checkout.active{height:auto!important;min-height:0!important;overflow:visible!important}
+  #view-checkout .layout{height:auto!important;min-height:0!important;align-items:start!important}
+  #view-checkout .layout>.panel:first-child{height:auto!important;min-height:0!important}
+  #view-checkout .products{height:auto!important;max-height:min(56dvh,620px)!important;overflow-y:auto!important}
+  #view-checkout .cart{position:relative!important;top:0!important;height:auto!important;max-height:none!important;overflow:visible!important}
+  #view-checkout .cart-list{max-height:min(38dvh,360px)!important;overflow-y:auto!important}
+  #view-checkout .cart-foot{height:auto!important;overflow:visible!important}
+  body.full #view-checkout.active{height:100%!important;overflow-x:hidden!important;overflow-y:auto!important;padding-bottom:12px}
+  body.full #view-checkout .layout{height:auto!important}
+}
+.cart .line{grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px}
+.cart-line-image,.cart-line-placeholder{width:48px;height:48px;border-radius:10px;background:var(--ui-soft,#f5f3ee);object-fit:cover;display:grid;place-items:center;color:var(--ui-muted,#756f66);font-size:18px}
+.cart-line-copy{min-width:0}.cart-line-copy>strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cart-line-copy .muted{margin-top:4px;font-weight:800;color:var(--ui-text,#171512)!important}
+.payment-method-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.payment-method-picker .payment-choice{min-height:54px;padding:7px 5px;border:1px solid var(--ui-line,#dedad1);border-radius:10px;background:var(--ui-surface,#fff);color:var(--ui-text,#171512);font-size:10px;font-weight:800;cursor:pointer}.payment-method-picker .payment-choice span{display:block;margin-bottom:3px;font-size:17px}.payment-method-picker .payment-choice.active{border-color:var(--ui-accent,#ff5a00);background:color-mix(in srgb,var(--ui-accent,#ff5a00) 7%,var(--ui-surface,#fff));color:var(--ui-accent,#ff5a00);box-shadow:inset 0 0 0 1px var(--ui-accent,#ff5a00)}.payment-method-picker .payment-choice:disabled{opacity:.45;cursor:not-allowed}.payment-native-select{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important}
+@media(max-width:760px){.payment-method-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.cart .line{grid-template-columns:42px minmax(0,1fr) auto}.cart-line-image,.cart-line-placeholder{width:42px;height:42px}}
 </style>
+<script>
+(function installPaymentMethodCards(){
+  var select=document.getElementById('payment');if(!select||document.getElementById('payment-method-picker'))return;
+  var picker=document.createElement('div');picker.id='payment-method-picker';picker.className='payment-method-picker';picker.setAttribute('role','group');picker.setAttribute('aria-label','Payment method');select.classList.add('payment-native-select');select.before(picker);
+  var icons={'Cash':'▣','Card':'▤','Bank Transfer':'▥','Online Payment':'⌁'};
+  function syncPaymentCards(){picker.innerHTML=Array.from(select.options).map(function(option){var active=option.value===select.value;return '<button type="button" class="payment-choice '+(active?'active':'')+'" data-payment="'+esc(option.value)+'" aria-pressed="'+active+'" '+(select.disabled?'disabled':'')+'><span aria-hidden="true">'+(icons[option.value]||'•')+'</span>'+esc(option.textContent)+'</button>'}).join('')}
+  picker.addEventListener('click',function(event){var button=event.target.closest('[data-payment]');if(!button||button.disabled)return;select.value=button.dataset.payment;select.dispatchEvent(new Event('change',{bubbles:true}));syncPaymentCards()});select.addEventListener('change',syncPaymentCards);
+  var paymentSplitRender=renderSplitSummary;renderSplitSummary=function(){paymentSplitRender();syncPaymentCards()};syncPaymentCards();
+})();
+</script>
 </body></html>

@@ -87,6 +87,17 @@ test('full-screen checkout keeps totals and completion controls reachable', () =
   assert.match(html, /body\.full #view-checkout \.cart-foot\{display:grid!important;grid-template-rows:minmax\(0,1fr\) repeat\(6,auto\)!important/s);
   assert.match(html, /body\.full #view-checkout #complete-btn\{position:relative!important;bottom:auto!important/s);
   assert.match(html, /cartList\.scrollTop=0/);
+  assert.match(html, /Browser zoom reduces the CSS viewport width/);
+  assert.match(html, /@media\(min-width:650px\) and \(max-width:1100px\).*#view-checkout\.active\{height:auto!important.*overflow:visible!important/s);
+  assert.match(html, /body\.full #view-checkout\.active\{height:100%!important;overflow-x:hidden!important;overflow-y:auto!important/s);
+});
+
+test('checkout presents preserved payment methods as touch-friendly cards', () => {
+  assert.match(html, /function installPaymentMethodCards/);
+  assert.match(html, /aria-label','Payment method'/);
+  for (const method of ['Cash', 'Card', 'Bank Transfer', 'Online Payment']) assert.match(html, new RegExp(`'${method}'`));
+  assert.match(html, /select\.dispatchEvent\(new Event\('change'/);
+  assert.match(html, /cart-line-image/);
 });
 
 test('modern UI is additive and offers three cached themes', () => {
@@ -103,4 +114,8 @@ test('modern UI is additive and offers three cached themes', () => {
   assert.match(html, /db\.settings\.uiTheme=id;save\(\)/);
   const worker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(worker, /\/assets\/pos-modern\.css/);
+  assert.match(css, /Unified Ceylonry POS interface/);
+  assert.match(css, /Operational sections: orders, products, CRM, inventory, sales and staff/);
+  assert.match(css, /Checkout mirrors the compact sales\/payment reference/);
+  assert.match(worker, /ceylonry-pos-app-shell-v10/);
 });

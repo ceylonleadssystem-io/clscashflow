@@ -19,3 +19,73 @@ table{background:var(--ui-surface)}th{padding:13px 15px!important;background:var
 @media(max-width:560px){.content,body.full .content{padding:9px!important}.top,body.full .top{padding:0 12px!important}.top h1{font-size:19px!important}.products{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:10px!important;gap:9px!important}.product{min-height:164px!important}.product-img,.product-placeholder{height:94px!important}.grid4{grid-template-columns:1fr!important}.panel-head{align-items:flex-start!important;flex-wrap:wrap}.table-wrap{border-radius:0 0 var(--ui-radius) var(--ui-radius)}}
 @media(pointer:coarse){.side .nav button,.btn,.chip,.input{min-height:46px!important}.product{touch-action:manipulation}.qty button{min-width:44px!important;min-height:44px!important}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Unified Ceylonry POS interface — shared by every operational view. */
+:root,[data-pos-theme="ceylonry"]{
+  --ui-accent:#ff4b0b;--ui-accent-strong:#e83d00;--ui-sidebar:#111920;
+  --ui-sidebar-2:#1b252d;--ui-canvas:#f6f8fa;--ui-soft:#f3f5f7;
+  --ui-line:#e5e9ed;--ui-muted:#66717b;--ui-good:#11a768;
+  --ui-warning:#e99a18;--ui-danger:#e43c2f;--ui-radius:13px;
+  --ui-shadow:0 5px 18px rgba(17,25,32,.055);
+}
+html{font-size:clamp(13px,.12vw + 12px,15px)}
+body{line-height:1.42;-webkit-font-smoothing:antialiased}
+.main{min-width:0}.content{max-width:1920px;width:100%;margin:0 auto}
+.view{animation:pos-view-in .16s ease-out}.view.active{min-width:0}
+@keyframes pos-view-in{from{opacity:.65;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+/* Navigation and application chrome. */
+.side,body.full .side{box-shadow:8px 0 28px rgba(8,13,17,.08)}
+.brand,body.full .brand{min-height:50px!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.session-user{padding:12px!important}.session-user strong{font-size:13px}.session-user span{font-size:10px!important}
+.side .nav button,body.full .side .nav button{display:flex!important;align-items:center;gap:9px;letter-spacing:.005em}
+.side .nav button.active:after{content:'›';margin-left:auto;font-size:18px;line-height:1}
+.side-foot{margin-top:auto!important;padding-top:14px!important}.side-foot:before{content:'';display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:var(--ui-good);box-shadow:0 0 0 4px rgba(17,167,104,.12)}
+.top,body.full .top{position:sticky;top:0;z-index:45;box-shadow:0 1px 0 rgba(17,25,32,.02)}
+.top h1{line-height:1.15}.top p{margin-top:5px!important}
+
+/* Page rhythm, cards and KPI hierarchy. */
+.view>.panel,.view>div>.panel,.dashboard-two>.panel{overflow:hidden}
+.grid4{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.card{position:relative;min-height:116px;overflow:hidden}
+.card:before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--ui-accent);opacity:.9}
+.card .label{font-size:9px!important}.card .value{margin-top:10px!important;font-size:clamp(21px,1.7vw,29px)!important}
+.card .muted{margin-top:5px}.dashboard-toolbar{border:1px solid var(--ui-line);border-radius:var(--ui-radius);padding:14px 16px;background:var(--ui-surface);box-shadow:var(--ui-shadow)}
+.dashboard-two{gap:14px!important}.cashflow-grid{gap:10px!important;padding:16px!important}
+.mini{border:1px solid var(--ui-line)!important;background:var(--ui-soft)!important}
+.mini strong{font-size:15px!important}.payment-bar{border-radius:999px!important;overflow:hidden;background:var(--ui-soft)!important}.payment-bar span{background:var(--ui-accent)!important}
+
+/* Tables remain dense enough for operational use while matching the reference. */
+.table-wrap{width:100%;overflow:auto;scrollbar-width:thin}
+table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!important;font-weight:800!important;letter-spacing:.08em!important;white-space:nowrap}td{height:48px;font-size:12px!important;vertical-align:middle}tbody tr:last-child td{border-bottom:0}.table-actions,.tools{align-items:center}
+.badge,.role-pill{display:inline-flex!important;align-items:center;gap:5px;font-weight:800!important;white-space:nowrap}.badge:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
+
+/* Inputs, toolbars and settings share one control language. */
+.input{width:100%;font-size:12px!important}.field{gap:7px!important}.field label,.label{font-size:9px!important;font-weight:800!important}
+.catalog-toolbar,.customer-directory-tools{background:var(--ui-surface)}
+.settings-tabs{border-bottom:1px solid var(--ui-line);padding:0 0 10px!important}.settings-tab{min-height:38px!important;border-radius:9px!important}.settings-tab.active{background:var(--ui-accent)!important;border-color:var(--ui-accent)!important}
+.category-card{box-shadow:0 2px 8px rgba(17,25,32,.035)}.subcategory-chip{background:var(--ui-soft)!important}
+.catalog-product-card{overflow:hidden;box-shadow:var(--ui-shadow)}.catalog-card-media{background:var(--ui-soft)!important}.catalog-card-body h3{letter-spacing:-.015em}
+
+/* Dialogs and workflows. */
+.modal{padding:16px!important}.modal-box{width:min(640px,100%);max-height:min(90dvh,860px)!important}.modal-box>.panel-head{position:sticky;top:0;z-index:2;background:var(--ui-surface)}.modal-body{padding:19px!important}.modal-foot{position:sticky;bottom:0;z-index:2;background:var(--ui-surface);padding:13px 18px!important}
+.modifier-choice{border-color:var(--ui-line)!important;border-radius:10px!important;background:var(--ui-soft)!important}.modifier-choice:has(input:checked){border-color:var(--ui-accent)!important;background:color-mix(in srgb,var(--ui-accent) 7%,var(--ui-surface))!important}
+.plan-settings{border-radius:11px!important}.customer-tab{border-radius:11px!important}.customer-find-note{line-height:1.4}
+
+/* Operational sections: orders, products, CRM, inventory, sales and staff. */
+#view-products>div,#view-settings>div{gap:14px!important}
+#view-orders .grid4,#view-inventory .grid4,#view-reports .grid4,#view-crm .grid4{margin-bottom:14px}
+.crm-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;gap:14px!important}.customer{box-shadow:var(--ui-shadow)}.customer h3{font-size:15px!important;letter-spacing:-.015em}.customer-stats{gap:7px!important}
+.cash-positive,.positive{color:var(--ui-good)!important}.cash-negative{color:var(--ui-danger)!important}
+
+/* Checkout mirrors the compact sales/payment reference without removing controls. */
+#view-checkout .panel{box-shadow:0 4px 16px rgba(17,25,32,.05)!important}
+#view-checkout .cart>.panel-head{background:linear-gradient(180deg,#fff,#fbfcfd)}
+#view-checkout #order-actions .danger{box-shadow:none!important}
+#view-checkout .cart-foot>.row{font-weight:600}.cart .grand{font-weight:900!important;letter-spacing:-.035em!important}
+#complete-btn{letter-spacing:.01em}.cash-tender-panel{border-color:color-mix(in srgb,var(--ui-good) 34%,var(--ui-line))!important;background:color-mix(in srgb,var(--ui-good) 7%,#fff)!important}
+.cash-change-row strong{font-family:'DM Sans',sans-serif!important;color:var(--ui-good)!important}
+
+@media(max-width:1280px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))!important}.crm-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:900px){.top,body.full .top{top:55px!important}.content,body.full .content{padding:11px!important}.dashboard-two{grid-template-columns:1fr!important}.panel-head{gap:10px}.panel-head>.tools{width:100%}.panel-head>.tools .input{flex:1 1 220px}.crm-grid{grid-template-columns:1fr!important}}
+@media(max-width:620px){.grid4{grid-template-columns:1fr!important}.card{min-height:98px}.form-grid{grid-template-columns:1fr!important}.field.full{grid-column:auto}.panel-head{align-items:stretch!important}.panel-head,.modal-body{padding:13px!important}.panel-head>.tools{display:grid;width:100%}.btn{white-space:normal}.settings-theme-picker{grid-template-columns:1fr!important}}
