@@ -18,9 +18,11 @@
   var currentUserCache = null;
   var authNullTimer = null;
   var sessionRefreshPromise = null;
+  var forcedSessionRefreshPromise = null;
   var authStateVersion = 0;
   var explicitSignOutInProgress = false;
   var lastAuthSuccessAt = 0;
+  var sessionBackupRejected = false;
 
   function notifyAuthListeners(user) {
     authListeners.slice().forEach(function(cb) {
@@ -45,6 +47,7 @@
 
   function persistSessionBackup(session) {
     if (!session || !session.user || !session.access_token || !session.refresh_token) return;
+    sessionBackupRejected = false;
     try {
       localStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify({
         access_token: session.access_token,
@@ -62,6 +65,7 @@
 
   function readSessionBackup() {
     try {
+      if (sessionBackupRejected) return null;
       var raw = localStorage.getItem(SESSION_BACKUP_KEY);
       if (!raw) return null;
       var backup = JSON.parse(raw);
@@ -395,6 +399,35 @@
     return session && session.access_token ? session.access_token : '';
   }
 
+  async function forceRefreshAccessToken() {
+    await getClient();
+    if (!forcedSessionRefreshPromise) {
+      forcedSessionRefreshPromise = supabaseClient.auth.refreshSession()
+        .then(function(out) {
+          if (out && out.error) throw out.error;
+          var session = out && out.data && out.data.session;
+          if (!session || !session.user || !session.access_token) throw new Error('Your session has expired. Please sign in again.');
+          persistSessionBackup(session);
+          setCurrentUser(wrapUser(session.user, session), true);
+          return session;
+        })
+        .catch(async function(error) {
+          sessionBackupRejected = true;
+          clearSessionBackup();
+          try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch (ignore) {}
+          try { await supabaseClient.auth.signOut({ scope: 'local' }); } catch (ignore) {}
+          setCurrentUser(null, true, true);
+          var expired = new Error('Your login session expired. Please sign in again. Your unsynced changes remain saved on this device.');
+          expired.code = 'auth/session-expired';
+          expired.cause = error;
+          throw expired;
+        })
+        .finally(function() { forcedSessionRefreshPromise = null; });
+    }
+    var refreshed = await forcedSessionRefreshPromise;
+    return refreshed && refreshed.access_token ? refreshed.access_token : '';
+  }
+
   function wrapUser(user, session) {
     if (!user) return null;
     var meta = user.user_metadata || {};
@@ -439,12 +472,16 @@
       });
     }
     var res = await send();
-    if (res.status === 401) {
-      await restoreSessionFromBackup().catch(function() { return null; });
+    if (res.status === 401 || res.status === 403) {
+      await forceRefreshAccessToken();
       res = await send();
     }
     var json = await res.json().catch(function() { return {}; });
-    if (!res.ok || !json.ok) throw new Error(json.error || 'Supabase document request failed.');
+    if (!res.ok || !json.ok) {
+      var requestError = new Error(json.error || 'Supabase document request failed.');
+      if (res.status === 401 || res.status === 403) requestError.code = 'auth/session-expired';
+      throw requestError;
+    }
     return json;
   }
 

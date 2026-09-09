@@ -55,6 +55,14 @@ test('cloud merge preserves catalogue, category and inventory deletions', () => 
   assert.match(html, /saveCloudSnapshotLocally/);
 });
 
+test('an empty sync cannot silently erase an existing catalogue', () => {
+  assert.match(html, /function cacheCatalogue\(payload,user\)/);
+  assert.match(html, /function productsFromHistory\(payload\)/);
+  assert.match(html, /function recoverMissingCatalogue\(current,candidates,profile,user\)/);
+  assert.match(html, /Your saved POS items were restored/);
+  assert.match(html, /if\(preferLocal\).*merged\.deletedIds\[key\]=merged\.deletedIds\[key\]\.filter/s);
+});
+
 test('sync saves offline first and cannot remain stuck indefinitely', () => {
   assert.match(html, /Offline · saved on this device/);
   assert.match(html, /withSyncTimeout/);
