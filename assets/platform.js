@@ -1758,7 +1758,7 @@
   }
   function nextBillingDueDate(fromDate,cycle) { return cycle==='annual'?nextAnnualDueDate(fromDate):nextMonthlyDueDate(fromDate); }
   function paymentTimelineHtml(profile,requestedCycle) {
-    profile=profile||{};var cycle=billingCycleFor(profile,requestedCycle),annual=cycle==='annual',paid=isProfilePaidRecord(profile),due=billingDueDate(profile),reminder=new Date(due.getTime()-(annual?30:5)*86400000),unit=annual?'year':'month',fmt=function(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
+    profile=profile||{};var cycle=billingCycleFor(profile,requestedCycle),annual=cycle==='annual',paid=isProfilePaidRecord(profile),due=billingDueDate(profile),reminder=new Date(due.getTime()-3*86400000),unit=annual?'year':'month',fmt=function(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
     return '<div class="cls-payment-timeline"><strong>'+(paid?'Current prepaid '+cycle+' cycle':'Trial to prepaid '+cycle+' plan')+'</strong><div><i></i><span><b>'+fmt(reminder)+'</b> · '+(paid?(annual?'Annual renewal reminder':'Monthly payment reminder'):'Trial ending reminder')+'</span></div><div><i></i><span><b>'+fmt(due)+'</b> · '+(paid?'Next '+unit+' must be paid in advance':'Trial ends · first '+cycle+' payment is due')+'</span></div><div><i></i><span><b>'+(paid?fmt(due):'After slip upload')+'</b> · '+(paid?'Payment popup opens until a new slip is uploaded':'Access resumes and the next payment is due one calendar '+unit+' later')+'</span></div></div>';
   }
   function billingCyclePickerHtml(details,selectedCycle) {
