@@ -70,8 +70,9 @@ test('split bill takes and records every payment separately', () => {
 
 test('full-screen checkout keeps totals and completion controls reachable', () => {
   assert.match(html, /Checkout visibility repair/);
-  assert.match(html, /body\.full #view-checkout \.cart-foot\{display:block!important;.*overflow-y:auto!important/s);
-  assert.match(html, /body\.full #view-checkout #complete-btn\{position:sticky!important;bottom:0!important/s);
+  assert.match(html, /body\.full #view-checkout \.cart-foot\{display:grid!important;grid-template-rows:minmax\(0,1fr\) repeat\(6,auto\)!important/s);
+  assert.match(html, /body\.full #view-checkout #complete-btn\{position:relative!important;bottom:auto!important/s);
+  assert.match(html, /cartList\.scrollTop=0/);
 });
 
 test('modern UI is additive and offers three cached themes', () => {
