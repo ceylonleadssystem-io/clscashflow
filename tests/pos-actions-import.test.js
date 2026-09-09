@@ -41,6 +41,9 @@ test('product images can be positioned by dragging the preview', () => {
   assert.match(html, /draggable-image-preview/);
   assert.match(html, /addEventListener\('pointerdown'/);
   assert.match(html, /addEventListener\('pointermove'/);
+  assert.match(html, /data-image-move="0,-10"/);
+  assert.match(html, /style\.setProperty\('object-position'.*'important'\)/s);
+  assert.match(html, /imagePositionX:Number\.isFinite\(imageX\)\?imageX:50/);
 });
 
 test('cloud merge preserves catalogue, category and inventory deletions', () => {
@@ -74,6 +77,9 @@ test('modern UI is additive and offers three cached themes', () => {
   assert.match(css, /data-pos-theme="ceylonry"/);
   assert.match(css, /data-pos-theme="graphite"/);
   assert.match(css, /data-pos-theme="sand"/);
+  assert.match(html, /id='pos-theme-settings'/);
+  assert.match(html, /settings-theme-picker/);
+  assert.match(html, /db\.settings\.uiTheme=id;save\(\)/);
   const worker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(worker, /\/assets\/pos-modern\.css/);
 });
