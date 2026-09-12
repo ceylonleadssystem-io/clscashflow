@@ -117,7 +117,9 @@ test('modern UI is additive and offers three cached themes', () => {
   assert.match(css, /Unified Ceylonry POS interface/);
   assert.match(css, /Operational sections: orders, products, CRM, inventory, sales and staff/);
   assert.match(css, /Checkout mirrors the compact sales\/payment reference/);
-  assert.match(worker, /ceylonry-pos-app-shell-v10/);
+  assert.match(worker, /ceylonry-pos-app-shell-v11/);
+  assert.equal((css.match(/:root,\[data-pos-theme="ceylonry"\]/g) || []).length, 1);
+  assert.match(html, /meta\.content=theme\.color/);
 });
 
 test('reported checkout and settings regressions stay fixed', () => {
@@ -142,5 +144,18 @@ test('customer admin can maintain the live catalogue', () => {
   assert.match(adminHtml, /data-delete-category/);
   for (const action of ['deleteProduct', 'renameCategory', 'deleteCategory']) {
     assert.match(adminApi, new RegExp(`action === '${action}'`));
+  }
+});
+
+test('POS landing page offers hardware ordering by email', () => {
+  const landing = fs.readFileSync(path.join(__dirname, '..', 'pos.html'), 'utf8');
+  for (const model of ['Ceylonry POS Lite', 'Ceylonry POS Pro · White', 'Ceylonry POS Pro · Black']) {
+    assert.match(landing, new RegExp(model.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(landing, /Receipt Printer/);
+  assert.equal((landing.match(/mailto:hello@ceylonrylabs\.io/g) || []).length, 5);
+  for (const image of ['ceylonry-pos-lite.jpg', 'ceylonry-pos-pro-white.jpg', 'ceylonry-pos-pro-black.jpg', 'ceylonry-receipt-printer.jpg', 'ceylonry-pos-lite-industries.jpg']) {
+    assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', image)));
+    assert.match(landing, new RegExp(`assets/${image}`));
   }
 });

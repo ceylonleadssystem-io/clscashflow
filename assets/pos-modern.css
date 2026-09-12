@@ -21,7 +21,7 @@ table{background:var(--ui-surface)}th{padding:13px 15px!important;background:var
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
 
 /* Unified Ceylonry POS interface — shared by every operational view. */
-:root,[data-pos-theme="ceylonry"]{
+[data-pos-theme="ceylonry"]{
   --ui-accent:#ff4b0b;--ui-accent-strong:#e83d00;--ui-sidebar:#111920;
   --ui-sidebar-2:#1b252d;--ui-canvas:#f6f8fa;--ui-soft:#f3f5f7;
   --ui-line:#e5e9ed;--ui-muted:#66717b;--ui-good:#11a768;
