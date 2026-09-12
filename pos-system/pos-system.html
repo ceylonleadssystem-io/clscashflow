@@ -932,4 +932,154 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
 }
 @media(max-width:390px){#view-checkout #order-actions{grid-template-columns:1fr!important}#view-checkout #order-actions .danger{grid-column:auto!important}}
 </style>
+<style>
+/* Final checkout shell: a clean, dense register view inspired by the supplied
+   reference while retaining every existing Ceylonry control and workflow. */
+@media(min-width:1101px){
+  body.full:has(#view-checkout.active) .app{display:block!important;min-height:100dvh}
+  body.full:has(#view-checkout.active) .side{display:none!important}
+  body.full:has(#view-checkout.active) .top{height:58px!important;padding:0 18px!important}
+  body.full:has(#view-checkout.active) .top h1{font-size:20px!important}
+  body.full:has(#view-checkout.active) .top p{display:none}
+  body.full:has(#view-checkout.active) .content{height:calc(100dvh - 58px)!important;padding:10px!important;overflow:hidden}
+  body.full #view-checkout.active{height:100%!important;min-height:0!important;overflow:hidden!important}
+  body.full #view-checkout .layout{grid-template-columns:minmax(0,1.55fr) minmax(430px,.95fr)!important;gap:10px!important;height:100%!important;align-items:stretch!important}
+  body.full #view-checkout .layout>.panel:first-child{height:100%!important;border-radius:15px!important;grid-template-rows:auto auto minmax(0,1fr)!important}
+  body.full #view-checkout .layout>.panel:first-child>.panel-head{min-height:64px;padding:10px 13px!important}
+  body.full #view-checkout .layout>.panel:first-child .panel-title{font-size:0!important}
+  body.full #view-checkout .layout>.panel:first-child .panel-title:after{content:'Products';font-size:18px!important}
+  body.full #view-checkout .layout>.panel:first-child .tools{flex:1;justify-content:flex-end;flex-wrap:nowrap}
+  body.full #view-checkout #product-search{max-width:540px;min-height:44px!important}
+  body.full #view-checkout .category-rail{padding:9px 12px!important;background:var(--ui-surface)!important}
+  body.full #view-checkout .category-scroll{width:38px;height:40px}
+  body.full #view-checkout .cats .chip{min-height:40px!important;padding:8px 14px!important}
+  body.full #view-checkout .products{grid-template-columns:repeat(auto-fill,minmax(142px,1fr))!important;grid-auto-rows:176px!important;gap:10px!important;padding:11px!important;overflow-y:auto!important}
+  body.full #view-checkout .product{min-height:176px!important;height:176px!important;border-width:1px!important;border-radius:12px!important;overflow:hidden}
+  body.full #view-checkout .product-img,body.full #view-checkout .product-placeholder{height:102px!important;flex:0 0 102px!important}
+  body.full #view-checkout .product-copy{min-height:74px!important;padding:8px 10px!important;gap:4px!important}
+  body.full #view-checkout .product strong{font-size:12px!important}
+  body.full #view-checkout .product .muted{display:none!important}
+  body.full #view-checkout .price{font-size:15px!important}
+  body.full #view-checkout .cart{height:100%!important;border-radius:15px!important;grid-template-rows:auto minmax(110px,1fr) minmax(0,1.6fr)!important;overflow:hidden!important}
+  body.full #view-checkout .cart>.panel-head{display:block!important;padding:12px 14px 10px!important;background:var(--ui-surface)!important}
+  body.full #view-checkout .cart>.panel-head>.panel-title{margin:0 0 9px!important;font-size:20px!important}
+  body.full #view-checkout #order-actions{display:grid!important;grid-template-columns:1fr 1.25fr 1fr!important;width:100%!important;gap:7px!important;margin:0!important}
+  body.full #view-checkout #order-actions .btn{min-height:38px!important;padding:7px 6px!important;font-size:11px!important}
+  body.full #view-checkout .cart-list{min-height:110px!important;max-height:none!important;padding:2px 14px!important;border-bottom:1px solid var(--ui-line)!important;overflow-y:auto!important}
+  body.full #view-checkout .line{padding:9px 0!important;font-size:11px!important}
+  body.full #view-checkout .cart-foot{display:grid!important;grid-template-rows:minmax(0,1fr) repeat(6,auto)!important;padding:8px 14px 12px!important;overflow:hidden!important}
+  body.full #view-checkout .checkout-fields{min-height:0!important;overflow-y:auto!important;gap:6px!important;margin:2px 0 5px!important;padding-right:4px!important}
+  body.full #view-checkout .input{min-height:38px!important;padding:7px 9px!important;font-size:12px!important}
+  body.full #view-checkout .btn{min-height:38px!important}
+  body.full #view-checkout .payment-choice{min-height:48px!important}
+  body.full #view-checkout .cart-foot>.row{margin:3px 0!important;font-size:11px!important}
+  body.full #view-checkout .grand{margin-top:3px!important;padding:7px 0 3px!important;font-size:20px!important}
+  body.full #view-checkout #complete-btn{min-height:48px!important;margin-top:5px!important;font-size:14px!important;background:linear-gradient(135deg,var(--ui-accent),var(--ui-accent-strong))!important}
+}
+@media(min-width:1450px){
+  body.full #view-checkout .layout{grid-template-columns:minmax(0,1.7fr) minmax(500px,.9fr)!important}
+  body.full #view-checkout .products{grid-template-columns:repeat(auto-fill,minmax(156px,1fr))!important}
+}
+@media(min-width:1101px) and (max-height:760px){
+  body.full:has(#view-checkout.active) .top{height:50px!important}
+  body.full:has(#view-checkout.active) .content{height:calc(100dvh - 50px)!important;padding:7px!important}
+  body.full #view-checkout .products{grid-auto-rows:148px!important}
+  body.full #view-checkout .product{height:148px!important;min-height:148px!important}
+  body.full #view-checkout .product-img,body.full #view-checkout .product-placeholder{height:78px!important;flex-basis:78px!important}
+  body.full #view-checkout .cart{grid-template-rows:auto minmax(88px,.7fr) minmax(0,1.6fr)!important}
+  body.full #view-checkout .cart-list{min-height:88px!important}
+}
+</style>
+<style>
+/* Checkout mode chooser and dedicated phone register presentation. */
+.checkout-mode-gate{position:fixed;inset:0;z-index:96;display:grid;place-items:center;padding:20px;background:rgba(12,18,23,.72);backdrop-filter:blur(12px)}
+.checkout-mode-gate[hidden]{display:none}.checkout-mode-card{width:min(760px,100%);padding:28px;border:1px solid var(--ui-line);border-radius:22px;background:var(--ui-surface);box-shadow:0 30px 90px rgba(8,15,20,.28)}
+.checkout-mode-card h2{margin:0;font:800 30px/1.1 'DM Sans',sans-serif;letter-spacing:-.04em}.checkout-mode-card>p{margin:8px 0 22px;color:var(--ui-muted)}
+.checkout-mode-options{display:grid;grid-template-columns:1fr 1fr;gap:14px}.checkout-mode-option{display:grid;grid-template-columns:48px 1fr;gap:13px;min-height:176px;padding:20px;border:2px solid var(--ui-line);border-radius:17px;background:var(--ui-soft);color:var(--ui-text);text-align:left;cursor:pointer;transition:.16s ease}
+.checkout-mode-option:hover,.checkout-mode-option:focus-visible{border-color:var(--ui-accent);transform:translateY(-2px);box-shadow:0 12px 30px rgba(17,25,32,.09);outline:0}.checkout-mode-icon{font-size:34px}.checkout-mode-option strong,.checkout-mode-option span,.checkout-mode-option small{display:block}.checkout-mode-option strong{font-size:19px}.checkout-mode-option span{margin-top:8px;color:var(--ui-muted);line-height:1.5}.checkout-mode-option small{margin-top:16px;color:var(--ui-accent);font-size:12px;font-weight:900}
+.checkout-mode-remember{display:flex;align-items:center;gap:9px;margin-top:17px;font-size:12px;font-weight:700}.checkout-mode-remember input{width:18px;height:18px;accent-color:var(--ui-accent)}
+#switch-checkout-nav{margin-top:5px!important;border:1px solid rgba(255,255,255,.12)!important}
+body.mobile-checkout{height:100dvh;overflow:hidden;background:var(--ui-canvas)}body.mobile-checkout .app{display:block!important;height:100dvh;min-height:0!important;max-width:760px;margin:0 auto;background:var(--ui-canvas);box-shadow:0 0 45px rgba(17,25,32,.12)}
+body.mobile-checkout .side{display:none!important}body.mobile-checkout .main{height:100dvh!important}body.mobile-checkout .top{display:flex!important;position:relative!important;top:0!important;height:58px!important;padding:0 12px!important}body.mobile-checkout .top h1{font-size:18px!important}body.mobile-checkout .top p{display:none}body.mobile-checkout .top-actions{gap:5px}body.mobile-checkout #sidebar-toggle{display:none!important}body.mobile-checkout #full-btn{min-width:0!important;padding:8px 10px!important;font-size:10px!important}
+body.mobile-checkout .content{display:block!important;height:calc(100dvh - 58px)!important;padding:7px!important;overflow:hidden}body.mobile-checkout .content>#pos-cloud-banner{display:none!important}body.mobile-checkout .content>.view{display:none!important}body.mobile-checkout #view-checkout.active{display:block!important;height:100%!important;overflow:hidden!important}
+body.mobile-checkout #view-checkout .layout{display:block!important;height:100%!important}body.mobile-checkout #view-checkout .layout>.panel:first-child{display:grid;height:100%!important;grid-template-rows:auto auto minmax(0,1fr)!important;border-radius:14px!important;overflow:hidden}body.mobile-checkout #view-checkout .layout>.panel:first-child>.panel-head{padding:8px!important}body.mobile-checkout #view-checkout .layout>.panel:first-child .panel-title{display:none}body.mobile-checkout #view-checkout .layout>.panel:first-child .tools{display:grid!important;grid-template-columns:minmax(0,1fr) auto;width:100%;gap:7px}body.mobile-checkout #product-search{min-height:44px!important;font-size:16px!important}body.mobile-checkout #view-checkout .category-rail{grid-template-columns:32px minmax(0,1fr) 32px!important;padding:7px!important;gap:5px}body.mobile-checkout #view-checkout .category-scroll{width:32px;height:38px}body.mobile-checkout #view-checkout .cats .chip{min-height:38px!important;padding:7px 11px!important;font-size:10px!important}
+body.mobile-checkout #view-checkout .products{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:168px!important;height:100%!important;padding:7px!important;gap:7px!important;overflow-y:auto!important}body.mobile-checkout #view-checkout .product{height:168px!important;min-height:168px!important;padding:0!important;border-width:1px!important;overflow:hidden}body.mobile-checkout #view-checkout .product-img,body.mobile-checkout #view-checkout .product-placeholder{height:104px!important;flex:0 0 104px!important}body.mobile-checkout #view-checkout .product-copy{min-height:64px!important;padding:7px!important;gap:3px!important}body.mobile-checkout #view-checkout .product-copy strong{font-size:11px!important;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical}body.mobile-checkout #view-checkout .product-copy .muted{display:none!important}body.mobile-checkout #view-checkout .price{font-size:13px!important}
+body.mobile-checkout #mobile-cart-toggle{display:inline-flex!important;min-height:38px!important;padding:8px 10px!important;font-size:10px!important}body.mobile-checkout #view-checkout .cart{display:none!important;height:100%!important;grid-template-rows:auto minmax(120px,1fr) minmax(0,1.45fr)!important;border-radius:14px!important;overflow:hidden!important}body.mobile-checkout.mobile-cart-open #view-checkout .layout>.panel:first-child{display:none!important}body.mobile-checkout.mobile-cart-open #view-checkout .cart{display:grid!important}body.mobile-checkout #view-checkout .cart>.panel-head{display:block!important;padding:10px!important}body.mobile-checkout #view-checkout .cart>.panel-head>.panel-title{margin:0 0 8px!important;font-size:19px!important}body.mobile-checkout #view-checkout #order-actions{grid-template-columns:1fr 1fr!important;gap:6px!important}body.mobile-checkout #view-checkout #order-actions .danger{grid-column:1/-1!important}body.mobile-checkout #view-checkout #order-actions .btn{min-height:36px!important;padding:7px 5px!important;font-size:10px!important}body.mobile-checkout #view-checkout .cart-list{min-height:120px!important;max-height:none!important;overflow-y:auto!important;padding:0 10px!important;border-bottom:1px solid var(--ui-line)!important}body.mobile-checkout #view-checkout .line{padding:8px 0!important}body.mobile-checkout #view-checkout .cart-foot{display:grid!important;grid-template-rows:minmax(0,1fr) repeat(6,auto)!important;min-height:0!important;padding:7px 10px 9px!important;overflow:hidden!important}body.mobile-checkout #view-checkout .checkout-fields{min-height:0!important;overflow-y:auto!important;gap:5px!important;margin:2px 0!important;padding-right:3px!important}body.mobile-checkout #view-checkout .input{min-height:40px!important;font-size:16px!important}body.mobile-checkout #view-checkout .payment-method-picker{grid-template-columns:repeat(2,minmax(0,1fr))!important}body.mobile-checkout #view-checkout .row{margin:3px 0!important;font-size:11px!important}body.mobile-checkout #view-checkout .grand{padding-top:7px!important;font-size:19px!important}body.mobile-checkout #view-checkout #complete-btn{min-height:48px!important;margin-top:4px!important}
+@media(max-width:520px){.checkout-mode-card{padding:20px}.checkout-mode-options{grid-template-columns:1fr}.checkout-mode-option{min-height:132px;padding:16px}.checkout-mode-card h2{font-size:25px}body.mobile-checkout #view-checkout .products{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+</style>
+<script>
+(function installCheckoutModeChooser(){
+  var storageKey='ceylonry-pos-checkout-mode',nav=document.getElementById('nav'),fullButton=document.getElementById('full-btn');
+  var gate=document.createElement('div');gate.id='checkout-mode-gate';gate.className='checkout-mode-gate';gate.hidden=true;gate.innerHTML='<section class="checkout-mode-card" role="dialog" aria-modal="true" aria-labelledby="checkout-mode-title"><h2 id="checkout-mode-title">Choose Your Checkout</h2><p>How would you like to use Ceylonry POS?</p><div class="checkout-mode-options"><button type="button" class="checkout-mode-option" data-checkout-mode="mobile"><span class="checkout-mode-icon">📱</span><span><strong>Mobile Checkout</strong><span>Optimised for phones and smaller screens.</span><small>Open Mobile Checkout →</small></span></button><button type="button" class="checkout-mode-option" data-checkout-mode="pos"><span class="checkout-mode-icon">🖥️</span><span><strong>POS Checkout</strong><span>Full checkout interface for POS terminals, desktops, laptops and tablets.</span><small>Open POS Checkout →</small></span></button></div><label class="checkout-mode-remember"><input type="checkbox" id="remember-checkout-mode"> Remember my choice on this device</label></section>';document.body.append(gate);
+  var switchButton=document.createElement('button');switchButton.id='switch-checkout-nav';switchButton.type='button';switchButton.textContent='⇄ Switch Checkout';nav.append(switchButton);
+  var topSwitch=document.createElement('button');topSwitch.id='switch-checkout-top';topSwitch.type='button';topSwitch.className='btn out';topSwitch.textContent='Switch Checkout';fullButton.before(topSwitch);
+  function showChooser(){gate.hidden=false;requestAnimationFrame(function(){var selected=gate.querySelector('[data-checkout-mode]');if(selected)selected.focus()})}
+  function applyMode(mode,remember){var mobile=mode==='mobile';document.body.classList.toggle('mobile-checkout',mobile);document.body.classList.toggle('full',mobile);document.body.classList.toggle('sidebar-collapsed',mobile);document.body.classList.remove('mobile-cart-open');if(remember)localStorage.setItem(storageKey,mode);else localStorage.removeItem(storageKey);gate.hidden=true;go('checkout');if(typeof renderCheckout==='function')renderCheckout();window.dispatchEvent(new Event('resize'))}
+  gate.addEventListener('click',function(event){var option=event.target.closest('[data-checkout-mode]');if(option)applyMode(option.dataset.checkoutMode,document.getElementById('remember-checkout-mode').checked)});
+  switchButton.onclick=topSwitch.onclick=showChooser;
+  var remembered=localStorage.getItem(storageKey);if(remembered==='mobile'||remembered==='pos')applyMode(remembered,true);else showChooser();
+  window.showCheckoutModeChooser=showChooser;window.applyCheckoutMode=applyMode;
+})();
+</script>
+<style>
+/* Compact desktop/tablet POS checkout. Browser side panels and zoom commonly
+   reduce the CSS viewport to 700–1100px; keep both operational columns visible. */
+@media(min-width:700px) and (max-width:1100px){
+  body:not(.mobile-checkout):has(#view-checkout.active){height:100dvh;overflow:hidden}
+  body:not(.mobile-checkout):has(#view-checkout.active) .app{display:block!important;height:100dvh!important;min-height:0!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) .side{display:none!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) .main{height:100dvh!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) .top{position:relative!important;top:0!important;height:52px!important;padding:0 12px!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) .top h1{font-size:18px!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) .top p{display:none!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) #sidebar-toggle{display:none!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) #switch-checkout-top,
+  body:not(.mobile-checkout):has(#view-checkout.active) #full-btn{min-height:34px!important;padding:6px 9px!important;font-size:10px!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) .content{display:block!important;height:calc(100dvh - 52px)!important;padding:7px!important;overflow:hidden!important}
+  body:not(.mobile-checkout):has(#view-checkout.active) .content>#notice,
+  body:not(.mobile-checkout):has(#view-checkout.active) .content>#pos-cloud-banner{display:none!important}
+  body:not(.mobile-checkout) #view-checkout.active{display:block!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+  body:not(.mobile-checkout) #view-checkout .layout{display:grid!important;grid-template-columns:minmax(0,1.18fr) minmax(330px,.92fr)!important;gap:7px!important;height:100%!important;min-height:0!important;align-items:stretch!important}
+  body:not(.mobile-checkout) #view-checkout .layout>.panel:first-child{display:grid!important;grid-template-rows:auto auto minmax(0,1fr)!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+  body:not(.mobile-checkout) #view-checkout .layout>.panel:first-child>.panel-head{display:block!important;padding:7px!important}
+  body:not(.mobile-checkout) #view-checkout .layout>.panel:first-child .panel-title{display:none!important}
+  body:not(.mobile-checkout) #view-checkout .layout>.panel:first-child .tools{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;width:100%!important;gap:6px!important}
+  body:not(.mobile-checkout) #view-checkout #product-search{min-height:38px!important;padding:6px 9px!important}
+  body:not(.mobile-checkout) #view-checkout .layout>.panel:first-child .tools .btn{min-height:38px!important;padding:6px 9px!important;font-size:10px!important}
+  body:not(.mobile-checkout) #view-checkout .category-rail{position:relative!important;top:0!important;grid-template-columns:30px minmax(0,1fr) 30px!important;padding:6px!important;gap:4px!important}
+  body:not(.mobile-checkout) #view-checkout .category-scroll{width:30px!important;height:34px!important}
+  body:not(.mobile-checkout) #view-checkout .cats .chip{min-height:34px!important;padding:6px 9px!important;font-size:9px!important}
+  body:not(.mobile-checkout) #view-checkout .products{grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-rows:150px!important;height:100%!important;max-height:none!important;padding:6px!important;gap:6px!important;overflow-y:auto!important}
+  body:not(.mobile-checkout) #view-checkout .product{height:150px!important;min-height:150px!important;border-width:1px!important;overflow:hidden!important}
+  body:not(.mobile-checkout) #view-checkout .product-img,
+  body:not(.mobile-checkout) #view-checkout .product-placeholder{height:86px!important;flex:0 0 86px!important}
+  body:not(.mobile-checkout) #view-checkout .product-copy{min-height:64px!important;padding:6px 8px!important;gap:2px!important}
+  body:not(.mobile-checkout) #view-checkout .product-copy strong{font-size:10px!important}
+  body:not(.mobile-checkout) #view-checkout .product-copy .muted{display:none!important}
+  body:not(.mobile-checkout) #view-checkout .price{font-size:13px!important}
+  body:not(.mobile-checkout) #view-checkout .cart{display:grid!important;grid-template-rows:auto minmax(90px,.75fr) minmax(0,1.65fr)!important;position:relative!important;top:0!important;height:100%!important;max-height:none!important;min-height:0!important;overflow:hidden!important}
+  body:not(.mobile-checkout) #view-checkout .cart>.panel-head{display:block!important;padding:8px!important}
+  body:not(.mobile-checkout) #view-checkout .cart>.panel-head>.panel-title{margin:0 0 6px!important;font-size:17px!important}
+  body:not(.mobile-checkout) #view-checkout #order-actions{grid-template-columns:1fr 1fr!important;gap:5px!important}
+  body:not(.mobile-checkout) #view-checkout #order-actions .danger{grid-column:1/-1!important}
+  body:not(.mobile-checkout) #view-checkout #order-actions .btn{min-height:31px!important;padding:5px 4px!important;font-size:9px!important}
+  body:not(.mobile-checkout) #view-checkout .cart-list{min-height:90px!important;max-height:none!important;padding:0 8px!important;overflow-y:auto!important;border-bottom:1px solid var(--ui-line)!important}
+  body:not(.mobile-checkout) #view-checkout .line{padding:6px 0!important;font-size:10px!important}
+  body:not(.mobile-checkout) #view-checkout .cart-line-image,
+  body:not(.mobile-checkout) #view-checkout .cart-line-placeholder{width:38px!important;height:38px!important}
+  body:not(.mobile-checkout) #view-checkout .cart-foot{display:grid!important;grid-template-rows:minmax(0,1fr) repeat(6,auto)!important;height:auto!important;min-height:0!important;padding:6px 8px 8px!important;overflow:hidden!important}
+  body:not(.mobile-checkout) #view-checkout .checkout-fields{min-height:0!important;max-height:none!important;gap:4px!important;margin:1px 0 3px!important;padding-right:2px!important;overflow-y:auto!important}
+  body:not(.mobile-checkout) #view-checkout .input{min-height:32px!important;padding:5px 7px!important;font-size:11px!important}
+  body:not(.mobile-checkout) #view-checkout .btn{min-height:32px!important;padding:5px 7px!important;font-size:10px!important}
+  body:not(.mobile-checkout) #view-checkout .customer-find-note{display:none!important}
+  body:not(.mobile-checkout) #view-checkout #discount-panel{padding:6px!important}
+  body:not(.mobile-checkout) #view-checkout .payment-method-picker{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
+  body:not(.mobile-checkout) #view-checkout .payment-choice{min-height:38px!important;padding:4px!important;font-size:8px!important}
+  body:not(.mobile-checkout) #view-checkout .payment-choice span{font-size:13px!important}
+  body:not(.mobile-checkout) #view-checkout .cart-foot>.row{margin:2px 0!important;font-size:10px!important}
+  body:not(.mobile-checkout) #view-checkout .grand{padding:5px 0 2px!important;margin-top:2px!important;font-size:17px!important}
+  body:not(.mobile-checkout) #view-checkout #complete-btn{position:relative!important;min-height:40px!important;margin-top:3px!important;font-size:11px!important}
+}
+@media(min-width:940px) and (max-width:1100px){body:not(.mobile-checkout) #view-checkout .products{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+</style>
 </body></html>

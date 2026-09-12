@@ -86,10 +86,17 @@ test('full-screen checkout keeps totals and completion controls reachable', () =
   assert.match(html, /body\.full #view-checkout \.cart\{position:relative!important;top:0!important;height:100%!important;max-height:100%!important\}/);
   assert.match(html, /body\.full #view-checkout \.cart-foot\{display:grid!important;grid-template-rows:minmax\(0,1fr\) repeat\(6,auto\)!important/s);
   assert.match(html, /body\.full #view-checkout #complete-btn\{position:relative!important;bottom:auto!important/s);
-  assert.match(html, /cartList\.scrollTop=0/);
+  assert.match(html, /cartList\.scrollTop=cartList\.scrollHeight/);
   assert.match(html, /Browser zoom reduces the CSS viewport width/);
   assert.match(html, /@media\(min-width:650px\) and \(max-width:1100px\).*#view-checkout\.active\{height:auto!important.*overflow:visible!important/s);
   assert.match(html, /body\.full #view-checkout\.active\{height:100%!important;overflow-x:hidden!important;overflow-y:auto!important/s);
+});
+
+test('tablet-width POS checkout retains both catalogue and order columns', () => {
+  assert.match(html, /@media\(min-width:700px\) and \(max-width:1100px\)/);
+  assert.match(html, /body:not\(\.mobile-checkout\) #view-checkout \.layout\{display:grid!important;grid-template-columns:minmax\(0,1\.18fr\) minmax\(330px,\.92fr\)!important/);
+  assert.match(html, /body:not\(\.mobile-checkout\) #view-checkout \.cart\{display:grid!important;grid-template-rows:auto minmax\(90px,\.75fr\) minmax\(0,1\.65fr\)!important/);
+  assert.match(html, /body:not\(\.mobile-checkout\) #view-checkout \.products\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
 });
 
 test('checkout order list scrolls continuously without item pagination', () => {
@@ -99,6 +106,17 @@ test('checkout order list scrolls continuously without item pagination', () => {
   assert.doesNotMatch(html, /onclick="changeCartPage\(/);
   assert.match(html, /#view-checkout #order-actions\{display:grid!important;grid-template-columns:repeat\(3,minmax\(112px,1fr\)\)!important/);
   assert.match(html, /payment-method-picker\{grid-template-columns:repeat\(auto-fit,minmax\(104px,1fr\)\)!important/);
+});
+
+test('checkout offers remembered mobile and terminal interfaces', () => {
+  assert.match(html, /Choose Your Checkout/);
+  assert.match(html, /data-checkout-mode="mobile"/);
+  assert.match(html, /data-checkout-mode="pos"/);
+  assert.match(html, /Remember my choice on this device/);
+  assert.match(html, /ceylonry-pos-checkout-mode/);
+  assert.match(html, /Switch Checkout/);
+  assert.match(html, /body\.mobile-checkout #view-checkout \.products/);
+  assert.match(html, /body\.mobile-checkout\.mobile-cart-open #view-checkout \.cart/);
 });
 
 test('checkout presents preserved payment methods as touch-friendly cards', () => {
@@ -156,14 +174,21 @@ test('customer admin can maintain the live catalogue', () => {
   }
 });
 
-test('POS landing page offers hardware ordering by email', () => {
+test('POS landing page offers a hardware cart and emailed order form', () => {
   const landing = fs.readFileSync(path.join(__dirname, '..', 'pos.html'), 'utf8');
-  for (const model of ['Ceylonry POS Lite', 'Ceylonry POS Pro · White', 'Ceylonry POS Pro · Black']) {
+  const orderApi = fs.readFileSync(path.join(__dirname, '..', 'netlify', 'functions', 'hardware-order.js'), 'utf8');
+  for (const model of ['Ceylonry POS Lite', 'Ceylonry POS Lite · Black', 'Ceylonry POS Pro · White', 'Ceylonry POS Pro · Black']) {
     assert.match(landing, new RegExp(model.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(landing, /Receipt Printer/);
-  assert.equal((landing.match(/mailto:hello@ceylonrylabs\.io/g) || []).length, 5);
-  for (const image of ['ceylonry-pos-lite.jpg', 'ceylonry-pos-pro-white.jpg', 'ceylonry-pos-pro-black.jpg', 'ceylonry-receipt-printer.jpg', 'ceylonry-pos-lite-industries.jpg']) {
+  assert.equal((landing.match(/data-hardware-id=/g) || []).length, 5);
+  assert.match(landing, /id="hardware-order-form"/);
+  for (const field of ['name', 'email', 'mobile', 'address']) assert.match(landing, new RegExp(`name="${field}"`));
+  assert.match(landing, /\.netlify\/functions\/hardware-order/);
+  assert.match(orderApi, /to: 'hello@ceylonrylabs\.io'/);
+  assert.match(orderApi, /Delivery address:/);
+  assert.match(orderApi, /items\.reduce/);
+  for (const image of ['ceylonry-pos-lite.jpg', 'ceylonry-pos-lite-black.jpg', 'ceylonry-pos-pro-white.jpg', 'ceylonry-pos-pro-black.jpg', 'ceylonry-receipt-printer.jpg', 'ceylonry-pos-lite-industries.jpg']) {
     assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', image)));
     assert.match(landing, new RegExp(`assets/${image}`));
   }
