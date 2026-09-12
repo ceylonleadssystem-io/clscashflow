@@ -92,6 +92,15 @@ test('full-screen checkout keeps totals and completion controls reachable', () =
   assert.match(html, /body\.full #view-checkout\.active\{height:100%!important;overflow-x:hidden!important;overflow-y:auto!important/s);
 });
 
+test('checkout order list scrolls continuously without item pagination', () => {
+  assert.match(html, /cartList\.innerHTML=cart\.map\(lineHtml\)\.join/);
+  assert.match(html, /cartList\.scrollTop=cartList\.scrollHeight/);
+  assert.match(html, /#view-checkout #cart-pagination\{display:none!important\}/);
+  assert.doesNotMatch(html, /onclick="changeCartPage\(/);
+  assert.match(html, /#view-checkout #order-actions\{display:grid!important;grid-template-columns:repeat\(3,minmax\(112px,1fr\)\)!important/);
+  assert.match(html, /payment-method-picker\{grid-template-columns:repeat\(auto-fit,minmax\(104px,1fr\)\)!important/);
+});
+
 test('checkout presents preserved payment methods as touch-friendly cards', () => {
   assert.match(html, /function installPaymentMethodCards/);
   assert.match(html, /aria-label','Payment method'/);

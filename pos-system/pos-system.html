@@ -453,7 +453,7 @@ body.full #view-checkout .cart-list{overflow:hidden!important;max-height:none!im
   window.toggleServiceChargeSettings=function(){var on=document.getElementById('set-service-charge-enabled')?.checked,rate=document.getElementById('set-service-charge-rate');if(rate)rate.disabled=!on};
   var originalLoadSettings=loadSettings;loadSettings=function(){originalLoadSettings();var enabled=!!db.settings.serviceChargeEnabled,rate=Math.max(0,Math.min(100,+db.settings.serviceChargeRate||0));document.getElementById('set-service-charge-enabled').checked=enabled;document.getElementById('set-service-charge-rate').value=rate;toggleServiceChargeSettings()};
   var originalSaveSettings=saveSettings;saveSettings=function(){var enabled=document.getElementById('set-service-charge-enabled').checked,rate=+document.getElementById('set-service-charge-rate').value;if(!Number.isFinite(rate)||rate<0||rate>100)return alert('Enter a service charge percentage from 0 to 100.');db.settings.serviceChargeEnabled=enabled;db.settings.serviceChargeRate=enabled?rate:0;originalSaveSettings();renderCart()};
-  var cartList=document.getElementById('cart-list'),pager=document.createElement('div');pager.id='cart-pagination';pager.className='cart-pagination';pager.hidden=true;cartList.after(pager);
+  var cartList=document.getElementById('cart-list'),pager=document.createElement('div');pager.id='cart-pagination';pager.hidden=true;pager.setAttribute('aria-hidden','true');cartList.after(pager);
   var grand=document.querySelector('#view-checkout .grand'),subtotalRow=document.createElement('div'),discountRow=document.createElement('div'),serviceRow=document.createElement('div');
   subtotalRow.className='row subtotal-summary';subtotalRow.innerHTML='<span>Subtotal</span><span id="cart-subtotal">LKR 0.00</span>';
   discountRow.className='row discount-summary';discountRow.hidden=true;discountRow.innerHTML='<span>Discount</span><span id="cart-discount">- LKR 0.00</span>';
@@ -463,11 +463,9 @@ body.full #view-checkout .cart-list{overflow:hidden!important;max-height:none!im
   discountAmount=function(){var subtotal=chargeableSubtotal(),value=Math.max(0,+activeDiscount.value||0);return Math.min(subtotal,activeDiscount.type==='percent'?subtotal*Math.min(value,100)/100:value)};
   window.serviceChargeAmount=function(){if(!db.settings.serviceChargeEnabled)return 0;var rate=Math.max(0,Math.min(100,+db.settings.serviceChargeRate||0));return Math.max(0,chargeableSubtotal()-discountAmount())*rate/100};
   checkoutPayableTotal=function(){return Math.max(0,chargeableSubtotal()-discountAmount()+serviceChargeAmount())};
-  var cartPage=0,lastCartLength=0;
-  window.changeCartPage=function(delta){var size=cartPageSize(),pages=Math.max(1,Math.ceil(cart.length/size));cartPage=Math.max(0,Math.min(pages-1,cartPage+delta));renderCart()};
-  function cartPageSize(){return innerHeight<760?3:innerHeight<1000?4:6}
+  var lastCartLength=0;
   function lineHtml(line){return '<div class="line">'+(line.image?'<img class="cart-line-image" src="'+line.image+'" alt="">':'<span class="cart-line-placeholder" aria-hidden="true">◇</span>')+'<div class="cart-line-copy"><strong>'+esc(line.name)+'</strong>'+((line.modifiers||[]).length?'<div class="line-modifiers">'+line.modifiers.map(function(m){return esc(m.groupName+': '+m.optionName)+(m.price?' (+'+money(m.price)+')':'')}).join('<br>')+'</div><button class="line-edit" onclick="openModifierPicker(\''+line.productId+'\',\''+line.key+'\')">Edit modifiers</button>':'')+'<div class="muted">'+money(line.price*line.qty)+'</div></div><div class="qty"><button onclick="qty(\''+line.key+'\',-1)">-</button>'+line.qty+'<button onclick="qty(\''+line.key+'\',1)">+</button></div></div>'}
-  var originalRenderCart=renderCart;renderCart=function(){originalRenderCart();var size=cartPageSize();if(cart.length>lastCartLength)cartPage=Math.max(0,Math.ceil(cart.length/size)-1);lastCartLength=cart.length;var pages=Math.max(1,Math.ceil(cart.length/size));cartPage=Math.min(cartPage,pages-1);var visible=cart.slice(cartPage*size,cartPage*size+size);cartList.innerHTML=visible.map(lineHtml).join('')||'<div class="empty">Select a product to begin.</div>';cartList.scrollTop=0;if(!cart.length){var checkoutFields=document.querySelector('#view-checkout .checkout-fields');if(checkoutFields)checkoutFields.scrollTop=0}pager.hidden=cart.length<=size;pager.innerHTML='<button class="btn out" onclick="changeCartPage(-1)" '+(cartPage===0?'disabled':'')+'>Previous</button><span>'+(cart.length?'Items '+(cartPage*size+1)+'-'+Math.min(cart.length,(cartPage+1)*size)+' of '+cart.length:'No items')+'</span><button class="btn out" onclick="changeCartPage(1)" '+(cartPage>=pages-1?'disabled':'')+'>Next</button>';var subtotal=chargeableSubtotal(),discount=discountAmount(),charge=serviceChargeAmount(),rate=+db.settings.serviceChargeRate||0;document.getElementById('cart-subtotal').textContent=money(subtotal);discountRow.hidden=!discount;document.getElementById('cart-discount').textContent='- '+money(discount);serviceRow.hidden=!charge;document.getElementById('cart-service-label').textContent='Service charge ('+rate+'%)';document.getElementById('cart-service-charge').textContent=money(charge);document.getElementById('cart-total').textContent=money(Math.max(0,subtotal-discount+charge));renderSplitSummary()};
+  var originalRenderCart=renderCart;renderCart=function(){originalRenderCart();var itemAdded=cart.length>lastCartLength;lastCartLength=cart.length;cartList.innerHTML=cart.map(lineHtml).join('')||'<div class="empty">Select a product to begin.</div>';pager.hidden=true;pager.innerHTML='';if(itemAdded)requestAnimationFrame(function(){cartList.scrollTop=cartList.scrollHeight});if(!cart.length){var checkoutFields=document.querySelector('#view-checkout .checkout-fields');if(checkoutFields)checkoutFields.scrollTop=0}var subtotal=chargeableSubtotal(),discount=discountAmount(),charge=serviceChargeAmount(),rate=+db.settings.serviceChargeRate||0;document.getElementById('cart-subtotal').textContent=money(subtotal);discountRow.hidden=!discount;document.getElementById('cart-discount').textContent='- '+money(discount);serviceRow.hidden=!charge;document.getElementById('cart-service-label').textContent='Service charge ('+rate+'%)';document.getElementById('cart-service-charge').textContent=money(charge);document.getElementById('cart-total').textContent=money(Math.max(0,subtotal-discount+charge));renderSplitSummary()};
   var originalCompleteSale=completeSale;completeSale=async function(){var amount=serviceChargeAmount(),rate=+db.settings.serviceChargeRate||0,before=db.sales[0]?.id;if(amount)cart.push({id:'service-charge',productId:'',key:'service-charge-'+Date.now(),name:'Service Charge ('+rate+'%)',code:'SERVICE',category:'Service Charge',cost:0,price:amount,qty:1,isServiceCharge:true,recipe:[],modifiers:[]});try{await originalCompleteSale();var sale=db.sales[0];if(sale&&sale.id!==before){sale.serviceCharge={enabled:amount>0,rate:rate,amount:amount};save()}}finally{cart=cart.filter(function(line){return !line.isServiceCharge});renderCart()}};
   addEventListener('resize',function(){renderCart()});
   renderCart();
@@ -908,4 +906,30 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
 })();
 </script>
 <style>.channel-setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}.channel-setting-grid label{display:flex;align-items:center;gap:8px;min-height:42px;padding:9px 11px;border:1px solid var(--ui-line,#dedad1);border-radius:10px;background:var(--ui-surface,#fff);font-size:12px;font-weight:700}@media(max-width:560px){.channel-setting-grid{grid-template-columns:1fr}}</style>
+<style>
+/* Fluid checkout controls and an unpaginated, continuously scrolling order list. */
+#view-checkout #order-actions{display:grid!important;grid-template-columns:repeat(3,minmax(112px,1fr))!important;gap:8px!important}
+#view-checkout #order-actions .btn{grid-column:auto!important;min-width:0!important;width:100%!important;padding-inline:clamp(8px,1vw,15px)!important;white-space:normal!important;line-height:1.2!important}
+#view-checkout #cart-pagination{display:none!important}
+#view-checkout .cart-list{scrollbar-gutter:stable;overscroll-behavior:contain}
+#view-checkout .payment-method-picker{grid-template-columns:repeat(auto-fit,minmax(104px,1fr))!important}
+#view-checkout .payment-choice{min-width:0;white-space:normal;line-height:1.2}
+#view-checkout .customer-lookup{grid-template-columns:minmax(150px,1fr) auto!important}
+#view-checkout .customer-lookup>button:last-child{grid-column:1/-1!important;width:100%!important}
+@media(min-width:1101px){
+  #view-checkout .cart{grid-template-rows:auto minmax(150px,1fr) minmax(0,1.65fr)!important}
+  #view-checkout .cart-list{min-height:150px!important;max-height:none!important;overflow-y:auto!important}
+}
+@media(min-width:650px) and (max-width:1300px){
+  #view-checkout #order-actions{grid-template-columns:repeat(2,minmax(120px,1fr))!important}
+  #view-checkout #order-actions .danger{grid-column:1/-1!important}
+}
+@media(max-width:649px){
+  #view-checkout #order-actions{grid-template-columns:1fr 1fr!important}
+  #view-checkout #order-actions .danger{grid-column:1/-1!important}
+  #view-checkout .cart-list{max-height:42dvh!important;overflow-y:auto!important}
+  #view-checkout .payment-method-picker{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:390px){#view-checkout #order-actions{grid-template-columns:1fr!important}#view-checkout #order-actions .danger{grid-column:auto!important}}
+</style>
 </body></html>
