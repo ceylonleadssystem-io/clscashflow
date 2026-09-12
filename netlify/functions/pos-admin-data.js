@@ -116,7 +116,7 @@ function normalizeProduct(raw, index) {
     unit: clean(raw.unit || 'item', 50),
     supplier: clean(raw.supplier, 140),
     reorderLevel: Math.max(0, Number(raw.reorderLevel || raw.reorder || 0) || 0),
-    image: clean(raw.image, 1000), modifierIds: [], recipe: [], active: raw.active !== false
+    image: clean(raw.image, 700000), modifierIds: Array.isArray(raw.modifierIds)?raw.modifierIds:[], recipe: Array.isArray(raw.recipe)?raw.recipe:[], active: raw.active !== false
   };
 }
 
@@ -227,6 +227,27 @@ exports.handler = async function(event) {
       const categories=Array.from(new Set((workspace.payload.categories||[]).concat([item.category]))).sort(),payload=Object.assign({},workspace.payload,{products,categories});
       await workspace.ref.set({ownerUid:uid,payload,updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
       return response(200,{ok:true,products:products.length,categories:categories.length});
+    }
+
+    if (action === 'deleteProduct') {
+      const id=clean(body.productId,100),before=Array.isArray(workspace.payload.products)?workspace.payload.products:[],products=before.filter(function(item){return String(item.id)!==id;});
+      if(products.length===before.length)return response(404,{ok:false,error:'Product not found.'});
+      const deletedIds=Object.assign({},workspace.payload.deletedIds||{});deletedIds.products=Array.from(new Set([].concat(deletedIds.products||[],[id])));
+      await workspace.ref.set({ownerUid:uid,payload:Object.assign({},workspace.payload,{products,deletedIds}),updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return response(200,{ok:true,products:products.length});
+    }
+
+    if (action === 'renameCategory') {
+      const oldName=clean(body.oldName,100),newName=clean(body.newName,100);if(!oldName||!newName)return response(400,{ok:false,error:'Both category names are required.'});
+      const categories=Array.from(new Set((workspace.payload.categories||[]).map(function(name){return name===oldName?newName:name}))),products=(workspace.payload.products||[]).map(function(item){return item.category===oldName?Object.assign({},item,{category:newName}):item});
+      await workspace.ref.set({ownerUid:uid,payload:Object.assign({},workspace.payload,{categories,products}),updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});return response(200,{ok:true});
+    }
+
+    if (action === 'deleteCategory') {
+      const name=clean(body.name,100);if(!name)return response(400,{ok:false,error:'Category name is required.'});
+      const fallback='Uncategorized',categories=(workspace.payload.categories||[]).filter(function(item){return item!==name;}),products=(workspace.payload.products||[]).map(function(item){return item.category===name?Object.assign({},item,{category:fallback}):item});if(products.some(function(item){return item.category===fallback})&&!categories.includes(fallback))categories.push(fallback);
+      const deletedIds=Object.assign({},workspace.payload.deletedIds||{});deletedIds.categories=Array.from(new Set([].concat(deletedIds.categories||[],[name.toLowerCase()])));
+      await workspace.ref.set({ownerUid:uid,payload:Object.assign({},workspace.payload,{categories,products,deletedIds}),updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});return response(200,{ok:true});
     }
 
     if (action === 'saveCatalog') {

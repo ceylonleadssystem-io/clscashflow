@@ -119,3 +119,28 @@ test('modern UI is additive and offers three cached themes', () => {
   assert.match(css, /Checkout mirrors the compact sales\/payment reference/);
   assert.match(worker, /ceylonry-pos-app-shell-v10/);
 });
+
+test('reported checkout and settings regressions stay fixed', () => {
+  assert.match(html, /function tenderAmount\(\).*replace\(\/,\/g,''\)/);
+  assert.match(html, /tender\.removeAttribute\('max'\)/);
+  assert.match(html, /saved=id;document\.documentElement\.dataset\.posTheme=id/);
+  assert.match(html, /function installConfiguredOrderChannels/);
+  for (const channel of ['Dine-in', 'Takeaway', 'PickMe', 'Uber Eats']) {
+    assert.match(html, new RegExp(`'${channel}'`));
+  }
+  assert.match(html, /db\.settings\.orderChannels=enabled;channelSave\(\)/);
+  assert.match(html, /if\(window\.clsSyncPosNow\)await window\.clsSyncPosNow\(\)/);
+});
+
+test('customer admin can maintain the live catalogue', () => {
+  const adminHtml = fs.readFileSync(path.join(__dirname, '..', 'pos-system', 'pos-admin.html'), 'utf8');
+  const adminApi = fs.readFileSync(path.join(__dirname, '..', 'netlify', 'functions', 'pos-admin-data.js'), 'utf8');
+  assert.match(adminHtml, /id=["']manual-image["']/);
+  assert.match(adminHtml, /data-edit-product/);
+  assert.match(adminHtml, /data-delete-product/);
+  assert.match(adminHtml, /data-rename-category/);
+  assert.match(adminHtml, /data-delete-category/);
+  for (const action of ['deleteProduct', 'renameCategory', 'deleteCategory']) {
+    assert.match(adminApi, new RegExp(`action === '${action}'`));
+  }
+});
