@@ -52,42 +52,35 @@ function requiredConfirmation(action) {
   return action === 'deleteAccount' ? 'DELETE ACCOUNT' : 'RESET DATA';
 }
 
-async function deletePath(path) {
-  const { error } = await service()
-    .from('app_documents')
-    .delete()
-    .eq('path', path);
-  if (error) throw error;
-}
-
-async function deleteOperationalData(ownerUid) {
-  for (const name of OPERATIONAL_COLLECTIONS) {
-    await deletePath('users/' + ownerUid + '/' + name);
+async function deleteOperationalData(ownerUid, actorUid) {
+  const backupId = feedbackId('reset-backup');
+  const { data, error } = await service().rpc('reset_workspace_with_backup', {
+    p_owner_uid: ownerUid,
+    p_actor_uid: actorUid,
+    p_backup_id: backupId,
+    p_paths: OPERATIONAL_COLLECTIONS.map(function(name) { return 'users/' + ownerUid + '/' + name; })
+  });
+  if (error) {
+    const err = new Error('The verified backup/reset database migration is not installed. No data was cleared.');
+    err.statusCode = 503;
+    throw err;
   }
+  return data || { backupId };
 }
 
 async function deleteWorkspace(ownerUid, includeProfile) {
-  const client = service();
-  let out = await client
-    .from('app_documents')
-    .delete()
-    .like('path', 'users/' + ownerUid + '/%');
-  if (out.error) throw out.error;
-
-  out = await client
-    .from('app_documents')
-    .delete()
-    .eq('owner_uid', ownerUid);
-  if (out.error) throw out.error;
-
-  if (includeProfile) {
-    out = await client
-      .from('app_documents')
-      .delete()
-      .eq('path', 'users')
-      .eq('id', ownerUid);
-    if (out.error) throw out.error;
+  const backupId = feedbackId('delete-backup');
+  const { data, error } = await service().rpc('delete_workspace_with_backup', {
+    p_owner_uid: ownerUid,
+    p_backup_id: backupId,
+    p_include_profile: !!includeProfile
+  });
+  if (error) {
+    const err = new Error('The verified backup/delete database migration is not installed. No account data was deleted.');
+    err.statusCode = 503;
+    throw err;
   }
+  return data || { backupId };
 }
 
 async function saveFeedback(action, user, ownerUid, profile, body) {
@@ -121,23 +114,7 @@ async function saveFeedback(action, user, ownerUid, profile, body) {
 }
 
 async function resetData(ownerUid, user) {
-  await deleteOperationalData(ownerUid);
-  const version = Date.now();
-  const snap = await getDocument('users', ownerUid);
-  const profile = snap && snap.data ? snap.data : {};
-  const settings = Object.assign({}, profile.settings || {});
-  settings.dataVersion = version;
-  settings.growthDataVersion = version;
-  await upsertDocument('users', ownerUid, {
-    settings,
-    nextInvNum: 1,
-    nextInvId: 1,
-    dataVersion: version,
-    growthDataVersion: version,
-    dataResetAt: nowIso(),
-    dataResetBy: user.id,
-    updatedAt: nowIso()
-  }, true);
+  return deleteOperationalData(ownerUid, user.id);
 }
 
 async function deleteAuthUser(uid) {
@@ -181,8 +158,8 @@ exports.handler = async function handler(event) {
     await saveFeedback(action, user, ownerUid, profile, body);
 
     if (action === 'resetData') {
-      await resetData(ownerUid, user);
-      return response(200, { ok: true, action, ownerUid });
+      const result = await resetData(ownerUid, user);
+      return response(200, { ok: true, action, ownerUid, backupId: result.backupId });
     }
 
     if (isTeamMember) {

@@ -25,9 +25,11 @@ function rememberPermission(cache, key, value) {
 }
 
 function headers(extra) {
+  const allowedOrigin = clean(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io', 500).replace(/\/$/, '');
   return Object.assign({
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Vary': 'Origin',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
   }, extra || {});

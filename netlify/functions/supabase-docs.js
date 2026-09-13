@@ -34,6 +34,24 @@ function isPublicInviteRead(action, path, id) {
   return action === 'get' && !!id && /^users\/[^/]+\/team$/.test(path);
 }
 
+function publicInvite(doc, id) {
+  if (!doc || !doc.data) return null;
+  const data = doc.data;
+  if (String(data.inviteToken || '') !== id || data.status !== 'pending') return null;
+  const expiresAt = Date.parse(data.expiresAt || '');
+  if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) return null;
+  return { id: doc.id, data: {
+    inviteToken: id,
+    ownerUid: String(data.ownerUid || ''),
+    bizName: String(data.bizName || '').slice(0, 180),
+    plan: String(data.plan || 'solo').slice(0, 30),
+    role: String(data.role || 'viewer').slice(0, 30),
+    email: String(data.email || '').slice(0, 320).toLowerCase(),
+    status: 'pending',
+    expiresAt: data.expiresAt || null
+  } };
+}
+
 exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: headers(), body: '' };
   if (event.httpMethod !== 'POST') {
@@ -50,7 +68,7 @@ exports.handler = async function handler(event) {
     if (!path) throw new Error('Missing document path.');
 
     if (isPublicInviteRead(action, path, id)) {
-      const doc = await getDocument(path, id);
+      const doc = publicInvite(await getDocument(path, id), id);
       return {
         statusCode: 200,
         headers: headers(),
@@ -163,3 +181,5 @@ exports.handler = async function handler(event) {
     };
   }
 };
+
+exports._test = { isPublicInviteRead, publicInvite };

@@ -499,7 +499,8 @@ window.createInvite = async function createInvite(){
       role: role,
       email: email,
       status: 'pending',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     });
     var link = buildInviteLink(inviteRef.id);
     var emailSent = false;

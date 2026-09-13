@@ -144,7 +144,7 @@ test('modern UI is additive and offers three cached themes', () => {
   assert.match(css, /Unified Ceylonry POS interface/);
   assert.match(css, /Operational sections: orders, products, CRM, inventory, sales and staff/);
   assert.match(css, /Checkout mirrors the compact sales\/payment reference/);
-  assert.match(worker, /ceylonry-pos-app-shell-v11/);
+  assert.match(worker, /ceylonry-pos-app-shell-v12/);
   assert.equal((css.match(/:root,\[data-pos-theme="ceylonry"\]/g) || []).length, 1);
   assert.match(html, /meta\.content=theme\.color/);
 });
