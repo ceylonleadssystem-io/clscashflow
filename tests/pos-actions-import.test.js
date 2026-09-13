@@ -184,6 +184,9 @@ test('POS landing page offers a hardware cart and emailed order form', () => {
   assert.equal((landing.match(/data-hardware-id=/g) || []).length, 5);
   assert.match(landing, /id="hardware-order-form"/);
   for (const field of ['name', 'email', 'mobile', 'address']) assert.match(landing, new RegExp(`name="${field}"`));
+  assert.match(landing, /Have something else you want to add\?/);
+  assert.match(landing, /id="hardware-add-more"/);
+  assert.match(landing, /scrollIntoView\(\{behavior:'smooth',block:'start'\}\)/);
   assert.match(landing, /\.netlify\/functions\/hardware-order/);
   assert.match(orderApi, /to: 'hello@ceylonrylabs\.io'/);
   assert.match(orderApi, /Delivery address:/);
