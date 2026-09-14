@@ -1,4 +1,4 @@
-const { firebaseAdminFacade } = require('../lib/supabase');
+const { firebaseAdminFacade } = require('../lib/appwrite');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async function handler(event) {
@@ -19,7 +19,7 @@ exports.handler = async function handler(event) {
     try {
       admin = firebaseAdminFacade();
     } catch (e) {
-      return { statusCode: 500, body: 'Supabase service role is not configured.' };
+      return { statusCode: 500, body: 'Appwrite service role is not configured.' };
     }
     const session = stripeEvent.data.object;
     if (session.payment_status === 'paid') {

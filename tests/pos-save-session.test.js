@@ -13,7 +13,7 @@ test('refreshing the business-login URL never invalidates an authenticated sessi
   assert.doesNotMatch(source, /if\(requireFreshBusinessLogin\).*firebase\.auth\(\)\.signOut/s);
 });
 
-test('only explicit business logout signs out of Supabase', () => {
+test('only explicit business logout signs out of Appwrite', () => {
   assert.match(source, /businessLogout=async function\(\).*firebase\.auth\(\)\.signOut\(\)/s);
 });
 

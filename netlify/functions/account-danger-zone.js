@@ -4,9 +4,11 @@ const {
   getUserFromEvent,
   getDocument,
   upsertDocument,
-  service,
+  queryDocuments,
+  deleteDocument,
+  users,
   clean
-} = require('../lib/supabase');
+} = require('../lib/appwrite');
 
 const OPERATIONAL_COLLECTIONS = [
   'transactions',
@@ -54,33 +56,32 @@ function requiredConfirmation(action) {
 
 async function deleteOperationalData(ownerUid, actorUid) {
   const backupId = feedbackId('reset-backup');
-  const { data, error } = await service().rpc('reset_workspace_with_backup', {
-    p_owner_uid: ownerUid,
-    p_actor_uid: actorUid,
-    p_backup_id: backupId,
-    p_paths: OPERATIONAL_COLLECTIONS.map(function(name) { return 'users/' + ownerUid + '/' + name; })
-  });
-  if (error) {
-    const err = new Error('The verified backup/reset database migration is not installed. No data was cleared.');
-    err.statusCode = 503;
-    throw err;
+  const paths = OPERATIONAL_COLLECTIONS.map(function(name) { return 'users/' + ownerUid + '/' + name; });
+  const rows = [];
+  for (const path of paths) {
+    const docs = await queryDocuments(path, { fetchLimit: 5000 });
+    docs.forEach(function(doc) { rows.push({ path, id: doc.id, data: doc.data }); });
   }
-  return data || { backupId };
+  await upsertDocument('accountDataBackups', backupId, { ownerUid, actorUid, reason:'resetData', rows, createdAtUtc:nowIso() }, false);
+  for (const row of rows) await deleteDocument(row.path, row.id);
+  return { backupId };
 }
 
 async function deleteWorkspace(ownerUid, includeProfile) {
   const backupId = feedbackId('delete-backup');
-  const { data, error } = await service().rpc('delete_workspace_with_backup', {
-    p_owner_uid: ownerUid,
-    p_backup_id: backupId,
-    p_include_profile: !!includeProfile
-  });
-  if (error) {
-    const err = new Error('The verified backup/delete database migration is not installed. No account data was deleted.');
-    err.statusCode = 503;
-    throw err;
+  const paths = OPERATIONAL_COLLECTIONS.map(function(name) { return 'users/' + ownerUid + '/' + name; });
+  const rows = [];
+  for (const path of paths) {
+    const docs = await queryDocuments(path, { fetchLimit: 5000 });
+    docs.forEach(function(doc) { rows.push({ path, id: doc.id, data: doc.data }); });
   }
-  return data || { backupId };
+  if (includeProfile) {
+    const profile = await getDocument('users', ownerUid);
+    if (profile) rows.push({ path:'users', id:ownerUid, data:profile.data });
+  }
+  await upsertDocument('accountDataBackups', backupId, { ownerUid, reason:'deleteAccount', rows, createdAtUtc:nowIso() }, false);
+  for (const row of rows) await deleteDocument(row.path, row.id);
+  return { backupId };
 }
 
 async function saveFeedback(action, user, ownerUid, profile, body) {
@@ -99,18 +100,7 @@ async function saveFeedback(action, user, ownerUid, profile, body) {
     userAgent: clean(body.userAgent, 500),
     createdAtUtc: stamp
   };
-  const { error } = await service()
-    .from('app_documents')
-    .insert({
-      path: 'accountDangerFeedback',
-      id: feedbackId(action),
-      data,
-      owner_uid: null,
-      email: data.email || null,
-      created_at: stamp,
-      updated_at: stamp
-    });
-  if (error) throw error;
+  await upsertDocument('accountDangerFeedback', feedbackId(action), data, false);
 }
 
 async function resetData(ownerUid, user) {
@@ -118,8 +108,7 @@ async function resetData(ownerUid, user) {
 }
 
 async function deleteAuthUser(uid) {
-  const { error } = await service().auth.admin.deleteUser(uid);
-  if (error) throw error;
+  await users().delete(uid);
 }
 
 exports.handler = async function handler(event) {

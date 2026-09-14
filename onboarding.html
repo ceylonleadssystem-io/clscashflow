@@ -441,9 +441,9 @@ body{background:#fff}
   .ob-choice,.setup-task,.tier-card,.tour-card,.showaround-panel,.plan-reco,.summary-box{border-radius:14px}
 }
 </style>
-<!-- Supabase compatibility SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260908-auth-recovery"></script>
+<!-- Appwrite compatibility SDK -->
+<script src="assets/appwrite-sdk.js"></script>
+<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
 <script>
 const firebaseConfig = {};
 firebase.initializeApp(firebaseConfig);
@@ -1731,7 +1731,7 @@ window.launchDashboard = async function launchDashboard(){
     const requestedPlan = firstPlan(state.tier || 'solo');
 
     if (state.googleAuth) {
-      // Google user — already authenticated, just update their Supabase profile
+      // Google user — already authenticated, just update their Appwrite profile
       const user = firebase.auth().currentUser;
       if (!user) { showStepError(4,'Session expired. Please sign in again to continue.'); setTimeout(function(){window.location.href='signin.html';},1200); return; }
       const existingDoc = await withTimeout(firebase.firestore().collection('users').doc(user.uid).get(), 5000, null);
@@ -1811,7 +1811,7 @@ window.launchDashboard = async function launchDashboard(){
       window.location.href = planFiles[selectedPlan] || 'solo.html';
 
     } else {
-      // Email user — create Supabase account then save profile
+      // Email user — create Appwrite account then save profile
       let cred;
       try {
         cred = await firebase.auth().createUserWithEmailAndPassword(state.email, state.password);

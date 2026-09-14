@@ -9,12 +9,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://iudcinvfqbdzaptnnzqg.supabase.co" crossorigin>
+<link rel="preconnect" href="https://sgp.cloud.appwrite.io" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-<!-- Supabase compatibility SDK -->
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-<script defer src="assets/supabase-firebase-compat.js?v=20260908-auth-recovery"></script>
+<!-- Appwrite compatibility SDK -->
+<script defer src="assets/appwrite-sdk.js"></script>
+<script defer src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -27,7 +27,7 @@
   --font-d:'Cormorant Garamond',serif;--font-b:'DM Sans',sans-serif;
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;align-items:center;justify-content:center;padding:1.5rem}
-.shell{display:grid;grid-template-columns:380px 480px;min-height:600px;background:var(--white);box-shadow:0 32px 80px rgba(0,0,0,.12);max-width:900px;width:100%}
+.shell{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,480px);min-height:600px;background:var(--white);box-shadow:0 32px 80px rgba(0,0,0,.12);max-width:900px;width:100%}
 /* LEFT */
 .left{background:#1a1714;padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
 .left::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;border:1px solid rgba(184,146,42,.15);pointer-events:none}

@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade, getUserFromEvent, getDocument } = require('../lib/supabase');
+const { firebaseAdminFacade, getUserFromEvent, getDocument } = require('../lib/appwrite');
 
 const MAX_FILE_BYTES = 3000000;
 const PLANS = {

@@ -63,7 +63,7 @@ for (const file of htmlFiles) {
 const secretPatterns = [
   ['Google API key', /AIza[0-9A-Za-z_-]{20,}/],
   ['Stripe live key', /sk_live_[0-9A-Za-z]+/],
-  ['Supabase service-role JWT', /eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/]
+  ['Appwrite service-role JWT', /eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/]
 ];
 
 for (const file of files.filter((item) => /\.(?:html|js|mjs|json|toml|sql|md)$/.test(item))) {

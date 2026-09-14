@@ -20,8 +20,8 @@ test('category managers are isolated for Products and Settings', () => {
   assert.match(html, /addPosCategory=function\(location\)/);
 });
 
-test('service worker retains critical CDN libraries after an online load', () => {
-  assert.match(worker, /supabase-js@2\.110\.0/);
+test('service worker retains critical libraries after an online load', () => {
+  assert.match(worker, /\/assets\/appwrite-sdk\.js/);
   assert.match(worker, /xlsx@0\.18\.5\/dist\/xlsx\.full\.min\.js/);
   assert.match(worker, /EXTERNAL_ASSETS\.includes\(url\.href\)/);
   assert.match(worker, /if\(cached\).*return cached/s);

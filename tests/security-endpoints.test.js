@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const receiptSource = fs.readFileSync(path.join(root, 'netlify/functions/submit-subscription-receipt.js'), 'utf8');
-const docsSource = fs.readFileSync(path.join(root, 'netlify/functions/supabase-docs.js'), 'utf8');
+const docsSource = fs.readFileSync(path.join(root, 'netlify/functions/appwrite-docs.js'), 'utf8');
 const platformSource = fs.readFileSync(path.join(root, 'assets/platform.js'), 'utf8');
 const accessAdminSource = fs.readFileSync(path.join(root, 'access-admin.html'), 'utf8');
 
@@ -34,10 +34,10 @@ test('receipt validation checks content signatures and periods', () => {
 });
 
 test('public invite reads validate token and expose only allowlisted fields', () => {
-  assert.match(docsSource, /data\.inviteToken/);
-  assert.match(docsSource, /data\.status !== 'pending'/);
-  assert.match(docsSource, /expiresAt <= Date\.now\(\)/);
-  assert.match(docsSource, /const doc = publicInvite/);
+  assert.match(docsSource, /d\.inviteToken/);
+  assert.match(docsSource, /d\.status\|\|'pending'/);
+  assert.match(docsSource, /Date\.parse\(d\.expiresAt\)>Date\.now\(\)/);
+  assert.match(docsSource, /var publicInvite=/);
   assert.match(accessAdminSource, /expiresAt:\s*new Date/);
-  assert.doesNotMatch(docsSource, /JSON\.stringify\(\{ ok: true, exists: !!doc, doc: await getDocument/);
+  assert.doesNotMatch(docsSource, /doc:invite/);
 });

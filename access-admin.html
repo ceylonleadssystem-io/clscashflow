@@ -6,9 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CeylonryLabs.io — Team Access</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="preconnect" href="https://iudcinvfqbdzaptnnzqg.supabase.co" crossorigin>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260908-auth-recovery"></script>
+<link rel="preconnect" href="https://sgp.cloud.appwrite.io" crossorigin>
+<script src="assets/appwrite-sdk.js"></script>
+<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
 <script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -463,7 +463,7 @@ window.createInvite = async function createInvite(){
   var role = el('inv-role').value;
   if(!email || email.indexOf('@') < 1){ showMsg('Please enter a valid email address.'); return; }
 
-  // Re-check seats live when Supabase access allow the count queries.
+  // Re-check seats live when Appwrite access allow the count queries.
   // Some production rules allow invite creation but block collection scans;
   // in that case, continue and let the create write/rules decide.
   var memSnap = null;

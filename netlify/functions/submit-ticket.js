@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade } = require('../lib/supabase');
+const { firebaseAdminFacade } = require('../lib/appwrite');
 
 async function getAdmin() {
   try {
@@ -76,10 +76,10 @@ exports.handler = async function handler(event) {
       });
       storage = { stored: true, id: doc.id };
     } catch (err) {
-      storage = { stored: false, reason: err && err.message ? err.message : 'Supabase write failed' };
+      storage = { stored: false, reason: err && err.message ? err.message : 'Appwrite write failed' };
     }
   } else if (!notifyOnly) {
-    storage = { stored: false, reason: 'Supabase service role not configured' };
+    storage = { stored: false, reason: 'Appwrite service role not configured' };
   } else {
     storage = { stored: true, id: data.threadId || 'live-chat' };
   }

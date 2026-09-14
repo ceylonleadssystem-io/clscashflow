@@ -2,7 +2,7 @@ const {
   clean,
   headers,
   getDocument
-} = require('../lib/supabase');
+} = require('../lib/appwrite');
 const {
   isValidPublicToken,
   publicTokenCandidates,

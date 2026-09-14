@@ -10,11 +10,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://iudcinvfqbdzaptnnzqg.supabase.co" crossorigin>
+<link rel="preconnect" href="https://sgp.cloud.appwrite.io" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<!-- Supabase compatibility SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-<script src="assets/supabase-firebase-compat.js?v=20260908-auth-recovery"></script>
+<!-- Appwrite compatibility SDK -->
+<script src="assets/appwrite-sdk.js"></script>
+<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
 <script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 <link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1">
 <script src="assets/catalog.js?v=20260811-catalog3"></script>
@@ -5145,7 +5145,7 @@ if (restoreBusinessLastBackupPreview()) {
   renderDashboard();
 }
 
-// Save all D data to Supabase
+// Save all D data to Appwrite
 async function saveDataNow() {
   if (!_uid) {
     console.warn('saveData skipped: user id is not ready yet.');
@@ -5267,7 +5267,7 @@ function saveData() {
   return _savePendingPromise;
 }
 
-// Load all D data from Supabase
+// Load all D data from Appwrite
 async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);

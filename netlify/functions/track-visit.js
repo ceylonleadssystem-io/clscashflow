@@ -1,4 +1,4 @@
-const { firebaseAdminFacade } = require('../lib/supabase');
+const { firebaseAdminFacade } = require('../lib/appwrite');
 
 async function getAdmin() {
   try {
@@ -87,7 +87,7 @@ exports.handler = async function handler(event, context) {
 
   const admin = await getAdmin();
   if (!admin) {
-    return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: false, reason: 'Supabase service role not configured' }) };
+    return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: false, reason: 'Appwrite service role not configured' }) };
   }
 
   try {

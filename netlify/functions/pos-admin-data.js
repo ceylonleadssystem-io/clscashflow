@@ -1,4 +1,4 @@
-const { firebaseAdminFacade } = require('../lib/supabase');
+const { firebaseAdminFacade } = require('../lib/appwrite');
 
 const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 

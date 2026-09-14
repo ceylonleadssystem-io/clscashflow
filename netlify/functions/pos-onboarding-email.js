@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade } = require('../lib/supabase');
+const { firebaseAdminFacade } = require('../lib/appwrite');
 
 function clean(value, max = 300) {
   return String(value == null ? '' : value).trim().slice(0, max);

@@ -6,7 +6,7 @@ const {
   queryDocuments,
   upsertDocument,
   canWrite
-} = require('../lib/supabase');
+} = require('../lib/appwrite');
 const {
   normalizeWhatsAppNumber,
   generatePublicToken,

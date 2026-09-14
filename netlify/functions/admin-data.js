@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade } = require('../lib/supabase');
+const { firebaseAdminFacade } = require('../lib/appwrite');
 
 async function getAdmin() {
   try {
@@ -683,7 +683,7 @@ exports.handler = async function handler(event) {
     return {
       statusCode: 503,
       headers: headers(),
-      body: JSON.stringify({ ok: false, error: 'Supabase service role is not configured on Netlify.' })
+      body: JSON.stringify({ ok: false, error: 'Appwrite service role is not configured on Netlify.' })
     };
   }
 

@@ -5,7 +5,7 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 ## Files
 
 - `index.html` - landing page
-- `signin.html` - Supabase sign in
+- `signin.html` - Appwrite sign in
 - `onboarding.html` - account setup flow
 - `solo.html` - Solo dashboard
 - `starter.html` - Studio dashboard
@@ -19,7 +19,8 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
 - `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
-- `supabase/schema.sql` - Supabase document table used by Auth, dashboards, admin, support, visits, and payments
+- `assets/appwrite-firebase-compat.js` - compatibility layer that preserves the existing application data API
+- `netlify/lib/appwrite.js` - server-side Appwrite adapter
 
 ## GitHub Upload
 
@@ -34,17 +35,19 @@ Netlify should use:
 
 These are already configured in `netlify.toml`.
 
-## Supabase
+## Appwrite
 
-This version stores application data in Supabase through `netlify/functions/supabase-docs.js` and `netlify/lib/supabase.js`.
+This version stores application data in Appwrite through `netlify/functions/appwrite-docs.js` and `netlify/lib/appwrite.js`.
 
-Run `supabase/schema.sql` in the Supabase SQL editor for project `iudcinvfqbdzaptnnzqg`, then add these variables in Netlify environment variables only:
+The Appwrite project is `6a947d6e0012c551dfde` in the Singapore region. It uses database `ceylonry`, collection `app_documents`, and bucket `payment-receipts`. Add these variables in Netlify environment variables only:
 
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `APPWRITE_ENDPOINT=https://sgp.cloud.appwrite.io/v1`
+- `APPWRITE_PROJECT_ID=6a947d6e0012c551dfde`
+- `APPWRITE_DATABASE_ID=ceylonry`
+- `APPWRITE_COLLECTION_ID=app_documents`
+- `APPWRITE_API_KEY` (server-only secret)
 
-Do not add these values to GitHub, HTML, or a committed `.env` file. The service role key is server-only and must stay in Netlify.
+Do not add the API key to GitHub, HTML, or a committed `.env` file. It is server-only and must stay in Netlify.
 
 ## Optional SMTP Environment Variables
 
@@ -66,7 +69,7 @@ For Hostinger, the common values are:
 
 ## Subscription Payments
 
-The 15-day trial is controlled by each user's `trialEnd` value in Supabase. After it ends, the dashboards require payment unless the user profile has an active paid status.
+The 15-day trial is controlled by each user's `trialEnd` value in Appwrite. After it ends, the dashboards require payment unless the user profile has an active paid status.
 
 Customers prepay each month by bank transfer and upload a PDF or image payment slip. The receipt is emailed to the accounts team and recorded in the subscription ledger. Payment may be submitted during the trial; in that case, the paid month begins when the 15-day trial ends. Otherwise the payment popup blocks access at the end of the trial and on each monthly due date until a new slip is uploaded. Expired trials also create a manual payment request in the `paymentRequests` document path so an administrator can send an invoice, mark the request as invoiced, mark it paid, or close it.
 
@@ -74,7 +77,7 @@ Customers prepay each month by bank transfer and upload a PDF or image payment s
 
 `access-admin.html` now creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
 
-If invite creation shows `Not allowed`, confirm the user is signed in, the invite is being written under `users/{ownerUid}/team`, and the Supabase `app_documents` table from `supabase/schema.sql` has been created.
+If invite creation shows `Not allowed`, confirm the user is signed in and the invite is being written under `users/{ownerUid}/team` in the Appwrite `app_documents` collection.
 
 ## EmailJS
 

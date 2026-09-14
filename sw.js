@@ -1,6 +1,6 @@
 const CACHE_NAME='ceylonry-pos-app-shell-v12';
-const PUBLIC_SHELL=['/app/','/app/index.html','/manifest.webmanifest','/pos-system/pos-system.html','/assets/pos-modern.css','/assets/supabase-firebase-compat.js','/assets/platform.js','/assets/pos-industry-tools.js','/assets/icons/ceylonry-192.png','/assets/icons/ceylonry-192-maskable.png','/assets/icons/ceylonry-512.png','/assets/icons/ceylonry-512-maskable.png'];
-const EXTERNAL_ASSETS=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'];
+const PUBLIC_SHELL=['/app/','/app/index.html','/manifest.webmanifest','/pos-system/pos-system.html','/assets/pos-modern.css','/assets/appwrite-firebase-compat.js','/assets/platform.js','/assets/pos-industry-tools.js','/assets/icons/ceylonry-192.png','/assets/icons/ceylonry-192-maskable.png','/assets/icons/ceylonry-512.png','/assets/icons/ceylonry-512-maskable.png'];
+const EXTERNAL_ASSETS=['/assets/appwrite-sdk.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'];
 
 self.addEventListener('install',function(event){event.waitUntil(caches.open(CACHE_NAME).then(function(cache){return cache.addAll(PUBLIC_SHELL)}));self.skipWaiting()});
 self.addEventListener('activate',function(event){event.waitUntil(caches.keys().then(function(keys){return Promise.all(keys.filter(function(key){return key!==CACHE_NAME}).map(function(key){return caches.delete(key)}))}));self.clients.claim()});

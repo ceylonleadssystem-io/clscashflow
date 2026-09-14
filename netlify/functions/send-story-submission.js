@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade } = require('../lib/supabase');
+const { firebaseAdminFacade } = require('../lib/appwrite');
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
@@ -21,7 +21,7 @@ async function storeSubmission(data) {
     });
     return { stored: true, id: doc.id };
   } catch (e) {
-    return { stored: false, reason: e && e.message ? e.message : 'Supabase write failed' };
+    return { stored: false, reason: e && e.message ? e.message : 'Appwrite write failed' };
   }
 }
 
