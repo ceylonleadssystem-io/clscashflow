@@ -3,7 +3,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const root = process.cwd();
-const ignoredDirectories = new Set(['.git', 'node_modules', 'tmp', 'output', 'dist', 'build']);
+const ignoredDirectories = new Set(['.git', 'node_modules', 'tmp', 'output', 'dist', 'build', 'supabase', 'cls-github-upload', 'cls_site 3']);
 const failures = [];
 const warnings = [];
 
