@@ -9,13 +9,12 @@
     "test": "node --test tests/*.test.js",
     "audit:prod": "pnpm audit --prod"
   },
-  "engines": {
-    "node": ">=20"
-  },
+  "engines": { "node": ">=20" },
   "dependencies": {
     "appwrite": "17.0.0",
     "node-appwrite": "^20.0.0",
-    "nodemailer": "^9.1.1",
+    "node-fetch-native-with-agent": "1.7.2",
+    "nodemailer": "^9.1.0",
     "stripe": "^16.12.0"
   }
 }
