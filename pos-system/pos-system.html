@@ -1134,4 +1134,27 @@ body.mobile-checkout #mobile-cart-toggle{display:inline-flex!important;min-heigh
   var timer=setInterval(function(){addStockTools();addCategoryNote();if(document.getElementById('stock-tools-panel')&&document.querySelector('.category-feature-note'))clearInterval(timer)},300);setTimeout(function(){clearInterval(timer)},10000);
 })();
 </script>
+<script>
+/* Final cloud-delete guard: keep deletions as tombstones so live cloud merges
+   cannot resurrect an item that was intentionally removed. */
+(function installCloudDeleteGuard(){
+  function wrapDelete(name,group){
+    var original=window[name]; if(typeof original!=='function'||original.__cloudDeleteGuard)return;
+    function guarded(id){
+      var before=(db[group]||[]).find(function(item){return String(item.id)===String(id)});
+      var result=original.apply(this,arguments);
+      if(!before||(db[group]||[]).some(function(item){return String(item.id)===String(id)}))return result;
+      db.deletedIds=db.deletedIds||{};db.deletedIds[group]=Array.isArray(db.deletedIds[group])?db.deletedIds[group]:[];
+      if(!db.deletedIds[group].includes(String(id)))db.deletedIds[group].push(String(id));
+      save();if(window.clsSyncPosNow)window.clsSyncPosNow();
+      return result;
+    }
+    guarded.__cloudDeleteGuard=true;window[name]=guarded;
+  }
+  wrapDelete('deleteProduct','products');
+  wrapDelete('deleteInventoryItem','inventory');
+  wrapDelete('deleteModifier','modifiers');
+  wrapDelete('posDeleteModifierGroup','modifiers');
+})();
+</script>
 </body></html>
