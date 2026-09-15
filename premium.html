@@ -362,6 +362,12 @@ input:checked+.tog-sl:before{transform:translateX(17px)}
 @media print{body>*:not(#print-inv){display:none!important}#print-inv{display:block!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 #print-inv{display:none}
 </style>
+<style>
+/* Studio Nice One requested a quieter footer; other accounts keep the standard contrast. */
+body.account-pasan-studio .footer,
+body.account-pasan-studio .footer *{color:#aaa!important;font-weight:400!important}
+body.account-pasan-studio .footer a{color:#b5b5b5!important}
+</style>
 </head>
 <body>
 
@@ -2010,6 +2016,13 @@ function saveData() {
 async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);
+    // Keep the last known account data available while the cloud collections load.
+    // Some older accounts can briefly return empty collection snapshots on refresh.
+    var cached = readPremiumBackup(uid);
+    if (cached && cached.data && Number(cached.version || 0) > Number(_dataVersion || 0)) {
+      Object.assign(D, cached.data);
+      _dataVersion = Number(cached.version || 0);
+    }
     var cols = ['transactions','expenses','invoices','clients','suppliers','staff','receivables','payables'];
     var keys = ['txns','exps','invoices','clients','suppliers','staff','recv','payables'];
     var snap;
@@ -2030,7 +2043,9 @@ async function loadData(uid) {
     _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
     for (var i = 0; i < cols.length; i++) {
       var cs = snaps[i];
-      D[keys[i]] = cs.docs.map(function(d) { return d.data(); });
+      // An empty response must not erase the account's existing records.
+      // A real empty collection is still represented by the initial empty array.
+      if (cs.docs && cs.docs.length) D[keys[i]] = cs.docs.map(function(d) { return d.data(); });
     }
     if (restorePremiumBackupIfNewer(serverVersion)) setTimeout(function(){ saveData(); }, 500);
   } catch(e) { console.error('Premium loadData:', e); }
@@ -2093,6 +2108,7 @@ _fauth.onAuthStateChanged(async function(user) {
     var hr=new Date().getHours();
     var greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
     var accountEmail=(_profile.email||(user&&user.email)||'');
+    document.body.classList.toggle('account-pasan-studio', accountEmail.toLowerCase()==='pasan@studioniceone.com');
     var accountName=(_profile.name||(user&&user.displayName)||D.settings.user||'there');
     if(_profile.ownerUid&&D.settings.user&&accountName===D.settings.user&&accountEmail){
       accountName=accountEmail.split('@')[0];
