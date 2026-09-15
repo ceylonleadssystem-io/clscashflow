@@ -902,7 +902,11 @@ body.full #view-settings.active>.settings-tabbed{height:100%;min-height:0}body.f
   function configured(){var savedChannels=db.settings&&db.settings.orderChannels;if(!Array.isArray(savedChannels)||!savedChannels.length)return choices.map(function(choice){return choice[0]});return savedChannels.filter(function(value){return choices.some(function(choice){return choice[0]===value})})}
   function refresh(){if(!select)return;var allowed=configured(),old=select.value;select.innerHTML=choices.filter(function(choice){return allowed.includes(choice[0])}).map(function(choice){return '<option value="'+choice[0]+'">'+choice[1]+'</option>'}).join('');select.value=allowed.includes(old)?old:allowed[0];select.dispatchEvent(new Event('change',{bubbles:true}));document.querySelectorAll('[data-order-channel]').forEach(function(input){input.checked=allowed.includes(input.dataset.orderChannel)})}
   var channelLoad=loadSettings;loadSettings=function(){var result=channelLoad();refresh();return result};var channelSave=saveSettings;saveSettings=function(){var enabled=Array.from(document.querySelectorAll('[data-order-channel]:checked')).map(function(input){return input.dataset.orderChannel});if(!enabled.length)return alert('Enable at least one checkout order type.');db.settings.orderChannels=enabled;channelSave();refresh()};
+  // The order-channel selector is mounted by the checkout enhancement script
+  // below this block, so refresh again once it exists after initial page load.
   refresh();
+  var channelTimer=setInterval(function(){if(document.getElementById('order-channel')){refresh();clearInterval(channelTimer)}},250);
+  setTimeout(function(){clearInterval(channelTimer)},10000);
 })();
 </script>
 <style>.channel-setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}.channel-setting-grid label{display:flex;align-items:center;gap:8px;min-height:42px;padding:9px 11px;border:1px solid var(--ui-line,#dedad1);border-radius:10px;background:var(--ui-surface,#fff);font-size:12px;font-weight:700}@media(max-width:560px){.channel-setting-grid{grid-template-columns:1fr}}</style>
