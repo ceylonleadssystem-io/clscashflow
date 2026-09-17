@@ -39,6 +39,7 @@ test('POS only restores the explicitly approved business account', () => {
   assert.match(pos, /POS_LOGIN_UID_KEY='ceylonry-pos-login-uid'/);
   assert.match(pos, /approvedUid===user\.uid/);
   assert.match(pos, /sessionStorage\.removeItem\(POS_LOGIN_UID_KEY\)/);
+  assert.match(pos, /if\(firebase\.auth\(\)\.currentUser\)await firebase\.auth\(\)\.signOut\(\);var cred=await firebase\.auth\(\)\.signInWithEmailAndPassword/);
 });
 
 test('role navigation remains hidden despite forced button styling', () => {
