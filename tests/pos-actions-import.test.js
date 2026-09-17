@@ -157,7 +157,7 @@ test('reported checkout and settings regressions stay fixed', () => {
   for (const channel of ['Dine-in', 'Takeaway', 'PickMe', 'Uber Eats']) {
     assert.match(html, new RegExp(`'${channel}'`));
   }
-  assert.match(html, /db\.settings\.orderChannels=enabled;channelSave\(\)/);
+  assert.match(html, /db\.settings\.orderChannels=foodService\?enabled:\[\];channelSave\(\)/);
   assert.match(html, /if\(window\.clsSyncPosNow\)await window\.clsSyncPosNow\(\)/);
 });
 

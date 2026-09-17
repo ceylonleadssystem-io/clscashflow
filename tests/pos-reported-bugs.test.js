@@ -48,3 +48,22 @@ test('role navigation remains hidden despite forced button styling', () => {
   assert.match(pos, /cashier:\['checkout','customers','staff'\]/);
   assert.match(pos, /management\.hidden=!user\|\|!\['owner','manager'\]\.includes\(user\.role\)/);
 });
+
+test('business-specific settings hide restaurant controls from hardware shops', () => {
+  assert.match(pos, /supportsFoodOrders\(\).*\['restaurant','cafe'\]/s);
+  assert.match(pos, /orderSettings\.hidden=!supportsFoodOrders\(\)/);
+  assert.match(pos, /serviceSettings\.hidden=!supportsServiceCharge\(\)/);
+  assert.match(pos, /foodService\?enabled:\[\]/);
+});
+
+test('POS business login provides password recovery', () => {
+  assert.match(pos, /id='pos-forgot-password'/);
+  assert.match(pos, /firebase\.auth\(\)\.sendPasswordResetEmail\(email\)/);
+  assert.match(pos, /Password reset link sent/);
+});
+
+test('catalogue recovery never restores intentionally deleted products', () => {
+  assert.match(pos, /intentionallyDeleted=new Set\(current\.deletedIds\.products\.map\(String\)\)/);
+  assert.match(pos, /products=\(products\|\|\[\]\)\.filter\(function\(product\)\{return!intentionallyDeleted\.has/);
+  assert.doesNotMatch(pos, /restoredIds=new Set\(products\.map/);
+});
