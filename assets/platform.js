@@ -869,11 +869,11 @@
     };
     var config = { publicKey: publicKey, serviceId: serviceId, templateId: templateId };
     var smtpError = null;
-    // Documents use the authenticated server mailbox first. This avoids
-    // EmailJS browser-origin, template-recipient, and payload-size failures.
-    if (isDocument) {
+    // Documents and POS receipts use the server mailbox first. This avoids
+    // browser-origin, template-recipient, and payload-size failures.
+    if (isDocument || isReceipt) {
       try {
-        return await sendDocumentViaSmtp(opts, documentLabel);
+        return await sendDocumentViaSmtp(opts, isReceipt ? 'Receipt' : documentLabel);
       } catch (err) {
         smtpError = err;
         console.error('Server document email failed; trying EmailJS fallback:', err);
