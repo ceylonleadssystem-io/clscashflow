@@ -1,4 +1,4 @@
-const CACHE_NAME='ceylonry-pos-app-shell-v12';
+const CACHE_NAME='ceylonry-pos-app-shell-v13';
 const PUBLIC_SHELL=['/app/','/app/index.html','/manifest.webmanifest','/pos-system/pos-system.html','/assets/pos-modern.css','/assets/appwrite-firebase-compat.js','/assets/platform.js','/assets/pos-industry-tools.js','/assets/icons/ceylonry-192.png','/assets/icons/ceylonry-192-maskable.png','/assets/icons/ceylonry-512.png','/assets/icons/ceylonry-512-maskable.png'];
 const EXTERNAL_ASSETS=['/assets/appwrite-sdk.js','https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'];
 

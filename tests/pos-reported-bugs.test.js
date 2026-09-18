@@ -79,3 +79,13 @@ test('catalogue recovery never restores intentionally deleted products', () => {
   assert.match(pos, /products=\(products\|\|\[\]\)\.filter\(function\(product\)\{return!intentionallyDeleted\.has/);
   assert.doesNotMatch(pos, /restoredIds=new Set\(products\.map/);
 });
+
+test('a stale device cannot clear cloud deletion tombstones during merge', () => {
+  assert.match(pos, /merged\.deletedIds\[key\]=Array\.from\(new Set\(\[\]\.concat\(remote\.deletedIds/);
+  assert.doesNotMatch(pos, /merged\.deletedIds\[key\]=merged\.deletedIds\[key\]\.filter/);
+});
+
+test('installed POS reloads when an updated service worker takes control', () => {
+  assert.match(pos, /serviceWorker\.addEventListener\('controllerchange'/);
+  assert.match(pos, /register\('\/sw\.js',\{updateViaCache:'none'\}\)/);
+});

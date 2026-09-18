@@ -8,7 +8,7 @@ const html = fs.readFileSync(path.join(root, 'pos-system', 'pos-system.html'), '
 const worker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 
 test('POS registers offline support when opened directly', () => {
-  assert.match(html, /navigator\.serviceWorker\.register\('\/sw\.js'\)/);
+  assert.match(html, /navigator\.serviceWorker\.register\('\/sw\.js',\{updateViaCache:'none'\}\)/);
 });
 
 test('category managers are isolated for Products and Settings', () => {
