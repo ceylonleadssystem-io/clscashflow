@@ -1226,4 +1226,46 @@ body.mobile-checkout #mobile-cart-toggle{display:inline-flex!important;min-heigh
   applyBusinessTypeSettingsVisibility();
 })();
 </script>
+<style>
+.hardware-status{display:flex;align-items:center;gap:8px;margin-top:10px;color:var(--ui-muted,#756f66);font-size:11px;font-weight:700}
+.hardware-status::before{content:'';width:8px;height:8px;border-radius:50%;background:#168653;box-shadow:0 0 0 3px color-mix(in srgb,#168653 16%,transparent)}
+.pos-print-frame{position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:.01;pointer-events:none}
+</style>
+<script>
+/* Android register hardware support. The NETUM scanner presents as a USB
+   keyboard; receipts print through the tablet's system print service. */
+(function installRegisterHardwareSupport(){
+  var scanBuffer='',scanStartedAt=0,scanLastAt=0,scanResetTimer=0;
+  function resetScanner(){scanBuffer='';scanStartedAt=0;scanLastAt=0;clearTimeout(scanResetTimer)}
+  function scannedProduct(code){var normalized=String(code||'').trim().toLowerCase();return(db.products||[]).find(function(product){return String(product.code||'').trim().toLowerCase()===normalized})}
+  document.addEventListener('keydown',function(event){
+    if(event.ctrlKey||event.altKey||event.metaKey||event.isComposing)return;
+    var now=performance.now(),editable=event.target&&event.target.matches&&event.target.matches('input,textarea,select,[contenteditable="true"]');
+    if(event.key==='Enter'){
+      var duration=scanStartedAt?now-scanStartedAt:Infinity,code=scanBuffer,product=code.length>=3&&duration<Math.max(900,code.length*90)?scannedProduct(code):null;
+      resetScanner();
+      if(!product)return;
+      event.preventDefault();event.stopPropagation();
+      if(editable&&event.target.value===code)event.target.value='';
+      addCart(product.id);notice(product.name+' added by barcode '+product.code+'.');
+      return;
+    }
+    if(event.key.length!==1||editable&&event.target.id!=='product-search'){if(now-scanLastAt>120)resetScanner();return}
+    if(!scanStartedAt||now-scanLastAt>120){scanBuffer='';scanStartedAt=now}
+    scanBuffer+=event.key;scanLastAt=now;clearTimeout(scanResetTimer);scanResetTimer=setTimeout(resetScanner,180);
+  },true);
+
+  function printDocument(html){
+    var old=document.querySelector('.pos-print-frame');if(old)old.remove();
+    var frame=document.createElement('iframe');frame.className='pos-print-frame';frame.title='Receipt print job';frame.srcdoc=html;
+    frame.addEventListener('load',function(){setTimeout(function(){try{frame.contentWindow.focus();frame.contentWindow.print()}catch(error){alert('The Android print service could not open. Check the printer connection and try Print Test Receipt again.')}},80)},{once:true});
+    document.body.append(frame);setTimeout(function(){if(frame.isConnected)frame.remove()},120000);
+  }
+  printReceipt=function(id){var sale=db.sales.find(function(item){return item.id===id});if(!sale)return alert('Receipt not found.');printDocument(receiptHtml(sale))};
+  printTestReceipt=function(){printDocument(receiptHtml({id:'test',receipt:'TEST-RECEIPT',createdAt:new Date().toISOString(),payment:'Cash',total:350,lines:[{name:'Test Item',qty:1,price:350,modifiers:[]}]}))};
+
+  var printingPanel=Array.from(document.querySelectorAll('#view-settings .panel')).find(function(panel){return/Receipts & Printing/i.test(panel.textContent)}),body=printingPanel&&printingPanel.querySelector('.modal-body');
+  if(body&&!document.getElementById('register-hardware-status')){var status=document.createElement('div');status.id='register-hardware-status';status.className='hardware-status';status.textContent='NETUM USB scanner ready. Receipts use the Android system print service at 80 mm.';body.append(status)}
+})();
+</script>
 </body></html>

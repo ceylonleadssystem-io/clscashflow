@@ -31,6 +31,18 @@ test('full-screen menu toggle can reveal the sidebar', () => {
   assert.match(pos, /body\.full\.sidebar-collapsed:has\(#view-checkout\.active\) \.side\{display:none!important\}/);
 });
 
+test('USB barcode scanner adds an exact product code through the existing cart flow', () => {
+  assert.match(pos, /installRegisterHardwareSupport/);
+  assert.match(pos, /String\(product\.code\|\|''\).*===normalized/);
+  assert.match(pos, /addCart\(product\.id\)/);
+});
+
+test('receipt printing uses an in-page frame instead of an Android-blocked popup', () => {
+  assert.match(pos, /function printDocument\(html\)/);
+  assert.match(pos, /frame\.contentWindow\.print\(\)/);
+  assert.match(pos, /printReceipt=function\(id\)/);
+});
+
 test('product deletion records a cloud tombstone before syncing', () => {
   assert.match(pos, /installAccessAndDeletionEnforcement\(\).*db\.deletedIds\.products.*clsSyncPosNow/s);
 });
