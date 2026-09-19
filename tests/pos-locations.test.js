@@ -13,6 +13,12 @@ test('locations are a universal POS capability rather than a business preset', (
   assert.doesNotMatch(html, /businessType[^\n]{0,120}locations/);
 });
 
+test('location management stays inside the Business Profile settings tab', () => {
+  assert.match(html, /section=document\.getElementById\('settings-section-business'\)/);
+  assert.match(html, /var host=section\|\|root/);
+  assert.match(html, /if\(panel\.parentElement!==host\)/);
+});
+
 test('new and legacy accounts receive a main location', () => {
   assert.match(html, /id:'loc-main',name:'Main Location',code:'MAIN'/);
   assert.match(html, /if\(!clean\.locations\.length\)clean\.locations\.push/);
