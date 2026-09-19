@@ -86,7 +86,7 @@ function defaultWorkspace(uid, profile) {
   return {
     accountUid: uid,
     products: [], modifiers: [], customers: [], sales: [], inventory: [], stockMovements: [],
-    users: [], timeEntries: [], cashShifts: [], supportAudit: [], categories: [], voidOrders: [],
+    users: [], locations: [{ id: 'loc-main', name: 'Main Location', code: 'MAIN', active: true, createdAt: new Date().toISOString() }], locationAudit: [], stockTransfers: [], timeEntries: [], cashShifts: [], supportAudit: [], categories: [], voidOrders: [],
     openOrders: [], customerCommunications: [], appointments: [], memberships: [], prescriptions: [],
     medicineBatches: [], commissionPayments: [], kitchenTickets: [],
     settings: { business: profile.posBusinessName || profile.bizName || 'My Business', email: profile.email || '', businessType: 'other', onboardingComplete: false }
