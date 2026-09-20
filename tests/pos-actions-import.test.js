@@ -63,7 +63,7 @@ test('an empty sync cannot silently erase an existing catalogue', () => {
   assert.match(html, /merged\.deletedIds\[key\]=Array\.from\(new Set\(\[\]\.concat\(remote\.deletedIds/);
   assert.doesNotMatch(html, /merged\.deletedIds\[key\]=merged\.deletedIds\[key\]\.filter/);
   assert.match(html, /Recover the account-bound device catalogue before the first write/);
-  assert.match(html, /if\(localPayload&&typeof localPayload==='object'&&!localPayload\.accountUid\)localPayload\.accountUid=user\.uid/);
+  assert.match(html, /if\(localPayload&&typeof localPayload==='object'&&!localPayload\.accountUid\)localPayload\.accountUid=workspaceUid/);
   assert.match(html, /preSyncRecovered=recoverMissingCatalogue.*await syncCloud\(\)/s);
 });
 
@@ -145,7 +145,7 @@ test('modern UI is additive and offers three cached themes', () => {
   assert.match(css, /Unified Ceylonry POS interface/);
   assert.match(css, /Operational sections: orders, products, CRM, inventory, sales and staff/);
   assert.match(css, /Checkout mirrors the compact sales\/payment reference/);
-  assert.match(worker, /ceylonry-pos-app-shell-v13/);
+  assert.match(worker, /ceylonry-pos-app-shell-v14/);
   assert.equal((css.match(/:root,\[data-pos-theme="ceylonry"\]/g) || []).length, 1);
   assert.match(html, /meta\.content=theme\.color/);
 });

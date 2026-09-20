@@ -312,6 +312,9 @@ test('admin billing handles reminders, payment confirmation and account access',
 test('large Appwrite documents are chunked below the data attribute limit', () => {
   const appwrite = fs.readFileSync(path.join(root, 'netlify', 'lib', 'appwrite.js'), 'utf8');
   assert.match(appwrite, /DOCUMENT_DATA_LIMIT = 900000/);
+  assert.match(appwrite, /Buffer\.byteLength/);
+  assert.match(appwrite, /splitUtf8\(serialized,DOCUMENT_CHUNK_SIZE\)/);
+  assert.match(appwrite, /payload\.data=storedData\(payload\.data\)/);
   assert.match(appwrite, /__chunkedDocument:true/);
   assert.match(appwrite, /hydratedRowToDoc/);
   assert.match(pos, /imageSource==='azure-swim-catalogue'.*bundled\[code\]===product\.image/s);
@@ -326,6 +329,7 @@ test('product edits persist modifier rules and stock usage before cloud sync', (
 test('failed cloud sync exposes an immediate retry action', () => {
   assert.match(pos, /Cloud sync failed\. Tap to retry now\./);
   assert.match(pos, /Retrying cloud sync/);
+  assert.match(pos, /Cloud sync failed · changes saved locally · tap to retry/);
 });
 
 test('cross-device sync resolves records and individual settings by update time', () => {
@@ -351,4 +355,18 @@ test('linked staff accounts and devices use the owner business workspace', () =>
   assert.match(pos, /saveCloudSnapshotLocally\(\);lastCloudJson=/);
   assert.match(appwrite, /async function linkedOwnerUid\(user\)/);
   assert.match(appwrite, /ownerUid===pathOwner/);
+});
+
+test('POS cloud writes merge on the server and verify persistence before reporting synced', () => {
+  const api = fs.readFileSync(path.join(root, 'netlify', 'functions', 'appwrite-docs.js'), 'utf8');
+  const worker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+  assert.match(api, /function mergePosPayload\(remote,local\)/);
+  assert.match(api, /data\.payload=mergePosPayload\(current\.data\.payload,data\.payload\)/);
+  assert.match(pos, /function payloadCovers\(remote,local\)/);
+  assert.match(pos, /for\(var attempt=0;attempt<3;attempt\+\+\)/);
+  assert.match(pos, /if\(payloadCovers\(verified,payload\)\)break/);
+  assert.match(pos, /Cloud did not confirm the latest device changes/);
+  assert.match(pos, /localStorage\.getItem\(pendingSyncKey\(\)\)==='1'\)setCloudStatus\('Syncing POS with cloud/);
+  assert.match(worker, /ceylonry-pos-app-shell-v14/);
+  assert.match(worker, /new Request\(event\.request,\{cache:'no-store'\}\)/);
 });

@@ -40,6 +40,27 @@ function ownerFrom(path, id, data) {
 }
 const DOCUMENT_DATA_LIMIT = 900000;
 const DOCUMENT_CHUNK_SIZE = 400000;
+function utf8Length(value) { return Buffer.byteLength(String(value == null ? '' : value), 'utf8'); }
+function splitUtf8(value, maxBytes) {
+  value = String(value == null ? '' : value);
+  const pieces = [];
+  let start = 0, index = 0, bytes = 0;
+  while (index < value.length) {
+    const codePoint = value.codePointAt(index);
+    const width = codePoint > 0xffff ? 2 : 1;
+    const size = utf8Length(String.fromCodePoint(codePoint));
+    if (bytes && bytes + size > maxBytes) { pieces.push(value.slice(start, index)); start = index; bytes = 0; }
+    bytes += size;
+    index += width;
+  }
+  if (start < value.length || !pieces.length) pieces.push(value.slice(start));
+  return pieces;
+}
+function storedData(value) {
+  const data = typeof value === 'string' ? value : JSON.stringify(value == null ? {} : value);
+  if (utf8Length(data) > 1000000) throw new Error('Stored Appwrite data exceeded the document attribute limit.');
+  return data;
+}
 function rowToDoc(row) { return { id: row.docId, data: JSON.parse(row.data || '{}') }; }
 function chunkPath(path, id) { return path + '/__large_documents__/' + id; }
 function chunkId(id, index) { return crypto.createHash('sha256').update(id + '\0chunk\0' + index).digest('hex').slice(0, 36); }
@@ -100,15 +121,16 @@ async function upsertDocument(path, id, data, merge) {
     if (!error || error.code !== 404) throw error;
   }
   if (current) { try { oldChunkCount = Number(JSON.parse(current.data || '{}').chunkCount) || 0; } catch (_) {} }
-  if (serialized.length > DOCUMENT_DATA_LIMIT) {
-    const pieces=[];for(let offset=0;offset<serialized.length;offset+=DOCUMENT_CHUNK_SIZE)pieces.push(serialized.slice(offset,offset+DOCUMENT_CHUNK_SIZE));
+  if (utf8Length(serialized) > DOCUMENT_DATA_LIMIT) {
+    const pieces=splitUtf8(serialized,DOCUMENT_CHUNK_SIZE);
     await Promise.all(pieces.map(async function(piece,index){
-      const logicalId=chunkId(id,index),chunkPayload={path:chunkPath(path,id),docId:logicalId,data:JSON.stringify({chunk:piece}),ownerUid:ownerFrom(path,id,next),email:null,createdAt:now,updatedAt:now},chunkKey=documentKey(chunkPayload.path,logicalId);
+      const logicalId=chunkId(id,index),chunkPayload={path:chunkPath(path,id),docId:logicalId,data:storedData({chunk:piece}),ownerUid:ownerFrom(path,id,next),email:null,createdAt:now,updatedAt:now},chunkKey=documentKey(chunkPayload.path,logicalId);
       try{const old=await databases().getDocument(DATABASE_ID,COLLECTION_ID,chunkKey);chunkPayload.createdAt=old.createdAt||now;await databases().updateDocument(DATABASE_ID,COLLECTION_ID,chunkKey,chunkPayload)}catch(error){if(!error||error.code!==404)throw error;await databases().createDocument(DATABASE_ID,COLLECTION_ID,chunkKey,chunkPayload,[])}
     }));
-    payload.data=JSON.stringify({__chunkedDocument:true,chunkCount:pieces.length});
+    payload.data=storedData({__chunkedDocument:true,chunkCount:pieces.length});
     if(oldChunkCount>pieces.length)await removeChunks(path,id,pieces.length,oldChunkCount-pieces.length);
   } else if(oldChunkCount) await removeChunks(path,id,0,oldChunkCount);
+  payload.data=storedData(payload.data);
   const saved=current?await databases().updateDocument(DATABASE_ID,COLLECTION_ID,key,payload):await databases().createDocument(DATABASE_ID,COLLECTION_ID,key,payload,[]);
   return {id:saved.docId,data:next};
 }
