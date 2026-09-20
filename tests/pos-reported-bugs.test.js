@@ -233,11 +233,33 @@ test('direct printer claims a bulk output endpoint and restores permission', () 
 });
 
 test('receipts use ESC POS with Android system print fallback', () => {
-  assert.match(pos, /usbPrinter\.transferOut\(usbEndpointNumber,escPosBytes\(sale\)\)/);
+  assert.match(pos, /usbPrinter\.transferOut\(usbEndpointNumber,bytes\)/);
   assert.match(pos, /bytes\.set\(\[27,64\],0\)/);
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
+  assert.match(pos, /function escPosLogoBytes\(\)/);
   assert.match(pos, /Direct print failed\. Opening Android System Print instead/);
   assert.match(pos, /printDocument\(receiptHtml\(sale\)\)/);
+});
+
+test('Business Tools is removed and successful voids disappear permanently', () => {
+  assert.match(pos, /button\.remove\(\)/);
+  assert.match(pos, /if\(view\)view\.remove\(\)/);
+  assert.match(pos, /deleteSalePermanently\(sale\.id,true\)/);
+  assert.match(pos, /bypassHistoricalCash/);
+});
+
+test('connecting the USB receipt printer enables automatic sale printing', () => {
+  assert.match(pos, /db\.settings\.printerType='usb-direct';db\.settings\.autoPrint=true/);
+  assert.match(pos, /if\(db\.settings\.autoPrint\)setTimeout\(\(\)=>printReceipt\(sale\.id\),200\)/);
+  assert.match(pos, /printReceipt=function\(id\).*sendReceiptToPrinter\(sale\)/s);
+});
+
+test('tablet landscape keeps page tools and refund dialogs aligned', () => {
+  assert.match(pos, /min-width:701px\) and \(max-width:1100px/);
+  assert.match(pos, /\.side,body\.full \.side\{position:relative!important/);
+  assert.match(pos, /\.modal\{z-index:1000!important/);
+  assert.match(pos, /#sale-action-modal \.modal-box.*grid-template-rows:auto minmax\(0,1fr\) auto/s);
+  assert.match(pos, /#view-products \.panel-head\{align-items:flex-start!important;flex-wrap:wrap!important/);
 });
 
 test('retail products automatically participate in location stock counts', () => {
