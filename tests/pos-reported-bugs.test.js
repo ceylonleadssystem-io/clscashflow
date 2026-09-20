@@ -263,6 +263,27 @@ test('tablet landscape keeps page tools and refund dialogs aligned', () => {
   assert.match(pos, /#view-products \.panel-head\{align-items:flex-start!important;flex-wrap:wrap!important/);
 });
 
+test('checkout saves sales before optional receipt printing', () => {
+  assert.match(pos, /installReliableSaleCompletion/);
+  assert.match(pos, /id="print-sale-receipt"/);
+  assert.match(pos, /Sale .* saved to Sales History/);
+  assert.match(pos, /if\(shouldPrint\)await printReceipt\(sale\.id\)/);
+  assert.match(pos, /window\.clsSyncPosNow\(\)\.catch/);
+  assert.match(pos, /db\.settings\.autoPrint=false/);
+});
+
+test('all businesses can print social links and QR artwork on receipts', () => {
+  assert.match(pos, /installReceiptSocials/);
+  assert.match(pos, /Socials on receipt/);
+  assert.match(pos, /set-social-instagram/);
+  assert.match(pos, /set-social-facebook/);
+  assert.match(pos, /set-social-tiktok/);
+  assert.match(pos, /set-social-website/);
+  assert.match(pos, /receiptSocialQr/);
+  assert.match(pos, /function escPosSocialQrBytes\(\)/);
+  assert.match(pos, /bytes\.set\(socialQr,logo\.length\+receiptBody\.length\)/);
+});
+
 test('retail products automatically participate in location stock counts', () => {
   assert.match(pos, /installRetailOperationsIntegrity/);
   assert.match(pos, /autoProductStock:true/);
