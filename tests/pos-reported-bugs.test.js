@@ -76,6 +76,14 @@ test('business-specific settings hide restaurant controls from hardware shops', 
   assert.match(pos, /foodService\?enabled:\[\]/);
 });
 
+test('retail checkout hides restaurant order channels and records retail sales', () => {
+  assert.match(pos, /\.order-channel-fields\[hidden\]\{display:none!important\}/);
+  assert.match(pos, /channel\.hidden=!restaurant/);
+  assert.match(pos, /reference\.placeholder=restaurant\?'Table \/ order reference \(optional\)':'Sale reference \(optional\)'/);
+  assert.match(pos, /orderChannel:restaurant\?\(channelSelect\.value\|\|'Dine-in'\):'Retail'/);
+  assert.match(pos, /platformOrderId:restaurant\?platformId\.value\.trim\(\):''/);
+});
+
 test('POS business login provides password recovery', () => {
   assert.match(pos, /id='pos-forgot-password'/);
   assert.match(pos, /firebase\.auth\(\)\.sendPasswordResetEmail\(email\)/);
@@ -230,4 +238,29 @@ test('receipts use ESC POS with Android system print fallback', () => {
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
   assert.match(pos, /Direct print failed\. Opening Android System Print instead/);
   assert.match(pos, /printDocument\(receiptHtml\(sale\)\)/);
+});
+
+test('retail products automatically participate in location stock counts', () => {
+  assert.match(pos, /installRetailOperationsIntegrity/);
+  assert.match(pos, /autoProductStock:true/);
+  assert.match(pos, /autoProductStock:true,locationQuantities:\{\}/);
+  assert.match(pos, /item\.locationQuantities\[location\.id\]=Number\(product\.stock\)\|\|0/);
+  assert.match(pos, /item\.locationQuantities\[loc\]=\(Number\(item\.locationQuantities\[loc\]\)\|\|0\)\+change/);
+  assert.match(pos, /direction<0\?'Product sold':'Sale reversed'/);
+});
+
+test('sales history supports purchase date filtering and receipt tombstones', () => {
+  assert.match(pos, /Purchased from/);
+  assert.match(pos, /Purchased to/);
+  assert.match(pos, /saleReceipts/);
+  assert.match(pos, /receipts\.has\(String\(sale\.receipt/);
+});
+
+test('admin billing handles reminders, payment confirmation and account access', () => {
+  assert.match(admin, /action === 'recordPayment'/);
+  assert.match(admin, /action === 'billingReminder'/);
+  assert.match(admin, /action === 'deleteAccount'/);
+  assert.match(pos, /deletePosUser/);
+  assert.doesNotMatch(platform, /id="cls-paywall"[^;]+type="file"/);
+  assert.match(platform, /No payment-slip upload is required/);
 });

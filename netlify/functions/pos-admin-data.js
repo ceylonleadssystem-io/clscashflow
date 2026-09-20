@@ -163,7 +163,7 @@ exports.handler = async function(event) {
         const authUser = authById.get(String(row.id)) || authByEmail.get(email) || null;
         return {
           id: row.id,
-          name: row.data.name || row.data.displayName || '', email: row.data.email || '',
+          name: row.data.name || row.data.displayName || '', email: row.data.email || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
           products: (payload.products || []).length, categories: (payload.categories || []).length,
@@ -207,6 +207,28 @@ exports.handler = async function(event) {
       await db.collection('subscriptionPayments').doc(receiptId).set({status:'verified',verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL,billingCycle:cycle,amountLkr:amount},{merge:true});
       await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:addBillingPeriod(now,cycle),posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
       return response(200,{ok:true,nextPaymentDue:addBillingPeriod(now,cycle)});
+    }
+
+    if (action === 'recordPayment') {
+      const cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)||(cycle==='annual'?42000:3500),paymentId='pos-admin-'+uid+'-'+Date.now();
+      await db.collection('subscriptionPayments').doc(paymentId).set({uid,email:profile.email||'',businessName:profile.posBusinessName||profile.bizName||'',plan:'pos',status:'verified',source:'admin-confirmed',billingCycle:cycle,amountLkr:amount,period:now.slice(0,7),receivedAtUtc:now,verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL});
+      const nextPaymentDue=addBillingPeriod(now,cycle);await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:nextPaymentDue,posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      return response(200,{ok:true,nextPaymentDue,paymentId});
+    }
+
+    if (action === 'billingReminder') {
+      const channel=body.channel==='whatsapp'?'whatsapp':'email',now=new Date().toISOString();
+      await db.collection('users').doc(uid).set({posPaymentReminderStatus:'sent',posPaymentReminderChannel:channel,posPaymentReminderAt:now,posPaymentReminderBy:ADMIN_EMAIL},{merge:true});
+      return response(200,{ok:true,channel,at:now});
+    }
+
+    if (action === 'deleteAccount') {
+      if(body.confirmBusiness!==clean(profile.posBusinessName||profile.bizName||'',160))return response(400,{ok:false,error:'Business confirmation does not match.'});
+      const now=new Date().toISOString(),backupId='pos-account-'+uid+'-'+Date.now();
+      await db.collection('accountDeletionBackups').doc(backupId).set({uid,deletedAtUtc:now,deletedBy:ADMIN_EMAIL,profile,workspace:workspace.payload,source:'pos-admin'});
+      await workspace.ref.delete();await db.collection('users').doc(uid).delete();
+      try{await admin.auth().deleteUser(uid)}catch(error){console.error('POS auth deletion requires follow-up:',error)}
+      return response(200,{ok:true,backupId});
     }
 
     if (action === 'getReceipt') {
