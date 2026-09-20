@@ -70,7 +70,7 @@ test('an empty sync cannot silently erase an existing catalogue', () => {
 test('sync saves offline first and cannot remain stuck indefinitely', () => {
   assert.match(html, /Offline · saved on this device/);
   assert.match(html, /withSyncTimeout/);
-  assert.match(html, /cloudUnsubscribe=setInterval\(pull,5000\)/);
+  assert.match(html, /cloudUnsubscribe=setInterval\(pull,2500\)/);
   assert.match(html, /POS is online · cloud synced/);
   assert.doesNotMatch(html, /id="pos-connection-label">POS is online</);
 });

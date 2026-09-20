@@ -38,7 +38,28 @@ function ownerFrom(path, id, data) {
   const match = String(path || '').match(/^users\/([^/]+)/);
   return clean(data.ownerUid || data.uid || data.userUid || (path === 'users' ? id : '') || (match && match[1]) || '', 64) || null;
 }
+const DOCUMENT_DATA_LIMIT = 900000;
+const DOCUMENT_CHUNK_SIZE = 400000;
 function rowToDoc(row) { return { id: row.docId, data: JSON.parse(row.data || '{}') }; }
+function chunkPath(path, id) { return path + '/__large_documents__/' + id; }
+function chunkId(id, index) { return crypto.createHash('sha256').update(id + '\0chunk\0' + index).digest('hex').slice(0, 36); }
+async function removeChunks(path, id, from, count) {
+  await Promise.all(Array.from({ length: Number(count) || 0 }, async function(_, offset) {
+    const logicalId = chunkId(id, (Number(from) || 0) + offset);
+    try { await databases().deleteDocument(DATABASE_ID, COLLECTION_ID, documentKey(chunkPath(path, id), logicalId)); }
+    catch (error) { if (!error || error.code !== 404) throw error; }
+  }));
+}
+async function hydratedRowToDoc(row) {
+  const parsed = JSON.parse(row.data || '{}');
+  if (!parsed.__chunkedDocument) return { id: row.docId, data: parsed };
+  const pieces = await Promise.all(Array.from({ length: Number(parsed.chunkCount) || 0 }, async function(_, index) {
+    const logicalId = chunkId(row.docId, index);
+    const chunk = await databases().getDocument(DATABASE_ID, COLLECTION_ID, documentKey(chunkPath(row.path, row.docId), logicalId));
+    return JSON.parse(chunk.data || '{}').chunk || '';
+  }));
+  return { id: row.docId, data: JSON.parse(pieces.join('')) };
+}
 
 async function getUserFromEvent(event) {
   const auth = String((event.headers || {}).authorization || (event.headers || {}).Authorization || '').match(/^Bearer\s+(.+)$/i);
@@ -51,14 +72,14 @@ async function getUserFromEvent(event) {
 }
 
 async function getDocument(path, id) {
-  try { return rowToDoc(await databases().getDocument(DATABASE_ID, COLLECTION_ID, documentKey(path, id))); }
+  try { return hydratedRowToDoc(await databases().getDocument(DATABASE_ID, COLLECTION_ID, documentKey(path, id))); }
   catch (error) { if (error && error.code === 404) return null; throw error; }
 }
 
 async function queryDocuments(path, options) {
   options = options || {};
   const result = await databases().listDocuments(DATABASE_ID, COLLECTION_ID, [Query.equal('path', [path]), Query.limit(Math.min(Number(options.fetchLimit || 1000), 5000))]);
-  let rows = result.documents.map(rowToDoc);
+  let rows = await Promise.all(result.documents.map(hydratedRowToDoc));
   (options.filters || []).forEach(function(filter) { rows = rows.filter(function(row) { return String((row.data || {})[filter.field] ?? '') === String(filter.value ?? ''); }); });
   if (options.order) rows.sort(function(a,b){ const av=(a.data||{})[options.order]||'',bv=(b.data||{})[options.order]||''; return (av < bv ? -1 : av > bv ? 1 : 0) * (options.dir === 'asc' ? 1 : -1); });
   return options.limit ? rows.slice(0, Number(options.limit)) : rows;
@@ -68,25 +89,44 @@ async function upsertDocument(path, id, data, merge) {
   const existing = merge ? await getDocument(path, id) : null;
   const next = Object.assign({}, existing ? existing.data : {}, normalizeData(data));
   Object.keys(next).forEach(function(key){ if(next[key] && next[key].__delete === true) delete next[key]; });
-  const now = new Date().toISOString();
-  const payload = { path, docId:id, data:JSON.stringify(next), ownerUid:ownerFrom(path,id,next), email:clean(next.email,320)||null, createdAt:now, updatedAt:now };
+  const now = new Date().toISOString(), serialized = JSON.stringify(next);
+  const payload = { path, docId:id, data:serialized, ownerUid:ownerFrom(path,id,next), email:clean(next.email,320)||null, createdAt:now, updatedAt:now };
   const key = documentKey(path,id);
+  let current = null, oldChunkCount = 0;
   try {
-    const current = await databases().getDocument(DATABASE_ID,COLLECTION_ID,key);
+    current = await databases().getDocument(DATABASE_ID,COLLECTION_ID,key);
     payload.createdAt = current.createdAt || now;
-    return rowToDoc(await databases().updateDocument(DATABASE_ID,COLLECTION_ID,key,payload));
   } catch (error) {
     if (!error || error.code !== 404) throw error;
-    return rowToDoc(await databases().createDocument(DATABASE_ID,COLLECTION_ID,key,payload,[]));
   }
+  if (current) { try { oldChunkCount = Number(JSON.parse(current.data || '{}').chunkCount) || 0; } catch (_) {} }
+  if (serialized.length > DOCUMENT_DATA_LIMIT) {
+    const pieces=[];for(let offset=0;offset<serialized.length;offset+=DOCUMENT_CHUNK_SIZE)pieces.push(serialized.slice(offset,offset+DOCUMENT_CHUNK_SIZE));
+    await Promise.all(pieces.map(async function(piece,index){
+      const logicalId=chunkId(id,index),chunkPayload={path:chunkPath(path,id),docId:logicalId,data:JSON.stringify({chunk:piece}),ownerUid:ownerFrom(path,id,next),email:null,createdAt:now,updatedAt:now},chunkKey=documentKey(chunkPayload.path,logicalId);
+      try{const old=await databases().getDocument(DATABASE_ID,COLLECTION_ID,chunkKey);chunkPayload.createdAt=old.createdAt||now;await databases().updateDocument(DATABASE_ID,COLLECTION_ID,chunkKey,chunkPayload)}catch(error){if(!error||error.code!==404)throw error;await databases().createDocument(DATABASE_ID,COLLECTION_ID,chunkKey,chunkPayload,[])}
+    }));
+    payload.data=JSON.stringify({__chunkedDocument:true,chunkCount:pieces.length});
+    if(oldChunkCount>pieces.length)await removeChunks(path,id,pieces.length,oldChunkCount-pieces.length);
+  } else if(oldChunkCount) await removeChunks(path,id,0,oldChunkCount);
+  const saved=current?await databases().updateDocument(DATABASE_ID,COLLECTION_ID,key,payload):await databases().createDocument(DATABASE_ID,COLLECTION_ID,key,payload,[]);
+  return {id:saved.docId,data:next};
 }
 
-async function deleteDocument(path,id){ try{await databases().deleteDocument(DATABASE_ID,COLLECTION_ID,documentKey(path,id));}catch(error){if(!error||error.code!==404)throw error;} }
+async function deleteDocument(path,id){
+  try{
+    const current=await databases().getDocument(DATABASE_ID,COLLECTION_ID,documentKey(path,id));
+    let chunkCount=0;try{chunkCount=Number(JSON.parse(current.data||'{}').chunkCount)||0}catch(_){}
+    await databases().deleteDocument(DATABASE_ID,COLLECTION_ID,documentKey(path,id));
+    if(chunkCount)await removeChunks(path,id,0,chunkCount);
+  }catch(error){if(!error||error.code!==404)throw error;}
+}
 function newId(prefix){return clean((prefix?prefix+'_':'')+ID.unique(),36);}
 async function isAdmin(user){if(clean(user&&user.email,240).toLowerCase()===ADMIN_EMAIL)return true;const p=user&&await getDocument('users',user.id);return !!(p&&p.data&&p.data.adminAccess===true);}
 function belongs(row,user){const d=row.data||{},m=String(row.path||'').match(/^users\/([^/]+)/);return !!user&&(row.id===user.id||d.uid===user.id||d.userUid===user.id||d.ownerUid===user.id||(m&&m[1]===user.id)||clean(d.email,240).toLowerCase()===clean(user.email,240).toLowerCase());}
-async function canRead(row,user){return belongs(row,user)||await isAdmin(user);}
-async function canWrite(path,id,data,user){if(belongs({path,id,data},user)||await isAdmin(user))return true;const old=await getDocument(path,id);return !!old&&belongs({path,id,data:old.data},user);}
+async function linkedOwnerUid(user){if(!user)return'';const profile=await getDocument('users',user.id).catch(function(){return null});return clean(profile&&profile.data&&profile.data.ownerUid,240)||user.id;}
+async function canRead(row,user){if(belongs(row,user)||await isAdmin(user))return true;const ownerUid=await linkedOwnerUid(user),pathOwner=(String(row.path||'').match(/^users\/([^/]+)/)||[])[1]||'',dataOwner=clean((row.data||{}).ownerUid,240);return ownerUid!==user.id&&(ownerUid===pathOwner||ownerUid===dataOwner);}
+async function canWrite(path,id,data,user){if(belongs({path,id,data},user)||await isAdmin(user))return true;const ownerUid=await linkedOwnerUid(user),pathOwner=(String(path||'').match(/^users\/([^/]+)/)||[])[1]||'';if(ownerUid!==user.id&&(ownerUid===pathOwner||ownerUid===clean((data||{}).ownerUid,240)))return true;const old=await getDocument(path,id);return !!old&&(belongs({path,id,data:old.data},user)||(ownerUid!==user.id&&ownerUid===clean(old.data&&old.data.ownerUid,240)));}
 
 function snap(doc){return{id:doc&&doc.id||'',exists:!!doc,data:function(){return doc?Object.assign({},doc.data):undefined}}}
 function collection(path,filters,order,max){

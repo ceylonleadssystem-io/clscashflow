@@ -308,3 +308,47 @@ test('admin billing handles reminders, payment confirmation and account access',
   assert.doesNotMatch(platform, /id="cls-paywall"[^;]+type="file"/);
   assert.match(platform, /No payment-slip upload is required/);
 });
+
+test('large Appwrite documents are chunked below the data attribute limit', () => {
+  const appwrite = fs.readFileSync(path.join(root, 'netlify', 'lib', 'appwrite.js'), 'utf8');
+  assert.match(appwrite, /DOCUMENT_DATA_LIMIT = 900000/);
+  assert.match(appwrite, /__chunkedDocument:true/);
+  assert.match(appwrite, /hydratedRowToDoc/);
+  assert.match(pos, /imageSource==='azure-swim-catalogue'.*bundled\[code\]===product\.image/s);
+});
+
+test('product edits persist modifier rules and stock usage before cloud sync', () => {
+  assert.match(pos, /row\.dataset\.modifierId/);
+  assert.match(pos, /product\.modifierRules=modifierRules;product\.recipe=recipe;product\.updatedAt=/);
+  assert.match(pos, /window\.clsSyncPosNow\(\);renderInventory\(\);renderProducts\(\);renderCheckout\(\)/);
+});
+
+test('failed cloud sync exposes an immediate retry action', () => {
+  assert.match(pos, /Cloud sync failed\. Tap to retry now\./);
+  assert.match(pos, /Retrying cloud sync/);
+});
+
+test('cross-device sync resolves records and individual settings by update time', () => {
+  assert.match(pos, /function prepareSyncMetadata\(previous\)/);
+  assert.match(pos, /db\.syncMeta\.settings\[key\]=now/);
+  assert.match(pos, /item\.updatedAt=now/);
+  assert.match(pos, /localTime>remoteTime\?localSettings\[key\]:remoteTime>localTime\?remoteSettings\[key\]/);
+  assert.match(pos, /setInterval\(pull,2500\)/);
+});
+
+test('Azure Swim social QR artwork is preloaded and included in receipt printing', () => {
+  assert.match(pos, /var azureSwimReceiptQr='data:image\/png;base64,/);
+  assert.match(pos, /receiptSocialQr=azureSwimReceiptQr/);
+  assert.match(pos, /@AZURE_SWIM_SRI_LANKA/);
+  assert.match(pos, /escPosSocialQrBytes/);
+});
+
+test('linked staff accounts and devices use the owner business workspace', () => {
+  const appwrite = fs.readFileSync(path.join(root, 'netlify', 'lib', 'appwrite.js'), 'utf8');
+  assert.match(pos, /workspaceUid=String\(profile\.ownerUid\|\|user\.uid\)/);
+  assert.match(pos, /collection\('users'\)\.doc\(workspaceUid\)\.collection\('pos'\)\.doc\('main'\)/);
+  assert.match(pos, /storageKey=KEY\+'-'\+workspaceUid/);
+  assert.match(pos, /saveCloudSnapshotLocally\(\);lastCloudJson=/);
+  assert.match(appwrite, /async function linkedOwnerUid\(user\)/);
+  assert.match(appwrite, /ownerUid===pathOwner/);
+});
