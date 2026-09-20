@@ -232,13 +232,14 @@ test('direct printer claims a bulk output endpoint and restores permission', () 
   assert.match(pos, /navigator\.usb\.addEventListener\('disconnect'/);
 });
 
-test('receipts use ESC POS with Android system print fallback', () => {
-  assert.match(pos, /usbPrinter\.transferOut\(usbEndpointNumber,bytes\)/);
+test('receipts use chunked ESC POS without opening Android PDF printing', () => {
+  assert.match(pos, /usbPrinter\.transferOut\(usbEndpointNumber,chunk\)/);
   assert.match(pos, /bytes\.set\(\[27,64\],0\)/);
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
   assert.match(pos, /function escPosLogoBytes\(\)/);
-  assert.match(pos, /Direct print failed\. Opening Android System Print instead/);
-  assert.match(pos, /printDocument\(receiptHtml\(sale\)\)/);
+  assert.match(pos, /offset\+=4096/);
+  assert.match(pos, /The POS will not open Save as PDF/);
+  assert.doesNotMatch(pos, /sendReceiptToPrinter\(sale\).*printDocument\(receiptHtml\(sale\)\)/s);
 });
 
 test('Business Tools is removed and successful voids disappear permanently', () => {
