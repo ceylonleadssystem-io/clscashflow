@@ -90,6 +90,14 @@ test('POS business login provides password recovery', () => {
   assert.match(pos, /Password reset link sent/);
 });
 
+test('POS business login handles auth rate limits without repeated retries', () => {
+  assert.match(pos, /POS_AUTH_COOLDOWN_KEY='ceylonry-pos-auth-cooldown-until'/);
+  assert.match(pos, /submit\.disabled=true;submit\.textContent='Signing in/);
+  assert.match(pos, /Login is temporarily rate limited because there were too many attempts/);
+  assert.match(pos, /Date\.now\(\)\+10\*60\*1000/);
+  assert.match(pos, /if\(Date\.now\(\)<cooldown\)/);
+});
+
 test('catalogue recovery never restores intentionally deleted products', () => {
   assert.match(pos, /intentionallyDeleted=new Set\(current\.deletedIds\.products\.map\(String\)\)/);
   assert.match(pos, /products=\(products\|\|\[\]\)\.filter\(function\(product\)\{return!intentionallyDeleted\.has/);
