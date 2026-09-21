@@ -286,6 +286,9 @@ test('all businesses can print social links and QR artwork on receipts', () => {
 
 test('retail products automatically participate in location stock counts', () => {
   assert.match(pos, /installRetailOperationsIntegrity/);
+  assert.match(pos, /window\.clsEnsureProductInventory=ensureProductInventory/);
+  assert.match(pos, /if\(ensureProductInventory\(\)\)save\(\)/);
+  assert.match(pos, /if\(window\.clsEnsureProductInventory\)window\.clsEnsureProductInventory\(\)/);
   assert.match(pos, /autoProductStock:true/);
   assert.match(pos, /autoProductStock:true,locationQuantities:\{\}/);
   assert.match(pos, /item\.locationQuantities\[location\.id\]=Number\(product\.stock\)\|\|0/);
@@ -337,7 +340,7 @@ test('cross-device sync resolves records and individual settings by update time'
   assert.match(pos, /db\.syncMeta\.settings\[key\]=now/);
   assert.match(pos, /item\.updatedAt=now/);
   assert.match(pos, /localTime>remoteTime\?localSettings\[key\]:remoteTime>localTime\?remoteSettings\[key\]/);
-  assert.match(pos, /setInterval\(pull,2500\)/);
+  assert.match(pos, /setInterval\(pull,1500\)/);
 });
 
 test('Azure Swim social QR artwork is preloaded and included in receipt printing', () => {
@@ -369,4 +372,34 @@ test('POS cloud writes merge on the server and verify persistence before reporti
   assert.match(pos, /localStorage\.getItem\(pendingSyncKey\(\)\)==='1'\)setCloudStatus\('Syncing POS with cloud/);
   assert.match(worker, /ceylonry-pos-app-shell-v14/);
   assert.match(worker, /new Request\(event\.request,\{cache:'no-store'\}\)/);
+});
+test('an upload finishing preserves additions and deletions made while it was running', async () => {
+  const vm = require('node:vm');
+  const context = { console, setTimeout: () => {}, navigator: { onLine: true },
+    db: { products: [{ id: 'old' }], settings: {} }, cloudUser: { uid: 'owner' }, cloudProfile: {},
+    syncInFlight: false, syncAgain: false, lastCloudJson: '',
+    localStorage: { getItem: () => '1', setItem() {}, removeItem() {} },
+    pendingSyncKey: () => 'pending', updateConnectionStatus: () => true,
+    normalizeAccountDb: x => x, saveCloudSnapshotLocally() {}, setCloudStatus() {}, refreshSyncedView() {},
+    withSyncTimeout: x => x, firebase: { firestore: { FieldValue: { serverTimestamp: () => 'now' } } }
+  };
+  vm.createContext(context);
+  for (const name of ['itemTime', 'mergeList', 'mergePayload', 'payloadCovers', 'syncCloud']) {
+    const line = pos.split('\n').find(line => line.trim().startsWith((name === 'syncCloud' ? 'async ' : '') + 'function ' + name + '('));
+    vm.runInContext(line, context);
+  }
+  context.safePayload = () => JSON.parse(JSON.stringify(context.db));
+  let persisted;
+  context.cloudRef = {
+    get: async () => ({ exists: !!persisted, data: () => ({ payload: persisted }) }),
+    set: async value => {
+      persisted = JSON.parse(JSON.stringify(value.payload));
+      context.db = { products: [{ id: 'new', updatedAt: '2026-09-20T12:00:00Z' }], settings: {}, deletedIds: { products: ['old'] } };
+    }
+  };
+  await context.syncCloud();
+  assert.deepEqual(Array.from(context.db.products, x => x.id), ['new']);
+  assert.deepEqual(Array.from(context.db.deletedIds.products), ['old']);
+  assert.equal(context.syncAgain, false);
+  assert.equal(context.payloadCovers({ products: [], deletedIds: { products: ['old'] }, settings: {} }, { products: [{ id: 'old' }], settings: {} }), true);
 });
