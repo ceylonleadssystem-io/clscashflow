@@ -96,6 +96,7 @@ test('POS business login handles auth rate limits without repeated retries', () 
   assert.match(pos, /submit\.disabled=true;submit\.textContent='Signing in/);
   assert.match(pos, /Login is temporarily rate limited because there were too many attempts/);
   assert.match(pos, /posAuthCooldownRemaining\(\)/);
+  assert.match(pos, /remaining>POS_AUTH_COOLDOWN_MS/);
   assert.match(pos, /localStorage\.removeItem\(POS_AUTH_COOLDOWN_KEY\);return 0/);
 });
 
