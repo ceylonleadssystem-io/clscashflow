@@ -67,6 +67,12 @@
     Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
     Netlify-CDN-Cache-Control = "no-store"
 
+[[headers]]
+  for = "/pos-system/pos-system"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Netlify-CDN-Cache-Control = "no-store"
+
 # Public invoice links can become available immediately after a reminder is
 # created. Never retain an earlier not-found page in a mobile browser cache.
 [[headers]]

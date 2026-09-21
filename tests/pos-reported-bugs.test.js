@@ -7,6 +7,8 @@ const root = path.join(__dirname, '..');
 const pos = fs.readFileSync(path.join(root, 'pos-system', 'pos-system.html'), 'utf8');
 const platform = fs.readFileSync(path.join(root, 'assets', 'platform.js'), 'utf8');
 const mailer = fs.readFileSync(path.join(root, 'netlify', 'functions', 'send-invoice.js'), 'utf8');
+const worker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const config = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
 
 test('product prices survive business type changes and cloud merges', () => {
   assert.match(pos, /createdAt:new Date\(\)\.toISOString\(\)/);
@@ -115,10 +117,13 @@ test('a stale device cannot clear cloud deletion tombstones during merge', () =>
 test('installed POS reloads when an updated service worker takes control', () => {
   assert.match(pos, /serviceWorker\.addEventListener\('controllerchange'/);
   assert.match(pos, /register\('\/sw\.js',\{updateViaCache:'none'\}\)/);
+  assert.match(worker, /'\/pos-system\/pos-system'/);
+  assert.match(worker, /url\.pathname==='\/pos-system\/pos-system'/);
+  assert.match(worker, /new Request\(event\.request,\{cache:'no-store'\}\)/);
+  assert.match(config, /for = "\/pos-system\/pos-system"[\s\S]*?Cache-Control = "no-store/);
 });
 
 const admin = fs.readFileSync(path.join(root, 'netlify', 'functions', 'pos-admin-data.js'), 'utf8');
-const config = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
 const azureImages = fs.readFileSync(path.join(root, 'assets', 'azure-swim-products.js'), 'utf8');
 
 test('staff must select an authorized location before PIN login', () => {
