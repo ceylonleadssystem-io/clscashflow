@@ -90,14 +90,15 @@ test('POS business login provides password recovery', () => {
   assert.match(pos, /Password reset link sent/);
 });
 
-test('POS business login handles auth rate limits without repeated retries', () => {
+test('POS business login never persists a browser-side rate-limit countdown', () => {
   assert.match(pos, /POS_AUTH_COOLDOWN_KEY='ceylonry-pos-auth-cooldown-until'/);
-  assert.match(pos, /POS_AUTH_COOLDOWN_MS=90\*1000/);
+  assert.match(pos, /function clearPosAuthCooldown\(\)/);
+  assert.match(pos, /clearPosAuthCooldown\(\);businessAccountSubmit=async function/);
   assert.match(pos, /submit\.disabled=true;submit\.textContent='Signing in/);
-  assert.match(pos, /Login is temporarily rate limited because there were too many attempts/);
-  assert.match(pos, /posAuthCooldownRemaining\(\)/);
-  assert.match(pos, /remaining>POS_AUTH_COOLDOWN_MS/);
-  assert.match(pos, /localStorage\.removeItem\(POS_AUTH_COOLDOWN_KEY\);return 0/);
+  assert.match(pos, /Appwrite is temporarily rate limiting sign-ins/);
+  assert.match(pos, /catch\(e\).*clearPosAuthCooldown\(\);error\.textContent=posAuthMessage\(e\)/);
+  assert.doesNotMatch(pos, /setItem\(POS_AUTH_COOLDOWN_KEY/);
+  assert.doesNotMatch(pos, /Please wait about '\+Math\.ceil/);
 });
 
 test('catalogue recovery never restores intentionally deleted products', () => {
