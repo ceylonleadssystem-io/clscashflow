@@ -8,6 +8,9 @@ const receiptSource = fs.readFileSync(path.join(root, 'netlify/functions/submit-
 const docsSource = fs.readFileSync(path.join(root, 'netlify/functions/appwrite-docs.js'), 'utf8');
 const platformSource = fs.readFileSync(path.join(root, 'assets/platform.js'), 'utf8');
 const accessAdminSource = fs.readFileSync(path.join(root, 'access-admin.html'), 'utf8');
+const ceylonryAdminSource = fs.readFileSync(path.join(root, 'ceylonry-admin.html'), 'utf8');
+const appwriteCompatSource = fs.readFileSync(path.join(root, 'assets/appwrite-firebase-compat.js'), 'utf8');
+const adminSigninSource = fs.readFileSync(path.join(root, 'netlify/functions/admin-signin.js'), 'utf8');
 
 test('payment receipt upload requires authenticated identity and sends its token', () => {
   assert.match(receiptSource, /getUserFromEvent\(event\)/);
@@ -40,4 +43,12 @@ test('public invite reads validate token and expose only allowlisted fields', ()
   assert.match(docsSource, /var publicInvite=/);
   assert.match(accessAdminSource, /expiresAt:\s*new Date/);
   assert.doesNotMatch(docsSource, /doc:invite/);
+});
+
+test('ceylonry admin signs in with a server-issued Appwrite session token', () => {
+  assert.match(ceylonryAdminSource, /\/\.netlify\/functions\/admin-signin/);
+  assert.match(ceylonryAdminSource, /auth\.signInWithToken\(payload\.userId, payload\.secret\)/);
+  assert.match(appwriteCompatSource, /signInWithToken:async function\(userId,secret\)/);
+  assert.match(appwriteCompatSource, /account\.createSession\(userId,secret\)/);
+  assert.match(adminSigninSource, /api\.createToken\(user\.\$id, 64, 900\)/);
 });

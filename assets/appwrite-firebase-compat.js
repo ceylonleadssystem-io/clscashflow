@@ -13,6 +13,7 @@
     onAuthStateChanged:function(fn){listeners.push(fn);init.then(function(){fn(currentUser)});return function(){listeners=listeners.filter(function(x){return x!==fn})}},
     signInWithEmailAndPassword:async function(email,password){await account.createEmailPasswordSession(email,password);currentUser=await loadUser();emit();return{user:currentUser}},
     createUserWithEmailAndPassword:async function(email,password){await account.create(Appwrite.ID.unique(),email,password);await account.createEmailPasswordSession(email,password);currentUser=await loadUser();emit();return{user:currentUser}},
+    signInWithToken:async function(userId,secret){await account.createSession(userId,secret);currentUser=await loadUser();emit();return{user:currentUser}},
     signOut:async function(){try{await account.deleteSession('current')}catch(_){}currentUser=null;emit()},
     sendPasswordResetEmail:async function(email){return account.createRecovery(email,location.origin+'/reset-password.html')},
     signInWithPopup:async function(provider){account.createOAuth2Session((provider&&provider.provider)||'google',location.origin+'/signin.html',location.origin+'/signin.html');return new Promise(function(){})}

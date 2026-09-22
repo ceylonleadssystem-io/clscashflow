@@ -105,7 +105,11 @@ test('POS business login never persists a browser-side rate-limit countdown', ()
 
 test('catalogue recovery never restores intentionally deleted products', () => {
   assert.match(pos, /intentionallyDeleted=new Set\(current\.deletedIds\.products\.map\(String\)\)/);
+  assert.match(pos, /removedCategories=new Set\(current\.deletedIds\.categories\.map\(String\)\)/);
+  assert.match(pos, /removedSubcategories=new Set\(current\.deletedIds\.subcategories\.map\(String\)\)/);
   assert.match(pos, /products=\(products\|\|\[\]\)\.filter\(function\(product\)\{return!intentionallyDeleted\.has/);
+  assert.match(pos, /!removedCategories\.has\(String\(product\?\.category\|\|''\)\)/);
+  assert.match(pos, /current\.categories=.*\.filter\(function\(category\)\{return!removedCategories\.has/s);
   assert.doesNotMatch(pos, /restoredIds=new Set\(products\.map/);
 });
 
@@ -298,6 +302,8 @@ test('all businesses can print social links and QR artwork on receipts', () => {
   assert.match(pos, /receiptSocialQr/);
   assert.match(pos, /function escPosSocialQrBytes\(\)/);
   assert.match(pos, /bytes\.set\(socialQr,logo\.length\+receiptBody\.length\)/);
+  assert.doesNotMatch(pos, /addEventListener\('input',renderReceiptSocialPreview\)/);
+  assert.match(pos, /addEventListener\('input',function\(\)\{window\.renderReceiptSocialPreview\(\)\}\)/);
 });
 
 test('retail products automatically participate in location stock counts', () => {
@@ -310,6 +316,24 @@ test('retail products automatically participate in location stock counts', () =>
   assert.match(pos, /item\.locationQuantities\[location\.id\]=Number\(product\.stock\)\|\|0/);
   assert.match(pos, /item\.locationQuantities\[loc\]=\(Number\(item\.locationQuantities\[loc\]\)\|\|0\)\+change/);
   assert.match(pos, /direction<0\?'Product sold':'Sale reversed'/);
+});
+
+test('checkout prevents selling more retail stock than the branch has', () => {
+  assert.match(pos, /function availableProductStock\(productId\)/);
+  assert.match(pos, /function stockProblem\(lines\)/);
+  assert.match(pos, /button\.classList\.toggle\('out-of-stock',available<=0\)/);
+  assert.match(pos, /button\.disabled=available<=0/);
+  assert.match(pos, /Reduce the quantity before completing the sale/);
+});
+
+test('receipt purchase dates use a stable day-month-year format', () => {
+  assert.match(pos, /function receiptDate\(s\)/);
+  assert.match(pos, /toLocaleString\('en-GB'/);
+  assert.match(pos, /\$\{receiptDate\(s\)\}/);
+});
+
+test('confirmed cloud pulls clear stale pending sync status', () => {
+  assert.match(pos, /payloadCovers\(remote,safePayload\(\)\).*localStorage\.removeItem\(pendingSyncKey\(\)\)/s);
 });
 
 test('sales history supports purchase date filtering and receipt tombstones', () => {

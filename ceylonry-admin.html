@@ -1274,9 +1274,26 @@ $('admin-login').addEventListener('click', async function(){
   var email = $('admin-email').value.trim().toLowerCase();
   var pass = $('admin-pass').value;
   if (!isAdminEmail(email)) { $('login-error').textContent = 'This panel only accepts the platform admin email.'; return; }
+  var button = $('admin-login');
+  button.disabled = true;
+  button.textContent = 'Opening admin panel...';
   try {
+    var response = await fetch('/.netlify/functions/admin-signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+      cache: 'no-store',
+      body: JSON.stringify({ email: email, password: pass })
+    });
+    var payload = await response.json().catch(function(){ return {}; });
+    if (!response.ok || !payload.ok || !payload.userId || !payload.secret) throw new Error(payload.error || 'Administrator sign-in could not be completed.');
+    if (typeof auth.signInWithToken !== 'function') throw new Error('Admin token sign-in is not available. Refresh the page and try again.');
+    await auth.signInWithToken(payload.userId, payload.secret);
+    await loadAdminData({ forceLoading: true });
+  } catch (serverError) {
+    console.warn('Server admin sign-in failed:', serverError);
+    try {
     await auth.signInWithEmailAndPassword(email, pass);
-  } catch (e) {
+    } catch (e) {
     if (isCredentialError(e.code)) {
       try {
         await auth.createUserWithEmailAndPassword(email, pass);
@@ -1293,6 +1310,10 @@ $('admin-login').addEventListener('click', async function(){
       }
     }
     $('login-error').textContent = e.message;
+    }
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Open admin panel';
   }
 });
 $('refresh-btn').addEventListener('click', function(){
