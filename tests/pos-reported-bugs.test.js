@@ -51,6 +51,10 @@ test('USB barcode scanner adds an exact product code through the existing cart f
   assert.match(pos, /hidKeyMap/);
   assert.match(pos, /restoreUsbBarcodeScanner/);
   assert.match(pos, /Connect USB Scanner/);
+  assert.match(pos, /startBarcodeScannerTest/);
+  assert.match(pos, /finishBarcodeScannerTest/);
+  assert.match(pos, /scanner-test-input/);
+  assert.match(pos, /This tablet browser does not support USB HID selection/);
   assert.match(pos, /function scannerCodeVariants\(code\)/);
   assert.match(pos, /function scannedProduct\(code\)/);
   assert.match(pos, /product\.code,product\.barcode,product\.sku/);
@@ -240,8 +244,10 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /label-description/);
   assert.match(pos, /label-barcode/);
   assert.match(pos, /label-price/);
-  assert.match(pos, /function tsplCenterText/);
-  assert.match(pos, /barcodeX/);
+  assert.match(pos, /function tsplBitmapBytes\(product,copies,size\)/);
+  assert.match(pos, /function drawCode39\(context,value,x,y,width,height\)/);
+  assert.match(pos, /BITMAP 0,0/);
+  assert.match(pos, /compact=width<=40\|\|height<=25/);
   assert.match(pos, /GAP 3 mm,0/);
   assert.match(pos, /OFFSET 0 mm/);
   assert.match(pos, /REFERENCE 0,0/);
@@ -271,11 +277,11 @@ test('product category views hide stale preset-only categories', () => {
 
 test('POS hardware settings expose persistent printers and scanner readiness', () => {
   assert.match(pos, /Saved USB label printers reconnect automatically/);
-  assert.match(pos, /Connect the USB HID scanner once/);
-  assert.match(pos, /USB scanner not connected\. Keyboard-mode scanning is still ready/);
+  assert.match(pos, /Android usually exposes USB scanners as keyboards/);
+  assert.match(pos, /USB scanner not connected\. Keyboard-mode scanning is ready/);
   assert.match(pos, /window\.testBarcodeScanner=function/);
   assert.match(pos, /navigator\.usb\.addEventListener\('connect',function\(\)\{restoreBarcodePrinter\(\)\}\)/);
-  assert.match(pos, /Scanned Azure item codes go straight into Current Order/);
+  assert.match(pos, /matched Azure item codes to Current Order/);
 });
 
 test('Azure Swim catalogue photos fill matching empty product codes', () => {
