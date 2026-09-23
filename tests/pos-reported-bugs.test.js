@@ -279,6 +279,8 @@ test('staff access and sessions enforce selected locations', () => {
   assert.match(pos, /locationAccess:'all'/);
   assert.match(pos, /function defaultUserLocationIds\(\)/);
   assert.match(pos, /locationIds:defaultUserLocationIds\(\)/);
+  assert.match(pos, /requestAnimationFrame\(function\(\)\{audit\('location-switch'/);
+  assert.match(pos, /class="location-choice-copy"/);
   assert.match(pos, /Choose at least one location for this user/);
   assert.match(pos, /You do not have access to that location/);
   assert.match(pos, /All Locations is available for reporting roles only/);
@@ -343,8 +345,8 @@ test('receipts use chunked ESC POS without opening Android PDF printing', () => 
   assert.match(pos, /bytes\.set\(\[27,64\],0\)/);
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
   assert.match(pos, /function escPosLogoBytes\(\)/);
-  assert.match(pos, /var target=200,width=target,height=target/);
-  assert.match(pos, /width:25mm;height:25mm/);
+  assert.match(pos, /var target=240,width=target,height=target/);
+  assert.match(pos, /width:30mm;height:30mm/);
   assert.match(pos, /offset\+=4096/);
   assert.match(pos, /The POS will not open Save as PDF/);
   assert.doesNotMatch(pos, /sendReceiptToPrinter\(sale\).*printDocument\(receiptHtml\(sale\)\)/s);
