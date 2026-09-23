@@ -158,9 +158,15 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /function uniqueBarcode\(\)/);
   assert.match(pos, /AS-/);
   assert.match(pos, /function barcodeSvg\(value\)/);
-  assert.match(pos, /Print Barcode Labels/);
+  assert.match(pos, /Product Barcode Labels/);
   assert.match(pos, /Barcode label print job/);
   assert.match(pos, /Select the connected barcode printer/);
+  assert.match(pos, /Product Barcode Labels/);
+  assert.match(pos, /SKU: '\+code/);
+  assert.match(pos, /connectUsbBarcodePrinter/);
+  assert.match(pos, /printBarcodeLabelsUsbFromModal/);
+  assert.match(pos, /USB barcode label printer/);
+  assert.match(pos, /BARCODE 24,58,\\"128\\"/);
 });
 
 test('Azure Swim catalogue photos fill matching empty product codes', () => {
@@ -257,6 +263,8 @@ test('receipts use chunked ESC POS without opening Android PDF printing', () => 
   assert.match(pos, /bytes\.set\(\[27,64\],0\)/);
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
   assert.match(pos, /function escPosLogoBytes\(\)/);
+  assert.match(pos, /var width=256/);
+  assert.match(pos, /if\(height>160\)/);
   assert.match(pos, /offset\+=4096/);
   assert.match(pos, /The POS will not open Save as PDF/);
   assert.doesNotMatch(pos, /sendReceiptToPrinter\(sale\).*printDocument\(receiptHtml\(sale\)\)/s);
@@ -301,6 +309,8 @@ test('all businesses can print social links and QR artwork on receipts', () => {
   assert.match(pos, /set-social-website/);
   assert.match(pos, /receiptSocialQr/);
   assert.match(pos, /function escPosSocialQrBytes\(\)/);
+  assert.match(pos, /sluma>185/);
+  assert.match(pos, /cropX=found\?Math\.max\(0,minX-pad\):0/);
   assert.match(pos, /bytes\.set\(socialQr,logo\.length\+receiptBody\.length\)/);
   assert.doesNotMatch(pos, /addEventListener\('input',renderReceiptSocialPreview\)/);
   assert.match(pos, /addEventListener\('input',function\(\)\{window\.renderReceiptSocialPreview\(\)\}\)/);
@@ -330,6 +340,8 @@ test('receipt purchase dates use a stable day-month-year format', () => {
   assert.match(pos, /function receiptDate\(s\)/);
   assert.match(pos, /toLocaleString\('en-GB'/);
   assert.match(pos, /\$\{receiptDate\(s\)\}/);
+  assert.match(pos, /\(sale\.receipt\|\|'RECEIPT'\)\+'  '\+receiptDate\(sale\)/);
+  assert.doesNotMatch(pos, /sale\.createdAt\|\|Date\.now\(\)\)\.toLocaleString\(\)/);
 });
 
 test('confirmed cloud pulls clear stale pending sync status', () => {
