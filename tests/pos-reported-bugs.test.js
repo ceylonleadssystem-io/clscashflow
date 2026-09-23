@@ -244,10 +244,16 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /label-description/);
   assert.match(pos, /label-barcode/);
   assert.match(pos, /label-price/);
+  assert.match(pos, /Azure sticker · 40 × 30 mm/);
+  assert.match(pos, /40 × 25 mm micro/);
   assert.match(pos, /Azure Swim fit · 45 × 30 mm/);
   assert.match(pos, /function labelBitmapLayout\(width,height\)/);
-  assert.match(pos, /margin:34,nameFont:15,descFont:0,priceFont:16/);
-  assert.match(pos, /barcodeH:105/);
+  assert.match(pos, /width<=40&&height<=25/);
+  assert.match(pos, /margin:38,nameFont:13,descFont:0,priceFont:13/);
+  assert.match(pos, /barcodeH:98/);
+  assert.match(pos, /width<=40&&height<=30/);
+  assert.match(pos, /margin:34,nameFont:16,descFont:0,priceFont:16/);
+  assert.match(pos, /barcodeH:118/);
   assert.match(pos, /darken:true,noGap:true/);
   assert.match(pos, /margin:30,nameFont:20,descFont:9,priceFont:20/);
   assert.match(pos, /function tsplBitmapBytes\(product,copies,size\)/);
