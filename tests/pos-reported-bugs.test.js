@@ -197,6 +197,14 @@ test('full-screen tablet checkout keeps the sidebar menu control visible', () =>
   assert.match(pos, /not\(\.sidebar-collapsed\).*#view-checkout\.active.*\.side/);
 });
 
+test('mobile and tablet chrome keeps lock and business sign out reachable', () => {
+  assert.match(pos, /class="top-actions"/);
+  assert.match(pos, /class="btn out session-action" type="button" onclick="staffLogout\(\)">Lock POS/);
+  assert.match(pos, /class="btn out session-action" type="button" onclick="businessLogout\(\)">Sign Out Business/);
+  assert.match(pos, /@media\(max-width:900px\).*\.top-actions\{flex:1 1 100%;display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/s);
+  assert.match(pos, /@media\(max-width:520px\).*\.top-actions #full-btn\{grid-column:1\/-1\}/s);
+});
+
 test('locations are a universal POS capability rather than a business preset', () => {
   assert.match(pos, /installBusinessLocations/);
   assert.match(pos, /Branches are available for every business and POS type/);
