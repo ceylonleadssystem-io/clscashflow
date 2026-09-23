@@ -216,18 +216,47 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /Select the connected barcode printer/);
   assert.match(pos, /Product Barcode Labels/);
   assert.match(pos, /function barcodeLabelCopy\(product\)/);
+  assert.match(pos, /height="96"/);
+  assert.match(pos, /viewBox="0 0 '\+\(x\+8\)\+' 106"/);
   assert.match(pos, /openProductBarcodeFromForm/);
   assert.match(pos, /button\.id='print-product-barcode'/);
   assert.match(pos, /button\.textContent='Print Barcode'/);
   assert.match(pos, /Save this item first, then print its barcode label/);
   assert.match(pos, /label-name/);
-  assert.match(pos, /label-foot/);
-  assert.match(pos, /SKU: '\+code/);
+  assert.match(pos, /label-description/);
+  assert.match(pos, /label-barcode/);
+  assert.match(pos, /label-price/);
+  assert.match(pos, /function tsplCenterText/);
+  assert.match(pos, /barcodeX/);
+  assert.match(pos, /barcodeH=Math\.min\(96,Math\.max\(64/);
+  assert.match(pos, /max-height:14mm/);
+  assert.match(pos, /font-size:10pt/);
+  assert.doesNotMatch(pos, /SKU: '\+code/);
+  assert.doesNotMatch(pos, /SKU: '\+esc\(product\.code\)/);
   assert.match(pos, /connectUsbBarcodePrinter/);
   assert.match(pos, /printBarcodeLabelsUsbFromModal/);
   assert.match(pos, /USB barcode label printer/);
-  assert.match(pos, /BARCODE 24,58,\\"128\\"/);
+  assert.match(pos, /restoreBarcodePrinter\(\)\.then/);
+  assert.match(pos, /Saved USB label printers reconnect automatically/);
+  assert.match(pos, /BARCODE '\+barcodeX\+'\,'\+barcodeY\+',\\"128\\"/);
   assert.doesNotMatch(pos, /button\.textContent='Generate Barcode'/);
+});
+
+test('product category views hide stale preset-only categories', () => {
+  assert.match(pos, /function visibleProductCategories\(\)/);
+  assert.match(pos, /function stalePresetCategory\(name\)/);
+  assert.match(pos, /pastries/);
+  assert.match(pos, /sandwiches/);
+  assert.match(pos, /visibleProductCategories\(\)\.filter/);
+  assert.match(pos, /visibleCategories=visibleProductCategories\(\)/);
+});
+
+test('POS hardware settings expose persistent printers and scanner readiness', () => {
+  assert.match(pos, /Saved USB label printers reconnect automatically/);
+  assert.match(pos, /Ready for USB\/Bluetooth scanner input across every POS type/);
+  assert.match(pos, /window\.testBarcodeScanner=function/);
+  assert.match(pos, /navigator\.usb\.addEventListener\('connect',function\(\)\{restoreBarcodePrinter\(\)\}\)/);
+  assert.match(pos, /Scanned product codes go straight into checkout/);
 });
 
 test('Azure Swim catalogue photos fill matching empty product codes', () => {
