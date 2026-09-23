@@ -43,6 +43,14 @@ test('full-screen menu toggle can reveal the sidebar', () => {
 
 test('USB barcode scanner adds an exact product code through the existing cart flow', () => {
   assert.match(pos, /installRegisterHardwareSupport/);
+  assert.match(pos, /connectUsbBarcodeScanner/);
+  assert.match(pos, /navigator\.hid\.requestDevice/);
+  assert.match(pos, /usagePage:1,usage:6/);
+  assert.match(pos, /claimUsbBarcodeScanner/);
+  assert.match(pos, /handleHidScannerReport/);
+  assert.match(pos, /hidKeyMap/);
+  assert.match(pos, /restoreUsbBarcodeScanner/);
+  assert.match(pos, /Connect USB Scanner/);
   assert.match(pos, /function scannerCodeVariants\(code\)/);
   assert.match(pos, /function scannedProduct\(code\)/);
   assert.match(pos, /product\.code,product\.barcode,product\.sku/);
@@ -263,10 +271,11 @@ test('product category views hide stale preset-only categories', () => {
 
 test('POS hardware settings expose persistent printers and scanner readiness', () => {
   assert.match(pos, /Saved USB label printers reconnect automatically/);
-  assert.match(pos, /Ready for USB\/Bluetooth scanner input across every POS type/);
+  assert.match(pos, /Connect the USB HID scanner once/);
+  assert.match(pos, /USB scanner not connected\. Keyboard-mode scanning is still ready/);
   assert.match(pos, /window\.testBarcodeScanner=function/);
   assert.match(pos, /navigator\.usb\.addEventListener\('connect',function\(\)\{restoreBarcodePrinter\(\)\}\)/);
-  assert.match(pos, /Scanned product codes go straight into checkout/);
+  assert.match(pos, /Scanned Azure item codes go straight into Current Order/);
 });
 
 test('Azure Swim catalogue photos fill matching empty product codes', () => {
@@ -365,6 +374,8 @@ test('Azure Swim USB printer can be discovered and authorised from settings', ()
   assert.match(pos, /Connect USB Printer/);
   assert.match(pos, /Connect Label Printer/);
   assert.match(pos, /settings-barcode-printer-status/);
+  assert.match(pos, /settings-scanner-status/);
+  assert.match(config, /hid=\(self\)/);
   assert.match(pos, /Printer connection settings are available to every staff user/);
   assert.match(pos, /header-printer-button/);
   assert.match(pos, /openHeaderPrinterControl/);
