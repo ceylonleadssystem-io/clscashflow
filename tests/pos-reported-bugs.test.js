@@ -168,9 +168,25 @@ test('owners and admins can review inventory split across all locations', () => 
   assert.match(pos, /Out of Stock by Branch/);
   assert.match(pos, /All-Location Value/);
   assert.match(pos, /item\.locationQuantities\?\.\[loc\.id\]/);
-  assert.match(pos, /onclick="openLocationSwitcher\(\)">Choose Branch/);
+  assert.match(pos, /openBranchStockCounts/);
+  assert.match(pos, /Set Branch Stock/);
+  assert.match(pos, /Bulk Branch Count/);
   assert.match(pos, /locationLabel\(m\.locationId\)/);
   assert.doesNotMatch(pos, /Adjust by Branch/);
+});
+
+test('owners can set stock counts per location one by one or in bulk', () => {
+  assert.match(pos, /function initializeLocationInventory\(locId\)/);
+  assert.match(pos, /initializeLocationInventory\(loc\.id\)/);
+  assert.match(pos, /function setLocationStock\(item,locId,value,reason,note\)/);
+  assert.match(pos, /function addLocationStockMovement\(item,locId,change,balance,reason,note\)/);
+  assert.match(pos, /id='branch-stock-modal'/);
+  assert.match(pos, /id='bulk-branch-stock-modal'/);
+  assert.match(pos, /data-location-stock/);
+  assert.match(pos, /data-bulk-stock-item/);
+  assert.match(pos, /Owner central inventory update/);
+  assert.match(pos, /Owner bulk inventory update/);
+  assert.match(pos, /locationQuantities\[locId\]=0/);
 });
 
 test('location inventory is persisted before every save', () => {
@@ -217,6 +233,9 @@ test('full-screen tablet checkout keeps the sidebar menu control visible', () =>
   assert.match(pos, /body\.full:not\(\.mobile-checkout\):has\(#view-checkout\.active\) #sidebar-toggle\s*\{\s*display:inline-flex!important/);
   assert.match(pos, /@media\(max-width:900px\)/);
   assert.match(pos, /not\(\.sidebar-collapsed\).*#view-checkout\.active.*\.side/);
+  assert.match(pos, /#sidebar-toggle\{[\s\S]*?min-width:92px/);
+  assert.match(pos, /#sidebar-toggle\{[\s\S]*?flex:0 0 auto/);
+  assert.doesNotMatch(pos, /#sidebar-toggle\{\s*min-width:0/);
 });
 
 test('mobile and tablet chrome keeps lock and business sign out reachable', () => {
@@ -308,8 +327,8 @@ test('receipts use chunked ESC POS without opening Android PDF printing', () => 
   assert.match(pos, /bytes\.set\(\[27,64\],0\)/);
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
   assert.match(pos, /function escPosLogoBytes\(\)/);
-  assert.match(pos, /var width=256/);
-  assert.match(pos, /if\(height>160\)/);
+  assert.match(pos, /var target=508,width=target,height=target/);
+  assert.match(pos, /width:63\.5mm;height:63\.5mm/);
   assert.match(pos, /offset\+=4096/);
   assert.match(pos, /The POS will not open Save as PDF/);
   assert.doesNotMatch(pos, /sendReceiptToPrinter\(sale\).*printDocument\(receiptHtml\(sale\)\)/s);
@@ -347,6 +366,7 @@ test('checkout saves sales before optional receipt printing', () => {
 
 test('all businesses can print social links and QR artwork on receipts', () => {
   assert.match(pos, /installReceiptSocials/);
+  assert.match(pos, /function cleanReceiptQrImage\(source,callback\)/);
   assert.match(pos, /Socials on receipt/);
   assert.match(pos, /set-social-instagram/);
   assert.match(pos, /set-social-facebook/);
@@ -355,7 +375,8 @@ test('all businesses can print social links and QR artwork on receipts', () => {
   assert.match(pos, /receiptSocialQr/);
   assert.match(pos, /function escPosSocialQrBytes\(\)/);
   assert.match(pos, /sluma>185/);
-  assert.match(pos, /cropX=found\?Math\.max\(0,minX-pad\):0/);
+  assert.match(pos, /var pad=0,cropX=found\?Math\.max\(0,minX-pad\):0/);
+  assert.match(pos, /receiptSocialQrCleaned/);
   assert.match(pos, /bytes\.set\(socialQr,logo\.length\+receiptBody\.length\)/);
   assert.doesNotMatch(pos, /addEventListener\('input',renderReceiptSocialPreview\)/);
   assert.match(pos, /addEventListener\('input',function\(\)\{window\.renderReceiptSocialPreview\(\)\}\)/);
