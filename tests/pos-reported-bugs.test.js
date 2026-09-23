@@ -162,11 +162,19 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /Barcode label print job/);
   assert.match(pos, /Select the connected barcode printer/);
   assert.match(pos, /Product Barcode Labels/);
+  assert.match(pos, /function barcodeLabelCopy\(product\)/);
+  assert.match(pos, /openProductBarcodeFromForm/);
+  assert.match(pos, /button\.id='print-product-barcode'/);
+  assert.match(pos, /button\.textContent='Print Barcode'/);
+  assert.match(pos, /Save this item first, then print its barcode label/);
+  assert.match(pos, /label-name/);
+  assert.match(pos, /label-foot/);
   assert.match(pos, /SKU: '\+code/);
   assert.match(pos, /connectUsbBarcodePrinter/);
   assert.match(pos, /printBarcodeLabelsUsbFromModal/);
   assert.match(pos, /USB barcode label printer/);
   assert.match(pos, /BARCODE 24,58,\\"128\\"/);
+  assert.doesNotMatch(pos, /button\.textContent='Generate Barcode'/);
 });
 
 test('Azure Swim catalogue photos fill matching empty product codes', () => {
