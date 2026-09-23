@@ -146,6 +146,11 @@ test('staff login user selection survives login list refreshes', () => {
   assert.match(pos, /function refreshLoginUsers\(\)\{let select=document\.getElementById\('login-user'\),previous=select\?\.value/);
   assert.match(pos, /if\(users\.some\(u=>u\.id===previous\)\)select\.value=previous/);
   assert.match(pos, /document\.getElementById\('login-user'\)\.addEventListener\('change',refreshLoginLocations\)/);
+  assert.match(pos, /function loginUserAllowedAt\(user,locId\)/);
+  assert.match(pos, /userField\.before\(field\)/);
+  assert.match(pos, /Choose the branch first\. Only staff allowed at that location are shown\./);
+  assert.match(pos, /document\.getElementById\('login-location'\)\.addEventListener\('change',refreshLoginUsers\)/);
+  assert.match(pos, /db\.users\.filter\(function\(user\)\{return loginUserAllowedAt\(user,selectedLocation\)\}\)/);
 });
 
 test('owner and admin dashboard shows statistics for every location', () => {
@@ -155,6 +160,17 @@ test('owner and admin dashboard shows statistics for every location', () => {
   assert.match(pos, /Sales today/);
   assert.match(pos, /Stock units/);
   assert.match(pos, /item\.locationQuantities\?\.\[loc\.id\]/);
+});
+
+test('owners and admins can review inventory split across all locations', () => {
+  assert.match(pos, /locationId\(\)!=='all'\|\|!\['owner','admin'\]\.includes\(currentUser\(\)\?\.role\)/);
+  assert.match(pos, /Low Stock by Branch/);
+  assert.match(pos, /Out of Stock by Branch/);
+  assert.match(pos, /All-Location Value/);
+  assert.match(pos, /item\.locationQuantities\?\.\[loc\.id\]/);
+  assert.match(pos, /onclick="openLocationSwitcher\(\)">Choose Branch/);
+  assert.match(pos, /locationLabel\(m\.locationId\)/);
+  assert.doesNotMatch(pos, /Adjust by Branch/);
 });
 
 test('location inventory is persisted before every save', () => {
