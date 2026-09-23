@@ -162,6 +162,15 @@ test('owner and admin dashboard shows statistics for every location', () => {
   assert.match(pos, /item\.locationQuantities\?\.\[loc\.id\]/);
 });
 
+test('branch checkout sales are stamped for owner reporting and sync', () => {
+  assert.match(pos, /var locationCompleteSale=completeSale/);
+  assert.match(pos, /Choose a real POS location before completing checkout/);
+  assert.match(pos, /sale\.businessId=db\.accountUid\|\|storageKey/);
+  assert.match(pos, /sale\.locationId=loc\.id/);
+  assert.match(pos, /sale\.locationName=loc\.name/);
+  assert.match(pos, /audit\('checkout-completed',sale\.receipt\+'\s*·\s*'\+money\(sale\.total\),loc\.id\)/);
+});
+
 test('owners and admins can review inventory split across all locations', () => {
   assert.match(pos, /locationId\(\)!=='all'\|\|!\['owner','admin'\]\.includes\(currentUser\(\)\?\.role\)/);
   assert.match(pos, /Low Stock by Branch/);
@@ -192,6 +201,8 @@ test('owners can set stock counts per location one by one or in bulk', () => {
 test('location inventory is persisted before every save', () => {
   assert.match(pos, /save=function\(\)\{normalizeLocations\(\);syncInventoryOut\(\);stampRecords\(\)/);
   assert.match(pos, /item\.locationQuantities\[loc\.id\]=Number\(item\.qty\)/);
+  assert.match(pos, /function touchLocationQuantity\(item,locId\)/);
+  assert.match(pos, /locationQuantityUpdatedAt\[locId\]/);
   assert.match(pos, /syncInventoryIn\(\)/);
 });
 
@@ -266,6 +277,8 @@ test('new and legacy accounts receive a main location', () => {
 
 test('staff access and sessions enforce selected locations', () => {
   assert.match(pos, /locationAccess:'all'/);
+  assert.match(pos, /function defaultUserLocationIds\(\)/);
+  assert.match(pos, /locationIds:defaultUserLocationIds\(\)/);
   assert.match(pos, /Choose at least one location for this user/);
   assert.match(pos, /You do not have access to that location/);
   assert.match(pos, /All Locations is available for reporting roles only/);
@@ -275,6 +288,9 @@ test('staff access and sessions enforce selected locations', () => {
 test('operational records and inventory are location aware', () => {
   assert.match(pos, /\['sales','openOrders','cashShifts','timeEntries','stockMovements','voidOrders','customerCommunications','kitchenTickets'\]/);
   assert.match(pos, /item\.locationQuantities\[loc\.id\]/);
+  assert.match(pos, /inventory-location-button/);
+  assert.match(pos, /button\.onclick=openLocationSwitcher/);
+  assert.match(pos, /Location: '\+\(loc\?loc\.name:'Select Location'\)/);
   assert.match(pos, /businessId=businessId;item\.locationId=loc/);
   assert.match(pos, /locationAudit/);
   assert.match(pos, /stockTransfers/);
@@ -327,8 +343,8 @@ test('receipts use chunked ESC POS without opening Android PDF printing', () => 
   assert.match(pos, /bytes\.set\(\[27,64\],0\)/);
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
   assert.match(pos, /function escPosLogoBytes\(\)/);
-  assert.match(pos, /var target=508,width=target,height=target/);
-  assert.match(pos, /width:63\.5mm;height:63\.5mm/);
+  assert.match(pos, /var target=200,width=target,height=target/);
+  assert.match(pos, /width:25mm;height:25mm/);
   assert.match(pos, /offset\+=4096/);
   assert.match(pos, /The POS will not open Save as PDF/);
   assert.doesNotMatch(pos, /sendReceiptToPrinter\(sale\).*printDocument\(receiptHtml\(sale\)\)/s);
@@ -367,6 +383,7 @@ test('checkout saves sales before optional receipt printing', () => {
 test('all businesses can print social links and QR artwork on receipts', () => {
   assert.match(pos, /installReceiptSocials/);
   assert.match(pos, /function cleanReceiptQrImage\(source,callback\)/);
+  assert.match(pos, /function whitenSolidQrBackground\(canvas\)/);
   assert.match(pos, /Socials on receipt/);
   assert.match(pos, /set-social-instagram/);
   assert.match(pos, /set-social-facebook/);
@@ -376,7 +393,8 @@ test('all businesses can print social links and QR artwork on receipts', () => {
   assert.match(pos, /function escPosSocialQrBytes\(\)/);
   assert.match(pos, /sluma>185/);
   assert.match(pos, /var pad=0,cropX=found\?Math\.max\(0,minX-pad\):0/);
-  assert.match(pos, /receiptSocialQrCleaned/);
+  assert.match(pos, /whitenSolidQrBackground\(canvas\)/);
+  assert.match(pos, /receiptSocialQrCleanedVersion='qr-white-v2'/);
   assert.match(pos, /bytes\.set\(socialQr,logo\.length\+receiptBody\.length\)/);
   assert.doesNotMatch(pos, /addEventListener\('input',renderReceiptSocialPreview\)/);
   assert.match(pos, /addEventListener\('input',function\(\)\{window\.renderReceiptSocialPreview\(\)\}\)/);
@@ -391,7 +409,16 @@ test('retail products automatically participate in location stock counts', () =>
   assert.match(pos, /autoProductStock:true,locationQuantities:\{\}/);
   assert.match(pos, /item\.locationQuantities\[location\.id\]=Number\(product\.stock\)\|\|0/);
   assert.match(pos, /item\.locationQuantities\[loc\]=\(Number\(item\.locationQuantities\[loc\]\)\|\|0\)\+change/);
+  assert.match(pos, /item\.locationQuantityUpdatedAt\[loc\]=new Date\(\)\.toISOString\(\)/);
   assert.match(pos, /direction<0\?'Product sold':'Sale reversed'/);
+});
+
+test('cloud sync merges inventory counts per location', () => {
+  assert.match(pos, /function mergeInventoryList\(remote,local\)/);
+  assert.match(pos, /key==='inventory'\?mergeInventoryList\(remote\[key\],local\[key\]\):mergeList/);
+  assert.match(pos, /remoteTimes=old\.locationQuantityUpdatedAt\|\|\{\}/);
+  assert.match(pos, /localTimes=item\.locationQuantityUpdatedAt\|\|\{\}/);
+  assert.match(pos, /mergedQty\[loc\]=localTime>=remoteTime\?localQty\[loc\]:remoteQty\[loc\]/);
 });
 
 test('checkout prevents selling more retail stock than the branch has', () => {
@@ -502,7 +529,7 @@ test('an upload finishing preserves additions and deletions made while it was ru
     withSyncTimeout: x => x, firebase: { firestore: { FieldValue: { serverTimestamp: () => 'now' } } }
   };
   vm.createContext(context);
-  for (const name of ['itemTime', 'mergeList', 'mergePayload', 'payloadCovers', 'syncCloud']) {
+  for (const name of ['itemTime', 'mergeList', 'mergeInventoryList', 'mergePayload', 'payloadCovers', 'syncCloud']) {
     const line = pos.split('\n').find(line => line.trim().startsWith((name === 'syncCloud' ? 'async ' : '') + 'function ' + name + '('));
     vm.runInContext(line, context);
   }
