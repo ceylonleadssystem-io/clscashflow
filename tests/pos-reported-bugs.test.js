@@ -142,6 +142,12 @@ test('staff must select an authorized location before PIN login', () => {
   assert.match(pos, /staff-login-location/);
 });
 
+test('staff login user selection survives login list refreshes', () => {
+  assert.match(pos, /function refreshLoginUsers\(\)\{let select=document\.getElementById\('login-user'\),previous=select\?\.value/);
+  assert.match(pos, /if\(users\.some\(u=>u\.id===previous\)\)select\.value=previous/);
+  assert.match(pos, /document\.getElementById\('login-user'\)\.addEventListener\('change',refreshLoginLocations\)/);
+});
+
 test('owner and admin dashboard shows statistics for every location', () => {
   assert.match(pos, /installLocationDashboard/);
   assert.match(pos, /role==='owner'\|\|role==='admin'/);
