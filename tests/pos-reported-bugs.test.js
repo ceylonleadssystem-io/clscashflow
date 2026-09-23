@@ -67,8 +67,12 @@ test('POS only restores the explicitly approved business account', () => {
 test('role navigation remains hidden despite forced button styling', () => {
   assert.match(pos, /#nav button\[hidden\]\{display:none!important\}/);
   assert.match(pos, /button\.hidden=!canView\(button\.dataset\.view\)/);
-  assert.match(pos, /cashier:\['checkout','customers','staff'\]/);
+  assert.match(pos, /cashier:\['checkout','customers','staff','settings'\]/);
+  assert.match(pos, /accountant:\['dashboard','sales','staff','settings'\]/);
   assert.match(pos, /management\.hidden=!user\|\|!\['owner','manager'\]\.includes\(user\.role\)/);
+  assert.match(pos, /function applyPrinterSettingsAccess\(\)/);
+  assert.match(pos, /panel\.hidden=!fullSettings&&!isPrinting/);
+  assert.match(pos, /saveButton\.hidden=!fullSettings/);
 });
 
 test('business-specific settings hide restaurant controls from hardware shops', () => {
@@ -253,6 +257,9 @@ test('Azure Swim USB printer can be discovered and authorised from settings', ()
   assert.match(pos, /AZURE_PRINTER_VENDOR=1046,AZURE_PRINTER_PRODUCT=20497/);
   assert.match(pos, /navigator\.usb\.requestDevice/);
   assert.match(pos, /Connect USB Printer/);
+  assert.match(pos, /Connect Label Printer/);
+  assert.match(pos, /settings-barcode-printer-status/);
+  assert.match(pos, /Printer connection settings are available to every staff user/);
   assert.match(pos, /header-printer-button/);
   assert.match(pos, /openHeaderPrinterControl/);
   assert.match(pos, /Direct USB ESC\/POS printer \(80 mm\)/);
