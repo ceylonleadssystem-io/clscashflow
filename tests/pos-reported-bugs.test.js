@@ -43,7 +43,13 @@ test('full-screen menu toggle can reveal the sidebar', () => {
 
 test('USB barcode scanner adds an exact product code through the existing cart flow', () => {
   assert.match(pos, /installRegisterHardwareSupport/);
-  assert.match(pos, /String\(product\.code\|\|''\).*===normalized/);
+  assert.match(pos, /function scannerCodeVariants\(code\)/);
+  assert.match(pos, /function scannedProduct\(code\)/);
+  assert.match(pos, /product\.code,product\.barcode,product\.sku/);
+  assert.match(pos, /replace\(\/\^\\\*\+\|\\\*\+\$\/g,''\)/);
+  assert.match(pos, /function addScannedProductToCurrentOrder\(product,code\)/);
+  assert.match(pos, /go\('checkout'\)/);
+  assert.match(pos, /cartList\.scrollTop=cartList\.scrollHeight/);
   assert.match(pos, /addCart\(product\.id\)/);
 });
 
@@ -228,7 +234,11 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /label-price/);
   assert.match(pos, /function tsplCenterText/);
   assert.match(pos, /barcodeX/);
-  assert.match(pos, /barcodeH=Math\.min\(96,Math\.max\(64/);
+  assert.match(pos, /GAP 3 mm,0/);
+  assert.match(pos, /OFFSET 0 mm/);
+  assert.match(pos, /REFERENCE 0,0/);
+  assert.match(pos, /DIRECTION 0/);
+  assert.match(pos, /barcodeH=height<=30\?58:72/);
   assert.match(pos, /max-height:14mm/);
   assert.match(pos, /font-size:10pt/);
   assert.doesNotMatch(pos, /SKU: '\+code/);
