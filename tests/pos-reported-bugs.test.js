@@ -352,6 +352,16 @@ test('receipts use chunked ESC POS without opening Android PDF printing', () => 
   assert.doesNotMatch(pos, /sendReceiptToPrinter\(sale\).*printDocument\(receiptHtml\(sale\)\)/s);
 });
 
+test('all locations share the same receipt logo and QR print sizing', () => {
+  assert.match(pos, /var originalReceiptHtml=receiptHtml;receiptHtml=function\(sale\)/);
+  assert.match(pos, /originalReceiptHtml\.apply\(this,arguments\)/);
+  assert.match(pos, /sale\.locationId\|\|locationId\(\)/);
+  assert.match(pos, /width:30mm;height:30mm/);
+  assert.match(pos, /var target=240,width=target,height=target/);
+  assert.match(pos, /\.social-qr\{display:block;width:42mm;height:42mm;object-fit:contain/);
+  assert.match(pos, /socialQr=await escPosSocialQrBytes\(\)/);
+});
+
 test('Business Tools is removed and successful voids disappear permanently', () => {
   assert.match(pos, /button\.remove\(\)/);
   assert.match(pos, /if\(view\)view\.remove\(\)/);
