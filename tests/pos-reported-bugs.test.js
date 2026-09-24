@@ -244,8 +244,8 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /label-description/);
   assert.match(pos, /label-barcode/);
   assert.match(pos, /label-price/);
-  assert.match(pos, /40 × 30 mm Azure sticker/);
-  assert.match(pos, /Azure Swim labels use the 40 × 30 mm sticker feed with compact scan-safe artwork/);
+  assert.match(pos, /25 × 25 mm Azure compact/);
+  assert.match(pos, /Azure Swim labels are fixed to the compact 25 × 25 mm format/);
   assert.doesNotMatch(pos, /Azure sticker · 40 × 30 mm/);
   assert.doesNotMatch(pos, /25 × 25 mm micro/);
   assert.doesNotMatch(pos, /35 × 25 mm micro/);
@@ -253,6 +253,9 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.doesNotMatch(pos, /40 × 25 mm micro/);
   assert.doesNotMatch(pos, /Azure Swim fit · 45 × 30 mm/);
   assert.match(pos, /function labelBitmapLayout\(width,height\)/);
+  assert.match(pos, /width<=25&&height<=25/);
+  assert.match(pos, /margin:22,nameFont:14,descFont:7,underNameFont:0,priceFont:15/);
+  assert.match(pos, /nameY:8,descY:25,barcodeY:40,barcodeH:98/);
   assert.match(pos, /width<=30&&height<=25/);
   assert.match(pos, /margin:28,nameFont:16,descFont:8,underNameFont:0,priceFont:18/);
   assert.match(pos, /nameY:10,descY:30,barcodeY:48,barcodeH:88/);
@@ -269,8 +272,8 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /function drawCode128\(context,value,x,y,width,height,darken\)/);
   assert.match(pos, /function drawCode39\(context,value,x,y,width,height,darken\)/);
   assert.match(pos, /drawCode128\(context,product\.code,margin,layout\.barcodeY,dotsW-margin\*2,layout\.barcodeH,layout\.darken\)/);
-  assert.match(pos, /size=\['40','30'\]/);
-  assert.match(pos, /40 × 30 mm barcode label/);
+  assert.match(pos, /size=\['25','25'\]/);
+  assert.match(pos, /25 × 25 mm barcode label/);
   assert.match(pos, /BITMAP 0,0/);
   assert.match(pos, /GAP '\+\(layout\.gapMm\|\|3\)\+' mm,0/);
   assert.match(pos, /DENSITY 15/);
