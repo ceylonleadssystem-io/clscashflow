@@ -276,9 +276,10 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /30 × 25 mm barcode label/);
   assert.match(pos, /BITMAP 0,0/);
   assert.match(pos, /GAP '\+\(layout\.gapMm\|\|3\)\+' mm,0/);
+  assert.match(pos, /GAPDETECT/);
   assert.match(pos, /DENSITY 15/);
   assert.match(pos, /SPEED 2/);
-  assert.match(pos, /PRINT 1,'\+count/);
+  assert.match(pos, /PRINT '\+count/);
   assert.match(pos, /OFFSET 0 mm/);
   assert.match(pos, /REFERENCE 0,0/);
   assert.match(pos, /DIRECTION 1/);
@@ -366,6 +367,8 @@ test('staff access and sessions enforce selected locations', () => {
   assert.match(pos, /requestAnimationFrame\(function\(\)\{audit\('location-switch'/);
   assert.match(pos, /class="location-choice-copy"/);
   assert.match(pos, /Choose at least one location for this user/);
+  assert.match(pos, /match=edit&&\(edit\.getAttribute\('onclick'\)\|\|''\)\.match/);
+  assert.match(pos, /String\(item\.id\)===String\(match\[1\]\)/);
   assert.match(pos, /You do not have access to that location/);
   assert.match(pos, /All Locations is available for reporting roles only/);
   assert.match(pos, /Choose a real location before starting checkout/);
