@@ -244,8 +244,8 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /label-description/);
   assert.match(pos, /label-barcode/);
   assert.match(pos, /label-price/);
-  assert.match(pos, /30 × 25 mm micro/);
-  assert.match(pos, /Azure Swim labels are fixed to the tested 30 × 25 mm scan-safe format/);
+  assert.match(pos, /40 × 30 mm Azure sticker/);
+  assert.match(pos, /Azure Swim labels use the 40 × 30 mm sticker feed with compact scan-safe artwork/);
   assert.doesNotMatch(pos, /Azure sticker · 40 × 30 mm/);
   assert.doesNotMatch(pos, /25 × 25 mm micro/);
   assert.doesNotMatch(pos, /35 × 25 mm micro/);
@@ -256,6 +256,8 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /width<=30&&height<=25/);
   assert.match(pos, /margin:28,nameFont:16,descFont:8,underNameFont:0,priceFont:18/);
   assert.match(pos, /nameY:10,descY:30,barcodeY:48,barcodeH:88/);
+  assert.match(pos, /margin:42,nameFont:18,descFont:8,underNameFont:0,priceFont:18/);
+  assert.match(pos, /nameY:14,descY:36,barcodeY:56,barcodeH:110/);
   assert.match(pos, /if\(layout\.nameFont\)/);
   assert.match(pos, /layout\.underNameFont/);
   assert.match(pos, /layout\.barcodeY\+layout\.barcodeH\+layout\.underNameGap/);
@@ -267,8 +269,8 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /function drawCode128\(context,value,x,y,width,height,darken\)/);
   assert.match(pos, /function drawCode39\(context,value,x,y,width,height,darken\)/);
   assert.match(pos, /drawCode128\(context,product\.code,margin,layout\.barcodeY,dotsW-margin\*2,layout\.barcodeH,layout\.darken\)/);
-  assert.match(pos, /size=\['30','25'\]/);
-  assert.match(pos, /30 × 25 mm barcode label/);
+  assert.match(pos, /size=\['40','30'\]/);
+  assert.match(pos, /40 × 30 mm barcode label/);
   assert.match(pos, /BITMAP 0,0/);
   assert.match(pos, /GAP '\+\(layout\.gapMm\|\|3\)\+' mm,0/);
   assert.match(pos, /DENSITY 15/);
