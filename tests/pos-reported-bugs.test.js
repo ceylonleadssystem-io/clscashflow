@@ -267,8 +267,11 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /darken:true,noGap:true/);
   assert.match(pos, /margin:30,nameFont:20,descFont:9,priceFont:20/);
   assert.match(pos, /function tsplBitmapBytes\(product,copies,size\)/);
+  assert.match(pos, /var code128Patterns=\[/);
+  assert.match(pos, /function code128Values\(value\)/);
+  assert.match(pos, /function drawCode128\(context,value,x,y,width,height,darken\)/);
   assert.match(pos, /function drawCode39\(context,value,x,y,width,height,darken\)/);
-  assert.match(pos, /drawCode39\(context,product\.code,margin,layout\.barcodeY,dotsW-margin\*2,layout\.barcodeH,layout\.darken\)/);
+  assert.match(pos, /drawCode128\(context,product\.code,margin,layout\.barcodeY,dotsW-margin\*2,layout\.barcodeH,layout\.darken\)/);
   assert.match(pos, /BITMAP 0,0/);
   assert.match(pos, /GAP 0 mm,0/);
   assert.match(pos, /DENSITY 15/);
