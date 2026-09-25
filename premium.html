@@ -932,6 +932,50 @@ var D = {
 var payInvId = null, selTpl = 0, CH = {};
 var chartRenderToken = 0;
 
+function premiumProfileSettings(profile, user) {
+  profile = profile || {};
+  var saved = profile.settings || {};
+  var fullName = profile.name || (user && user.displayName) || saved.user || saved.username || D.settings.user || '';
+  return Object.assign({}, D.settings, {
+    biz: saved.biz || saved.bizName || profile.invoiceBiz || profile.bizName || profile.businessName || D.settings.biz,
+    user: saved.user || saved.username || fullName || D.settings.user,
+    addr: saved.addr || profile.addr || profile.address || D.settings.addr,
+    email: saved.email || profile.email || (user && user.email) || D.settings.email,
+    vat: saved.vat || profile.vat || D.settings.vat,
+    footer: saved.footer || profile.footer || D.settings.footer,
+    logo: saved.logo || profile.logo || D.settings.logo || '',
+    mainCurrency: saved.mainCurrency || profile.mainCurrency || 'LKR',
+    invoiceCurrency: saved.invoiceCurrency || profile.invoiceCurrency || profile.revenueDefaultCurrency || 'LKR',
+    baseCurrency: saved.baseCurrency || profile.baseCurrency || profile.mainCurrency || 'LKR',
+    revenueDefaultCurrency: saved.revenueDefaultCurrency || profile.revenueDefaultCurrency || profile.invoiceCurrency || 'LKR',
+    exchangeRates: saved.exchangeRates || profile.exchangeRates || { LKR: 1, USD: 300, GBP: 380, EUR: 325 }
+  });
+}
+
+function clearPremiumBusinessRecords() {
+  ['txns','invoices','exps','clients','staff','recv','payables','suppliers'].forEach(function(key) { D[key] = []; });
+}
+
+function profilePayloadFromSettings(settings) {
+  settings = settings || D.settings || {};
+  return {
+    bizName: settings.biz || settings.bizName || '',
+    invoiceBiz: settings.biz || settings.bizName || '',
+    businessName: settings.biz || settings.bizName || '',
+    name: settings.user || settings.username || '',
+    addr: settings.addr || '',
+    email: settings.email || '',
+    vat: settings.vat || '',
+    footer: settings.footer || '',
+    logo: settings.logo || '',
+    mainCurrency: settings.mainCurrency || 'LKR',
+    invoiceCurrency: settings.invoiceCurrency || settings.revenueDefaultCurrency || 'LKR',
+    baseCurrency: settings.baseCurrency || settings.mainCurrency || 'LKR',
+    revenueDefaultCurrency: settings.revenueDefaultCurrency || settings.invoiceCurrency || 'LKR',
+    exchangeRates: settings.exchangeRates || { LKR: 1, USD: 300, GBP: 380, EUR: 325 }
+  };
+}
+
 function loadChartLibrary() {
   if (window.Chart) return Promise.resolve(window.Chart);
   if (window.clsLoadChart) return window.clsLoadChart();
@@ -1836,18 +1880,21 @@ window.waRemind = function waRemind(id) {
   var msg=encodeURIComponent('Dear '+inv.client+',\n\nThis is a reminder that Invoice '+inv.id+' for '+fmt(inv.total-inv.paid)+' is due on '+inv.due+'.\n\nPlease arrange payment at your earliest convenience.\n\nThank you,\n'+D.settings.biz);
   window.open('https://wa.me/'+phone+'?text='+msg,'_blank');
 }
-window.saveSettings = function saveSettings() {
+window.saveSettings = async function saveSettings() {
   D.settings.biz=document.getElementById('s-biz').value||D.settings.biz;
   D.settings.user=document.getElementById('s-user').value||D.settings.user;
   D.settings.addr=document.getElementById('s-addr').value;
   D.settings.email=document.getElementById('s-email').value;
   D.settings.vat=document.getElementById('s-vat').value;
   D.settings.footer=document.getElementById('s-footer').value||'Invoice by Cashflow System - Ceylonry Labs.io';
+  D.settings.bizName=D.settings.biz;
+  D.settings.username=D.settings.user;
   var ini=D.settings.user.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
   document.getElementById('sb-uname').textContent=D.settings.user;
   document.getElementById('sb-av').textContent=ini;
-  showToast('Settings saved!','ok');
-  saveData();
+  var saved = await saveSettingsNow();
+  if (saved) showToast('Settings saved and synced!','ok');
+  else showToast('Settings saved on this device. Cloud sync will retry after refresh.','err');
 }
 function previewLogo(input) {
   if(!input.files||!input.files[0])return;
@@ -1938,6 +1985,10 @@ async function saveDataNow() {
     var savedSettings = Object.assign({}, D.settings || {});
     delete savedSettings.dataVersion;
     var userRef = _fdb.collection('users').doc(_uid);
+    await userRef.set(Object.assign(
+      { settings: Object.assign({}, savedSettings, { dataVersion: version }), dataVersion: version },
+      profilePayloadFromSettings(savedSettings)
+    ), { merge: true });
     var cols = { transactions: D.txns, expenses: D.exps, invoices: D.invoices, clients: D.clients, suppliers: D.suppliers, staff: D.staff, receivables: D.recv, payables: D.payables };
     var docsFor = function(arr) {
       return (arr || []).map(function(item, i) {
@@ -1961,7 +2012,6 @@ async function saveDataNow() {
         console.warn('Bulk save failed; retrying fallback save.', bulkErr);
       }
     }
-    await userRef.set({ settings: savedSettings }, { merge: true });
     for (var col in cols) {
       var arr = cols[col] || [];
       var colRef = userRef.collection(col);
@@ -1973,10 +2023,7 @@ async function saveDataNow() {
       });
       await b.commit();
     }
-    await userRef.set({
-      settings: Object.assign({}, savedSettings, { dataVersion: version }),
-      dataVersion: version
-    }, { merge: true });
+    await userRef.set({ dataVersion: version }, { merge: true });
     writePremiumBackup(version, true);
     return true;
   } catch(e) {
@@ -2013,15 +2060,38 @@ function saveData() {
   return _savePendingPromise;
 }
 
+async function saveSettingsNow() {
+  try {
+    var version = writePremiumBackup(Date.now(), false);
+    var savedSettings = Object.assign({}, D.settings || {});
+    delete savedSettings.dataVersion;
+    if (!_uid) {
+      localStorage.setItem('cls-premium-backup', JSON.stringify(D));
+      return true;
+    }
+    await _fdb.collection('users').doc(_uid).set(Object.assign(
+      { settings: Object.assign({}, savedSettings, { dataVersion: version }), dataVersion: version },
+      profilePayloadFromSettings(savedSettings)
+    ), { merge: true });
+    writePremiumBackup(version, true);
+    return true;
+  } catch(e) {
+    console.error('Premium saveSettings:', e);
+    return false;
+  }
+}
+
 async function loadData(uid) {
   try {
     var userRef = _fdb.collection('users').doc(uid);
     // Keep the last known account data available while the cloud collections load.
     // Some older accounts can briefly return empty collection snapshots on refresh.
     var cached = readPremiumBackup(uid);
+    var usedCached = false;
     if (cached && cached.data && Number(cached.version || 0) > Number(_dataVersion || 0)) {
       Object.assign(D, cached.data);
       _dataVersion = Number(cached.version || 0);
+      usedCached = true;
     }
     var cols = ['transactions','expenses','invoices','clients','suppliers','staff','receivables','payables'];
     var keys = ['txns','exps','invoices','clients','suppliers','staff','recv','payables'];
@@ -2038,15 +2108,20 @@ async function loadData(uid) {
       }));
     }
     var profileData = snap.exists ? (snap.data() || {}) : {};
-    if (profileData.settings) Object.assign(D.settings, profileData.settings);
+    D.settings = premiumProfileSettings(profileData, _fauth.currentUser);
     var serverVersion = Number(profileData.dataVersion || 0);
     _dataVersion = Math.max(_dataVersion || 0, serverVersion || 0);
+    var loadedAnyCollection = false;
     for (var i = 0; i < cols.length; i++) {
       var cs = snaps[i];
       // An empty response must not erase the account's existing records.
       // A real empty collection is still represented by the initial empty array.
-      if (cs.docs && cs.docs.length) D[keys[i]] = cs.docs.map(function(d) { return d.data(); });
+      if (cs.docs && cs.docs.length) {
+        D[keys[i]] = cs.docs.map(function(d) { return d.data(); });
+        loadedAnyCollection = true;
+      }
     }
+    if (!loadedAnyCollection && !usedCached) clearPremiumBusinessRecords();
     if (restorePremiumBackupIfNewer(serverVersion)) setTimeout(function(){ saveData(); }, 500);
   } catch(e) { console.error('Premium loadData:', e); }
 }

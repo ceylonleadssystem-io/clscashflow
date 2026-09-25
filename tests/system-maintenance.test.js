@@ -32,3 +32,15 @@ test('privileged API responses do not use wildcard CORS', function() {
   assert.doesNotMatch(facade, /'Access-Control-Allow-Origin': '\*'/);
   assert.match(facade, /Vary: 'Origin'/);
 });
+
+test('premium cashflow accounts hydrate onboarding details and save settings directly', function() {
+  const premium = read('premium.html');
+  assert.match(premium, /function premiumProfileSettings\(profile, user\)/);
+  assert.match(premium, /profile\.invoiceBiz \|\| profile\.bizName \|\| profile\.businessName/);
+  assert.match(premium, /function clearPremiumBusinessRecords\(\)/);
+  assert.match(premium, /if \(!loadedAnyCollection && !usedCached\) clearPremiumBusinessRecords\(\)/);
+  assert.match(premium, /async function saveSettingsNow\(\)/);
+  assert.match(premium, /profilePayloadFromSettings\(savedSettings\)/);
+  assert.match(premium, /var saved = await saveSettingsNow\(\)/);
+  assert.doesNotMatch(premium, /var saved = await saveData\(\);\n  if \(saved\) showToast\('Settings saved and synced!'/);
+});
