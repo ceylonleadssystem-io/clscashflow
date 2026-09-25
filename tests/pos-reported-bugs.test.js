@@ -266,7 +266,7 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /layout\.underNameFont/);
   assert.match(pos, /layout\.barcodeY\+layout\.barcodeH\+layout\.underNameGap/);
   assert.match(pos, /priceGap:6,bottomPad:30/);
-  assert.match(pos, /darken:true,gapMm:3,backfeedDots:200/);
+  assert.match(pos, /darken:true,gapMm:3/);
   assert.match(pos, /function tsplBitmapBytes\(product,copies,size\)/);
   assert.match(pos, /var code128Patterns=\[/);
   assert.match(pos, /function code128Values\(value\)/);
@@ -286,8 +286,9 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /SET TEAR OFF/);
   assert.match(pos, /SET PEEL OFF/);
   assert.match(pos, /SET CUTTER OFF/);
-  assert.match(pos, /BACKFEED '\+\(layout\.backfeedDots\|\|0\)\+'/);
-  assert.match(pos, /BACKFEED 200/);
+  assert.match(pos, /BACKFEED 0/);
+  assert.doesNotMatch(pos, /backfeedDots:200/);
+  assert.doesNotMatch(pos, /BACKFEED 200/);
   assert.match(pos, /PRINT 1,'\+count\+'/);
   assert.match(pos, /OFFSET 0 mm/);
   assert.match(pos, /REFERENCE 0,0/);
