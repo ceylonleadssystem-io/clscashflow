@@ -284,7 +284,7 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /PRINT 1/);
   assert.match(pos, /OFFSET 0 mm/);
   assert.match(pos, /REFERENCE 0,0/);
-  assert.match(pos, /DIRECTION 1/);
+  assert.match(pos, /DIRECTION 0/);
   assert.match(pos, /pixels\[offset\+3\]<=40\|\|luma>=160/);
   assert.match(pos, /max-height:14mm/);
   assert.match(pos, /font-size:10pt/);
