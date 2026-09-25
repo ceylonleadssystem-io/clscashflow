@@ -258,15 +258,15 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /margin:22,nameFont:14,descFont:7,underNameFont:0,priceFont:15/);
   assert.match(pos, /nameY:8,descY:25,barcodeY:40,barcodeH:98/);
   assert.match(pos, /width<=30&&height<=25/);
-  assert.match(pos, /margin:24,nameFont:16,descFont:0,underNameFont:0,priceFont:17/);
-  assert.match(pos, /nameY:10,descY:0,barcodeY:34,barcodeH:112/);
+  assert.match(pos, /margin:24,nameFont:16,descFont:0,underNameFont:0,priceFont:16/);
+  assert.match(pos, /nameY:6,descY:0,barcodeY:28,barcodeH:104/);
   assert.match(pos, /margin:42,nameFont:18,descFont:8,underNameFont:0,priceFont:18/);
   assert.match(pos, /nameY:14,descY:36,barcodeY:56,barcodeH:110/);
   assert.match(pos, /if\(layout\.nameFont\)/);
   assert.match(pos, /layout\.underNameFont/);
   assert.match(pos, /layout\.barcodeY\+layout\.barcodeH\+layout\.underNameGap/);
-  assert.match(pos, /priceGap:12,bottomPad:17/);
-  assert.match(pos, /darken:true,gapMm:1/);
+  assert.match(pos, /priceGap:8,bottomPad:22/);
+  assert.match(pos, /darken:true,gapMm:3/);
   assert.match(pos, /function tsplBitmapBytes\(product,copies,size\)/);
   assert.match(pos, /var code128Patterns=\[/);
   assert.match(pos, /function code128Values\(value\)/);
@@ -277,7 +277,9 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /30 × 25 mm barcode label/);
   assert.match(pos, /BITMAP 0,0/);
   assert.match(pos, /GAP '\+\(layout\.gapMm\|\|3\)\+' mm,0/);
-  assert.doesNotMatch(pos, /GAPDETECT/);
+  assert.match(pos, /calibrateUsbBarcodePrinter/);
+  assert.match(pos, /GAPDETECT/);
+  assert.match(pos, /Barcode label printer calibrated/);
   assert.match(pos, /DENSITY 15/);
   assert.match(pos, /SPEED 2/);
   assert.doesNotMatch(pos, /for\(var copy=0;copy<count;copy\+\+\)/);
@@ -418,6 +420,7 @@ test('Azure Swim USB printer can be discovered and authorised from settings', ()
   assert.match(pos, /navigator\.usb\.requestDevice/);
   assert.match(pos, /Connect USB Printer/);
   assert.match(pos, /Connect Label Printer/);
+  assert.match(pos, /Calibrate Label Gap/);
   assert.match(pos, /settings-barcode-printer-status/);
   assert.match(pos, /settings-scanner-status/);
   assert.match(config, /hid=\(self\)/);
