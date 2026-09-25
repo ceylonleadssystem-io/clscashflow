@@ -389,7 +389,7 @@ async function routeSignedInUser(user) {
     try {
       const cachedUid = localStorage.getItem('cls-plan-uid') || '';
       const cachedPlan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'));
-      if (cachedUid === user.uid && SIGNIN_PLAN_FILES[cachedPlan]) {
+      if (!emailDashboardPlan(user.email) && cachedUid === user.uid && SIGNIN_PLAN_FILES[cachedPlan]) {
         authRedirectInProgress = true;
         openDashboard(SIGNIN_PLAN_FILES[cachedPlan]);
         return;
