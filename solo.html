@@ -1623,6 +1623,10 @@ async function loadDB() {
     DB.clients.list = results[6].docs.map(d => d.data());
     DB.suppliers.list = results[7].docs.map(d => d.data());
     normalizeLoadedDBCollections();
+    const localBackup = readDBBackup(_uid);
+    const cloudHasRecords = results.some(function(snap) { return snap.docs && snap.docs.length; });
+    const localHasRecords = localBackup && localBackup.data && [localBackup.data.transactions, localBackup.data.expenses, localBackup.data.invoices, localBackup.data.quotes, localBackup.data.catalog, localBackup.data.editBacklog, localBackup.data.clients && localBackup.data.clients.list, localBackup.data.suppliers && localBackup.data.suppliers.list].some(function(list) { return Array.isArray(list) && list.length; });
+    if (localHasRecords && !cloudHasRecords && Number(localBackup.version || 0) >= serverVersion) { applyDBBackup(localBackup, true); setTimeout(function() { saveDB(); }, 500); return; }
     if (restoreDBBackupIfNewer(serverVersion) === 'unsaved') setTimeout(function(){ saveDB(); }, 500);
   } catch(e) { console.error('loadDB error:', e); }
 }

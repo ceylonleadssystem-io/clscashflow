@@ -39,13 +39,15 @@ exports.handler=async function(event){
     if(action==='bulkReplace'){
       if(!id)throw new Error('Missing document id.');
       if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});
-      var saved=await upsertDocument(path,id,data,true);
       var payload=b.collections&&typeof b.collections==='object'?b.collections:{};
       for(const name of Object.keys(payload)){
         var safeName=String(name||'').replace(/[^\w-]/g,'');
         if(!safeName)continue;
         await replaceCollection(path+'/'+id+'/'+safeName,payload[name],user);
       }
+      // Commit the profile/version marker last. A failed collection write must
+      // never make an incomplete workspace look like a valid cloud snapshot.
+      var saved=await upsertDocument(path,id,data,true);
       return response(200,{ok:true,doc:saved});
     }
     if(action==='set'||action==='update'||action==='add'){id=id||newId('doc');if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});if(id==='main'&&/^users\/[^/]+\/pos$/.test(path)&&data.payload){var current=await getDocument(path,id);if(current&&current.data&&current.data.payload)data.payload=mergePosPayload(current.data.payload,data.payload)}return response(200,{ok:true,doc:await upsertDocument(path,id,data,action!=='set'||b.merge!==false)});}

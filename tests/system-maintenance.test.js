@@ -64,3 +64,14 @@ test('the central Ceylonry account always routes to Business', function() {
   assert.match(signin, /const accountPlan = emailDashboardPlan\(user\.email\)/);
   assert.match(signin, /currentPlan: accountPlan/);
 });
+
+test('Cashflow never lets an empty cloud response erase a local workspace backup', function() {
+  const solo = read('solo.html');
+  const starter = read('starter.html');
+  const growth = read('growth.html');
+  const premium = read('premium.html');
+  assert.match(solo, /localHasRecords && !cloudHasRecords/);
+  assert.match(starter, /localHasRecords && !cloudHasRecords/);
+  assert.match(growth, /localHasRecords && !cloudHasRecords/);
+  assert.match(premium, /localHasRecords && !loadedAnyCollection/);
+});

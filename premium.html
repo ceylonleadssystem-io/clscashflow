@@ -2122,6 +2122,13 @@ async function loadData(uid) {
       }
     }
     if (!loadedAnyCollection && !usedCached) clearPremiumBusinessRecords();
+    var localBackup = readPremiumBackup(_uid);
+    var localHasRecords = localBackup && localBackup.data && [localBackup.data.txns, localBackup.data.exps, localBackup.data.invoices, localBackup.data.clients, localBackup.data.suppliers, localBackup.data.staff, localBackup.data.recv, localBackup.data.payables].some(function(list) { return Array.isArray(list) && list.length; });
+    if (localHasRecords && !loadedAnyCollection && Number(localBackup.version || 0) >= serverVersion) {
+      Object.assign(D, localBackup.data);
+      _dataVersion = Math.max(_dataVersion || 0, Number(localBackup.version || 0));
+      setTimeout(function() { saveData(); }, 500);
+    }
     if (restorePremiumBackupIfNewer(serverVersion)) setTimeout(function(){ saveData(); }, 500);
   } catch(e) { console.error('Premium loadData:', e); }
 }

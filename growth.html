@@ -5299,6 +5299,10 @@ async function loadData(uid) {
       D[keys[i]] = snap.docs.map(function(d) { return d.data(); });
     }
     normalizeBusinessData();
+    var localBackup = readBusinessBackup(_uid);
+    var cloudHasRecords = snaps.some(function(snap) { return snap.docs && snap.docs.length; });
+    var localHasRecords = localBackup && localBackup.data && [localBackup.data.txns, localBackup.data.exps, localBackup.data.invoices, localBackup.data.quotes, localBackup.data.catalog, localBackup.data.clients, localBackup.data.suppliers, localBackup.data.payables, localBackup.data.staff, localBackup.data.contractors, localBackup.data.contractorPayments, localBackup.data.editLog].some(function(list) { return Array.isArray(list) && list.length; });
+    if (localHasRecords && !cloudHasRecords && Number(localBackup.version || 0) >= serverVersion) { applyBusinessBackup(localBackup, true); setTimeout(function() { saveData(); }, 500); return; }
     var payrollSupplierCleanupPending = D._payrollSupplierCleanupPending === true;
     delete D._payrollSupplierCleanupPending;
     var restoreStatus = restoreBusinessBackupIfNewer(serverVersion);
