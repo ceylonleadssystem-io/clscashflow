@@ -282,6 +282,9 @@ test('products can generate scannable and printable barcode labels', () => {
   assert.match(pos, /SPEED 2/);
   assert.doesNotMatch(pos, /for\(var copy=0;copy<count;copy\+\+\)/);
   assert.match(pos, /SET TEAR OFF/);
+  assert.match(pos, /SET PEEL OFF/);
+  assert.match(pos, /SET CUTTER OFF/);
+  assert.match(pos, /BACKFEED 0/);
   assert.match(pos, /PRINT 1,'\+count\+'/);
   assert.match(pos, /OFFSET 0 mm/);
   assert.match(pos, /REFERENCE 0,0/);
