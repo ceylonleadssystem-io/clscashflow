@@ -33,6 +33,20 @@
   DocRef.prototype.set=async function(data,opt){await request({action:'set',path:this.path,id:this.id,data:data,merge:!!(opt&&opt.merge)});return this};
   DocRef.prototype.update=async function(data){await request({action:'update',path:this.path,id:this.id,data:data});return this};
   DocRef.prototype.delete=async function(){await request({action:'delete',path:this.path,id:this.id})};
+  DocRef.prototype.getCollections=async function(collections){
+    var j=await request({action:'bulkGet',path:this.path,id:this.id,collections:collections||[]});
+    var profile=new Snap(j.profile);
+    var out={};
+    Object.keys(j.collections||{}).forEach(function(name){
+      var docs=(j.collections[name]||[]).map(function(x){return new Snap(x)});
+      out[name]={docs:docs,empty:!docs.length,size:docs.length,forEach:function(fn){docs.forEach(fn)}};
+    });
+    return{profile:profile,collections:out};
+  };
+  DocRef.prototype.replaceCollections=async function(profileData,collections){
+    await request({action:'bulkReplace',path:this.path,id:this.id,data:profileData||{},collections:collections||{}});
+    return this;
+  };
   function CollectionRef(path){QueryRef.call(this,path)}CollectionRef.prototype=Object.create(QueryRef.prototype);CollectionRef.prototype.doc=function(id){return new DocRef(this.path,id)};CollectionRef.prototype.add=async function(data){var d=new DocRef(this.path);await d.set(data);return d};
   function firestore(){return{collection:function(n){return new CollectionRef(n)},batch:function(){var jobs=[];return{set:function(r,d,o){jobs.push(function(){return r.set(d,o)})},delete:function(r){jobs.push(function(){return r.delete()})},commit:function(){return Promise.all(jobs.map(function(f){return f()}))}}}}}
   firestore.FieldValue={serverTimestamp:function(){return new Date().toISOString()},delete:function(){return{__delete:true}}};

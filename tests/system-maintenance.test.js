@@ -44,3 +44,15 @@ test('premium cashflow accounts hydrate onboarding details and save settings dir
   assert.match(premium, /var saved = await saveSettingsNow\(\)/);
   assert.doesNotMatch(premium, /var saved = await saveData\(\);\n  if \(saved\) showToast\('Settings saved and synced!'/);
 });
+
+test('Appwrite Firestore shim supports Cashflow bulk workspace sync', function() {
+  const compat = read('assets/appwrite-firebase-compat.js');
+  const docs = read('netlify/functions/appwrite-docs.js');
+  assert.match(compat, /DocRef\.prototype\.getCollections=async function/);
+  assert.match(compat, /action:'bulkGet'/);
+  assert.match(compat, /DocRef\.prototype\.replaceCollections=async function/);
+  assert.match(compat, /action:'bulkReplace'/);
+  assert.match(docs, /if\(action==='bulkGet'\)/);
+  assert.match(docs, /if\(action==='bulkReplace'\)/);
+  assert.match(docs, /async function replaceCollection/);
+});

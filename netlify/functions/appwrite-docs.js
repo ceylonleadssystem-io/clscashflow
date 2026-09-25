@@ -5,6 +5,18 @@ function bodyOf(event){try{return JSON.parse(event.body||'{}')}catch(_){return{}
 function itemTime(item){return Date.parse(item&&item.updatedAt||item&&item.createdAt||item&&item.at||item&&item.date||'')||0}
 function mergeRows(remote,local){var rows=new Map();(remote||[]).forEach(function(item){var key=item&&item.id!=null?String(item.id):'value:'+JSON.stringify(item);rows.set(key,item)});(local||[]).forEach(function(item){var key=item&&item.id!=null?String(item.id):'value:'+JSON.stringify(item),old=rows.get(key);if(!old||itemTime(item)>=itemTime(old))rows.set(key,item)});return Array.from(rows.values())}
 function mergePosPayload(remote,local){remote=remote&&typeof remote==='object'?remote:{};local=local&&typeof local==='object'?local:{};var merged=Object.assign({},remote,local),arrays=['products','modifiers','customers','sales','users','locations','locationAudit','stockTransfers','timeEntries','cashShifts','supportAudit','categories','subcategories','inventory','stockMovements','voidOrders','openOrders','customerCommunications','appointments','memberships','prescriptions','medicineBatches','commissionPayments'],deletedKeys=['products','modifiers','inventory','sales','saleReceipts','users','categories','subcategories'];merged.deletedIds={};deletedKeys.forEach(function(key){merged.deletedIds[key]=Array.from(new Set([].concat(remote.deletedIds&&remote.deletedIds[key]||[],local.deletedIds&&local.deletedIds[key]||[]).map(String)))});arrays.forEach(function(key){if(key==='categories'){var removedNames=new Set(merged.deletedIds.categories.map(function(value){return String(value).trim().toLowerCase()}));merged.categories=Array.from(new Set([].concat(remote.categories||[],local.categories||[]))).filter(function(value){return!removedNames.has(String(value).trim().toLowerCase())});return}merged[key]=mergeRows(remote[key],local[key]);if(merged.deletedIds[key]){var removed=new Set(merged.deletedIds[key]);merged[key]=merged[key].filter(function(item){return!removed.has(String(item&&item.id))})}});var removedReceipts=new Set(merged.deletedIds.saleReceipts);merged.sales=(merged.sales||[]).filter(function(sale){return!removedReceipts.has(String(sale&&sale.receipt||''))});var remoteSettings=remote.settings||{},localSettings=local.settings||{},remoteTimes=remote.syncMeta&&remote.syncMeta.settings||{},localTimes=local.syncMeta&&local.syncMeta.settings||{};merged.settings={};new Set(Object.keys(remoteSettings).concat(Object.keys(localSettings))).forEach(function(key){var rt=Date.parse(remoteTimes[key]||'')||0,lt=Date.parse(localTimes[key]||'')||0;merged.settings[key]=lt>=rt&&Object.prototype.hasOwnProperty.call(localSettings,key)?localSettings[key]:remoteSettings[key]});merged.syncMeta=Object.assign({},remote.syncMeta||{},local.syncMeta||{}, {settings:{}});new Set(Object.keys(remoteTimes).concat(Object.keys(localTimes))).forEach(function(key){merged.syncMeta.settings[key]=(Date.parse(localTimes[key]||'')||0)>=(Date.parse(remoteTimes[key]||'')||0)?localTimes[key]:remoteTimes[key]});merged.nextOrderSequence=Math.max(Number(remote.nextOrderSequence)||0,Number(local.nextOrderSequence)||0);return merged}
+async function replaceCollection(path,docs,user){
+  docs=Array.isArray(docs)?docs:[];
+  var existing=await queryDocuments(path,{fetchLimit:5000});
+  for(const row of existing){if(await canWrite(path,row.id,row.data||{},user))await deleteDocument(path,row.id);}
+  for(const row of docs){
+    var doc=row&&typeof row==='object'?row:{};
+    var id=String(doc.id||newId('doc'));
+    var data=doc.data&&typeof doc.data==='object'?doc.data:{};
+    if(!await canWrite(path,id,data,user))throw Object.assign(new Error('Not allowed.'),{statusCode:403});
+    await upsertDocument(path,id,data,false);
+  }
+}
 exports.handler=async function(event){
   if(event.httpMethod==='OPTIONS')return response(204,{});if(event.httpMethod!=='POST')return response(405,{ok:false,error:'Method not allowed'});
   try{var b=bodyOf(event),action=String(b.action||''),path=String(b.path||'').replace(/^\/+|\/+$/g,''),id=String(b.id||''),data=b.data&&typeof b.data==='object'?b.data:{};if(!path)throw new Error('Missing document path.');
@@ -12,6 +24,30 @@ exports.handler=async function(event){
     var user=await getUserFromEvent(event);if(!user)return response(401,{ok:false,error:'Please sign in again.'});
     if(action==='get'){var doc=await getDocument(path,id);if(!doc)return response(200,{ok:true,exists:false,doc:null});if(!await canRead({path,id:doc.id,data:doc.data},user))return response(403,{ok:false,error:'Not allowed.'});return response(200,{ok:true,exists:true,doc});}
     if(action==='query'){var docs=await queryDocuments(path,b.options||{}),allowed=[];for(const row of docs)if(await canRead({path,id:row.id,data:row.data},user))allowed.push(row);return response(200,{ok:true,docs:allowed});}
+    if(action==='bulkGet'){
+      var profile=await getDocument(path,id);
+      if(profile&&!await canRead({path,id:profile.id,data:profile.data},user))return response(403,{ok:false,error:'Not allowed.'});
+      var names=Array.isArray(b.collections)?b.collections.map(function(name){return String(name||'').replace(/[^\w-]/g,'')}).filter(Boolean):[];
+      var collections={};
+      for(const name of names){
+        var rows=await queryDocuments(path+'/'+id+'/'+name,{fetchLimit:5000}),allowedRows=[];
+        for(const row of rows)if(await canRead({path:path+'/'+id+'/'+name,id:row.id,data:row.data},user))allowedRows.push(row);
+        collections[name]=allowedRows;
+      }
+      return response(200,{ok:true,profile:profile||null,collections});
+    }
+    if(action==='bulkReplace'){
+      if(!id)throw new Error('Missing document id.');
+      if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});
+      var saved=await upsertDocument(path,id,data,true);
+      var payload=b.collections&&typeof b.collections==='object'?b.collections:{};
+      for(const name of Object.keys(payload)){
+        var safeName=String(name||'').replace(/[^\w-]/g,'');
+        if(!safeName)continue;
+        await replaceCollection(path+'/'+id+'/'+safeName,payload[name],user);
+      }
+      return response(200,{ok:true,doc:saved});
+    }
     if(action==='set'||action==='update'||action==='add'){id=id||newId('doc');if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});if(id==='main'&&/^users\/[^/]+\/pos$/.test(path)&&data.payload){var current=await getDocument(path,id);if(current&&current.data&&current.data.payload)data.payload=mergePosPayload(current.data.payload,data.payload)}return response(200,{ok:true,doc:await upsertDocument(path,id,data,action!=='set'||b.merge!==false)});}
     if(action==='delete'){var old=await getDocument(path,id);if(old&&!await canWrite(path,id,old.data,user))return response(403,{ok:false,error:'Not allowed.'});await deleteDocument(path,id);return response(200,{ok:true});}
     return response(400,{ok:false,error:'Unsupported action.'});
