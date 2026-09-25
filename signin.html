@@ -294,6 +294,9 @@ function showPlatformAdminRecovery(email) {
 let authRedirectInProgress = false;
 const SIGNIN_PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: 'pos-system/pos-system.html' };
 const SIGNIN_PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
+const SIGNIN_EMAIL_PLAN_OVERRIDES = {
+  'accounts@ceylonrylabs.io': 'business'
+};
 const SIGNIN_PROFILE_TIMEOUT_MS = 1800;
 const SIGNIN_OWNER_TIMEOUT_MS = 1200;
 
@@ -305,6 +308,9 @@ function normalizeDashboardPlan(value) {
 function firstDashboardPlan(...values) {
   return values.map(normalizeDashboardPlan).find(Boolean) || '';
 }
+function emailDashboardPlan(email) {
+  return SIGNIN_EMAIL_PLAN_OVERRIDES[String(email || '').trim().toLowerCase()] || '';
+}
 function rememberPlanLocal(plan) {
   if (!SIGNIN_PLAN_FILES[plan]) return;
   try {
@@ -313,7 +319,7 @@ function rememberPlanLocal(plan) {
   } catch (e) {}
 }
 async function ensureSigninUserProfile(user) {
-  const plan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo') || 'solo';
+  const plan = emailDashboardPlan(user && user.email) || firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo') || 'solo';
   const trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + 15);
   const profile = {
@@ -457,7 +463,22 @@ async function redirectToDashboard(user) {
     }
     if (doc.exists) {
       const data = doc.data() || {};
-      let plan = firstDashboardPlan(data.currentPlan, data.plan, data.requestedPlan, data.lastPlan);
+      let plan = emailDashboardPlan(user.email) || firstDashboardPlan(data.currentPlan, data.plan, data.requestedPlan, data.lastPlan);
+
+      // Keep the account's canonical plan in Appwrite when a legacy profile
+      // was created without a plan and sign-in would otherwise fall back.
+      const accountPlan = emailDashboardPlan(user.email);
+      if (accountPlan && plan !== accountPlan) {
+        plan = accountPlan;
+        firebase.firestore().collection('users').doc(user.uid).set({
+          plan: accountPlan,
+          currentPlan: accountPlan,
+          lastPlan: accountPlan,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(function(err) {
+          console.warn('Business account plan repair skipped after sign-in:', err);
+        });
+      }
 
       if (data.ownerUid) {
         const ownerDoc = await withRouteTimeout(

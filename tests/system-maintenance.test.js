@@ -56,3 +56,11 @@ test('Appwrite Firestore shim supports Cashflow bulk workspace sync', function()
   assert.match(docs, /if\(action==='bulkReplace'\)/);
   assert.match(docs, /async function replaceCollection/);
 });
+
+test('the central Ceylonry account always routes to Business', function() {
+  const signin = read('signin.html');
+  assert.match(signin, /accounts@ceylonrylabs\.io': 'business'/);
+  assert.match(signin, /function emailDashboardPlan\(email\)/);
+  assert.match(signin, /const accountPlan = emailDashboardPlan\(user\.email\)/);
+  assert.match(signin, /currentPlan: accountPlan/);
+});
