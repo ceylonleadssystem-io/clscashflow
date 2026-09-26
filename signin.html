@@ -1,791 +1,1666 @@
-<!DOCTYPE html>
+<!doctype html>
 <!-- CLS-V5-WINDOW-ONCLICK -->
 <!-- CLS-SIGNIN-V4 -->
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CeylonryLabs.io — Sign In</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://sgp.cloud.appwrite.io" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>CeylonryLabs.io — Sign In</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+		<link rel="preconnect" href="https://sgp.cloud.appwrite.io" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+			rel="stylesheet"
+		/>
 
-<!-- Appwrite compatibility SDK -->
-<script defer src="assets/appwrite-sdk.js"></script>
-<script defer src="assets/appwrite-firebase-compat.js?v=20260925-cashflow-bulk-sync"></script>
+		<!-- Appwrite compatibility SDK -->
+		<script defer src="assets/appwrite-sdk.js"></script>
+		<script
+			defer
+			src="assets/appwrite-firebase-compat.js?v=20260925-cashflow-bulk-sync"
+		></script>
 
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --gold:#B8922A;--gold-l:#D4A840;--gold-d:#7A6010;
-  --bg:#F7F5F0;--white:#FFFFFF;--bg3:#F0EDE6;
-  --text:#1C1814;--muted:#6B6258;--dim:#A8A29A;
-  --border:rgba(184,146,42,.2);--border2:rgba(184,146,42,.35);
-  --green:#1a9e5c;--red:#c0392b;
-  --font-d:'Cormorant Garamond',serif;--font-b:'DM Sans',sans-serif;
-}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;align-items:center;justify-content:center;padding:1.5rem}
-.shell{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,480px);min-height:600px;background:var(--white);box-shadow:0 32px 80px rgba(0,0,0,.12);max-width:900px;width:100%}
-/* LEFT */
-.left{background:#1a1714;padding:3rem 2.5rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
-.left::before{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;border:1px solid rgba(184,146,42,.15);pointer-events:none}
-.left::after{content:'';position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;border:1px solid rgba(184,146,42,.1);pointer-events:none}
-.logo{font-family:var(--font-d);font-size:1.5rem;font-weight:300;color:#fff;position:relative;z-index:1}
-.logo span{color:var(--gold)}
-.logo-sub{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:.25rem}
-.left-body{position:relative;z-index:1}
-.left-title{font-family:var(--font-d);font-size:2.4rem;font-weight:300;color:#fff;line-height:1.2;margin-bottom:1rem}
-.left-title em{color:var(--gold);font-style:italic}
-.left-sub{font-size:.82rem;color:rgba(255,255,255,.5);line-height:1.8}
-.left-features{display:flex;flex-direction:column;gap:.65rem;margin-top:1.75rem}
-.lf-item{display:flex;align-items:center;gap:.75rem;font-size:.78rem;color:rgba(255,255,255,.6)}
-.lf-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0}
-.left-footer{font-size:.65rem;color:rgba(255,255,255,.25);position:relative;z-index:1}
-/* RIGHT */
-.right{padding:3rem 2.75rem;display:flex;flex-direction:column;justify-content:center}
-.right-eyebrow{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;font-weight:600}
-.right-title{font-family:var(--font-d);font-size:2rem;font-weight:300;color:var(--text);margin-bottom:.35rem}
-.right-sub{font-size:.82rem;color:var(--muted);margin-bottom:2rem;line-height:1.6}
-.rule{width:40px;height:2px;background:linear-gradient(90deg,#1a1714,var(--gold));margin-bottom:1.5rem}
-/* Google button */
-.btn-google{display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;padding:.8rem;border:1.5px solid var(--border2);background:var(--white);color:var(--text);font-family:var(--font-b);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .22s;margin-bottom:1.25rem;letter-spacing:.02em}
-.btn-google:hover{border-color:var(--gold);background:var(--bg3)}
-.btn-google svg{width:18px;height:18px;flex-shrink:0}
-.divider{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.divider-text{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
-/* Form */
-.field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.85rem}
-.field label{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.finput{background:var(--bg3);border:1px solid var(--border2);padding:.7rem 1rem;color:var(--text);font-family:var(--font-b);font-size:.85rem;outline:none;transition:all .22s;width:100%}
-.finput:focus{border-color:#1a1714;background:var(--white);box-shadow:0 0 0 3px rgba(26,23,20,.05)}
-.finput::placeholder{color:var(--dim)}
-.password-field{position:relative}
-.password-field .finput{padding-right:3.1rem}
-.password-toggle{position:absolute;right:.55rem;top:50%;transform:translateY(-50%);border:1px solid var(--border2);background:var(--white);color:var(--muted);min-width:2.1rem;height:2.1rem;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-b);font-size:.68rem;font-weight:700;cursor:pointer;transition:all .2s}
-.password-toggle:hover,.password-toggle:focus{border-color:var(--gold);color:var(--text);outline:none}
-.forgot{font-size:.72rem;color:var(--gold);text-decoration:none;float:right;margin-top:-.5rem;margin-bottom:.85rem;display:block;text-align:right}
-.forgot:hover{color:var(--gold-l)}
-.btn-sign{width:100%;padding:.85rem;background:#1a1714;color:#fff;font-family:var(--font-b);font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;border:none;cursor:pointer;transition:all .25s;margin-bottom:1.25rem}
-.btn-sign:hover{background:var(--gold)}
-.btn-sign:disabled{opacity:.5;cursor:not-allowed}
-.signup-link{font-size:.78rem;color:var(--muted);text-align:center}
-.signup-link a{color:var(--gold);text-decoration:none;font-weight:500}
-.signup-link a:hover{color:var(--gold-l)}
-.err-msg{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);color:var(--red);font-size:.78rem;padding:.65rem .9rem;margin-bottom:.85rem;display:none}
-.err-msg.show{display:block}
-.invite-banner{display:none;background:rgba(184,146,42,.1);border:1px solid var(--border2);padding:.85rem 1rem;margin-bottom:1rem;color:var(--muted);font-size:.8rem;line-height:1.6}
-.invite-banner.show{display:block}
-.invite-banner strong{color:var(--text)}
-.reset-form{display:none}
-.reset-form.show{display:block}
-.main-form.hide{display:none}
-@media(max-width:760px){
-  html,body{min-height:100dvh;height:auto;display:block;padding:0;overflow-x:hidden}
-  .shell{display:block;width:100%;max-width:none;min-height:100dvh;box-shadow:none;background:var(--white)}
-  .left{display:none}
-  .right{min-height:100dvh;padding:1.25rem 1.05rem 2rem;justify-content:flex-start}
-  .right a[style]{margin-bottom:1.15rem!important}
-  .right-eyebrow{font-size:.54rem;letter-spacing:.2em;line-height:1.4;margin-bottom:.55rem}
-  .right-title{font-size:clamp(1.7rem,9vw,2.05rem);line-height:1.05;margin-bottom:.5rem}
-  .right-sub{font-size:.82rem;line-height:1.55;margin-bottom:1.25rem}
-  .rule{margin-bottom:1.2rem}
-  .btn-google,.btn-sign,.finput{min-height:48px}
-  .btn-google{font-size:.78rem;padding:.75rem .85rem}
-  .divider{gap:.55rem;margin-bottom:1.1rem}
-  .divider-text{font-size:.58rem;letter-spacing:.12em;text-align:center}
-  .field{margin-bottom:.9rem}
-  .field label{font-size:.56rem}
-  .finput{font-size:.9rem;padding:.78rem .95rem}
-  .forgot{float:none;text-align:left;margin:.1rem 0 1rem}
-  .btn-sign{margin-bottom:1rem}
-  .signup-link{font-size:.78rem;line-height:1.55}
-  .signup-link a{display:block;margin-top:.15rem}
-  .err-msg,.invite-banner{font-size:.76rem}
-}
-@media(max-width:360px){
-  .right{padding-left:.85rem;padding-right:.85rem}
-  .right-title{font-size:1.55rem}
-  .btn-google{gap:.5rem}
-}
-</style>
-<link rel="stylesheet" href="assets/editorial-app.css?v=20260808-mobile-final11">
-<style>
-@media(max-width:760px){
-  html,body{min-height:100dvh;background:#fff!important}
-  .shell{display:flex!important;flex-direction:column;width:100%;min-height:100dvh!important;background:#fff!important}
-  .left{display:block!important;flex:0 0 102px;min-height:102px!important;height:102px;padding:1.35rem 1rem!important;background:radial-gradient(circle at 100% 0,rgba(215,167,47,.14),transparent 52%),#080808!important;border-radius:0!important}
-  .left::before{display:none!important}
-  .left::after{display:block!important;width:54px!important;height:54px!important;left:-20px!important;top:-24px!important;bottom:auto!important;background:#d7a72f!important}
-  .left .logo{font-family:'Inter',sans-serif!important;font-size:1.25rem!important;font-weight:800!important;letter-spacing:-.045em!important}
-  .left .logo-sub{font-size:.56rem!important;letter-spacing:.18em!important;color:rgba(255,255,255,.62)!important}
-  .left-body,.left-footer{display:none!important}
-  .right{flex:1;min-height:calc(100dvh - 102px)!important;width:100%;padding:1.35rem 1rem 2rem!important;justify-content:flex-start!important;background:#fff!important}
-  .right>a:first-child{margin-bottom:1rem!important}
-  .right-title{font-size:clamp(1.75rem,7.4vw,2rem)!important;line-height:1.04!important;margin-bottom:.35rem!important}
-  .right-sub{max-width:340px;margin-bottom:1rem!important;line-height:1.35!important}
-  .rule{width:52px;height:4px;margin:.15rem 0 1.25rem!important;background:#d7a72f!important;border-radius:999px}
-  .btn-google{margin-bottom:1.15rem!important}
-  .divider{margin-bottom:1.1rem!important}
-  .finput,.btn-google{border-radius:12px!important}
-  .password-toggle{border-radius:7px!important;min-width:44px;height:28px}
-  .forgot{text-align:left!important}
-}
-@media(max-width:760px) and (max-height:720px){
-  .shell{min-height:100dvh!important}
-  .left{flex-basis:76px!important;min-height:76px!important;height:76px!important;padding:.9rem 1rem!important}
-  .left .logo{font-size:1.08rem!important}
-  .left .logo-sub{font-size:.49rem!important;margin-top:.14rem!important}
-  .right{min-height:calc(100dvh - 76px)!important;padding:.7rem 1rem .85rem!important}
-  .right>a:first-child{margin-bottom:.5rem!important;font-size:.7rem!important}
-  .right-eyebrow{font-size:.49rem!important;margin-bottom:.28rem!important}
-  .right-title{font-size:1.55rem!important;margin-bottom:.2rem!important}
-  .right-sub{font-size:.73rem!important;line-height:1.35!important;margin-bottom:.52rem!important}
-  .rule{height:3px!important;margin:0 0 .72rem!important}
-  .btn-google,.btn-sign,.finput{min-height:44px!important}
-  .btn-google{padding:.55rem .75rem!important;margin-bottom:.65rem!important}
-  .divider{margin-bottom:.62rem!important}
-  .field{gap:.22rem!important;margin-bottom:.52rem!important}
-  .finput{padding:.58rem .82rem!important}
-  .forgot{font-size:.68rem!important;margin:0 0 .55rem!important}
-  .btn-sign{padding:.62rem!important;margin-bottom:.55rem!important}
-  .signup-link{font-size:.69rem!important;line-height:1.35!important}
-  .signup-link a{display:inline!important;margin:0 0 0 .2rem!important}
-}
-@media(max-width:760px) and (max-height:580px){
-  .left{flex-basis:62px!important;min-height:62px!important;height:62px!important;padding:.65rem 1rem!important}
-  .right{min-height:calc(100dvh - 62px)!important;padding:.55rem .85rem .7rem!important}
-  .right-eyebrow,.right-sub{display:none!important}
-  .right-title{font-size:1.38rem!important}
-  .rule{margin-bottom:.55rem!important}
-  .btn-google,.btn-sign,.finput{min-height:42px!important}
-}
-</style>
-</head>
-<body>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			:root {
+				--gold: #b8922a;
+				--gold-l: #d4a840;
+				--gold-d: #7a6010;
+				--bg: #f7f5f0;
+				--white: #ffffff;
+				--bg3: #f0ede6;
+				--text: #1c1814;
+				--muted: #6b6258;
+				--dim: #a8a29a;
+				--border: rgba(184, 146, 42, 0.2);
+				--border2: rgba(184, 146, 42, 0.35);
+				--green: #1a9e5c;
+				--red: #c0392b;
+				--font-d: "Cormorant Garamond", serif;
+				--font-b: "DM Sans", sans-serif;
+			}
+			html,
+			body {
+				height: 100%;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-b);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 1.5rem;
+			}
+			.shell {
+				display: grid;
+				grid-template-columns: minmax(300px, 380px) minmax(0, 480px);
+				min-height: 600px;
+				background: var(--white);
+				box-shadow: 0 32px 80px rgba(0, 0, 0, 0.12);
+				max-width: 900px;
+				width: 100%;
+			}
+			/* LEFT */
+			.left {
+				background: #1a1714;
+				padding: 3rem 2.5rem;
+				display: flex;
+				flex-direction: column;
+				justify-content: space-between;
+				position: relative;
+				overflow: hidden;
+			}
+			.left::before {
+				content: "";
+				position: absolute;
+				top: -60px;
+				right: -60px;
+				width: 240px;
+				height: 240px;
+				border-radius: 50%;
+				border: 1px solid rgba(184, 146, 42, 0.15);
+				pointer-events: none;
+			}
+			.left::after {
+				content: "";
+				position: absolute;
+				bottom: -40px;
+				left: -40px;
+				width: 160px;
+				height: 160px;
+				border-radius: 50%;
+				border: 1px solid rgba(184, 146, 42, 0.1);
+				pointer-events: none;
+			}
+			.logo {
+				font-family: var(--font-d);
+				font-size: 1.5rem;
+				font-weight: 300;
+				color: #fff;
+				position: relative;
+				z-index: 1;
+			}
+			.logo span {
+				color: var(--gold);
+			}
+			.logo-sub {
+				font-size: 0.6rem;
+				letter-spacing: 0.22em;
+				text-transform: uppercase;
+				color: rgba(255, 255, 255, 0.35);
+				margin-top: 0.25rem;
+			}
+			.left-body {
+				position: relative;
+				z-index: 1;
+			}
+			.left-title {
+				font-family: var(--font-d);
+				font-size: 2.4rem;
+				font-weight: 300;
+				color: #fff;
+				line-height: 1.2;
+				margin-bottom: 1rem;
+			}
+			.left-title em {
+				color: var(--gold);
+				font-style: italic;
+			}
+			.left-sub {
+				font-size: 0.82rem;
+				color: rgba(255, 255, 255, 0.5);
+				line-height: 1.8;
+			}
+			.left-features {
+				display: flex;
+				flex-direction: column;
+				gap: 0.65rem;
+				margin-top: 1.75rem;
+			}
+			.lf-item {
+				display: flex;
+				align-items: center;
+				gap: 0.75rem;
+				font-size: 0.78rem;
+				color: rgba(255, 255, 255, 0.6);
+			}
+			.lf-dot {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: var(--gold);
+				flex-shrink: 0;
+			}
+			.left-footer {
+				font-size: 0.65rem;
+				color: rgba(255, 255, 255, 0.25);
+				position: relative;
+				z-index: 1;
+			}
+			/* RIGHT */
+			.right {
+				padding: 3rem 2.75rem;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+			}
+			.right-eyebrow {
+				font-size: 0.6rem;
+				letter-spacing: 0.25em;
+				text-transform: uppercase;
+				color: var(--gold);
+				margin-bottom: 0.6rem;
+				font-weight: 600;
+			}
+			.right-title {
+				font-family: var(--font-d);
+				font-size: 2rem;
+				font-weight: 300;
+				color: var(--text);
+				margin-bottom: 0.35rem;
+			}
+			.right-sub {
+				font-size: 0.82rem;
+				color: var(--muted);
+				margin-bottom: 2rem;
+				line-height: 1.6;
+			}
+			.rule {
+				width: 40px;
+				height: 2px;
+				background: linear-gradient(90deg, #1a1714, var(--gold));
+				margin-bottom: 1.5rem;
+			}
+			/* Google button */
+			.btn-google {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.75rem;
+				width: 100%;
+				padding: 0.8rem;
+				border: 1.5px solid var(--border2);
+				background: var(--white);
+				color: var(--text);
+				font-family: var(--font-b);
+				font-size: 0.82rem;
+				font-weight: 500;
+				cursor: pointer;
+				transition: all 0.22s;
+				margin-bottom: 1.25rem;
+				letter-spacing: 0.02em;
+			}
+			.btn-google:hover {
+				border-color: var(--gold);
+				background: var(--bg3);
+			}
+			.btn-google svg {
+				width: 18px;
+				height: 18px;
+				flex-shrink: 0;
+			}
+			.divider {
+				display: flex;
+				align-items: center;
+				gap: 0.75rem;
+				margin-bottom: 1.25rem;
+			}
+			.divider::before,
+			.divider::after {
+				content: "";
+				flex: 1;
+				height: 1px;
+				background: var(--border);
+			}
+			.divider-text {
+				font-size: 0.65rem;
+				letter-spacing: 0.18em;
+				text-transform: uppercase;
+				color: var(--dim);
+			}
+			/* Form */
+			.field {
+				display: flex;
+				flex-direction: column;
+				gap: 0.35rem;
+				margin-bottom: 0.85rem;
+			}
+			.field label {
+				font-size: 0.6rem;
+				letter-spacing: 0.15em;
+				text-transform: uppercase;
+				color: var(--muted);
+				font-weight: 600;
+			}
+			.finput {
+				background: var(--bg3);
+				border: 1px solid var(--border2);
+				padding: 0.7rem 1rem;
+				color: var(--text);
+				font-family: var(--font-b);
+				font-size: 0.85rem;
+				outline: none;
+				transition: all 0.22s;
+				width: 100%;
+			}
+			.finput:focus {
+				border-color: #1a1714;
+				background: var(--white);
+				box-shadow: 0 0 0 3px rgba(26, 23, 20, 0.05);
+			}
+			.finput::placeholder {
+				color: var(--dim);
+			}
+			.password-field {
+				position: relative;
+			}
+			.password-field .finput {
+				padding-right: 3.1rem;
+			}
+			.password-toggle {
+				position: absolute;
+				right: 0.55rem;
+				top: 50%;
+				transform: translateY(-50%);
+				border: 1px solid var(--border2);
+				background: var(--white);
+				color: var(--muted);
+				min-width: 2.1rem;
+				height: 2.1rem;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				font-family: var(--font-b);
+				font-size: 0.68rem;
+				font-weight: 700;
+				cursor: pointer;
+				transition: all 0.2s;
+			}
+			.password-toggle:hover,
+			.password-toggle:focus {
+				border-color: var(--gold);
+				color: var(--text);
+				outline: none;
+			}
+			.forgot {
+				font-size: 0.72rem;
+				color: var(--gold);
+				text-decoration: none;
+				float: right;
+				margin-top: -0.5rem;
+				margin-bottom: 0.85rem;
+				display: block;
+				text-align: right;
+			}
+			.forgot:hover {
+				color: var(--gold-l);
+			}
+			.btn-sign {
+				width: 100%;
+				padding: 0.85rem;
+				background: #1a1714;
+				color: #fff;
+				font-family: var(--font-b);
+				font-size: 0.78rem;
+				letter-spacing: 0.15em;
+				text-transform: uppercase;
+				font-weight: 600;
+				border: none;
+				cursor: pointer;
+				transition: all 0.25s;
+				margin-bottom: 1.25rem;
+			}
+			.btn-sign:hover {
+				background: var(--gold);
+			}
+			.btn-sign:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+			.signup-link {
+				font-size: 0.78rem;
+				color: var(--muted);
+				text-align: center;
+			}
+			.signup-link a {
+				color: var(--gold);
+				text-decoration: none;
+				font-weight: 500;
+			}
+			.signup-link a:hover {
+				color: var(--gold-l);
+			}
+			.err-msg {
+				background: rgba(192, 57, 43, 0.08);
+				border: 1px solid rgba(192, 57, 43, 0.25);
+				color: var(--red);
+				font-size: 0.78rem;
+				padding: 0.65rem 0.9rem;
+				margin-bottom: 0.85rem;
+				display: none;
+			}
+			.err-msg.show {
+				display: block;
+			}
+			.invite-banner {
+				display: none;
+				background: rgba(184, 146, 42, 0.1);
+				border: 1px solid var(--border2);
+				padding: 0.85rem 1rem;
+				margin-bottom: 1rem;
+				color: var(--muted);
+				font-size: 0.8rem;
+				line-height: 1.6;
+			}
+			.invite-banner.show {
+				display: block;
+			}
+			.invite-banner strong {
+				color: var(--text);
+			}
+			.reset-form {
+				display: none;
+			}
+			.reset-form.show {
+				display: block;
+			}
+			.main-form.hide {
+				display: none;
+			}
+			@media (max-width: 760px) {
+				html,
+				body {
+					min-height: 100dvh;
+					height: auto;
+					display: block;
+					padding: 0;
+					overflow-x: hidden;
+				}
+				.shell {
+					display: block;
+					width: 100%;
+					max-width: none;
+					min-height: 100dvh;
+					box-shadow: none;
+					background: var(--white);
+				}
+				.left {
+					display: none;
+				}
+				.right {
+					min-height: 100dvh;
+					padding: 1.25rem 1.05rem 2rem;
+					justify-content: flex-start;
+				}
+				.right a[style] {
+					margin-bottom: 1.15rem !important;
+				}
+				.right-eyebrow {
+					font-size: 0.54rem;
+					letter-spacing: 0.2em;
+					line-height: 1.4;
+					margin-bottom: 0.55rem;
+				}
+				.right-title {
+					font-size: clamp(1.7rem, 9vw, 2.05rem);
+					line-height: 1.05;
+					margin-bottom: 0.5rem;
+				}
+				.right-sub {
+					font-size: 0.82rem;
+					line-height: 1.55;
+					margin-bottom: 1.25rem;
+				}
+				.rule {
+					margin-bottom: 1.2rem;
+				}
+				.btn-google,
+				.btn-sign,
+				.finput {
+					min-height: 48px;
+				}
+				.btn-google {
+					font-size: 0.78rem;
+					padding: 0.75rem 0.85rem;
+				}
+				.divider {
+					gap: 0.55rem;
+					margin-bottom: 1.1rem;
+				}
+				.divider-text {
+					font-size: 0.58rem;
+					letter-spacing: 0.12em;
+					text-align: center;
+				}
+				.field {
+					margin-bottom: 0.9rem;
+				}
+				.field label {
+					font-size: 0.56rem;
+				}
+				.finput {
+					font-size: 0.9rem;
+					padding: 0.78rem 0.95rem;
+				}
+				.forgot {
+					float: none;
+					text-align: left;
+					margin: 0.1rem 0 1rem;
+				}
+				.btn-sign {
+					margin-bottom: 1rem;
+				}
+				.signup-link {
+					font-size: 0.78rem;
+					line-height: 1.55;
+				}
+				.signup-link a {
+					display: block;
+					margin-top: 0.15rem;
+				}
+				.err-msg,
+				.invite-banner {
+					font-size: 0.76rem;
+				}
+			}
+			@media (max-width: 360px) {
+				.right {
+					padding-left: 0.85rem;
+					padding-right: 0.85rem;
+				}
+				.right-title {
+					font-size: 1.55rem;
+				}
+				.btn-google {
+					gap: 0.5rem;
+				}
+			}
+		</style>
+		<link
+			rel="stylesheet"
+			href="assets/editorial-app.css?v=20260808-mobile-final11"
+		/>
+		<style>
+			@media (max-width: 760px) {
+				html,
+				body {
+					min-height: 100dvh;
+					background: #fff !important;
+				}
+				.shell {
+					display: flex !important;
+					flex-direction: column;
+					width: 100%;
+					min-height: 100dvh !important;
+					background: #fff !important;
+				}
+				.left {
+					display: block !important;
+					flex: 0 0 102px;
+					min-height: 102px !important;
+					height: 102px;
+					padding: 1.35rem 1rem !important;
+					background:
+						radial-gradient(
+							circle at 100% 0,
+							rgba(215, 167, 47, 0.14),
+							transparent 52%
+						),
+						#080808 !important;
+					border-radius: 0 !important;
+				}
+				.left::before {
+					display: none !important;
+				}
+				.left::after {
+					display: block !important;
+					width: 54px !important;
+					height: 54px !important;
+					left: -20px !important;
+					top: -24px !important;
+					bottom: auto !important;
+					background: #d7a72f !important;
+				}
+				.left .logo {
+					font-family: "Inter", sans-serif !important;
+					font-size: 1.25rem !important;
+					font-weight: 800 !important;
+					letter-spacing: -0.045em !important;
+				}
+				.left .logo-sub {
+					font-size: 0.56rem !important;
+					letter-spacing: 0.18em !important;
+					color: rgba(255, 255, 255, 0.62) !important;
+				}
+				.left-body,
+				.left-footer {
+					display: none !important;
+				}
+				.right {
+					flex: 1;
+					min-height: calc(100dvh - 102px) !important;
+					width: 100%;
+					padding: 1.35rem 1rem 2rem !important;
+					justify-content: flex-start !important;
+					background: #fff !important;
+				}
+				.right > a:first-child {
+					margin-bottom: 1rem !important;
+				}
+				.right-title {
+					font-size: clamp(1.75rem, 7.4vw, 2rem) !important;
+					line-height: 1.04 !important;
+					margin-bottom: 0.35rem !important;
+				}
+				.right-sub {
+					max-width: 340px;
+					margin-bottom: 1rem !important;
+					line-height: 1.35 !important;
+				}
+				.rule {
+					width: 52px;
+					height: 4px;
+					margin: 0.15rem 0 1.25rem !important;
+					background: #d7a72f !important;
+					border-radius: 999px;
+				}
+				.btn-google {
+					margin-bottom: 1.15rem !important;
+				}
+				.divider {
+					margin-bottom: 1.1rem !important;
+				}
+				.finput,
+				.btn-google {
+					border-radius: 12px !important;
+				}
+				.password-toggle {
+					border-radius: 7px !important;
+					min-width: 44px;
+					height: 28px;
+				}
+				.forgot {
+					text-align: left !important;
+				}
+			}
+			@media (max-width: 760px) and (max-height: 720px) {
+				.shell {
+					min-height: 100dvh !important;
+				}
+				.left {
+					flex-basis: 76px !important;
+					min-height: 76px !important;
+					height: 76px !important;
+					padding: 0.9rem 1rem !important;
+				}
+				.left .logo {
+					font-size: 1.08rem !important;
+				}
+				.left .logo-sub {
+					font-size: 0.49rem !important;
+					margin-top: 0.14rem !important;
+				}
+				.right {
+					min-height: calc(100dvh - 76px) !important;
+					padding: 0.7rem 1rem 0.85rem !important;
+				}
+				.right > a:first-child {
+					margin-bottom: 0.5rem !important;
+					font-size: 0.7rem !important;
+				}
+				.right-eyebrow {
+					font-size: 0.49rem !important;
+					margin-bottom: 0.28rem !important;
+				}
+				.right-title {
+					font-size: 1.55rem !important;
+					margin-bottom: 0.2rem !important;
+				}
+				.right-sub {
+					font-size: 0.73rem !important;
+					line-height: 1.35 !important;
+					margin-bottom: 0.52rem !important;
+				}
+				.rule {
+					height: 3px !important;
+					margin: 0 0 0.72rem !important;
+				}
+				.btn-google,
+				.btn-sign,
+				.finput {
+					min-height: 44px !important;
+				}
+				.btn-google {
+					padding: 0.55rem 0.75rem !important;
+					margin-bottom: 0.65rem !important;
+				}
+				.divider {
+					margin-bottom: 0.62rem !important;
+				}
+				.field {
+					gap: 0.22rem !important;
+					margin-bottom: 0.52rem !important;
+				}
+				.finput {
+					padding: 0.58rem 0.82rem !important;
+				}
+				.forgot {
+					font-size: 0.68rem !important;
+					margin: 0 0 0.55rem !important;
+				}
+				.btn-sign {
+					padding: 0.62rem !important;
+					margin-bottom: 0.55rem !important;
+				}
+				.signup-link {
+					font-size: 0.69rem !important;
+					line-height: 1.35 !important;
+				}
+				.signup-link a {
+					display: inline !important;
+					margin: 0 0 0 0.2rem !important;
+				}
+			}
+			@media (max-width: 760px) and (max-height: 580px) {
+				.left {
+					flex-basis: 62px !important;
+					min-height: 62px !important;
+					height: 62px !important;
+					padding: 0.65rem 1rem !important;
+				}
+				.right {
+					min-height: calc(100dvh - 62px) !important;
+					padding: 0.55rem 0.85rem 0.7rem !important;
+				}
+				.right-eyebrow,
+				.right-sub {
+					display: none !important;
+				}
+				.right-title {
+					font-size: 1.38rem !important;
+				}
+				.rule {
+					margin-bottom: 0.55rem !important;
+				}
+				.btn-google,
+				.btn-sign,
+				.finput {
+					min-height: 42px !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="shell">
+			<!-- LEFT -->
+			<div class="left">
+				<div>
+					<div class="logo">Cashflow <span>&amp; Invoicing</span></div>
+					<div class="logo-sub">By Ceylonry Labs.io</div>
+				</div>
+				<div class="left-body">
+					<div class="left-title">Welcome<br /><em>back.</em></div>
+					<div class="left-sub">
+						Your business finances, exactly where you left them.
+					</div>
+					<div class="left-features">
+						<div class="lf-item">
+							<div class="lf-dot"></div>
+							Invoices, expenses & cashflow
+						</div>
+						<div class="lf-item">
+							<div class="lf-dot"></div>
+							Clients & supplier database
+						</div>
+						<div class="lf-item">
+							<div class="lf-dot"></div>
+							Profit overview & reports
+						</div>
+						<div class="lf-item">
+							<div class="lf-dot"></div>
+							Your data, secure in the cloud
+						</div>
+					</div>
+				</div>
+				<div class="left-footer">
+					© 2026 CeylonryLabs.io · All rights reserved
+				</div>
+			</div>
 
-<div class="shell">
-  <!-- LEFT -->
-  <div class="left">
-    <div>
-      <div class="logo">Cashflow <span>&amp; Invoicing</span></div>
-      <div class="logo-sub">By Ceylonry Labs.io</div>
-    </div>
-    <div class="left-body">
-      <div class="left-title">Welcome<br><em>back.</em></div>
-      <div class="left-sub">Your business finances, exactly where you left them.</div>
-      <div class="left-features">
-        <div class="lf-item"><div class="lf-dot"></div>Invoices, expenses & cashflow</div>
-        <div class="lf-item"><div class="lf-dot"></div>Clients & supplier database</div>
-        <div class="lf-item"><div class="lf-dot"></div>Profit overview & reports</div>
-        <div class="lf-item"><div class="lf-dot"></div>Your data, secure in the cloud</div>
-      </div>
-    </div>
-    <div class="left-footer">© 2026 CeylonryLabs.io · All rights reserved</div>
-  </div>
+			<!-- RIGHT -->
+			<div class="right">
+				<a
+					href="index.html"
+					style="
+						display: inline-block;
+						margin-bottom: 20px;
+						font-size: 0.78rem;
+						color: var(--muted);
+						text-decoration: none;
+					"
+					>← Back to Home</a
+				>
+				<div class="right-eyebrow">Cashflow &amp; Invoicing</div>
+				<div class="right-title">Cashflow Sign In</div>
+				<div class="right-sub">
+					Enter your business email and password to access your dashboard.
+				</div>
+				<div class="rule"></div>
 
-  <!-- RIGHT -->
-  <div class="right">
-    <a href="index.html" style="display:inline-block;margin-bottom:20px;font-size:.78rem;color:var(--muted);text-decoration:none">← Back to Home</a>
-    <div class="right-eyebrow">Cashflow &amp; Invoicing</div>
-    <div class="right-title">Cashflow Sign In</div>
-    <div class="right-sub">Enter your business email and password to access your dashboard.</div>
-    <div class="rule"></div>
+				<div class="err-msg" id="err-msg"></div>
+				<div class="invite-banner" id="invite-banner"></div>
 
-    <div class="err-msg" id="err-msg"></div>
-    <div class="invite-banner" id="invite-banner"></div>
+				<!-- MAIN SIGN IN FORM -->
+				<div class="main-form" id="main-form">
+					<div class="field">
+						<label for="si-email">Email Address</label>
+						<input
+							class="finput"
+							type="email"
+							id="si-email"
+							placeholder="you@business.com"
+							autocomplete="email"
+							maxlength="254"
+							required
+						/>
+					</div>
+					<div class="field">
+						<label for="si-pass">Password</label>
+						<div class="password-field">
+							<input
+								class="finput"
+								type="password"
+								id="si-pass"
+								placeholder="••••••••"
+								autocomplete="current-password"
+								minlength="6"
+								maxlength="128"
+								required
+								onkeydown="if (event.key === 'Enter') signIn();"
+							/>
+							<button
+								class="password-toggle"
+								type="button"
+								id="si-pass-toggle"
+								aria-label="Show password"
+								onclick="window.togglePassword('si-pass', 'si-pass-toggle')"
+							>
+								Show
+							</button>
+						</div>
+					</div>
+					<a class="forgot" href="#" onclick="window.showReset(event)"
+						>Forgot your password?</a
+					>
 
-    <!-- MAIN SIGN IN FORM -->
-    <div class="main-form" id="main-form">
-      <div class="field">
-        <label for="si-email">Email Address</label>
-        <input class="finput" type="email" id="si-email" placeholder="you@business.com" autocomplete="email" maxlength="254" required>
-      </div>
-      <div class="field">
-        <label for="si-pass">Password</label>
-        <div class="password-field">
-          <input class="finput" type="password" id="si-pass" placeholder="••••••••" autocomplete="current-password" minlength="6" maxlength="128" required onkeydown="if(event.key==='Enter')signIn()">
-          <button class="password-toggle" type="button" id="si-pass-toggle" aria-label="Show password" onclick="window.togglePassword('si-pass','si-pass-toggle')">Show</button>
-        </div>
-      </div>
-      <a class="forgot" href="#" onclick="window.showReset(event)">Forgot your password?</a>
+					<button class="btn-sign" id="sign-btn" onclick="window.signIn()">
+						Sign In →
+					</button>
 
-      <button class="btn-sign" id="sign-btn" onclick="window.signIn()">Sign In →</button>
+					<div class="signup-link">
+						Don't have an account?
+						<a id="signup-link" href="onboarding.html"
+							>Start your free 15-day trial →</a
+						>
+					</div>
+				</div>
 
-      <div class="signup-link">
-        Don't have an account? <a id="signup-link" href="onboarding.html">Start your free 15-day trial →</a>
-      </div>
-    </div>
+				<!-- RESET PASSWORD FORM -->
+				<div class="reset-form" id="reset-form">
+					<div class="field">
+						<label for="reset-email">Your Email Address</label>
+						<input
+							class="finput"
+							type="email"
+							id="reset-email"
+							placeholder="you@business.com"
+							autocomplete="email"
+							maxlength="254"
+							required
+						/>
+					</div>
+					<button class="btn-sign" id="reset-btn" onclick="window.sendReset()">
+						Send Reset Link →
+					</button>
+					<div class="signup-link" style="margin-top: 0.75rem">
+						<a href="#" onclick="window.showSignIn(event)">← Back to sign in</a>
+					</div>
+				</div>
+			</div>
+		</div>
 
-    <!-- RESET PASSWORD FORM -->
-    <div class="reset-form" id="reset-form">
-      <div class="field">
-        <label for="reset-email">Your Email Address</label>
-        <input class="finput" type="email" id="reset-email" placeholder="you@business.com" autocomplete="email" maxlength="254" required>
-      </div>
-      <button class="btn-sign" id="reset-btn" onclick="window.sendReset()">Send Reset Link →</button>
-      <div class="signup-link" style="margin-top:.75rem">
-        <a href="#" onclick="window.showSignIn(event)">← Back to sign in</a>
-      </div>
-    </div>
-  </div>
-</div>
+		<script>
+			document.addEventListener("DOMContentLoaded", function () {
+				firebase.initializeApp({});
+				var inviteParams = new URLSearchParams(window.location.search);
+				var inviteToken = inviteParams.get("invite") || "";
+				var inviteOwner = inviteParams.get("owner") || "";
+				var inviteRecord = null;
+				var PLATFORM_ADMIN_EMAIL = "devteam@ceylonrylabs.io";
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-firebase.initializeApp({});
-var inviteParams = new URLSearchParams(window.location.search);
-var inviteToken = inviteParams.get('invite') || '';
-var inviteOwner = inviteParams.get('owner') || '';
-var inviteRecord = null;
-var PLATFORM_ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
+				function isPlatformAdminEmail(email) {
+					return (
+						String(email || "")
+							.trim()
+							.toLowerCase() === PLATFORM_ADMIN_EMAIL
+					);
+				}
 
-function isPlatformAdminEmail(email) {
-  return String(email || '').trim().toLowerCase() === PLATFORM_ADMIN_EMAIL;
-}
+				function isCredentialError(code) {
+					return (
+						[
+							"auth/user-not-found",
+							"auth/wrong-password",
+							"auth/invalid-credential",
+							"auth/invalid-login-credentials",
+						].indexOf(code) !== -1
+					);
+				}
 
-function isCredentialError(code) {
-  return ['auth/user-not-found', 'auth/wrong-password', 'auth/invalid-credential', 'auth/invalid-login-credentials'].indexOf(code) !== -1;
-}
+				async function ensurePlatformAdminProfile(user, createdNow) {
+					if (!user || !isPlatformAdminEmail(user.email)) return;
+					var stamp = firebase.firestore.FieldValue.serverTimestamp();
+					var payload = {
+						name: user.displayName || "Ceylonry Labs Admin",
+						email: PLATFORM_ADMIN_EMAIL,
+						role: "platform_admin",
+						accountType: "platform_admin",
+						plan: "admin",
+						currentPlan: "admin",
+						lastPlan: "admin",
+						paid: true,
+						onboardingComplete: true,
+						adminAccess: true,
+						lastSeenAt: stamp,
+						lastSeenUtc: new Date().toISOString(),
+						lastSeenPath: window.location.pathname,
+						updatedAt: stamp,
+					};
+					if (createdNow) {
+						payload.createdAt = stamp;
+						payload.adminCreatedAt = stamp;
+					}
+					await firebase
+						.firestore()
+						.collection("users")
+						.doc(user.uid)
+						.set(payload, { merge: true });
+				}
 
-async function ensurePlatformAdminProfile(user, createdNow) {
-  if (!user || !isPlatformAdminEmail(user.email)) return;
-  var stamp = firebase.firestore.FieldValue.serverTimestamp();
-  var payload = {
-    name: user.displayName || 'Ceylonry Labs Admin',
-    email: PLATFORM_ADMIN_EMAIL,
-    role: 'platform_admin',
-    accountType: 'platform_admin',
-    plan: 'admin',
-    currentPlan: 'admin',
-    lastPlan: 'admin',
-    paid: true,
-    onboardingComplete: true,
-    adminAccess: true,
-    lastSeenAt: stamp,
-    lastSeenUtc: new Date().toISOString(),
-    lastSeenPath: window.location.pathname,
-    updatedAt: stamp
-  };
-  if (createdNow) {
-    payload.createdAt = stamp;
-    payload.adminCreatedAt = stamp;
-  }
-  await firebase.firestore().collection('users').doc(user.uid).set(payload, { merge: true });
-}
+				async function bootstrapPlatformAdmin(email, pass) {
+					var cred = await firebase
+						.auth()
+						.createUserWithEmailAndPassword(email, pass);
+					await ensurePlatformAdminProfile(cred.user, true);
+					window.location.href = "ceylonry-admin.html";
+				}
 
-async function bootstrapPlatformAdmin(email, pass) {
-  var cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
-  await ensurePlatformAdminProfile(cred.user, true);
-  window.location.href = 'ceylonry-admin.html';
-}
+				function showPlatformAdminRecovery(email) {
+					resetSignButton();
+					document.getElementById("main-form").classList.add("hide");
+					document.getElementById("reset-form").classList.add("show");
+					document.getElementById("reset-email").value =
+						email || PLATFORM_ADMIN_EMAIL;
+					showErr(
+						"The administrator account exists, but this password does not match. Send a secure reset link below, then use the same new password for both Cashflow Admin and the POS Developer Portal.",
+					);
+					document.getElementById("reset-btn").focus();
+				}
 
-function showPlatformAdminRecovery(email) {
-  resetSignButton();
-  document.getElementById('main-form').classList.add('hide');
-  document.getElementById('reset-form').classList.add('show');
-  document.getElementById('reset-email').value = email || PLATFORM_ADMIN_EMAIL;
-  showErr('The administrator account exists, but this password does not match. Send a secure reset link below, then use the same new password for both Cashflow Admin and the POS Developer Portal.');
-  document.getElementById('reset-btn').focus();
-}
+				let authRedirectInProgress = false;
+				const SIGNIN_PLAN_FILES = {
+					solo: "solo.html",
+					studio: "starter.html",
+					business: "growth.html",
+					pos: "pos-system/pos-system.html",
+				};
+				const SIGNIN_PLAN_ALIASES = {
+					starter: "studio",
+					growth: "business",
+					premium: "business",
+				};
+				const SIGNIN_EMAIL_PLAN_OVERRIDES = {
+					"accounts@ceylonrylabs.io": "business",
+				};
+				const SIGNIN_PROFILE_TIMEOUT_MS = 1800;
+				const SIGNIN_OWNER_TIMEOUT_MS = 1200;
 
-let authRedirectInProgress = false;
-const SIGNIN_PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: 'pos-system/pos-system.html' };
-const SIGNIN_PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
-const SIGNIN_EMAIL_PLAN_OVERRIDES = {
-  'accounts@ceylonrylabs.io': 'business'
-};
-const SIGNIN_PROFILE_TIMEOUT_MS = 1800;
-const SIGNIN_OWNER_TIMEOUT_MS = 1200;
+				function normalizeDashboardPlan(value) {
+					const raw = String(value || "").toLowerCase();
+					const mapped = SIGNIN_PLAN_ALIASES[raw] || raw;
+					return SIGNIN_PLAN_FILES[mapped] ? mapped : "";
+				}
+				function firstDashboardPlan(...values) {
+					return values.map(normalizeDashboardPlan).find(Boolean) || "";
+				}
+				function emailDashboardPlan(email) {
+					return (
+						SIGNIN_EMAIL_PLAN_OVERRIDES[
+							String(email || "")
+								.trim()
+								.toLowerCase()
+						] || ""
+					);
+				}
+				function rememberPlanLocal(plan) {
+					if (!SIGNIN_PLAN_FILES[plan]) return;
+					try {
+						localStorage.setItem("cls-current-plan", plan);
+						localStorage.setItem("cls-last-plan", plan);
+					} catch (e) {}
+				}
+				async function ensureSigninUserProfile(user) {
+					const plan =
+						emailDashboardPlan(user && user.email) ||
+						firstDashboardPlan(
+							localStorage.getItem("cls-current-plan"),
+							localStorage.getItem("cls-last-plan"),
+							"solo",
+						) ||
+						"solo";
+					const trialEnd = new Date();
+					trialEnd.setDate(trialEnd.getDate() + 15);
+					const profile = {
+						name:
+							user.displayName ||
+							String(user.email || "").split("@")[0] ||
+							"User",
+						email: user.email || "",
+						role: "owner",
+						plan: plan,
+						currentPlan: plan,
+						lastPlan: plan,
+						planPrice:
+							plan === "business" ? 94800 : plan === "studio" ? 60000 : 36000,
+						planMonthlyPrice:
+							plan === "business" ? 8500 : plan === "studio" ? 5500 : 3500,
+						billingCycle: "annual",
+						trialStart: new Date().toISOString(),
+						trialEnd: trialEnd.toISOString(),
+						paid: false,
+						onboardingComplete: false,
+						recoveredProfile: true,
+						createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+						updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+					};
+					await firebase
+						.firestore()
+						.collection("users")
+						.doc(user.uid)
+						.set(profile, { merge: true });
+					return {
+						exists: true,
+						data: function () {
+							return profile;
+						},
+					};
+				}
+				function localDashboardDest() {
+					const plan =
+						firstDashboardPlan(
+							localStorage.getItem("cls-current-plan"),
+							localStorage.getItem("cls-last-plan"),
+							"solo",
+						) || "solo";
+					return SIGNIN_PLAN_FILES[plan] || "solo.html";
+				}
+				function withRouteTimeout(promise, ms, label) {
+					let timer;
+					const timeout = new Promise(function (_, reject) {
+						timer = setTimeout(function () {
+							reject(new Error(label || "Route lookup timed out."));
+						}, ms);
+					});
+					return Promise.race([promise, timeout]).finally(function () {
+						clearTimeout(timer);
+					});
+				}
+				function resetSignButton() {
+					const btn = document.getElementById("sign-btn");
+					if (btn) {
+						btn.textContent = "Sign In →";
+						btn.disabled = false;
+					}
+				}
+				function openDashboard(dest) {
+					window.location.replace(dest || localDashboardDest());
+				}
 
-function normalizeDashboardPlan(value) {
-  const raw = String(value || '').toLowerCase();
-  const mapped = SIGNIN_PLAN_ALIASES[raw] || raw;
-  return SIGNIN_PLAN_FILES[mapped] ? mapped : '';
-}
-function firstDashboardPlan(...values) {
-  return values.map(normalizeDashboardPlan).find(Boolean) || '';
-}
-function emailDashboardPlan(email) {
-  return SIGNIN_EMAIL_PLAN_OVERRIDES[String(email || '').trim().toLowerCase()] || '';
-}
-function rememberPlanLocal(plan) {
-  if (!SIGNIN_PLAN_FILES[plan]) return;
-  try {
-    localStorage.setItem('cls-current-plan', plan);
-    localStorage.setItem('cls-last-plan', plan);
-  } catch (e) {}
-}
-async function ensureSigninUserProfile(user) {
-  const plan = emailDashboardPlan(user && user.email) || firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo') || 'solo';
-  const trialEnd = new Date();
-  trialEnd.setDate(trialEnd.getDate() + 15);
-  const profile = {
-    name: user.displayName || String(user.email || '').split('@')[0] || 'User',
-    email: user.email || '',
-    role: 'owner',
-    plan: plan,
-    currentPlan: plan,
-    lastPlan: plan,
-    planPrice: plan === 'business' ? 94800 : (plan === 'studio' ? 60000 : 36000),
-    planMonthlyPrice: plan === 'business' ? 8500 : (plan === 'studio' ? 5500 : 3500),
-    billingCycle: 'annual',
-    trialStart: new Date().toISOString(),
-    trialEnd: trialEnd.toISOString(),
-    paid: false,
-    onboardingComplete: false,
-    recoveredProfile: true,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-  await firebase.firestore().collection('users').doc(user.uid).set(profile, { merge: true });
-  return { exists: true, data: function() { return profile; } };
-}
-function localDashboardDest() {
-  const plan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo') || 'solo';
-  return SIGNIN_PLAN_FILES[plan] || 'solo.html';
-}
-function withRouteTimeout(promise, ms, label) {
-  let timer;
-  const timeout = new Promise(function(_, reject) {
-    timer = setTimeout(function() { reject(new Error(label || 'Route lookup timed out.')); }, ms);
-  });
-  return Promise.race([promise, timeout]).finally(function() {
-    clearTimeout(timer);
-  });
-}
-function resetSignButton() {
-  const btn = document.getElementById('sign-btn');
-  if (btn) {
-    btn.textContent = 'Sign In →';
-    btn.disabled = false;
-  }
-}
-function openDashboard(dest) {
-  window.location.replace(dest || localDashboardDest());
-}
+				function isPasswordRecoveryReturn() {
+					const hash = window.location.hash || "";
+					const search = window.location.search || "";
+					return /type=recovery|recovery_token=/.test(hash + search);
+				}
 
-function isPasswordRecoveryReturn() {
-  const hash = window.location.hash || '';
-  const search = window.location.search || '';
-  return /type=recovery|recovery_token=/.test(hash + search);
-}
+				if (isPasswordRecoveryReturn()) {
+					window.location.replace(
+						"reset-password.html" +
+							window.location.search +
+							window.location.hash,
+					);
+				}
 
-if (isPasswordRecoveryReturn()) {
-  window.location.replace('reset-password.html' + window.location.search + window.location.hash);
-}
+				function hasOAuthReturnParams() {
+					const hash = window.location.hash || "";
+					const search = window.location.search || "";
+					return /access_token=|refresh_token=|provider_token=|code=|error=|error_description=/.test(
+						hash + search,
+					);
+				}
 
-function hasOAuthReturnParams() {
-  const hash = window.location.hash || '';
-  const search = window.location.search || '';
-  return /access_token=|refresh_token=|provider_token=|code=|error=|error_description=/.test(hash + search);
-}
+				async function routeSignedInUser(user) {
+					if (!user || authRedirectInProgress) return;
+					if (
+						!inviteToken &&
+						!inviteOwner &&
+						!isPlatformAdminEmail(user.email)
+					) {
+						try {
+							const cachedUid = localStorage.getItem("cls-plan-uid") || "";
+							const cachedPlan = firstDashboardPlan(
+								localStorage.getItem("cls-current-plan"),
+								localStorage.getItem("cls-last-plan"),
+							);
+							if (
+								!emailDashboardPlan(user.email) &&
+								cachedUid === user.uid &&
+								SIGNIN_PLAN_FILES[cachedPlan]
+							) {
+								authRedirectInProgress = true;
+								openDashboard(SIGNIN_PLAN_FILES[cachedPlan]);
+								return;
+							}
+						} catch (e) {}
+					}
+					authRedirectInProgress = true;
+					try {
+						await redirectToDashboard(user);
+					} catch (e) {
+						authRedirectInProgress = false;
+						throw e;
+					}
+				}
 
-async function routeSignedInUser(user) {
-  if (!user || authRedirectInProgress) return;
-  if (!inviteToken && !inviteOwner && !isPlatformAdminEmail(user.email)) {
-    try {
-      const cachedUid = localStorage.getItem('cls-plan-uid') || '';
-      const cachedPlan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'));
-      if (!emailDashboardPlan(user.email) && cachedUid === user.uid && SIGNIN_PLAN_FILES[cachedPlan]) {
-        authRedirectInProgress = true;
-        openDashboard(SIGNIN_PLAN_FILES[cachedPlan]);
-        return;
-      }
-    } catch (e) {}
-  }
-  authRedirectInProgress = true;
-  try {
-    await redirectToDashboard(user);
-  } catch (e) {
-    authRedirectInProgress = false;
-    throw e;
-  }
-}
+				function watchOAuthReturnSession() {
+					if (!hasOAuthReturnParams()) return;
+					showErr("Google sign-in complete. Opening your dashboard...");
+					const errEl = document.getElementById("err-msg");
+					if (errEl) {
+						errEl.style.background = "rgba(26,158,92,.08)";
+						errEl.style.borderColor = "rgba(26,158,92,.25)";
+						errEl.style.color = "var(--green)";
+					}
+					let tries = 0;
+					const timer = setInterval(function () {
+						tries += 1;
+						const user = firebase.auth().currentUser;
+						if (user) {
+							clearInterval(timer);
+							routeSignedInUser(user);
+						} else if (tries >= 20) {
+							clearInterval(timer);
+							firebase.auth().onAuthStateChanged(function (nextUser) {
+								if (nextUser) routeSignedInUser(nextUser);
+							});
+						}
+					}, 250);
+				}
 
-function watchOAuthReturnSession() {
-  if (!hasOAuthReturnParams()) return;
-  showErr('Google sign-in complete. Opening your dashboard...');
-  const errEl = document.getElementById('err-msg');
-  if (errEl) {
-    errEl.style.background = 'rgba(26,158,92,.08)';
-    errEl.style.borderColor = 'rgba(26,158,92,.25)';
-    errEl.style.color = 'var(--green)';
-  }
-  let tries = 0;
-  const timer = setInterval(function() {
-    tries += 1;
-    const user = firebase.auth().currentUser;
-    if (user) {
-      clearInterval(timer);
-      routeSignedInUser(user);
-    } else if (tries >= 20) {
-      clearInterval(timer);
-      firebase.auth().onAuthStateChanged(function(nextUser) {
-        if (nextUser) routeSignedInUser(nextUser);
-      });
-    }
-  }, 250);
-}
+				// ── AUTH STATE: redirect if already signed in ──
+				firebase.auth().onAuthStateChanged(async function (user) {
+					if (user) {
+						await routeSignedInUser(user);
+					}
+				});
 
-// ── AUTH STATE: redirect if already signed in ──
-firebase.auth().onAuthStateChanged(async function(user) {
-  if (user) {
-    await routeSignedInUser(user);
-  }
-});
+				watchOAuthReturnSession();
 
-watchOAuthReturnSession();
+				async function redirectToDashboard(user) {
+					try {
+						if (isPlatformAdminEmail(user && user.email)) {
+							await ensurePlatformAdminProfile(user, false);
+							openDashboard("ceylonry-admin.html");
+							return;
+						}
+						if (inviteToken && inviteOwner) {
+							await acceptInvite(user);
+						}
+						let doc = await withRouteTimeout(
+							firebase.firestore().collection("users").doc(user.uid).get(),
+							SIGNIN_PROFILE_TIMEOUT_MS,
+							"Profile lookup timed out.",
+						);
+						if (!doc.exists) {
+							doc = await withRouteTimeout(
+								ensureSigninUserProfile(user),
+								SIGNIN_PROFILE_TIMEOUT_MS,
+								"Profile creation timed out.",
+							);
+						}
+						if (doc.exists) {
+							const data = doc.data() || {};
+							let plan =
+								emailDashboardPlan(user.email) ||
+								firstDashboardPlan(
+									data.currentPlan,
+									data.plan,
+									data.requestedPlan,
+									data.lastPlan,
+								);
 
-async function redirectToDashboard(user) {
-  try {
-    if (isPlatformAdminEmail(user && user.email)) {
-      await ensurePlatformAdminProfile(user, false);
-      openDashboard('ceylonry-admin.html');
-      return;
-    }
-    if (inviteToken && inviteOwner) {
-      await acceptInvite(user);
-    }
-    let doc = await withRouteTimeout(
-      firebase.firestore().collection('users').doc(user.uid).get(),
-      SIGNIN_PROFILE_TIMEOUT_MS,
-      'Profile lookup timed out.'
-    );
-    if (!doc.exists) {
-      doc = await withRouteTimeout(
-        ensureSigninUserProfile(user),
-        SIGNIN_PROFILE_TIMEOUT_MS,
-        'Profile creation timed out.'
-      );
-    }
-    if (doc.exists) {
-      const data = doc.data() || {};
-      let plan = emailDashboardPlan(user.email) || firstDashboardPlan(data.currentPlan, data.plan, data.requestedPlan, data.lastPlan);
+							// Keep the account's canonical plan in Appwrite when a legacy profile
+							// was created without a plan and sign-in would otherwise fall back.
+							const accountPlan = emailDashboardPlan(user.email);
+							if (accountPlan && plan !== accountPlan) {
+								plan = accountPlan;
+								firebase
+									.firestore()
+									.collection("users")
+									.doc(user.uid)
+									.set(
+										{
+											plan: accountPlan,
+											currentPlan: accountPlan,
+											lastPlan: accountPlan,
+											updatedAt:
+												firebase.firestore.FieldValue.serverTimestamp(),
+										},
+										{ merge: true },
+									)
+									.catch(function (err) {
+										console.warn(
+											"Business account plan repair skipped after sign-in:",
+											err,
+										);
+									});
+							}
 
-      // Keep the account's canonical plan in Appwrite when a legacy profile
-      // was created without a plan and sign-in would otherwise fall back.
-      const accountPlan = emailDashboardPlan(user.email);
-      if (accountPlan && plan !== accountPlan) {
-        plan = accountPlan;
-        firebase.firestore().collection('users').doc(user.uid).set({
-          plan: accountPlan,
-          currentPlan: accountPlan,
-          lastPlan: accountPlan,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(function(err) {
-          console.warn('Business account plan repair skipped after sign-in:', err);
-        });
-      }
+							if (data.ownerUid) {
+								const ownerDoc = await withRouteTimeout(
+									firebase
+										.firestore()
+										.collection("users")
+										.doc(data.ownerUid)
+										.get(),
+									SIGNIN_OWNER_TIMEOUT_MS,
+									"Owner lookup timed out.",
+								).catch(function (err) {
+									console.warn("Owner lookup skipped after sign-in:", err);
+									return null;
+								});
+								if (ownerDoc && ownerDoc.exists) {
+									const owner = ownerDoc.data() || {};
+									const ownerPlan = firstDashboardPlan(
+										owner.currentPlan,
+										owner.plan,
+										owner.requestedPlan,
+										owner.lastPlan,
+										plan,
+										"solo",
+									);
+									if (ownerPlan === "solo") {
+										await firebase
+											.firestore()
+											.collection("users")
+											.doc(user.uid)
+											.set(
+												{
+													plan: "solo",
+													currentPlan: "solo",
+													lastPlan: "solo",
+													teamAccessRevoked: true,
+													accessRevokedAt:
+														firebase.firestore.FieldValue.serverTimestamp(),
+												},
+												{ merge: true },
+											);
+										await firebase.auth().signOut();
+										authRedirectInProgress = false;
+										resetSignButton();
+										showErr(
+											"Team access is no longer available because the account owner is on the Solo plan. Ask the owner to upgrade or send a new invite.",
+										);
+										return;
+									}
+									if (SIGNIN_PLAN_FILES[ownerPlan] && ownerPlan !== plan) {
+										plan = ownerPlan;
+										firebase
+											.firestore()
+											.collection("users")
+											.doc(user.uid)
+											.set(
+												{
+													plan: ownerPlan,
+													currentPlan: ownerPlan,
+													lastPlan: ownerPlan,
+													trialStart:
+														owner.trialStart || data.trialStart || null,
+													trialEnd: owner.trialEnd || data.trialEnd || null,
+													paid: owner.paid === true,
+												},
+												{ merge: true },
+											)
+											.catch(function (err) {
+												console.warn("Plan sync skipped after sign-in:", err);
+											});
+									}
+								}
+							}
 
-      if (data.ownerUid) {
-        const ownerDoc = await withRouteTimeout(
-          firebase.firestore().collection('users').doc(data.ownerUid).get(),
-          SIGNIN_OWNER_TIMEOUT_MS,
-          'Owner lookup timed out.'
-        ).catch(function(err) {
-          console.warn('Owner lookup skipped after sign-in:', err);
-          return null;
-        });
-        if (ownerDoc && ownerDoc.exists) {
-          const owner = ownerDoc.data() || {};
-          const ownerPlan = firstDashboardPlan(owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, plan, 'solo');
-          if (ownerPlan === 'solo') {
-            await firebase.firestore().collection('users').doc(user.uid).set({
-              plan: 'solo',
-              currentPlan: 'solo',
-              lastPlan: 'solo',
-              teamAccessRevoked: true,
-              accessRevokedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-            await firebase.auth().signOut();
-            authRedirectInProgress = false;
-            resetSignButton();
-            showErr('Team access is no longer available because the account owner is on the Solo plan. Ask the owner to upgrade or send a new invite.');
-            return;
-          }
-          if (SIGNIN_PLAN_FILES[ownerPlan] && ownerPlan !== plan) {
-            plan = ownerPlan;
-            firebase.firestore().collection('users').doc(user.uid).set({
-              plan: ownerPlan,
-              currentPlan: ownerPlan,
-              lastPlan: ownerPlan,
-              trialStart: owner.trialStart || data.trialStart || null,
-              trialEnd: owner.trialEnd || data.trialEnd || null,
-              paid: owner.paid === true
-            }, { merge: true }).catch(function(err) {
-              console.warn('Plan sync skipped after sign-in:', err);
-            });
-          }
-        }
-      }
+							if (!SIGNIN_PLAN_FILES[plan]) {
+								plan = firstDashboardPlan(
+									localStorage.getItem("cls-current-plan"),
+									localStorage.getItem("cls-last-plan"),
+									"solo",
+								);
+							}
+							if (!SIGNIN_PLAN_FILES[plan]) plan = "solo";
+							rememberPlanLocal(plan);
+							openDashboard(SIGNIN_PLAN_FILES[plan]);
+							return;
+						}
 
-      if (!SIGNIN_PLAN_FILES[plan]) {
-        plan = firstDashboardPlan(localStorage.getItem('cls-current-plan'), localStorage.getItem('cls-last-plan'), 'solo');
-      }
-      if (!SIGNIN_PLAN_FILES[plan]) plan = 'solo';
-      rememberPlanLocal(plan);
-      openDashboard(SIGNIN_PLAN_FILES[plan]);
-      return;
-    }
+						openDashboard("onboarding.html");
+					} catch (e) {
+						console.error(e);
+						if (inviteToken && inviteOwner) {
+							authRedirectInProgress = false;
+							resetSignButton();
+							showErr(
+								e.message || "Could not accept this invite. Please try again.",
+							);
+							return;
+						}
+						showErr("Signed in. Opening your dashboard...");
+						const errEl = document.getElementById("err-msg");
+						if (errEl) {
+							errEl.style.background = "rgba(26,158,92,.08)";
+							errEl.style.borderColor = "rgba(26,158,92,.25)";
+							errEl.style.color = "var(--green)";
+						}
+						openDashboard(localDashboardDest());
+					}
+				}
 
-    openDashboard('onboarding.html');
-  } catch(e) {
-    console.error(e);
-    if (inviteToken && inviteOwner) {
-      authRedirectInProgress = false;
-      resetSignButton();
-      showErr(e.message || 'Could not accept this invite. Please try again.');
-      return;
-    }
-    showErr('Signed in. Opening your dashboard...');
-    const errEl = document.getElementById('err-msg');
-    if (errEl) {
-      errEl.style.background = 'rgba(26,158,92,.08)';
-      errEl.style.borderColor = 'rgba(26,158,92,.25)';
-      errEl.style.color = 'var(--green)';
-    }
-    openDashboard(localDashboardDest());
-  }
-}
+				async function loadInvite() {
+					if (!inviteToken || !inviteOwner) return;
+					try {
+						const ownerDoc = await firebase
+							.firestore()
+							.collection("users")
+							.doc(inviteOwner)
+							.get();
+						const owner = ownerDoc.exists ? ownerDoc.data() : {};
+						const snap = await firebase
+							.firestore()
+							.collection("users")
+							.doc(inviteOwner)
+							.collection("team")
+							.where("inviteToken", "==", inviteToken)
+							.limit(1)
+							.get();
+						if (snap.empty) {
+							showErr("This invite link was not found or has expired.");
+							return;
+						}
+						inviteRecord = snap.docs[0].data();
+						inviteRecord.id = snap.docs[0].id;
+						const biz = owner.bizName || owner.invoiceBiz || "this business";
+						const banner = document.getElementById("invite-banner");
+						banner.innerHTML =
+							"You have been invited to join <strong>" +
+							biz +
+							"</strong> as <strong>" +
+							(inviteRecord.role || "team member") +
+							"</strong>. Sign in with the invited email to accept access.";
+						banner.classList.add("show");
+						document.getElementById("sign-btn").textContent = "Accept Invite →";
+						document.getElementById("signup-link").href =
+							"onboarding.html?invite=" +
+							encodeURIComponent(inviteToken) +
+							"&owner=" +
+							encodeURIComponent(inviteOwner);
+						document.getElementById("signup-link").textContent =
+							"Need an account? Create one to accept invite →";
+						if (inviteRecord.email)
+							document.getElementById("si-email").value = inviteRecord.email;
+					} catch (e) {
+						showErr("Could not load invite: " + e.message);
+					}
+				}
 
-async function loadInvite() {
-  if (!inviteToken || !inviteOwner) return;
-  try {
-    const ownerDoc = await firebase.firestore().collection('users').doc(inviteOwner).get();
-    const owner = ownerDoc.exists ? ownerDoc.data() : {};
-    const snap = await firebase.firestore().collection('users').doc(inviteOwner).collection('team').where('inviteToken','==',inviteToken).limit(1).get();
-    if (snap.empty) { showErr('This invite link was not found or has expired.'); return; }
-    inviteRecord = snap.docs[0].data();
-    inviteRecord.id = snap.docs[0].id;
-    const biz = owner.bizName || owner.invoiceBiz || 'this business';
-    const banner = document.getElementById('invite-banner');
-    banner.innerHTML = 'You have been invited to join <strong>' + biz + '</strong> as <strong>' + (inviteRecord.role || 'team member') + '</strong>. Sign in with the invited email to accept access.';
-    banner.classList.add('show');
-    document.getElementById('sign-btn').textContent = 'Accept Invite →';
-    document.getElementById('signup-link').href = 'onboarding.html?invite=' + encodeURIComponent(inviteToken) + '&owner=' + encodeURIComponent(inviteOwner);
-    document.getElementById('signup-link').textContent = 'Need an account? Create one to accept invite →';
-    if (inviteRecord.email) document.getElementById('si-email').value = inviteRecord.email;
-  } catch(e) {
-    showErr('Could not load invite: ' + e.message);
-  }
-}
+				async function acceptInvite(user) {
+					if (!inviteRecord) await loadInvite();
+					if (!inviteRecord || inviteRecord.status === "suspended") return;
+					if (
+						inviteRecord.email &&
+						user.email &&
+						inviteRecord.email.toLowerCase() !== user.email.toLowerCase()
+					) {
+						throw new Error(
+							"This invite is for " +
+								inviteRecord.email +
+								". Please sign in with that email.",
+						);
+					}
+					const ownerDoc = await firebase
+						.firestore()
+						.collection("users")
+						.doc(inviteOwner)
+						.get();
+					const owner = ownerDoc.exists ? ownerDoc.data() : {};
+					const planFiles = {
+						solo: "solo.html",
+						studio: "starter.html",
+						business: "growth.html",
+					};
+					const planAliases = {
+						starter: "studio",
+						growth: "business",
+						premium: "business",
+					};
+					const normalizePlan = (value) => {
+						const raw = String(value || "").toLowerCase();
+						const mapped = planAliases[raw] || raw;
+						return planFiles[mapped] ? mapped : "";
+					};
+					const ownerPlan =
+						[
+							owner.currentPlan,
+							owner.plan,
+							owner.requestedPlan,
+							owner.lastPlan,
+							"solo",
+						]
+							.map(normalizePlan)
+							.find(Boolean) || "solo";
+					if (ownerPlan === "solo") {
+						throw new Error(
+							"This invite is no longer active because the owner is on the Solo plan.",
+						);
+					}
+					await firebase
+						.firestore()
+						.collection("users")
+						.doc(user.uid)
+						.set(
+							{
+								name: user.displayName || inviteRecord.name || "",
+								email: user.email || inviteRecord.email || "",
+								role: inviteRecord.role || "viewer",
+								ownerUid: inviteOwner,
+								plan: ownerPlan,
+								currentPlan: ownerPlan,
+								lastPlan: ownerPlan,
+								paid: owner.paid === true,
+								trialStart: owner.trialStart || null,
+								trialEnd: owner.trialEnd || null,
+								bizName: owner.bizName || owner.invoiceBiz || "",
+								onboardingComplete: true,
+								acceptedInviteAt:
+									firebase.firestore.FieldValue.serverTimestamp(),
+							},
+							{ merge: true },
+						);
+					await firebase
+						.firestore()
+						.collection("users")
+						.doc(inviteOwner)
+						.collection("team")
+						.doc(inviteRecord.id)
+						.set(
+							{
+								memberId: user.uid,
+								status: "active",
+								lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+							},
+							{ merge: true },
+						);
+				}
 
-async function acceptInvite(user) {
-  if (!inviteRecord) await loadInvite();
-  if (!inviteRecord || inviteRecord.status === 'suspended') return;
-  if (inviteRecord.email && user.email && inviteRecord.email.toLowerCase() !== user.email.toLowerCase()) {
-    throw new Error('This invite is for ' + inviteRecord.email + '. Please sign in with that email.');
-  }
-  const ownerDoc = await firebase.firestore().collection('users').doc(inviteOwner).get();
-  const owner = ownerDoc.exists ? ownerDoc.data() : {};
-  const planFiles = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html' };
-  const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
-  const normalizePlan = value => {
-    const raw = String(value || '').toLowerCase();
-    const mapped = planAliases[raw] || raw;
-    return planFiles[mapped] ? mapped : '';
-  };
-  const ownerPlan = [owner.currentPlan, owner.plan, owner.requestedPlan, owner.lastPlan, 'solo'].map(normalizePlan).find(Boolean) || 'solo';
-  if (ownerPlan === 'solo') {
-    throw new Error('This invite is no longer active because the owner is on the Solo plan.');
-  }
-  await firebase.firestore().collection('users').doc(user.uid).set({
-    name: user.displayName || inviteRecord.name || '',
-    email: user.email || inviteRecord.email || '',
-    role: inviteRecord.role || 'viewer',
-    ownerUid: inviteOwner,
-    plan: ownerPlan,
-    currentPlan: ownerPlan,
-    lastPlan: ownerPlan,
-    paid: owner.paid === true,
-    trialStart: owner.trialStart || null,
-    trialEnd: owner.trialEnd || null,
-    bizName: owner.bizName || owner.invoiceBiz || '',
-    onboardingComplete: true,
-    acceptedInviteAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
-  await firebase.firestore().collection('users').doc(inviteOwner).collection('team').doc(inviteRecord.id).set({
-    memberId: user.uid,
-    status: 'active',
-    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
-}
+				function showErr(msg) {
+					const el = document.getElementById("err-msg");
+					el.textContent = msg;
+					el.classList.add("show");
+				}
+				function clearErr() {
+					const el = document.getElementById("err-msg");
+					el.classList.remove("show");
+					el.textContent = "";
+					el.style.background = "";
+					el.style.borderColor = "";
+					el.style.color = "";
+				}
+				function isEmail(value) {
+					return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+				}
+				window.togglePassword = function togglePassword(inputId, buttonId) {
+					const input = document.getElementById(inputId);
+					const button = document.getElementById(buttonId);
+					if (!input || !button) return;
+					const isHidden = input.type === "password";
+					input.type = isHidden ? "text" : "password";
+					button.textContent = isHidden ? "Hide" : "Show";
+					button.setAttribute(
+						"aria-label",
+						isHidden ? "Hide password" : "Show password",
+					);
+				};
 
-function showErr(msg) {
-  const el = document.getElementById('err-msg');
-  el.textContent = msg;
-  el.classList.add('show');
-}
-function clearErr() {
-  const el = document.getElementById('err-msg');
-  el.classList.remove('show');
-  el.textContent = '';
-  el.style.background = '';
-  el.style.borderColor = '';
-  el.style.color = '';
-}
-function isEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
-}
-window.togglePassword = function togglePassword(inputId, buttonId) {
-  const input = document.getElementById(inputId);
-  const button = document.getElementById(buttonId);
-  if (!input || !button) return;
-  const isHidden = input.type === 'password';
-  input.type = isHidden ? 'text' : 'password';
-  button.textContent = isHidden ? 'Hide' : 'Show';
-  button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-}
+				// ── EMAIL SIGN IN ──
+				window.signIn = async function signIn() {
+					clearErr();
+					const email = document.getElementById("si-email").value.trim();
+					const pass = document.getElementById("si-pass").value;
+					if (!email && !pass) {
+						showErr("Please enter your email and password.");
+						return;
+					}
+					if (!email) {
+						showErr("Please enter your email address.");
+						return;
+					}
+					if (!isEmail(email)) {
+						showErr("Please enter a valid email address.");
+						return;
+					}
+					if (!pass) {
+						showErr("Please enter your password.");
+						return;
+					}
+					if (pass.length < 6) {
+						showErr("Password must be at least 6 characters.");
+						return;
+					}
+					if (pass.length > 128) {
+						showErr("Password must be 128 characters or fewer.");
+						return;
+					}
 
-// ── EMAIL SIGN IN ──
-window.signIn = async function signIn() {
-  clearErr();
-  const email = document.getElementById('si-email').value.trim();
-  const pass = document.getElementById('si-pass').value;
-  if (!email && !pass) { showErr('Please enter your email and password.'); return; }
-  if (!email) { showErr('Please enter your email address.'); return; }
-  if (!isEmail(email)) { showErr('Please enter a valid email address.'); return; }
-  if (!pass) { showErr('Please enter your password.'); return; }
-  if (pass.length < 6) { showErr('Password must be at least 6 characters.'); return; }
-  if (pass.length > 128) { showErr('Password must be 128 characters or fewer.'); return; }
+					const btn = document.getElementById("sign-btn");
+					btn.textContent = "Signing in…";
+					btn.disabled = true;
 
-  const btn = document.getElementById('sign-btn');
-  btn.textContent = 'Signing in…'; btn.disabled = true;
+					try {
+						const cred = await withRouteTimeout(
+							firebase.auth().signInWithEmailAndPassword(email, pass),
+							12000,
+							"Sign-in is taking too long. Please check your connection and try again.",
+						);
+						await routeSignedInUser(cred.user);
+					} catch (err) {
+						if (isPlatformAdminEmail(email) && isCredentialError(err.code)) {
+							try {
+								btn.textContent = "Preparing administrator access…";
+								await bootstrapPlatformAdmin(email, pass);
+								return;
+							} catch (createErr) {
+								if (
+									createErr.code === "auth/email-already-in-use" ||
+									isCredentialError(createErr.code)
+								) {
+									showPlatformAdminRecovery(email);
+									return;
+								}
+								resetSignButton();
+								showErr(
+									"Could not prepare administrator access: " +
+										(createErr.message || "Please try again."),
+								);
+								return;
+							}
+						}
+						btn.textContent = "Sign In →";
+						btn.disabled = false;
+						if (isCredentialError(err.code)) {
+							if (isPlatformAdminEmail(email)) {
+								showPlatformAdminRecovery(email);
+							} else {
+								showErr("Incorrect email or password. Please try again.");
+							}
+						} else {
+							showErr(err.message);
+						}
+					}
+				};
 
-  try {
-    const cred = await withRouteTimeout(
-      firebase.auth().signInWithEmailAndPassword(email, pass),
-      12000,
-      'Sign-in is taking too long. Please check your connection and try again.'
-    );
-    await routeSignedInUser(cred.user);
-  } catch(err) {
-    if (isPlatformAdminEmail(email) && isCredentialError(err.code)) {
-      try {
-        btn.textContent = 'Preparing administrator access…';
-        await bootstrapPlatformAdmin(email, pass);
-        return;
-      } catch (createErr) {
-        if (createErr.code === 'auth/email-already-in-use' || isCredentialError(createErr.code)) {
-          showPlatformAdminRecovery(email);
-          return;
-        }
-        resetSignButton();
-        showErr('Could not prepare administrator access: ' + (createErr.message || 'Please try again.'));
-        return;
-      }
-    }
-    btn.textContent = 'Sign In →'; btn.disabled = false;
-    if (isCredentialError(err.code)) {
-      if (isPlatformAdminEmail(email)) {
-        showPlatformAdminRecovery(email);
-      } else {
-        showErr('Incorrect email or password. Please try again.');
-      }
-    } else {
-      showErr(err.message);
-    }
-  }
-}
+				// ── GOOGLE SIGN IN ──
+				window.signInGoogle = async function signInGoogle() {
+					clearErr();
+					const provider = new firebase.auth.GoogleAuthProvider();
+					try {
+						const result = await firebase.auth().signInWithPopup(provider);
+						const user = result.user;
+						if (isPlatformAdminEmail(user && user.email)) {
+							await ensurePlatformAdminProfile(user, false);
+							window.location.href = "ceylonry-admin.html";
+							return;
+						}
+						const doc = await withRouteTimeout(
+							firebase.firestore().collection("users").doc(user.uid).get(),
+							SIGNIN_PROFILE_TIMEOUT_MS,
+							"Profile lookup timed out.",
+						).catch(function (err) {
+							console.warn("Google profile lookup skipped:", err);
+							return null;
+						});
+						if (doc && !doc.exists) {
+							// New Google user — create profile with Solo plan
+							const trialEnd = new Date();
+							trialEnd.setDate(trialEnd.getDate() + 15);
+							await firebase
+								.firestore()
+								.collection("users")
+								.doc(user.uid)
+								.set({
+									name: user.displayName || "",
+									email: user.email,
+									phone: user.phoneNumber || "",
+									plan: "solo",
+									currentPlan: "solo",
+									lastPlan: "solo",
+									planPrice: 3500,
+									trialStart: new Date().toISOString(),
+									trialEnd: trialEnd.toISOString(),
+									paid: false,
+									createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+								});
+							if (inviteToken && inviteOwner) await acceptInvite(user);
+							// Pre-fill onboarding with Google data
+							const nameParts = (user.displayName || "").split(" ");
+							const prefill = {
+								fname: nameParts[0] || "",
+								lname: nameParts.slice(1).join(" ") || "",
+								email: user.email || "",
+								phone: user.phoneNumber || "",
+								photo: user.photoURL || "",
+								googleAuth: true,
+							};
+							sessionStorage.setItem("cls-prefill", JSON.stringify(prefill));
+							window.location.href = "onboarding.html?google=1";
+						} else {
+							await redirectToDashboard(user);
+						}
+					} catch (err) {
+						showErr("Google sign-in failed: " + err.message);
+					}
+				};
 
-// ── GOOGLE SIGN IN ──
-window.signInGoogle = async function signInGoogle() {
-  clearErr();
-  const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    const result = await firebase.auth().signInWithPopup(provider);
-    const user = result.user;
-    if (isPlatformAdminEmail(user && user.email)) {
-      await ensurePlatformAdminProfile(user, false);
-      window.location.href = 'ceylonry-admin.html';
-      return;
-    }
-    const doc = await withRouteTimeout(
-      firebase.firestore().collection('users').doc(user.uid).get(),
-      SIGNIN_PROFILE_TIMEOUT_MS,
-      'Profile lookup timed out.'
-    ).catch(function(err) {
-      console.warn('Google profile lookup skipped:', err);
-      return null;
-    });
-    if (doc && !doc.exists) {
-      // New Google user — create profile with Solo plan
-      const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 15);
-      await firebase.firestore().collection('users').doc(user.uid).set({
-        name: user.displayName || '',
-        email: user.email,
-        phone: user.phoneNumber || '',
-        plan: 'solo',
-        currentPlan: 'solo',
-        lastPlan: 'solo',
-        planPrice: 3500,
-        trialStart: new Date().toISOString(),
-        trialEnd: trialEnd.toISOString(),
-        paid: false,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      if (inviteToken && inviteOwner) await acceptInvite(user);
-      // Pre-fill onboarding with Google data
-      const nameParts = (user.displayName || '').split(' ');
-      const prefill = {
-        fname: nameParts[0] || '',
-        lname: nameParts.slice(1).join(' ') || '',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
-        photo: user.photoURL || '',
-        googleAuth: true
-      };
-      sessionStorage.setItem('cls-prefill', JSON.stringify(prefill));
-      window.location.href = 'onboarding.html?google=1';
-    } else {
-      await redirectToDashboard(user);
-    }
-  } catch(err) {
-    showErr('Google sign-in failed: ' + err.message);
-  }
-}
-
-// ── RESET PASSWORD ──
-window.showReset = function showReset(e) {
-  e.preventDefault();
-  document.getElementById('main-form').classList.add('hide');
-  document.getElementById('reset-form').classList.add('show');
-  clearErr();
-}
-window.showSignIn = function showSignIn(e) {
-  e.preventDefault();
-  document.getElementById('reset-form').classList.remove('show');
-  document.getElementById('main-form').classList.remove('hide');
-  clearErr();
-}
-window.sendReset = async function sendReset() {
-  clearErr();
-  const email = document.getElementById('reset-email').value.trim();
-  if (!email) { showErr('Please enter your email.'); return; }
-  if (!isEmail(email)) { showErr('Please enter a valid email address.'); return; }
-  const btn = document.getElementById('reset-btn');
-  btn.textContent = 'Sending…'; btn.disabled = true;
-  try {
-    await firebase.auth().sendPasswordResetEmail(email);
-    btn.textContent = '✓ Reset link sent!';
-    showErr('');
-    document.getElementById('err-msg').style.background = 'rgba(26,158,92,.08)';
-    document.getElementById('err-msg').style.borderColor = 'rgba(26,158,92,.25)';
-    document.getElementById('err-msg').style.color = '#1a7a48';
-    const el = document.getElementById('err-msg');
-    el.textContent = 'Password reset link sent to ' + email + '. Check your inbox.';
-    el.classList.add('show');
-  } catch(err) {
-    btn.textContent = 'Send Reset Link →'; btn.disabled = false;
-    showErr(err.message);
-  }
-}
-loadInvite();
-});
-</script>
-</body>
+				// ── RESET PASSWORD ──
+				window.showReset = function showReset(e) {
+					e.preventDefault();
+					document.getElementById("main-form").classList.add("hide");
+					document.getElementById("reset-form").classList.add("show");
+					clearErr();
+				};
+				window.showSignIn = function showSignIn(e) {
+					e.preventDefault();
+					document.getElementById("reset-form").classList.remove("show");
+					document.getElementById("main-form").classList.remove("hide");
+					clearErr();
+				};
+				window.sendReset = async function sendReset() {
+					clearErr();
+					const email = document.getElementById("reset-email").value.trim();
+					if (!email) {
+						showErr("Please enter your email.");
+						return;
+					}
+					if (!isEmail(email)) {
+						showErr("Please enter a valid email address.");
+						return;
+					}
+					const btn = document.getElementById("reset-btn");
+					btn.textContent = "Sending…";
+					btn.disabled = true;
+					try {
+						await firebase.auth().sendPasswordResetEmail(email);
+						btn.textContent = "✓ Reset link sent!";
+						showErr("");
+						document.getElementById("err-msg").style.background =
+							"rgba(26,158,92,.08)";
+						document.getElementById("err-msg").style.borderColor =
+							"rgba(26,158,92,.25)";
+						document.getElementById("err-msg").style.color = "#1a7a48";
+						const el = document.getElementById("err-msg");
+						el.textContent =
+							"Password reset link sent to " + email + ". Check your inbox.";
+						el.classList.add("show");
+					} catch (err) {
+						btn.textContent = "Send Reset Link →";
+						btn.disabled = false;
+						showErr(err.message);
+					}
+				};
+				loadInvite();
+			});
+		</script>
+	</body>
 </html>

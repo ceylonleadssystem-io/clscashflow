@@ -1,275 +1,592 @@
-<!DOCTYPE html>
+<!doctype html>
 <!-- CLS-ACCEPT-INVITE-V1 -->
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CeylonryLabs.io — Join the Team</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="assets/appwrite-sdk.js"></script>
-<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --gold:#B8922A;--gold-l:#D4A840;--bg:#F7F5F0;--white:#FFFFFF;--bg3:#F0EDE6;--bg4:#E8E4DA;
-  --text:#1C1814;--muted:#6B6258;--dim:#A8A29A;--border:#E2DDD4;--border-acc:rgba(184,146,42,.3);
-  --black:#1a1714;--green:#1a9e5c;--red:#c0392b;
-  --font-d:'Cormorant Garamond',serif;--font-b:'DM Sans',sans-serif;
-}
-html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font-b);display:flex;align-items:center;justify-content:center;padding:1.5rem}
-.card{background:var(--white);border:1px solid var(--border);max-width:440px;width:100%;padding:2.5rem;box-shadow:0 20px 60px rgba(0,0,0,.06)}
-.logo{font-family:var(--font-d);font-size:1.5rem;text-align:center;margin-bottom:.25rem}
-.logo span{color:var(--gold)}
-.eyebrow{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600;text-align:center;margin-bottom:1.25rem}
-.invite-banner{background:var(--bg);border:1px solid var(--border-acc);padding:1.1rem 1.25rem;margin-bottom:1.5rem;text-align:center}
-.invite-banner .who{font-family:var(--font-d);font-size:1.5rem;font-weight:300;line-height:1.2}
-.invite-banner .role{font-size:.78rem;color:var(--muted);margin-top:.35rem}
-.invite-banner .role b{color:var(--text)}
-.field{margin-bottom:1rem}
-.field label{display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:.4rem}
-.field input{width:100%;background:var(--bg);border:1px solid var(--border);padding:.78rem 1rem;color:var(--text);font-family:var(--font-b);font-size:.92rem;outline:none;transition:border-color .2s;color-scheme:light}
-.field input:focus{border-color:var(--gold)}
-.field input:disabled{opacity:.7;cursor:not-allowed;background:var(--bg3)}
-.btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;background:var(--gold);color:#fff;border:none;padding:.9rem;font-family:var(--font-b);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all .25s}
-.btn:hover{background:var(--gold-l)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-google{background:#fff;border:1px solid var(--border);color:var(--text);margin-top:.75rem}
-.btn-google:hover{background:var(--bg)}
-.divider{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0;color:var(--dim);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.msg{padding:.8rem 1rem;font-size:.82rem;margin-bottom:1rem;display:none;line-height:1.5}
-.msg.show{display:block}
-.msg-err{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.3);color:var(--red)}
-.note{font-size:.74rem;color:var(--dim);text-align:center;margin-top:1rem;line-height:1.6}
-.state{text-align:center}
-.state h2{font-family:var(--font-d);font-weight:300;font-size:1.7rem;margin-bottom:.6rem}
-.state p{font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:1.25rem}
-.hidden{display:none!important}
-.spinner{width:32px;height:32px;border:3px solid var(--bg4);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:1.5rem auto}
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:560px){
-  html,body{display:block;min-height:100dvh;padding:0;overflow-x:hidden}
-  .card{min-height:100dvh;max-width:none;border:0;box-shadow:none;padding:1.4rem 1rem;display:flex;flex-direction:column;justify-content:center}
-  .logo{font-size:1.35rem}
-  .eyebrow{font-size:.56rem;line-height:1.45}
-  .invite-banner{padding:1rem}
-  .invite-banner .who{font-size:1.28rem}
-  .field input,.btn{min-height:48px}
-  .btn{font-size:.72rem;padding:.8rem}
-  .state h2{font-size:1.45rem}
-  .state p,.note{font-size:.8rem}
-}
-</style>
-</head>
-<body>
-<div class="card">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>CeylonryLabs.io — Join the Team</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<script src="assets/appwrite-sdk.js"></script>
+		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			:root {
+				--gold: #b8922a;
+				--gold-l: #d4a840;
+				--bg: #f7f5f0;
+				--white: #ffffff;
+				--bg3: #f0ede6;
+				--bg4: #e8e4da;
+				--text: #1c1814;
+				--muted: #6b6258;
+				--dim: #a8a29a;
+				--border: #e2ddd4;
+				--border-acc: rgba(184, 146, 42, 0.3);
+				--black: #1a1714;
+				--green: #1a9e5c;
+				--red: #c0392b;
+				--font-d: "Cormorant Garamond", serif;
+				--font-b: "DM Sans", sans-serif;
+			}
+			html,
+			body {
+				min-height: 100%;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--font-b);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 1.5rem;
+			}
+			.card {
+				background: var(--white);
+				border: 1px solid var(--border);
+				max-width: 440px;
+				width: 100%;
+				padding: 2.5rem;
+				box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
+			}
+			.logo {
+				font-family: var(--font-d);
+				font-size: 1.5rem;
+				text-align: center;
+				margin-bottom: 0.25rem;
+			}
+			.logo span {
+				color: var(--gold);
+			}
+			.eyebrow {
+				font-size: 0.62rem;
+				letter-spacing: 0.22em;
+				text-transform: uppercase;
+				color: var(--gold);
+				font-weight: 600;
+				text-align: center;
+				margin-bottom: 1.25rem;
+			}
+			.invite-banner {
+				background: var(--bg);
+				border: 1px solid var(--border-acc);
+				padding: 1.1rem 1.25rem;
+				margin-bottom: 1.5rem;
+				text-align: center;
+			}
+			.invite-banner .who {
+				font-family: var(--font-d);
+				font-size: 1.5rem;
+				font-weight: 300;
+				line-height: 1.2;
+			}
+			.invite-banner .role {
+				font-size: 0.78rem;
+				color: var(--muted);
+				margin-top: 0.35rem;
+			}
+			.invite-banner .role b {
+				color: var(--text);
+			}
+			.field {
+				margin-bottom: 1rem;
+			}
+			.field label {
+				display: block;
+				font-size: 0.66rem;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: var(--muted);
+				font-weight: 500;
+				margin-bottom: 0.4rem;
+			}
+			.field input {
+				width: 100%;
+				background: var(--bg);
+				border: 1px solid var(--border);
+				padding: 0.78rem 1rem;
+				color: var(--text);
+				font-family: var(--font-b);
+				font-size: 0.92rem;
+				outline: none;
+				transition: border-color 0.2s;
+				color-scheme: light;
+			}
+			.field input:focus {
+				border-color: var(--gold);
+			}
+			.field input:disabled {
+				opacity: 0.7;
+				cursor: not-allowed;
+				background: var(--bg3);
+			}
+			.btn {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 0.5rem;
+				width: 100%;
+				background: var(--gold);
+				color: #fff;
+				border: none;
+				padding: 0.9rem;
+				font-family: var(--font-b);
+				font-size: 0.8rem;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.25s;
+			}
+			.btn:hover {
+				background: var(--gold-l);
+			}
+			.btn:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+			.btn-google {
+				background: #fff;
+				border: 1px solid var(--border);
+				color: var(--text);
+				margin-top: 0.75rem;
+			}
+			.btn-google:hover {
+				background: var(--bg);
+			}
+			.divider {
+				display: flex;
+				align-items: center;
+				gap: 0.75rem;
+				margin: 1.25rem 0;
+				color: var(--dim);
+				font-size: 0.72rem;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+			}
+			.divider::before,
+			.divider::after {
+				content: "";
+				flex: 1;
+				height: 1px;
+				background: var(--border);
+			}
+			.msg {
+				padding: 0.8rem 1rem;
+				font-size: 0.82rem;
+				margin-bottom: 1rem;
+				display: none;
+				line-height: 1.5;
+			}
+			.msg.show {
+				display: block;
+			}
+			.msg-err {
+				background: rgba(192, 57, 43, 0.08);
+				border: 1px solid rgba(192, 57, 43, 0.3);
+				color: var(--red);
+			}
+			.note {
+				font-size: 0.74rem;
+				color: var(--dim);
+				text-align: center;
+				margin-top: 1rem;
+				line-height: 1.6;
+			}
+			.state {
+				text-align: center;
+			}
+			.state h2 {
+				font-family: var(--font-d);
+				font-weight: 300;
+				font-size: 1.7rem;
+				margin-bottom: 0.6rem;
+			}
+			.state p {
+				font-size: 0.88rem;
+				color: var(--muted);
+				line-height: 1.7;
+				margin-bottom: 1.25rem;
+			}
+			.hidden {
+				display: none !important;
+			}
+			.spinner {
+				width: 32px;
+				height: 32px;
+				border: 3px solid var(--bg4);
+				border-top-color: var(--gold);
+				border-radius: 50%;
+				animation: spin 0.8s linear infinite;
+				margin: 1.5rem auto;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			@media (max-width: 560px) {
+				html,
+				body {
+					display: block;
+					min-height: 100dvh;
+					padding: 0;
+					overflow-x: hidden;
+				}
+				.card {
+					min-height: 100dvh;
+					max-width: none;
+					border: 0;
+					box-shadow: none;
+					padding: 1.4rem 1rem;
+					display: flex;
+					flex-direction: column;
+					justify-content: center;
+				}
+				.logo {
+					font-size: 1.35rem;
+				}
+				.eyebrow {
+					font-size: 0.56rem;
+					line-height: 1.45;
+				}
+				.invite-banner {
+					padding: 1rem;
+				}
+				.invite-banner .who {
+					font-size: 1.28rem;
+				}
+				.field input,
+				.btn {
+					min-height: 48px;
+				}
+				.btn {
+					font-size: 0.72rem;
+					padding: 0.8rem;
+				}
+				.state h2 {
+					font-size: 1.45rem;
+				}
+				.state p,
+				.note {
+					font-size: 0.8rem;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="card">
+			<!-- LOADING -->
+			<div id="loading" class="state">
+				<div class="logo">Ceylonry<span>Labs</span>.io</div>
+				<div class="spinner"></div>
+				<p style="color: var(--muted); font-size: 0.85rem">
+					Checking your invitation&hellip;
+				</p>
+			</div>
 
-  <!-- LOADING -->
-  <div id="loading" class="state">
-    <div class="logo">Ceylonry<span>Labs</span>.io</div>
-    <div class="spinner"></div>
-    <p style="color:var(--muted);font-size:.85rem">Checking your invitation&hellip;</p>
-  </div>
+			<!-- INVALID / EXPIRED -->
+			<div id="invalid" class="state hidden">
+				<div class="logo">Ceylonry<span>Labs</span>.io</div>
+				<h2 id="invalid-title">Invitation not found</h2>
+				<p id="invalid-msg">
+					This invite link is invalid, has already been used, or was revoked.
+					Please ask whoever invited you to send a new link.
+				</p>
+				<a class="btn" href="signin.html">Go to Sign In</a>
+			</div>
 
-  <!-- INVALID / EXPIRED -->
-  <div id="invalid" class="state hidden">
-    <div class="logo">Ceylonry<span>Labs</span>.io</div>
-    <h2 id="invalid-title">Invitation not found</h2>
-    <p id="invalid-msg">This invite link is invalid, has already been used, or was revoked. Please ask whoever invited you to send a new link.</p>
-    <a class="btn" href="signin.html">Go to Sign In</a>
-  </div>
+			<!-- ACCEPT FORM -->
+			<div id="form" class="hidden">
+				<div class="logo">Ceylonry<span>Labs</span>.io</div>
+				<div class="eyebrow">Team Invitation</div>
 
-  <!-- ACCEPT FORM -->
-  <div id="form" class="hidden">
-    <div class="logo">Ceylonry<span>Labs</span>.io</div>
-    <div class="eyebrow">Team Invitation</div>
+				<div class="invite-banner">
+					<div class="who">Join <span id="biz">the team</span></div>
+					<div class="role">
+						You've been invited as <b id="role-label">Staff</b>
+					</div>
+				</div>
 
-    <div class="invite-banner">
-      <div class="who">Join <span id="biz">the team</span></div>
-      <div class="role">You've been invited as <b id="role-label">Staff</b></div>
-    </div>
+				<div id="msg" class="msg"></div>
 
-    <div id="msg" class="msg"></div>
+				<div class="field">
+					<label>Your Name</label>
+					<input
+						type="text"
+						id="f-name"
+						placeholder="Your full name"
+						autocomplete="name"
+					/>
+				</div>
+				<div class="field">
+					<label>Email Address</label>
+					<input type="email" id="f-email" disabled />
+				</div>
+				<div class="field">
+					<label>Create a Password</label>
+					<input
+						type="password"
+						id="f-pass"
+						placeholder="At least 6 characters"
+						autocomplete="new-password"
+					/>
+				</div>
 
-    <div class="field">
-      <label>Your Name</label>
-      <input type="text" id="f-name" placeholder="Your full name" autocomplete="name">
-    </div>
-    <div class="field">
-      <label>Email Address</label>
-      <input type="email" id="f-email" disabled>
-    </div>
-    <div class="field">
-      <label>Create a Password</label>
-      <input type="password" id="f-pass" placeholder="At least 6 characters" autocomplete="new-password">
-    </div>
+				<button class="btn" id="btn-join" data-cls-fn="joinWithPassword">
+					Join the Team &rarr;
+				</button>
 
-    <button class="btn" id="btn-join" data-cls-fn="joinWithPassword">Join the Team &rarr;</button>
+				<div class="divider">or</div>
+				<button
+					class="btn btn-google"
+					id="btn-google"
+					data-cls-fn="joinWithGoogle"
+				>
+					Continue with Google
+				</button>
 
-    <div class="divider">or</div>
-    <button class="btn btn-google" id="btn-google" data-cls-fn="joinWithGoogle">Continue with Google</button>
+				<p class="note">
+					By joining you'll get access to <span id="biz2">this business</span>'s
+					account with the role above. Your account is free — only the owner is
+					billed.
+				</p>
+			</div>
 
-    <p class="note">By joining you'll get access to <span id="biz2">this business</span>'s account with the role above. Your account is free — only the owner is billed.</p>
-  </div>
+			<!-- SUCCESS -->
+			<div id="success" class="state hidden">
+				<div class="logo">Ceylonry<span>Labs</span>.io</div>
+				<div style="font-size: 2.5rem; margin: 1rem 0">🎉</div>
+				<h2>You're in!</h2>
+				<p>Your account is ready. Taking you to the dashboard&hellip;</p>
+				<div class="spinner"></div>
+			</div>
+		</div>
 
-  <!-- SUCCESS -->
-  <div id="success" class="state hidden">
-    <div class="logo">Ceylonry<span>Labs</span>.io</div>
-    <div style="font-size:2.5rem;margin:1rem 0">🎉</div>
-    <h2>You're in!</h2>
-    <p>Your account is ready. Taking you to the dashboard&hellip;</p>
-    <div class="spinner"></div>
-  </div>
+		<script>
+			var firebaseConfig = {};
+			firebase.initializeApp(firebaseConfig);
+			var _db = firebase.firestore();
+			var _auth = firebase.auth();
 
-</div>
+			var PLAN_FILES = {
+				solo: "solo.html",
+				studio: "starter.html",
+				business: "growth.html",
+			};
+			var PLAN_ALIASES = {
+				starter: "studio",
+				growth: "business",
+				premium: "business",
+			};
+			function normalizePlan(plan) {
+				plan = String(plan || "").toLowerCase();
+				plan = PLAN_ALIASES[plan] || plan;
+				return PLAN_FILES[plan] ? plan : "solo";
+			}
+			var ROLE_LABELS = {
+				admin: "Admin",
+				staff: "Staff",
+				accountant: "Accountant",
+				viewer: "Viewer",
+			};
 
-<script>
-var firebaseConfig = {};
-firebase.initializeApp(firebaseConfig);
-var _db = firebase.firestore();
-var _auth = firebase.auth();
+			var _inviteId = null;
+			var _ownerUid = null;
+			var _invite = null;
+			var _inviteRef = null;
 
-var PLAN_FILES = { solo:'solo.html', studio:'starter.html', business:'growth.html' };
-var PLAN_ALIASES = { starter:'studio', growth:'business', premium:'business' };
-function normalizePlan(plan){
-  plan = String(plan || '').toLowerCase();
-  plan = PLAN_ALIASES[plan] || plan;
-  return PLAN_FILES[plan] ? plan : 'solo';
-}
-var ROLE_LABELS = { admin:'Admin', staff:'Staff', accountant:'Accountant', viewer:'Viewer' };
+			function el(id) {
+				return document.getElementById(id);
+			}
+			function show(id) {
+				["loading", "invalid", "form", "success"].forEach(function (s) {
+					el(s).classList.add("hidden");
+				});
+				el(id).classList.remove("hidden");
+			}
+			function showMsg(t) {
+				var m = el("msg");
+				m.textContent = t;
+				m.className = "msg show msg-err";
+			}
+			function clearMsg() {
+				el("msg").className = "msg";
+			}
+			function getParam(name) {
+				return new URLSearchParams(location.search).get(name);
+			}
 
-var _inviteId = null;
-var _ownerUid = null;
-var _invite = null;
-var _inviteRef = null;
+			// ── Load the invite ──
+			(async function init() {
+				_inviteId = getParam("i") || getParam("invite");
+				_ownerUid = getParam("owner") || getParam("o");
+				if (!_inviteId || !_ownerUid) {
+					show("invalid");
+					return;
+				}
+				try {
+					_inviteRef = _db
+						.collection("users")
+						.doc(_ownerUid)
+						.collection("team")
+						.doc(_inviteId);
+					var doc = await _inviteRef.get();
+					if (!doc.exists) {
+						show("invalid");
+						return;
+					}
+					_invite = doc.data();
+					_invite.ownerUid = _invite.ownerUid || _ownerUid;
+					_invite.inviteToken = _invite.inviteToken || _inviteId;
+					if (_invite.status === "accepted") {
+						el("invalid-title").textContent = "Already accepted";
+						el("invalid-msg").textContent =
+							"This invitation has already been used. If that account is yours, just sign in.";
+						show("invalid");
+						return;
+					}
+					if (_invite.status !== "pending") {
+						show("invalid");
+						return;
+					}
 
-function el(id){ return document.getElementById(id); }
-function show(id){ ['loading','invalid','form','success'].forEach(function(s){ el(s).classList.add('hidden'); }); el(id).classList.remove('hidden'); }
-function showMsg(t){ var m=el('msg'); m.textContent=t; m.className='msg show msg-err'; }
-function clearMsg(){ el('msg').className='msg'; }
-function getParam(name){ return new URLSearchParams(location.search).get(name); }
+					var biz = _invite.bizName || "the team";
+					el("biz").textContent = biz;
+					el("biz2").textContent = biz;
+					el("role-label").textContent =
+						ROLE_LABELS[_invite.role] || "Team member";
+					el("f-email").value = _invite.email || "";
+					show("form");
+				} catch (e) {
+					console.error("invite load error:", e);
+					el("invalid-title").textContent = "Something went wrong";
+					el("invalid-msg").textContent =
+						"We could not load this invitation. Please check your connection and try the link again.";
+					show("invalid");
+				}
+			})();
 
-// ── Load the invite ──
-(async function init(){
-  _inviteId = getParam('i') || getParam('invite');
-  _ownerUid = getParam('owner') || getParam('o');
-  if(!_inviteId || !_ownerUid){ show('invalid'); return; }
-  try {
-    _inviteRef = _db.collection('users').doc(_ownerUid).collection('team').doc(_inviteId);
-    var doc = await _inviteRef.get();
-    if(!doc.exists){ show('invalid'); return; }
-    _invite = doc.data();
-    _invite.ownerUid = _invite.ownerUid || _ownerUid;
-    _invite.inviteToken = _invite.inviteToken || _inviteId;
-    if(_invite.status === 'accepted'){
-      el('invalid-title').textContent = 'Already accepted';
-      el('invalid-msg').textContent = 'This invitation has already been used. If that account is yours, just sign in.';
-      show('invalid'); return;
-    }
-    if(_invite.status !== 'pending'){ show('invalid'); return; }
+			// ── Attach a freshly-authenticated user to the owner's account ──
+			async function attachAndFinish(user, name) {
+				var profile = {
+					name: name || user.displayName || "",
+					email: (user.email || _invite.email || "").toLowerCase(),
+					ownerUid: _invite.ownerUid,
+					role: _invite.role,
+					plan: normalizePlan(_invite.plan),
+					bizName: _invite.bizName || "",
+					isTeamMember: true,
+					paid: true, // members are seats under the owner; no separate billing
+					joinedAt: new Date().toISOString(),
+				};
+				await _db
+					.collection("users")
+					.doc(user.uid)
+					.set(profile, { merge: true });
+				await _inviteRef.update({
+					status: "accepted",
+					memberUid: user.uid,
+					acceptedAt: new Date().toISOString(),
+				});
+				show("success");
+				var dest = PLAN_FILES[normalizePlan(_invite.plan)] || "solo.html";
+				setTimeout(function () {
+					window.location.href = dest;
+				}, 1400);
+			}
 
-    var biz = _invite.bizName || 'the team';
-    el('biz').textContent = biz;
-    el('biz2').textContent = biz;
-    el('role-label').textContent = ROLE_LABELS[_invite.role] || 'Team member';
-    el('f-email').value = _invite.email || '';
-    show('form');
-  } catch(e){
-    console.error('invite load error:', e);
-    el('invalid-title').textContent = 'Something went wrong';
-    el('invalid-msg').textContent = 'We could not load this invitation. Please check your connection and try the link again.';
-    show('invalid');
-  }
-})();
+			// ── Email + password ──
+			window.joinWithPassword = async function joinWithPassword() {
+				clearMsg();
+				var name = el("f-name").value.trim();
+				var pass = el("f-pass").value;
+				var email = (_invite.email || "").toLowerCase();
+				if (!name) {
+					showMsg("Please enter your name.");
+					return;
+				}
+				if (!pass || pass.length < 6) {
+					showMsg("Please choose a password of at least 6 characters.");
+					return;
+				}
 
-// ── Attach a freshly-authenticated user to the owner's account ──
-async function attachAndFinish(user, name){
-  var profile = {
-    name: name || user.displayName || '',
-    email: (user.email || _invite.email || '').toLowerCase(),
-    ownerUid: _invite.ownerUid,
-    role: _invite.role,
-    plan: normalizePlan(_invite.plan),
-    bizName: _invite.bizName || '',
-    isTeamMember: true,
-    paid: true,                 // members are seats under the owner; no separate billing
-    joinedAt: new Date().toISOString()
-  };
-  await _db.collection('users').doc(user.uid).set(profile, { merge: true });
-  await _inviteRef.update({
-    status: 'accepted',
-    memberUid: user.uid,
-    acceptedAt: new Date().toISOString()
-  });
-  show('success');
-  var dest = PLAN_FILES[normalizePlan(_invite.plan)] || 'solo.html';
-  setTimeout(function(){ window.location.href = dest; }, 1400);
-}
+				el("btn-join").disabled = true;
+				try {
+					var cred = await _auth.createUserWithEmailAndPassword(email, pass);
+					await attachAndFinish(cred.user, name);
+				} catch (e) {
+					if (e && e.code === "auth/email-already-in-use") {
+						// Existing account — sign them in with the password they entered, then attach
+						try {
+							var c2 = await _auth.signInWithEmailAndPassword(email, pass);
+							await attachAndFinish(c2.user, name);
+							return;
+						} catch (e2) {
+							showMsg(
+								"An account already exists for this email. Enter its existing password to join, or reset it from the sign-in page.",
+							);
+						}
+					} else if (e && e.code === "auth/weak-password") {
+						showMsg(
+							"That password is too weak. Please use at least 6 characters.",
+						);
+					} else {
+						console.error("join error:", e);
+						showMsg("Could not create your account. Please try again.");
+					}
+					el("btn-join").disabled = false;
+				}
+			};
 
-// ── Email + password ──
-window.joinWithPassword = async function joinWithPassword(){
-  clearMsg();
-  var name = el('f-name').value.trim();
-  var pass = el('f-pass').value;
-  var email = (_invite.email || '').toLowerCase();
-  if(!name){ showMsg('Please enter your name.'); return; }
-  if(!pass || pass.length < 6){ showMsg('Please choose a password of at least 6 characters.'); return; }
+			// ── Google ──
+			window.joinWithGoogle = async function joinWithGoogle() {
+				clearMsg();
+				var name = el("f-name").value.trim();
+				if (!name) {
+					showMsg("Please enter your name before continuing with Google.");
+					return;
+				}
+				var provider = new firebase.auth.GoogleAuthProvider();
+				el("btn-google").disabled = true;
+				try {
+					var result = await _auth.signInWithPopup(provider);
+					var user = result.user;
+					if (
+						(user.email || "").toLowerCase() !==
+						(_invite.email || "").toLowerCase()
+					) {
+						await _auth.signOut();
+						showMsg(
+							"This invite is for " +
+								_invite.email +
+								". Please use that Google account.",
+						);
+						el("btn-google").disabled = false;
+						return;
+					}
+					await attachAndFinish(user, name);
+				} catch (e) {
+					console.error("google join error:", e);
+					showMsg("Google sign-in did not complete. Please try again.");
+					el("btn-google").disabled = false;
+				}
+			};
 
-  el('btn-join').disabled = true;
-  try {
-    var cred = await _auth.createUserWithEmailAndPassword(email, pass);
-    await attachAndFinish(cred.user, name);
-  } catch(e){
-    if(e && e.code === 'auth/email-already-in-use'){
-      // Existing account — sign them in with the password they entered, then attach
-      try {
-        var c2 = await _auth.signInWithEmailAndPassword(email, pass);
-        await attachAndFinish(c2.user, name);
-        return;
-      } catch(e2){
-        showMsg('An account already exists for this email. Enter its existing password to join, or reset it from the sign-in page.');
-      }
-    } else if(e && e.code === 'auth/weak-password'){
-      showMsg('That password is too weak. Please use at least 6 characters.');
-    } else {
-      console.error('join error:', e);
-      showMsg('Could not create your account. Please try again.');
-    }
-    el('btn-join').disabled = false;
-  }
-};
-
-// ── Google ──
-window.joinWithGoogle = async function joinWithGoogle(){
-  clearMsg();
-  var name = el('f-name').value.trim();
-  if(!name){ showMsg('Please enter your name before continuing with Google.'); return; }
-  var provider = new firebase.auth.GoogleAuthProvider();
-  el('btn-google').disabled = true;
-  try {
-    var result = await _auth.signInWithPopup(provider);
-    var user = result.user;
-    if((user.email || '').toLowerCase() !== (_invite.email || '').toLowerCase()){
-      await _auth.signOut();
-      showMsg('This invite is for ' + _invite.email + '. Please use that Google account.');
-      el('btn-google').disabled = false;
-      return;
-    }
-    await attachAndFinish(user, name);
-  } catch(e){
-    console.error('google join error:', e);
-    showMsg('Google sign-in did not complete. Please try again.');
-    el('btn-google').disabled = false;
-  }
-};
-
-// ── CSP-safe delegation ──
-document.addEventListener('click', function(e){
-  var a = e.target.closest('[data-cls-fn]');
-  if(!a) return;
-  var fn = a.getAttribute('data-cls-fn');
-  if(typeof window[fn] === 'function') window[fn]();
-});
-</script>
-</body>
+			// ── CSP-safe delegation ──
+			document.addEventListener("click", function (e) {
+				var a = e.target.closest("[data-cls-fn]");
+				if (!a) return;
+				var fn = a.getAttribute("data-cls-fn");
+				if (typeof window[fn] === "function") window[fn]();
+			});
+		</script>
+	</body>
 </html>
