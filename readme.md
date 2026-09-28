@@ -5,7 +5,7 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 ## Files
 
 - `index.html` - landing page
-- `signin.html` - Firebase sign in
+- `signin.html` - Appwrite sign in
 - `onboarding.html` - account setup flow
 - `solo.html` - Solo dashboard
 - `starter.html` - Studio dashboard
@@ -16,12 +16,11 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify/functions/send-invoice.js` - built-in SMTP invoice email fallback
 - `netlify/functions/send-invite.js` - team invite email function
 - `netlify/functions/send-welcome.js` - welcome email function
-- `netlify/functions/payable-create-checkout.js` - server-side Payable checkout creator
-- `netlify/functions/payable-webhook.js` - server-side Payable payment confirmation handler
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
 - `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
-- `firestore.rules` - suggested Firebase Firestore rules for team invites and owner/team access
+- `assets/appwrite-firebase-compat.js` - compatibility layer that preserves the existing application data API
+- `netlify/lib/appwrite.js` - server-side Appwrite adapter
 
 ## GitHub Upload
 
@@ -35,6 +34,20 @@ Netlify should use:
 - Functions directory: `netlify/functions`
 
 These are already configured in `netlify.toml`.
+
+## Appwrite
+
+This version stores application data in Appwrite through `netlify/functions/appwrite-docs.js` and `netlify/lib/appwrite.js`.
+
+The Appwrite project is `6a947d6e0012c551dfde` in the Singapore region. It uses database `ceylonry`, collection `app_documents`, and bucket `payment-receipts`. Add these variables in Netlify environment variables only:
+
+- `APPWRITE_ENDPOINT=https://sgp.cloud.appwrite.io/v1`
+- `APPWRITE_PROJECT_ID=6a947d6e0012c551dfde`
+- `APPWRITE_DATABASE_ID=ceylonry`
+- `APPWRITE_COLLECTION_ID=app_documents`
+- `APPWRITE_API_KEY` (server-only secret)
+
+Do not add the API key to GitHub, HTML, or a committed `.env` file. It is server-only and must stay in Netlify.
 
 ## Optional SMTP Environment Variables
 
@@ -54,40 +67,17 @@ For Hostinger, the common values are:
 - `SMTP_PASS`: the mailbox password
 - `SMTP_FROM`: optional, usually same as `SMTP_USER`
 
-## Payable Subscription Payments
+## Subscription Payments
 
-Payable credentials must be added only in Netlify environment variables. Do not place keys or tokens in GitHub, HTML, or browser JavaScript.
+The 15-day trial is controlled by each user's `trialEnd` value in Appwrite. After it ends, the dashboards require payment unless the user profile has an active paid status.
 
-Required for Payable checkout:
-
-- `PAYABLE_MERCHANT_ID` - from Payable Settings -> API Integration
-- `PAYABLE_MERCHANT_TOKEN` - from Payable Settings -> API Integration
-- `PAYABLE_BUSINESS_KEY` - from Payable Settings -> Business Integration
-- `PAYABLE_BUSINESS_TOKEN` - from Payable Settings -> Business Integration
-- `PAYABLE_CHECKOUT_URL` - the checkout/session API endpoint Payable gives you
-- `PAYABLE_WEBHOOK_SECRET` - any strong private value you choose for verifying callback requests
-- `FIREBASE_SERVICE_ACCOUNT` - Firebase service account JSON, either raw JSON or base64 encoded. If the Netlify function environment approaches the 4 KB Lambda limit, store the service account as a Netlify secret file instead and set only `GOOGLE_APPLICATION_CREDENTIALS` to the deployed file path.
-- `SITE_URL` - your production site URL, for example `https://your-site.netlify.app`
-
-Do not also define split Firebase Admin variables such as `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, or `FIREBASE_PRIVATE_KEY` for the functions. Netlify attaches site-level variables to every function upload, and those large duplicated values can make the function environment exceed the Lambda limit.
-
-Give Payable this callback URL after you choose `PAYABLE_WEBHOOK_SECRET`:
-
-`https://www.ceylonrylabs.io/.netlify/functions/payable-webhook?secret=YOUR_PAYABLE_WEBHOOK_SECRET`
-
-The 15-day trial is controlled by each user's `trialEnd` value in Firestore. After it ends, the dashboards require payment unless the user profile has `paid: true`. The Payable webhook sets `paid: true`, `subscriptionStatus: active`, and the selected plan after a verified paid callback.
-
-If Payable checkout is not ready yet, the expired-trial paywall creates a manual payment request token in the `paymentRequests` collection. The admin panel shows those tokens so the team can manually send an invoice, mark the request as invoiced, mark it paid, or close it.
-
-The Payable API field names may need one final adjustment once Payable sends the exact checkout documentation. The integration is centralized in `netlify/functions/payable-create-checkout.js`, so that mapping can be changed without touching the dashboards.
+Customers prepay each month by bank transfer and upload a PDF or image payment slip. The receipt is emailed to the accounts team and recorded in the subscription ledger. Payment may be submitted during the trial; in that case, the paid month begins when the 15-day trial ends. Otherwise the payment popup blocks access at the end of the trial and on each monthly due date until a new slip is uploaded. Expired trials also create a manual payment request in the `paymentRequests` document path so an administrator can send an invoice, mark the request as invoiced, mark it paid, or close it.
 
 ## Team Invites
 
 `access-admin.html` now creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
 
-If invite creation shows `Missing or insufficient permissions`, publish the included `firestore.rules` in Firebase:
-
-Firebase Console -> Firestore Database -> Rules -> paste the contents of `firestore.rules` -> Publish.
+If invite creation shows `Not allowed`, confirm the user is signed in and the invite is being written under `users/{ownerUid}/team` in the Appwrite `app_documents` collection.
 
 ## EmailJS
 
