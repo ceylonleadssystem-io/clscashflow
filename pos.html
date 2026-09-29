@@ -14,6 +14,123 @@
 			rel="stylesheet"
 		/>
 		<style>
+			#Our-story {
+		--brand: orangered;
+		--brand-soft: #fff0e8;
+		--ink: #14110f;
+		--muted: #4a4541;
+		--card: #ffffff;
+		font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+		color: var(--ink);
+		background: linear-gradient(180deg, #fff 0%, #fff8f3 55%, #f7ece4 100%);
+		padding: 72px 0 0;
+		overflow: hidden;
+	}
+	#Our-story .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+
+	/* Heading */
+	#Our-story .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; }
+	#Our-story .eyebrow {
+		display: flex; align-items: center; gap: 14px; margin: 0 0 18px;
+		color: var(--brand); font-weight: 600; font-size: 14px; letter-spacing: .18em; text-transform: uppercase;
+	}
+	#Our-story .eyebrow::after { content: ""; width: 46px; height: 1px; background: var(--brand); opacity: .6; }
+	#Our-story h2 { margin: 0; font-size: clamp(38px, 5.4vw, 66px); line-height: 1.04; font-weight: 800; letter-spacing: -.02em; }
+	#Our-story .lead { margin: 20px 0 0; max-width: 560px; font-size: 22px; line-height: 1.45; color: var(--muted); }
+	#Our-story .lead strong { color: var(--ink); font-weight: 700; }
+
+	#Our-story .tagline {
+		font-family: "Caveat", cursive; font-size: 26px; line-height: 1.2; color: #3a3430;
+		transform: rotate(-8deg); margin: 34px 40px 0 0; white-space: nowrap; position: relative;
+	}
+	#Our-story .tagline span { display: block; }
+	#Our-story .tagline span:nth-child(2) { margin-left: 8px; }
+	#Our-story .tagline span:nth-child(3) { margin-left: 22px; }
+	#Our-story .tagline::after {
+		content: ""; position: absolute; left: 10px; bottom: -22px; width: 190px; height: 34px;
+		border-bottom: 2px solid var(--brand); border-radius: 0 0 100% 0 / 0 0 100% 0;
+	}
+
+	/* Founder cards */
+	#Our-story .founders { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; position: relative; }
+	#Our-story .founder {
+		background: var(--card); border-radius: 22px; padding: 18px;
+		display: grid; grid-template-columns: 224px 1fr; gap: 26px;
+		box-shadow: 0 10px 40px rgba(120, 60, 20, .08);
+	}
+	#Our-story .portrait {
+		border-radius: 16px; min-height: 290px; overflow: hidden; position: relative;
+		background: linear-gradient(180deg, #d9a26f 0%, #6b4a38 45%, #1c1714 100%);
+	}
+	#Our-story .portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+	#Our-story .portrait svg { position: absolute; inset: auto 0 0 0; width: 100%; height: 78%; fill: #120e0c; }
+	#Our-story .founder .info { display: flex; flex-direction: column; padding: 14px 6px 4px 0; }
+	#Our-story .founder h3 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.01em; }
+	#Our-story .role { margin: 4px 0 14px; color: var(--brand); font-weight: 600; font-size: 18px; }
+	#Our-story .founder p { margin: 0 0 10px; font-size: 15.5px; line-height: 1.5; color: var(--muted); }
+	#Our-story .founder p b { color: var(--ink); font-weight: 600; }
+	#Our-story .pill {
+		margin-top: auto; align-self: stretch; display: flex; align-items: center; justify-content: center; gap: 10px;
+		background: var(--brand-soft); color: #5a2a10; border-radius: 999px; padding: 12px 18px; font-size: 14.5px; font-weight: 500;
+	}
+	#Our-story .pill svg { width: 20px; height: 20px; stroke: var(--brand); flex: none; }
+
+	/* Connector between founders */
+	#Our-story .link {
+		position: relative; height: 44px; margin: 0 auto; width: min(66%, 780px);
+		border: 1px solid var(--brand); border-top: 0; border-radius: 0 0 40px 40px; opacity: .9;
+	}
+	#Our-story .link i {
+		position: absolute; left: 50%; bottom: -24px; transform: translateX(-50%);
+		width: 48px; height: 48px; border-radius: 50%; background: #fff; border: 1px solid var(--brand);
+		display: grid; place-items: center;
+	}
+	#Our-story .link svg { width: 22px; height: 22px; stroke: var(--brand); }
+
+	/* Statement */
+	#Our-story .statement { text-align: center; margin-top: 56px; }
+	#Our-story .statement h3 { margin: 0; font-size: clamp(26px, 3vw, 34px); line-height: 1.2; font-weight: 800; letter-spacing: -.01em; }
+	#Our-story .statement h3 em { font-style: normal; color: var(--brand); }
+	#Our-story .statement p { margin: 20px auto 0; max-width: 780px; font-size: 19px; line-height: 1.5; color: var(--muted); }
+	#Our-story .statement p strong { color: var(--ink); font-weight: 600; }
+
+	/* Feature row */
+	#Our-story .features { display: flex; justify-content: space-between; gap: 8px; margin: 44px 0 0; padding: 0; list-style: none; }
+	#Our-story .features li { flex: 1; text-align: center; font-size: 17px; font-weight: 500; position: relative; }
+	#Our-story .features li + li::before { content: ""; position: absolute; left: 0; top: 10px; height: 52px; width: 1px; background: #f0d9cc; }
+	#Our-story .features .ico {
+		width: 52px; height: 52px; margin: 0 auto 10px; border-radius: 14px; background: var(--brand-soft);
+		border: 1px solid #ffdcc8; display: grid; place-items: center;
+	}
+	#Our-story .features svg { width: 26px; height: 26px; stroke: var(--brand); }
+
+	/* Brand footer */
+	#Our-story .brand { text-align: center; padding: 56px 0 64px; }
+	#Our-story .brand strong { display: block; font-size: clamp(44px, 6vw, 64px); font-weight: 800; letter-spacing: -.02em; line-height: 1.05; }
+	#Our-story .brand strong span { color: var(--brand); }
+	#Our-story .brand p { margin: 6px 0 22px; font-size: clamp(24px, 3vw, 34px); font-weight: 400; }
+	#Our-story .badge {
+		display: inline-flex; align-items: center; gap: 12px; padding: 10px 26px 10px 18px; border-radius: 999px;
+		border: 1px solid var(--brand); background: rgba(255, 255, 255, .8); font-weight: 500; font-size: 16px;
+	}
+	#Our-story .flag { width: 34px; height: 22px; border-radius: 3px; border: 1px solid #d8c0a8;
+		background: linear-gradient(90deg, #f5b400 0 12%, #1a7a3c 12% 24%, #8d153a 24% 100%); }
+
+	@media (max-width: 900px) {
+		#Our-story .top { flex-direction: column; }
+		#Our-story .tagline { margin: 24px 0 24px 8px; }
+		#Our-story .founders { grid-template-columns: 1fr; }
+		#Our-story .link { display: none; }
+		#Our-story .features { flex-wrap: wrap; justify-content: center; row-gap: 24px; }
+		#Our-story .features li { flex: 0 0 30%; }
+		#Our-story .features li::before { display: none; }
+	}
+	@media (max-width: 560px) {
+		#Our-story .founder { grid-template-columns: 1fr; }
+		#Our-story .portrait { min-height: 240px; }
+		#Our-story .features li { flex: 0 0 45%; }
+		#Our-story .lead { font-size: 19px; }
+	}
 			:root {
 				--ink: #171512;
 				--gold: #c2911c;
@@ -928,8 +1045,9 @@
 				<div class="links">
 					<a href="#features">Features</a
 					><a href="#businesses">Business Types</a
-					><a href="#hardware">Hardware</a><a href="#pricing">Pricing</a
-					><a href="#faq">FAQ</a>
+					><a href="#hardware">Hardware</a><a href="#pricing">Pricing</a>
+					<a href="#Our-story">Our Story</a>	
+					<a href="#faq">FAQ</a>
 				</div>
 				<div class="actions">
 					<a class="btn light" href="index.html">Main Website</a>
@@ -1413,18 +1531,18 @@
 								<button class="active" type="button" data-cycle="monthly">
 									Monthly</button
 								><button type="button" data-cycle="annual">
-									Annual · Save LKR 8,400
+									Annual · Save LKR 6,000
 								</button>
 							</div>
 							<div class="price">
-								<span id="price-value">LKR 3,500</span>
+								<span id="price-value">LKR 5,500</span>
 								<small id="price-term">/ month</small>
 							</div>
 							<p class="price-copy" id="price-copy">
-								Billed monthly. Includes up to 5 POS users.
+								Billed monthly. Includes up to 2 POS users.
 							</p>
 							<div class="price-list">
-								<span>15-day free trial</span><span>Up to 5 users included</span
+								<span>7-day free trial</span><span>Up to 2 users included</span
 								><span>All business presets</span
 								><span>Offline transaction storage</span
 								><span>Inventory and reporting</span
@@ -1439,6 +1557,85 @@
 					</div>
 				</div>
 			</section>
+
+			<section class="section" id="Our-story">
+	<div class="wrap">
+
+		<div class="top">
+			<div class="head">
+				<p class="eyebrow">Our story</p>
+				<h2>Built from experience.</h2>
+				<h2>Built for <span style="color: orangered;">Sri Lanka.</span></h2>
+				<p class="lead"><strong>Ceylonry</strong> POS began with two people who understood the POS industry from two different sides.</p>
+			</div>
+			<div class="tagline" aria-hidden="true">
+				<span>Real Experience</span>
+				<span>Real Solutions</span>
+				<span>For Sri Lankan Businesses</span>
+			</div>
+		</div>
+
+		<div class="founders">
+			<article class="founder">
+				<div class="portrait">
+					<img src="assets/pasan-yasas-founder.jpg" alt="Pasan Yasas" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+						<circle cx="100" cy="70" r="38"/><path d="M20 240c0-62 34-100 80-100s80 38 80 100z"/>
+				</img>
+				</div>
+				<div class="info">
+					<h3>Pasan Yasas</h3>
+					<p class="role">Founder</p>
+					<p>Worked as a Customer Support Lead for a U.S. POS technology company, handling roughly <b>30 customer interactions</b> a day.</p>
+					<p>This gave him first-hand insight into merchant challenges, operational pain points and the features businesses actually wanted.</p>
+					<div class="pill">
+						<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+						Customer &amp; Merchant Experience
+					</div>
+				</div>
+			</article>
+
+			<article class="founder">
+				<div class="portrait">
+					<svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+						<circle cx="100" cy="70" r="38"/><path d="M20 240c0-62 34-100 80-100s80 38 80 100z"/>
+					</svg>
+				</div>
+				<div class="info">
+					<h3>Ayushka Weerasinghe</h3>
+					<p class="role">Co-Founder</p>
+					<p>A key developer working with POS technology, understanding how modern POS systems are engineered and how customer requirements can be transformed into practical solutions.</p>
+					<div class="pill">
+						<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6M14.5 4l-5 16"/></svg>
+						Technology &amp; Product Engineering
+					</div>
+				</div>
+			</article>
+		</div>
+
+		<div class="link" aria-hidden="true">
+			<i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></i>
+		</div>
+
+		<div class="statement">
+			<h3>Pasan understood the <em>customer.</em><br>Ayushka understood the <em>technology.</em></h3>
+			<p>Together, they brought that experience to <strong>Sri Lanka</strong> and <strong>created Ceylonry</strong> POS, a locally built platform designed to adapt to the way each business operates and grows.</p>
+		</div>
+
+		<ul class="features">
+			<li><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg></div>Sales</li>
+			<li><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div>Inventory</li>
+			<li><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div>CRM</li>
+			<li><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div>Loyalty</li>
+			<li><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>Customer Insights</li>
+			<li><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/></svg></div>Reporting</li>
+			<li><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div>Multi-location</li>
+		</ul>
+		<br>
+		<br>
+		
+	</div>
+</section>
+
 
 			<section class="section white" id="faq">
 				<div class="wrap">
@@ -1705,14 +1902,14 @@
 					});
 					var annual = button.dataset.cycle === "annual";
 					document.getElementById("price-value").textContent = annual
-						? "LKR 2,800"
-						: "LKR 3,500";
+						? "LKR 5,000"
+						: "LKR 5,500";
 					document.getElementById("price-term").textContent = annual
 						? "/ month, paid annually"
 						: "/ month";
 					document.getElementById("price-copy").textContent = annual
-						? "LKR 33,600 billed annually. Save LKR 8,400 per year. Includes up to 5 POS users."
-						: "Billed monthly. Includes up to 5 POS users.";
+						? "LKR 60,000 billed annually. Save LKR 6,000 per year. Includes up to 2 POS users."
+						: "Billed monthly. Includes up to 2 POS users.";
 				});
 			});
 		</script>
