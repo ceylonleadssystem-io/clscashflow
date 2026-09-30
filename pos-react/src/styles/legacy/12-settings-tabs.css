@@ -1,0 +1,87 @@
+			.settings-tabbed {
+				width: 100%;
+				max-width: 1050px !important;
+				min-height: 0;
+			}
+			.settings-tabs {
+				display: flex;
+				gap: 7px;
+				overflow-x: auto;
+				padding: 2px 2px 10px;
+				scrollbar-width: none;
+			}
+			.settings-tabs::-webkit-scrollbar {
+				display: none;
+			}
+			.settings-tab {
+				flex: 0 0 auto;
+				border: 1px solid #d8d2c8;
+				background: #fff;
+				color: #5f5951;
+				border-radius: 30px;
+				padding: 10px 15px;
+				font-size: 12px;
+				font-weight: 800;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			.settings-tab.active {
+				background: #171512;
+				border-color: #171512;
+				color: #fff;
+			}
+			.settings-tab-content {
+				min-height: 0;
+				overflow: hidden;
+			}
+			.settings-tab-section {
+				display: none;
+				height: 100%;
+				min-height: 0;
+				overflow-y: auto;
+				overscroll-behavior: contain;
+				scrollbar-width: thin;
+				padding: 2px 4px 12px 2px;
+			}
+			.settings-tab-section.active {
+				display: grid;
+				align-content: start;
+				gap: 14px;
+			}
+			.settings-tab-section > .panel {
+				margin: 0 !important;
+			}
+			.settings-tab-save {
+				position: relative !important;
+				bottom: auto !important;
+				margin-top: 10px;
+				flex: 0 0 auto;
+			}
+			#view-settings.active > .settings-tabbed {
+				display: grid;
+				grid-template-rows: auto minmax(0, 1fr) auto;
+				height: calc(100dvh - 220px);
+				min-height: 360px;
+				overflow: hidden;
+			}
+			body.full #view-settings.active > .settings-tabbed {
+				height: 100%;
+				min-height: 0;
+			}
+			body.full #view-settings .settings-tabs {
+				padding-bottom: 8px;
+			}
+			body.full #view-settings .settings-tab-section {
+				padding-bottom: 8px;
+			}
+			@media (max-width: 560px) {
+				#view-settings.active > .settings-tabbed {
+					height: calc(100dvh - 205px);
+					min-height: 320px;
+				}
+				.settings-tab {
+					padding: 9px 12px;
+					font-size: 11px;
+				}
+			}
+		

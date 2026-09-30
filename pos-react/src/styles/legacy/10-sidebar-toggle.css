@@ -1,0 +1,145 @@
+			/* Distraction-free register mode: the operator can reclaim the sidebar width. */
+			#sidebar-toggle {
+				display: none;
+			}
+			body.full #sidebar-toggle {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+			}
+			#nav button[hidden] {
+				display: none !important;
+			}
+			body.full.sidebar-collapsed .side {
+				display: none !important;
+			}
+			body.full.sidebar-collapsed .app {
+				grid-template-columns: 1fr !important;
+			}
+			body.full:not(.sidebar-collapsed) .side {
+				display: flex !important;
+			}
+			body.full:not(.sidebar-collapsed) .app {
+				grid-template-columns: 248px minmax(0, 1fr) !important;
+			}
+			body.full.sidebar-collapsed #view-checkout .layout {
+				grid-template-columns: minmax(0, 1fr) clamp(430px, 36vw, 590px);
+			}
+			.order-channel-fields {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+			}
+			.order-channel-fields[hidden] {
+				display: none !important;
+			}
+			.order-channel-fields .input {
+				width: 100%;
+			}
+			.order-channel-badge {
+				display: inline-block;
+				margin-top: 4px;
+				padding: 3px 7px;
+				border-radius: 20px;
+				background: #fff2d7;
+				color: #80570a;
+				font-size: 9px;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+			}
+			.ios-fullscreen-guide {
+				position: fixed;
+				inset: 0;
+				z-index: 20000;
+				display: grid;
+				place-items: center;
+				padding: 20px;
+				background: rgba(12, 11, 9, 0.78);
+			}
+			.ios-fullscreen-guide[hidden] {
+				display: none;
+			}
+			.ios-fullscreen-card {
+				width: min(520px, 100%);
+				background: #fff;
+				border-radius: 18px;
+				padding: 26px;
+				box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+			}
+			.ios-fullscreen-card h2 {
+				margin: 0 0 8px;
+				font: 700 27px "Playfair Display";
+			}
+			.ios-fullscreen-card p {
+				margin: 0 0 18px;
+				color: #756f66;
+				line-height: 1.55;
+			}
+			.ios-fullscreen-steps {
+				display: grid;
+				gap: 10px;
+				margin: 0 0 20px;
+				padding: 0;
+				list-style: none;
+				counter-reset: steps;
+			}
+			.ios-fullscreen-steps li {
+				counter-increment: steps;
+				display: grid;
+				grid-template-columns: 32px 1fr;
+				align-items: center;
+				gap: 10px;
+			}
+			.ios-fullscreen-steps li:before {
+				content: counter(steps);
+				display: grid;
+				place-items: center;
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+				background: #171512;
+				color: #fff;
+				font-weight: 800;
+			}
+			.ios-fullscreen-card .btn {
+				width: 100%;
+			}
+			/* iPad/touch keyboards must not zoom or collapse the CSS kiosk workspace. */
+			@media (pointer: coarse) {
+				body.full {
+					height: 100dvh;
+					overflow: hidden;
+				}
+				body.full .app {
+					height: 100dvh;
+					min-height: 0;
+				}
+				body.full .content {
+					height: calc(100dvh - 64px);
+				}
+				body.full #view-checkout input,
+				body.full #view-checkout select,
+				body.full #view-checkout textarea {
+					font-size: 16px !important;
+				}
+				body.full #view-checkout input:focus,
+				body.full #view-checkout select:focus,
+				body.full #view-checkout textarea:focus {
+					font-size: 16px !important;
+				}
+			}
+			@media (pointer: coarse) and (max-height: 950px) {
+				body.full:has(#view-checkout.active) .content {
+					height: calc(100dvh - 52px);
+				}
+			}
+			@media (max-width: 700px) {
+				.order-channel-fields {
+					grid-template-columns: 1fr;
+				}
+				body.full.sidebar-collapsed #view-checkout .layout {
+					grid-template-columns: 1fr;
+				}
+			}
+		
