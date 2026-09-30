@@ -1,4 +1,4 @@
-const { getAdmin } = require('./firebase-admin.cjs');
+const { getAdmin } = require('./appwrite-admin.cjs');
 
 function headers() {
   return {
@@ -79,7 +79,7 @@ exports.handler = async function handler(event, context) {
 
   const admin = await getAdmin();
   if (!admin) {
-    return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: false, reason: 'Firebase admin not configured' }) };
+    return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: false, reason: 'Appwrite is not configured' }) };
   }
 
   try {

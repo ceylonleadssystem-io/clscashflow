@@ -1,5 +1,5 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const { getAdmin } = require('./firebase-admin.cjs');
+const { getAdmin } = require('./appwrite-admin.cjs');
 
 exports.handler = async function handler(event) {
   if (event.httpMethod !== 'POST') {
@@ -22,7 +22,7 @@ exports.handler = async function handler(event) {
       if (uid) {
         const admin = await getAdmin();
         if (!admin) {
-          return { statusCode: 500, body: 'Firebase admin credentials are not configured' };
+          return { statusCode: 500, body: 'Appwrite is not configured' };
         }
         await admin.firestore().collection('users').doc(uid).set({
           paid: true,

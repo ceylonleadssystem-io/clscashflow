@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { getAdmin } = require('./firebase-admin.cjs');
+const { getAdmin } = require('./appwrite-admin.cjs');
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
@@ -14,7 +14,7 @@ function clean(s) {
 async function storeSubmission(data) {
   try {
     const admin = await getAdmin();
-    if (!admin) return { stored: false, reason: 'Firebase admin credentials not configured' };
+    if (!admin) return { stored: false, reason: 'Appwrite is not configured' };
     const doc = await admin.firestore().collection('businessStorySubmissions').add({
       ...data,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
