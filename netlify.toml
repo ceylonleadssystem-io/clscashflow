@@ -33,6 +33,21 @@
   to = "/app/index.html"
   status = 200
 
+[[redirects]]
+  from = "/posv2"
+  to = "/pos-react/dist/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/posv2/"
+  to = "/pos-react/dist/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/posv2/*"
+  to = "/pos-react/dist/:splat"
+  status = 200
+
 # Standard security headers (no restrictive CSP, so inline scripts keep working)
 [[headers]]
   for = "/*"
