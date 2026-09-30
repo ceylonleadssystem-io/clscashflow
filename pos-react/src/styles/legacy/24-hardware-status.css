@@ -1,0 +1,81 @@
+			.hardware-status {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 10px;
+				color: var(--ui-muted, #756f66);
+				font-size: 11px;
+				font-weight: 700;
+			}
+			.hardware-status::before {
+				content: "";
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: #168653;
+				box-shadow: 0 0 0 3px color-mix(in srgb, #168653 16%, transparent);
+			}
+			.hardware-status.offline::before {
+				background: #b97913;
+				box-shadow: 0 0 0 3px color-mix(in srgb, #b97913 16%, transparent);
+			}
+			.usb-printer-controls {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) auto;
+				gap: 9px;
+				align-items: end;
+				margin-top: 12px;
+				padding: 12px;
+				border: 1px solid var(--ui-line, #dedad1);
+				border-radius: 10px;
+				background: var(--ui-soft, #faf9f6);
+			}
+			.usb-printer-controls .hardware-status {
+				grid-column: 1/-1;
+				margin: 0;
+			}
+			.header-printer-button {
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				min-width: 96px;
+			}
+			.header-printer-button::before {
+				content: "";
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: #b97913;
+				box-shadow: 0 0 0 3px color-mix(in srgb, #b97913 15%, transparent);
+			}
+			.header-printer-button.connected::before {
+				background: #168653;
+				box-shadow: 0 0 0 3px color-mix(in srgb, #168653 15%, transparent);
+			}
+			.pos-print-frame {
+				position: fixed;
+				right: 0;
+				bottom: 0;
+				width: 1px;
+				height: 1px;
+				border: 0;
+				opacity: 0.01;
+				pointer-events: none;
+			}
+			@media (max-width: 600px) {
+				.usb-printer-controls {
+					grid-template-columns: 1fr;
+				}
+				.usb-printer-controls .btn {
+					width: 100%;
+				}
+				.header-printer-button {
+					min-width: 44px;
+					width: 44px;
+					padding: 9px;
+				}
+				.header-printer-button span {
+					display: none;
+				}
+			}
+		

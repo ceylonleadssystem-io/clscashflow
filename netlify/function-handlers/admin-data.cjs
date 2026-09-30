@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { getAdmin } = require('./firebase-admin.cjs');
+const { getAdmin } = require('./appwrite-admin.cjs');
 
 function headers() {
   return {
@@ -410,7 +410,7 @@ exports.handler = async function handler(event) {
     return {
       statusCode: 503,
       headers: headers(),
-      body: JSON.stringify({ ok: false, error: 'Firebase admin is not configured on Netlify.' })
+      body: JSON.stringify({ ok: false, error: 'Appwrite is not configured on Netlify.' })
     };
   }
 

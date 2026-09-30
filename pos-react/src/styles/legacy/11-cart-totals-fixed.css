@@ -1,0 +1,121 @@
+			.cash-tender-panel {
+				display: grid;
+				gap: 8px;
+				padding: 11px 12px;
+				border: 1px solid #d7b963;
+				border-radius: 9px;
+				background: #fffaf0;
+			}
+			.cash-tender-panel[hidden] {
+				display: none;
+			}
+			.cash-tender-entry {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) auto;
+				gap: 8px;
+			}
+			.cash-change-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				font-size: 12px;
+			}
+			.cash-change-row strong {
+				font: 700 18px "Playfair Display";
+				color: #168653;
+			}
+			.cash-change-row.short strong {
+				color: #a5362b;
+			}
+			body.full #view-checkout .cash-tender-panel {
+				padding: 8px 10px;
+				gap: 5px;
+			}
+			body.full #view-checkout .cash-change-row strong {
+				font-size: 16px;
+			}
+			/* Keep totals and payment fixed inside the register while order lines paginate above. */
+			body.full .content {
+				display: grid;
+				grid-template-rows: auto auto minmax(0, 1fr);
+			}
+			body.full .content > #notice {
+				grid-row: 1;
+			}
+			body.full .content > #pos-cloud-banner {
+				grid-row: 2;
+			}
+			body.full .content > .view {
+				grid-row: 3;
+			}
+			body.full #view-checkout.active {
+				height: auto !important;
+				min-height: 0;
+			}
+			body.full #view-checkout .cart {
+				grid-template-rows: auto minmax(0, auto) auto minmax(0, 1fr) !important;
+			}
+			body.full #view-checkout .cart-list {
+				max-height: min(25vh, 230px) !important;
+				overflow-y: auto;
+			}
+			body.full #view-checkout #cart-pagination {
+				min-height: 38px;
+				padding: 5px 10px;
+			}
+			body.full #view-checkout .cart-foot {
+				display: grid;
+				grid-template-rows: minmax(0, 1fr) repeat(5, auto);
+				overflow: hidden !important;
+			}
+			body.full #view-checkout .checkout-fields {
+				min-height: 0;
+				overflow-y: auto;
+				overscroll-behavior: contain;
+				padding-right: 3px;
+			}
+			body.full #view-checkout #complete-btn {
+				position: relative !important;
+				bottom: auto !important;
+				display: block !important;
+				visibility: visible !important;
+			}
+			#mobile-cart-toggle {
+				display: none;
+			}
+			@media (pointer: coarse) and (min-width: 650px) and (max-width: 900px) {
+				body.full #view-checkout .layout {
+					grid-template-columns: minmax(0, 1fr) minmax(340px, 46vw) !important;
+				}
+				body.full #view-checkout .layout > .panel:first-child,
+				body.full #view-checkout .cart {
+					height: 100% !important;
+				}
+			}
+			@media (max-width: 649px) {
+				body.full #mobile-cart-toggle {
+					display: inline-flex;
+				}
+				body.full #view-checkout .layout {
+					display: block;
+					height: 100%;
+				}
+				body.full #view-checkout .layout > .panel:first-child {
+					height: 100%;
+				}
+				body.full #view-checkout .cart {
+					display: none;
+					height: 100% !important;
+				}
+				body.full.mobile-cart-open #view-checkout .layout > .panel:first-child {
+					display: none;
+				}
+				body.full.mobile-cart-open #view-checkout .cart {
+					display: grid;
+				}
+				body.full #view-checkout .cart-list {
+					max-height: 24vh !important;
+				}
+			}
+		

@@ -296,6 +296,33 @@ exports.handler = async function(event) {
       return response(200, { ok: true, products: products.length, categories: categories.length, imported: incoming.length, backupId });
     }
 
+    if (action === 'saveSettings') {
+      // Admin dashboard: feature switches (business + per location) and the first-login welcome message.
+      // Written with per-key timestamps so the POS cloud merge accepts them as the newest value.
+      const incoming = body.settings && typeof body.settings === 'object' ? body.settings : {};
+      const allowedKeys = ['features', 'locationFeatures', 'welcome'];
+      const now = new Date().toISOString();
+      const payload = Object.assign({}, workspace.payload);
+      payload.settings = Object.assign({}, payload.settings);
+      payload.syncMeta = Object.assign({}, payload.syncMeta);
+      payload.syncMeta.settings = Object.assign({}, payload.syncMeta.settings);
+      const changed = [];
+      allowedKeys.forEach(function(key) {
+        if (!Object.prototype.hasOwnProperty.call(incoming, key)) return;
+        const value = incoming[key];
+        if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+        payload.settings[key] = JSON.parse(JSON.stringify(value));
+        payload.syncMeta.settings[key] = now;
+        changed.push(key);
+      });
+      if (!changed.length) return response(400, { ok: false, error: 'Nothing to save.' });
+      payload.syncMeta.updatedAt = now;
+      payload.supportAudit = Array.isArray(payload.supportAudit) ? payload.supportAudit : [];
+      payload.supportAudit.unshift({ id: 'sa' + Date.now(), at: now, action: 'admin-settings', details: clean(body.summary || changed.join(', '), 400), userId: ADMIN_EMAIL, session: 'pos-admin' });
+      await workspace.ref.set({ ownerUid: uid, payload, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedAtUtc: now }, { merge: true });
+      return response(200, { ok: true, saved: changed });
+    }
+
     if (action === 'setSetupStatus') {
       const status = ['draft', 'ready', 'approved'].includes(body.status) ? body.status : 'draft';
       await db.collection('users').doc(uid).set({ posSetupStatus: status, posCatalogUpdatedAtUtc: new Date().toISOString(), posCatalogUpdatedBy: ADMIN_EMAIL }, { merge: true });

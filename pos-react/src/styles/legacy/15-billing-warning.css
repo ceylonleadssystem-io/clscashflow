@@ -1,0 +1,174 @@
+			.pos-billing-warning {
+				margin-left: auto;
+				color: #8a5a00;
+				font-size: 12px;
+				font-weight: 800;
+				text-align: right;
+			}
+			.image-arrow-controls {
+				display: grid;
+				grid-template-columns: minmax(160px, 1fr) auto;
+				gap: 12px;
+				align-items: center;
+				margin-top: 10px;
+				padding: 12px;
+				border: 1px solid var(--ui-line, #ded8ce);
+				border-radius: 10px;
+				background: var(--ui-soft, #faf8f3);
+				color: var(--ui-text, #171512);
+			}
+			.image-arrow-copy strong,
+			.image-arrow-copy span {
+				display: block;
+			}
+			.image-arrow-copy span {
+				margin-top: 4px;
+				color: var(--ui-muted, #756f67);
+				font-size: 11px;
+			}
+			.image-arrow-pad {
+				display: grid;
+				grid-template-columns: 46px 46px 46px;
+				grid-template-rows: 42px 42px 42px;
+				gap: 6px;
+			}
+			.image-arrow-pad button {
+				min-height: 42px;
+				padding: 0;
+				border: 1px solid var(--ui-line, #d3cdc2);
+				border-radius: 8px;
+				background: var(--ui-surface, #fff);
+				color: var(--ui-text, #171512);
+				font-size: 20px;
+				font-weight: 900;
+				cursor: pointer;
+			}
+			.image-arrow-pad button:hover,
+			.image-arrow-pad button:focus-visible {
+				border-color: var(--ui-accent, #ff5a00);
+				color: var(--ui-accent, #ff5a00);
+				outline: 2px solid
+					color-mix(in srgb, var(--ui-accent, #ff5a00) 25%, transparent);
+			}
+			.image-arrow-pad .up {
+				grid-column: 2;
+			}
+			.image-arrow-pad .left {
+				grid-column: 1;
+				grid-row: 2;
+			}
+			.image-arrow-pad .reset {
+				grid-column: 2;
+				grid-row: 2;
+				font-size: 11px;
+			}
+			.image-arrow-pad .right {
+				grid-column: 3;
+				grid-row: 2;
+			}
+			.image-arrow-pad .down {
+				grid-column: 2;
+				grid-row: 3;
+			}
+			.image-position-controls .field:has(#p-image-x),
+			.image-position-controls .field:has(#p-image-y),
+			.image-position-controls > button {
+				display: none !important;
+			}
+			.settings-theme-picker {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 10px;
+			}
+			.settings-theme-option {
+				display: grid;
+				grid-template-columns: 38px 1fr 24px;
+				align-items: center;
+				gap: 10px;
+				min-height: 68px;
+				padding: 10px;
+				border: 2px solid var(--ui-line);
+				border-radius: 12px;
+				background: var(--ui-surface);
+				color: var(--ui-text);
+				text-align: left;
+				cursor: pointer;
+			}
+			.settings-theme-option.active {
+				border-color: var(--ui-accent);
+				box-shadow: 0 0 0 3px
+					color-mix(in srgb, var(--ui-accent) 16%, transparent);
+			}
+			.theme-option-swatch {
+				width: 34px;
+				height: 34px;
+				border-radius: 9px;
+				background: var(--swatch);
+				box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.2);
+			}
+			.settings-theme-option strong,
+			.settings-theme-option small {
+				display: block;
+			}
+			.settings-theme-option small {
+				margin-top: 3px;
+				color: var(--ui-muted);
+			}
+			.theme-option-check {
+				color: var(--ui-accent);
+				font-weight: 900;
+				opacity: 0;
+			}
+			.settings-theme-option.active .theme-option-check {
+				opacity: 1;
+			}
+			[data-pos-theme="graphite"] .session-user span {
+				color: #f1f4f6 !important;
+			}
+			[data-pos-theme="graphite"] .session-user strong {
+				color: #fff !important;
+			}
+			.signin-shift-actions {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 9px;
+				margin-top: 14px;
+			}
+			.signin-shift-actions .wide {
+				grid-column: 1/-1;
+			}
+			.user-behaviour-fields {
+				grid-column: 1/-1;
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 12px;
+				padding-top: 12px;
+				border-top: 1px solid #e5e1d9;
+			}
+			.billing-settings-note {
+				padding: 10px 0 0;
+				color: #756f67;
+				font-size: 11px;
+				line-height: 1.55;
+			}
+			@media (max-width: 700px) {
+				.pos-cloud-banner {
+					align-items: flex-start !important;
+				}
+				.pos-billing-warning {
+					width: 100%;
+					margin: 7px 0 0;
+					text-align: left;
+				}
+				.image-arrow-controls,
+				.user-behaviour-fields {
+					grid-template-columns: 1fr;
+				}
+				.image-arrow-pad {
+					justify-self: center;
+				}
+				.settings-theme-picker {
+					grid-template-columns: 1fr;
+				}
+			}
+		

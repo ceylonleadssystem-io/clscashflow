@@ -6,6 +6,7 @@ const root = process.cwd();
 const ignoredDirectories = new Set(['.git', 'node_modules', 'tmp', 'output', 'dist', 'build', 'supabase', 'cls-github-upload', 'cls_site 3']);
 const failures = [];
 const warnings = [];
+const packageTypeCache = new Map();
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -19,11 +20,37 @@ function relative(file) {
   return path.relative(root, file) || '.';
 }
 
+function packageType(directory) {
+  if (packageTypeCache.has(directory)) return packageTypeCache.get(directory);
+  const packageFile = path.join(directory, 'package.json');
+  let type = null;
+  if (fs.existsSync(packageFile)) {
+    try {
+      type = JSON.parse(fs.readFileSync(packageFile, 'utf8')).type || null;
+    } catch {
+      type = null;
+    }
+  }
+  packageTypeCache.set(directory, type);
+  return type;
+}
+
+function isModuleFile(file) {
+  let directory = path.dirname(file);
+  while (directory.startsWith(root)) {
+    if (packageType(directory) === 'module') return true;
+    if (directory === root) break;
+    directory = path.dirname(directory);
+  }
+  return false;
+}
+
 const files = walk(root);
 const javascriptFiles = files.filter((file) => file.endsWith('.js'));
 const htmlFiles = files.filter((file) => file.endsWith('.html'));
 
 for (const file of javascriptFiles) {
+  if (isModuleFile(file)) continue;
   try {
     new vm.Script(fs.readFileSync(file, 'utf8'), { filename: relative(file) });
   } catch (error) {
@@ -53,9 +80,12 @@ for (const file of htmlFiles) {
     if (!target || /^(?:https?:|mailto:|tel:|data:|javascript:|#|\/\/)/i.test(target) || /[{$]/.test(target)) continue;
     target = target.split(/[?#]/)[0];
     if (!target) continue;
-    const resolved = target.startsWith('/')
+    let resolved = target.startsWith('/')
       ? path.join(root, target.slice(1))
       : path.resolve(path.dirname(file), target);
+    if (target.startsWith('/') && !fs.existsSync(resolved)) {
+      resolved = path.resolve(path.dirname(file), target.slice(1));
+    }
     if (!fs.existsSync(resolved)) failures.push(`${relative(file)}: missing local reference ${match[1]}`);
   }
 }

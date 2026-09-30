@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { getAdmin } = require('./firebase-admin.cjs');
+const { getAdmin } = require('./appwrite-admin.cjs');
 
 function headers() {
   return {
@@ -69,7 +69,7 @@ exports.handler = async function handler(event) {
       storage = { stored: false, reason: err && err.message ? err.message : 'Firestore write failed' };
     }
   } else {
-    storage = { stored: false, reason: 'Firebase admin not configured' };
+    storage = { stored: false, reason: 'Appwrite is not configured' };
   }
 
   const user = process.env.SMTP_USER;

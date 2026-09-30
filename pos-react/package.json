@@ -1,0 +1,32 @@
+{
+  "name": "ceylonry-pos-react",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ceylonry POS - modular React + WatermelonDB port of pos-system.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint:syntax": "node --check vite.config.js"
+  },
+  "dependencies": {
+    "@nozbe/watermelondb": "^0.27.1",
+    "appwrite": "^17.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.24.7",
+    "@babel/plugin-transform-class-properties": "^7.24.7",
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2",
+    "fake-indexeddb": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

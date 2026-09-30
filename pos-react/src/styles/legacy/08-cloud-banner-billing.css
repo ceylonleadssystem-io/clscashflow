@@ -1,0 +1,293 @@
+			.pos-cloud-banner {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				background: #fff2d7;
+				border: 1px solid #dfbd63;
+				color: #704b08;
+				border-radius: 9px;
+				padding: 10px 13px;
+				margin-bottom: 12px;
+				font-size: 11px;
+				font-weight: 700;
+			}
+			.pos-cloud-banner .btn {
+				min-height: 34px;
+				padding: 7px 11px;
+			}
+			.pos-cloud-state {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.pos-cloud-dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: #1b9659;
+			}
+			.pos-auth-note {
+				margin-top: 10px;
+				border-top: 1px solid #e5dfd5;
+				padding-top: 12px;
+				font-size: 11px;
+				color: #756f66;
+			}
+			.pos-auth-note a {
+				color: #9a7217;
+				font-weight: 800;
+			}
+			.table-actions {
+				display: flex;
+				justify-content: flex-end;
+				gap: 6px;
+				flex-wrap: wrap;
+			}
+			/* Keep subscription payment inside the visible viewport regardless of POS page layout. */
+			.cls-bank-modal {
+				position: fixed !important;
+				inset: 0 !important;
+				z-index: 10000 !important;
+				display: grid !important;
+				place-items: center !important;
+				width: 100vw !important;
+				height: 100dvh !important;
+				margin: 0 !important;
+				padding: 16px !important;
+				overflow: auto !important;
+				background: rgba(8, 8, 8, 0.78) !important;
+				overscroll-behavior: contain;
+			}
+			.cls-bank-card {
+				position: relative !important;
+				inset: auto !important;
+				width: min(560px, calc(100vw - 32px)) !important;
+				max-height: calc(100dvh - 32px) !important;
+				margin: auto !important;
+				overflow: auto !important;
+			}
+			.cls-bank-card .cls-bank-close {
+				position: sticky !important;
+				top: 0 !important;
+				float: right !important;
+				z-index: 2;
+			}
+			@supports not (height: 100dvh) {
+				.cls-bank-modal {
+					height: 100vh !important;
+				}
+				.cls-bank-card {
+					max-height: calc(100vh - 32px) !important;
+				}
+			}
+			/* A compact top navigation replaces the tall sidebar on tablets, phones and narrowed desktop windows. */
+			@media (max-width: 1100px) {
+				html,
+				body {
+					width: 100%;
+					overflow-x: hidden;
+				}
+				.app,
+				body.full .app {
+					display: block;
+					min-height: 100dvh;
+				}
+				.side,
+				body.full .side {
+					display: block !important;
+					position: sticky !important;
+					top: 0 !important;
+					z-index: 60 !important;
+					width: 100% !important;
+					height: auto !important;
+					min-height: 0 !important;
+					padding: 8px 10px !important;
+					overflow: hidden !important;
+				}
+				.side .brand,
+				.side .session-user,
+				.side .side-foot,
+				.side .side-business-logo {
+					display: none !important;
+				}
+				.side .nav,
+				body.full .side .nav {
+					display: flex !important;
+					gap: 6px !important;
+					width: 100%;
+					min-height: 0;
+					overflow-x: auto !important;
+					overflow-y: hidden !important;
+					padding: 0 0 3px !important;
+					scrollbar-width: none;
+					-webkit-overflow-scrolling: touch;
+				}
+				.side .nav::-webkit-scrollbar {
+					display: none;
+				}
+				.side .nav button,
+				body.full .nav button {
+					flex: 0 0 auto !important;
+					min-height: 42px !important;
+					padding: 10px 12px !important;
+					white-space: nowrap !important;
+					font-size: 11px !important;
+				}
+				.main {
+					width: 100%;
+					min-width: 0;
+				}
+				.top,
+				body.full .top {
+					display: flex !important;
+					position: sticky !important;
+					top: 57px !important;
+					z-index: 50 !important;
+					height: 60px !important;
+					padding: 0 14px !important;
+				}
+				.top h1 {
+					font-size: 20px;
+				}
+				.top p {
+					display: none;
+				}
+				.content,
+				body.full .content {
+					padding: 12px !important;
+				}
+				.view {
+					scroll-margin-top: 122px;
+				}
+				.layout,
+				#view-checkout .layout {
+					grid-template-columns: 1fr !important;
+				}
+				.cart,
+				#view-checkout .cart {
+					position: relative !important;
+					top: 0 !important;
+					max-height: none !important;
+					overflow: visible !important;
+				}
+				.grid4 {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+				}
+			}
+			@media (max-width: 560px) {
+				.pos-cloud-banner {
+					align-items: flex-start;
+					flex-direction: column;
+				}
+				.pos-cloud-banner .btn {
+					width: 100%;
+				}
+				.grid4 {
+					grid-template-columns: 1fr;
+				}
+				.top {
+					height: 56px !important;
+					top: 57px !important;
+				}
+				.top .btn {
+					padding: 8px 10px;
+				}
+				.content,
+				body.full .content {
+					padding: 9px !important;
+				}
+				.table-actions {
+					flex-direction: column;
+					align-items: stretch;
+				}
+				.table-actions .btn {
+					width: 100%;
+				}
+				.cls-bank-modal {
+					place-items: end center !important;
+					padding: 8px !important;
+				}
+				.cls-bank-card {
+					width: 100% !important;
+					max-height: calc(100dvh - 16px) !important;
+					border-radius: 18px 18px 10px 10px !important;
+				}
+			}
+			/* Keep mobile navigation available and prevent Staff & Shifts from widening the page. */
+			@media (max-width: 1100px) {
+				html {
+					overflow-x: clip;
+				}
+				.side,
+				body.full .side {
+					position: -webkit-sticky !important;
+					position: sticky !important;
+					top: 0 !important;
+					align-self: start;
+					transform: translateZ(0);
+				}
+				.side .nav button.active {
+					scroll-margin-inline: 14px;
+				}
+				.main,
+				.content,
+				.view,
+				#view-staff,
+				#view-staff > * {
+					min-width: 0;
+					max-width: 100%;
+				}
+			}
+			@media (min-width: 601px) and (max-width: 900px) {
+				#view-staff .shift-grid {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+				}
+				#view-staff .shift-grid .card:last-child {
+					grid-column: 1/-1;
+				}
+			}
+			@media (max-width: 600px) {
+				#view-staff {
+					width: 100%;
+					margin: 0 auto;
+				}
+				#view-staff .shift-grid {
+					grid-template-columns: minmax(0, 1fr);
+					gap: 10px;
+				}
+				#view-staff .shift-grid .card {
+					width: 100%;
+					min-width: 0;
+					padding: 15px;
+				}
+				#view-staff .shift-grid .card:last-child {
+					grid-column: auto;
+				}
+				#view-staff .value {
+					font-size: 23px;
+					overflow-wrap: anywhere;
+				}
+				#view-staff .shift-actions {
+					display: grid;
+					grid-template-columns: 1fr;
+					gap: 8px;
+				}
+				#view-staff .shift-actions .btn {
+					width: 100%;
+				}
+				#view-staff .panel-head {
+					align-items: flex-start;
+					flex-wrap: wrap;
+				}
+				#view-staff .panel-head .btn {
+					width: 100%;
+				}
+				#view-staff .table-wrap {
+					width: 100%;
+					max-width: 100%;
+					overflow-x: auto;
+					-webkit-overflow-scrolling: touch;
+				}
+			}
+		

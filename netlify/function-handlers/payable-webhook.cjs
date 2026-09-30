@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { getAdmin } = require('./firebase-admin.cjs');
+const { getAdmin } = require('./appwrite-admin.cjs');
 
 function headers() {
   return {
@@ -150,7 +150,7 @@ exports.handler = async function handler(event) {
 
   const admin = await getAdmin();
   if (!admin) {
-    return { statusCode: 500, headers: headers(), body: JSON.stringify({ ok: false, error: 'Firebase Admin is not configured for payment updates.' }) };
+    return { statusCode: 500, headers: headers(), body: JSON.stringify({ ok: false, error: 'Appwrite is not configured for payment updates.' }) };
   }
 
   const body = parseBody(event);

@@ -1,0 +1,79 @@
+import { useEffect } from "react";
+import { UiProvider, useUi } from "./store/UiProvider";
+import { SessionProvider, useSession } from "./store/SessionProvider";
+import { DataProvider, useData } from "./store/DataProvider";
+import { FeatureProvider } from "./store/FeatureProvider";
+import { ModalsProvider } from "./store/ModalsProvider";
+import { PosProvider, usePos } from "./store/PosProvider";
+import { CheckoutProvider } from "./store/CheckoutProvider";
+import { BusinessGate } from "./gates/BusinessGate";
+import { StaffGate } from "./gates/StaffGate";
+import { CheckoutModeGate } from "./gates/CheckoutModeGate";
+import { Shell } from "./components/layout/Shell";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+
+/**
+ * Provider tree:
+ *   Ui -> Session (auth, workspace DB, cloud sync)
+ *      -> Data (live WatermelonDB snapshot) -> Features (admin switches)
+ *      -> Modals -> Pos (staff session, services) -> Checkout (current order)
+ */
+export default function App() {
+	return (
+		<ErrorBoundary>
+			<UiProvider>
+				<SessionProvider>
+					<Root />
+				</SessionProvider>
+			</UiProvider>
+		</ErrorBoundary>
+	);
+}
+
+const Loading = ({ children = "Loading…" }) => <div className="app-loading">{children}</div>;
+
+function Root() {
+	const { phase, workspace } = useSession();
+	if (phase === "booting") return <Loading />;
+	if (phase === "signed-out") return <BusinessGate />;
+	if (phase === "activating" || !workspace) return <Loading>Loading your POS…</Loading>;
+	return (
+		<DataProvider key={workspace.dbName} store={workspace.store}>
+			<Ready />
+		</DataProvider>
+	);
+}
+
+function Ready() {
+	const data = useData();
+	if (!data.ready) return <Loading>Opening local database…</Loading>;
+	return (
+		<FeatureProvider>
+			<ModalsProvider>
+				<PosProvider>
+					<CheckoutProvider>
+						<Gate />
+					</CheckoutProvider>
+				</PosProvider>
+			</ModalsProvider>
+		</FeatureProvider>
+	);
+}
+
+function Gate() {
+	const { currentUser, support, chooserOpen } = usePos();
+	const { billing, restoredNotice } = useSession();
+	const ui = useUi();
+	useEffect(() => {
+		if (restoredNotice) ui.notice("Your saved POS items were restored and synced.");
+	}, [restoredNotice, ui]);
+	if (!billing.allowed) return <Loading>Subscription payment required. Complete the payment dialog to continue.</Loading>;
+	if (!currentUser && !support)
+		return (
+			<>
+				<StaffGate />
+				{chooserOpen && <CheckoutModeGate />}
+			</>
+		);
+	return <Shell />;
+}
