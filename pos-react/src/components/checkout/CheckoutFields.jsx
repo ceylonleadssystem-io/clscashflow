@@ -3,6 +3,8 @@ import { PAYMENT_ICONS, PAYMENT_METHODS, PLATFORM_CHANNELS } from "../../config/
 import { birthdayInfo, customerInsights, customerSegment } from "../../domain/analytics";
 import { money, today } from "../../domain/format";
 import { NumberInput } from "../ui";
+import { FieldError } from "../ui/FieldError";
+import { cleanPhoneInput, emailError } from "../../domain/validators";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { useCheckout } from "../../store/CheckoutProvider";
@@ -48,7 +50,7 @@ function CustomerSection() {
 					inputMode="tel"
 					placeholder="Find by mobile number"
 					value={c.phoneSearch}
-					onChange={(e) => c.setPhoneSearch(e.target.value)}
+					onChange={(e) => c.setPhoneSearch(cleanPhoneInput(e.target.value))}
 					onKeyDown={(e) => {
 						if (e.key === "Enter") {
 							e.preventDefault();
@@ -309,7 +311,10 @@ function ReceiptOptions() {
 						<input type="checkbox" id="send-receipt" checked={c.wantsEmail} onChange={(e) => c.toggleEmail(e.target.checked)} /> Email receipt requested
 					</label>
 					{c.wantsEmail && (
-						<input className="input" id="receipt-email" type="email" placeholder="Customer email" value={c.receiptEmail} onChange={(e) => c.setReceiptEmail(e.target.value)} autoFocus />
+						<>
+							<input className={"input" + (emailError(c.receiptEmail) ? " invalid" : "")} id="receipt-email" type="email" placeholder="Customer email" value={c.receiptEmail} onChange={(e) => c.setReceiptEmail(e.target.value)} autoFocus />
+							<FieldError message={emailError(c.receiptEmail)} />
+						</>
 					)}
 				</>
 			)}

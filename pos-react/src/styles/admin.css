@@ -76,3 +76,41 @@
 .plans-conditions{margin:14px 0 0;background:#fff7f1;border-radius:12px;padding:12px 16px;font-size:12px;color:#6b6258}
 @media(max-width:1000px){.plans-grid{grid-template-columns:repeat(2,1fr)}.plans-extra,.plans-highlights{grid-template-columns:1fr 1fr}.plans-extra{grid-template-columns:1fr}}
 @media(max-width:600px){.plans-grid,.plans-highlights,.plans-extra-tiles{grid-template-columns:1fr}}
+
+/* ---- stock search / adjust ---- */
+.stock-search-list{display:grid;gap:6px;margin-top:10px;max-height:320px;overflow:auto}
+.stock-search-row{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;background:#fff;border:1px solid #e5e1d9;border-radius:12px;padding:10px 14px;cursor:pointer;font:inherit}
+.stock-search-row:hover,.stock-search-row:focus-visible{border-color:var(--accent,#ff4d0a);outline:none}
+.stock-search-row small{display:block;color:#7a6f63}
+.stock-search-row em{font-style:normal;color:#6b6258;font-size:13px;white-space:nowrap}
+.stock-search-row.add-new{background:#fff7f1;border-style:dashed;border-color:var(--accent,#ff4d0a);color:var(--accent,#ff4d0a)}
+.adjust-preview{grid-column:1/-1;padding:10px 14px;border-radius:10px;background:#f3efe7;font-weight:700}
+.adjust-preview.pos{background:#e7f6ee;color:#168653}.adjust-preview.neg{background:#fde9e7;color:#a5362b}
+
+/* ---- phone stock count ---- */
+.qr-box{display:grid;justify-items:center;gap:14px;text-align:center}
+.qr-box img{border:1px solid #e5e1d9;border-radius:12px;padding:8px;background:#fff;max-width:100%;height:auto}
+.qr-steps{text-align:left;margin:0;padding-left:20px;color:#6b6258;font-size:14px;line-height:1.6}
+.count-page{max-width:640px;margin:0 auto;padding:14px;display:grid;gap:12px;min-height:100vh;background:var(--bg,#f5f3ee)}
+.count-page header{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.count-list{display:grid;gap:8px}
+.count-row{display:grid;grid-template-columns:1fr 110px auto;gap:10px;align-items:center;background:#fff;border:1px solid #e5e1d9;border-radius:12px;padding:10px 12px}
+.count-row small{display:block;color:#7a6f63}
+@media(max-width:480px){.count-row{grid-template-columns:1fr 1fr}.count-row>div:first-child{grid-column:1/-1}}
+
+.field-error{color:#a5362b;font-size:12px;margin-top:4px;font-weight:600}
+.input.invalid{border-color:#a5362b!important;box-shadow:0 0 0 3px rgba(165,54,43,.12)}
+
+/* ---- admin portal extras ---- */
+.admin-login{min-height:100vh;display:grid;place-items:center;padding:18px;background:linear-gradient(135deg,#171512,#2a241c)}
+.admin-login-card{width:min(440px,100%);background:#fff;border-radius:20px;padding:30px 28px;display:grid;gap:6px}
+.admin-login-card h1{margin:6px 0 0;font-size:24px}
+.admin-badge{display:inline-block;width:max-content;background:#171512;color:#fff;font:700 11px "DM Sans",sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.admin-crumb{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:12px}.admin-crumb h2{margin:0}
+.admin-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start}
+.admin-dl{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:0 0 16px}.admin-dl dt{color:#7a6f63}.admin-dl dd{margin:0;font-weight:600}
+.tri{display:inline-flex;border:1px solid #d8d2c6;border-radius:999px;overflow:hidden;flex:none}
+.tri button{border:0;background:#fff;padding:6px 11px;font:600 12px "DM Sans",sans-serif;cursor:pointer;color:#6b6258}
+.tri button.sel.inherit{background:#eee9df;color:#171512}.tri button.sel.on{background:#168653;color:#fff}.tri button.sel.off{background:#a5362b;color:#fff}
+.btn.active{border-color:var(--accent,#ff4d0a);color:var(--accent,#ff4d0a)}
+.admin-app .admin-savebar{z-index:30}

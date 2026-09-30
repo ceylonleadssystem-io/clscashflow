@@ -147,3 +147,48 @@ describe("format", () => {
 		expect(whatsappPhone("0771234567")).toBe("94771234567");
 	});
 });
+
+import { adjustmentChange, availableProductStock, ensureProductInventory } from "../domain/inventory";
+import { buildInvoiceLines } from "../admin-app/billing";
+import { emailError, phoneError } from "../domain/validators";
+import { defaultFeatureFlags } from "../config/features";
+
+describe("stock reasons", () => {
+	it("adds or removes according to the reason", () => {
+		expect(adjustmentChange("Stock received", 5, 10)).toBe(5);
+		expect(adjustmentChange("Wastage", 3, 10)).toBe(-3);
+		expect(adjustmentChange("Damaged", -3, 10)).toBe(-3);
+		expect(adjustmentChange("Stock count correction", 8, 10)).toBe(-2);
+	});
+	it("deleted stock rows leave the product always available", () => {
+		const p = { id: "p", type: "Product", trackStock: false, stock: 0 };
+		expect(availableProductStock(p, [], "x")).toBe(Infinity);
+		expect(ensureProductInventory([p], [], [{ id: "x", active: true }]).inventory).toHaveLength(0);
+	});
+});
+
+describe("invoices", () => {
+	const flags = { ...defaultFeatureFlags() };
+	it("charges tier price plus additional features beyond the free ones", () => {
+		const r = buildInvoiceLines({ tier: "starter", flags, period: "2026-10" });
+		// starter excludes 9 features that are all on in `flags` -> 9 extras, 2 free
+		expect(r.extras.length).toBeGreaterThan(2);
+		expect(r.total).toBe(5500 + (r.extras.length - 2) * 5500);
+	});
+	it("uses the fixed-amount exception when set", () => {
+		const r = buildInvoiceLines({ tier: "business", flags, exceptionAmount: 6000, exceptionNote: "legacy deal" });
+		expect(r.exception).toBe(true);
+		expect(r.total).toBe(6000);
+		expect(r.lines).toHaveLength(1);
+	});
+});
+
+describe("validators", () => {
+	it("validates email and phone", () => {
+		expect(emailError("a@b.co")).toBe("");
+		expect(emailError("bad")).not.toBe("");
+		expect(phoneError("077 123 4567")).toBe("");
+		expect(phoneError("12ab")).not.toBe("");
+		expect(phoneError("123")).not.toBe("");
+	});
+});

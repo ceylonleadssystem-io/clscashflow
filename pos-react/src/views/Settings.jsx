@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { FULL_SETTINGS_ROLES } from "../config/roles";
 import { KITCHEN_TYPES, SERVICE_CHARGE_TYPES } from "../config/presets";
 import { ORDER_CHANNELS } from "../config/constants";
+import { emailError } from "../domain/validators";
+import { useUi } from "../store/UiProvider";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
@@ -53,6 +55,7 @@ export function Settings() {
 	const themes = useFeature("settings.themes");
 	const serviceCharge = useFeature("checkout.serviceCharge");
 	const billing = useFeature("settings.billing");
+	const ui = useUi();
 	const [tab, setTab] = useState("business");
 	const [form, setForm] = useState(() => formFrom(settings));
 	useEffect(() => {
@@ -61,7 +64,14 @@ export function Settings() {
 	}, [settings.businessType]);
 	const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
 	const full = FULL_SETTINGS_ROLES.includes(currentUser?.role);
-	const save = () => svc.settings.saveSettings(form);
+	const save = () => {
+		const bad = emailError(form.email);
+		if (bad) {
+			setTab("business");
+			return ui.alert("Business email: " + bad);
+		}
+		return svc.settings.saveSettings(form);
+	};
 	const kitchen = KITCHEN_TYPES.includes(form.businessType);
 	void kitchen;
 

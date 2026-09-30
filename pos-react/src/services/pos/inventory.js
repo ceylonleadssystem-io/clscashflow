@@ -1,6 +1,6 @@
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
-import { locationStock, stockMovement } from "../../domain/inventory";
+import { adjustmentChange, locationStock, stockMovement } from "../../domain/inventory";
 import { parseStockCountRows } from "../../domain/catalog";
 import { applyStockChange, audit, markDeleted, movementRow, newId } from "./common";
 import { loadXlsx } from "../xlsx";
@@ -32,6 +32,7 @@ export async function saveInventoryItem(ctx, form) {
 		reorder,
 		cost,
 		supplier: form.supplier.trim(),
+		...(form.productId ? { productId: form.productId, autoProductStock: true } : {}),
 	};
 	let movement = null;
 	if (qty !== before || !existing) {
@@ -48,22 +49,30 @@ export async function saveInventoryItem(ctx, form) {
 	await ctx.store.write((tx) => {
 		tx.put(T.inventoryItems, item);
 		if (movement) tx.put(T.stockMovements, movement);
+		const product = form.productId && d.products.find((p) => p.id === form.productId);
+		if (product) tx.put(T.products, { ...product, trackStock: true });
 	});
 	return item;
 }
 
-export async function adjustStock(ctx, itemId, change, reason, note) {
+export async function adjustStock(ctx, itemId, amount, reason, note) {
 	const d = ctx.data();
 	const s = ctx.session();
 	const item = d.inventory.find((i) => i.id === itemId);
-	if (!item || !change || !Number.isFinite(change)) return void (await ctx.ui.alert("Enter a positive or negative adjustment."));
+	const value = Number(amount);
+	if (!item || !Number.isFinite(value) || value < 0 || (value === 0 && reason !== "Stock count correction"))
+		return void (await ctx.ui.alert("Enter a quantity greater than zero."));
 	const loc = activeLocationId(ctx);
-	if (locationStock(item, loc) + change < 0) return void (await ctx.ui.alert("This adjustment would make stock negative."));
+	const current = locationStock(item, loc);
+	const change = adjustmentChange(reason, value, current);
+	if (!change) return void (await ctx.ui.alert("The counted quantity matches the current stock. Nothing to update."));
+	if (current + change < 0) return void (await ctx.ui.alert(`This would make stock negative. Only ${current} ${item.unit} on hand.`));
 	const { item: next, balance } = applyStockChange(item, change, loc);
 	await ctx.store.write((tx) => {
 		tx.put(T.inventoryItems, next);
 		tx.put(T.stockMovements, movementRow(next, balance, change, reason, note, s));
 	});
+	ctx.ui.notice(`${item.name}: ${change > 0 ? "+" : ""}${change} ${item.unit} · now ${balance} ${item.unit} (${reason}).`);
 	return true;
 }
 
@@ -77,10 +86,13 @@ export async function deleteInventoryItem(ctx, id) {
 	await ctx.store.write(async (tx) => {
 		d.stockMovements.filter((m) => m.itemId === id && !m.itemName).forEach((m) => tx.put(T.stockMovements, { ...m, itemName: item.name }));
 		usedBy.forEach((p) => tx.put(T.products, { ...p, recipe: (p.recipe || []).filter((r) => r.itemId !== id) }));
+		// deleting a sellable product's stock row turns stock tracking off: always available
+		const product = item.productId && d.products.find((p) => String(p.id) === String(item.productId));
+		if (product) tx.put(T.products, { ...product, trackStock: false });
 		await markDeleted(tx, "inventory", id);
 		tx.remove(T.inventoryItems, id);
 	});
-	ctx.ui.notice(item.name + " deleted from inventory.");
+	ctx.ui.notice(item.name + (item.productId ? " is no longer stock-tracked and can always be sold." : " deleted from inventory."));
 }
 
 /** Owner/admin: set the count of one item for every location. */
