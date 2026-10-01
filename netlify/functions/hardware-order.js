@@ -8,11 +8,13 @@ const HEADERS = {
 };
 
 const PRODUCTS = {
-  lite: { name: 'Ceylonry POS Lite', price: 120000 },
-  'lite-black': { name: 'Ceylonry POS Lite · Black', price: 155000 },
-  'pro-white': { name: 'Ceylonry POS Pro · White', price: 162000 },
   'pro-black': { name: 'Ceylonry POS Pro · Black', price: 165000 },
-  printer: { name: 'Ceylonry Receipt Printer', price: 18000 }
+  'pro-white': { name: 'Ceylonry POS Pro · White', price: 162000 },
+  'lite-black': { name: 'Ceylonry POS Lite · Black', price: 155000 },
+  'lite': { name: 'Ceylonry POS Lite · White', price: 120000 },
+  'printer': { name: 'Ceylonry Receipt Printer', price: 18000 },
+  'barcode-wired': { name: 'Ceylonry Wired Barcode Reader', price: 20625 },
+  'barcode-wireless': { name: 'Ceylonry Wireless Barcode Reader', price: 28875 }
 };
 
 function response(statusCode, body) {
