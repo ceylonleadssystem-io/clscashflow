@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { env } from "../config/env";
+import { DEV_ADMIN } from "./localAdmin";
 
 /** Administrative sign-in (separate from the business / staff login of the POS). */
 export function AdminLogin({ onSignIn, error, busy }) {
@@ -15,8 +16,12 @@ export function AdminLogin({ onSignIn, error, busy }) {
 				</div>
 				<div className="admin-badge">Administration</div>
 				<h1>Administrator sign in</h1>
-				<p className="muted">Restricted area. Manage accounts, tiers, features, billing and messages for every POS business.</p>
-				{env.authProvider === "local" && <div className="print-note">This portal needs the Appwrite provider (VITE_AUTH_PROVIDER=appwrite).</div>}
+				<p className="muted">Restricted area.</p>
+				{env.authProvider === "local" && (
+					<div className="print-note">
+						Local dev instance. Email: <strong>{DEV_ADMIN.email}</strong> · Password: <strong>{DEV_ADMIN.password}</strong>
+					</div>
+				)}
 				<div className="field">
 					<label>Administrator email</label>
 					<input className="input" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />

@@ -1,8 +1,10 @@
 import { env } from "../config/env";
 import { getAuthService } from "../services/auth.service";
+import { localAdminApi } from "./localAdmin";
 
 /** Calls the admin Netlify function with the signed-in administrator's Appwrite JWT. */
 export async function adminApi(body) {
+	if (env.authProvider === "local") return localAdminApi(body);
 	const user = getAuthService().currentUser;
 	if (!user) throw new Error("Sign in again.");
 	const token = await user.getIdToken();
@@ -19,6 +21,10 @@ export async function adminApi(body) {
 
 /** Sends an invoice through the existing SMTP function. */
 export async function emailInvoice({ to, invoice, clientName, businessName }) {
+	if (env.authProvider === "local") {
+		console.info("[dev] invoice e-mail skipped in local mode", to, invoice.number);
+		return true;
+	}
 	const res = await fetch(env.sendInvoiceUrl, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },

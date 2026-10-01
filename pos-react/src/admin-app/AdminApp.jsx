@@ -4,6 +4,7 @@ import { getAuthService, friendlyAuthError } from "../services/auth.service";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
 import { adminApi } from "./adminApi";
+import { localAdminSession } from "./localAdmin";
 import { PLANS } from "../config/plans";
 
 const fmtDate = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
@@ -23,7 +24,10 @@ export function AdminApp() {
 	const [q, setQ] = useState("");
 
 	useEffect(() => {
-		if (env.authProvider !== "appwrite") return setReady(true);
+		if (env.authProvider !== "appwrite") {
+			if (localAdminSession.get()) setUser({ email: "dev admin" });
+			return setReady(true);
+		}
 		return auth.onChange((u) => {
 			setUser(u && env.adminEmails.includes(String(u.email).toLowerCase()) ? u : null);
 			setReady(true);
@@ -51,10 +55,15 @@ export function AdminApp() {
 		setBusy(true);
 		setError("");
 		try {
+			if (env.authProvider === "local") {
+				localAdminSession.signIn(email, password);
+				setUser({ email });
+				return;
+			}
 			if (!env.adminEmails.includes(email)) throw new Error("This account is not an administrator.");
 			await auth.signIn(email, password);
 		} catch (e) {
-			setError(friendlyAuthError(e));
+			setError(env.authProvider === "local" ? e.message : friendlyAuthError(e));
 		} finally {
 			setBusy(false);
 		}
@@ -79,7 +88,7 @@ export function AdminApp() {
 					<button className="btn out" onClick={load} disabled={loading}>
 						{loading ? "Refreshing…" : "Refresh"}
 					</button>
-					<button className="btn out" onClick={async () => { await auth.signOut(); setUser(null); }}>
+					<button className="btn out" onClick={async () => { localAdminSession.signOut(); if (env.authProvider === "appwrite") await auth.signOut(); setUser(null); }}>
 						Sign out
 					</button>
 				</div>
