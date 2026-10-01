@@ -9,7 +9,7 @@
 		/>
 		<title>CeylonryPOS — Developer Portal</title>
 		<script src="../assets/appwrite-sdk.js"></script>
-		<script src="../assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="../assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<style>
 			:root {
 				--ink: #171512;
@@ -764,8 +764,8 @@
 			</main>
 		</div>
 		<script>
-			firebase.initializeApp({});
-			const auth = firebase.auth(),
+			clsBackend.initializeApp({});
+			const auth = clsBackend.auth(),
 				ADMIN_EMAIL = "devteam@ceylonrylabs.io";
 			let users = [],
 				selected = null,

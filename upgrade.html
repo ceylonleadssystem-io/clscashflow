@@ -12,7 +12,7 @@
 			rel="stylesheet"
 		/>
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<style>
 			* {
 				box-sizing: border-box;
@@ -230,9 +230,9 @@
 			<div class="grid" id="plans"></div>
 		</div>
 		<script>
-			var firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
-			var auth = firebase.auth();
+			var backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
+			var auth = clsBackend.auth();
 			var currentUid = "";
 			var paymentLinks = {
 				starter: "https://buy.stripe.com/28EfZg71n0CD6sK3by43S0d",

@@ -9,7 +9,7 @@ const docsSource = fs.readFileSync(path.join(root, 'netlify/functions/appwrite-d
 const platformSource = fs.readFileSync(path.join(root, 'assets/platform.js'), 'utf8');
 const accessAdminSource = fs.readFileSync(path.join(root, 'access-admin.html'), 'utf8');
 const ceylonryAdminSource = fs.readFileSync(path.join(root, 'ceylonry-admin.html'), 'utf8');
-const appwriteCompatSource = fs.readFileSync(path.join(root, 'assets/appwrite-firebase-compat.js'), 'utf8');
+const appwriteCompatSource = fs.readFileSync(path.join(root, 'assets/appwrite-compat.js'), 'utf8');
 const adminSigninSource = fs.readFileSync(path.join(root, 'netlify/functions/admin-signin.js'), 'utf8');
 
 test('payment receipt upload requires authenticated identity and sends its token', () => {

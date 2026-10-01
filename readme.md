@@ -19,7 +19,7 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
 - `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
-- `assets/appwrite-firebase-compat.js` - compatibility layer that preserves the existing application data API
+- `assets/appwrite-compat.js` - compatibility layer that preserves the existing application data API
 - `netlify/lib/appwrite.js` - server-side Appwrite adapter
 
 ## GitHub Upload

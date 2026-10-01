@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade } = require('../lib/appwrite');
+const { appwriteAdmin } = require('../lib/appwrite');
 
 function clean(value, max = 300) {
   return String(value == null ? '' : value).trim().slice(0, max);
@@ -19,7 +19,7 @@ exports.handler = async function handler(event) {
   if (!token) return reply(401, { error: 'POS sign-in is required' });
 
   try {
-    const admin = firebaseAdminFacade();
+    const admin = appwriteAdmin();
     const identity = await admin.auth().verifyIdToken(token);
     const ref = admin.firestore().collection('users').doc(identity.uid);
     const snapshot = await ref.get();

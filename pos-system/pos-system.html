@@ -29,7 +29,7 @@
 		/>
 		<link rel="stylesheet" href="../assets/pos-modern.css?v=20260912-ui3" />
 		<script src="../assets/appwrite-sdk.js"></script>
-		<script src="../assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="../assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<script src="../assets/platform.js?v=20260901-pos-modal"></script>
 		<script>
 			window.addEventListener("load", function () {
@@ -9386,8 +9386,8 @@
 		</style>
 		<script>
 			(function () {
-				if (!window.firebase) return;
-				firebase.initializeApp({});
+				if (!window.clsBackend) return;
+				clsBackend.initializeApp({});
 				// The login query selects the business sign-in entry point; it must never
 				// invalidate an already authenticated session during a normal refresh.
 				var requireFreshBusinessLogin = false;
@@ -9407,10 +9407,10 @@
 						cycle,
 					);
 					if (ok && plan === "pos") {
-						var user = firebase.auth().currentUser,
+						var user = clsBackend.auth().currentUser,
 							next = profile.nextPaymentDue || "";
 						if (user)
-							await firebase
+							await clsBackend
 								.firestore()
 								.collection("users")
 								.doc(user.uid)
@@ -9423,7 +9423,7 @@
 										posLastPaymentSlipAt: new Date().toISOString(),
 										posNextPaymentDue: next,
 										posBillingCycle: cycle || "monthly",
-										updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+										updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 									},
 									{ merge: true },
 								);
@@ -10456,7 +10456,7 @@
 									{
 										ownerUid: cloudUser.uid,
 										payload: merged,
-										updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+										updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 									},
 									{ merge: true },
 								),
@@ -10533,7 +10533,7 @@
 						return;
 					activatingCloudUid = user.uid;
 					try {
-						var userRef = firebase
+						var userRef = clsBackend
 								.firestore()
 								.collection("users")
 								.doc(user.uid),
@@ -10591,7 +10591,7 @@
 						}
 						sessionStorage.setItem("ceylonry-pos-business-uid", workspaceUid);
 						window._profile = posAccessProfile(profile, user);
-						cloudRef = firebase
+						cloudRef = clsBackend
 							.firestore()
 							.collection("users")
 							.doc(workspaceUid)
@@ -10662,7 +10662,7 @@
 									{
 										posEnabled: true,
 										posPlan: "pos",
-										updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+										updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 									},
 									{ merge: true },
 								);
@@ -10827,8 +10827,8 @@
 						submit.textContent = "Signing in…";
 						error.textContent = "Signing in securely…";
 						sessionStorage.removeItem(POS_LOGIN_UID_KEY);
-						if (firebase.auth().currentUser) await firebase.auth().signOut();
-						var cred = await firebase
+						if (clsBackend.auth().currentUser) await clsBackend.auth().signOut();
+						var cred = await clsBackend
 							.auth()
 							.signInWithEmailAndPassword(email, password);
 						clearPosAuthCooldown();
@@ -10890,7 +10890,7 @@
 					activatedCloudUid = "";
 					sessionStorage.removeItem(POS_LOGIN_UID_KEY);
 					try {
-						await firebase.auth().signOut();
+						await clsBackend.auth().signOut();
 					} catch (error) {
 						console.warn(
 							"Cloud sign-out will finish when the connection returns",
@@ -10901,7 +10901,7 @@
 					document.getElementById("account-gate").hidden = false;
 					document.getElementById("login-gate").hidden = true;
 				};
-				firebase.auth().onAuthStateChanged(function (user) {
+				clsBackend.auth().onAuthStateChanged(function (user) {
 					var approvedUid = sessionStorage.getItem(POS_LOGIN_UID_KEY) || "";
 					if (user && approvedUid === user.uid) {
 						activateCloud(user).catch(function (e) {
@@ -18073,7 +18073,7 @@
 						}
 						try {
 							error.textContent = "Sending password reset link…";
-							await firebase.auth().sendPasswordResetEmail(email);
+							await clsBackend.auth().sendPasswordResetEmail(email);
 							error.textContent =
 								"Password reset link sent. Check your email, set a new password, then return here to sign in.";
 						} catch (e) {

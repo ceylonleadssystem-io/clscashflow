@@ -46,7 +46,7 @@ test('premium cashflow accounts hydrate onboarding details and save settings dir
 });
 
 test('Appwrite Firestore shim supports Cashflow bulk workspace sync', function() {
-  const compat = read('assets/appwrite-firebase-compat.js');
+  const compat = read('assets/appwrite-compat.js');
   const docs = read('netlify/functions/appwrite-docs.js');
   assert.match(compat, /DocRef\.prototype\.getCollections=async function/);
   assert.match(compat, /action:'bulkGet'/);
@@ -68,7 +68,7 @@ test('legacy Netlify handlers use Appwrite instead of Firebase Admin credentials
     'submit-ticket.cjs',
     'track-visit.cjs'
   ].map(function(file) { return read('netlify/function-handlers/' + file); }).join('\n');
-  assert.match(admin, /firebaseAdminFacade/);
+  assert.match(admin, /appwriteAdmin/);
   assert.doesNotMatch(admin + handlers, /firebase-admin|FIREBASE_SERVICE_ACCOUNT|GOOGLE_APPLICATION_CREDENTIALS/i);
 });
 

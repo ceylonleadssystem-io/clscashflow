@@ -1,6 +1,6 @@
 const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade } = require('../lib/appwrite');
+const { appwriteAdmin } = require('../lib/appwrite');
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
@@ -14,7 +14,7 @@ function clean(s) {
 
 async function storeSubmission(data) {
   try {
-    const admin = firebaseAdminFacade();
+    const admin = appwriteAdmin();
     const doc = await admin.firestore().collection('businessStorySubmissions').add({
       ...data,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),

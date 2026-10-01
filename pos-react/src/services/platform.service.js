@@ -86,16 +86,16 @@ export async function openBankTransfer(profile) {
  * After a payment slip is submitted for the POS plan, mirror the POS specific
  * entitlement fields on the user profile (legacy behaviour).
  */
-export function patchReceiptSubmission(firebase) {
+export function patchReceiptSubmission(clsBackend) {
 	const base = window.clsSubmitSubscriptionReceipt;
 	if (!base || base.__posPatched) return;
 	const patched = async function (file, profile, plan, statusEl, cycle) {
 		const ok = await base(file, profile, plan, statusEl, cycle);
 		if (ok && plan === "pos") {
-			const user = firebase.auth().currentUser;
+			const user = clsBackend.auth().currentUser;
 			const next = profile.nextPaymentDue || "";
 			if (user)
-				await firebase
+				await clsBackend
 					.firestore()
 					.collection("users")
 					.doc(user.uid)
@@ -108,7 +108,7 @@ export function patchReceiptSubmission(firebase) {
 							posLastPaymentSlipAt: new Date().toISOString(),
 							posNextPaymentDue: next,
 							posBillingCycle: cycle || "monthly",
-							updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+							updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 						},
 						{ merge: true },
 					);

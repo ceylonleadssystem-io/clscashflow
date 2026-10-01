@@ -1,6 +1,6 @@
 import { env } from "../config/env";
 import { STORAGE } from "../config/constants";
-import { getFirebaseCompat, installGlobalFirebase } from "./appwrite/firebaseCompat";
+import { getAppwriteCompat, installGlobalClsBackend } from "./appwrite/appwriteCompat";
 
 /**
  * Authentication abstraction. Components never import Appwrite - they use one
@@ -41,8 +41,8 @@ export function friendlyAuthError(error) {
 class AppwriteAuthProvider {
 	kind = "appwrite";
 	constructor() {
-		installGlobalFirebase();
-		this.fb = getFirebaseCompat();
+		installGlobalClsBackend();
+		this.fb = getAppwriteCompat();
 	}
 	get currentUser() {
 		return this.fb.auth().currentUser;
@@ -64,7 +64,7 @@ class AppwriteAuthProvider {
 	hasAccount() {
 		return true;
 	}
-	firebase() {
+	clsBackend() {
 		return this.fb;
 	}
 }

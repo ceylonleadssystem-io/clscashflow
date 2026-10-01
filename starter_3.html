@@ -14,7 +14,7 @@
 			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap"
 			rel="stylesheet"
 		/>
-		<!-- Supabase compatibility SDK -->
+		<!-- Appwrite compatibility SDK -->
 		<script
 			defer
 			src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
@@ -23,8 +23,8 @@
 			defer
 			src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
 		></script>
-		<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-		<script src="assets/supabase-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-sdk.js"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 		<style>
 			*,
@@ -3687,12 +3687,12 @@
 				"background:#1a9e5c;color:#fff;padding:2px 6px;border-radius:3px",
 			);
 			// ════════════════════════════════
-			// FIREBASE CONFIG & DATA STORE
+			// BACKEND CONFIG & DATA STORE
 			// ════════════════════════════════
-			const firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
-			const _db = firebase.firestore();
-			const _auth = firebase.auth();
+			const backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
+			const _db = clsBackend.firestore();
+			const _auth = clsBackend.auth();
 			let _uid = null;
 			let _profile = null;
 			let _signedInUid = null;
@@ -3843,7 +3843,7 @@
 						id: String(id),
 						data: {
 							...item,
-							_ts: firebase.firestore.FieldValue.serverTimestamp(),
+							_ts: clsBackend.firestore.FieldValue.serverTimestamp(),
 						},
 					};
 				});
@@ -3886,7 +3886,7 @@
 								id: String(id),
 								data: {
 									...item,
-									_ts: firebase.firestore.FieldValue.serverTimestamp(),
+									_ts: clsBackend.firestore.FieldValue.serverTimestamp(),
 								},
 							};
 						});
@@ -4245,7 +4245,7 @@
 						plan: "growth",
 						requestedPlan: "growth",
 						upgradedFrom: "starter",
-						upgradedAt: firebase.firestore.FieldValue.serverTimestamp(),
+						upgradedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 					};
 					if (st.end) profileUpdate.trialEnd = st.end.toISOString();
 					await _db

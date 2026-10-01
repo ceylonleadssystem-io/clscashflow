@@ -12,7 +12,7 @@
 		/>
 		<link rel="preconnect" href="https://sgp.cloud.appwrite.io" crossorigin />
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 		<style>
 			*,
@@ -723,14 +723,14 @@
 
 		<script>
 			// ════════════════════════════════
-			// FIREBASE
+			// BACKEND
 			// ════════════════════════════════
-			var firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
-			var _db = firebase.firestore();
-			var _auth = firebase.auth();
+			var backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
+			var _db = clsBackend.firestore();
+			var _auth = clsBackend.auth();
 
-			var _user = null; // signed-in firebase user
+			var _user = null; // signed-in clsBackend user
 			var _profile = null; // their profile doc data
 			var _ownerUid = null; // the account whose team we manage (= owner)
 			var _plan = (
@@ -1376,7 +1376,7 @@
 					// Detach from the owner's account: lose ownerUid + mark removed
 					await _db.collection("users").doc(uid).update({
 						role: "removed",
-						ownerUid: firebase.firestore.FieldValue.delete(),
+						ownerUid: clsBackend.firestore.FieldValue.delete(),
 					});
 					showMsg("Access removed.", true);
 					await loadTeam();

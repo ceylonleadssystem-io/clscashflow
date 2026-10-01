@@ -11,7 +11,7 @@
 			rel="stylesheet"
 		/>
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<style>
 			*,
 			*::before,
@@ -372,10 +372,10 @@
 		</div>
 
 		<script>
-			var firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
-			var _db = firebase.firestore();
-			var _auth = firebase.auth();
+			var backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
+			var _db = clsBackend.firestore();
+			var _auth = clsBackend.auth();
 
 			var PLAN_FILES = {
 				solo: "solo.html",
@@ -555,7 +555,7 @@
 					showMsg("Please enter your name before continuing with Google.");
 					return;
 				}
-				var provider = new firebase.auth.GoogleAuthProvider();
+				var provider = new clsBackend.auth.GoogleAuthProvider();
 				el("btn-google").disabled = true;
 				try {
 					var result = await _auth.signInWithPopup(provider);

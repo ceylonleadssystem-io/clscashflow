@@ -199,7 +199,7 @@ function collection(path,filters,order,max){
     get:async function(){var rows=await queryDocuments(path,{filters,order:order&&order.field,dir:order&&order.dir,limit:max,fetchLimit:Math.max(max||0,1000)}),docs=rows.map(snap);return{docs,empty:!docs.length,size:docs.length,forEach:function(fn){docs.forEach(fn)}}}
   };
 }
-function firebaseAdminFacade(){
+function appwriteAdmin(){
   function firestore(){return{collection:function(name){return collection(name)},batch:function(){var jobs=[];return{set:function(ref,data,opts){jobs.push(function(){return ref.set(data,opts)})},delete:function(ref){jobs.push(function(){return ref.delete()})},commit:function(){return Promise.all(jobs.map(function(job){return job()}))}}}}}
   firestore.FieldValue={serverTimestamp:function(){return new Date().toISOString()},delete:function(){return{__delete:true}}};
   return{
@@ -223,4 +223,4 @@ function firebaseAdminFacade(){
   };
 }
 
-module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,firebaseAdminFacade};
+module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};

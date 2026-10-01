@@ -10,11 +10,11 @@ const source = fs.readFileSync(
 
 test('refreshing the business-login URL never invalidates an authenticated session', () => {
   assert.match(source, /var requireFreshBusinessLogin=false/);
-  assert.doesNotMatch(source, /if\(requireFreshBusinessLogin\).*firebase\.auth\(\)\.signOut/s);
+  assert.doesNotMatch(source, /if\(requireFreshBusinessLogin\).*clsBackend\.auth\(\)\.signOut/s);
 });
 
 test('only explicit business logout signs out of Appwrite', () => {
-  assert.match(source, /businessLogout=async function\(\).*firebase\.auth\(\)\.signOut\(\)/s);
+  assert.match(source, /businessLogout=async function\(\).*clsBackend\.auth\(\)\.signOut\(\)/s);
 });
 
 test('POS saves locally and immediately queues cloud persistence', () => {

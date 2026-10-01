@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
 		<title>CeylonryPOS — Customer Preview</title>
 		<script src="../assets/appwrite-sdk.js"></script>
-		<script src="../assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="../assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<style>
 			:root {
 				--ink: #171512;
@@ -818,7 +818,7 @@
 					try {
 						const user = new URLSearchParams(location.search).get("user");
 						if (!user) throw Error("No customer was selected.");
-						const current = firebase.auth().currentUser;
+						const current = clsBackend.auth().currentUser;
 						if (!current) throw Error("Sign in to the developer portal again.");
 						const token = await current.getIdToken();
 						const response = await fetch(
@@ -847,7 +847,7 @@
 							setTimeout(() => (location.href = "pos-system.html"), 900);
 					}
 				}
-				firebase.auth().onAuthStateChanged((user) => {
+				clsBackend.auth().onAuthStateChanged((user) => {
 					if (user) load();
 					else {
 						$("status").textContent =

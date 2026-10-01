@@ -2185,10 +2185,10 @@
 		</style>
 		<!-- Appwrite compatibility SDK -->
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260925-cashflow-bulk-sync"></script>
+		<script src="assets/appwrite-compat.js?v=20260925-cashflow-bulk-sync"></script>
 		<script>
-			const firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
+			const backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
 		</script>
 		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 	</head>
@@ -5233,8 +5233,8 @@
 			}
 
 			async function writeArrayCollection(uid, col, items) {
-				var batch = firebase.firestore().batch();
-				var ref = firebase
+				var batch = clsBackend.firestore().batch();
+				var ref = clsBackend
 					.firestore()
 					.collection("users")
 					.doc(uid)
@@ -5244,7 +5244,7 @@
 					batch.set(
 						docRef,
 						Object.assign({}, item, {
-							_ts: firebase.firestore.FieldValue.serverTimestamp(),
+							_ts: clsBackend.firestore.FieldValue.serverTimestamp(),
 						}),
 					);
 				});
@@ -5260,7 +5260,7 @@
 
 			async function acceptOnboardingInvite(uid, email) {
 				if (!state.inviteToken || !state.inviteOwner) return;
-				var snap = await firebase
+				var snap = await clsBackend
 					.firestore()
 					.collection("users")
 					.doc(state.inviteOwner)
@@ -5281,7 +5281,7 @@
 							". Please use that email address.",
 					);
 				}
-				var ownerDoc = await firebase
+				var ownerDoc = await clsBackend
 					.firestore()
 					.collection("users")
 					.doc(state.inviteOwner)
@@ -5313,7 +5313,7 @@
 					]
 						.map(normalizeInvitePlan)
 						.find(Boolean) || "solo";
-				await firebase
+				await clsBackend
 					.firestore()
 					.collection("users")
 					.doc(uid)
@@ -5327,11 +5327,11 @@
 							trialStart: owner.trialStart || null,
 							trialEnd: owner.trialEnd || null,
 							paid: owner.paid === true,
-							acceptedInviteAt: firebase.firestore.FieldValue.serverTimestamp(),
+							acceptedInviteAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 						},
 						{ merge: true },
 					);
-				await firebase
+				await clsBackend
 					.firestore()
 					.collection("users")
 					.doc(state.inviteOwner)
@@ -5341,13 +5341,13 @@
 						{
 							memberId: uid,
 							status: "active",
-							lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+							lastLogin: clsBackend.firestore.FieldValue.serverTimestamp(),
 						},
 						{ merge: true },
 					);
 			}
 			// ══════════════════════════════════════
-			// FIREBASE AUTH — Account Creation
+			// BACKEND AUTH — Account Creation
 			// ══════════════════════════════════════
 			function withTimeout(promise, ms, fallback) {
 				return Promise.race([
@@ -5448,7 +5448,7 @@
 					companyRegistrationNumber: "PV00355958",
 					tradingAs: "Ceylonry Labs",
 				};
-				await firebase
+				await clsBackend
 					.firestore()
 					.collection("users")
 					.doc(uid)
@@ -5513,7 +5513,7 @@
 
 					if (state.googleAuth) {
 						// Google user — already authenticated, just update their Appwrite profile
-						const user = firebase.auth().currentUser;
+						const user = clsBackend.auth().currentUser;
 						if (!user) {
 							showStepError(
 								4,
@@ -5525,7 +5525,7 @@
 							return;
 						}
 						const existingDoc = await withTimeout(
-							firebase.firestore().collection("users").doc(user.uid).get(),
+							clsBackend.firestore().collection("users").doc(user.uid).get(),
 							5000,
 							null,
 						);
@@ -5541,7 +5541,7 @@
 						var googleTrialStart = new Date();
 						var googleTrialEnd = new Date(googleTrialStart.getTime());
 						googleTrialEnd.setDate(googleTrialEnd.getDate() + 15);
-						await firebase
+						await clsBackend
 							.firestore()
 							.collection("users")
 							.doc(user.uid)
@@ -5612,7 +5612,7 @@
 									growthPartnerAttributedAtUtc:
 										existingProfile.growthPartnerAttributedAtUtc ||
 										(state.growthPartnerCode ? new Date().toISOString() : ""),
-									updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+									updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 								},
 								{ merge: true },
 							);
@@ -5644,14 +5644,14 @@
 								null,
 							);
 							if (welcomeResult && welcomeResult.sent)
-								await firebase
+								await clsBackend
 									.firestore()
 									.collection("users")
 									.doc(user.uid)
 									.set(
 										{
 											welcomeEmailSentAt:
-												firebase.firestore.FieldValue.serverTimestamp(),
+												clsBackend.firestore.FieldValue.serverTimestamp(),
 										},
 										{ merge: true },
 									);
@@ -5663,7 +5663,7 @@
 								return window.clsRememberPlan(
 									selectedPlan,
 									user.uid,
-									firebase.firestore(),
+									clsBackend.firestore(),
 								);
 							});
 						window.location.href = planFiles[selectedPlan] || "solo.html";
@@ -5671,12 +5671,12 @@
 						// Email user — create Appwrite account then save profile
 						let cred;
 						try {
-							cred = await firebase
+							cred = await clsBackend
 								.auth()
 								.createUserWithEmailAndPassword(state.email, state.password);
 						} catch (authErr) {
 							if (authErr && authErr.code === "auth/email-already-in-use") {
-								cred = await firebase
+								cred = await clsBackend
 									.auth()
 									.signInWithEmailAndPassword(state.email, state.password);
 							} else {
@@ -5685,7 +5685,7 @@
 						}
 						const uid = cred.user.uid;
 						const priorDoc = await withTimeout(
-							firebase.firestore().collection("users").doc(uid).get(),
+							clsBackend.firestore().collection("users").doc(uid).get(),
 							5000,
 							null,
 						);
@@ -5701,7 +5701,7 @@
 						const trialStart = new Date();
 						const trialEnd = new Date(trialStart.getTime());
 						trialEnd.setDate(trialEnd.getDate() + 15);
-						await firebase
+						await clsBackend
 							.firestore()
 							.collection("users")
 							.doc(uid)
@@ -5771,7 +5771,7 @@
 									growthPartnerAttributedAtUtc:
 										priorProfile.growthPartnerAttributedAtUtc ||
 										(state.growthPartnerCode ? new Date().toISOString() : ""),
-									createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+									createdAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 								},
 								{ merge: true },
 							);
@@ -5803,14 +5803,14 @@
 								null,
 							);
 							if (welcomeResult && welcomeResult.sent)
-								await firebase
+								await clsBackend
 									.firestore()
 									.collection("users")
 									.doc(uid)
 									.set(
 										{
 											welcomeEmailSentAt:
-												firebase.firestore.FieldValue.serverTimestamp(),
+												clsBackend.firestore.FieldValue.serverTimestamp(),
 										},
 										{ merge: true },
 									);
@@ -5822,7 +5822,7 @@
 								return window.clsRememberPlan(
 									requestedPlan,
 									uid,
-									firebase.firestore(),
+									clsBackend.firestore(),
 								);
 							});
 						window.location.href = planFiles[requestedPlan] || "solo.html";

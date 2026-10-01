@@ -59,7 +59,7 @@ pos-react/
    ├─ services/
    │   ├─ pos/                 action services (sales, catalog, customers, inventory, staff, settings, printing, locations, industry)
    │   ├─ sync/                payload mapper, merge rules, workspace bootstrap
-   │   ├─ appwrite/            ES-module port of assets/appwrite-firebase-compat.js
+   │   ├─ appwrite/            ES-module port of assets/appwrite-compat.js
    │   ├─ auth.service.js      Appwrite / local providers behind one interface
    │   ├─ cloud.service.js     pull/push/merge sync engine
    │   ├─ platform.service.js  bridge to platform.js (EmailJS receipts, paywall, bank transfer)
@@ -105,7 +105,7 @@ secrets here** (the Appwrite API key and SMTP passwords stay in Netlify).
 | --- | --- | --- |
 | **Netlify function `appwrite-docs`** | `netlify/functions/appwrite-docs.js` (main repo) | Required in `appwrite` mode. All cloud documents go through it. Env on Netlify: `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, `APPWRITE_DATABASE_ID`, `APPWRITE_COLLECTION_ID`, `APPWRITE_API_KEY`. |
 | **Netlify function `pos-onboarding-email`** | main repo | Called once per account after sign-in (`services/platform.service.js`). Best-effort. |
-| **`platform.js`** | copied to `public/assets/platform.js` from the main repo | Loaded lazily after sign-in. Provides `clsSendPaymentReceiptEmail` (EmailJS), the subscription paywall and the bank-transfer dialog. If it fails to load the POS keeps working; e-mail receipts and the paywall are then unavailable. Re-copy it when the main repo updates it. It needs `window.firebase`, which `services/appwrite/firebaseCompat.js` installs. |
+| **`platform.js`** | copied to `public/assets/platform.js` from the main repo | Loaded lazily after sign-in. Provides `clsSendPaymentReceiptEmail` (EmailJS), the subscription paywall and the bank-transfer dialog. If it fails to load the POS keeps working; e-mail receipts and the paywall are then unavailable. Re-copy it when the main repo updates it. It needs `window.clsBackend`, which `services/appwrite/appwriteCompat.js` installs. |
 | **EmailJS** | CDN, loaded by `platform.js` | Needs the business' EmailJS key/service/template (Settings) or the `VITE_EJS_*` defaults. |
 | **SheetJS (xlsx)** | `https://cdn.jsdelivr.net/npm/xlsx@0.18.5/...` | Lazy-loaded for catalogue import and stock-count upload (`services/xlsx.js`). |
 | **Catalogue template** | `public/assets/Ceylonry-POS-Catalogue-Template.xlsx` | Copied from `pos-system/assets/`. |

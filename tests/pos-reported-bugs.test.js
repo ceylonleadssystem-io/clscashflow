@@ -79,7 +79,7 @@ test('POS only restores the explicitly approved business account', () => {
   assert.match(pos, /POS_LOGIN_UID_KEY='ceylonry-pos-login-uid'/);
   assert.match(pos, /approvedUid===user\.uid/);
   assert.match(pos, /sessionStorage\.removeItem\(POS_LOGIN_UID_KEY\)/);
-  assert.match(pos, /if\(firebase\.auth\(\)\.currentUser\)await firebase\.auth\(\)\.signOut\(\);var cred=await firebase\.auth\(\)\.signInWithEmailAndPassword/);
+  assert.match(pos, /if\(clsBackend\.auth\(\)\.currentUser\)await clsBackend\.auth\(\)\.signOut\(\);var cred=await clsBackend\.auth\(\)\.signInWithEmailAndPassword/);
 });
 
 test('role navigation remains hidden despite forced button styling', () => {
@@ -110,7 +110,7 @@ test('retail checkout hides restaurant order channels and records retail sales',
 
 test('POS business login provides password recovery', () => {
   assert.match(pos, /id='pos-forgot-password'/);
-  assert.match(pos, /firebase\.auth\(\)\.sendPasswordResetEmail\(email\)/);
+  assert.match(pos, /clsBackend\.auth\(\)\.sendPasswordResetEmail\(email\)/);
   assert.match(pos, /Password reset link sent/);
 });
 
@@ -638,7 +638,7 @@ test('an upload finishing preserves additions and deletions made while it was ru
     localStorage: { getItem: () => '1', setItem() {}, removeItem() {} },
     pendingSyncKey: () => 'pending', updateConnectionStatus: () => true,
     normalizeAccountDb: x => x, saveCloudSnapshotLocally() {}, setCloudStatus() {}, refreshSyncedView() {},
-    withSyncTimeout: x => x, firebase: { firestore: { FieldValue: { serverTimestamp: () => 'now' } } }
+    withSyncTimeout: x => x, clsBackend: { firestore: { FieldValue: { serverTimestamp: () => 'now' } } }
   };
   vm.createContext(context);
   for (const name of ['itemTime', 'mergeList', 'mergeInventoryList', 'mergePayload', 'payloadCovers', 'syncCloud']) {

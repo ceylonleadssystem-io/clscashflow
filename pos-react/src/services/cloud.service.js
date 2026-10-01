@@ -31,8 +31,8 @@ const withTimeout = (promise, ms = 12000) =>
 	]);
 
 export class CloudSyncService {
-	constructor({ firebase, onStatus }) {
-		this.fb = firebase;
+	constructor({ clsBackend, onStatus }) {
+		this.fb = clsBackend;
 		this.onStatus = onStatus || (() => {});
 		this.store = null;
 		this.ref = null;

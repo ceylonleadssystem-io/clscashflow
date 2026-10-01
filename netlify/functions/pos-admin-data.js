@@ -1,5 +1,5 @@
 const { siteOrigin } = require('../lib/security');
-const { firebaseAdminFacade } = require('../lib/appwrite');
+const { appwriteAdmin } = require('../lib/appwrite');
 
 const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 
@@ -134,7 +134,7 @@ exports.handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: headers(), body: '' };
   if (!['GET', 'POST'].includes(event.httpMethod)) return response(405, { ok: false, error: 'Method not allowed.' });
   try {
-    const admin = firebaseAdminFacade();
+    const admin = appwriteAdmin();
     await verifyAdmin(admin, event);
     const db = admin.firestore();
     const body = event.httpMethod === 'POST' ? JSON.parse(event.body || '{}') : {};

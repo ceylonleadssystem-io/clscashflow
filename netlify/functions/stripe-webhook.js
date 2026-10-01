@@ -1,4 +1,4 @@
-const { firebaseAdminFacade } = require('../lib/appwrite');
+const { appwriteAdmin } = require('../lib/appwrite');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async function handler(event) {
@@ -17,7 +17,7 @@ exports.handler = async function handler(event) {
   if (stripeEvent.type === 'checkout.session.completed') {
     let admin;
     try {
-      admin = firebaseAdminFacade();
+      admin = appwriteAdmin();
     } catch (e) {
       return { statusCode: 500, body: 'Appwrite service role is not configured.' };
     }
