@@ -100,7 +100,13 @@ async function getDocument(path, id) {
 async function queryDocuments(path, options) {
   options = options || {};
   const result = await databases().listDocuments(DATABASE_ID, COLLECTION_ID, [Query.equal('path', [path]), Query.limit(Math.min(Number(options.fetchLimit || 1000), 5000))]);
-  let rows = await Promise.all(result.documents.map(hydratedRowToDoc));
+  // A large document whose chunk is missing (404) must not break the whole listing - skip it and log.
+  let rows = (await Promise.all(result.documents.map(function(row) {
+    return hydratedRowToDoc(row).catch(function(error) {
+      if (error && error.code === 404) { console.error('Skipping unreadable document', path, row.docId, error.message); return null; }
+      throw error;
+    });
+  }))).filter(Boolean);
   (options.filters || []).forEach(function(filter) { rows = rows.filter(function(row) { return String((row.data || {})[filter.field] ?? '') === String(filter.value ?? ''); }); });
   if (options.order) rows.sort(function(a,b){ const av=(a.data||{})[options.order]||'',bv=(b.data||{})[options.order]||''; return (av < bv ? -1 : av > bv ? 1 : 0) * (options.dir === 'asc' ? 1 : -1); });
   return options.limit ? rows.slice(0, Number(options.limit)) : rows;
