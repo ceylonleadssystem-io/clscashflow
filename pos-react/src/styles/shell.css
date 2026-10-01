@@ -1,0 +1,829 @@
+/* shell.css — merged in original cascade order (do not reorder). */
+
+/* ---- 08-cloud-banner-billing.css ---- */
+.pos-cloud-banner {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				background: #fff2d7;
+				border: 1px solid #dfbd63;
+				color: #704b08;
+				border-radius: 9px;
+				padding: 10px 13px;
+				margin-bottom: 12px;
+				font-size: 11px;
+				font-weight: 700;
+			}
+			.pos-cloud-banner .btn {
+				min-height: 34px;
+				padding: 7px 11px;
+			}
+			.pos-cloud-state {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.pos-cloud-dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: #1b9659;
+			}
+			.pos-auth-note {
+				margin-top: 10px;
+				border-top: 1px solid #e5dfd5;
+				padding-top: 12px;
+				font-size: 11px;
+				color: #756f66;
+			}
+			.pos-auth-note a {
+				color: #9a7217;
+				font-weight: 800;
+			}
+			.table-actions {
+				display: flex;
+				justify-content: flex-end;
+				gap: 6px;
+				flex-wrap: wrap;
+			}
+			/* Keep subscription payment inside the visible viewport regardless of POS page layout. */
+			.cls-bank-modal {
+				position: fixed !important;
+				inset: 0 !important;
+				z-index: 10000 !important;
+				display: grid !important;
+				place-items: center !important;
+				width: 100vw !important;
+				height: 100dvh !important;
+				margin: 0 !important;
+				padding: 16px !important;
+				overflow: auto !important;
+				background: rgba(8, 8, 8, 0.78) !important;
+				overscroll-behavior: contain;
+			}
+			.cls-bank-card {
+				position: relative !important;
+				inset: auto !important;
+				width: min(560px, calc(100vw - 32px)) !important;
+				max-height: calc(100dvh - 32px) !important;
+				margin: auto !important;
+				overflow: auto !important;
+			}
+			.cls-bank-card .cls-bank-close {
+				position: sticky !important;
+				top: 0 !important;
+				float: right !important;
+				z-index: 2;
+			}
+			@supports not (height: 100dvh) {
+				.cls-bank-modal {
+					height: 100vh !important;
+				}
+				.cls-bank-card {
+					max-height: calc(100vh - 32px) !important;
+				}
+			}
+			/* A compact top navigation replaces the tall sidebar on tablets, phones and narrowed desktop windows. */
+			@media (max-width: 1100px) {
+				html,
+				body {
+					width: 100%;
+					overflow-x: hidden;
+				}
+				.app,
+				body.full .app {
+					display: block;
+					min-height: 100dvh;
+				}
+				.side,
+				body.full .side {
+					display: block !important;
+					position: sticky !important;
+					top: 0 !important;
+					z-index: 60 !important;
+					width: 100% !important;
+					height: auto !important;
+					min-height: 0 !important;
+					padding: 8px 10px !important;
+					overflow: hidden !important;
+				}
+				.side .brand,
+				.side .session-user,
+				.side .side-foot,
+				.side .side-business-logo {
+					display: none !important;
+				}
+				.side .nav,
+				body.full .side .nav {
+					display: flex !important;
+					gap: 6px !important;
+					width: 100%;
+					min-height: 0;
+					overflow-x: auto !important;
+					overflow-y: hidden !important;
+					padding: 0 0 3px !important;
+					scrollbar-width: none;
+					-webkit-overflow-scrolling: touch;
+				}
+				.side .nav::-webkit-scrollbar {
+					display: none;
+				}
+				.side .nav button,
+				body.full .nav button {
+					flex: 0 0 auto !important;
+					min-height: 42px !important;
+					padding: 10px 12px !important;
+					white-space: nowrap !important;
+					font-size: 11px !important;
+				}
+				.main {
+					width: 100%;
+					min-width: 0;
+				}
+				.top,
+				body.full .top {
+					display: flex !important;
+					position: sticky !important;
+					top: 57px !important;
+					z-index: 50 !important;
+					height: 60px !important;
+					padding: 0 14px !important;
+				}
+				.top h1 {
+					font-size: 20px;
+				}
+				.top p {
+					display: none;
+				}
+				.content,
+				body.full .content {
+					padding: 12px !important;
+				}
+				.view {
+					scroll-margin-top: 122px;
+				}
+				.layout,
+				#view-checkout .layout {
+					grid-template-columns: 1fr !important;
+				}
+				.cart,
+				#view-checkout .cart {
+					position: relative !important;
+					top: 0 !important;
+					max-height: none !important;
+					overflow: visible !important;
+				}
+				.grid4 {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+				}
+			}
+			@media (max-width: 560px) {
+				.pos-cloud-banner {
+					align-items: flex-start;
+					flex-direction: column;
+				}
+				.pos-cloud-banner .btn {
+					width: 100%;
+				}
+				.grid4 {
+					grid-template-columns: 1fr;
+				}
+				.top {
+					height: 56px !important;
+					top: 57px !important;
+				}
+				.top .btn {
+					padding: 8px 10px;
+				}
+				.content,
+				body.full .content {
+					padding: 9px !important;
+				}
+				.table-actions {
+					flex-direction: column;
+					align-items: stretch;
+				}
+				.table-actions .btn {
+					width: 100%;
+				}
+				.cls-bank-modal {
+					place-items: end center !important;
+					padding: 8px !important;
+				}
+				.cls-bank-card {
+					width: 100% !important;
+					max-height: calc(100dvh - 16px) !important;
+					border-radius: 18px 18px 10px 10px !important;
+				}
+			}
+			/* Keep mobile navigation available and prevent Staff & Shifts from widening the page. */
+			@media (max-width: 1100px) {
+				html {
+					overflow-x: clip;
+				}
+				.side,
+				body.full .side {
+					position: -webkit-sticky !important;
+					position: sticky !important;
+					top: 0 !important;
+					align-self: start;
+					transform: translateZ(0);
+				}
+				.side .nav button.active {
+					scroll-margin-inline: 14px;
+				}
+				.main,
+				.content,
+				.view,
+				#view-staff,
+				#view-staff > * {
+					min-width: 0;
+					max-width: 100%;
+				}
+			}
+			@media (min-width: 601px) and (max-width: 900px) {
+				#view-staff .shift-grid {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+				}
+				#view-staff .shift-grid .card:last-child {
+					grid-column: 1/-1;
+				}
+			}
+			@media (max-width: 600px) {
+				#view-staff {
+					width: 100%;
+					margin: 0 auto;
+				}
+				#view-staff .shift-grid {
+					grid-template-columns: minmax(0, 1fr);
+					gap: 10px;
+				}
+				#view-staff .shift-grid .card {
+					width: 100%;
+					min-width: 0;
+					padding: 15px;
+				}
+				#view-staff .shift-grid .card:last-child {
+					grid-column: auto;
+				}
+				#view-staff .value {
+					font-size: 23px;
+					overflow-wrap: anywhere;
+				}
+				#view-staff .shift-actions {
+					display: grid;
+					grid-template-columns: 1fr;
+					gap: 8px;
+				}
+				#view-staff .shift-actions .btn {
+					width: 100%;
+				}
+				#view-staff .panel-head {
+					align-items: flex-start;
+					flex-wrap: wrap;
+				}
+				#view-staff .panel-head .btn {
+					width: 100%;
+				}
+				#view-staff .table-wrap {
+					width: 100%;
+					max-width: 100%;
+					overflow-x: auto;
+					-webkit-overflow-scrolling: touch;
+				}
+			}
+
+/* ---- 09-viewport-fit-checkout.css ---- */
+/* Viewport-fit checkout: the page never grows as products or order lines increase. */
+			body.full:has(#view-checkout.active) .content {
+				overflow: hidden;
+			}
+			body.full #view-checkout .cart-list {
+				overflow: hidden !important;
+				max-height: none !important;
+			}
+			.cart-pagination {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 8px;
+				padding: 7px 14px;
+				border-bottom: 2px solid #171512;
+				background: #faf9f6;
+				font-size: 11px;
+				font-weight: 700;
+			}
+			.cart-pagination[hidden] {
+				display: none;
+			}
+			.cart-pagination .btn {
+				min-height: 30px !important;
+				padding: 5px 10px !important;
+				font-size: 10px !important;
+			}
+			.service-charge-summary[hidden],
+			.discount-summary[hidden] {
+				display: none;
+			}
+			.service-charge-settings {
+				border-color: #d7b963;
+				background: #fffaf0;
+			}
+			.service-charge-toggle {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				font-weight: 700;
+				font-size: 13px;
+			}
+			@media (min-width: 901px) {
+				body.full #view-checkout .cart-foot {
+					overflow: hidden !important;
+				}
+			}
+			@media (max-height: 950px) and (min-width: 901px) {
+				body.full:has(#view-checkout.active) .top {
+					height: 52px;
+				}
+				body.full:has(#view-checkout.active) .content {
+					height: calc(100vh - 52px);
+					padding: 8px 10px;
+				}
+				body.full #view-checkout .layout {
+					gap: 9px;
+				}
+				body.full #view-checkout .layout > .panel:first-child {
+					grid-template-rows: auto auto minmax(0, 1fr);
+				}
+				body.full #view-checkout .panel-head {
+					padding: 8px 10px !important;
+				}
+				body.full #view-checkout .cats {
+					padding: 7px 10px;
+					gap: 5px;
+				}
+				body.full #view-checkout .chip {
+					min-height: 32px;
+					padding: 6px 10px;
+					font-size: 11px;
+				}
+				body.full #view-checkout .products {
+					padding: 8px;
+					gap: 7px;
+					grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+				}
+				body.full #view-checkout .product {
+					min-height: 118px;
+				}
+				body.full #view-checkout .product-img,
+				body.full #view-checkout .product-placeholder {
+					height: 58px;
+				}
+				body.full #view-checkout .product-copy {
+					padding: 7px;
+					gap: 4px;
+				}
+				body.full #view-checkout .product strong {
+					font-size: 12px;
+				}
+				body.full #view-checkout .price {
+					font-size: 15px;
+				}
+				body.full #view-checkout .cart > .panel-head > .panel-title {
+					font-size: 18px;
+				}
+				body.full #view-checkout #order-actions .btn {
+					min-height: 32px;
+					padding: 6px 5px;
+					font-size: 10px;
+				}
+				body.full #view-checkout .cart-list {
+					min-height: 0 !important;
+					padding: 0 10px;
+				}
+				body.full #view-checkout .line {
+					padding: 6px 0;
+					font-size: 11px;
+				}
+				body.full #view-checkout .qty button {
+					width: 30px;
+					height: 30px;
+					min-width: 30px;
+					min-height: 30px;
+					font-size: 14px;
+				}
+				body.full #view-checkout .cart-foot {
+					padding: 8px 10px;
+				}
+				body.full #view-checkout .checkout-fields {
+					gap: 4px;
+					margin: 4px 0;
+				}
+				body.full #view-checkout .input {
+					min-height: 32px;
+					padding: 5px 8px;
+					font-size: 12px;
+				}
+				body.full #view-checkout .btn {
+					min-height: 32px;
+					padding: 6px 9px;
+					font-size: 11px;
+				}
+				body.full #view-checkout .customer-find-note {
+					display: none;
+				}
+				body.full #view-checkout #discount-panel {
+					padding: 7px;
+				}
+				body.full #view-checkout .row {
+					margin: 3px 0;
+					font-size: 11px;
+				}
+				body.full #view-checkout .grand {
+					font-size: 17px;
+					padding-top: 5px;
+				}
+				body.full #view-checkout #complete-btn {
+					min-height: 38px;
+					margin-top: 4px !important;
+				}
+			}
+			@media (max-height: 760px) and (min-width: 901px) {
+				body.full #view-checkout .muted label {
+					font-size: 10px;
+				}
+				body.full #view-checkout #split-bill-button {
+					display: none;
+				}
+				body.full #view-checkout .cart-list:has(.empty) {
+					min-height: 48px !important;
+					max-height: 48px !important;
+				}
+				body.full #view-checkout .cart-list .empty {
+					padding: 8px;
+				}
+				body.full #view-checkout .product {
+					min-height: 102px;
+				}
+				body.full #view-checkout .product-img,
+				body.full #view-checkout .product-placeholder {
+					height: 46px;
+				}
+			}
+
+/* ---- 10-sidebar-toggle.css ---- */
+/* Distraction-free register mode: the operator can reclaim the sidebar width. */
+			#sidebar-toggle {
+				display: none;
+			}
+			body.full #sidebar-toggle {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+			}
+			#nav button[hidden] {
+				display: none !important;
+			}
+			body.full.sidebar-collapsed .side {
+				display: none !important;
+			}
+			body.full.sidebar-collapsed .app {
+				grid-template-columns: 1fr !important;
+			}
+			body.full:not(.sidebar-collapsed) .side {
+				display: flex !important;
+			}
+			body.full:not(.sidebar-collapsed) .app {
+				grid-template-columns: 248px minmax(0, 1fr) !important;
+			}
+			body.full.sidebar-collapsed #view-checkout .layout {
+				grid-template-columns: minmax(0, 1fr) clamp(430px, 36vw, 590px);
+			}
+			.order-channel-fields {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+			}
+			.order-channel-fields[hidden] {
+				display: none !important;
+			}
+			.order-channel-fields .input {
+				width: 100%;
+			}
+			.order-channel-badge {
+				display: inline-block;
+				margin-top: 4px;
+				padding: 3px 7px;
+				border-radius: 20px;
+				background: #fff2d7;
+				color: #80570a;
+				font-size: 9px;
+				font-weight: 800;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+			}
+			.ios-fullscreen-guide {
+				position: fixed;
+				inset: 0;
+				z-index: 20000;
+				display: grid;
+				place-items: center;
+				padding: 20px;
+				background: rgba(12, 11, 9, 0.78);
+			}
+			.ios-fullscreen-guide[hidden] {
+				display: none;
+			}
+			.ios-fullscreen-card {
+				width: min(520px, 100%);
+				background: #fff;
+				border-radius: 18px;
+				padding: 26px;
+				box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+			}
+			.ios-fullscreen-card h2 {
+				margin: 0 0 8px;
+				font: 700 27px "Playfair Display";
+			}
+			.ios-fullscreen-card p {
+				margin: 0 0 18px;
+				color: #756f66;
+				line-height: 1.55;
+			}
+			.ios-fullscreen-steps {
+				display: grid;
+				gap: 10px;
+				margin: 0 0 20px;
+				padding: 0;
+				list-style: none;
+				counter-reset: steps;
+			}
+			.ios-fullscreen-steps li {
+				counter-increment: steps;
+				display: grid;
+				grid-template-columns: 32px 1fr;
+				align-items: center;
+				gap: 10px;
+			}
+			.ios-fullscreen-steps li:before {
+				content: counter(steps);
+				display: grid;
+				place-items: center;
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+				background: #171512;
+				color: #fff;
+				font-weight: 800;
+			}
+			.ios-fullscreen-card .btn {
+				width: 100%;
+			}
+			/* iPad/touch keyboards must not zoom or collapse the CSS kiosk workspace. */
+			@media (pointer: coarse) {
+				body.full {
+					height: 100dvh;
+					overflow: hidden;
+				}
+				body.full .app {
+					height: 100dvh;
+					min-height: 0;
+				}
+				body.full .content {
+					height: calc(100dvh - 64px);
+				}
+				body.full #view-checkout input,
+				body.full #view-checkout select,
+				body.full #view-checkout textarea {
+					font-size: 16px !important;
+				}
+				body.full #view-checkout input:focus,
+				body.full #view-checkout select:focus,
+				body.full #view-checkout textarea:focus {
+					font-size: 16px !important;
+				}
+			}
+			@media (pointer: coarse) and (max-height: 950px) {
+				body.full:has(#view-checkout.active) .content {
+					height: calc(100dvh - 52px);
+				}
+			}
+			@media (max-width: 700px) {
+				.order-channel-fields {
+					grid-template-columns: 1fr;
+				}
+				body.full.sidebar-collapsed #view-checkout .layout {
+					grid-template-columns: 1fr;
+				}
+			}
+
+/* ---- 11-cart-totals-fixed.css ---- */
+.cash-tender-panel {
+				display: grid;
+				gap: 8px;
+				padding: 11px 12px;
+				border: 1px solid #d7b963;
+				border-radius: 9px;
+				background: #fffaf0;
+			}
+			.cash-tender-panel[hidden] {
+				display: none;
+			}
+			.cash-tender-entry {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) auto;
+				gap: 8px;
+			}
+			.cash-change-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				font-size: 12px;
+			}
+			.cash-change-row strong {
+				font: 700 18px "Playfair Display";
+				color: #168653;
+			}
+			.cash-change-row.short strong {
+				color: #a5362b;
+			}
+			body.full #view-checkout .cash-tender-panel {
+				padding: 8px 10px;
+				gap: 5px;
+			}
+			body.full #view-checkout .cash-change-row strong {
+				font-size: 16px;
+			}
+			/* Keep totals and payment fixed inside the register while order lines paginate above. */
+			body.full .content {
+				display: grid;
+				grid-template-rows: auto auto minmax(0, 1fr);
+			}
+			body.full .content > #notice {
+				grid-row: 1;
+			}
+			body.full .content > #pos-cloud-banner {
+				grid-row: 2;
+			}
+			body.full .content > .view {
+				grid-row: 3;
+			}
+			body.full #view-checkout.active {
+				height: auto !important;
+				min-height: 0;
+			}
+			body.full #view-checkout .cart {
+				grid-template-rows: auto minmax(0, auto) auto minmax(0, 1fr) !important;
+			}
+			body.full #view-checkout .cart-list {
+				max-height: min(25vh, 230px) !important;
+				overflow-y: auto;
+			}
+			body.full #view-checkout #cart-pagination {
+				min-height: 38px;
+				padding: 5px 10px;
+			}
+			body.full #view-checkout .cart-foot {
+				display: grid;
+				grid-template-rows: minmax(0, 1fr) repeat(5, auto);
+				overflow: hidden !important;
+			}
+			body.full #view-checkout .checkout-fields {
+				min-height: 0;
+				overflow-y: auto;
+				overscroll-behavior: contain;
+				padding-right: 3px;
+			}
+			body.full #view-checkout #complete-btn {
+				position: relative !important;
+				bottom: auto !important;
+				display: block !important;
+				visibility: visible !important;
+			}
+			#mobile-cart-toggle {
+				display: none;
+			}
+			@media (pointer: coarse) and (min-width: 650px) and (max-width: 900px) {
+				body.full #view-checkout .layout {
+					grid-template-columns: minmax(0, 1fr) minmax(340px, 46vw) !important;
+				}
+				body.full #view-checkout .layout > .panel:first-child,
+				body.full #view-checkout .cart {
+					height: 100% !important;
+				}
+			}
+			@media (max-width: 649px) {
+				body.full #mobile-cart-toggle {
+					display: inline-flex;
+				}
+				body.full #view-checkout .layout {
+					display: block;
+					height: 100%;
+				}
+				body.full #view-checkout .layout > .panel:first-child {
+					height: 100%;
+				}
+				body.full #view-checkout .cart {
+					display: none;
+					height: 100% !important;
+				}
+				body.full.mobile-cart-open #view-checkout .layout > .panel:first-child {
+					display: none;
+				}
+				body.full.mobile-cart-open #view-checkout .cart {
+					display: grid;
+				}
+				body.full #view-checkout .cart-list {
+					max-height: 24vh !important;
+				}
+			}
+
+/* ---- 12-settings-tabs.css ---- */
+.settings-tabbed {
+				width: 100%;
+				max-width: 1050px !important;
+				min-height: 0;
+			}
+			.settings-tabs {
+				display: flex;
+				gap: 7px;
+				overflow-x: auto;
+				padding: 2px 2px 10px;
+				scrollbar-width: none;
+			}
+			.settings-tabs::-webkit-scrollbar {
+				display: none;
+			}
+			.settings-tab {
+				flex: 0 0 auto;
+				border: 1px solid #d8d2c8;
+				background: #fff;
+				color: #5f5951;
+				border-radius: 30px;
+				padding: 10px 15px;
+				font-size: 12px;
+				font-weight: 800;
+				cursor: pointer;
+				white-space: nowrap;
+			}
+			.settings-tab.active {
+				background: #171512;
+				border-color: #171512;
+				color: #fff;
+			}
+			.settings-tab-content {
+				min-height: 0;
+				overflow: hidden;
+			}
+			.settings-tab-section {
+				display: none;
+				height: 100%;
+				min-height: 0;
+				overflow-y: auto;
+				overscroll-behavior: contain;
+				scrollbar-width: thin;
+				padding: 2px 4px 12px 2px;
+			}
+			.settings-tab-section.active {
+				display: grid;
+				align-content: start;
+				gap: 14px;
+			}
+			.settings-tab-section > .panel {
+				margin: 0 !important;
+			}
+			.settings-tab-save {
+				position: relative !important;
+				bottom: auto !important;
+				margin-top: 10px;
+				flex: 0 0 auto;
+			}
+			#view-settings.active > .settings-tabbed {
+				display: grid;
+				grid-template-rows: auto minmax(0, 1fr) auto;
+				height: calc(100dvh - 220px);
+				min-height: 360px;
+				overflow: hidden;
+			}
+			body.full #view-settings.active > .settings-tabbed {
+				height: 100%;
+				min-height: 0;
+			}
+			body.full #view-settings .settings-tabs {
+				padding-bottom: 8px;
+			}
+			body.full #view-settings .settings-tab-section {
+				padding-bottom: 8px;
+			}
+			@media (max-width: 560px) {
+				#view-settings.active > .settings-tabbed {
+					height: calc(100dvh - 205px);
+					min-height: 320px;
+				}
+				.settings-tab {
+					padding: 9px 12px;
+					font-size: 11px;
+				}
+			}

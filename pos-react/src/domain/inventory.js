@@ -54,7 +54,10 @@ export const productStockItem = (inventory, productId) =>
 export function availableProductStock(product, inventory, locationId) {
 	if (!product || isService(product)) return Infinity;
 	const item = productStockItem(inventory, product.id);
-	return item ? locationStock(item, locationId) : Number(product.stock) || 0;
+	if (item) return locationStock(item, locationId);
+	// stock row deleted on purpose: the item is sellable without restrictions
+	if (product.trackStock === false) return Infinity;
+	return Number(product.stock) || 0;
 }
 
 export const cartQtyForProduct = (cart, productId, exceptKey) =>
@@ -79,7 +82,7 @@ export function ensureProductInventory(products, inventory, locations) {
 	const active = locations.filter((l) => l.active !== false);
 	let changed = false;
 	products
-		.filter((p) => !isService(p))
+		.filter((p) => !isService(p) && p.trackStock !== false)
 		.forEach((product) => {
 			let item = next.find((e) => String(e.productId || "") === String(product.id));
 			if (!item) {
@@ -125,4 +128,24 @@ export function ensureProductInventory(products, inventory, locations) {
 			});
 		});
 	return { inventory: next, changed };
+}
+
+/**
+ * How an adjustment reason changes stock. The operator always types a positive
+ * number; the reason decides whether it is added, removed or is a counted total.
+ */
+export const ADJUST_RULES = {
+	"Stock received": { sign: 1, label: "Quantity received (added to stock)" },
+	"Stock count correction": { sign: 0, label: "Counted quantity (replaces current stock)" },
+	Wastage: { sign: -1, label: "Quantity wasted (removed from stock)" },
+	Damaged: { sign: -1, label: "Quantity damaged (removed from stock)" },
+	"Internal use": { sign: -1, label: "Quantity used (removed from stock)" },
+	"Return to supplier": { sign: -1, label: "Quantity returned (removed from stock)" },
+};
+
+/** Signed stock change for `amount` (>= 0) typed under `reason` at `current` stock. */
+export function adjustmentChange(reason, amount, current) {
+	const rule = ADJUST_RULES[reason] || ADJUST_RULES["Stock received"];
+	const a = Math.abs(Number(amount) || 0);
+	return rule.sign === 0 ? a - current : rule.sign * a;
 }

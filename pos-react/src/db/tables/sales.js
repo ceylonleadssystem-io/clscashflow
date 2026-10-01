@@ -9,6 +9,8 @@ export const sales = defineTable(
 		date: "string", // YYYY-MM-DD
 		createdAt: "string",
 		customerId: "string",
+		customerName: "string",
+		customerPhone: "string",
 		payment: "string", // Cash | Card | ... | Split
 		payments: "json", // split-bill shares
 		total: "number",

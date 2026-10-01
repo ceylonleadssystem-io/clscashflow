@@ -131,6 +131,8 @@ export async function completeSale(ctx, input) {
 			date: today(),
 			createdAt: nowIso(),
 			customerId: input.customerId || "",
+			customerName: customer?.name || "",
+			customerPhone: customer?.phone || "",
 			payment: splits.length ? "Split" : input.payment,
 			lines,
 			total,

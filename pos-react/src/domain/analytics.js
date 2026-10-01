@@ -113,10 +113,17 @@ export function staffHours(entries, users, { from, to }) {
 }
 
 // ------------------------------------------------------------ customers ----
-export const validCustomerSales = (sales, id) => sales.filter((s) => s.customerId === id && isActiveSale(s));
+const digits = (v) => String(v || "").replace(/\D/g, "");
+/** Sales of a customer: linked by id, or by the phone number saved on the sale. */
+export const validCustomerSales = (sales, customer) =>
+	sales.filter(
+		(s) =>
+			isActiveSale(s) &&
+			(s.customerId === customer.id || (!s.customerId && digits(s.customerPhone).length >= 7 && digits(s.customerPhone) === digits(customer.phone))),
+	);
 
 export function customerInsights(customer, sales) {
-	const list = validCustomerSales(sales, customer.id);
+	const list = validCustomerSales(sales, customer);
 	const spent = list.reduce((a, s) => a + (+s.total || 0), 0);
 	const dates = list.map((s) => s.date).filter(Boolean).sort();
 	const items = {};

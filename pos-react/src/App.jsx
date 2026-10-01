@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UiProvider, useUi } from "./store/UiProvider";
 import { SessionProvider, useSession } from "./store/SessionProvider";
 import { DataProvider, useData } from "./store/DataProvider";
@@ -9,6 +9,7 @@ import { CheckoutProvider } from "./store/CheckoutProvider";
 import { BusinessGate } from "./gates/BusinessGate";
 import { StaffGate } from "./gates/StaffGate";
 import { CheckoutModeGate } from "./gates/CheckoutModeGate";
+import { StockCount } from "./views/StockCount";
 import { Shell } from "./components/layout/Shell";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -64,6 +65,12 @@ function Gate() {
 	const { currentUser, support, chooserOpen } = usePos();
 	const { billing, restoredNotice } = useSession();
 	const ui = useUi();
+	const [hash, setHash] = useState(window.location.hash);
+	useEffect(() => {
+		const on = () => setHash(window.location.hash);
+		window.addEventListener("hashchange", on);
+		return () => window.removeEventListener("hashchange", on);
+	}, []);
 	useEffect(() => {
 		if (restoredNotice) ui.notice("Your saved POS items were restored and synced.");
 	}, [restoredNotice, ui]);
@@ -75,5 +82,6 @@ function Gate() {
 				{chooserOpen && <CheckoutModeGate />}
 			</>
 		);
+	if (hash === "#/count" && !support) return <StockCount />;
 	return <Shell />;
 }

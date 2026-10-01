@@ -4,6 +4,8 @@ import { ORDER_CHANNELS, UI_THEMES, POS_BASE_PRICE, POS_INCLUDED_USERS, POS_EXTR
 import { env } from "../../config/env";
 import { money, posMonthlyPrice } from "../../domain/format";
 import { Panel, Field } from "../ui";
+import { FieldError } from "../ui/FieldError";
+import { emailError } from "../../domain/validators";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
@@ -26,7 +28,8 @@ export function BusinessProfilePanel({ form, set }) {
 						<input className="input" id="set-business" value={form.business} onChange={set("business")} />
 					</Field>
 					<Field label="Business Email">
-						<input className="input" id="set-email" type="email" value={form.email} onChange={set("email")} />
+						<input className={"input" + (emailError(form.email) ? " invalid" : "")} id="set-email" type="email" value={form.email} onChange={set("email")} />
+						<FieldError message={emailError(form.email)} />
 					</Field>
 					<Field label="Business Address" full>
 						<textarea className="input" id="set-address" rows={2} value={form.address} onChange={set("address")} />

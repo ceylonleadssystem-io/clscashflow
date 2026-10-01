@@ -7,22 +7,23 @@ import { usePos } from "../store/PosProvider";
 
 /** Offered right after sign-in according to the user's clock-in / register behaviour. */
 export function ShiftStartModal() {
-	const { shiftStart, setShiftStart, go, svc } = usePos();
+	const { shiftStart, setShiftStart, go, welcomeUser } = usePos();
 	const { openCash } = useModals();
 	const data = useData();
-	const [clocked, setClocked] = useState(false);
 	const user = shiftStart;
 	const needsClock = user && !activeTimeEntry(data.timeEntries, user.id) && user.clockInBehaviour !== "manual";
 	const needsRegister = user && !currentCashShift(data.cashShifts, user.id) && user.registerBehaviour !== "manual";
 
 	// "Clock in automatically": open the clock-in dialog straight away
 	useEffect(() => {
-		if (user && user.clockInBehaviour === "automatic" && !activeTimeEntry(data.timeEntries, user.id)) openCash("clock-in");
+		if (user && user.clockInBehaviour === "automatic" && !activeTimeEntry(data.timeEntries, user.id)) {
+			openCash("clock-in");
+			setShiftStart(null);
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user?.id]);
-	useEffect(() => setClocked(false), [user?.id]);
 
-	if (!user) return null;
+	if (!user || welcomeUser) return null; // the welcome message comes first
 	const automatic = user.clockInBehaviour === "automatic";
 	const showClock = needsClock && !automatic;
 	if (!showClock && !needsRegister) return null;
@@ -37,13 +38,13 @@ export function ShiftStartModal() {
 						<button
 							className="btn gold"
 							type="button"
-							disabled={clocked}
 							onClick={() => {
+								// hand over to the "Clock In & Open Register" dialog
+								setShiftStart(null);
 								openCash("clock-in");
-								setClocked(true);
 							}}
 						>
-							{clocked ? "Clocked In" : "Clock In"}
+							Clock In
 						</button>
 					)}
 					{needsRegister && (

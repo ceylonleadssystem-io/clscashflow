@@ -296,11 +296,38 @@ exports.handler = async function(event) {
       return response(200, { ok: true, products: products.length, categories: categories.length, imported: incoming.length, backupId });
     }
 
+    if (action === 'listInvoices') {
+      const rows = await readRows(db, 'users/' + uid + '/posInvoices', 'createdAtUtc', 200);
+      return response(200, { ok: true, invoices: rows.map(function(row) { return Object.assign({ id: row.id }, row.data); }) });
+    }
+
+    if (action === 'saveInvoice') {
+      // Subscription invoices raised by the administrator (tier price + add-on features or a fixed-amount exception).
+      const inv = body.invoice && typeof body.invoice === 'object' ? body.invoice : {};
+      const now = new Date().toISOString();
+      const lines = (Array.isArray(inv.lines) ? inv.lines : []).slice(0, 50).map(function(l) {
+        const qty = Number(l.qty) || 1, price = Number(l.price) || 0;
+        return { desc: clean(l.desc, 200), qty: qty, price: price, total: Math.round(qty * price * 100) / 100 };
+      });
+      if (!lines.length) return response(400, { ok: false, error: 'An invoice needs at least one line.' });
+      const amount = lines.reduce(function(t, l) { return t + l.total; }, 0);
+      const number = clean(inv.number, 40) || ('INV-POS-' + Date.now().toString().slice(-8));
+      const doc = {
+        number: number, uid: uid, createdAtUtc: now, createdBy: ADMIN_EMAIL,
+        tier: clean(inv.tier, 40), period: clean(inv.period, 40), exception: inv.exception === true,
+        note: clean(inv.note, 500), dueDate: clean(inv.dueDate, 40), currency: 'LKR',
+        lines: lines, amount: amount, status: clean(inv.status, 20) || 'unpaid',
+        emailedTo: inv.emailedTo ? clean(inv.emailedTo, 200) : '', emailedAtUtc: inv.emailedTo ? now : ''
+      };
+      await db.collection('users/' + uid + '/posInvoices').doc(number).set(doc, { merge: true });
+      return response(200, { ok: true, invoice: doc });
+    }
+
     if (action === 'saveSettings') {
       // Admin dashboard: feature switches (business + per location) and the first-login welcome message.
       // Written with per-key timestamps so the POS cloud merge accepts them as the newest value.
       const incoming = body.settings && typeof body.settings === 'object' ? body.settings : {};
-      const allowedKeys = ['features', 'locationFeatures', 'welcome'];
+      const allowedKeys = ['features', 'locationFeatures', 'welcome', 'plan'];
       const now = new Date().toISOString();
       const payload = Object.assign({}, workspace.payload);
       payload.settings = Object.assign({}, payload.settings);

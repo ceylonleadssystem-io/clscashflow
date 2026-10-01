@@ -8,6 +8,7 @@ import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
 import { lowStockWhatsAppUrl } from "../services/pos/inventory";
 import { activeLocations, locationLabel } from "../services/pos/locations";
+import { StockCountQrModal } from "../modals/StockCountQrModal";
 import { InventoryItemModal, StockAdjustModal, BranchStockModal, BulkBranchStockModal } from "../modals/InventoryModals";
 import { useDeferredLocationOpen } from "../hooks/useLocationSwitcher";
 import { useUi } from "../store/UiProvider";
@@ -30,6 +31,7 @@ export function Inventory() {
 	const [branch, setBranch] = useState(null);
 	const [bulk, setBulk] = useState(false);
 	const [file, setFile] = useState(null);
+	const [qrOpen, setQrOpen] = useState(false);
 
 	const canEdit = ["owner", "manager", "admin"].includes(role);
 	const allMode = branchStock && locationId === "all" && ["owner", "admin"].includes(role);
@@ -97,14 +99,11 @@ export function Inventory() {
 						<div className="stock-tools-grid">
 							<div className="stock-tool">
 								<strong>Phone stock count</strong>
-								<small>Open this POS on a phone, search an item and use Adjust → Stock count correction. The layout is touch-friendly and syncs through the existing POS session.</small>
+								<small>Scan a QR code with your phone to open a touch-friendly count page, type the counted quantities and they sync back here.</small>
 								<button
 									className="btn"
 									type="button"
-									onClick={() => {
-										document.getElementById("inventory-search")?.focus();
-										ui.notice("Inventory is ready for phone counting.");
-									}}
+									onClick={() => setQrOpen(true)}
 								>
 									Start phone count
 								</button>
@@ -154,7 +153,7 @@ export function Inventory() {
 						<input className="input" id="inventory-search" placeholder="Search stock" value={q} onChange={(e) => setQ(e.target.value)} />
 						{(canEdit || allMode) && (
 							<button className="btn" id="inventory-add" onClick={() => setItem("")}>
-								+ Add Stock Item
+								+ Add Stock
 							</button>
 						)}
 					</div>
@@ -330,6 +329,7 @@ export function Inventory() {
 					</table>
 				</div>
 			</div>
+			<StockCountQrModal open={qrOpen} onClose={() => setQrOpen(false)} />
 			<InventoryItemModal id={item} open={item !== null} onClose={() => setItem(null)} />
 			<StockAdjustModal id={adjust} open={adjust !== null} onClose={() => setAdjust(null)} />
 			<BranchStockModal id={branch} open={branch !== null} onClose={() => setBranch(null)} />

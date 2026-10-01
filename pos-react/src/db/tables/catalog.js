@@ -19,6 +19,7 @@ export const products = defineTable(
 		stock: "number",
 		unit: "string",
 		supplier: "string",
+		trackStock: "boolean", // false = stock row deleted: always sellable
 		barcode: "string",
 		modifierIds: "json", // string[]
 		modifierRules: "json", // { [modifierId]: required? }

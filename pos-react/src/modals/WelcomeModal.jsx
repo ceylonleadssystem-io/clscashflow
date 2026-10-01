@@ -38,9 +38,7 @@ export function WelcomeModal() {
 			<ModalBody>
 				{welcome.message && <p className="welcome-message">{welcome.message}</p>}
 				{welcome.showPlans && (
-					<PlansGrid
-						onSelect={() => window.open(env.onboardingUrl, "_blank", "noopener")}
-					/>
+					<PlansGrid currentPlan={data.settings.plan?.tier} onSelect={() => window.open(env.onboardingUrl, "_blank", "noopener")} />
 				)}
 			</ModalBody>
 		</Modal>

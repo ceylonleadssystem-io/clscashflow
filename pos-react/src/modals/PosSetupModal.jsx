@@ -6,7 +6,8 @@ import { usePos } from "../store/PosProvider";
 
 /** "Set Up Your POS": choose a business preset and apply categories/modifiers/KOT defaults. */
 export function PosSetupModal() {
-	const { setupOpen, setSetupOpen, svc } = usePos();
+	const { setupOpen: wantsSetup, setSetupOpen, svc, welcomeUser } = usePos();
+	const setupOpen = wantsSetup && !welcomeUser;
 	const { settings } = useData();
 	const [type, setType] = useState("restaurant");
 	const [addCategories, setAddCategories] = useState(true);

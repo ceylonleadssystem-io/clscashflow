@@ -32,7 +32,7 @@ export function whatsappPhone(value) {
 	return digits;
 }
 
-export const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+export const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
 
 /** Parses "1,234.50" style input; NaN when invalid. */
 export function parseNumber(value) {
