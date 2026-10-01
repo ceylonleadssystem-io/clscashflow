@@ -1,3 +1,4 @@
+const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
 const { firebaseAdminFacade } = require('../lib/appwrite');
 
@@ -26,6 +27,8 @@ async function storeSubmission(data) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'send-story', limit: 5, windowMs: 600000, maxBody: 300000 });
+  if (blocked) return blocked;
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,

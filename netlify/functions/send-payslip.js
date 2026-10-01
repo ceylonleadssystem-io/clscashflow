@@ -1,4 +1,6 @@
+const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
+const { validEmail } = require('../lib/security');
 
 function clean(value, max) {
   return String(value == null ? '' : value).trim().slice(0, max || 500);
@@ -11,6 +13,8 @@ function esc(value) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'send-payslip', limit: 20, windowMs: 600000, maxBody: 6000000 });
+  if (blocked) return blocked;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
   }
@@ -26,7 +30,7 @@ exports.handler = async function handler(event) {
   const pdfBase64 = String(data.pdfBase64 == null ? '' : data.pdfBase64)
     .replace(/^data:application\/pdf;base64,/i, '')
     .replace(/\s+/g, '');
-  if (!to || !employeeName || !month || !pdfBase64) {
+  if (!validEmail(to) || !employeeName || !month || !pdfBase64) {
     return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'Email, employee, month, and payslip PDF are required.' }) };
   }
   const pdfBuffer = /^[A-Za-z0-9+/]*={0,2}$/.test(pdfBase64) ? Buffer.from(pdfBase64, 'base64') : Buffer.alloc(0);
@@ -72,6 +76,6 @@ exports.handler = async function handler(event) {
     });
     return { statusCode: 200, body: JSON.stringify({ ok: true, sent: true }) };
   } catch (error) {
-    return { statusCode: 502, body: JSON.stringify({ ok: false, error: 'Email server rejected the payslip: ' + clean(error && error.message, 300) }) };
+    return { statusCode: 502, body: JSON.stringify({ ok: false, error: 'Email server rejected the payslip.' }) };
   }
 };

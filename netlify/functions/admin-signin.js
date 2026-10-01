@@ -1,8 +1,12 @@
 const crypto = require('crypto');
 const { users, upsertDocument, headers, newId } = require('../lib/appwrite');
+const { originAllowed, rateLimited, clientIp } = require('../lib/security');
 
 const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
-const ADMIN_PASSWORD_SHA256 = '3a210a10d833215c3af0e59a9f172e7e0aa33f455b40aa1338177fd4baf30de7';
+// Set ADMIN_PASSWORD_SHA256 in the Netlify environment and rotate the password.
+// The literal below is only a legacy fallback so the portal keeps working until then.
+const LEGACY_ADMIN_PASSWORD_SHA256 = '3a210a10d833215c3af0e59a9f172e7e0aa33f455b40aa1338177fd4baf30de7';
+const ADMIN_PASSWORD_SHA256 = String(process.env.ADMIN_PASSWORD_SHA256 || LEGACY_ADMIN_PASSWORD_SHA256).trim().toLowerCase();
 
 function response(statusCode, body) {
   return { statusCode, headers: Object.assign(headers(), { 'Cache-Control': 'no-store' }), body: JSON.stringify(body) };
@@ -25,6 +29,11 @@ function isTransient(error) {
 exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') return response(204, {});
   if (event.httpMethod !== 'POST') return response(405, { error: 'Method not allowed' });
+  if (!originAllowed(event)) return response(403, { error: 'Request origin is not allowed.' });
+  // Brute-force protection: 5 attempts / 15 min per IP.
+  if (rateLimited('admin-signin:ip:' + clientIp(event), 5, 900000)) {
+    return response(429, { error: 'Too many sign-in attempts. Please wait and try again.', code: 'auth/too-many-requests' });
+  }
   try {
     const body = JSON.parse(event.body || '{}');
     const email = String(body.email || '').trim().toLowerCase();

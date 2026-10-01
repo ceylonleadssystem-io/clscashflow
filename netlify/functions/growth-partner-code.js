@@ -1,8 +1,9 @@
+const { guard, siteOrigin } = require('../lib/security');
 const { firebaseAdminFacade } = require('../lib/appwrite');
 
 const responseHeaders = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'GET, OPTIONS'
 };
@@ -12,6 +13,8 @@ function reply(statusCode, body) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'growth-code', limit: 60, windowMs: 600000, maxBody: 300000, methods: ['POST','GET'] });
+  if (blocked) return blocked;
   if (event.httpMethod === 'OPTIONS') return reply(204, {});
   if (event.httpMethod !== 'GET') return reply(405, { valid: false, error: 'Method not allowed.' });
   const code = String((event.queryStringParameters || {}).code || '').trim().toUpperCase();

@@ -1,3 +1,4 @@
+const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
 const { firebaseAdminFacade } = require('../lib/appwrite');
 
@@ -12,7 +13,7 @@ async function getAdmin() {
 function headers() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
@@ -31,6 +32,8 @@ function esc(s) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'submit-ticket', limit: 10, windowMs: 600000, maxBody: 300000 });
+  if (blocked) return blocked;
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: headers(), body: '' };
   }
@@ -141,6 +144,6 @@ exports.handler = async function handler(event) {
     });
     return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, emailed: true, storage }) };
   } catch (err) {
-    return { statusCode: 502, headers: headers(), body: JSON.stringify({ ok: false, error: err && err.message ? err.message : 'Email failed', storage }) };
+    return { statusCode: 502, headers: headers(), body: JSON.stringify({ ok: false, error: 'Email failed', storage }) };
   }
 };

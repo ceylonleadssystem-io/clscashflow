@@ -1,4 +1,6 @@
+const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
+const { validEmail } = require('../lib/security');
 
 function esc(s) {
   return String(s || '').replace(/[&<>"]/g, function(c) {
@@ -7,6 +9,8 @@ function esc(s) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'send-welcome', limit: 10, windowMs: 600000, maxBody: 300000 });
+  if (blocked) return blocked;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
@@ -33,8 +37,8 @@ exports.handler = async function handler(event) {
   const forwardedFor = event.headers && (event.headers['x-forwarded-for'] || event.headers['X-Forwarded-For']);
   const onboardingIp = String(forwardedFor || (event.headers && event.headers['client-ip']) || '').split(',')[0].trim();
 
-  if (!to) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Missing recipient email' }) };
+  if (!to || !validEmail(to)) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Missing or invalid recipient email' }) };
   }
 
   const user = process.env.SMTP_USER;

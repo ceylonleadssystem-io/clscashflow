@@ -1,3 +1,4 @@
+const { siteOrigin } = require('../lib/security');
 const { firebaseAdminFacade } = require('../lib/appwrite');
 
 const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
@@ -7,7 +8,8 @@ function headers() {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
     'Netlify-CDN-Cache-Control': 'no-store',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
+    Vary: 'Origin',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
   };

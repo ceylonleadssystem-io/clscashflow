@@ -1,3 +1,4 @@
+const { guard, siteOrigin } = require('../lib/security');
 const { firebaseAdminFacade } = require('../lib/appwrite');
 
 async function getAdmin() {
@@ -11,7 +12,7 @@ async function getAdmin() {
 function headers() {
   return {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
@@ -33,6 +34,8 @@ function isLandingPath(path) {
 }
 
 exports.handler = async function handler(event, context) {
+  const blocked = guard(event, { name: 'track-visit', limit: 120, windowMs: 600000, maxBody: 300000, methods: ['POST','GET'] });
+  if (blocked) return blocked;
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: headers(), body: '' };
   }

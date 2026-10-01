@@ -1,4 +1,6 @@
+const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
+const { validEmail, trustedLink } = require('../lib/security');
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) {
@@ -7,6 +9,8 @@ function esc(s) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'send-invite', limit: 10, windowMs: 600000, maxBody: 300000 });
+  if (blocked) return blocked;
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -27,7 +31,7 @@ exports.handler = async function handler(event) {
   }
 
   const to = String(data.to || '').trim().toLowerCase();
-  const inviteLink = String(data.inviteLink || '').trim();
+  const inviteLink = trustedLink(String(data.inviteLink || '').trim());
   const bizName = String(data.bizName || 'CeylonryLabs CashFlow').trim();
   const ownerName = String(data.ownerName || '').trim();
   const role = String(data.role || 'team member').trim();
@@ -35,7 +39,7 @@ exports.handler = async function handler(event) {
   const planAliases = { starter: 'studio', growth: 'business', premium: 'business' };
   const plan = planAliases[rawPlan] || rawPlan;
 
-  if (!to || !inviteLink) {
+  if (!validEmail(to) || !inviteLink) {
     return {
       statusCode: 400,
       headers: { 'Content-Type': 'application/json' },
@@ -124,7 +128,7 @@ exports.handler = async function handler(event) {
     return {
       statusCode: 502,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ok: false, error: err && err.message ? err.message : 'Email server rejected the message' })
+      body: JSON.stringify({ ok: false, error: 'Email server rejected the message' })
     };
   }
 };

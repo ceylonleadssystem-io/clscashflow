@@ -1,3 +1,4 @@
+const { siteOrigin } = require('../lib/security');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { firebaseAdminFacade } = require('../lib/appwrite');
@@ -17,7 +18,8 @@ function headers() {
     'Netlify-CDN-Cache-Control': 'no-store',
     'Pragma': 'no-cache',
     'Expires': '0',
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
+    Vary: 'Origin',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
   };
