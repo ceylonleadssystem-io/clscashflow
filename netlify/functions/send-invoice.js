@@ -1,4 +1,6 @@
+const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
+const { validEmail } = require('../lib/security');
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -10,6 +12,8 @@ function money(n) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'send-invoice', limit: 30, windowMs: 600000, maxBody: 300000 });
+  if (blocked) return blocked;
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
   }
@@ -19,7 +23,7 @@ exports.handler = async function handler(event) {
   catch (e) { return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'Invalid request body' }) }; }
 
   const to = (d.to || '').trim();
-  if (!to) return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'No client email on this invoice.' }) };
+  if (!to || !validEmail(to)) return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'No client email on this invoice.' }) };
 
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
@@ -139,6 +143,6 @@ exports.handler = async function handler(event) {
     });
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (err) {
-    return { statusCode: 502, body: JSON.stringify({ ok: false, error: 'Email server rejected the message: ' + (err && err.message ? err.message : 'unknown error') }) };
+    return { statusCode: 502, body: JSON.stringify({ ok: false, error: 'Email server rejected the message.' }) };
   }
 };

@@ -1,7 +1,8 @@
+const { guard, siteOrigin } = require('../lib/security');
 const EMAILJS_API_URL = 'https://api.emailjs.com/api/v1.0/email/send';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
@@ -16,6 +17,8 @@ function json(statusCode, body) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'emailjs-reminder', limit: 20, windowMs: 600000, maxBody: 300000, methods: ['POST','GET'] });
+  if (blocked) return blocked;
   if (event.httpMethod === 'OPTIONS') return json(204, {});
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' });
 
@@ -59,11 +62,11 @@ exports.handler = async function handler(event) {
     if (!response.ok) {
       return json(response.status, {
         ok: false,
-        error: text || `EmailJS returned HTTP ${response.status}`
+        error: `EmailJS returned HTTP ${response.status}`
       });
     }
     return json(200, { ok: true, message: text || 'Email sent' });
   } catch (error) {
-    return json(502, { ok: false, error: error.message || 'EmailJS request failed' });
+    return json(502, { ok: false, error: 'EmailJS request failed' });
   }
 };

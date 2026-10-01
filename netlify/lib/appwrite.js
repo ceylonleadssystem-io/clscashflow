@@ -154,7 +154,38 @@ async function isAdmin(user){if(clean(user&&user.email,240).toLowerCase()===ADMI
 function belongs(row,user){const d=row.data||{},m=String(row.path||'').match(/^users\/([^/]+)/);return !!user&&(row.id===user.id||d.uid===user.id||d.userUid===user.id||d.ownerUid===user.id||(m&&m[1]===user.id)||clean(d.email,240).toLowerCase()===clean(user.email,240).toLowerCase());}
 async function linkedOwnerUid(user){if(!user)return'';const profile=await getDocument('users',user.id).catch(function(){return null});return clean(profile&&profile.data&&profile.data.ownerUid,240)||user.id;}
 async function canRead(row,user){if(belongs(row,user)||await isAdmin(user))return true;const ownerUid=await linkedOwnerUid(user),pathOwner=(String(row.path||'').match(/^users\/([^/]+)/)||[])[1]||'',dataOwner=clean((row.data||{}).ownerUid,240);return ownerUid!==user.id&&(ownerUid===pathOwner||ownerUid===dataOwner);}
-async function canWrite(path,id,data,user){if(belongs({path,id,data},user)||await isAdmin(user))return true;const ownerUid=await linkedOwnerUid(user),pathOwner=(String(path||'').match(/^users\/([^/]+)/)||[])[1]||'';if(ownerUid!==user.id&&(ownerUid===pathOwner||ownerUid===clean((data||{}).ownerUid,240)))return true;const old=await getDocument(path,id);return !!old&&(belongs({path,id,data:old.data},user)||(ownerUid!==user.id&&ownerUid===clean(old.data&&old.data.ownerUid,240)));}
+async function canWrite(path,id,data,user){
+  if(!user)return false;
+  if(await isAdmin(user))return true;
+  // Ownership is decided from the path, the stored document and the verified
+  // user - never from owner fields inside the request body, which the caller controls.
+  const pathOwner=(String(path||'').match(/^users\/([^/]+)/)||[])[1]||'';
+  const ownerUid=await linkedOwnerUid(user),teamAccess=ownerUid!==user.id&&ownerUid===pathOwner;
+  const old=await getDocument(path,id);
+  if(old)return belongs({path,id,data:old.data},user)||teamAccess;
+  if(pathOwner===user.id||teamAccess||id===user.id)return true;
+  // New top-level document: it may only be created in the caller's own name.
+  const d=data||{};
+  return !pathOwner&&[d.uid,d.userUid,d.ownerUid].some(function(v){return v!=null&&String(v)===user.id});
+}
+async function hasTeamInvite(ownerUid,user){
+  if(!ownerUid||!user)return false;
+  const email=clean(user.email,240).toLowerCase();if(!email)return false;
+  const rows=await queryDocuments('users/'+ownerUid+'/team',{fetchLimit:1000}).catch(function(){return[]});
+  return rows.some(function(row){const d=row.data||{};return clean(d.email,240).toLowerCase()===email&&(d.status==='pending'||d.status==='accepted');});
+}
+// Own-profile writes may not self-grant platform admin or attach to someone else's workspace.
+async function sanitizeProfileWrite(path,id,data,user){
+  data=data&&typeof data==='object'?data:{};
+  if(path!=='users'||!user||id!==user.id||await isAdmin(user))return data;
+  const out=Object.assign({},data),existing=await getDocument('users',id),old=existing&&existing.data||{};
+  const keep=function(key){if(old[key]===undefined)delete out[key];else out[key]=old[key];};
+  if('adminAccess'in out)keep('adminAccess');
+  ['role','accountType','plan','currentPlan','lastPlan'].forEach(function(key){if(/^(platform_admin|admin)$/i.test(String(out[key]||'')))keep(key);});
+  const wanted=clean(out.ownerUid,240);
+  if(wanted&&wanted!==id&&wanted!==clean(old.ownerUid,240)&&!await hasTeamInvite(wanted,user)){keep('ownerUid');keep('isTeamMember');if('role'in out)keep('role');}
+  return out;
+}
 
 function snap(doc){return{id:doc&&doc.id||'',exists:!!doc,data:function(){return doc?Object.assign({},doc.data):undefined}}}
 function collection(path,filters,order,max){

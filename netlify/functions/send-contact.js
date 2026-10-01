@@ -1,8 +1,9 @@
+const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
@@ -39,6 +40,8 @@ function validEmail(value) {
 }
 
 exports.handler = async function handler(event) {
+  const blocked = guard(event, { name: 'send-contact', limit: 5, windowMs: 600000, maxBody: 300000 });
+  if (blocked) return blocked;
   if (event.httpMethod === 'OPTIONS') return response(204, {});
   if (event.httpMethod !== 'POST') return response(405, { ok: false, error: 'Method not allowed' });
 
