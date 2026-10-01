@@ -153,3 +153,15 @@ img{max-width:100%}
   .crm-grid{grid-template-columns:1fr}
   .table-wrap th,.table-wrap td{padding:10px 12px;font-size:13px}
 }
+
+/* Customers: on phones keep Name, Visits and Total Spent on screen (phone/e-mail move under the name) */
+.customers-table .cust-contact{display:none}
+@media (max-width:640px){
+	.table-wrap>.customers-table{min-width:0!important;width:100%}
+	.customers-table th:nth-child(2),.customers-table td:nth-child(2),
+	.customers-table th:nth-child(3),.customers-table td:nth-child(3),
+	.customers-table th:nth-child(4),.customers-table td:nth-child(4){display:none}
+	.customers-table .cust-contact{display:block}
+	.customers-table th,.customers-table td{padding:10px 8px!important}
+	.customers-table td:nth-child(6){white-space:nowrap;font-weight:600}
+}
