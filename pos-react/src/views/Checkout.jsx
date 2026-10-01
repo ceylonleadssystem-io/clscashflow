@@ -101,7 +101,7 @@ export function Checkout() {
 							<span id="cart-total">{money(t.total)}</span>
 						</div>
 						<button className="btn gold" id="complete-btn" style={{ width: "100%", marginTop: 10 }} onClick={c.completeSale} disabled={!c.cart.length || c.busy}>
-							Complete Sale
+							Complete Sale<span className="complete-amount"> · {money(t.total)}</span>
 						</button>
 					</div>
 				</aside>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePos } from "../../store/PosProvider";
+import { NAV_ITEMS } from "../../config/roles";
 import { useSession } from "../../store/SessionProvider";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
@@ -8,13 +9,14 @@ import { useFullscreen } from "../../hooks/useFullscreen";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { useUi } from "../../store/UiProvider";
 import { locationLabel } from "../../services/pos/locations";
+import { money } from "../../domain/format";
 
 export function Topbar({ onOpenLocations }) {
-	const { title, staffLogout, layout, setLayout, setChooserOpen, locationId, currentUser, svc } = usePos();
+	const { title, view, go, canView, staffLogout, layout, setLayout, setChooserOpen, locationId, currentUser, svc } = usePos();
 	const { signOut } = useSession();
 	const data = useData();
 	const { full, toggle } = useFullscreen();
-	const { cart } = useCheckout();
+	const { cart, totals } = useCheckout();
 	const ui = useUi();
 	const fullscreenOn = useFeature("shell.fullscreen");
 	const sidebarToggle = useFeature("shell.sidebarToggle");
@@ -22,8 +24,22 @@ export function Topbar({ onOpenLocations }) {
 	const modeChooser = useFeature("checkout.modeChooser");
 	const headerPrinter = useFeature("hardware.headerPrinterButton");
 	const [printer, setPrinter] = useState(receiptPrinter.status);
+	const [menuOpen, setMenuOpen] = useState(false);
 	useEffect(() => receiptPrinter.subscribe(setPrinter), []);
+	useEffect(() => {
+		if (!menuOpen) return;
+		const close = (e) => {
+			if (e.type === "keydown" ? e.key === "Escape" : !e.target.closest?.(".top-right")) setMenuOpen(false);
+		};
+		document.addEventListener("keydown", close);
+		document.addEventListener("pointerdown", close);
+		return () => {
+			document.removeEventListener("keydown", close);
+			document.removeEventListener("pointerdown", close);
+		};
+	}, [menuOpen]);
 	const count = cart.reduce((a, l) => a + (+l.qty || 0), 0);
+	const total = totals?.total || 0;
 	const all = locationId === "all";
 	const loc = data.locations.find((l) => l.id === locationId);
 
@@ -37,65 +53,94 @@ export function Topbar({ onOpenLocations }) {
 	};
 
 	return (
-		<header className="top">
-			<div>
-				<h1 id="title">{title[0]}</h1>
-				<p id="subtitle">{title[1]}</p>
-			</div>
-			<div className="top-actions">
-				{locations && currentUser && (
-					<button id="location-switcher" className="location-switcher" onClick={onOpenLocations}>
-						<span>
-							<small>POS Location</small>
-							{all ? "All Locations" : loc ? loc.name : locationId ? locationLabel(data, locationId) : "Select Location"}
-						</span>
-						<b>⌄</b>
-					</button>
-				)}
-				<button className="btn out session-action" type="button" onClick={staffLogout}>
-					Lock POS
-				</button>
-				<button className="btn out session-action" type="button" onClick={signOut}>
-					Sign Out Business
-				</button>
-				{sidebarToggle && (
+		<>
+			<header className="top">
+				<div className="top-title">
+					<h1 id="title">{title[0]}</h1>
+					<p id="subtitle">{title[1]}</p>
+				</div>
+				<div className="top-right">
+					{locations && currentUser && (
+						<button id="location-switcher" className="location-switcher" onClick={onOpenLocations}>
+							<span>
+								<small>POS Location</small>
+								{all ? "All Locations" : loc ? loc.name : locationId ? locationLabel(data, locationId) : "Select Location"}
+							</span>
+							<b>⌄</b>
+						</button>
+					)}
 					<button
-						id="sidebar-toggle"
+						id="top-more"
 						type="button"
-						className="btn out"
-						aria-pressed={layout.sidebarCollapsed}
-						onClick={() => setLayout((l) => ({ ...l, sidebarCollapsed: !l.sidebarCollapsed }))}
+						className="btn out top-more"
+						aria-haspopup="true"
+						aria-expanded={menuOpen}
+						aria-label="More actions"
+						onClick={() => setMenuOpen((o) => !o)}
 					>
-						{layout.sidebarCollapsed ? "Show Menu" : "Hide Menu"}
+						<span aria-hidden="true">⋯</span>
 					</button>
+					<div className={"top-actions" + (menuOpen ? " open" : "")} onClick={(e) => e.target.closest("button") && setMenuOpen(false)}>
+						<div className="top-nav" role="group" aria-label="Go to">
+							{NAV_ITEMS.filter((item) => canView(item.view)).map((item) => (
+								<button key={item.view} type="button" className={"btn out" + (view === item.view ? " active" : "")} aria-current={view === item.view ? "page" : undefined} onClick={() => go(item.view)}>
+									{item.label}
+								</button>
+							))}
+						</div>
+						<button className="btn out session-action" type="button" onClick={staffLogout}>
+							Lock POS
+						</button>
+						<button className="btn out session-action" type="button" onClick={signOut}>
+							Sign Out Business
+						</button>
+						{sidebarToggle && (
+							<button
+								id="sidebar-toggle"
+								type="button"
+								className="btn out"
+								aria-pressed={layout.sidebarCollapsed}
+								onClick={() => setLayout((l) => ({ ...l, sidebarCollapsed: !l.sidebarCollapsed }))}
+							>
+								{layout.sidebarCollapsed ? "Show Menu" : "Hide Menu"}
+							</button>
+						)}
+						{modeChooser && (
+							<button id="switch-checkout-top" type="button" className="btn out" onClick={() => setChooserOpen(true)}>
+								Switch Checkout
+							</button>
+						)}
+						{headerPrinter && (
+							<button
+								type="button"
+								id="header-printer-button"
+								className={"btn out header-printer-button" + (printer.connected ? " connected" : "")}
+								onClick={printerClick}
+								title={printer.message}
+								aria-label={(printer.connected ? "Printer connected. " : "Printer not connected. ") + printer.message}
+							>
+								<b aria-hidden="true">▣</b>
+								<span>Printer</span>
+							</button>
+						)}
+						{fullscreenOn && (
+							<button className="btn out" onClick={toggle} id="full-btn">
+								{full ? "Exit Full Screen" : "Full Screen"}
+							</button>
+						)}
+					</div>
+				</div>
+			</header>
+			<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
+				{layout.mobileCartOpen ? (
+					<span>← Back to Products</span>
+				) : (
+					<>
+						<span>View Order ({count})</span>
+						<strong>{money(total)}</strong>
+					</>
 				)}
-				<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
-					{layout.mobileCartOpen ? "Back to Products" : `View Order (${count})`}
-				</button>
-				{modeChooser && (
-					<button id="switch-checkout-top" type="button" className="btn out" onClick={() => setChooserOpen(true)}>
-						Switch Checkout
-					</button>
-				)}
-				{headerPrinter && (
-					<button
-						type="button"
-						id="header-printer-button"
-						className={"btn out header-printer-button" + (printer.connected ? " connected" : "")}
-						onClick={printerClick}
-						title={printer.message}
-						aria-label={(printer.connected ? "Printer connected. " : "Printer not connected. ") + printer.message}
-					>
-						<b aria-hidden="true">▣</b>
-						<span>Printer</span>
-					</button>
-				)}
-				{fullscreenOn && (
-					<button className="btn out" onClick={toggle} id="full-btn">
-						{full ? "Exit Full Screen" : "Full Screen"}
-					</button>
-				)}
-			</div>
-		</header>
+			</button>
+		</>
 	);
 }

@@ -64,3 +64,17 @@ through EmailJS (`public/email-templates/pos-order-email.html`, body `{{{message
 `src/styles/index.css` imports six files in cascade order: `base`, `shell`, `checkout-catalogue`, `features`,
 `dialogs-settings`, `app` (admin, plans, stock search/QR and the responsive rules). Later rules intentionally
 override earlier ones; do not reorder.
+
+## Responsive layout
+The last block of `src/styles/app.css` ("RESPONSIVE LAYER") owns the header and checkout sizing; it replaces the
+older per-breakpoint header rules, so edit it rather than adding more overrides elsewhere.
+
+| Width | Header | POS checkout | Mobile checkout |
+| --- | --- | --- | --- |
+| > 1100 | full action row | products + cart; customer/payment fields scroll, totals + Complete Sale stay visible | (wide screens) products + cart side by side |
+| 700-1100 | location switcher + **More** menu (also holds navigation when the sidebar is hidden) | products + cart columns | side by side (landscape phones, tablets) |
+| < 700 | same | single column with a **View Order** bar and cart sheet; sidebar becomes a top strip | single column, **View Order** bar, cart is one scroll area with Total + Complete Sale pinned |
+| height <= 500 | 52px header | - | compact products + cart, no brand line |
+
+Components: `Topbar.jsx` renders `.top-right` (location switcher, `#top-more`, `.top-actions`) and the fixed
+`#mobile-cart-toggle` bar. Body classes `mobile-checkout` and `mobile-cart-open` select the layout.
