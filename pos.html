@@ -442,6 +442,7 @@
 				gap: 18px;
 			}
 			.hardware-card {
+				cursor: pointer;
 				overflow: hidden;
 				background: #24221f;
 				border: 1px solid #403c36;
@@ -533,6 +534,205 @@
 			.hardware-order.added {
 				background: #168653;
 				border-color: #168653;
+			}
+			.hardware-group {
+				margin: 34px 0 14px;
+				font: 700 13px Inter, sans-serif;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: #ff8a4d;
+			}
+			.hardware-group:first-of-type {
+				margin-top: 0;
+			}
+			.hardware-grid.two {
+				grid-template-columns: repeat(2, 1fr);
+			}
+			.hardware-grid.three {
+				grid-template-columns: repeat(3, 1fr);
+			}
+			button.hardware-image {
+				padding: 0;
+				border: 0;
+				cursor: pointer;
+				aspect-ratio: 4/3;
+				width: 100%;
+			}
+			.hardware-title {
+				padding: 0;
+				border: 0;
+				background: none;
+				color: inherit;
+				font: inherit;
+				text-align: left;
+				cursor: pointer;
+			}
+			.hardware-title:hover {
+				color: #ff8a4d;
+			}
+			.hardware-card button:focus-visible {
+				outline: 3px solid #ff8a4d;
+				outline-offset: 2px;
+			}
+			.hardware-save {
+				position: absolute;
+				right: 12px;
+				bottom: 12px;
+				padding: 7px 11px;
+				border-radius: 999px;
+				background: #168653;
+				color: #fff;
+				font-size: 11px;
+				font-weight: 800;
+			}
+			.hardware-actions {
+				display: grid;
+				grid-template-columns: 1fr 1.25fr;
+				gap: 9px;
+				margin-top: 16px;
+			}
+			.hardware-actions .btn {
+				margin-top: 0;
+				padding-inline: 10px;
+				white-space: nowrap;
+			}
+			.hardware-details-btn {
+				background: transparent;
+				border: 1px solid #5a554d;
+				color: #fff;
+			}
+			.hardware-details-btn:hover {
+				border-color: #ff5a00;
+			}
+			.hw-detail {
+				display: grid;
+				grid-template-columns: 1.1fr 1fr;
+			}
+			.hw-detail-img {
+				background: #eee;
+				min-height: 100%;
+			}
+			.hw-detail-img {
+				display: flex;
+				align-items: center;
+			}
+			.hw-detail-img img {
+				width: 100%;
+				height: auto;
+				display: block;
+			}
+			.hw-detail-body {
+				padding: 26px;
+			}
+			.hw-detail-body h2 {
+				margin: 0 0 4px;
+				font: 700 28px "Playfair Display";
+			}
+			.hw-detail-body p.hw-desc {
+				margin: 6px 0 0;
+				color: var(--muted);
+				font-size: 14px;
+				line-height: 1.6;
+			}
+			.hw-price-box {
+				margin: 18px 0;
+				padding: 14px 16px;
+				border-radius: 14px;
+				background: var(--sand);
+				border: 1px solid var(--line);
+			}
+			.hw-price-box del {
+				display: block;
+				color: var(--muted);
+				font-size: 13px;
+			}
+			.hw-price-box strong {
+				font-size: 30px;
+				color: #ff5a00;
+			}
+			.hw-price-box span {
+				margin-left: 8px;
+				padding: 4px 9px;
+				border-radius: 999px;
+				background: #168653;
+				color: #fff;
+				font-size: 11px;
+				font-weight: 800;
+				vertical-align: 5px;
+			}
+			.hw-spec-grid {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 8px;
+				margin-bottom: 14px;
+			}
+			.hw-spec-grid div {
+				padding: 11px 8px;
+				text-align: center;
+				border: 1px solid var(--line);
+				border-radius: 12px;
+				font-weight: 700;
+				font-size: 14px;
+			}
+			.hw-spec-grid small {
+				display: block;
+				margin-bottom: 3px;
+				color: var(--muted);
+				font-size: 10px;
+				font-weight: 700;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+			.hw-detail-body h4 {
+				margin: 14px 0 6px;
+				font-size: 11px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+			.hw-detail-body ul {
+				margin: 0;
+				padding-left: 18px;
+				font-size: 14px;
+				line-height: 1.75;
+			}
+			.hw-warranty {
+				margin-top: 14px;
+				padding: 11px 13px;
+				border-radius: 12px;
+				background: #fff3ea;
+				font-size: 12px;
+				line-height: 1.55;
+			}
+			.hw-detail-add {
+				width: 100%;
+				margin-top: 16px;
+				background: #ff5a00;
+				border-color: #ff5a00;
+			}
+			@media (max-width: 760px) {
+				.hw-detail {
+					grid-template-columns: 1fr;
+				}
+				.hw-detail-img {
+					aspect-ratio: 4/3;
+					min-height: 0;
+				}
+				.hw-detail-body {
+					padding: 18px;
+				}
+				.hardware-grid.two,
+				.hardware-grid.three {
+					grid-template-columns: 1fr;
+				}
+				.hw-spec-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+			@media (min-width: 761px) and (max-width: 1100px) {
+				.hardware-grid.three {
+					grid-template-columns: repeat(2, 1fr);
+				}
 			}
 			.hardware-showcase {
 				position: relative;
@@ -1234,157 +1434,128 @@
 							assistance.
 						</p>
 					</div>
-					<div class="hardware-grid">
-						<article class="hardware-card">
-							<div class="hardware-image">
-								<img
-									src="assets/ceylonry-pos-lite.jpg"
-									alt="White Ceylonry POS Lite touchscreen terminal"
-									loading="lazy"
-								/>
+					<h3 class="hardware-group">POS terminals</h3>
+					<div class="hardware-grid two">
+						<article class="hardware-card" data-hardware-card="pro-black">
+							<button class="hardware-image" type="button" data-hardware-details="pro-black" aria-label="View POS Pro · Black details">
+								<img src="assets/hw-pro-black.jpg" alt="Black Ceylonry POS Pro dual-screen terminal" loading="lazy" />
+								<span class="hardware-badge">Black edition</span>
+								<span class="hardware-save">Save LKR 25,000</span>
+							</button>
+							<div class="hardware-copy">
+								<h3><button type="button" class="hardware-title" data-hardware-details="pro-black">Ceylonry POS Pro · Black</button></h3>
+								<p>The premium dual-screen experience in a sleek black finish for modern counters.</p>
+								<div class="hardware-features"><span>Dual screen</span><span>Staff touch screen</span><span>Customer display</span></div>
+								<div class="hardware-price"><del>LKR 190,000</del>LKR 165,000</div>
+								<div class="hardware-actions">
+									<button class="btn hardware-details-btn" type="button" data-hardware-details="pro-black">View details</button>
+									<button class="btn hardware-order" type="button" data-hardware-id="pro-black">Add to cart →</button>
+								</div>
+							</div>
+						</article>
+						<article class="hardware-card" data-hardware-card="pro-white">
+							<button class="hardware-image" type="button" data-hardware-details="pro-white" aria-label="View POS Pro · White details">
+								<img src="assets/hw-pro-white.jpg" alt="White Ceylonry POS Pro dual-screen terminal" loading="lazy" />
+								<span class="hardware-badge orange">Most popular</span>
+								<span class="hardware-save">Save LKR 28,000</span>
+							</button>
+							<div class="hardware-copy">
+								<h3><button type="button" class="hardware-title" data-hardware-details="pro-white">Ceylonry POS Pro · White</button></h3>
+								<p>A premium dual-screen checkout with a dedicated customer-facing display.</p>
+								<div class="hardware-features"><span>Dual screen</span><span>Staff touch screen</span><span>Customer display</span></div>
+								<div class="hardware-price"><del>LKR 190,000</del>LKR 162,000</div>
+								<div class="hardware-actions">
+									<button class="btn hardware-details-btn" type="button" data-hardware-details="pro-white">View details</button>
+									<button class="btn hardware-order" type="button" data-hardware-id="pro-white">Add to cart →</button>
+								</div>
+							</div>
+						</article>
+						<article class="hardware-card" data-hardware-card="lite-black">
+							<button class="hardware-image" type="button" data-hardware-details="lite-black" aria-label="View POS Lite · Black details">
+								<img src="assets/hw-lite-black.jpg" alt="Black Ceylonry POS Lite touchscreen terminal" loading="lazy" />
+								<span class="hardware-badge">Lite black edition</span>
+								<span class="hardware-save">Save LKR 30,000</span>
+							</button>
+							<div class="hardware-copy">
+								<h3><button type="button" class="hardware-title" data-hardware-details="lite-black">Ceylonry POS Lite · Black</button></h3>
+								<p>A sleek black all-in-one touchscreen POS with a customer number display.</p>
+								<div class="hardware-features"><span>Touchscreen</span><span>Customer number display</span><span>Intel Core i5</span></div>
+								<div class="hardware-price"><del>LKR 185,000</del>LKR 155,000</div>
+								<div class="hardware-actions">
+									<button class="btn hardware-details-btn" type="button" data-hardware-details="lite-black">View details</button>
+									<button class="btn hardware-order" type="button" data-hardware-id="lite-black">Add to cart →</button>
+								</div>
+							</div>
+						</article>
+						<article class="hardware-card" data-hardware-card="lite">
+							<button class="hardware-image" type="button" data-hardware-details="lite" aria-label="View POS Lite · White details">
+								<img src="assets/hw-lite.jpg" alt="White Ceylonry POS Lite touchscreen terminal" loading="lazy" />
 								<span class="hardware-badge orange">Best value</span>
-							</div>
+								<span class="hardware-save">Save LKR 30,000</span>
+							</button>
 							<div class="hardware-copy">
-								<h3>Ceylonry POS Lite</h3>
-								<p>
-									A reliable all-in-one touchscreen POS for small and growing
-									businesses.
-								</p>
-								<div class="hardware-features">
-									<span>Touchscreen</span>
-									<span>Windows</span>
-									<span>Customer display</span>
+								<h3><button type="button" class="hardware-title" data-hardware-details="lite">Ceylonry POS Lite · White</button></h3>
+								<p>A reliable all-in-one touchscreen POS for small and growing businesses.</p>
+								<div class="hardware-features"><span>Touchscreen</span><span>Customer number display</span><span>Intel Core i5</span></div>
+								<div class="hardware-price"><del>LKR 150,000</del>LKR 120,000</div>
+								<div class="hardware-actions">
+									<button class="btn hardware-details-btn" type="button" data-hardware-details="lite">View details</button>
+									<button class="btn hardware-order" type="button" data-hardware-id="lite">Add to cart →</button>
 								</div>
-								<div class="hardware-price">
-									<del>LKR 150,000</del>LKR 120,000
-								</div>
-								<button
-									class="btn hardware-order"
-									type="button"
-									data-hardware-id="lite"
-								>
-									Add POS Lite to cart →
-								</button>
 							</div>
 						</article>
-						<article class="hardware-card">
-							<div class="hardware-image">
-								<img
-									src="assets/ceylonry-pos-lite-black.jpg"
-									alt="Black Ceylonry POS Lite touchscreen terminal"
-									loading="lazy"
-								/><span class="hardware-badge">Lite black edition</span>
-							</div>
+					</div>
+					<h3 class="hardware-group">Peripherals</h3>
+					<div class="hardware-grid three">
+						<article class="hardware-card" data-hardware-card="printer">
+							<button class="hardware-image" type="button" data-hardware-details="printer" aria-label="View Receipt Printer details">
+								<img src="assets/hw-printer.jpg" alt="Ceylonry compact thermal receipt printer" loading="lazy" />
+								<span class="hardware-badge orange">Counter essential</span>
+								<span class="hardware-save">Save LKR 7,000</span>
+							</button>
 							<div class="hardware-copy">
-								<h3>Ceylonry POS Lite · Black</h3>
-								<p>
-									A sleek black all-in-one touchscreen POS with a
-									customer-facing price display.
-								</p>
-								<div class="hardware-features">
-									<span>Touchscreen</span><span>Customer display</span
-									><span>Barcode ready</span>
+								<h3><button type="button" class="hardware-title" data-hardware-details="printer">Ceylonry Receipt Printer</button></h3>
+								<p>Fast thermal printing in a compact counter footprint. Plug-and-play and designed for daily checkout.</p>
+								<div class="hardware-features"><span>Fast thermal printing</span><span>Compact footprint</span><span>Plug & play</span></div>
+								<div class="hardware-price"><del>LKR 25,000</del>LKR 18,000</div>
+								<div class="hardware-actions">
+									<button class="btn hardware-details-btn" type="button" data-hardware-details="printer">View details</button>
+									<button class="btn hardware-order" type="button" data-hardware-id="printer">Add to cart →</button>
 								</div>
-								<div class="hardware-price">
-									<del>LKR 185,000</del>LKR 155,000
-								</div>
-								<button
-									class="btn hardware-order"
-									type="button"
-									data-hardware-id="lite-black"
-								>
-									Add Lite Black to cart →
-								</button>
 							</div>
 						</article>
-						<article class="hardware-card">
-							<div class="hardware-image">
-								<img
-									src="assets/ceylonry-pos-pro-white.jpg"
-									alt="White Ceylonry POS Pro dual-screen terminal"
-									loading="lazy"
-								/><span class="hardware-badge orange">Most popular</span>
-							</div>
+						<article class="hardware-card" data-hardware-card="barcode-wired">
+							<button class="hardware-image" type="button" data-hardware-details="barcode-wired" aria-label="View Wired Barcode Reader details">
+								<img src="assets/hw-barcode-wired.jpg" alt="Ceylonry wired counter barcode reader" loading="lazy" />
+								<span class="hardware-badge orange">New</span>
+								<span class="hardware-save">Save LKR 8,375</span>
+							</button>
 							<div class="hardware-copy">
-								<h3>Ceylonry POS Pro · White</h3>
-								<p>
-									A premium dual-screen checkout with a dedicated
-									customer-facing display.
-								</p>
-								<div class="hardware-features">
-									<span>Dual screen</span><span>Barcode ready</span
-									><span>Peripheral support</span>
+								<h3><button type="button" class="hardware-title" data-hardware-details="barcode-wired">Ceylonry Wired Barcode Reader</button></h3>
+								<p>A stable wired counter scanner with fast barcode scanning and simple setup. Ideal for retail checkout.</p>
+								<div class="hardware-features"><span>Stable wired connection</span><span>Fast scanning</span><span>Retail checkout</span></div>
+								<div class="hardware-price"><del>LKR 29,000</del>LKR 20,625</div>
+								<div class="hardware-actions">
+									<button class="btn hardware-details-btn" type="button" data-hardware-details="barcode-wired">View details</button>
+									<button class="btn hardware-order" type="button" data-hardware-id="barcode-wired">Add to cart →</button>
 								</div>
-								<div class="hardware-price">
-									<del>LKR 190,000</del>LKR 162,000
-								</div>
-								<button
-									class="btn hardware-order"
-									type="button"
-									data-hardware-id="pro-white"
-								>
-									Add Pro White to cart →
-								</button>
 							</div>
 						</article>
-						<article class="hardware-card">
-							<div class="hardware-image">
-								<img
-									src="assets/ceylonry-pos-pro-black.jpg"
-									alt="Black Ceylonry POS Pro dual-screen terminal"
-									loading="lazy"
-								/><span class="hardware-badge">Black edition</span>
-							</div>
+						<article class="hardware-card" data-hardware-card="barcode-wireless">
+							<button class="hardware-image" type="button" data-hardware-details="barcode-wireless" aria-label="View Wireless Barcode Reader details">
+								<img src="assets/hw-barcode-wireless.jpg" alt="Ceylonry wireless handheld barcode reader" loading="lazy" />
+								<span class="hardware-badge orange">New</span>
+								<span class="hardware-save">Save LKR 16,125</span>
+							</button>
 							<div class="hardware-copy">
-								<h3>Ceylonry POS Pro · Black</h3>
-								<p>
-									The premium dual-screen experience in a sleek black finish for
-									modern counters.
-								</p>
-								<div class="hardware-features">
-									<span>Dual screen</span><span>1-year warranty</span
-									><span>Installation support</span>
+								<h3><button type="button" class="hardware-title" data-hardware-details="barcode-wireless">Ceylonry Wireless Barcode Reader</button></h3>
+								<p>A handheld wireless scanner with fast scanning, useful for both checkout and stock.</p>
+								<div class="hardware-features"><span>Wireless connectivity</span><span>Handheld flexibility</span><span>Checkout & stock</span></div>
+								<div class="hardware-price"><del>LKR 45,000</del>LKR 28,875</div>
+								<div class="hardware-actions">
+									<button class="btn hardware-details-btn" type="button" data-hardware-details="barcode-wireless">View details</button>
+									<button class="btn hardware-order" type="button" data-hardware-id="barcode-wireless">Add to cart →</button>
 								</div>
-								<div class="hardware-price">
-									<del>LKR 190,000</del>LKR 165,000
-								</div>
-								<button
-									class="btn hardware-order"
-									type="button"
-									data-hardware-id="pro-black"
-								>
-									Add Pro Black to cart →
-								</button>
-							</div>
-						</article>
-						<article class="hardware-card">
-							<div class="hardware-image">
-								<img
-									src="assets/ceylonry-receipt-printer.jpg"
-									alt="Ceylonry compact thermal receipt printer"
-									loading="lazy"
-								/><span class="hardware-badge orange">Counter essential</span>
-							</div>
-							<div class="hardware-copy">
-								<h3>Receipt Printer</h3>
-								<p>
-									A compact, fast and reliable thermal printer that pairs with
-									your Ceylonry POS checkout.
-								</p>
-								<div class="hardware-features">
-									<span>Fast printing</span><span>Plug &amp; play</span
-									><span>1-year warranty</span>
-								</div>
-								<div class="hardware-price">
-									<del>LKR 25,000</del>LKR 18,000
-								</div>
-								<button
-									class="btn hardware-order"
-									type="button"
-									data-hardware-id="printer"
-								>
-									Add Receipt Printer to cart →
-								</button>
 							</div>
 						</article>
 					</div>
@@ -1417,6 +1588,17 @@
 				</div>
 			</section>
 
+			<div class="order-modal" id="hardware-detail-modal" role="dialog" aria-modal="true" aria-labelledby="hw-detail-title">
+				<div class="order-dialog" style="width: min(980px, 100%)">
+					<div class="order-head">
+						<div>
+							<p class="eyebrow" style="margin-bottom: 5px" id="hw-detail-eyebrow">Hardware details</p>
+						</div>
+						<button class="order-close" id="hardware-detail-close" type="button" aria-label="Close details">×</button>
+					</div>
+					<div class="hw-detail" id="hardware-detail-body"></div>
+				</div>
+			</div>
 			<button
 				class="btn hardware-cart-button"
 				id="hardware-cart-button"
@@ -1701,12 +1883,15 @@
 		</footer>
 		<script>
 			const HARDWARE_PRODUCTS = {
-				lite: { name: "Ceylonry POS Lite", price: 120000 },
-				"lite-black": { name: "Ceylonry POS Lite · Black", price: 155000 },
-				"pro-white": { name: "Ceylonry POS Pro · White", price: 162000 },
 				"pro-black": { name: "Ceylonry POS Pro · Black", price: 165000 },
-				printer: { name: "Ceylonry Receipt Printer", price: 18000 },
+				"pro-white": { name: "Ceylonry POS Pro · White", price: 162000 },
+				"lite-black": { name: "Ceylonry POS Lite · Black", price: 155000 },
+				"lite": { name: "Ceylonry POS Lite · White", price: 120000 },
+				"printer": { name: "Ceylonry Receipt Printer", price: 18000 },
+				"barcode-wired": { name: "Ceylonry Wired Barcode Reader", price: 20625 },
+				"barcode-wireless": { name: "Ceylonry Wireless Barcode Reader", price: 28875 },
 			};
+			const HARDWARE_DETAILS = {"pro-black": {"name": "Ceylonry POS Pro · Black", "tag": "Dual screen | Black edition", "desc": "The premium dual-screen experience in a sleek black finish for modern counters.", "img": "assets/hw-pro-black.jpg", "alt": "Black Ceylonry POS Pro dual-screen terminal", "normal": 190000, "price": 165000, "kind": "terminal", "specs": [["Processor", "Intel Core i5 · 3rd Generation"], ["Memory", "8 GB RAM"], ["Storage", "128 GB"]], "display": ["Staff touch screen", "Customer display screen"], "built": ["Fast checkout", "Reliable daily operation", "Retail, restaurant and service use"]}, "pro-white": {"name": "Ceylonry POS Pro · White", "tag": "Dual screen | White edition", "desc": "A premium dual-screen checkout with a dedicated customer-facing display.", "img": "assets/hw-pro-white.jpg", "alt": "White Ceylonry POS Pro dual-screen terminal", "normal": 190000, "price": 162000, "kind": "terminal", "specs": [["Processor", "Intel Core i5 · 3rd Generation"], ["Memory", "8 GB RAM"], ["Storage", "128 GB"]], "display": ["Staff touch screen", "Customer display screen"], "built": ["Fast checkout", "Reliable daily operation", "Retail, restaurant and service use"]}, "lite-black": {"name": "Ceylonry POS Lite · Black", "tag": "Customer number display | Black edition", "desc": "A sleek black all-in-one touchscreen POS with a customer number display.", "img": "assets/hw-lite-black.jpg", "alt": "Black Ceylonry POS Lite touchscreen terminal", "normal": 185000, "price": 155000, "kind": "terminal", "specs": [["Processor", "Intel Core i5 · 3rd Generation"], ["Memory", "8 GB RAM"], ["Storage", "128 GB"]], "display": ["Staff touch screen", "Customer number display"], "built": ["Fast checkout", "Reliable daily operation", "Retail, restaurant and service use"]}, "lite": {"name": "Ceylonry POS Lite · White", "tag": "Customer number display | White edition", "desc": "A reliable all-in-one touchscreen POS for small and growing businesses.", "img": "assets/hw-lite.jpg", "alt": "White Ceylonry POS Lite touchscreen terminal", "normal": 150000, "price": 120000, "kind": "terminal", "specs": [["Processor", "Intel Core i5 · 3rd Generation"], ["Memory", "8 GB RAM"], ["Storage", "128 GB"]], "display": ["Staff touch screen", "Customer number display"], "built": ["Fast checkout", "Reliable daily operation", "Retail, restaurant and service use"]}, "printer": {"name": "Ceylonry Receipt Printer", "tag": "Fast · Compact · Reliable", "desc": "Fast thermal printing in a compact counter footprint. Plug-and-play and designed for daily checkout.", "img": "assets/hw-printer.jpg", "alt": "Ceylonry compact thermal receipt printer", "normal": 25000, "price": 18000, "kind": "periph", "feat": ["Fast thermal printing", "Compact footprint", "Plug & play"]}, "barcode-wired": {"name": "Ceylonry Wired Barcode Reader", "tag": "Fast · Wired · Reliable", "desc": "A stable wired counter scanner with fast barcode scanning and simple setup. Ideal for retail checkout.", "img": "assets/hw-barcode-wired.jpg", "alt": "Ceylonry wired counter barcode reader", "normal": 29000, "price": 20625, "kind": "periph", "feat": ["Stable wired connection", "Fast scanning", "Retail checkout"]}, "barcode-wireless": {"name": "Ceylonry Wireless Barcode Reader", "tag": "Fast · Wireless · Flexible", "desc": "A handheld wireless scanner with fast scanning, useful for both checkout and stock.", "img": "assets/hw-barcode-wireless.jpg", "alt": "Ceylonry wireless handheld barcode reader", "normal": 45000, "price": 28875, "kind": "periph", "feat": ["Wireless connectivity", "Handheld flexibility", "Checkout & stock"]}};
 			let hardwareCart = {};
 			try {
 				hardwareCart =
@@ -1797,6 +1982,55 @@
 					.classList.remove("open");
 				document.body.style.overflow = "";
 			}
+			function esc(t) {
+				return String(t).replace(/[&<>"]/g, function (c) {
+					return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+				});
+			}
+			function openHardwareDetails(id) {
+				var d = HARDWARE_DETAILS[id];
+				if (!d) return;
+				var list = function (a) {
+					return "<ul>" + a.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
+				};
+				var specs = d.kind === "terminal"
+					? '<div class="hw-spec-grid">' + d.specs.map(function (s) { return "<div><small>" + esc(s[0]) + "</small>" + esc(s[1]) + "</div>"; }).join("") + "</div><h4>Display</h4>" + list(d.display) + "<h4>Built for business</h4>" + list(d.built)
+					: "<h4>Highlights</h4>" + list(d.feat);
+				document.getElementById("hw-detail-eyebrow").textContent = d.kind === "terminal" ? "POS terminal" : "Counter peripheral";
+				document.getElementById("hardware-detail-body").innerHTML =
+					'<div class="hw-detail-img"><img src="' + d.img + '" alt="' + esc(d.alt) + '" /></div><div class="hw-detail-body"><h2 id="hw-detail-title">' + esc(d.name) + '</h2><p class="eyebrow" style="margin:0">' + esc(d.tag) + '</p><p class="hw-desc">' + esc(d.desc) + '</p><div class="hw-price-box"><del>Normal rate ' + hardwareMoney(d.normal) + "</del><strong>" + hardwareMoney(d.price) + "</strong><span>Save " + hardwareMoney(d.normal - d.price) + "</span></div>" + specs + '<div class="hw-warranty"><strong>Up to 1 year warranty</strong> — internal hardware issues only. Excludes physical/liquid damage, misuse, power damage, accessories and unauthorised repairs.</div><button class="btn hw-detail-add" type="button" data-detail-add="' + id + '">Add to cart →</button></div>';
+				document.getElementById("hardware-detail-modal").classList.add("open");
+				document.body.style.overflow = "hidden";
+				document.getElementById("hardware-detail-close").focus();
+			}
+			function closeHardwareDetails() {
+				document.getElementById("hardware-detail-modal").classList.remove("open");
+				if (!document.getElementById("hardware-order-modal").classList.contains("open"))
+					document.body.style.overflow = "";
+			}
+			document.querySelectorAll("[data-hardware-details]").forEach(function (el) {
+				el.addEventListener("click", function () {
+					openHardwareDetails(el.dataset.hardwareDetails);
+				});
+			});
+			document.querySelectorAll("[data-hardware-card]").forEach(function (card) {
+				card.addEventListener("click", function (event) {
+					if (event.target.closest("button")) return;
+					openHardwareDetails(card.dataset.hardwareCard);
+				});
+			});
+			document.getElementById("hardware-detail-close").addEventListener("click", closeHardwareDetails);
+			document.getElementById("hardware-detail-modal").addEventListener("click", function (event) {
+				if (event.target === this) closeHardwareDetails();
+				var add = event.target.closest("[data-detail-add]");
+				if (add) {
+					var id = add.dataset.detailAdd;
+					hardwareCart[id] = Math.min(20, (hardwareCart[id] || 0) + 1);
+					saveHardwareCart();
+					closeHardwareDetails();
+					openHardwareOrder();
+				}
+			});
 			document
 				.querySelectorAll("[data-hardware-id]")
 				.forEach(function (button) {
@@ -1850,7 +2084,10 @@
 					saveHardwareCart();
 				});
 			document.addEventListener("keydown", function (event) {
-				if (event.key === "Escape") closeHardwareOrder();
+				if (event.key === "Escape") {
+					closeHardwareDetails();
+					closeHardwareOrder();
+				}
 			});
 			document
 				.getElementById("hardware-order-form")
