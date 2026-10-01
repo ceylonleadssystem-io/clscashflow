@@ -2,11 +2,11 @@ import { Account, Client, ID } from "appwrite";
 import { env } from "../../config/env";
 
 /**
- * Appwrite <-> "firebase-style" compatibility layer.
+ * Appwrite <-> "clsBackend-style" compatibility layer.
  *
- * This is an ES-module port of `assets/appwrite-firebase-compat.js`. The legacy
+ * This is an ES-module port of `assets/appwrite-compat.js`. The legacy
  * pages (and the shared `platform.js` billing/paywall/support script) talk to
- * `window.firebase.auth()/firestore()`; keeping the same facade means the
+ * `window.clsBackend.auth()/firestore()`; keeping the same facade means the
  * existing Netlify function `appwrite-docs` and platform.js keep working
  * unchanged. React components never touch this file directly - they use
  * `auth.service.js` and `cloud.service.js`.
@@ -15,7 +15,7 @@ import { env } from "../../config/env";
  */
 let installed = null;
 
-export function getFirebaseCompat() {
+export function getAppwriteCompat() {
 	if (installed) return installed;
 
 	const client = new Client().setEndpoint(env.appwriteEndpoint).setProject(env.appwriteProjectId);
@@ -234,9 +234,9 @@ export function getFirebaseCompat() {
 	return installed;
 }
 
-/** Exposes the compat object as `window.firebase` for platform.js / legacy portals. */
-export function installGlobalFirebase() {
+/** Exposes the compat object as `window.clsBackend` for platform.js / legacy portals. */
+export function installGlobalClsBackend() {
 	if (typeof window === "undefined") return null;
-	if (!window.firebase) window.firebase = getFirebaseCompat();
-	return window.firebase;
+	if (!window.clsBackend) window.clsBackend = getAppwriteCompat();
+	return window.clsBackend;
 }

@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const compat = fs.readFileSync(
-  path.join(__dirname, '..', 'assets', 'appwrite-firebase-compat.js'),
+  path.join(__dirname, '..', 'assets', 'appwrite-compat.js'),
   'utf8'
 );
 const pos = fs.readFileSync(

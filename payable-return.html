@@ -11,8 +11,8 @@
 			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@400;500;700&display=swap"
 			rel="stylesheet"
 		/>
-		<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-		<script src="assets/supabase-firebase-compat.js?v=20260712-performance"></script>
+		<script src="assets/appwrite-sdk.js"></script>
+		<script src="assets/appwrite-compat.js?v=20260712-performance"></script>
 		<style>
 			:root {
 				--black: #1a1714;
@@ -187,8 +187,8 @@
 
 				async function waitForUser() {
 					try {
-						firebase.initializeApp({});
-						var auth = firebase.auth();
+						clsBackend.initializeApp({});
+						var auth = clsBackend.auth();
 						if (auth && typeof auth.waitForCurrentUser === "function") {
 							return await auth.waitForCurrentUser(5000);
 						}

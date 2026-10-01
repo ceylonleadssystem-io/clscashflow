@@ -1,5 +1,5 @@
 const { guard, siteOrigin } = require('../lib/security');
-const { firebaseAdminFacade } = require('../lib/appwrite');
+const { appwriteAdmin } = require('../lib/appwrite');
 
 const responseHeaders = {
   'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ exports.handler = async function handler(event) {
   const code = String((event.queryStringParameters || {}).code || '').trim().toUpperCase();
   if (!code) {
     try {
-      const db = firebaseAdminFacade().firestore();
+      const db = appwriteAdmin().firestore();
       const snap = await db.collection('growthPartnerCodes').get();
       const codes = [];
       for (const doc of snap.docs) {
@@ -40,7 +40,7 @@ exports.handler = async function handler(event) {
   if (!/^CGP-\d{4,6}$/.test(code)) return reply(400, { valid: false, error: 'Use the code format CGP-0001.' });
 
   try {
-    const db = firebaseAdminFacade().firestore();
+    const db = appwriteAdmin().firestore();
     const codeSnap = await db.collection('growthPartnerCodes').doc(code).get();
     if (!codeSnap.exists) return reply(404, { valid: false, error: 'This Growth Partner code was not found.' });
     const codeData = codeSnap.data() || {};

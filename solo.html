@@ -17,7 +17,7 @@
 		/>
 		<!-- Appwrite compatibility SDK -->
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 		<link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1" />
 		<script src="assets/catalog.js?v=20260811-catalog3"></script>
@@ -5965,12 +5965,12 @@
 				"background:#1a9e5c;color:#fff;padding:2px 6px;border-radius:3px",
 			);
 			// ════════════════════════════════
-			// FIREBASE CONFIG & DATA STORE
+			// BACKEND CONFIG & DATA STORE
 			// ════════════════════════════════
-			const firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
-			const _db = firebase.firestore();
-			const _auth = firebase.auth();
+			const backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
+			const _db = clsBackend.firestore();
+			const _auth = clsBackend.auth();
 			let _uid = null;
 			let _profile = null;
 			let _signedInUid = null;
@@ -6223,7 +6223,7 @@
 						id: String(id),
 						data: {
 							...item,
-							_ts: firebase.firestore.FieldValue.serverTimestamp(),
+							_ts: clsBackend.firestore.FieldValue.serverTimestamp(),
 						},
 					};
 				});
@@ -6270,7 +6270,7 @@
 								id: String(id),
 								data: {
 									...item,
-									_ts: firebase.firestore.FieldValue.serverTimestamp(),
+									_ts: clsBackend.firestore.FieldValue.serverTimestamp(),
 								},
 							};
 						});
@@ -6834,7 +6834,7 @@
 						planMonthlyPrice: 5500,
 						billingCycle: "monthly",
 						upgradedFrom: "solo",
-						upgradedAt: firebase.firestore.FieldValue.serverTimestamp(),
+						upgradedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 					};
 					if (st.end) profileUpdate.trialEnd = st.end.toISOString();
 					await _db
@@ -6900,7 +6900,7 @@
 						.set(
 							{
 								soloTourSeen: true,
-								soloTourSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
+								soloTourSeenAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 							},
 							{ merge: true },
 						)

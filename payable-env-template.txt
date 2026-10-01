@@ -1,7 +1,7 @@
 # Cashflow System - local environment variables
 # Do not commit this file. It is already ignored by .gitignore.
 #
-# Paste the real values from Payable dashboard copy buttons, Netlify, and Supabase.
+# Paste the real values from Payable dashboard copy buttons, Netlify, and Appwrite.
 
 # Site
 SITE_URL=https://www.ceylonrylabs.io
@@ -40,11 +40,11 @@ PAYABLE_BUSINESS_TOKEN=PASTE_BUSINESS_TOKEN_HERE
 # https://www.ceylonrylabs.io/.netlify/functions/payable-webhook?secret=YOUR_SECRET
 PAYABLE_WEBHOOK_SECRET=PASTE_STRONG_RANDOM_SECRET_HERE
 
-# Supabase
+# Appwrite
 # Add these only in Netlify environment variables. Do not commit real keys.
-SUPABASE_URL=https://iudcinvfqbdzaptnnzqg.supabase.co
-SUPABASE_ANON_KEY=PASTE_SUPABASE_ANON_KEY_HERE
-SUPABASE_SERVICE_ROLE_KEY=PASTE_SUPABASE_SERVICE_ROLE_KEY_HERE
+APPWRITE_ENDPOINT=https://sgp.cloud.appwrite.io/v1
+APPWRITE_PROJECT_ID=PASTE_APPWRITE_PROJECT_ID_HERE
+APPWRITE_API_KEY=PASTE_APPWRITE_API_KEY_HERE
 
 # Optional SMTP variables used by email/invite/support functions.
 SMTP_HOST=smtp.hostinger.com

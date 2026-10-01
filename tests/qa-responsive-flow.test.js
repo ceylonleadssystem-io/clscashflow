@@ -617,7 +617,7 @@ test('payslip email endpoint sends a PDF attachment', function() {
 test('admin dashboard loads quickly without presenting failed requests as zero data', function() {
   const page = read('ceylonry-admin.html');
   const endpoint = read('netlify/functions/admin-data.js');
-  const database = read('netlify/lib/supabase.js');
+  const database = read('netlify/lib/appwrite.js');
   assert.match(page, /id="data-status"/);
   assert.match(page, /ADMIN_REQUEST_TIMEOUT_MS = 15000/);
   assert.match(page, /sessionStorage\.getItem\(ADMIN_CACHE_KEY\)/);

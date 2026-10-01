@@ -18,7 +18,7 @@
 		/>
 		<!-- Appwrite compatibility SDK -->
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 		<link rel="stylesheet" href="assets/catalog.css?v=20260810-catalog1" />
 		<script src="assets/catalog.js?v=20260811-catalog3"></script>
@@ -9170,7 +9170,7 @@
 							{
 								businessTourSeen: true,
 								businessTourSeenAt:
-									firebase.firestore.FieldValue.serverTimestamp(),
+									clsBackend.firestore.FieldValue.serverTimestamp(),
 							},
 							{ merge: true },
 						)
@@ -9246,7 +9246,7 @@
 						lastPlan: "studio",
 						requestedPlan: "studio",
 						downgradedFrom: "business",
-						downgradedAt: firebase.firestore.FieldValue.serverTimestamp(),
+						downgradedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 					};
 					if (st.end) update.trialEnd = st.end.toISOString();
 					await _fdb
@@ -18379,11 +18379,11 @@
 				setTimeout(cleanupInvoicePrint, 3000);
 			};
 
-			// ===================== FIREBASE + AUTH =====================
+			// ===================== BACKEND + AUTH =====================
 			var _fbConfig = {};
-			firebase.initializeApp(_fbConfig);
-			var _fdb = firebase.firestore();
-			var _fauth = firebase.auth();
+			clsBackend.initializeApp(_fbConfig);
+			var _fdb = clsBackend.firestore();
+			var _fauth = clsBackend.auth();
 			var _uid = null;
 			var _profile = null;
 			var _signedInUid = null;

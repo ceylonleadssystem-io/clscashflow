@@ -50,5 +50,5 @@
   function CollectionRef(path){QueryRef.call(this,path)}CollectionRef.prototype=Object.create(QueryRef.prototype);CollectionRef.prototype.doc=function(id){return new DocRef(this.path,id)};CollectionRef.prototype.add=async function(data){var d=new DocRef(this.path);await d.set(data);return d};
   function firestore(){return{collection:function(n){return new CollectionRef(n)},batch:function(){var jobs=[];return{set:function(r,d,o){jobs.push(function(){return r.set(d,o)})},delete:function(r){jobs.push(function(){return r.delete()})},commit:function(){return Promise.all(jobs.map(function(f){return f()}))}}}}}
   firestore.FieldValue={serverTimestamp:function(){return new Date().toISOString()},delete:function(){return{__delete:true}}};
-  window.firebase={apps:[{}],initializeApp:function(){return window.firebase},auth:auth,firestore:firestore};window.firebase.auth.GoogleAuthProvider=GoogleAuthProvider;
+  window.clsBackend={apps:[{}],initializeApp:function(){return window.clsBackend},auth:auth,firestore:firestore};window.clsBackend.auth.GoogleAuthProvider=GoogleAuthProvider;
 })();

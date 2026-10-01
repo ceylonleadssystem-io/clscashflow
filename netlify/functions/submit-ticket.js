@@ -1,10 +1,10 @@
 const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade } = require('../lib/appwrite');
+const { appwriteAdmin } = require('../lib/appwrite');
 
 async function getAdmin() {
   try {
-    return firebaseAdminFacade();
+    return appwriteAdmin();
   } catch (e) {
     return null;
   }

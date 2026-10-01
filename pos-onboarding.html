@@ -11,7 +11,7 @@
 			rel="stylesheet"
 		/>
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<script src="assets/platform.js?v=20260830-pos"></script>
 		<script>
 			document.addEventListener("DOMContentLoaded", function () {
@@ -502,7 +502,7 @@
 			</section>
 		</main>
 		<script>
-			firebase.initializeApp({});
+			clsBackend.initializeApp({});
 			document.querySelectorAll("[data-password-toggle]").forEach((toggle) =>
 				toggle.addEventListener("click", () => {
 					let input = document.getElementById(toggle.dataset.passwordToggle),
@@ -543,19 +543,19 @@
 					let cred,
 						isNewAccount = false;
 					try {
-						cred = await firebase
+						cred = await clsBackend
 							.auth()
 							.createUserWithEmailAndPassword(email, password);
 						isNewAccount = true;
 					} catch (authError) {
 						if (authError?.code === "auth/email-already-in-use")
-							cred = await firebase
+							cred = await clsBackend
 								.auth()
 								.signInWithEmailAndPassword(email, password);
 						else throw authError;
 					}
 					let uid = cred.user.uid,
-						ref = firebase.firestore().collection("users").doc(uid),
+						ref = clsBackend.firestore().collection("users").doc(uid),
 						priorSnap = await ref.get(),
 						prior = priorSnap.exists ? priorSnap.data() : {},
 						start = prior.posTrialStart
@@ -600,10 +600,10 @@
 								: "trial",
 							termsAccepted: true,
 							posTermsAcceptedAt: new Date().toISOString(),
-							updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+							updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 							createdAt:
 								prior.createdAt ||
-								firebase.firestore.FieldValue.serverTimestamp(),
+								clsBackend.firestore.FieldValue.serverTimestamp(),
 						},
 						{ merge: true },
 					);
@@ -652,8 +652,8 @@
 							.set({
 								ownerUid: uid,
 								payload: initialPos,
-								createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-								updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+								createdAt: clsBackend.firestore.FieldValue.serverTimestamp(),
+								updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 							});
 					}
 					sessionStorage.removeItem("ceylonry-business-auth");

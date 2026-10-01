@@ -10,7 +10,7 @@
 			rel="stylesheet"
 		/>
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
 		<style>
 			* {
@@ -1534,10 +1534,10 @@
 		</main>
 
 		<script>
-			var firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
-			var db = firebase.firestore();
-			var auth = firebase.auth();
+			var backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
+			var db = clsBackend.firestore();
+			var auth = clsBackend.auth();
 			var ADMIN_EMAIL = "devteam@ceylonrylabs.io";
 
 			function isAdminEmail(email) {
@@ -1559,7 +1559,7 @@
 			}
 			async function ensureAdminProfile(user, createdNow) {
 				if (!user || !isAdminEmail(user.email)) return;
-				var stamp = firebase.firestore.FieldValue.serverTimestamp();
+				var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
 				var payload = {
 					name: user.displayName || "Ceylonry Labs Admin",
 					email: ADMIN_EMAIL,
@@ -3908,10 +3908,10 @@
 				} catch (serverErr) {
 					var payload = {
 						status: status,
-						updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+						updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 					};
 					if (status === "closed") {
-						payload.closedAt = firebase.firestore.FieldValue.serverTimestamp();
+						payload.closedAt = clsBackend.firestore.FieldValue.serverTimestamp();
 						payload.closedBy = "platform_admin";
 					}
 					await db
@@ -4022,7 +4022,7 @@
 			}
 
 			function adminPaymentRequestUpdatePayload(status) {
-				var stamp = firebase.firestore.FieldValue.serverTimestamp();
+				var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
 				if (status === "pending")
 					return {
 						status: "pending",
@@ -4073,7 +4073,7 @@
 						.doc(id)
 						.set(payload, { merge: true });
 					if (request.uid) {
-						var stamp = firebase.firestore.FieldValue.serverTimestamp();
+						var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
 						var userPayload =
 							status === "paid"
 								? adminUserUpdatePayload("markPaid")
@@ -4202,7 +4202,7 @@
 						cycle: cycle,
 					});
 				} catch (serverErr) {
-					var stamp = firebase.firestore.FieldValue.serverTimestamp();
+					var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
 					var expiresAt = new Date(
 						Date.now() + 7 * 24 * 60 * 60 * 1000,
 					).toISOString();
@@ -4264,7 +4264,7 @@
 						message: message,
 					});
 				} catch (serverErr) {
-					var stamp = firebase.firestore.FieldValue.serverTimestamp();
+					var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
 					await db
 						.collection("chatThreads")
 						.doc(id)
@@ -4331,7 +4331,7 @@
 						status: status,
 					});
 				} catch (serverErr) {
-					var stamp = firebase.firestore.FieldValue.serverTimestamp();
+					var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
 					var payload = {
 						status: status,
 						updatedAt: stamp,
@@ -4351,14 +4351,14 @@
 			}
 
 			function adminUserUpdatePayload(updateType) {
-				var stamp = firebase.firestore.FieldValue.serverTimestamp();
+				var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
 				if (updateType === "markTeam")
 					return {
 						isInternalTeam: true,
 						isTestAccount: true,
 						customerType: "team",
 						paid: false,
-						paymentVerifiedAtUtc: firebase.firestore.FieldValue.delete(),
+						paymentVerifiedAtUtc: clsBackend.firestore.FieldValue.delete(),
 						updatedAt: stamp,
 						classifiedBy: "platform_admin",
 					};

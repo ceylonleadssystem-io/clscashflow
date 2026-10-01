@@ -169,8 +169,8 @@
     var email = plainText(user.email || '', 240);
     var fallbackName = email ? email.split('@')[0] : 'User';
     var name = plainText(user.displayName || fallbackName, 180);
-    var stamp = window.firebase && firebase.firestore && firebase.firestore.FieldValue
-      ? firebase.firestore.FieldValue.serverTimestamp()
+    var stamp = window.clsBackend && clsBackend.firestore && clsBackend.firestore.FieldValue
+      ? clsBackend.firestore.FieldValue.serverTimestamp()
       : new Date().toISOString();
     await ref.set({
       name: name,
@@ -216,8 +216,8 @@
   function getFirestore(db) {
     if (db) return db;
     try {
-      if (window.firebase && firebase.apps && firebase.apps.length && firebase.firestore) {
-        return firebase.firestore();
+      if (window.clsBackend && clsBackend.apps && clsBackend.apps.length && clsBackend.firestore) {
+        return clsBackend.firestore();
       }
     } catch (e) {}
     return null;
@@ -225,8 +225,8 @@
 
   function getAuthUser() {
     try {
-      if (window.firebase && firebase.apps && firebase.apps.length && firebase.auth) {
-        return firebase.auth().currentUser;
+      if (window.clsBackend && clsBackend.apps && clsBackend.apps.length && clsBackend.auth) {
+        return clsBackend.auth().currentUser;
       }
     } catch (e) {}
     return null;
@@ -241,7 +241,7 @@
         var user = getAuthUser();
         if (!user) {
           try {
-            var auth = window.firebase && firebase.auth ? firebase.auth() : null;
+            var auth = window.clsBackend && clsBackend.auth ? clsBackend.auth() : null;
             if (auth && typeof auth.waitForCurrentUser === 'function') {
               user = await auth.waitForCurrentUser(1200);
             }
@@ -309,8 +309,8 @@
       lastSeenUtc: nowIso()
     };
     try {
-      if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
-        update.lastSeenAt = firebase.firestore.FieldValue.serverTimestamp();
+      if (window.clsBackend && clsBackend.firestore && clsBackend.firestore.FieldValue) {
+        update.lastSeenAt = clsBackend.firestore.FieldValue.serverTimestamp();
       }
       await db.collection('users').doc(uid).set(update, { merge: true });
     } catch (e) {
@@ -377,8 +377,8 @@
       update.lastPlan = expectedPlan;
     }
     try {
-      if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
-        update.lastSeenAt = firebase.firestore.FieldValue.serverTimestamp();
+      if (window.clsBackend && clsBackend.firestore && clsBackend.firestore.FieldValue) {
+        update.lastSeenAt = clsBackend.firestore.FieldValue.serverTimestamp();
       }
       db.collection('users').doc(uid).set(update, { merge: true }).catch(function(e) {
         console.warn('Plan access check update skipped:', e);
@@ -1193,7 +1193,7 @@
     var font = invoiceFont(s.invoiceFont);
     var accountEmail = String(opts.accountEmail || s.accountEmail || '').trim().toLowerCase();
     if (!accountEmail) {
-      try { accountEmail = String(firebase.auth().currentUser.email || '').trim().toLowerCase(); } catch (e) {}
+      try { accountEmail = String(clsBackend.auth().currentUser.email || '').trim().toLowerCase(); } catch (e) {}
     }
     var accountClass = accountEmail === 'pasan@studioniceone.com' ? ' account-pasan-studio' : '';
     var cur = inv.cur || inv.currency || 'LKR';
@@ -1339,8 +1339,8 @@
 
   function fieldTimestamp() {
     try {
-      if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
-        return firebase.firestore.FieldValue.serverTimestamp();
+      if (window.clsBackend && clsBackend.firestore && clsBackend.firestore.FieldValue) {
+        return clsBackend.firestore.FieldValue.serverTimestamp();
       }
     } catch (e) {}
     return nowIso();
@@ -2254,8 +2254,8 @@
     var payload = Object.assign({}, data, {
       status: 'open',
       source: 'browser-fallback',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      createdAt: clsBackend.firestore.FieldValue.serverTimestamp(),
+      updatedAt: clsBackend.firestore.FieldValue.serverTimestamp()
     });
     var doc = await db.collection('supportTickets').add(payload);
     return doc.id;
@@ -2511,7 +2511,7 @@
   async function closeMyTicket(id, wrap) {
     var db = getFirestore();
     if (!db) throw new Error('Data storage is not available on this page.');
-    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
     await db.collection('supportTickets').doc(id).set({
       status: 'closed',
       closedBy: 'customer',
@@ -2550,7 +2550,7 @@
     if (!db) throw new Error('Data storage is not available on this page.');
     if (!user) throw new Error('Please sign in to chat with support.');
     var ref = db.collection('chatThreads').doc(chatThreadId(user));
-    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
     var payload = {
       uid: user.uid,
       email: cleanString(user.email || '', 180).toLowerCase(),
@@ -2616,7 +2616,7 @@
       renderChatMessages(list, rows);
       thread.set({
         unreadForUser: false,
-        lastUserReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastUserReadAt: clsBackend.firestore.FieldValue.serverTimestamp(),
         lastUserReadAtUtc: nowIso()
       }, { merge: true }).catch(function() {});
     } catch (e) {
@@ -2645,7 +2645,7 @@
         renderChatMessages(list, rows);
         thread.set({
           unreadForUser: false,
-          lastUserReadAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastUserReadAt: clsBackend.firestore.FieldValue.serverTimestamp(),
           lastUserReadAtUtc: nowIso()
         }, { merge: true }).catch(function() {});
       }, function() {
@@ -2662,7 +2662,7 @@
     var db = getFirestore();
     var user = getAuthUser();
     var thread = db.collection('chatThreads').doc(chatThreadId(user));
-    var stamp = firebase.firestore.FieldValue.serverTimestamp();
+    var stamp = clsBackend.firestore.FieldValue.serverTimestamp();
     var authorName = cleanString(user.displayName || user.email || 'Customer', 180);
     var list = wrap && wrap.querySelector('[data-chat-list]');
     if (list) {
@@ -2926,7 +2926,7 @@
           } else {
             setStatus('Account deleted. Signing out...', false);
             try {
-              if (window.firebase && firebase.auth) await firebase.auth().signOut();
+              if (window.clsBackend && clsBackend.auth) await clsBackend.auth().signOut();
             } catch (e) {}
             setTimeout(function() { location.href = 'signin.html?account=deleted'; }, 700);
           }
@@ -3007,8 +3007,8 @@
     });
 
     try {
-      if (window.firebase && firebase.apps && firebase.apps.length && firebase.auth) {
-        firebase.auth().onAuthStateChanged(function(nextUser) {
+      if (window.clsBackend && clsBackend.apps && clsBackend.apps.length && clsBackend.auth) {
+        clsBackend.auth().onAuthStateChanged(function(nextUser) {
           if (supportActivityLoaded) {
             subscribeChat(wrap);
           }

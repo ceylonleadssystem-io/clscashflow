@@ -1,5 +1,5 @@
 'use strict';
-const {headers,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,canRead,canWrite}=require('../lib/appwrite');
+const {headers,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,canRead,canWrite,sanitizeProfileWrite}=require('../lib/appwrite');
 function response(code,body){return{statusCode:code,headers:headers(),body:JSON.stringify(body)}}
 function bodyOf(event){try{return JSON.parse(event.body||'{}')}catch(_){return{}}}
 function itemTime(item){return Date.parse(item&&item.updatedAt||item&&item.createdAt||item&&item.at||item&&item.date||'')||0}
@@ -38,6 +38,7 @@ exports.handler=async function(event){
     }
     if(action==='bulkReplace'){
       if(!id)throw new Error('Missing document id.');
+      data=await sanitizeProfileWrite(path,id,data,user);
       if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});
       var payload=b.collections&&typeof b.collections==='object'?b.collections:{};
       for(const name of Object.keys(payload)){
@@ -50,7 +51,7 @@ exports.handler=async function(event){
       var saved=await upsertDocument(path,id,data,true);
       return response(200,{ok:true,doc:saved});
     }
-    if(action==='set'||action==='update'||action==='add'){id=id||newId('doc');if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});if(id==='main'&&/^users\/[^/]+\/pos$/.test(path)&&data.payload){var current=await getDocument(path,id);if(current&&current.data&&current.data.payload)data.payload=mergePosPayload(current.data.payload,data.payload)}return response(200,{ok:true,doc:await upsertDocument(path,id,data,action!=='set'||b.merge!==false)});}
+    if(action==='set'||action==='update'||action==='add'){id=id||newId('doc');data=await sanitizeProfileWrite(path,id,data,user);if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});if(id==='main'&&/^users\/[^/]+\/pos$/.test(path)&&data.payload){var current=await getDocument(path,id);if(current&&current.data&&current.data.payload)data.payload=mergePosPayload(current.data.payload,data.payload)}return response(200,{ok:true,doc:await upsertDocument(path,id,data,action!=='set'||b.merge!==false)});}
     if(action==='delete'){var old=await getDocument(path,id);if(old&&!await canWrite(path,id,old.data,user))return response(403,{ok:false,error:'Not allowed.'});await deleteDocument(path,id);return response(200,{ok:true});}
     return response(400,{ok:false,error:'Unsupported action.'});
   }catch(e){return response(e.statusCode||500,{ok:false,error:e.message||'Appwrite request failed.'})}

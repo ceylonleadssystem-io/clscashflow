@@ -10,8 +10,8 @@
 			href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
 			rel="stylesheet"
 		/>
-		<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0"></script>
-		<script src="../assets/supabase-firebase-compat.js?v=20260830-pos"></script>
+		<script src="../assets/appwrite-sdk.js"></script>
+		<script src="../assets/appwrite-compat.js?v=20260830-pos"></script>
 		<script src="../assets/platform.js?v=20260901-pos-modal"></script>
 		<script src="../tmp/pdfs/pos-guide-seed.js"></script>
 		<script>
@@ -8573,8 +8573,8 @@
 		</style>
 		<script>
 			(function () {
-				if (!window.firebase) return;
-				firebase.initializeApp({});
+				if (!window.clsBackend) return;
+				clsBackend.initializeApp({});
 				var requireFreshBusinessLogin =
 					new URLSearchParams(location.search).get("login") === "business";
 				if (requireFreshBusinessLogin) {
@@ -8597,10 +8597,10 @@
 						cycle,
 					);
 					if (ok && plan === "pos") {
-						var user = firebase.auth().currentUser,
+						var user = clsBackend.auth().currentUser,
 							next = profile.nextPaymentDue || "";
 						if (user)
-							await firebase
+							await clsBackend
 								.firestore()
 								.collection("users")
 								.doc(user.uid)
@@ -8613,7 +8613,7 @@
 										posLastPaymentSlipAt: new Date().toISOString(),
 										posNextPaymentDue: next,
 										posBillingCycle: cycle || "monthly",
-										updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+										updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 									},
 									{ merge: true },
 								);
@@ -8798,7 +8798,7 @@
 							{
 								ownerUid: cloudUser.uid,
 								payload: payload,
-								updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+								updatedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 							},
 							{ merge: true },
 						)
@@ -8808,7 +8808,7 @@
 				}
 				async function activateCloud(user) {
 					cloudUser = user;
-					var userRef = firebase.firestore().collection("users").doc(user.uid),
+					var userRef = clsBackend.firestore().collection("users").doc(user.uid),
 						snap = await userRef.get(),
 						profile = snap.exists ? snap.data() : {};
 					if (!profile.posEnabled && profile.plan !== "pos") {
@@ -8902,7 +8902,7 @@
 					if (email === DEVELOPER_EMAIL) return normalPosSubmit();
 					try {
 						error.textContent = "Signing in securely…";
-						var cred = await firebase
+						var cred = await clsBackend
 							.auth()
 							.signInWithEmailAndPassword(email, password);
 						error.textContent = "";
@@ -8924,10 +8924,10 @@
 				document.getElementById("account-confirm-field").hidden = true;
 				document.getElementById("account-submit").textContent =
 					"Sign In to POS";
-				firebase.auth().onAuthStateChanged(async function (user) {
+				clsBackend.auth().onAuthStateChanged(async function (user) {
 					if (requireFreshBusinessLogin) {
 						if (user) {
-							await firebase.auth().signOut();
+							await clsBackend.auth().signOut();
 							return;
 						}
 						requireFreshBusinessLogin = false;

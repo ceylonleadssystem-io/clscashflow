@@ -11,7 +11,7 @@
 			rel="stylesheet"
 		/>
 		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-firebase-compat.js?v=20260908-auth-recovery"></script>
+		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
 		<style>
 			* {
 				box-sizing: border-box;
@@ -123,10 +123,10 @@
 			<a class="btn" id="dash" href="starter.html">Go to Dashboard →</a>
 		</div>
 		<script>
-			var firebaseConfig = {};
-			firebase.initializeApp(firebaseConfig);
-			var db = firebase.firestore();
-			var auth = firebase.auth();
+			var backendConfig = {};
+			clsBackend.initializeApp(backendConfig);
+			var db = clsBackend.firestore();
+			var auth = clsBackend.auth();
 			var params = new URLSearchParams(location.search);
 			var plan = (params.get("plan") || "starter").toLowerCase();
 			var uid = params.get("uid") || "";
@@ -163,7 +163,7 @@
 							plan: plan,
 							planPrice:
 								plan === "premium" ? 15500 : plan === "growth" ? 12500 : 5500,
-							paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+							paidAt: clsBackend.firestore.FieldValue.serverTimestamp(),
 							lastPaymentSource: params.get("session_id")
 								? "stripe-session"
 								: "success-page",

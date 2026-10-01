@@ -1,7 +1,7 @@
-const { firebaseAdminFacade } = require('../lib/appwrite');
+const { appwriteAdmin } = require('../lib/appwrite');
 
 async function getAdmin() {
-  return firebaseAdminFacade();
+  return appwriteAdmin();
 }
 
 module.exports = { getAdmin };

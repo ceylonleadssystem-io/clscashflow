@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const { firebaseAdminFacade, getUserFromEvent, getDocument } = require('../lib/appwrite');
+const { appwriteAdmin, getUserFromEvent, getDocument } = require('../lib/appwrite');
 
 const MAX_FILE_BYTES = 3000000;
 const PLANS = {
@@ -64,7 +64,7 @@ exports.handler = async function(event) {
   const safeFileName = fileName.replace(/[^A-Za-z0-9._-]/g, '-');
   const contentHash = crypto.createHash('sha256').update(upload.file).digest('hex');
   const receiptId = ownerUid + '-' + period;
-  const admin = firebaseAdminFacade();
+  const admin = appwriteAdmin();
   const receiptRef = admin.firestore().collection('subscriptionPayments').doc(receiptId);
   try {
     const prior = await receiptRef.get();

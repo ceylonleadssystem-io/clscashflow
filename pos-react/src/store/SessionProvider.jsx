@@ -63,8 +63,8 @@ export function SessionProvider({ children }) {
 			setPhase("activating");
 			try {
 				if (auth.kind === "appwrite") {
-					const fb = auth.firebase();
-					const cloud = new CloudSyncService({ firebase: fb, onStatus: setCloudStatus });
+					const fb = auth.clsBackend();
+					const cloud = new CloudSyncService({ clsBackend: fb, onStatus: setCloudStatus });
 					cloudRef.current = cloud;
 					const ctx = await cloud.resolveWorkspace(user);
 					const dbName = databaseNameFor(ctx.workspaceUid);
