@@ -69,7 +69,7 @@ export function Customers() {
 					{rows.length} of {data.customers.length} customers
 				</div>
 				<div className="table-wrap">
-					<table>
+					<table className="customers-table">
 						<thead>
 							<tr>
 								<th>Name</th>
@@ -87,6 +87,7 @@ export function Customers() {
 									<td>
 										<strong>{c.name}</strong>
 										{c.company && <small className="table-subcategory">{c.company}</small>}
+										<small className="table-subcategory cust-contact">{c.phone || c.email || ""}</small>
 									</td>
 									<td>{c.email || "—"}</td>
 									<td>{c.phone || "—"}</td>

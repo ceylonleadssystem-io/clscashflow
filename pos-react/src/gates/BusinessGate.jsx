@@ -90,7 +90,7 @@ export function BusinessGate() {
 				</div>
 				{!local && !developer && (
 					<div className="pos-auth-note" id="pos-new-account-note">
-						New to POS? <a href={env.onboardingUrl}>Start a 15-day POS trial</a> · Your sales are stored on this device if the internet drops and sync when it returns.
+						New to POS? <a href={env.onboardingUrl}>Start a 7-day POS trial</a> · Your sales are stored on this device if the internet drops and sync when it returns.
 					</div>
 				)}
 				<div className="print-note">After business sign-in, each staff member signs into the POS using their own PIN.</div>

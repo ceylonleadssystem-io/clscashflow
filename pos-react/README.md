@@ -1,9 +1,11 @@
 # Ceylonry POS — React + WatermelonDB
 
+📚 Full documentation: [docs/](docs/README.md) — user guide, administrator guide, architecture, development, deployment, test plan.
+
 
 * Every screen, modal and action of the **final** (last-layer-wins) behaviour of the original was ported
   — see the [parity checklist](#parity-checklist).
-* The original stylesheets are reused **verbatim** (`src/styles/*.css`, merged in cascade order), and the
+* The original stylesheets are reused (`src/styles/*.css`, merged into six files in cascade order), and the
   components render the same markup/classes, so the UI looks and behaves like the current POS.
 * Local, relational, persistent data lives in **WatermelonDB** (LokiJS/IndexedDB on the web).
 * Authentication, cloud sync, e-mail, billing and hardware sit behind **service abstractions**
@@ -93,7 +95,7 @@ secrets here** (the Appwrite API key and SMTP passwords stay in Netlify).
 | `VITE_EJS_KEY` / `VITE_EJS_SERVICE` / `VITE_EJS_RECEIPT_TEMPLATE` | legacy EmailJS ids | Defaults for receipt e-mails (per-business override in settings) |
 | `VITE_CATALOGUE_IMAGES_URL` | *(empty)* | Optional bundle defining `window.CLS_AZURE_SWIM_IMAGES` |
 | `VITE_SYNC_PULL_MS` / `VITE_SYNC_PUSH_MS` | `1500` / `2500` | Cloud sync cadence |
-| `VITE_BASE_PATH` | `/` | Use `/pos-system/` (or any sub-path) when hosting beside the legacy pages |
+| `VITE_BASE_PATH` | `/posv2/` | Use `/pos-system/` (or any sub-path) when hosting beside the legacy pages |
 
 ---
 
@@ -173,7 +175,7 @@ promise-based `ui.alert/confirm/prompt/notice` (dialogs replace `window.alert/co
 
 Open **`admin.html`** (built as a second Vite entry; e.g. `/posv2/admin.html`). It has its own
 administrator sign-in (Appwrite account listed in `VITE_ADMIN_EMAILS`; the Netlify function
-`pos-admin-data` enforces the real allow-list) and is **not** reachable from the POS sidebar.
+`pos-admin-data` enforces the real allow-list, currently the single address hard-coded as `ADMIN_EMAIL` in the function) and is **not** reachable from the POS sidebar.
 
 Per POS account the administrator can:
 
@@ -258,7 +260,7 @@ These were bugs/inconsistencies in the stacked layers; the React port fixes them
 
 ## 9. Testing
 
-`npm test` runs vitest: pure domain logic (cart, refunds, cash drawer, analytics, catalogue parsing, order
+`npm test` runs vitest (138 tests; see [docs/testing.md](docs/testing.md)): pure domain logic (cart, refunds, cash drawer, analytics, catalogue parsing, order
 sequence, inventory), WatermelonDB (relational round-trip, repositories), feature-flag resolution, merge
 rules and an end-to-end **cloud sync** test (two devices against an in-memory Appwrite-style store).
 For UI, run `npm run dev` in local mode and walk through the screens.
