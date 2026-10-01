@@ -306,6 +306,12 @@
 				border-color: var(--black);
 				box-shadow: 0 0 0 3px rgba(74, 59, 42, 0.06);
 			}
+			.ob-field-error {
+				margin-top: 5px;
+				color: #c53b2e;
+				font-size: 0.75rem;
+				line-height: 1.35;
+			}
 			.ob-input.has-error {
 				border-color: var(--red);
 				box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.08);
@@ -4228,13 +4234,146 @@
 				return false;
 			}
 			function isEmail(v) {
-				return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+				v = String(v || "").trim();
+				return (
+					!v ||
+					(v.length <= 254 &&
+						!/\.\./.test(v) &&
+						/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/.test(
+							v,
+						))
+				);
 			}
+			/* international numbers: optional leading +, digits/spaces/-/(), 7-15 digits (E.164) */
 			function isPhone(v) {
-				return !v || /^[+0-9 ()-]{7,20}$/.test(v);
+				v = String(v || "").trim();
+				if (!v) return true;
+				if (!/^\+?[0-9\s\-()]+$/.test(v)) return false;
+				const digits = v.replace(/\D/g, "").length;
+				return digits >= 7 && digits <= 15;
 			}
 			function isName(v) {
-				return /^[A-Za-z][A-Za-z .'-]{1,59}$/.test(String(v || "").trim());
+				return /^[\p{L}\p{M}][\p{L}\p{M} .'\-]{1,59}$/u.test(String(v || "").trim());
+			}
+
+			// ── FIELD RULES (single source for the Next button and the inline messages) ──
+			const NAME_CHARS = /[^\p{L}\p{M} .'\-]/gu;
+			const FIELD_RULES = {
+				"s1-fname": (v) =>
+					!v
+						? "Please enter your first name."
+						: !isName(v)
+							? "First name must be 2-60 characters: letters, spaces, hyphens, apostrophes or periods only."
+							: "",
+				"s1-lname": (v) =>
+					!v
+						? "Please enter your last name."
+						: !isName(v)
+							? "Last name must be 2-60 characters: letters, spaces, hyphens, apostrophes or periods only."
+							: "",
+				"s1-email": (v) =>
+					!v ? "Please enter your email address." : !isEmail(v) ? "Please enter a valid email address, e.g. name@example.com." : "",
+				"s1-phone": (v) =>
+					!v ? "Please enter your phone number." : !isPhone(v) ? "Please enter a valid phone number (7-15 digits, e.g. +94 77 123 4567)." : "",
+				"s4-bizname": (v) =>
+					!v
+						? "Please enter your business name."
+						: v.length < 2 || v.length > 80
+							? "Business name must be 2-80 characters."
+							: !/^[\p{L}\p{N}][\p{L}\p{M}\p{N} &'.,()\/\-]*$/u.test(v)
+								? "Business name must start with a letter or number and use only letters, numbers, spaces and & ' . , ( ) / -"
+								: "",
+				"s4-regno": (v) =>
+					v && !/^[A-Za-z0-9][A-Za-z0-9 \/.\-]{1,29}$/.test(v) ? "Registration number can use letters, numbers, spaces and / . - (2-30 characters)." : "",
+				"s4-email": (v) => (!isEmail(v) ? "Please enter a valid invoice email, or leave it blank." : ""),
+				"s4-addr": (v) => (v.length > 200 ? "Business address must be 200 characters or fewer." : ""),
+				"s4-bank-name": (v) =>
+					v && !/^[\p{L}\p{M}\p{N} &'.,()\-]{2,60}$/u.test(v) ? "Bank name must be 2-60 characters (letters, numbers and & ' . , ( ) -)." : "",
+				"s4-bank-account-name": (v) =>
+					v && !isName(v) ? "Account name must be 2-60 characters: letters, spaces, hyphens, apostrophes or periods only." : "",
+				"s4-bank-account-number": (v) =>
+					v && !/^\d{6,20}$/.test(v.replace(/[\s-]/g, "")) ? "Account number must be 6-20 digits." : "",
+				"s4-bank-branch": (v) =>
+					v && !/^[\p{L}\p{M}\p{N} &'.,()\-]{2,60}$/u.test(v) ? "Branch must be 2-60 characters (letters, numbers and & ' . , ( ) -)." : "",
+				"s2-client-name": (v) =>
+					v && !/^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} &'.,()\-]{1,79}$/u.test(v) ? "Customer name must be 2-80 characters (letters, numbers and & ' . , ( ) -)." : "",
+				"s2-client-phone": (v) => (!isPhone(v) ? "Please enter a valid customer phone number (7-15 digits), or leave it blank." : ""),
+				"s2-client-email": (v) => (!isEmail(v) ? "Please enter a valid customer email, or leave it blank." : ""),
+				"s4-vat": (v) => (v && !/^[A-Za-z0-9][A-Za-z0-9 \/.\-]{1,29}$/.test(v) ? "VAT / tax number can use letters, numbers, spaces and / . - (2-30 characters)." : ""),
+				"s4-taxrate": (v) => {
+					if (v === "") return "";
+					const n = Number(v);
+					return !Number.isFinite(n) || n < 0 || n > 100 ? "Tax rate must be a number from 0 to 100." : "";
+				},
+				"s4-footer": (v) => (v.length > 180 ? "Please keep the notes under 180 characters." : ""),
+				"s4-prefix": (v) => (v && !/^[A-Za-z0-9-]{1,14}$/.test(v) ? "Invoice prefix can use letters, numbers and hyphens only (max 14)." : ""),
+			};
+			const FIELD_LIMITS = { "s1-fname": 60, "s1-lname": 60, "s1-email": 254, "s1-phone": 20, "s4-bizname": 80, "s4-regno": 30, "s4-email": 254, "s4-addr": 200, "s4-bank-name": 60, "s4-bank-account-name": 60, "s4-bank-account-number": 24, "s4-bank-branch": 60, "s2-client-name": 80, "s2-client-phone": 20, "s2-client-email": 254, "s4-vat": 30, "s4-footer": 180, "notif-email": 254, "notif-sms": 20, "notif-wa": 20 };
+			/* characters that can never be valid are removed while typing */
+			const FIELD_SANITISE = {
+				"s1-fname": (v) => v.replace(NAME_CHARS, ""),
+				"s1-lname": (v) => v.replace(NAME_CHARS, ""),
+				"s4-bank-account-name": (v) => v.replace(NAME_CHARS, ""),
+				"s1-email": (v) => v.replace(/\s/g, ""),
+				"s4-email": (v) => v.replace(/\s/g, ""),
+				"s2-client-email": (v) => v.replace(/\s/g, ""),
+				"notif-email": (v) => v.replace(/\s/g, ""),
+				"s1-phone": (v) => v.replace(/[^\d+\s\-()]/g, ""),
+				"s2-client-phone": (v) => v.replace(/[^\d+\s\-()]/g, ""),
+				"notif-sms": (v) => v.replace(/[^\d+\s\-()]/g, ""),
+				"notif-wa": (v) => v.replace(/[^\d+\s\-()]/g, ""),
+				"s4-bank-account-number": (v) => v.replace(/[^\d\s-]/g, ""),
+				"s4-prefix": (v) => v.replace(/[^A-Za-z0-9-]/g, ""),
+			};
+			FIELD_RULES["notif-email"] = (v) => (!isEmail(v) ? "Please enter a valid notification email address." : "");
+			FIELD_RULES["notif-sms"] = (v) => (!isPhone(v) ? "Please enter a valid SMS phone number." : "");
+			FIELD_RULES["notif-wa"] = (v) => (!isPhone(v) ? "Please enter a valid WhatsApp phone number." : "");
+			function fieldMessage(id) {
+				const el = document.getElementById(id);
+				return el && FIELD_RULES[id] ? FIELD_RULES[id](String(el.value || "").trim()) : "";
+			}
+			/** First failing field of `ids`, as { id, message } (or null). */
+			function firstFieldError(ids) {
+				for (const id of ids) {
+					const message = fieldMessage(id);
+					if (message) return { id, message };
+				}
+				return null;
+			}
+			function showFieldMessage(id, message) {
+				const el = document.getElementById(id);
+				if (!el) return;
+				el.classList.toggle("has-error", !!message);
+				el.setAttribute("aria-invalid", message ? "true" : "false");
+				const box = el.closest(".ob-field") || el.parentNode;
+				let note = box.querySelector(".ob-field-error");
+				if (!note && message) {
+					note = document.createElement("div");
+					note.className = "ob-field-error";
+					note.id = id + "-error";
+					note.setAttribute("role", "alert");
+					box.appendChild(note);
+					el.setAttribute("aria-describedby", note.id);
+				}
+				if (note) note.textContent = message || "";
+			}
+			function bindFieldValidation() {
+				Object.keys(FIELD_RULES).forEach((id) => {
+					const el = document.getElementById(id);
+					if (!el) return;
+					if (FIELD_LIMITS[id]) el.setAttribute("maxlength", FIELD_LIMITS[id]);
+					let touched = false;
+					el.addEventListener("input", () => {
+						const clean = FIELD_SANITISE[id] ? FIELD_SANITISE[id](el.value) : el.value;
+						if (clean !== el.value) el.value = clean;
+						if (touched) showFieldMessage(id, fieldMessage(id));
+					});
+					el.addEventListener("blur", () => {
+						touched = true;
+						el.value = el.value.trim().replace(/ {2,}/g, " ");
+						showFieldMessage(id, fieldMessage(id));
+					});
+				});
 			}
 			function normalizeGrowthPartnerCode(value) {
 				const compact = String(value || "")
@@ -4374,6 +4513,8 @@
 					const lname = document.getElementById("s1-lname").value.trim();
 					const email = document.getElementById("s1-email").value.trim();
 					const phone = document.getElementById("s1-phone").value.trim();
+					const bad1 = firstFieldError(["s1-fname", "s1-lname", "s1-email", "s1-phone"]);
+					if (bad1) return showStepError(1, bad1.message, [bad1.id]);
 					if (!fname)
 						return showStepError(1, "Please enter your first name.", [
 							"s1-fname",
@@ -4456,6 +4597,8 @@
 					const invEmail = document.getElementById("s4-email").value.trim();
 					const footer = document.getElementById("s4-footer").value.trim();
 					const prefix = document.getElementById("s4-prefix").value.trim();
+					const bad3 = firstFieldError(["s4-bizname", "s4-regno", "s4-email", "s4-addr", "s4-bank-name", "s4-bank-account-name", "s4-bank-account-number", "s4-bank-branch", "s2-client-name", "s2-client-phone", "s2-client-email", "s4-vat", "s4-taxrate", "s4-footer", "s4-prefix"]);
+					if (bad3) return showStepError(3, bad3.message, [bad3.id]);
 					if (!biz)
 						return showStepError(3, "Please enter your business name.", [
 							"s4-bizname",
@@ -5709,6 +5852,7 @@
 			buildTemplateGrid(3);
 			loadGrowthPartnerCodes();
 			bindInvoicePreviewInputs();
+			bindFieldValidation();
 			// Pick up pre-fill data from landing page free-month form
 			(function () {
 				// Pick up pre-fill data from landing page or Google sign-in

@@ -22,13 +22,13 @@
 					"aria-label",
 					"Back to Cashflow, Invoicing and POS System home",
 				);
-				home.href = "/index.html?public=1";
+				home.href = "index.html";
 				home.addEventListener("click", function (event) {
 					event.preventDefault();
 					sessionStorage.removeItem("ceylonry-business-auth");
 					sessionStorage.removeItem("ceylonry-pos-user");
 					sessionStorage.removeItem("ceylonry-pos-business-uid");
-					location.replace("/index.html?public=1");
+					location.replace("index.html");
 				});
 				var posSignIn = document.querySelector(".signin a");
 				if (posSignIn) {
@@ -39,7 +39,7 @@
 					field = document.createElement("div");
 				field.className = "field full";
 				field.innerHTML =
-					'<label for="mobile">Mobile number <span class="required-mark" aria-hidden="true">*</span></label><input id="mobile" type="tel" required autocomplete="tel" inputmode="tel" placeholder="07X XXX XXXX" aria-required="true">';
+					'<label for="mobile">Mobile number <span class="required-mark" aria-hidden="true">*</span></label><input type="tel" id="mobile" type="tel" required autocomplete="tel" inputmode="tel" placeholder="07X XXX XXXX" aria-required="true">';
 				business.closest(".field").after(field);
 				[
 					["first", "First name"],
@@ -364,6 +364,28 @@
 				}
 			}
 		</style>
+			<style>
+			.field-error {
+				display: none;
+				margin-top: 5px;
+				color: #c53b2e;
+				font-size: 12.5px;
+				line-height: 1.35;
+			}
+			.field.invalid .field-error,
+			.terms.invalid + .field-error {
+				display: block;
+			}
+			.field.invalid input,
+			.field.invalid .password-wrap input {
+				border-color: #c53b2e !important;
+			}
+			.terms.invalid {
+				outline: 1px solid #c53b2e;
+				outline-offset: 4px;
+				border-radius: 6px;
+			}
+		</style>
 	</head>
 	<body>
 		<main class="shell">
@@ -387,7 +409,7 @@
 							<strong>7 days free</strong>No card required
 						</div>
 						<div class="fact">
-							<strong>LKR 5,500/month</strong>Up to 5 users
+							<strong>LKR 5,500/month</strong>Up to 2 users
 						</div>
 						<div class="fact"><strong>LKR 500</strong>Each additional user</div>
 					</div>
@@ -407,19 +429,19 @@
 					<div class="grid">
 						<div class="field">
 							<label>First name</label
-							><input id="first" required autocomplete="given-name" />
+							><input type="text" id="first" required autocomplete="given-name" />
 						</div>
 						<div class="field">
 							<label>Last name</label
-							><input id="last" required autocomplete="family-name" />
+							><input type="text" id="last" required autocomplete="family-name" />
 						</div>
 						<div class="field full">
 							<label>Business name</label
-							><input id="business" required autocomplete="organization" />
+							><input type="text" id="business" required autocomplete="organization" />
 						</div>
 						<div class="field full">
 							<label>Email address</label
-							><input id="email" type="email" required autocomplete="email" />
+							><input type="email" id="email" required autocomplete="email" />
 						</div>
 						<div class="field">
 							<label for="password">Password</label>
@@ -468,9 +490,9 @@
 							<a href="terms.html" target="_blank">Terms of Service</a> and
 							<a href="privacy.html" target="_blank">Privacy Policy</a>. I
 							understand that POS access requires prepaid payment after the
-							15-day trial.</span
+							7-day trial.</span
 						></label
-					><button class="btn" id="submit">Start My 15-Day POS Trial →</button>
+					><button class="btn" id="submit">Start My 7-Day POS Trial →</button>
 					<div class="error" id="error" role="alert"></div>
 					<div class="signin">
 						Already registered?
@@ -642,8 +664,166 @@
 					console.error(err);
 					error.textContent = err?.message || "Could not start the POS trial.";
 					button.disabled = false;
-					button.textContent = "Start My 15-Day POS Trial →";
+					button.textContent = "Start My 7-Day POS Trial →";
 				}
+			});
+		</script>
+		<script>
+			/* Form validation: runs before the sign-up handler and blocks invalid data. */
+			document.addEventListener("DOMContentLoaded", function () {
+				var form = document.getElementById("pos-trial-form");
+				var $ = function (id) { return document.getElementById(id); };
+				var NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M}\s'.\-]*$/u;
+				var BUSINESS_RE = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}\s&'.,()\/\-]*$/u;
+				var EMAIL_RE = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
+
+				/* Sri Lankan mobile: 07X XXX XXXX, +94 7X XXX XXXX or 94 7X XXX XXXX -> 07XXXXXXXX */
+				function normaliseMobile(value) {
+					var d = String(value || "").replace(/[\s\-()]/g, "");
+					if (/^\+?94/.test(d)) d = "0" + d.replace(/^\+?94/, "");
+					return /^07[01245678]\d{7}$/.test(d) ? d : "";
+				}
+
+				var rules = {
+					first: function (v) {
+						if (!v) return "Enter your first name.";
+						if (v.length < 2) return "First name must be at least 2 characters.";
+						if (v.length > 50) return "First name must be 50 characters or fewer.";
+						if (!NAME_RE.test(v)) return "First name can only contain letters, spaces, apostrophes, dots and hyphens.";
+						return "";
+					},
+					last: function (v) {
+						if (!v) return "Enter your last name.";
+						if (v.length < 2) return "Last name must be at least 2 characters.";
+						if (v.length > 50) return "Last name must be 50 characters or fewer.";
+						if (!NAME_RE.test(v)) return "Last name can only contain letters, spaces, apostrophes, dots and hyphens.";
+						return "";
+					},
+					business: function (v) {
+						if (!v) return "Enter your business name.";
+						if (v.length < 2) return "Business name must be at least 2 characters.";
+						if (v.length > 80) return "Business name must be 80 characters or fewer.";
+						if (!BUSINESS_RE.test(v)) return "Business name must start with a letter or number and use only letters, numbers, spaces and & ' . , ( ) / -";
+						return "";
+					},
+					mobile: function (v) {
+						if (!v) return "Enter your mobile number.";
+						if (!normaliseMobile(v)) return "Enter a valid Sri Lankan mobile number, e.g. 077 123 4567 or +94 77 123 4567.";
+						return "";
+					},
+					email: function (v) {
+						if (!v) return "Enter your email address.";
+						if (v.length > 254) return "Email address is too long.";
+						if (/\.\./.test(v) || !EMAIL_RE.test(v)) return "Enter a valid email address, e.g. name@example.com.";
+						return "";
+					},
+					password: function (v) {
+						if (!v) return "Enter a password.";
+						if (v.length < 8) return "Password must be at least 8 characters.";
+						if (v.length > 128) return "Password must be 128 characters or fewer.";
+						return "";
+					},
+					confirm: function (v) {
+						if (!v) return "Confirm your password.";
+						if (v !== $("password").value) return "Passwords do not match.";
+						return "";
+					},
+				};
+				var order = ["first", "last", "business", "mobile", "email", "password", "confirm"];
+				var trimmed = { first: 1, last: 1, business: 1, mobile: 1, email: 1 };
+
+				/* block characters that can never be valid while typing */
+				var sanitise = {
+					first: function (v) { return v.replace(/[^\p{L}\p{M}\s'.\-]/gu, ""); },
+					last: function (v) { return v.replace(/[^\p{L}\p{M}\s'.\-]/gu, ""); },
+					mobile: function (v) { return v.replace(/[^\d+\s\-()]/g, ""); },
+					email: function (v) { return v.replace(/\s/g, ""); },
+				};
+				var limits = { first: 50, last: 50, business: 80, mobile: 20, email: 254, password: 128, confirm: 128 };
+
+				function holder(input) { return input.closest(".field"); }
+				function slot(input) {
+					var box = holder(input), el = box.querySelector(".field-error");
+					if (!el) {
+						el = document.createElement("div");
+						el.className = "field-error";
+						el.id = input.id + "-error";
+						el.setAttribute("role", "alert");
+						box.appendChild(el);
+						input.setAttribute("aria-describedby", el.id);
+					}
+					return el;
+				}
+				function check(id) {
+					var input = $(id);
+					if (!input) return "";
+					var raw = input.value, value = trimmed[id] ? raw.trim() : raw;
+					var message = rules[id](value);
+					var box = holder(input);
+					box.classList.toggle("invalid", !!message);
+					input.setAttribute("aria-invalid", message ? "true" : "false");
+					slot(input).textContent = message;
+					return message;
+				}
+				function checkTerms() {
+					var box = $("terms").closest(".terms"), ok = $("terms").checked;
+					box.classList.toggle("invalid", !ok);
+					var next = box.nextElementSibling;
+					if (!next || !next.classList.contains("field-error")) {
+						next = document.createElement("div");
+						next.className = "field-error";
+						next.setAttribute("role", "alert");
+						box.after(next);
+					}
+					next.textContent = ok ? "" : "You must accept the Terms of Service and Privacy Policy to continue.";
+					return ok ? "" : "terms";
+				}
+
+				form.setAttribute("novalidate", "");
+				order.forEach(function (id) {
+					var input = $(id);
+					if (!input) return;
+					input.setAttribute("maxlength", limits[id]);
+					var touched = false;
+					input.addEventListener("input", function () {
+						if (sanitise[id]) {
+							var clean = sanitise[id](input.value);
+							if (clean !== input.value) input.value = clean;
+						}
+						if (touched) check(id);
+						if (id === "password" && $("confirm").value) check("confirm");
+					});
+					input.addEventListener("blur", function () {
+						touched = true;
+						if (trimmed[id]) input.value = input.value.trim().replace(/\s{2,}/g, " ");
+						check(id);
+					});
+				});
+				$("terms").addEventListener("change", checkTerms);
+
+				/* capture phase + stopImmediatePropagation: the sign-up handler never runs on invalid data */
+				form.addEventListener(
+					"submit",
+					function (event) {
+						var firstBad = "";
+						order.forEach(function (id) {
+							if (check(id) && !firstBad) firstBad = id;
+						});
+						if (checkTerms() && !firstBad) firstBad = "terms";
+						if (firstBad) {
+							event.preventDefault();
+							event.stopImmediatePropagation();
+							var target = $(firstBad);
+							target.scrollIntoView({ block: "center", behavior: "smooth" });
+							target.focus({ preventScroll: true });
+							return;
+						}
+						$("mobile").value = normaliseMobile($("mobile").value);
+						sessionStorage.setItem("ceylonry-pos-onboarding-mobile", $("mobile").value);
+						$("email").value = $("email").value.trim().toLowerCase();
+					},
+					true,
+				);
 			});
 		</script>
 	</body>
