@@ -264,7 +264,13 @@ export class PosStore {
 			},
 			/** Fresh reads inside a transaction. */
 			all: (table) => store.all(table),
-			get: (table, id) => store.get(table, id),
+			/** Read-your-writes: a row queued earlier in this transaction wins over the stored one. */
+			get: (table, id) => {
+				const queued = pending.get(store.spec(table).name + ":" + id);
+				if (queued?.op === "put") return Promise.resolve({ ...queued.plain });
+				if (queued?.op === "remove") return Promise.resolve(null);
+				return store.get(table, id);
+			},
 			getSale: (id) => store.getSale(id),
 			snapshot: () => store.readSnapshot(),
 		};
