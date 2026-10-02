@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { env } from "../config/env";
-import { getAuthService, friendlyAuthError } from "../services/auth.service";
+import { adminSession } from "./adminSession";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
-import { PLANS } from "../config/plans";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("admin");
@@ -14,8 +13,6 @@ const fmtDate = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "nume
 
 /** Administration portal: separate login + accounts list + per-account dashboard. */
 export function AdminApp() {
-	const auth = useMemo(() => getAuthService(), []);
-
 	const [user, setUser] = useState(null);
 	const [ready, setReady] = useState(false);
 	const [error, setError] = useState("");
@@ -26,16 +23,16 @@ export function AdminApp() {
 	const [selected, setSelected] = useState("");
 	const [q, setQ] = useState("");
 
+	// Restore a still-valid administrator session (kept in sessionStorage for this tab only).
 	useEffect(() => {
-		if (env.authProvider !== "appwrite") {
+		if (env.authProvider === "local") {
 			if (localAdminSession.get()) setUser({ email: "dev admin" });
-			return setReady(true);
+		} else {
+			const s = adminSession.get();
+			if (s) setUser({ email: s.email });
 		}
-		return auth.onChange((u) => {
-			setUser(u && env.adminEmails.includes(String(u.email).toLowerCase()) ? u : null);
-			setReady(true);
-		});
-	}, [auth]);
+		setReady(true);
+	}, []);
 
 	const load = useCallback(async () => {
 		setLoading(true);
@@ -46,6 +43,11 @@ export function AdminApp() {
 			setError("");
 		} catch (e) {
 			log.error("could not load admin account list", e);
+			if (e.status === 401) {
+				// Token expired or revoked: return to the sign-in form.
+				adminSession.clear();
+				setUser(null);
+			}
 			setError(e.message);
 		} finally {
 			setLoading(false);
@@ -64,11 +66,15 @@ export function AdminApp() {
 				setUser({ email });
 				return;
 			}
-			if (!env.adminEmails.includes(email)) throw new Error("This account is not an administrator.");
-			await auth.signIn(email, password);
+			// Credentials are checked server-side against the separate admin database.
+			const res = await fetch(env.adminLoginUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+			const json = await res.json().catch(() => ({}));
+			if (!res.ok || !json.ok) throw new Error(json.error || "Sign-in failed (" + res.status + ").");
+			adminSession.set({ token: json.token, expiresAt: json.expiresAt, email: json.email, name: json.name });
+			setUser({ email: json.email });
 		} catch (e) {
 			log.warn("admin sign-in failed", e);
-			setError(env.authProvider === "local" ? e.message : friendlyAuthError(e));
+			setError(e.message);
 		} finally {
 			setBusy(false);
 		}
@@ -93,7 +99,7 @@ export function AdminApp() {
 					<button className="btn out" onClick={load} disabled={loading}>
 						{loading ? "Refreshing…" : "Refresh"}
 					</button>
-					<button className="btn out" onClick={async () => { localAdminSession.signOut(); if (env.authProvider === "appwrite") await auth.signOut(); setUser(null); }}>
+					<button className="btn out" onClick={() => { localAdminSession.signOut(); adminSession.clear(); setUser(null); }}>
 						Sign out
 					</button>
 				</div>
@@ -172,7 +178,7 @@ export function AdminApp() {
 						</div>
 					</div>
 					<p className="muted" style={{ marginTop: 10 }}>
-						Tiers: {PLANS.map((p) => p.name).join(" · ")}. Open an account to change its tier, features per location, welcome message and invoices.
+						Open an account to switch its features on or off (per business or per location), edit its welcome message and manage invoices.
 					</p>
 				</>
 			)}

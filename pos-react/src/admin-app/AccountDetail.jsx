@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FEATURES, FEATURE_GROUPS, FEATURE_MAP, defaultFeatureFlags, dependentsOf, resolveFeatures } from "../config/features";
-import { PLANS, PLAN_FEATURE_OFF } from "../config/plans";
+import { PLANS } from "../config/plans";
 import { DEFAULT_WELCOME } from "../config/welcome";
 import { Switch } from "../components/ui";
-import { PlansGrid } from "../components/PlansGrid";
 import { useUi } from "../store/UiProvider";
 import { adminApi, emailInvoice } from "./adminApi";
 import { buildInvoiceLines } from "./billing";
 
 const fmt = (n) => "LKR " + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const TABS = [
-	["access", "Access & tier"],
+	["access", "Access"],
 	["features", "Features"],
 	["welcome", "Welcome message"],
 	["invoices", "Invoices"],
@@ -78,7 +77,8 @@ export function AccountDetail({ account, onBack, onChanged }) {
 // ------------------------------------------------------------------ access ---
 function AccessTab({ account, profile, settings, save, saving, onChanged, ui }) {
 	const plan = settings.plan || {};
-	const [tier, setTier] = useState(plan.tier || "starter");
+	// The tier itself is no longer edited here; it is kept as-is because invoices still read it.
+	const tier = plan.tier || "starter";
 	const [fixed, setFixed] = useState(plan.exceptionAmount ? String(plan.exceptionAmount) : "");
 	const [note, setNote] = useState(plan.exceptionNote || "");
 	const paused = profile.posAccountPaused === true;
@@ -128,22 +128,12 @@ function AccessTab({ account, profile, settings, save, saving, onChanged, ui }) 
 			<div className="panel">
 				<div className="panel-head">
 					<div>
-						<div className="panel-title">Tier & pricing</div>
-						<div className="muted">Drives invoices and the “Your plan” marker shown to the client.</div>
+						<div className="panel-title">Fixed amount</div>
+						<div className="muted">Optional agreed amount that overrides the calculated invoice total.</div>
 					</div>
 				</div>
 				<div className="modal-body">
 					<div className="form-grid">
-						<div className="field">
-							<label>Tier</label>
-							<select className="input" value={tier} onChange={(e) => setTier(e.target.value)}>
-								{PLANS.map((p) => (
-									<option key={p.id} value={p.id}>
-										{p.name} — LKR {p.price.toLocaleString()} {p.term}
-									</option>
-								))}
-							</select>
-						</div>
 						<div className="field">
 							<label>Fixed amount exception (LKR, optional)</label>
 							<input className="input" inputMode="decimal" placeholder="e.g. 6000" value={fixed} onChange={(e) => setFixed(e.target.value.replace(/[^\d.,]/g, ""))} />
@@ -153,18 +143,10 @@ function AccessTab({ account, profile, settings, save, saving, onChanged, ui }) 
 							<input className="input" placeholder="Why this client has a fixed price" value={note} onChange={(e) => setNote(e.target.value)} />
 						</div>
 					</div>
-					<p className="muted">When a fixed amount is set, invoices charge exactly that amount instead of the tier price + additional features.</p>
+					<p className="muted">When a fixed amount is set, invoices charge exactly that amount instead of the calculated total.</p>
 					<button className="btn gold" disabled={saving} onClick={savePlan}>
-						Save tier
+						Save amount
 					</button>
-				</div>
-			</div>
-			<div className="panel" style={{ gridColumn: "1/-1" }}>
-				<div className="panel-head">
-					<div className="panel-title">Tier comparison</div>
-				</div>
-				<div className="modal-body">
-					<PlansGrid currentPlan={tier} onSelect={(p) => setTier(p.id)} />
 				</div>
 			</div>
 		</div>
@@ -181,8 +163,6 @@ function FeaturesTab({ settings, locations, save, saving, ui }) {
 	const isBusiness = scope === "business";
 	const override = isBusiness ? {} : byLoc[scope] || {};
 	const effective = useMemo(() => resolveFeatures({ ...base, ...override }), [base, override]);
-	const plan = settings.plan?.tier;
-
 	const setBaseFlag = async (f, on) => {
 		if (f.core) return;
 		if (!on) {
@@ -200,11 +180,6 @@ function FeaturesTab({ settings, locations, save, saving, ui }) {
 			if (!Object.keys(cur).length) delete next[scope];
 			return next;
 		});
-	const applyTier = (tier) => {
-		const off = new Set(PLAN_FEATURE_OFF[tier] || []);
-		setBase({ ...defaultFeatureFlags(), ...Object.fromEntries(FEATURES.filter((f) => off.has(f.id)).map((f) => [f.id, false])) });
-		ui.notice(`${tier} preset applied — press Save to store it.`);
-	};
 	const dirty = JSON.stringify(base) !== JSON.stringify({ ...defaultFeatureFlags(), ...(settings.features || {}) }) || JSON.stringify(byLoc) !== JSON.stringify(settings.locationFeatures || {});
 	const needle = q.trim().toLowerCase();
 	const visible = FEATURES.filter((f) => (group === "all" || f.group === group) && (!needle || (f.label + f.description + f.id).toLowerCase().includes(needle)));
@@ -232,12 +207,6 @@ function FeaturesTab({ settings, locations, save, saving, ui }) {
 				</select>
 				{isBusiness && (
 					<div className="admin-bulk">
-						<span className="muted" style={{ alignSelf: "center" }}>Apply tier preset:</span>
-						{PLANS.map((p) => (
-							<button key={p.id} className={"btn out" + (plan === p.id ? " active" : "")} onClick={() => applyTier(p.id)}>
-								{p.name.replace("POS ", "")}
-							</button>
-						))}
 						<button className="btn out" onClick={() => setBase(defaultFeatureFlags())}>Reset defaults</button>
 					</div>
 				)}
@@ -338,14 +307,11 @@ function WelcomeTab({ settings, save, saving }) {
 						<label>Message</label>
 						<textarea className="input" rows={6} value={w.message} onChange={set("message")} maxLength={1500} />
 					</div>
-					<label className="muted admin-check" style={{ marginTop: 12 }}>
-						<input type="checkbox" checked={w.showPlans} onChange={set("showPlans")} /> Include the pricing tiers
-					</label>
 					<div className="tools" style={{ marginTop: 14 }}>
-						<button className="btn gold" disabled={saving} onClick={() => save({ welcome: { ...w, version: current.version } }, "Welcome message updated")}>
+						<button className="btn gold" disabled={saving} onClick={() => save({ welcome: { ...w, showPlans: false, version: current.version } }, "Welcome message updated")}>
 							Save message
 						</button>
-						<button className="btn out" disabled={saving} onClick={() => save({ welcome: { ...w, version: (Number(current.version) || 1) + 1 } }, "Welcome message re-published to all users")}>
+						<button className="btn out" disabled={saving} onClick={() => save({ welcome: { ...w, showPlans: false, version: (Number(current.version) || 1) + 1 } }, "Welcome message re-published to all users")}>
 							Save & show again to every user
 						</button>
 					</div>
@@ -359,7 +325,6 @@ function WelcomeTab({ settings, save, saving }) {
 				<div className="modal-body">
 					<h3 style={{ marginTop: 0 }}>{w.title}</h3>
 					<p className="welcome-message">{w.message}</p>
-					{w.showPlans && <div className="muted">+ pricing tiers (shown below the message)</div>}
 				</div>
 			</div>
 		</div>

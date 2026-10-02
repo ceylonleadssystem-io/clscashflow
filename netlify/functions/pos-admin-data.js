@@ -1,8 +1,9 @@
 const { siteOrigin } = require('../lib/security');
 const { appwriteAdmin } = require('../lib/appwrite');
+const { isAdminEmail, verifyToken } = require('../lib/admin-auth');
+const { getAdmin, audit } = require('../lib/admin-store');
 const log = require('../lib/log').createLogger('pos-admin-data');
 
-const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 
 function headers() {
   return {
@@ -37,17 +38,20 @@ function serialize(value) {
   return value;
 }
 
-async function verifyAdmin(admin, event) {
+// Administrators sign in through pos-admin-login (separate admin database); this function only
+// accepts the short-lived token that endpoint issues. The admin record is re-read on every
+// request, so deactivating an administrator takes effect immediately.
+async function verifyAdmin(event) {
   const auth = event.headers.authorization || event.headers.Authorization || '';
   const match = String(auth).match(/^Bearer\s+(.+)$/i);
-  if (!match) { log.warn('admin auth denied', { reason: 'missing-token' }); const err = new Error('POS admin sign-in is required.'); err.statusCode = 401; throw err; }
-  const decoded = await admin.auth().verifyIdToken(match[1]);
-  // Only the platform admin identity may use this portal; any other signed-in user is refused.
-  if (clean(decoded.email).toLowerCase() !== ADMIN_EMAIL) {
-    log.warn('admin auth denied', { reason: 'not-platform-admin', uid: decoded.uid });
-    const err = new Error('This account is not authorized for the POS developer portal.'); err.statusCode = 403; throw err;
-  }
-  return decoded;
+  const deny = function(status, reason, message) { log.warn('admin auth denied', { reason }); const err = new Error(message); err.statusCode = status; return err; };
+  if (!match) throw deny(401, 'missing-token', 'POS admin sign-in is required.');
+  const claims = verifyToken(match[1]);
+  if (!claims) throw deny(401, 'invalid-or-expired-token', 'Your administrator session has expired. Please sign in again.');
+  if (!isAdminEmail(claims.email)) throw deny(403, 'not-an-admin-address', 'This account is not authorized for the POS developer portal.');
+  const record = await getAdmin(String(claims.sub || ''));
+  if (!record || !record.active || record.email !== String(claims.email).toLowerCase()) throw deny(403, 'admin-inactive', 'This administrator account is not active.');
+  return { id: record.id, email: record.email };
 }
 
 async function readRows(db, path, order, limit) {
@@ -138,11 +142,15 @@ async function handle(event) {
   if (!['GET', 'POST'].includes(event.httpMethod)) return response(405, { ok: false, error: 'Method not allowed.' });
   try {
     const admin = appwriteAdmin();
-    await verifyAdmin(admin, event);
+    // ADMIN_EMAIL is the signed-in administrator; it stamps every `...By` field written below.
+    const adminUser = await verifyAdmin(event);
+    const ADMIN_EMAIL = adminUser.email;
     const db = admin.firestore();
     const body = event.httpMethod === 'POST' ? JSON.parse(event.body || '{}') : {};
     const params = event.queryStringParameters || {};
     const action = clean(body.action || params.action || 'list');
+    // Everything that can change data is recorded in the admin audit log (read-only actions are not).
+    if (!['list', 'get', 'listInvoices'].includes(action)) await audit({ adminEmail: ADMIN_EMAIL, action, target: clean(body.userId || body.uid, 120) });
 
     if (action === 'list') {
       const baseReads = await Promise.all([

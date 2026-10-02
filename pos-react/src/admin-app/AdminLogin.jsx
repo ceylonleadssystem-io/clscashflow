@@ -8,6 +8,7 @@ export function AdminLogin({ onSignIn, error, busy }) {
 	const [password, setPassword] = useState("");
 	const [show, setShow] = useState(false);
 	const submit = () => onSignIn(email.trim().toLowerCase(), password);
+	const wrongDomain = env.authProvider !== "local" && email.includes("@") && !email.trim().toLowerCase().endsWith("@ceylonrylabs.io");
 	return (
 		<div className="admin-login">
 			<div className="admin-login-card">
@@ -16,7 +17,7 @@ export function AdminLogin({ onSignIn, error, busy }) {
 				</div>
 				<div className="admin-badge">Administration</div>
 				<h1>Administrator sign in</h1>
-				<p className="muted">Restricted area.</p>
+				<p className="muted">Restricted area. Ceylonry Labs administrator accounts only.</p>
 				{env.authProvider === "local" && (
 					<div className="print-note">
 						Local dev instance. Email: <strong>{DEV_ADMIN.email}</strong> · Password: <strong>{DEV_ADMIN.password}</strong>
@@ -26,6 +27,7 @@ export function AdminLogin({ onSignIn, error, busy }) {
 					<label>Administrator email</label>
 					<input className="input" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
 				</div>
+				{wrongDomain && <div className="login-error" style={{ display: "block" }}>Administrator accounts use a @ceylonrylabs.io address.</div>}
 				<div className="field">
 					<label>Password</label>
 					<div className="account-password-wrap">
@@ -35,7 +37,7 @@ export function AdminLogin({ onSignIn, error, busy }) {
 						</button>
 					</div>
 				</div>
-				<button className="btn gold" style={{ width: "100%", marginTop: 14 }} disabled={busy || !email || !password} onClick={submit}>
+				<button className="btn gold" style={{ width: "100%", marginTop: 14 }} disabled={busy || !email || !password || wrongDomain} onClick={submit}>
 					{busy ? "Signing in…" : "Sign in to Administration"}
 				</button>
 				{error && <div className="login-error" style={{ display: "block" }}>{error}</div>}
