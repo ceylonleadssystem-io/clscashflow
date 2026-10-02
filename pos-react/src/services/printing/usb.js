@@ -38,6 +38,7 @@ export async function transferChunks(device, endpoint, bytes, chunk = 4096) {
 	for (let offset = 0; offset < bytes.length; offset += chunk) {
 		const part = bytes.slice(offset, Math.min(offset + chunk, bytes.length));
 		const result = await device.transferOut(endpoint, part);
+		// 4 KB chunks: larger bulk transfers are rejected by some cheap thermal printers.
 		if (result.status !== "ok") throw new Error("The printer stopped accepting data.");
 	}
 }

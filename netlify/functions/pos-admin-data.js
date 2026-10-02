@@ -1,7 +1,9 @@
 const { siteOrigin } = require('../lib/security');
 const { appwriteAdmin } = require('../lib/appwrite');
+const { isAdminEmail, verifyToken } = require('../lib/admin-auth');
+const { getAdmin, audit } = require('../lib/admin-store');
+const log = require('../lib/log').createLogger('pos-admin-data');
 
-const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 
 function headers() {
   return {
@@ -36,15 +38,20 @@ function serialize(value) {
   return value;
 }
 
-async function verifyAdmin(admin, event) {
+// Administrators sign in through pos-admin-login (separate admin database); this function only
+// accepts the short-lived token that endpoint issues. The admin record is re-read on every
+// request, so deactivating an administrator takes effect immediately.
+async function verifyAdmin(event) {
   const auth = event.headers.authorization || event.headers.Authorization || '';
   const match = String(auth).match(/^Bearer\s+(.+)$/i);
-  if (!match) { const err = new Error('POS admin sign-in is required.'); err.statusCode = 401; throw err; }
-  const decoded = await admin.auth().verifyIdToken(match[1]);
-  if (clean(decoded.email).toLowerCase() !== ADMIN_EMAIL) {
-    const err = new Error('This account is not authorized for the POS developer portal.'); err.statusCode = 403; throw err;
-  }
-  return decoded;
+  const deny = function(status, reason, message) { log.warn('admin auth denied', { reason }); const err = new Error(message); err.statusCode = status; return err; };
+  if (!match) throw deny(401, 'missing-token', 'POS admin sign-in is required.');
+  const claims = verifyToken(match[1]);
+  if (!claims) throw deny(401, 'invalid-or-expired-token', 'Your administrator session has expired. Please sign in again.');
+  if (!isAdminEmail(claims.email)) throw deny(403, 'not-an-admin-address', 'This account is not authorized for the POS developer portal.');
+  const record = await getAdmin(String(claims.sub || ''));
+  if (!record || !record.active || record.email !== String(claims.email).toLowerCase()) throw deny(403, 'admin-inactive', 'This administrator account is not active.');
+  return { id: record.id, email: record.email };
 }
 
 async function readRows(db, path, order, limit) {
@@ -130,16 +137,20 @@ async function loadWorkspace(db, uid, profile) {
   return { ref, wrapper: data, payload };
 }
 
-exports.handler = async function(event) {
+async function handle(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: headers(), body: '' };
   if (!['GET', 'POST'].includes(event.httpMethod)) return response(405, { ok: false, error: 'Method not allowed.' });
   try {
     const admin = appwriteAdmin();
-    await verifyAdmin(admin, event);
+    // ADMIN_EMAIL is the signed-in administrator; it stamps every `...By` field written below.
+    const adminUser = await verifyAdmin(event);
+    const ADMIN_EMAIL = adminUser.email;
     const db = admin.firestore();
     const body = event.httpMethod === 'POST' ? JSON.parse(event.body || '{}') : {};
     const params = event.queryStringParameters || {};
     const action = clean(body.action || params.action || 'list');
+    // Everything that can change data is recorded in the admin audit log (read-only actions are not).
+    if (!['list', 'get', 'listInvoices'].includes(action)) await audit({ adminEmail: ADMIN_EMAIL, action, target: clean(body.userId || body.uid, 120) });
 
     if (action === 'list') {
       const baseReads = await Promise.all([
@@ -155,6 +166,7 @@ exports.handler = async function(event) {
       } catch (error) {
         authAvailable = false;
         console.error('POS auth reconciliation unavailable:', error);
+        log.error('auth reconciliation unavailable', error);
       }
       const authById = new Map(authUsers.map(function(user) { return [String(user.uid), user]; }));
       const authByEmail = new Map(authUsers.map(function(user) { return [clean(user.email).toLowerCase(), user]; }));
@@ -208,6 +220,7 @@ exports.handler = async function(event) {
       if(!receiptId)return response(400,{ok:false,error:'Select a payment receipt.'});
       await db.collection('subscriptionPayments').doc(receiptId).set({status:'verified',verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL,billingCycle:cycle,amountLkr:amount},{merge:true});
       await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:addBillingPeriod(now,cycle),posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      log.info('payment confirmed',{uid,receiptId,cycle});
       return response(200,{ok:true,nextPaymentDue:addBillingPeriod(now,cycle)});
     }
 
@@ -215,6 +228,7 @@ exports.handler = async function(event) {
       const cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)||(cycle==='annual'?42000:3500),paymentId='pos-admin-'+uid+'-'+Date.now();
       await db.collection('subscriptionPayments').doc(paymentId).set({uid,email:profile.email||'',businessName:profile.posBusinessName||profile.bizName||'',plan:'pos',status:'verified',source:'admin-confirmed',billingCycle:cycle,amountLkr:amount,period:now.slice(0,7),receivedAtUtc:now,verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL});
       const nextPaymentDue=addBillingPeriod(now,cycle);await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:nextPaymentDue,posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      log.info('payment recorded',{uid,paymentId,cycle});
       return response(200,{ok:true,nextPaymentDue,paymentId});
     }
 
@@ -229,7 +243,9 @@ exports.handler = async function(event) {
       const now=new Date().toISOString(),backupId='pos-account-'+uid+'-'+Date.now();
       await db.collection('accountDeletionBackups').doc(backupId).set({uid,deletedAtUtc:now,deletedBy:ADMIN_EMAIL,profile,workspace:workspace.payload,source:'pos-admin'});
       await workspace.ref.delete();await db.collection('users').doc(uid).delete();
-      try{await admin.auth().deleteUser(uid)}catch(error){console.error('POS auth deletion requires follow-up:',error)}
+      // The profile/workspace are already gone and backed up; an auth failure must not fail the request, but needs manual follow-up.
+      try{await admin.auth().deleteUser(uid)}catch(error){console.error('POS auth deletion requires follow-up:',error);log.error('auth user deletion needs follow-up',error,{uid,backupId})}
+      log.info('pos account deleted',{uid,backupId});
       return response(200,{ok:true,backupId});
     }
 
@@ -281,6 +297,7 @@ exports.handler = async function(event) {
       const beforeProducts = Array.isArray(workspace.payload.products) ? workspace.payload.products : [];
       const beforeCategories = Array.isArray(workspace.payload.categories) ? workspace.payload.categories : [];
       const backupId = 'catalog-' + Date.now();
+      log.info('catalog import', { uid, mode, incoming: incoming.length, before: beforeProducts.length, backupId });
       await db.collection('users/' + uid + '/posCatalogBackups').doc(backupId).set({ products: beforeProducts, categories: beforeCategories, createdAtUtc: new Date().toISOString(), createdBy: ADMIN_EMAIL });
       let products = incoming;
       if (mode === 'merge') {
@@ -349,6 +366,7 @@ exports.handler = async function(event) {
       payload.supportAudit = Array.isArray(payload.supportAudit) ? payload.supportAudit : [];
       payload.supportAudit.unshift({ id: 'sa' + Date.now(), at: now, action: 'admin-settings', details: clean(body.summary || changed.join(', '), 400), userId: ADMIN_EMAIL, session: 'pos-admin' });
       await workspace.ref.set({ ownerUid: uid, payload, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedAtUtc: now }, { merge: true });
+      log.info('admin settings saved', { uid, keys: changed });
       return response(200, { ok: true, saved: changed });
     }
 
@@ -360,6 +378,21 @@ exports.handler = async function(event) {
 
     return response(400, { ok: false, error: 'Unknown POS admin action.' });
   } catch (error) {
+    log.error('pos-admin action threw', error);
     return response(error.statusCode || 500, { ok: false, error: error.message || 'POS admin request failed.' });
   }
+}
+
+// Single place that records every request outcome (action, status, duration). Only the action
+// name is read from the body/query here; payloads are never logged.
+exports.handler = async function(event) {
+  const started = Date.now();
+  let action = '';
+  try { action = clean((JSON.parse(event.body || '{}').action) || (event.queryStringParameters || {}).action || 'list', 40); } catch (_) { /* logging only */ }
+  const res = await handle(event);
+  const ctx = { action, status: res.statusCode, ms: Date.now() - started };
+  if (res.statusCode === 401 || res.statusCode === 403) log.warn('pos-admin request denied', ctx);
+  else if (res.statusCode >= 500) log.error('pos-admin request failed', ctx);
+  else log.info('pos-admin request', ctx);
+  return res;
 };

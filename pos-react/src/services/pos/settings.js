@@ -5,6 +5,9 @@ import { nowIso, posMonthlyPrice } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
 import { supportAuditEntry } from "./common";
 import { addCommonModifiers } from "./catalog";
+import { createLogger } from "../../utils/logger";
+
+const log = createLogger("settings");
 
 /** Business settings, POS setup wizard, support code, themes, feature flags. */
 
@@ -70,6 +73,7 @@ export async function patchSettings(ctx, patch) {
 const generateCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 export async function regenerateSupportCode(ctx) {
+	log.info("support code regenerated");
 	await patchSettings(ctx, { supportCode: generateCode(), supportCodeExpiresAt: Date.now() + SUPPORT_CODE_TTL_MS });
 	ctx.ui.notice("A new support code was generated. It expires in 24 hours.");
 }
@@ -82,6 +86,7 @@ export async function uploadBusinessLogo(ctx, file) {
 		await patchSettings(ctx, { logo });
 		ctx.ui.notice("Business logo saved and fitted for the POS and receipts.");
 	} catch (e) {
+		log.error("business logo upload failed", e);
 		await ctx.ui.alert(e.message);
 	}
 }
@@ -109,6 +114,7 @@ export const setTheme = async (ctx, id, label) => {
 export async function applyPosSetup(ctx, { type, addCategories, enableKot }) {
 	const d = ctx.data();
 	const preset = POS_TYPE_PRESETS[type] || POS_TYPE_PRESETS.other;
+	log.info("POS setup applied", { type, addCategories: !!addCategories, enableKot: !!enableKot });
 	await ctx.store.write((tx) => {
 		tx.setSetting("businessType", type);
 		tx.setSetting("autoPrintKot", !!enableKot);

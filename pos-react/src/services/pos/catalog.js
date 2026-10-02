@@ -3,7 +3,10 @@ import { nowIso } from "../../domain/format";
 import { categoryKey, productCategories } from "../../domain/catalog";
 import { ensureProductInventory } from "../../domain/inventory";
 import { commonModifierPresets } from "../../config/presets";
+import { createLogger } from "../../utils/logger";
 import { markDeleted, newId, unmarkDeletedCategory } from "./common";
+
+const log = createLogger("catalog");
 
 /** Products, categories, subcategories, modifier groups and catalogue import. */
 
@@ -56,6 +59,7 @@ export async function saveProduct(ctx, form) {
 		const products = existing ? d.products.map((p) => (p.id === product.id ? product : p)) : [product, ...d.products];
 		if (ctx.features()["inventory.productStock"]) syncProductInventory(tx, d, products);
 	});
+	log.info(existing ? "product updated" : "product created", { productId: product.id, category });
 	ctx.ui.notice(`${name} saved with cost ${fmt(cost)} and selling price ${fmt(price)}.`);
 	return product;
 }
@@ -77,6 +81,7 @@ export async function deleteProduct(ctx, id) {
 			tx.remove(T.inventoryItems, stock.id);
 		}
 	});
+	log.info("product deleted", { productId: id });
 	ctx.ui.notice(`${p.name} was deleted.`);
 	return p;
 }
@@ -140,6 +145,7 @@ export async function deleteCategory(ctx, name) {
 		}
 		await markDeleted(tx, "categories", categoryKey(name));
 	});
+	log.info("category deleted", { productsMoved: used.length });
 	ctx.ui.notice(name + " category deleted.");
 }
 
@@ -307,6 +313,7 @@ export async function importCatalogue(ctx, rows, mode) {
 		});
 		if (ctx.features()["inventory.productStock"]) syncProductInventory(tx, d, products);
 	});
+	log.info("catalogue imported", { mode, selected: selected.length, imported, updated, skipped, rejected: rows.length - selected.length });
 	ctx.ui.notice(
 		`${imported} items added${updated ? " · " + updated + " updated" : ""}${skipped ? " · " + skipped + " skipped" : ""}. Use Edit to add images and adjust details.`,
 	);

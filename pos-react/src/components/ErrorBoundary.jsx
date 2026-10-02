@@ -1,4 +1,7 @@
 import { Component } from "react";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("ui");
 
 /** Last line of defence: a crash in one screen never leaves a blank page. */
 export class ErrorBoundary extends Component {
@@ -7,7 +10,7 @@ export class ErrorBoundary extends Component {
 		return { error };
 	}
 	componentDidCatch(error, info) {
-		console.error("POS screen crashed", error, info);
+		log.error("POS screen crashed", error, { componentStack: String(info?.componentStack || "").split("\n").slice(0, 6).join("\n") });
 	}
 	render() {
 		if (!this.state.error) return this.props.children;

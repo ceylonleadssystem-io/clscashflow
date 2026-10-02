@@ -93,6 +93,11 @@ const isChargeable = (line) => !line.isDiscount && !line.isServiceCharge;
 export const chargeableSubtotal = (cart) =>
 	cart.filter(isChargeable).reduce((sum, l) => sum + (+l.price || 0) * (+l.qty || 0), 0);
 
+/**
+ * Discount is capped at the subtotal (a total can never go negative) and a percent
+ * discount is capped at 100. Percent maths is left unrounded here; rounding happens
+ * only when amounts are displayed or split.
+ */
 export function discountAmount(cart, discount) {
 	const subtotal = chargeableSubtotal(cart);
 	const value = Math.max(0, +discount?.value || 0);
@@ -102,6 +107,7 @@ export function discountAmount(cart, discount) {
 	);
 }
 
+/** Service charge applies to the post-discount subtotal, so discounts reduce it too. */
 export function serviceChargeAmount(cart, discount, settings, supported) {
 	if (!supported || !settings.serviceChargeEnabled) return 0;
 	const rate = Math.max(0, Math.min(100, +settings.serviceChargeRate || 0));
@@ -125,7 +131,8 @@ export const EMPTY_DISCOUNT = { type: "percent", value: 0 };
 
 export const isPlatformChannel = (channel) => PLATFORM_CHANNELS.includes(channel);
 
-/** Equal split that puts the rounding remainder on the last share. */
+/**
+ * Equal split that puts the rounding remainder on the last share. */
 export function equalSplit(total, count) {
 	const base = Math.floor((total / count) * 100) / 100;
 	return Array.from({ length: count }, (_, i) => ({

@@ -9,6 +9,9 @@ import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
 import { useScopedData } from "../hooks/useScopedData";
 import { SaleActionModal } from "../modals/SaleActionModal";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("ui");
 
 /** Sales history: search, date filter, reprint/download/WhatsApp, refund, void, delete. */
 export function Sales() {
@@ -37,14 +40,16 @@ export function Sales() {
 		});
 	}, [sales, data.customers, q, from, to]);
 
-	const exportSales = () =>
-		downloadCsv(
+	const exportSales = () => {
+		log.info("sales exported", { rows: data.sales.length });
+		return downloadCsv(
 			[
 				["Date", "Receipt", "Customer", "Payment", "Revenue", "Cost", "Profit"],
 				...data.sales.map((s) => [s.date, s.receipt, customerName(data.customers, s.customerId), s.payment, s.total, s.cost, s.profit]),
 			],
 			"pos-sales.csv",
 		);
+	};
 
 	return (
 		<section className="view active" id="view-sales">

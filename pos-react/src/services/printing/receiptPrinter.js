@@ -1,6 +1,9 @@
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
 import { receiptText } from "./documents";
 import { escPosRaster } from "./imageTools";
+import { createLogger } from "../../utils/logger";
+
+const log = createLogger("printing");
 
 const AZURE_PRINTER_VENDOR = 1046;
 const AZURE_PRINTER_PRODUCT = 20497;
@@ -24,6 +27,7 @@ class ReceiptPrinter {
 		navigator.usb.addEventListener("disconnect", (e) => {
 			if (this.device === e.device) {
 				this.device = null;
+				log.warn("USB receipt printer disconnected");
 				this._set("USB printer disconnected. Reconnect the cable, then tap Connect USB Printer.", false);
 			}
 		});
@@ -56,6 +60,7 @@ class ReceiptPrinter {
 			productName: device.productName || "USB receipt printer",
 			serialNumber: device.serialNumber || "",
 		});
+		log.info("USB receipt printer connected", { device: device.productName || "USB receipt printer", vendorId: device.vendorId, productId: device.productId });
 		this._set(`${device.productName || "USB receipt printer"} connected and automatic sale receipts enabled (${device.vendorId}:${device.productId}).`, true);
 		return device;
 	}
@@ -70,7 +75,9 @@ class ReceiptPrinter {
 			await this._claim(device);
 			return true;
 		} catch (error) {
+			// NotFoundError = the user closed the device picker; not a failure.
 			if (error && error.name === "NotFoundError") return false;
+			log.error("USB receipt printer connection failed", error);
 			this._set("USB printer connection failed: " + (error.message || "check the cable and Android USB permission."), false);
 			throw error;
 		}
@@ -91,7 +98,8 @@ class ReceiptPrinter {
 			}
 			await this._claim(device);
 			return true;
-		} catch {
+		} catch (error) {
+			log.warn("USB receipt printer restore failed", error);
 			this._set("USB printer is unavailable. Reconnect the cable or grant access again.", false);
 			return false;
 		}
@@ -103,6 +111,7 @@ class ReceiptPrinter {
 			if (!restored)
 				throw new Error("USB printer is not connected. Tap Printer, select the receipt printer, and allow USB access.");
 		}
+		// Byte order matters: logo raster, then ESC @ (init) + text, then QR raster, then GS V B 0 (feed + partial cut).
 		const encoder = new TextEncoder();
 		const text = encoder.encode(receiptText(sale, ctx));
 		const body = new Uint8Array(2 + text.length);
@@ -117,6 +126,7 @@ class ReceiptPrinter {
 		bytes.set(qr, logo.length + body.length);
 		bytes.set(cut, logo.length + body.length + qr.length);
 		await transferChunks(this.device, this.endpoint, bytes);
+		log.info("receipt bytes sent to USB printer", { receipt: sale.receipt, bytes: bytes.length, device: this.device.productName || "USB receipt printer" });
 		this._set(`${this.device.productName || "USB receipt printer"} connected and ready.`, true);
 	}
 }

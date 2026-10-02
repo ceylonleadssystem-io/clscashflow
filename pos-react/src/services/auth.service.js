@@ -1,5 +1,6 @@
 import { env } from "../config/env";
 import { STORAGE } from "../config/constants";
+import { createLogger } from "../utils/logger";
 import { getAppwriteCompat, installGlobalClsBackend } from "./appwrite/appwriteCompat";
 
 /**
@@ -19,6 +20,7 @@ import { getAppwriteCompat, installGlobalClsBackend } from "./appwrite/appwriteC
  *   hasAccount()         (local provider) whether an owner login exists
  *   register(email, pw)  (local provider) create the owner login
  */
+const log = createLogger("auth");
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function passwordHash(value) {
@@ -51,11 +53,19 @@ class AppwriteAuthProvider {
 		return this.fb.auth().onAuthStateChanged(cb);
 	}
 	async signIn(email, password) {
+		// Appwrite allows one active session per client; a stale one makes sign-in fail, so clear it first.
 		if (this.fb.auth().currentUser) await this.fb.auth().signOut();
-		const cred = await this.fb.auth().signInWithEmailAndPassword(email, password);
-		return cred.user;
+		try {
+			const cred = await this.fb.auth().signInWithEmailAndPassword(email, password);
+			log.info("sign-in succeeded", { provider: "appwrite" });
+			return cred.user;
+		} catch (e) {
+			log.warn("sign-in failed", e, { provider: "appwrite" });
+			throw e;
+		}
 	}
 	signOut() {
+		log.info("sign-out", { provider: "appwrite" });
 		return this.fb.auth().signOut();
 	}
 	resetPassword(email) {
@@ -120,14 +130,18 @@ class LocalAuthProvider {
 	async signIn(email, password) {
 		const account = this._account();
 		if (!account) throw new Error("Create the business login first.");
-		if (account.email !== email || account.passwordHash !== (await passwordHash(password)))
+		if (account.email !== email || account.passwordHash !== (await passwordHash(password))) {
+			log.warn("local sign-in rejected");
 			throw new Error("Incorrect business email or password.");
+		}
 		this.user = this._mkUser(email);
 		sessionStorage.setItem(STORAGE.businessAuth, "1");
+		log.info("sign-in succeeded", { provider: "local" });
 		this._emit();
 		return this.user;
 	}
 	async signOut() {
+		log.info("sign-out", { provider: "local" });
 		this.user = null;
 		sessionStorage.removeItem(STORAGE.businessAuth);
 		this._emit();
@@ -136,6 +150,7 @@ class LocalAuthProvider {
 		throw new Error("Password reset is only available with the Appwrite provider. Clear this device's POS login to start again.");
 	}
 	forget() {
+		log.warn("local owner login cleared from this device");
 		localStorage.removeItem(LOCAL_KEY);
 	}
 }

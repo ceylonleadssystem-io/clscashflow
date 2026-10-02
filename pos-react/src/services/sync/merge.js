@@ -69,6 +69,10 @@ const DELETED_KEYS = [
 	"subcategories",
 ];
 
+/**
+ * Deletions are tombstoned in `deletedIds` and always win over a live copy of the row;
+ * `preferLocal` only breaks ties (equal timestamps) and decides top-level key precedence.
+ */
 export function mergePayload(remote, local, preferLocal) {
 	remote = remote && typeof remote === "object" ? remote : {};
 	local = local && typeof local === "object" ? local : {};
@@ -128,7 +132,10 @@ export function mergePayload(remote, local, preferLocal) {
 	return merged;
 }
 
-/** True when `remote` already contains everything in `local`. */
+/**
+ * True when `remote` already contains everything in `local`. Used to confirm a push landed
+ * (and to clear the pending flag), so it errs on the side of returning false.
+ */
 export function payloadCovers(remote, local) {
 	if (!remote || !local) return false;
 	const arrays = MERGE_ARRAYS.filter((k) => k !== "kitchenTickets");

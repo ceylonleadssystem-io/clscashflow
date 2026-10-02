@@ -8,6 +8,9 @@ import { useData } from "./DataProvider";
 import { useFeatures } from "./FeatureProvider";
 import { usePos } from "./PosProvider";
 import { useUi } from "./UiProvider";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("checkout");
 
 /**
  * State of the order currently being rung up (cart, discount, split bill,
@@ -225,9 +228,13 @@ export function CheckoutProvider({ children }) {
 			});
 			if (result?.needsSplit) return setSplitOpen(true);
 			if (result?.sale) {
+				log.info("order placed", { orderId: result.sale.id, lines: cart.length, payment });
 				resetOrder();
 				if (result.printRequested) await svc.sales.printCompletedSale(result.sale);
 			}
+		} catch (e) {
+			log.error("sale could not be completed", e);
+			throw e;
 		} finally {
 			busy.current = false;
 			setBusyUi(false);
@@ -235,7 +242,10 @@ export function CheckoutProvider({ children }) {
 	}, [cart, discount, payment, splitPayments, customerId, wantsEmail, receiptEmail, wantsWhatsApp, printAfter, cashTendered, orderReference, orderChannel, platformOrderId, openOrderId, svc, enabled, resetOrder]);
 
 	const voidOrder = useCallback(async () => {
-		if (await svc.sales.voidCurrentOrder(cart)) resetOrder();
+		if (await svc.sales.voidCurrentOrder(cart)) {
+			log.info("current order cleared/voided", { lines: cart.length });
+			resetOrder();
+		}
 	}, [svc, cart, resetOrder]);
 
 	const saveOrder = useCallback(
@@ -251,6 +261,7 @@ export function CheckoutProvider({ children }) {
 				sendKitchen,
 			});
 			if (order) {
+				log.info(sendKitchen ? "order held and sent to kitchen" : "order held", { orderId: order.id });
 				resetOrder();
 				go("orders", true);
 			}

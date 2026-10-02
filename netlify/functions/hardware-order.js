@@ -1,5 +1,6 @@
 const { guard, siteOrigin } = require('../lib/security');
 const nodemailer = require('nodemailer');
+const log = require('../lib/log').createLogger('hardware-order');
 
 const HEADERS = {
   'Content-Type': 'application/json',
@@ -38,6 +39,8 @@ function money(value) {
 
 exports.handler = async function handler(event) {
   const blocked = guard(event, { name: 'hardware-order', limit: 5, windowMs: 600000, maxBody: 300000 });
+  // guard covers origin, method, body size and the per-IP rate limit (5 per 10 min).
+  if (blocked) log.warn('request blocked by guard', { status: blocked.statusCode });
   if (blocked) return blocked;
   if (event.httpMethod === 'OPTIONS') return response(204, {});
   if (event.httpMethod !== 'POST') return response(405, { ok: false, error: 'Method not allowed.' });
@@ -45,6 +48,8 @@ exports.handler = async function handler(event) {
   let body;
   try { body = JSON.parse(event.body || '{}'); }
   catch (error) { return response(400, { ok: false, error: 'Invalid order request.' }); }
+  // Honeypot field: bots fill it, humans never see it. Reply as if successful so bots do not retry.
+  if (clean(body.website, 200)) log.info('honeypot triggered; order dropped');
   if (clean(body.website, 200)) return response(200, { ok: true, sent: true });
 
   const customer = {
@@ -69,6 +74,7 @@ exports.handler = async function handler(event) {
     const quantity = Math.max(1, Math.min(20, Math.floor(Number(item && item.quantity) || 1)));
     return product ? { name: product.name, price: product.price, quantity, total: product.price * quantity } : null;
   }).filter(Boolean);
+  if (!items.length) log.warn('order rejected', { status: 400, reason: 'no-valid-items' });
   if (!items.length) return response(400, { ok: false, error: 'Please add at least one hardware item.' });
 
   const total = items.reduce(function(sum, item) { return sum + item.total; }, 0);
@@ -93,6 +99,7 @@ exports.handler = async function handler(event) {
 
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
+  if (!user || !pass) log.error('SMTP is not configured', null, { orderId });
   if (!user || !pass) return response(500, { ok: false, error: 'Online ordering is temporarily unavailable. Please email hello@ceylonrylabs.io.' });
   const port = Number(process.env.SMTP_PORT || 465);
   const transporter = nodemailer.createTransport({
@@ -110,9 +117,11 @@ exports.handler = async function handler(event) {
       text,
       html
     });
+    log.info('order emailed', { orderId, items: items.length, total });
     return response(200, { ok: true, sent: true, orderId });
   } catch (error) {
     console.error('Hardware order email failed:', error);
+    log.error('order email failed', error, { orderId });
     return response(502, { ok: false, error: 'We could not send the order. Please try again or email hello@ceylonrylabs.io.' });
   }
 };

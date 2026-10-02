@@ -4,7 +4,10 @@ import { downloadBlob, whatsappPhone } from "../../domain/format";
 import { kotHtml, receiptHtml, receiptMessage } from "../printing/documents";
 import { printHtmlInFrame, printHtmlInWindow } from "../printing/printDocument";
 import { receiptPrinter } from "../printing/receiptPrinter";
+import { createLogger } from "../../utils/logger";
 import { kitchenMode, newId, stamp } from "./common";
+
+const log = createLogger("printing");
 
 /** Receipt / kitchen-ticket output: USB ESC/POS, system print, download, WhatsApp. */
 
@@ -24,16 +27,20 @@ export async function printReceipt(ctx, sale) {
 	if (type === "usb-direct" && ctx.features()["hardware.usbPrinter"]) {
 		try {
 			await receiptPrinter.print(sale, { ...docCtx(ctx, sale), saved: d.settings.usbPrinter });
+			log.info("receipt printed", { receipt: sale.receipt, method: "usb-direct" });
 			ctx.ui.notice("Receipt " + sale.receipt + " sent directly to the USB receipt printer.");
 			return true;
 		} catch (error) {
 			console.error("Direct USB receipt print failed", error);
+			log.error("receipt print failed", error, { receipt: sale.receipt, method: "usb-direct" });
 			await ctx.ui.alert(
 				"Receipt was not printed. " + (error.message || "Reconnect the USB receipt printer and try again.") + " The POS will not open Save as PDF.",
 			);
 			return false;
 		}
 	}
+	// System print: the browser dialog gives no completion signal, so only the hand-off is logged.
+	log.info("receipt sent to system print", { receipt: sale.receipt, printerType: type });
 	printHtmlInFrame(receiptHtml(sale, docCtx(ctx, sale)), "Receipt print job");
 	return true;
 }
@@ -61,10 +68,12 @@ export async function shareReceiptWhatsApp(ctx, sale, targetWindow) {
 	const customer = sale && d.customers.find((c) => c.id === sale.customerId);
 	const phone = whatsappPhone(customer?.phone);
 	if (!sale || !phone) {
+		log.warn("whatsapp receipt skipped: no customer mobile number", { receipt: sale?.receipt });
 		if (targetWindow) targetWindow.close();
 		return void (await ctx.ui.alert("This sale does not have a customer mobile number."));
 	}
 	const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(receiptMessage(sale, { settings: d.settings, customer }));
+	log.info("whatsapp receipt opened", { receipt: sale.receipt });
 	if (targetWindow) targetWindow.location.href = url;
 	else window.open(url, "_blank");
 }
@@ -95,13 +104,15 @@ export async function queueKitchenTicket(ctx, order) {
 		if (hook) {
 			try {
 				await Promise.resolve(hook(ticket));
-			} catch {
+			} catch (error) {
+				log.warn("kitchen printer hook failed; falling back to Kitchen POS", error, { destination, order: ticket.orderNumber });
 				ticket.status = "printer-unavailable";
 				ctx.ui.notice("Kitchen printer unavailable. Ticket sent to the Kitchen POS instead.");
 			}
 		} else ticket.status = "queued-for-" + destination;
 	}
 	await ctx.store.write((tx) => tx.put(T.kitchenTickets, ticket));
+	log.info("kitchen ticket queued", { order: ticket.orderNumber, destination, status: ticket.status, items: ticket.lines.length });
 	return destination;
 }
 

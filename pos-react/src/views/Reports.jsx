@@ -5,6 +5,9 @@ import { Kpi } from "../components/ui";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useScopedData } from "../hooks/useScopedData";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("ui");
 
 /** Business reports: items, payments, register reconciliation, staff hours, customers. */
 export function Reports() {
@@ -20,8 +23,9 @@ export function Reports() {
 	const hours = staffHours(timeEntries, data.users, range);
 	const cr = useMemo(() => customerReport(data.customers, sales, range), [data.customers, sales, range]);
 
-	const exportReport = () =>
-		downloadCsv(
+	const exportReport = () => {
+		log.info("report exported", { from: range.from, to: range.to, items: d.items.length });
+		return downloadCsv(
 			[
 				["POS REPORT", range.from + " to " + range.to],
 				[],
@@ -30,6 +34,7 @@ export function Reports() {
 			],
 			`pos-report-${range.from}-${range.to}.csv`,
 		);
+	};
 
 	return (
 		<section className="view active" id="view-reports">

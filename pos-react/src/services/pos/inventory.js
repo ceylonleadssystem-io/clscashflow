@@ -4,6 +4,9 @@ import { adjustmentChange, locationStock, stockMovement } from "../../domain/inv
 import { parseStockCountRows } from "../../domain/catalog";
 import { applyStockChange, audit, markDeleted, movementRow, newId } from "./common";
 import { loadXlsx } from "../xlsx";
+import { createLogger } from "../../utils/logger";
+
+const log = createLogger("inventory");
 
 /** Stock items, adjustments, recipes, branch counts and count-sheet upload. */
 
@@ -52,6 +55,7 @@ export async function saveInventoryItem(ctx, form) {
 		const product = form.productId && d.products.find((p) => p.id === form.productId);
 		if (product) tx.put(T.products, { ...product, trackStock: true });
 	});
+	log.info(existing ? "stock item updated" : "stock item created", { itemId: item.id, location: loc, adjusted: !!movement });
 	return item;
 }
 
@@ -72,6 +76,7 @@ export async function adjustStock(ctx, itemId, amount, reason, note) {
 		tx.put(T.inventoryItems, next);
 		tx.put(T.stockMovements, movementRow(next, balance, change, reason, note, s));
 	});
+	log.info("stock adjusted", { itemId: item.id, reason, change, balance, location: loc });
 	ctx.ui.notice(`${item.name}: ${change > 0 ? "+" : ""}${change} ${item.unit} · now ${balance} ${item.unit} (${reason}).`);
 	return true;
 }
@@ -92,6 +97,7 @@ export async function deleteInventoryItem(ctx, id) {
 		await markDeleted(tx, "inventory", id);
 		tx.remove(T.inventoryItems, id);
 	});
+	log.info("stock item deleted", { itemId: id, recipesUpdated: usedBy.length });
 	ctx.ui.notice(item.name + (item.productId ? " is no longer stock-tracked and can always be sold." : " deleted from inventory."));
 }
 
@@ -124,6 +130,7 @@ export async function saveBranchStockCounts(ctx, itemId, counts) {
 		}
 		tx.put(T.inventoryItems, next);
 	});
+	log.info("branch stock counts saved", { itemId, changed });
 	ctx.ui.notice(changed ? `${changed} branch stock count${changed === 1 ? "" : "s"} updated.` : "No branch stock counts changed.");
 	return changed;
 }
@@ -155,6 +162,7 @@ export async function saveBulkBranchStockCounts(ctx, locationId, counts, locatio
 			changed++;
 		}
 	});
+	log.info("bulk branch stock counts saved", { locationId, changed });
 	ctx.ui.notice(changed ? `${changed} stock count${changed === 1 ? "" : "s"} updated for ${locationName}.` : "No stock counts changed.");
 }
 
@@ -186,10 +194,12 @@ export async function importStockCountFile(ctx, file) {
 				}
 			});
 		});
+		log.info("stock count sheet imported", { rows: counts.length, applied: changed, unmatched: counts.length - changed });
 		if (!changed) return void ctx.ui.notice("No matching SKU or item names were found in the count sheet.");
 		ctx.ui.notice(`${changed} stock count${changed === 1 ? " was" : "s were"} updated.`);
 		return changed;
 	} catch (e) {
+		log.error("stock count import failed", e);
 		await ctx.ui.alert(e.message);
 	}
 }

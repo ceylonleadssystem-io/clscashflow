@@ -3,6 +3,9 @@ import { env } from "../../config/env";
 import { DEFAULT_OWNER_PIN, STORAGE } from "../../config/constants";
 import { RETIRED_MODIFIER_NAMES } from "../../config/presets";
 import { itemTime } from "./merge";
+import { createLogger } from "../../utils/logger";
+
+const log = createLogger("sync");
 
 /** Workspace bootstrap / normalisation (ported from the legacy cloud layer). */
 
@@ -74,7 +77,11 @@ export function freshAccountDb(profile = {}, user = {}) {
 }
 
 export function normalizeAccountDb(payload, profile, user) {
-	if (payload?.accountUid && payload.accountUid !== user.uid) payload = null;
+	// A payload stamped with another account's uid must never leak into this workspace: start fresh instead.
+	if (payload?.accountUid && payload.accountUid !== user.uid) {
+		log.warn("payload belongs to a different account; discarded");
+		payload = null;
+	}
 	const clean = payload && typeof payload === "object" ? payload : freshAccountDb(profile, user);
 	clean.accountUid = user.uid;
 	for (const key of [...PAYLOAD_ARRAYS, "sales"]) clean[key] = Array.isArray(clean[key]) ? clean[key] : [];
@@ -141,6 +148,7 @@ export function cacheCatalogue(payload, user) {
 		);
 	} catch (error) {
 		console.warn("Catalogue backup could not be updated", error);
+		log.warn("catalogue backup write failed", error);
 	}
 }
 
@@ -226,6 +234,7 @@ export function recoverMissingCatalogue(current, candidates, profile, user) {
 			!removedSubcategories.has(String(p?.subcategory || "")),
 	);
 	if (!products.length) return false;
+	log.info("catalogue restored", { products: products.length, from: source === current ? "history" : "backup" });
 	current.products = JSON.parse(JSON.stringify(products));
 	current.categories = Array.from(
 		new Set([].concat(current.categories || [], source.categories || [], products.map((p) => p.category || "Recovered")).filter(Boolean)),

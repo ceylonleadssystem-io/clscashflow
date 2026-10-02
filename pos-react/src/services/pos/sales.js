@@ -16,7 +16,10 @@ import { formatOrderNumber, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
 import { orderEmailHtml, orderEmailSubject } from "../printing/orderEmail";
 import { applyStockChange, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
+import { createLogger } from "../../utils/logger";
 import { printKotForSale, printReceipt, queueKitchenTicket, shareReceiptWhatsApp } from "./printing";
+
+const log = createLogger("sales");
 
 /** Checkout completion, reversals (refund/void), open orders and sale deletion. */
 
@@ -225,6 +228,14 @@ export async function completeSale(ctx, input) {
 		});
 	});
 
+	log.info("sale completed", {
+		receipt,
+		total,
+		payment: sale.payment,
+		items: lines.filter((l) => !l.isDiscount && !l.isServiceCharge).length,
+		location: loc.id,
+		fromOpenOrder: !!openOrder,
+	});
 	let message = `Sale ${receipt} completed for ${money(total)}.`;
 	if (cashDue > 0)
 		message = `Sale ${receipt} completed. Cash received: ${money(given)} · Change to give: ${money(Math.max(0, given - cashDue))}.`;
@@ -240,8 +251,11 @@ export async function completeSale(ctx, input) {
 				settings,
 			});
 			await ctx.store.write((tx) => tx.putSale({ ...sale, receiptSentAt: nowIso() }));
+			log.info("order email sent", { receipt });
 			message += " Order e-mailed to " + email + ".";
 		} catch (e) {
+			// The sale is already committed; an e-mail failure must not undo or block it.
+			log.warn("order email failed", e, { receipt });
 			message += " Sale saved, but the order e-mail failed: " + e.message;
 		}
 	}
@@ -338,6 +352,16 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 			});
 		} else tx.putSale(updated);
 	});
+	log.info(type === "refund" ? "sale refunded" : "sale voided", {
+		receipt: sale.receipt,
+		type,
+		refundType: type === "refund" ? refundType : undefined,
+		total: sale.total,
+		payment: sale.payment,
+		items: restoredLines.length,
+		role: s.user?.role,
+		permanentlyDeleted: autoPurge,
+	});
 	ctx.ui.notice((type === "refund" ? "Refund" : "Void") + " recorded for " + sale.receipt + ".");
 	return true;
 }
@@ -366,6 +390,7 @@ export async function deleteSalePermanently(ctx, id, skipConfirm = false) {
 			sessionId: s.sessionId || "",
 		});
 	});
+	log.warn("sale permanently deleted", { receipt: sale.receipt, status, role: s.user?.role });
 	ctx.ui.notice(sale.receipt + " was permanently deleted from every synced device.");
 }
 
@@ -388,6 +413,7 @@ export async function voidCurrentOrder(ctx, cart) {
 			),
 		),
 	);
+	log.info("current order voided", { items: cart.length });
 	ctx.ui.notice("Current order voided.");
 	return true;
 }
@@ -423,6 +449,7 @@ export async function saveOpenOrder(ctx, input) {
 		tx.put(T.openOrders, stamped);
 		if (!existing) tx.setMeta("nextOrderSequence", seq + 1);
 	});
+	log.info(existing ? "open order updated" : "open order saved", { order: stamped.orderNumber, items: input.cart.length, sentToKitchen: !!input.sendKitchen });
 	if (input.sendKitchen) await queueKitchenTicket(ctx, { ...stamped, receipt: stamped.orderNumber });
 	ctx.ui.notice(input.sendKitchen ? "Order sent to the kitchen." : "Open order saved.");
 	return stamped;
@@ -449,6 +476,7 @@ export async function voidOpenOrder(ctx, id) {
 	await ctx.store.write((tx) =>
 		tx.put(T.openOrders, { ...order, status: "voided", voidedAt: nowIso(), voidedBy: s.userId, voidReason: reason }),
 	);
+	log.info("open order voided", { order: order.orderNumber });
 	ctx.ui.notice(order.orderNumber + " voided.");
 }
 

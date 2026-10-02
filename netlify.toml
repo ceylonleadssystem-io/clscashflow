@@ -33,6 +33,19 @@
   to = "/app/index.html"
   status = 200
 
+# POS administration portal. Must stay above the generic /posv2/* rule (first match wins).
+[[redirects]]
+  from = "/posv2/admin"
+  to = "/pos-react/dist/admin.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/posv2/admin/"
+  to = "/pos-react/dist/admin.html"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/posv2"
   to = "/pos-react/dist/index.html"
@@ -203,3 +216,18 @@
   to = "/404.html"
   status = 404
   force = true
+
+# The admin portal is never framed, cached or indexed.
+[[headers]]
+  for = "/posv2/admin"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/posv2/admin/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"

@@ -1,5 +1,8 @@
 import { STORAGE } from "../config/constants";
 import { env } from "../config/env";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("support");
 
 /**
  * Read-only "support session": the developer portal opens the POS with
@@ -19,6 +22,7 @@ export const supportModeActive = () =>
 	new URLSearchParams(location.search).get("support") === "1" && !!supportSession();
 
 export function endSupportSession() {
+	log.info("support session ended");
 	sessionStorage.removeItem(STORAGE.supportSession);
 	location.href = env.supportPortalUrl;
 }

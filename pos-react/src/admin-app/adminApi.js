@@ -1,13 +1,16 @@
 import { env } from "../config/env";
-import { getAuthService } from "../services/auth.service";
+import { adminSession } from "./adminSession";
 import { localAdminApi } from "./localAdmin";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("admin");
 
 /** Calls the admin Netlify function with the signed-in administrator's Appwrite JWT. */
 export async function adminApi(body) {
 	if (env.authProvider === "local") return localAdminApi(body);
-	const user = getAuthService().currentUser;
-	if (!user) throw new Error("Sign in again.");
-	const token = await user.getIdToken();
+	const session = adminSession.get();
+	if (!session) throw Object.assign(new Error("Your administrator session has expired. Please sign in again."), { status: 401 });
+	const token = session.token;
 	const res = await fetch(env.adminFunctionUrl + (body ? "" : "?fresh=" + Date.now()), {
 		method: body ? "POST" : "GET",
 		cache: "no-store",
@@ -15,7 +18,13 @@ export async function adminApi(body) {
 		body: body ? JSON.stringify(body) : undefined,
 	});
 	const json = await res.json().catch(() => ({}));
-	if (!res.ok || !json.ok) throw new Error(json.error || "Request failed (" + res.status + ").");
+	if (!res.ok || !json.ok) {
+		const err = Object.assign(new Error(json.error || "Request failed (" + res.status + ")."), { status: res.status });
+		log.error("admin request failed", err, { action: body?.action || "list", accountId: body?.userId, status: res.status });
+		throw err;
+	}
+	// Single choke point for admin actions (account lookup, plan/billing/access changes): log ids only, never payloads.
+	if (body) log.info("admin action", { action: body.action, accountId: body.userId });
 	return json;
 }
 

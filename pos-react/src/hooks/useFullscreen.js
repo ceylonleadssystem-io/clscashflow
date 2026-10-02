@@ -1,5 +1,8 @@
 import { useCallback, useEffect } from "react";
 import { usePos } from "../store/PosProvider";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("fullscreen");
 
 const ua = typeof navigator !== "undefined" ? navigator : { userAgent: "", platform: "", maxTouchPoints: 0 };
 const appleTouch = /iPad|iPhone|iPod/.test(ua.userAgent) || (ua.platform === "MacIntel" && ua.maxTouchPoints > 1);
@@ -28,7 +31,8 @@ export function useFullscreen() {
 			try {
 				const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
 				if (req) await req.call(document.documentElement);
-			} catch {
+			} catch (error) {
+				log.warn("fullscreen request rejected; using kiosk layout only", error);
 				/* the kiosk layout still applies */
 			}
 		} else {
@@ -36,7 +40,8 @@ export function useFullscreen() {
 			try {
 				if (document.exitFullscreen && document.fullscreenElement) await document.exitFullscreen();
 				else if (document.webkitExitFullscreen && document.webkitFullscreenElement) document.webkitExitFullscreen();
-			} catch {
+			} catch (error) {
+				log.warn("exit fullscreen failed", error);
 				/* ignore */
 			}
 		}

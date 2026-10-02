@@ -1,4 +1,5 @@
 import { Q } from "@nozbe/watermelondb";
+import { createLogger } from "../utils/logger";
 import { T, TABLE_LIST } from "./tables";
 import {
 	comparable,
@@ -25,6 +26,8 @@ import {
 const LEGACY_ARRAY_TABLES = TABLE_LIST.filter(
 	(t) => t.legacyKey && t !== T.sales && t !== T.categories,
 );
+
+const log = createLogger("db");
 
 export const EMPTY_SNAPSHOT = () => {
 	const s = {
@@ -274,11 +277,19 @@ export class PosStore {
 			getSale: (id) => store.getSale(id),
 			snapshot: () => store.readSnapshot(),
 		};
-		const result = await this.db.write(async () => {
-			const out = await fn(tx);
-			await this._flush(pending, options);
-			return out;
-		});
+		let result;
+		try {
+			result = await this.db.write(async () => {
+				const out = await fn(tx);
+				await this._flush(pending, options);
+				return out;
+			});
+		} catch (error) {
+			// The transaction is atomic, so nothing was persisted; the caller still receives the error.
+			log.error("database write failed", error, { rows: pending.size, origin: options.origin || "local" });
+			throw error;
+		}
+		if (options.origin === "sync" && pending.size) log.info("bulk write committed", { rows: pending.size });
 		if (pending.size) this.version++;
 		if (pending.size) this._writeListeners.forEach((cb) => cb({ origin: options.origin || "local" }));
 		return result;
@@ -383,6 +394,7 @@ export class PosStore {
 	 * Only changed rows are written. Local-only settings listed in `keepSettings`
 	 * (e.g. ownerAuth) are never deleted.
 	 */
+	// Used when pulling cloud data: diffing keeps IndexedDB churn (and observer re-renders) small.
 	async replaceAll(snapshot, { keepSettings = ["ownerAuth"], preserveTimestamps = true } = {}) {
 		const current = await this.readSnapshot();
 		return this.write(async (tx) => {
