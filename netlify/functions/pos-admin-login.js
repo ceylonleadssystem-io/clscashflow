@@ -42,8 +42,11 @@ exports.handler = async function handler(event) {
     }
     if (!verifyPassword(password, admin.passwordHash)) {
       const locked = await store.recordFailure(admin);
-      await store.audit({ adminEmail: email, action: locked ? 'login-locked' : 'login-failed', detail: 'bad password' });
-      log.warn('sign-in rejected', { reason: locked ? 'locked-now' : 'bad-password', adminId: admin.id });
+      // Shape only (never the hash or password): lets an operator tell a mangled stored hash
+      // (wrong length / part count) from a simple wrong password.
+      const shape = { hashLength: admin.passwordHash.length, hashParts: admin.passwordHash.split('$').length, hashPrefix: admin.passwordHash.slice(0, 17), passwordLength: password.length };
+      await store.audit({ adminEmail: email, action: locked ? 'login-locked' : 'login-failed', detail: 'bad password; hash ' + shape.hashLength + ' chars/' + shape.hashParts + ' parts; typed ' + shape.passwordLength + ' chars' });
+      log.warn('sign-in rejected', Object.assign({ reason: locked ? 'locked-now' : 'bad-password', adminId: admin.id }, shape));
       return reply(event, 401, { ok: false, error: GENERIC });
     }
 
