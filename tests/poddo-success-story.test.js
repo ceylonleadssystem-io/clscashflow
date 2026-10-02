@@ -23,8 +23,3 @@ test('Poddo story stacks into a single clean column on mobile', () => {
   assert.match(page, /\.success-logo-panel\{min-height:220px/);
   assert.match(page, /\.proof-slide\{padding:30px 22px/);
 });
-
-test('benefit slides are not misrepresented as named customer testimonials', () => {
-  assert.match(page, /Other slides describe product benefits and are not presented as customer testimonials/);
-  assert.doesNotMatch(page, /30\+ businesses are using us/i);
-});

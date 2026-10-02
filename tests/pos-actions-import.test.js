@@ -182,7 +182,7 @@ test('POS landing page offers a hardware cart and emailed order form', () => {
     assert.match(landing, new RegExp(model.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(landing, /Receipt Printer/);
-  assert.equal((landing.match(/data-hardware-id=/g) || []).length, 5);
+  assert.equal((landing.match(/data-hardware-id=/g) || []).length, 7);
   assert.match(landing, /id="hardware-order-form"/);
   for (const field of ['name', 'email', 'mobile', 'address']) assert.match(landing, new RegExp(`name="${field}"`));
   assert.match(landing, /Have something else you want to add\?/);
@@ -192,7 +192,7 @@ test('POS landing page offers a hardware cart and emailed order form', () => {
   assert.match(orderApi, /to: 'hello@ceylonrylabs\.io'/);
   assert.match(orderApi, /Delivery address:/);
   assert.match(orderApi, /items\.reduce/);
-  for (const image of ['ceylonry-pos-lite.jpg', 'ceylonry-pos-lite-black.jpg', 'ceylonry-pos-pro-white.jpg', 'ceylonry-pos-pro-black.jpg', 'ceylonry-receipt-printer.jpg', 'ceylonry-pos-lite-industries.jpg']) {
+  for (const image of ['hw-lite.jpg', 'hw-lite-black.jpg', 'hw-pro-white.jpg', 'hw-pro-black.jpg', 'hw-printer.jpg', 'hw-barcode-wired.jpg', 'hw-barcode-wireless.jpg', 'ceylonry-pos-lite-industries.jpg']) {
     assert.ok(fs.existsSync(path.join(__dirname, '..', 'assets', image)));
     assert.match(landing, new RegExp(`assets/${image}`));
   }

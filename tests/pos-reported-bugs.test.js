@@ -104,7 +104,7 @@ test('retail checkout hides restaurant order channels and records retail sales',
   assert.match(pos, /\.order-channel-fields\[hidden\]\{display:none!important\}/);
   assert.match(pos, /channel\.hidden=!restaurant/);
   assert.match(pos, /reference\.placeholder=restaurant\?'Table \/ order reference \(optional\)':'Sale reference \(optional\)'/);
-  assert.match(pos, /orderChannel:restaurant\?\(channelSelect\.value\|\|'Dine-in'\):'Retail'/);
+  assert.match(pos, /orderChannel:restaurant\?\(?channelSelect\.value\|\|'Dine-in'\)?:'Retail'/);
   assert.match(pos, /platformOrderId:restaurant\?platformId\.value\.trim\(\):''/);
 });
 
@@ -129,7 +129,7 @@ test('catalogue recovery never restores intentionally deleted products', () => {
   assert.match(pos, /intentionallyDeleted=new Set\(current\.deletedIds\.products\.map\(String\)\)/);
   assert.match(pos, /removedCategories=new Set\(current\.deletedIds\.categories\.map\(String\)\)/);
   assert.match(pos, /removedSubcategories=new Set\(current\.deletedIds\.subcategories\.map\(String\)\)/);
-  assert.match(pos, /products=\(products\|\|\[\]\)\.filter\(function\(product\)\{return!intentionallyDeleted\.has/);
+  assert.match(pos, /products=\(products\|\|\[\]\)\.filter\(function\(product\)\{return\(?!intentionallyDeleted\.has/);
   assert.match(pos, /!removedCategories\.has\(String\(product\?\.category\|\|''\)\)/);
   assert.match(pos, /current\.categories=.*\.filter\(function\(category\)\{return!removedCategories\.has/s);
   assert.doesNotMatch(pos, /restoredIds=new Set\(products\.map/);
@@ -642,8 +642,11 @@ test('an upload finishing preserves additions and deletions made while it was ru
   };
   vm.createContext(context);
   for (const name of ['itemTime', 'mergeList', 'mergeInventoryList', 'mergePayload', 'payloadCovers', 'syncCloud']) {
-    const line = pos.split('\n').find(line => line.trim().startsWith((name === 'syncCloud' ? 'async ' : '') + 'function ' + name + '('));
-    vm.runInContext(line, context);
+    // Extract the whole function by brace matching: the formatter spreads functions over many lines.
+    const start = pos.search(new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\('));
+    let depth = 0, end = pos.indexOf('{', start);
+    for (let i = end; i < pos.length; i++) { if (pos[i] === '{') depth++; else if (pos[i] === '}' && --depth === 0) { end = i + 1; break; } }
+    vm.runInContext(pos.slice(start, end), context);
   }
   context.safePayload = () => JSON.parse(JSON.stringify(context.db));
   let persisted;
