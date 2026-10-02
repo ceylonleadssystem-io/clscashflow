@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UiProvider, useUi } from "./store/UiProvider";
 import { SessionProvider, useSession } from "./store/SessionProvider";
 import { DataProvider, useData } from "./store/DataProvider";
@@ -31,13 +31,42 @@ export default function App() {
 	);
 }
 
-const Loading = ({ children = "Loading…" }) => <div className="app-loading">{children}</div>;
+// Progress carries over between loading stages so the bar only ever moves forward.
+let lastProgress = 0;
+
+const Loading = ({ children = "Loading…", progress = 10 }) => {
+	const [pct, setPct] = useState(lastProgress);
+	const ref = useRef(pct);
+	useEffect(() => {
+		const move = (next) => {
+			ref.current = Math.max(ref.current, next);
+			lastProgress = ref.current;
+			setPct(ref.current);
+		};
+		move(progress);
+		// Creep slowly toward (never past) the next stage so it never looks stuck.
+		const id = setInterval(() => move(Math.min(ref.current + 1.5, progress + 18, 96)), 350);
+		return () => clearInterval(id);
+	}, [progress]);
+	return (
+		<div className="app-loading app-loading-progress">
+			<div className="app-loading-card" role="status" aria-live="polite">
+				<div className="app-loading-brand">Ceylonry<span>POS</span></div>
+				<div className="app-loading-text">{children}</div>
+				<div className="app-loading-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
+					<div className="app-loading-fill" style={{ width: pct + "%" }} />
+				</div>
+				<div className="app-loading-pct">{Math.round(pct)}%</div>
+			</div>
+		</div>
+	);
+};
 
 function Root() {
 	const { phase, workspace } = useSession();
-	if (phase === "booting") return <Loading />;
+	if (phase === "booting") return <Loading progress={12}>Starting up…</Loading>;
 	if (phase === "signed-out") return <BusinessGate />;
-	if (phase === "activating" || !workspace) return <Loading>Loading your POS…</Loading>;
+	if (phase === "activating" || !workspace) return <Loading progress={40}>Loading your POS…</Loading>;
 	return (
 		<DataProvider key={workspace.dbName} store={workspace.store}>
 			<Ready />
@@ -47,7 +76,7 @@ function Root() {
 
 function Ready() {
 	const data = useData();
-	if (!data.ready) return <Loading>Opening local database…</Loading>;
+	if (!data.ready) return <Loading progress={72}>Opening local database…</Loading>;
 	return (
 		<FeatureProvider>
 			<ModalsProvider>
