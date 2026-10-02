@@ -13,7 +13,7 @@ test('final onboarding requires a named terms and privacy acceptance', () => {
   assert.match(onboarding, /I Agree &amp; Start My 15-Day Free Trial/);
   assert.match(onboarding, /if\(!consent\.fullName\)/);
   assert.match(onboarding, /if\(!consent\.accepted\)/);
-  assert.match(onboarding, /prepaid monthly bank transfer and payment-slip upload/);
+  assert.match(onboarding, /prepaid monthly or annual bank-transfer cycle and\s+payment-slip upload/);
 });
 
 test('acceptance evidence is versioned and saved as a separate historical document', () => {

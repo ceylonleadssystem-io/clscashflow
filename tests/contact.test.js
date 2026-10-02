@@ -27,6 +27,7 @@ test('contact endpoint rejects unsupported topics', async function() {
     body: JSON.stringify({
       fullName: 'Test User',
       email: 'test@example.com',
+      mobile: '0771234567',
       topic: 'Injected topic',
       message: 'Hello'
     })

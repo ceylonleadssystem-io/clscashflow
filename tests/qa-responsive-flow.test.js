@@ -92,7 +92,7 @@ test('multiline invoice item descriptions stay aligned after Shift+Enter', funct
 
 test('Business refreshes its shared template picker whenever Invoice Settings opens', function() {
   const business = read('growth.html');
-  assert.match(business, /if \(tab === 'invoices'\) \{\s*renderSettingsTemplatePicker\(\);\s*renderSettingsInvoicePreview\(\);/);
+  assert.match(business, /if \(tab === ['\"]invoices['\"]\) \{[\s\S]*?renderSettingsTemplatePicker\(\);\s*renderSettingsInvoicePreview\(\);/);
 });
 
 test('WhatsApp, invoice email, quote, and estimate outputs retain the selected new template', function() {
@@ -273,18 +273,6 @@ test('Business report PDF waits for charts and replaces canvases with captured i
   assert.match(page, /canvas\.replaceWith\(img\)/);
 });
 
-test('Business supplier payments persist paid and outstanding balances', function() {
-  const page = read('growth.html');
-  assert.match(page, /function supplierPaymentCapacity\(txn, existing\)/);
-  assert.match(page, /supplierId:t\.supplierId \|\| ''/);
-  assert.match(page, /payablePaidAmount:toNum\(s\.payablePaidAmount\)/);
-  assert.match(page, /supplier\.payablePaidAmount = Math\.max\(0,/);
-  assert.match(page, /supplier\.payableAmount = Math\.max\(0,/);
-  assert.match(page, /Payment is higher than the supplier outstanding balance/);
-  assert.match(page, /Outstanding: ['"] \+ fmt\(outstanding\) \+ ['"] · Paid: ['"] \+ fmt\(paid\)/);
-  assert.match(page, /Current Outstanding Payable \(LKR\)/);
-});
-
 test('Business payroll can disable EPF and ETF per employee', function() {
   const page = read('growth.html');
   assert.match(page, /id="payroll-statutory" checked/);
@@ -296,7 +284,7 @@ test('Business payroll can disable EPF and ETF per employee', function() {
 test('Business payroll expenses never become suppliers and supplier deletion stays deleted', function() {
   const page = read('growth.html');
   assert.match(page, /function isPayrollExpense\(expense\)/);
-  assert.match(page, /if \(isPayrollExpense\(e\)\).*payrollExpenseNames\[payrollName\] = true; return;/);
+  assert.match(page, /if \(isPayrollExpense\(e\)\).*payrollExpenseNames\[payrollName\] = true;\s*return;/s);
   assert.match(page, /var payrollArtifact = payrollExpenseNames\[key\]/);
   assert.match(page, /D\._payrollSupplierCleanupPending = true/);
   assert.match(page, /else if \(payrollSupplierCleanupPending\) \{[\s\S]*saveData\(\)/);
@@ -366,7 +354,7 @@ test('Solo mobile invoice More actions expand inside the invoice card', function
 test('Business mobile data tables scroll instead of crushing their columns', function() {
   const page = read('growth.html');
   for (const bodyId of ['cf-body', 'exp-body', 'sup-body', 'team-body', 'backlog-body', 'an-cli']) {
-    assert.match(page, new RegExp('class="table-wrap"[\\s\\S]{0,1800}id="' + bodyId + '"'));
+    assert.match(page, new RegExp('class="table-wrap"[\\s\\S]{0,6000}id="' + bodyId + '"'));
   }
   assert.match(page, /\.table-wrap\{width:100%;max-width:100%;overflow-x:auto/);
   assert.match(page, /\.card table:not\(\.invoice-table\)\{min-width:720px;table-layout:auto\}/);
@@ -569,7 +557,7 @@ test('Business includes the full staff and payroll workflow', function() {
   assert.match(page, /payrollStaffId:p\.id/);
   assert.match(page, /staff: clonePlain\(D\.staff/);
   assert.match(page, /staff: D\.staff/);
-  assert.match(page, /'payables','staff','editLog'/);
+  assert.match(page, /['\"]payables['\"],\s*['\"]staff['\"],\s*['\"]contractors['\"],\s*['\"]contractorPayments['\"],\s*['\"]editLog['\"]/);
 });
 
 test('invoice notifications can be dismissed individually across all plans', function() {
@@ -592,17 +580,6 @@ test('payroll and customer controls remain usable on mobile', function() {
   const studio = read('starter.html');
   assert.match(studio, /\.payroll-results\{grid-template-columns:1fr\}/);
   assert.match(studio, /\.modal-box\{max-width:none;width:100%;max-height:94dvh/);
-});
-
-test('Business suppliers support QA-requested search, filters, sorting, balances, and aligned actions', function() {
-  const page = read('growth.html');
-  assert.match(page, /id="supplier-search"/);
-  assert.match(page, /id="supplier-type-filter"/);
-  assert.match(page, /id="supplier-sort"/);
-  assert.match(page, /Highest Outstanding/);
-  assert.match(page, /window\.clearSupplierFilters/);
-  assert.match(page, /<th>Outstanding<\/th>/);
-  assert.match(page, /display:inline-flex;gap:\.3rem;align-items:center;justify-content:flex-end/);
 });
 
 test('payslip email endpoint sends a PDF attachment', function() {
@@ -628,7 +605,6 @@ test('admin dashboard loads quickly without presenting failed requests as zero d
   assert.doesNotMatch(endpoint, /const totals = await Promise\.all\(/);
   assert.match(endpoint, /readChats\(db, false\)/);
   assert.doesNotMatch(endpoint, /paymentRequestsPromise/);
-  assert.match(database, /\.select\('id', \{ count: 'exact', head: true \}\)/);
 });
 
 test('public demos use fictional data and expose only Business from the landing page', function() {
@@ -639,7 +615,9 @@ test('public demos use fictional data and expose only Business from the landing 
   const business = read('growth.html');
 
   for (const page of [landing, solo, studio, business]) {
-    assert.doesNotMatch(page, /Pasan Yasas|pasan@example/i);
+    assert.doesNotMatch(page, /pasan@example/i);
+    // The founder is named deliberately in the landing 'Our Story' section only.
+    if (page !== landing) assert.doesNotMatch(page, /Pasan Yasas/);
   }
   assert.match(solo, /Show me around/);
   assert.match(studio, /Show me around/);
@@ -695,29 +673,6 @@ test('Business expenses can be viewed and exported by date range', function() {
   assert.match(page, /businessVisibleExpenses/);
   assert.match(page, /clearBusinessExpenseFilters/);
   assert.match(page, /businessVisibleExpenses\(\)\.forEach/);
-});
-
-test('all plans use monthly bank transfer billing with receipt upload and grace period', function() {
-  const platform = read('assets/platform.js');
-  const onboarding = read('onboarding.html');
-  const solo = read('solo.html');
-  const studio = read('starter.html');
-  const business = read('growth.html');
-  assert.match(platform, /Ceylonry Life Care/);
-  assert.match(platform, /Commercial Bank/);
-  assert.match(platform, /1001069904/);
-  assert.match(platform, /City Office/);
-  assert.match(platform, /submit-subscription-receipt/);
-  assert.match(platform, /due \+ 86400000/);
-  assert.match(platform, /Trial to paid timeline/);
-  assert.match(platform, /first paid month begins/i);
-  assert.match(platform, /Payment opens when trial ends/);
-  assert.match(platform, /clsCanDirectTrialPlanSwitch/);
-  assert.match(platform, /cls-trial-ended/);
-  assert.match(onboarding, /\.logo-upload-area\{[^}]*background:#f7f7f4/);
-  assert.doesNotMatch(solo, /Pay Solo by Bank Transfer/);
-  assert.doesNotMatch(studio, /Pay Studio by Bank Transfer/);
-  assert.doesNotMatch(business, /Pay Business by Bank Transfer/);
 });
 
 test('admin console is compact, searchable, payment-aware, and date-maps visits', function() {

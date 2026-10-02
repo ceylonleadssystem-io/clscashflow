@@ -10,15 +10,15 @@ test('document email uses the authenticated server mailbox before EmailJS', () =
   const platform = read('assets/platform.js');
   assert.match(platform, /async function sendDocumentViaSmtp\(opts, documentLabel\)/);
   assert.match(platform, /fetch\('\/\.netlify\/functions\/send-invoice'/);
-  assert.match(platform, /if \(isDocument\) \{[\s\S]*?return await sendDocumentViaSmtp\(opts, documentLabel\)/);
+  assert.match(platform, /if \(isDocument \|\| isReceipt\) \{[\s\S]*?return await sendDocumentViaSmtp\(opts, /);
   assert.match(platform, /trying EmailJS fallback/);
 });
 
 test('server document email supports invoices, quotes, and estimates', () => {
   const endpoint = read('netlify/functions/send-invoice.js');
-  assert.match(endpoint, /documentLabel = \/\^estimate\$\/i/);
+  assert.match(endpoint, /\/\^estimate\$\/i\.test\(rawLabel\)/);
   assert.match(endpoint, /\^quote\|quotation\$/i);
-  assert.match(endpoint, /documentLabel === 'Invoice' \? 'Due Date' : 'Valid Until'/);
+  assert.match(endpoint, /documentLabel === 'Invoice' \? 'Due Date' : \(documentLabel === 'Receipt' \? 'Payment Date' : 'Valid Until'\)/);
   assert.match(endpoint, /subject: documentLabel \+/);
 });
 

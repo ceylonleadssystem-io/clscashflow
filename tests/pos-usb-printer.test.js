@@ -24,10 +24,10 @@ test('direct printer claims a bulk output endpoint and restores permission', () 
   assert.match(pos, /navigator\.usb\.addEventListener\('disconnect'/);
 });
 
-test('receipts use ESC POS with Android system print fallback', () => {
-  assert.match(pos, /usbPrinter\.transferOut\(usbEndpointNumber,escPosBytes\(sale\)\)/);
+test('receipts print through ESC POS over USB and never fall back to Save as PDF', () => {
+  assert.match(pos, /receipt = escPosBytes\(sale\)[\s\S]*?usbPrinter\.transferOut\(usbEndpointNumber, chunk\)/);
   assert.match(pos, /bytes\.set\(\[27,64\],0\)/);
   assert.match(pos, /bytes\.set\(\[29,86,66,0\]/);
-  assert.match(pos, /Direct print failed\. Opening Android System Print instead/);
-  assert.match(pos, /printDocument\(receiptHtml\(sale\)\)/);
+  assert.match(pos, /Receipt was not printed\./);
+  assert.match(pos, /The POS will not open Save as PDF\./);
 });
