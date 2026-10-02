@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const { appwriteAdmin } = require('../lib/appwrite');
+const log = require('../lib/log').createLogger('pos-onboarding-email');
 
 function clean(value, max = 300) {
   return String(value == null ? '' : value).trim().slice(0, max);
@@ -16,6 +17,7 @@ function reply(statusCode, body) {
 exports.handler = async function handler(event) {
   if (event.httpMethod !== 'POST') return reply(405, { error: 'Method not allowed' });
   const token = clean((event.headers.authorization || '').replace(/^Bearer\s+/i, ''), 5000);
+  if (!token) log.warn('onboarding email denied', { status: 401, reason: 'missing-token' });
   if (!token) return reply(401, { error: 'POS sign-in is required' });
 
   try {
@@ -24,7 +26,10 @@ exports.handler = async function handler(event) {
     const ref = admin.firestore().collection('users').doc(identity.uid);
     const snapshot = await ref.get();
     const profile = snapshot.exists ? snapshot.data() || {} : {};
+    // Only POS accounts may trigger the welcome mail, so the endpoint cannot be used as a general mailer.
+    if (!profile.posEnabled && profile.plan !== 'pos') log.warn('onboarding email denied', { status: 403, reason: 'not-pos-account', uid: identity.uid });
     if (!profile.posEnabled && profile.plan !== 'pos') return reply(403, { error: 'POS account required' });
+    if (profile.posWelcomeEmailSentAt) log.info('welcome email already sent', { uid: identity.uid });
     if (profile.posWelcomeEmailSentAt) return reply(200, { sent: false, alreadySent: true });
 
     let body = {};
@@ -37,6 +42,7 @@ exports.handler = async function handler(event) {
 
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
+    if (!user || !pass) log.error('SMTP is not configured', null, { uid: identity.uid });
     if (!user || !pass) return reply(500, { error: 'Email service is not configured' });
     const port = Number(process.env.SMTP_PORT || 465);
     const mailer = nodemailer.createTransport({
@@ -67,9 +73,11 @@ exports.handler = async function handler(event) {
     });
 
     await ref.set({ posWelcomeEmailSentAt: new Date().toISOString(), posOnboardingNotifiedAt: new Date().toISOString(), posMobile: mobile === 'Not provided' ? '' : mobile }, { merge: true });
+    log.info('onboarding emails sent', { uid: identity.uid });
     return reply(200, { sent: true });
   } catch (error) {
     console.error('pos-onboarding-email:', error);
+    log.error('onboarding email failed', error);
     return reply(error.statusCode || 500, { error: error.message || 'Could not send onboarding email' });
   }
 };

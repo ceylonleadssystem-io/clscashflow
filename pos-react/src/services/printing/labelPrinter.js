@@ -1,6 +1,9 @@
 import { claimUsbOutput, createEmitter } from "./usb";
 import { barcodeSvg, cleanBarcode, drawCode128 } from "./barcode";
 import { esc, money } from "../../domain/format";
+import { createLogger } from "../../utils/logger";
+
+const log = createLogger("printing");
 
 /** USB TSPL label printer (30 × 25 mm gap labels) + browser print fallback. */
 
@@ -76,6 +79,7 @@ export function tsplBitmapBytes(product, copies, size) {
 	);
 	const pixels = ctx.getImageData(0, 0, dotsW, dotsH).data;
 	const rowBytes = Math.ceil(dotsW / 8);
+	// TSPL BITMAP mode 0: a set bit is a WHITE dot, so black pixels stay 0.
 	const raster = new Uint8Array(rowBytes * dotsH);
 	for (let y = 0; y < dotsH; y++)
 		for (let x = 0; x < dotsW; x++) {
@@ -112,6 +116,7 @@ class LabelPrinter {
 			navigator.usb.addEventListener("disconnect", (e) => {
 				if (this.device === e.device) {
 					this.device = null;
+					log.warn("USB label printer disconnected");
 					this._set("USB barcode label printer disconnected. Reconnect the cable; saved permission will restore automatically when Android allows it.", false);
 				}
 			});
@@ -137,6 +142,7 @@ class LabelPrinter {
 		this.endpoint = out.endpointNumber;
 		this.name = device.productName || "USB barcode label printer";
 		this.onRemember?.({ vendorId: device.vendorId, productId: device.productId, productName: this.name, serialNumber: device.serialNumber || "" });
+		log.info("USB label printer connected", { device: this.name, vendorId: device.vendorId, productId: device.productId });
 		this._set(this.name + " connected for barcode labels.", true);
 	}
 	async connect() {
@@ -146,7 +152,9 @@ class LabelPrinter {
 			await this._claim(device);
 			return true;
 		} catch (error) {
+			// NotFoundError = the user closed the device picker; not a failure.
 			if (error && error.name === "NotFoundError") return false;
+			log.error("USB label printer connection failed", error);
 			this._set("USB barcode printer connection failed: " + (error.message || "check cable and permission."), false);
 			throw error;
 		}
@@ -159,7 +167,8 @@ class LabelPrinter {
 			if (!device) return false;
 			await this._claim(device);
 			return true;
-		} catch {
+		} catch (error) {
+			log.warn("USB label printer restore failed", error);
 			this._set("USB barcode printer is unavailable. Reconnect and allow USB access again.", false);
 			return false;
 		}
@@ -181,7 +190,11 @@ class LabelPrinter {
 		await this._ensure(saved);
 		const bytes = tsplBitmapBytes(product, copies, size);
 		const result = await this.device.transferOut(this.endpoint, bytes);
-		if (result.status !== "ok") throw new Error("The USB barcode printer stopped accepting label data.");
+		if (result.status !== "ok") {
+			log.error("label print rejected by printer", new Error("transferOut status " + result.status), { device: this.name, bytes: bytes.length });
+			throw new Error("The USB barcode printer stopped accepting label data.");
+		}
+		log.info("labels sent to USB printer", { device: this.name, copies: Number(copies) || 1, bytes: bytes.length });
 		this._set(this.name + " ready for barcode labels.", true);
 	}
 }

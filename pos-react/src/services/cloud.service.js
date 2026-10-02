@@ -12,6 +12,9 @@ import {
 	safePayload,
 } from "./sync/account";
 import { profileHasPosAccess } from "./billing";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("cloud");
 
 /**
  * Cloud sync for one business workspace.
@@ -24,11 +27,16 @@ import { profileHasPosAccess } from "./billing";
  */
 const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
 
-const withTimeout = (promise, ms = 12000) =>
-	Promise.race([
-		promise,
-		new Promise((_, reject) => setTimeout(() => reject(new Error("Cloud sync timed out")), ms)),
-	]);
+// Rejects if the cloud call takes longer than `ms`. The timer is cleared as soon as the call
+// settles so finished requests don't leave a pending timeout behind (it would also fire a
+// rejection nobody listens to, and keep a Node/test process alive).
+const withTimeout = (promise, ms = 12000) => {
+	let timer;
+	const timeout = new Promise((_, reject) => {
+		timer = setTimeout(() => reject(new Error("Cloud sync timed out")), ms);
+	});
+	return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+};
 
 export class CloudSyncService {
 	constructor({ clsBackend, onStatus }) {
@@ -63,7 +71,11 @@ export class CloudSyncService {
 			} catch {
 				/* ignore */
 			}
-			if (!Object.keys(profile).length) throw e;
+			if (!Object.keys(profile).length) {
+				log.error("profile load failed and no cached profile exists", e);
+				throw e;
+			}
+			log.warn("profile load failed; using cached profile", e);
 		}
 		const workspaceUid = String(profile.ownerUid || user.uid);
 		return {
@@ -143,12 +155,14 @@ export class CloudSyncService {
 		const catalogueBackup = readCatalogueBackup(workspaceUid);
 		cacheCatalogue(localPayload, workspaceUser);
 
+		log.info("attach started", { dbName, hasLocal: !!localPayload, hasLegacy: !!legacyWorkspace });
 		let pending = this.isPending();
 		let remote = null;
 		try {
 			remote = await withTimeout(this.ref.get());
 		} catch (e) {
 			console.warn("POS started from this device while offline", e);
+			log.warn("remote read failed on attach; starting from local data", e);
 		}
 		const remoteData = remote && remote.exists ? remote.data() : null;
 		const remotePayload = remoteData?.payload || null;
@@ -166,12 +180,14 @@ export class CloudSyncService {
 				workspaceUser,
 			);
 			if (preSyncRecovered) {
+				log.warn("catalogue recovered from backup before sync");
 				localPayload = seed;
 				this.markPending();
 				pending = true;
 			}
 		}
 		if (!profileHasPosAccess(profile) && (hasRemotePos || hasLocalPos)) {
+			log.info("repairing missing POS entitlement on profile");
 			profile.posEnabled = true;
 			profile.posPlan = "pos";
 			localStorage.setItem(ctx.profileKey, JSON.stringify(profile));
@@ -182,15 +198,19 @@ export class CloudSyncService {
 				);
 			} catch (e) {
 				console.warn("POS entitlement repair will retry later", e);
+				log.warn("entitlement repair failed; will retry later", e);
 			}
 		}
 
 		const normalize = (p) => normalizeAccountDb(p, profile, workspaceUser);
+		// Branch order matters: unsynced local edits win over remote, a foreign-owned remote doc is never merged.
 		if (pending && localPayload) {
+			log.info("attach: merging pending local changes over remote");
 			await this._apply(normalize(mergePayload(remotePayload, clone(localPayload), true)));
 			this.lastCloudJson = "";
 			await this.syncNow();
 		} else if (remoteData?.ownerUid && remoteData.ownerUid !== workspaceUid) {
+			log.warn("remote POS document belongs to another owner; starting a fresh account database");
 			await this._apply(normalize(freshAccountDb(profile, workspaceUser)));
 			this.lastCloudJson = "";
 			await this.syncNow();
@@ -220,17 +240,20 @@ export class CloudSyncService {
 			workspaceUser,
 		);
 		if (recovered) {
+			log.warn("empty catalogue rebuilt from backups/history");
 			await this._apply(current);
 			this.markPending();
 			this.lastCloudJson = "";
 			await this.syncNow();
 		}
+		log.info("attach finished", { restoredCatalogue: preSyncRecovered || recovered });
 		return { restoredCatalogue: preSyncRecovered || recovered };
 	}
 
 	// ------------------------------------------------------------- loops
 	start() {
 		this.stop();
+		log.info("sync loops started", { pullMs: env.syncPullMs, pushMs: env.syncPushMs });
 		this.unsubWrites = this.store.onWrite(({ origin }) => {
 			if (origin === "sync") return;
 			this.markPending();
@@ -291,6 +314,7 @@ export class CloudSyncService {
 		} catch (error) {
 			this._status("Cloud sync failed · tap to retry", "retry");
 			console.warn("POS live sync paused", error);
+			log.warn("pull failed", error);
 		}
 	}
 
@@ -301,7 +325,10 @@ export class CloudSyncService {
 		if (!localDirty && stamp && stamp === this.lastRemoteStamp) return;
 		const merged = normalizeAccountDb(mergePayload(incoming, clone(local), localDirty), profile, workspaceUser);
 		const incomingJson = exactly(normalizeAccountDb(JSON.parse(JSON.stringify(incoming)), profile, workspaceUser));
-		if (exactly(safePayload(merged)) !== exactly(local)) await this._apply(merged);
+		if (exactly(safePayload(merged)) !== exactly(local)) {
+			log.info("remote changes merged into local database", { localDirty });
+			await this._apply(merged);
+		}
 		this.lastCloudJson = incomingJson;
 		this.lastRemoteStamp = stamp || "";
 		if (exactly(await this._localPayload()) !== incomingJson) {
@@ -330,6 +357,8 @@ export class CloudSyncService {
 			return;
 		}
 		this.inFlight = true;
+		const startedAt = Date.now();
+		log.info("push started", { pending });
 		this._status("Syncing POS with cloud…", "syncing");
 		try {
 			let verified = null;
@@ -352,6 +381,7 @@ export class CloudSyncService {
 				verified = confirmation.exists ? confirmation.data()?.payload : null;
 				this.lastRemoteStamp = confirmation.exists ? confirmation.data()?.updatedAt || "" : "";
 				if (payloadCovers(verified, payload)) break;
+				log.warn("cloud did not confirm push; retrying", { attempt: attempt + 1 });
 				if (attempt === 2) throw new Error("Cloud did not confirm the latest device changes.");
 			}
 			const latest = await this._localPayload();
@@ -359,6 +389,7 @@ export class CloudSyncService {
 			const merged = normalizeAccountDb(mergePayload(verified, clone(latest), changedDuringSync), profile, workspaceUser);
 			if (exactly(safePayload(merged)) !== exactly(latest)) await this._apply(merged);
 			this.lastCloudJson = exactly(normalizeAccountDb(JSON.parse(JSON.stringify(verified)), profile, workspaceUser));
+			log.info("push finished", { ms: Date.now() - startedAt, changedDuringSync });
 			if (changedDuringSync) {
 				this.markPending();
 				this.again = true;
@@ -376,6 +407,7 @@ export class CloudSyncService {
 				navigator.onLine ? "retry" : "offline",
 			);
 			console.warn("POS cloud sync delayed; changes remain saved on this device", e);
+			log.error("push failed; changes kept locally", e, { ms: Date.now() - startedAt, online: navigator.onLine });
 		} finally {
 			this.inFlight = false;
 			if (this.again) {

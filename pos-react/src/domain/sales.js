@@ -26,7 +26,11 @@ export function refundableLines(sale) {
 		.filter((x) => !x.line.isDiscount && x.available > 0);
 }
 
-/** Ratio between what the customer paid and the gross price of the lines. */
+/**
+ * Ratio between what the customer paid and the gross price of the lines. Partial refunds
+ * are scaled by this so discounts/service charges are refunded proportionally rather than
+ * refunding the full list price of returned items.
+ */
 export function refundRate(sale) {
 	const gross = (sale.lines || [])
 		.filter((l) => !l.isDiscount)
@@ -58,6 +62,7 @@ export function selectedRefundLines(sale, refundType, choices = {}) {
 		}));
 }
 
+/** A partial refund can never exceed the sale total; a full refund returns the total as paid. */
 export function calculateRefundAmount(sale, refundType, lines) {
 	if (refundType === "full") return +sale.total || 0;
 	return Math.min(

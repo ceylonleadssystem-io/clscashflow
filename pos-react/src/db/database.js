@@ -3,6 +3,10 @@ import LokiJSAdapter from "@nozbe/watermelondb/adapters/lokijs";
 import { schema } from "./schema";
 import { migrations } from "./migrations";
 import { modelClasses } from "./models";
+import { SCHEMA_VERSION } from "./schema";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("db");
 
 /**
  * Creates (or re-opens) a WatermelonDB database.
@@ -12,6 +16,7 @@ import { modelClasses } from "./models";
  * replaces the per-account `localStorage` keys used by the legacy POS.
  */
 export function createDatabase(name, { onSetUpError } = {}) {
+	log.info("opening local database", { name, schemaVersion: SCHEMA_VERSION });
 	const adapter = new LokiJSAdapter({
 		dbName: name,
 		schema,
@@ -22,6 +27,7 @@ export function createDatabase(name, { onSetUpError } = {}) {
 		useIncrementalIndexedDB: true,
 		onSetUpError: (error) => {
 			console.error("POS local database failed to start", error);
+			log.error("local database failed to start", error, { name });
 			if (onSetUpError) onSetUpError(error);
 		},
 	});

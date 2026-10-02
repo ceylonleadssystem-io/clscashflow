@@ -1,4 +1,7 @@
 import { env } from "../config/env";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("platform");
 
 /**
  * Bridge to the shared platform script (`/assets/platform.js`) that the whole
@@ -21,6 +24,7 @@ export function loadPlatformScript() {
 		script.onload = () => resolve(true);
 		script.onerror = () => {
 			console.warn("platform.js could not be loaded - billing widgets and receipt e-mail are unavailable.");
+			log.warn("platform script failed to load; billing widgets and receipt e-mail unavailable");
 			resolve(false);
 		};
 		document.head.appendChild(script);
@@ -64,7 +68,13 @@ export async function sendOrderEmail({ to, subject, html, customerName, settings
 		message_html: html,
 		business_name: settings.business || "",
 	};
-	await window.emailjs.send(serviceId, templateId, params, { publicKey });
+	try {
+		await window.emailjs.send(serviceId, templateId, params, { publicKey });
+	} catch (e) {
+		log.error("order e-mail send failed", e);
+		throw e;
+	}
+	log.info("order e-mail sent");
 	return true;
 }
 
@@ -91,6 +101,7 @@ export function patchReceiptSubmission(clsBackend) {
 	if (!base || base.__posPatched) return;
 	const patched = async function (file, profile, plan, statusEl, cycle) {
 		const ok = await base(file, profile, plan, statusEl, cycle);
+		log.info("payment slip submitted", { plan, cycle, ok: !!ok });
 		if (ok && plan === "pos") {
 			const user = clsBackend.auth().currentUser;
 			const next = profile.nextPaymentDue || "";
@@ -146,10 +157,16 @@ export async function sendOnboardingEmails(user, profile) {
 				mobile,
 			}),
 		});
-		if (response.ok) sessionStorage.removeItem("ceylonry-pos-onboarding-mobile");
-		else console.warn("POS onboarding email will retry on the next sign-in");
+		if (response.ok) {
+			sessionStorage.removeItem("ceylonry-pos-onboarding-mobile");
+			log.info("onboarding e-mails sent");
+		} else {
+			console.warn("POS onboarding email will retry on the next sign-in");
+			log.warn("onboarding e-mail request rejected; will retry next sign-in", null, { status: response.status });
+		}
 	} catch (error) {
 		console.warn("POS onboarding email will retry on the next sign-in", error);
+		log.warn("onboarding e-mail failed; will retry next sign-in", error);
 	}
 }
 

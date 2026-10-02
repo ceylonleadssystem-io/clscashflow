@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { appwriteAdmin, getUserFromEvent, getDocument } = require('../lib/appwrite');
+const log = require('../lib/log').createLogger('submit-subscription-receipt');
 
 const MAX_FILE_BYTES = 3000000;
 const PLANS = {
@@ -34,7 +35,8 @@ function decodedFile(value, mimeType) {
 exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' });
   let user;
-  try { user = await getUserFromEvent(event); } catch (e) { return json(401, { ok: false, error: 'Please sign in again.' }); }
+  try { user = await getUserFromEvent(event); } catch (e) { log.warn('receipt denied', { status: 401, reason: 'auth-check-failed' }); return json(401, { ok: false, error: 'Please sign in again.' }); }
+  if (!user) log.warn('receipt denied', { status: 401, reason: 'not-signed-in' });
   if (!user) return json(401, { ok: false, error: 'Please sign in again.' });
 
   let data;
@@ -42,6 +44,8 @@ exports.handler = async function(event) {
   const mimeType = clean(data.mimeType, 100).toLowerCase();
   const upload = decodedFile(data.fileBase64, mimeType);
   const fileName = clean(data.fileName, 180);
+  // Magic-byte and size checks run before anything is emailed so the attachment cannot be spoofed by mimeType alone.
+  if (!upload || !fileName) log.warn('receipt rejected', { status: 400, reason: 'invalid-file', uid: user.id });
   if (!upload || !fileName) return json(400, { ok: false, error: 'A valid PDF or image payment slip smaller than 3 MB is required.' });
 
   const cycle = clean(data.billingCycle, 20) === 'annual' ? 'annual' : 'monthly';
@@ -49,13 +53,15 @@ exports.handler = async function(event) {
   const planKey = PLAN_ALIASES[rawPlan] || rawPlan;
   const plan = PLANS[planKey];
   const period = clean(data.period, 20);
+  if (!plan || !validPeriod(period)) log.warn('receipt rejected', { status: 400, reason: 'invalid-plan-or-period', uid: user.id });
   if (!plan || !validPeriod(period)) return json(400, { ok: false, error: 'Invalid subscription plan or billing period.' });
 
   let profile = null;
-  try { profile = await getDocument('users', user.id); } catch (e) { return json(503, { ok: false, error: 'Could not verify the billing account.' }); }
+  try { profile = await getDocument('users', user.id); } catch (e) { log.error('billing profile lookup failed', e, { uid: user.id }); return json(503, { ok: false, error: 'Could not verify the billing account.' }); }
   const profileData = profile && profile.data || {};
   const ownerUid = clean(profileData.ownerUid || user.id, 160);
   const email = clean(user.email || profileData.email, 320).toLowerCase();
+  if (!ownerUid || !validEmail(email)) log.warn('receipt rejected', { status: 400, reason: 'missing-billing-email', uid: user.id });
   if (!ownerUid || !validEmail(email)) return json(400, { ok: false, error: 'Your account needs a valid billing email.' });
 
   const amountLkr = cycle === 'annual' ? plan.annual : plan.monthly;
@@ -69,11 +75,14 @@ exports.handler = async function(event) {
   try {
     const prior = await receiptRef.get();
     const priorData = prior && prior.exists ? prior.data() || {} : {};
+    // Same slip re-submitted for the same period: answer success without emailing accounts again.
+    if (priorData.emailSent && priorData.contentHash === contentHash) log.info('duplicate receipt ignored', { receiptId });
     if (priorData.emailSent && priorData.contentHash === contentHash) return json(200, { ok: true, sent: true, adminStored: true, duplicate: true });
-  } catch (e) { return json(503, { ok: false, error: 'Could not safely register the payment slip. Please retry.' }); }
+  } catch (e) { log.error('prior receipt lookup failed', e, { receiptId }); return json(503, { ok: false, error: 'Could not safely register the payment slip. Please retry.' }); }
 
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
+  if (!smtpUser || !smtpPass) log.error('SMTP is not configured', null, { receiptId });
   if (!smtpUser || !smtpPass) return json(500, { ok: false, error: 'Email is not configured. Set SMTP_USER and SMTP_PASS in Netlify.' });
   const transporter = nodemailer.createTransport({ host: process.env.SMTP_HOST || 'smtp.hostinger.com', port: Number(process.env.SMTP_PORT || 465), secure: true, auth: { user: smtpUser, pass: smtpPass } });
   const amount = 'LKR ' + amountLkr.toLocaleString('en-US');
@@ -87,8 +96,10 @@ exports.handler = async function(event) {
     });
     const stamp = admin.firestore.FieldValue.serverTimestamp();
     await receiptRef.set({ uid: ownerUid, submittedByUid: user.id, email, name, businessName, plan: planKey, billingCycle: cycle, amountLkr, currency: 'LKR', period, status: 'receipt-submitted', source: 'bank-receipt-email', receiptName: safeFileName, receiptType: mimeType, receiptSize: upload.file.length, contentHash, emailRecipient: 'accounts@ceylonrylabs.io', emailSent: true, receivedAt: stamp, receivedAtUtc: new Date().toISOString() }, { merge: true });
+    log.info('receipt emailed and stored', { receiptId, plan: planKey, cycle, bytes: upload.file.length });
     return json(200, { ok: true, sent: true, adminStored: true });
   } catch (error) {
+    log.error('receipt email/store failed', error, { receiptId });
     return json(502, { ok: false, error: 'Could not process the payment slip. Please retry.' });
   }
 };

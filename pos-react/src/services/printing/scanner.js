@@ -1,4 +1,7 @@
 import { createEmitter } from "./usb";
+import { createLogger } from "../../utils/logger";
+
+const log = createLogger("scanner");
 
 /**
  * Barcode scanners. Most USB scanners behave as keyboards ("wedge" mode): a fast
@@ -102,7 +105,12 @@ class BarcodeScanner {
 			const code = this.buffer;
 			const product = code.length >= 3 && duration < Math.max(900, code.length * 90) ? this.resolve?.(code) : null;
 			this._reset();
-			if (!product) return;
+			// Only complete, scanner-speed bursts are logged; ordinary typing never reaches this point.
+			if (!product) {
+				if (code.length >= 3 && duration < Math.max(900, code.length * 90)) log.warn("barcode scan unresolved", { code, source: "keyboard" });
+				return;
+			}
+			log.info("barcode scan resolved", { code, source: "keyboard" });
 			event.preventDefault();
 			event.stopPropagation();
 			if (editable && t.value === code) t.value = "";
@@ -134,6 +142,8 @@ class BarcodeScanner {
 				this.hidBuffer = "";
 				if (code) {
 					const product = this.resolve?.(code);
+					if (product) log.info("barcode scan resolved", { code, source: "hid" });
+					else log.warn("barcode scan unresolved", { code, source: "hid" });
 					if (product) this.handle?.(code, product);
 					else this.handle?.(code, null);
 				}
@@ -150,6 +160,7 @@ class BarcodeScanner {
 		this.onRemember?.({ vendorId: device.vendorId, productId: device.productId, productName: device.productName || "USB barcode scanner" });
 		device.removeEventListener("inputreport", this._onHidReport);
 		device.addEventListener("inputreport", this._onHidReport);
+		log.info("USB scanner connected", { device: device.productName || "USB barcode scanner", vendorId: device.vendorId, productId: device.productId });
 		this._set((device.productName || "USB barcode scanner") + " connected. Scan an item code to add it to Current Order.", true);
 	}
 
@@ -166,6 +177,7 @@ class BarcodeScanner {
 			return "connected";
 		} catch (error) {
 			if (error && error.name === "NotFoundError") return "cancelled";
+			log.error("USB scanner connection failed", error);
 			this._set("USB scanner connection failed: " + (error.message || "check cable and Android permission."), false);
 			throw error;
 		}
@@ -181,7 +193,8 @@ class BarcodeScanner {
 			if (!device) return false;
 			await this._claim(device);
 			return true;
-		} catch {
+		} catch (error) {
+			log.warn("USB scanner restore failed", error);
 			this._set("USB scanner is unavailable. Reconnect and allow HID access again, or scan in keyboard mode.", false);
 			return false;
 		}

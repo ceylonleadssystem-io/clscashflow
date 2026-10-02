@@ -62,6 +62,8 @@ const Loading = ({ children = "Loading…", progress = 10 }) => {
 	);
 };
 
+// DataProvider is keyed by dbName so switching business accounts remounts every provider below it
+// instead of leaking the previous workspace's snapshot, staff session and cart.
 function Root() {
 	const { phase, workspace } = useSession();
 	if (phase === "booting") return <Loading progress={12}>Starting up…</Loading>;

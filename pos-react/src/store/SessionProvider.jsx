@@ -17,6 +17,9 @@ import {
 import { payloadToSnapshot } from "../services/sync/payload";
 import { freshAccountDb, normalizeAccountDb } from "../services/sync/account";
 import { T } from "../db/tables";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("session");
 
 /**
  * Business-account session: authentication, workspace (per-account
@@ -54,12 +57,15 @@ export function SessionProvider({ children }) {
 		setAuthError(message);
 		sessionStorage.removeItem(STORAGE.businessAuth);
 		sessionStorage.removeItem(STORAGE.userSession);
+		log.info("session reset", { phase: "signed-out" });
 	}, []);
 
 	const activate = useCallback(
 		async (user) => {
 			if (!user || activating.current === user.uid) return;
+			// The ref (not state) guards against duplicate activations from overlapping onChange/signIn calls.
 			activating.current = user.uid;
+			log.info("activating workspace", { provider: auth.kind });
 			setPhase("activating");
 			try {
 				if (auth.kind === "appwrite") {
@@ -96,7 +102,8 @@ export function SessionProvider({ children }) {
 								},
 								{ merge: true },
 							);
-						} catch {
+						} catch (e) {
+							log.warn("could not flag account as payment-required", e);
 							/* non-fatal */
 						}
 						renderPaywall(profile);
@@ -114,8 +121,9 @@ export function SessionProvider({ children }) {
 				loadCatalogueImages();
 				setPhase("ready");
 				setAuthError("");
+				log.info("workspace ready", { provider: auth.kind });
 			} catch (e) {
-				console.error("POS account could not be activated", e);
+				log.error("POS account could not be activated", e);
 				activating.current = "";
 				setAuthError(e?.message || "Could not load the POS account.");
 				setPhase("signed-out");
@@ -163,7 +171,8 @@ export function SessionProvider({ children }) {
 					document.getElementById("cls-paywall")?.remove();
 					document.body.classList.remove("cls-trial-ended");
 				}
-			} catch {
+			} catch (e) {
+				log.warn("account access re-check failed; keeping current state", e);
 				/* offline or transient: keep the current state */
 			}
 		};
@@ -179,6 +188,7 @@ export function SessionProvider({ children }) {
 				const user = await auth.signIn(email, password);
 				sessionStorage.setItem(STORAGE.loginUid, user.uid);
 				setAuthError("");
+				log.info("business login succeeded");
 				if (email === env.developerEmail) {
 					window.location.href = env.supportPortalUrl;
 					return;
@@ -186,6 +196,7 @@ export function SessionProvider({ children }) {
 				await activate(user);
 			} catch (e) {
 				sessionStorage.removeItem(STORAGE.loginUid);
+				log.warn("business login failed", e);
 				setAuthError(auth.kind === "appwrite" ? friendlyAuthError(e) : e.message);
 			}
 		},
@@ -199,6 +210,7 @@ export function SessionProvider({ children }) {
 				sessionStorage.setItem(STORAGE.loginUid, user.uid);
 				await activate(user);
 			} catch (e) {
+				log.warn("business registration failed", e);
 				setAuthError(e.message);
 			}
 		},
@@ -211,8 +223,9 @@ export function SessionProvider({ children }) {
 		try {
 			await auth.signOut();
 		} catch (e) {
-			console.warn("Cloud sign-out will finish when the connection returns", e);
+			log.warn("Cloud sign-out will finish when the connection returns", e);
 		}
+		log.info("business sign-out");
 		reset("");
 	}, [auth, reset]);
 
@@ -224,6 +237,7 @@ export function SessionProvider({ children }) {
 				await auth.resetPassword(email);
 				setAuthError("Password reset link sent. Check your email, set a new password, then return here to sign in.");
 			} catch (e) {
+				log.warn("password reset request failed", e);
 				setAuthError(e?.message || "Could not send the password reset link.");
 			}
 		},

@@ -9,6 +9,7 @@ const {
   users,
   clean
 } = require('../lib/appwrite');
+const log = require('../lib/log').createLogger('account-danger-zone');
 
 const OPERATIONAL_COLLECTIONS = [
   'transactions',
@@ -62,8 +63,10 @@ async function deleteOperationalData(ownerUid, actorUid) {
     const docs = await queryDocuments(path, { fetchLimit: 5000 });
     docs.forEach(function(doc) { rows.push({ path, id: doc.id, data: doc.data }); });
   }
+  // The backup is written before any delete so a failure mid-way never loses data.
   await upsertDocument('accountDataBackups', backupId, { ownerUid, actorUid, reason:'resetData', rows, createdAtUtc:nowIso() }, false);
   for (const row of rows) await deleteDocument(row.path, row.id);
+  log.info('workspace data reset', { ownerUid, actorUid, backupId, rows: rows.length });
   return { backupId };
 }
 
@@ -81,6 +84,7 @@ async function deleteWorkspace(ownerUid, includeProfile) {
   }
   await upsertDocument('accountDataBackups', backupId, { ownerUid, reason:'deleteAccount', rows, createdAtUtc:nowIso() }, false);
   for (const row of rows) await deleteDocument(row.path, row.id);
+  log.info('workspace deleted', { ownerUid, backupId, rows: rows.length, includeProfile });
   return { backupId };
 }
 
@@ -117,6 +121,7 @@ exports.handler = async function handler(event) {
 
   try {
     const user = await getUserFromEvent(event);
+    if (!user) log.warn('danger zone denied', { status: 401, reason: 'not-signed-in' });
     if (!user) return response(401, { ok: false, error: 'Please sign in again.' });
 
     const body = readBody(event);
@@ -130,9 +135,12 @@ exports.handler = async function handler(event) {
     const email = clean(user.email || profile.email || '', 240).toLowerCase();
 
     if (email === 'devteam@ceylonrylabs.io' || profile.adminAccess === true || profile.role === 'platform_admin') {
+      log.warn('danger zone denied', { status: 400, reason: 'platform-admin', uid: user.id, action });
       return response(400, { ok: false, error: 'Platform admin accounts cannot use this self-service danger zone.' });
     }
+    // Team members share the owner's workspace, so only the owner may wipe it; members may only delete their own account.
     if (action === 'resetData' && isTeamMember) {
+      log.warn('danger zone denied', { status: 403, reason: 'team-member-reset', uid: user.id });
       return response(403, { ok: false, error: 'Only the account owner can reset workspace data.' });
     }
 
@@ -157,8 +165,10 @@ exports.handler = async function handler(event) {
       await deleteWorkspace(ownerUid, true);
     }
     await deleteAuthUser(user.id);
+    log.info('account deleted', { uid: user.id, ownerUid, isTeamMember });
     return response(200, { ok: true, action });
   } catch (err) {
+    log.error('danger zone action failed', err);
     return response(err.statusCode || 500, {
       ok: false,
       error: err && err.message ? err.message : 'Could not complete account action.'

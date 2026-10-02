@@ -1,5 +1,8 @@
 import { Account, Client, ID } from "appwrite";
 import { env } from "../../config/env";
+import { createLogger } from "../../utils/logger";
+
+const log = createLogger("appwrite");
 
 /**
  * Appwrite <-> "clsBackend-style" compatibility layer.
@@ -53,6 +56,7 @@ export function getAppwriteCompat() {
 				fn(currentUser);
 			} catch (e) {
 				console.error(e);
+				log.error("auth listener threw", e);
 			}
 		});
 	const init = loadUser().then((u) => {
@@ -74,11 +78,13 @@ export function getAppwriteCompat() {
 		async signInWithEmailAndPassword(email, password) {
 			await account.createEmailPasswordSession(email, password);
 			currentUser = await loadUser();
+			log.info("email session created");
 			emit();
 			return { user: currentUser };
 		},
 		async createUserWithEmailAndPassword(email, password) {
 			await account.create(ID.unique(), email, password);
+			log.info("account created");
 			await account.createEmailPasswordSession(email, password);
 			currentUser = await loadUser();
 			emit();
@@ -93,8 +99,11 @@ export function getAppwriteCompat() {
 		async signOut() {
 			try {
 				await account.deleteSession("current");
-			} catch {
-				/* already signed out */
+			} catch (e) {
+				// 401 means there was no session to delete (already signed out): expected, stay quiet.
+				// Anything else (network, server) leaves a session alive on the server, so record it.
+				// Local state is cleared below either way so the user is never stuck signed in on screen.
+				if (e?.code !== 401) log.warn("sign-out: could not end the server session; clearing local state anyway", e);
 			}
 			currentUser = null;
 			emit();
@@ -113,7 +122,10 @@ export function getAppwriteCompat() {
 			if (currentUser && !publicRead) headers.Authorization = "Bearer " + (await currentUser.getIdToken());
 			const r = await fetch(env.docsFunctionUrl, { method: "POST", headers, body: JSON.stringify(body) });
 			const j = await r.json();
-			if (!r.ok || j.ok === false) throw new Error(j.error || "Appwrite request failed.");
+			if (!r.ok || j.ok === false) {
+				log.warn("docs function request failed", null, { action: body.action, path: body.path, status: r.status });
+				throw new Error(j.error || "Appwrite request failed.");
+			}
 			return j;
 		});
 

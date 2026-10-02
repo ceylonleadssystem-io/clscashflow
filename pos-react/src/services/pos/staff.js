@@ -1,7 +1,10 @@
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { activeTimeEntry, currentCashShift, expectedCash } from "../../domain/sales";
+import { createLogger } from "../../utils/logger";
 import { markDeleted, newId, stamp } from "./common";
+
+const log = createLogger("staff");
 
 /** Attendance, cash-register shifts and user management. */
 
@@ -17,6 +20,7 @@ export async function clockInAndOpenRegister(ctx, openingCash) {
 		tx.put(T.timeEntries, stamp({ id: newId("t"), userId: s.userId, clockIn: now, breaks: [] }, s));
 		tx.put(T.cashShifts, stamp({ id: newId("cs"), userId: s.userId, openedAt: now, openingCash, status: "open" }, s));
 	});
+	log.info("clocked in and register opened", { userId: s.userId, openingCash });
 	return true;
 }
 
@@ -33,6 +37,7 @@ export async function clockOut(ctx) {
 	const last = breaks[breaks.length - 1];
 	if (last && !last.end) last.end = nowIso();
 	await ctx.store.write((tx) => tx.put(T.timeEntries, { ...entry, breaks, clockOut: nowIso() }));
+	log.info("clocked out", { userId: s.userId });
 	return true;
 }
 
@@ -60,6 +65,7 @@ export async function openRegister(ctx, amount) {
 	await ctx.store.write((tx) =>
 		tx.put(T.cashShifts, stamp({ id: newId("cs"), userId: s.userId, openedAt: nowIso(), openingCash: amount, status: "open" }, s)),
 	);
+	log.info("register opened", { userId: s.userId, openingCash: amount });
 	return true;
 }
 
@@ -83,6 +89,7 @@ export async function closeRegister(ctx, actual) {
 			status: "closed",
 		}),
 	);
+	log.info("register closed", { userId: s.userId, shiftId: shift.id, expected, actual, variance: actual - expected });
 	return true;
 }
 
@@ -111,6 +118,14 @@ export async function saveUser(ctx, form) {
 		locationIds: role === "owner" || access === "all" ? [] : ids,
 	};
 	await ctx.store.write((tx) => tx.put(T.users, user));
+	// Never log the PIN; role/active changes are the audit-relevant facts.
+	log.info(existing ? "user updated" : "user created", {
+		userId: user.id,
+		role: user.role,
+		active: user.active,
+		previousRole: existing?.role,
+		by: ctx.session().userId,
+	});
 	return user;
 }
 
@@ -129,5 +144,6 @@ export async function deleteUser(ctx, id) {
 		await markDeleted(tx, "users", user.id);
 		tx.remove(T.users, user.id);
 	});
+	log.warn("user deleted", { userId: user.id, role: user.role, by: s.userId });
 	ctx.ui.notice(user.name + " was permanently deleted.");
 }

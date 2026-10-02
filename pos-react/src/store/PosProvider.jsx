@@ -17,6 +17,9 @@ import { useFeatures } from "./FeatureProvider";
 import { useSession } from "./SessionProvider";
 import { resolveWelcome } from "../config/welcome";
 import { useUi } from "./UiProvider";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("staff");
 
 /**
  * Register session: who is signed in with a PIN, at which location, which
@@ -164,8 +167,15 @@ export function PosProvider({ children }) {
 			let chosen = location;
 			if (!multi || activeLocations(d).length === 1) chosen = allowed[0] || activeLocations(d)[0]?.id || "";
 			if (!chosen) return "Select your POS location before signing in.";
-			if (user && !allowed.includes(chosen) && multi) return "You are not authorized for that location.";
-			if (!user || user.pin !== pin) return "Incorrect user or PIN.";
+			if (user && !allowed.includes(chosen) && multi) {
+				log.warn("staff login rejected: location not permitted", { userId: user.id, locationId: chosen });
+				return "You are not authorized for that location.";
+			}
+			if (!user || user.pin !== pin) {
+				log.warn("staff login failed: incorrect user or PIN", { userId });
+				return "Incorrect user or PIN.";
+			}
+			log.info("staff login", { userId: user.id, role: user.role, locationId: chosen });
 			sessionStorage.setItem(STORAGE.userSession, user.id);
 			setCurrentUserId(user.id);
 			setLocationId(chosen);
@@ -185,6 +195,7 @@ export function PosProvider({ children }) {
 	);
 
 	const staffLogout = useCallback(() => {
+		log.info("staff logout");
 		sessionStorage.removeItem(STORAGE.userSession);
 		locationStore.set("");
 		setCurrentUserId("");
@@ -193,6 +204,7 @@ export function PosProvider({ children }) {
 
 	// ---------------------------------------------------------- layout ------
 	const setCheckoutMode = useCallback((mode, remember) => {
+		log.info("checkout mode changed", { mode, remembered: !!remember });
 		if (remember) localStorage.setItem(STORAGE.checkoutMode, mode);
 		else localStorage.removeItem(STORAGE.checkoutMode);
 		setCheckoutModeState(mode);

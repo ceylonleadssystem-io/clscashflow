@@ -6,6 +6,9 @@ import { AccountDetail } from "./AccountDetail";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
 import { PLANS } from "../config/plans";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("admin");
 
 const fmtDate = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
@@ -42,6 +45,7 @@ export function AdminApp() {
 			setStats(res.stats || null);
 			setError("");
 		} catch (e) {
+			log.error("could not load admin account list", e);
 			setError(e.message);
 		} finally {
 			setLoading(false);
@@ -63,6 +67,7 @@ export function AdminApp() {
 			if (!env.adminEmails.includes(email)) throw new Error("This account is not an administrator.");
 			await auth.signIn(email, password);
 		} catch (e) {
+			log.warn("admin sign-in failed", e);
 			setError(env.authProvider === "local" ? e.message : friendlyAuthError(e));
 		} finally {
 			setBusy(false);

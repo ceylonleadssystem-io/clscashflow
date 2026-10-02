@@ -1,6 +1,9 @@
 import { env } from "../config/env";
 import { getAuthService } from "../services/auth.service";
 import { localAdminApi } from "./localAdmin";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("admin");
 
 /** Calls the admin Netlify function with the signed-in administrator's Appwrite JWT. */
 export async function adminApi(body) {
@@ -15,7 +18,13 @@ export async function adminApi(body) {
 		body: body ? JSON.stringify(body) : undefined,
 	});
 	const json = await res.json().catch(() => ({}));
-	if (!res.ok || !json.ok) throw new Error(json.error || "Request failed (" + res.status + ").");
+	if (!res.ok || !json.ok) {
+		const err = new Error(json.error || "Request failed (" + res.status + ").");
+		log.error("admin request failed", err, { action: body?.action || "list", accountId: body?.userId, status: res.status });
+		throw err;
+	}
+	// Single choke point for admin actions (account lookup, plan/billing/access changes): log ids only, never payloads.
+	if (body) log.info("admin action", { action: body.action, accountId: body.userId });
 	return json;
 }
 

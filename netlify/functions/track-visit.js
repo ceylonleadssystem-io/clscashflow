@@ -1,5 +1,6 @@
 const { guard, siteOrigin } = require('../lib/security');
 const { appwriteAdmin } = require('../lib/appwrite');
+const log = require('../lib/log').createLogger('track-visit');
 
 async function getAdmin() {
   try {
@@ -35,6 +36,7 @@ function isLandingPath(path) {
 
 exports.handler = async function handler(event, context) {
   const blocked = guard(event, { name: 'track-visit', limit: 120, windowMs: 600000, maxBody: 300000, methods: ['POST','GET'] });
+  if (blocked) log.warn('request blocked by guard', { status: blocked.statusCode });
   if (blocked) return blocked;
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: headers(), body: '' };
@@ -90,6 +92,8 @@ exports.handler = async function handler(event, context) {
 
   const admin = await getAdmin();
   if (!admin) {
+    // Analytics is best-effort: report success to the browser so a missing service key never surfaces as a site error.
+    log.warn('visit not stored: service role not configured');
     return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: false, reason: 'Appwrite service role not configured' }) };
   }
 
@@ -99,8 +103,10 @@ exports.handler = async function handler(event, context) {
       lastSeenAt: admin.firestore.FieldValue.serverTimestamp(),
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
+    log.info('visit stored', { eventType: payload.eventType, isLanding: payload.isLanding });
     return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: true, id: doc.id }) };
   } catch (err) {
+    log.error('visit storage failed', err);
     return { statusCode: 200, headers: headers(), body: JSON.stringify({ ok: true, stored: false, error: err && err.message ? err.message : 'Storage failed' }) };
   }
 };
