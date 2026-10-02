@@ -18,8 +18,8 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `netlify/functions/send-welcome.js` - welcome email function
 - `netlify.toml` - Netlify publish/functions configuration
 - `package.json` - Netlify function dependency list
-- `emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
-- `assets/appwrite-firebase-compat.js` - compatibility layer that preserves the existing application data API
+- `email-templates/emailjs-custom-invoice-template.html` - optional no-logo EmailJS invoice body template
+- `assets/appwrite-compat.js` - compatibility layer that preserves the existing application data API
 - `netlify/lib/appwrite.js` - server-side Appwrite adapter
 
 ## GitHub Upload
@@ -94,4 +94,4 @@ For the simplest EmailJS body, use:
 {{{message_html}}}
 ```
 
-If you want the no-logo stationery style, paste the contents of `emailjs-custom-invoice-template.html` into the EmailJS body instead. The Solo and Studio invoice dashboards send the custom fields used by that template, including `business_name`, `client_name`, `invoice_no`, `items_html`, `subtotal`, and `grand_total`.
+If you want the no-logo stationery style, paste the contents of `email-templates/emailjs-custom-invoice-template.html` into the EmailJS body instead. The Solo and Studio invoice dashboards send the custom fields used by that template, including `business_name`, `client_name`, `invoice_no`, `items_html`, `subtotal`, and `grand_total`.
