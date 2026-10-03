@@ -49,7 +49,7 @@
   var installPrompt=null,installButton=document.getElementById('install-app'),iosGuide=document.getElementById('ios-guide'),status=document.getElementById('status');
   var standalone=matchMedia('(display-mode:standalone)').matches||navigator.standalone===true;
   var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  function openCeylonry(){status.textContent='Opening your secure POS…';location.href='/pos-system/pos-system.html'}
+  function openCeylonry(){status.textContent='Opening your secure POS…';location.href='/posv2/'}
   document.getElementById('open-ceylonry').addEventListener('click',openCeylonry);document.getElementById('open-installed').addEventListener('click',openCeylonry);
   if(standalone){document.getElementById('open-ceylonry').textContent='Open CeylonryPOS →';document.getElementById('open-installed').hidden=true;status.textContent='CeylonryPOS is installed on this device.'}
   else if(ios){installButton.hidden=false;iosGuide.hidden=false;installButton.addEventListener('click',function(){iosGuide.hidden=false;iosGuide.scrollIntoView({behavior:'smooth',block:'nearest'})})}

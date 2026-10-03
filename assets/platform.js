@@ -14,7 +14,7 @@
     return window.clsCurrencySymbol(code) + (code === 'AED' ? ' ' : '') + number;
   };
   var VALID_PLANS = { solo: true, studio: true, business: true, pos: true };
-  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: 'pos-system/pos-system.html' };
+  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: '/posv2/' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
   var PLAN_DETAILS = {
     solo: {
@@ -55,7 +55,7 @@
   Object.defineProperty(PLAN_DETAILS, 'pos', {
     enumerable: true,
     get: function() {
-      return Object.assign({ file: 'pos-system/pos-system.html', monthlyPayLink: '', annualPayLink: '' }, POS_TIERS[window._posPlanTier] || POS_TIERS.starter);
+      return Object.assign({ file: '/posv2/', monthlyPayLink: '', annualPayLink: '' }, POS_TIERS[window._posPlanTier] || POS_TIERS.starter);
     }
   });
   var PLAN_RANK = { solo: 1, studio: 2, business: 3, pos: 1 };

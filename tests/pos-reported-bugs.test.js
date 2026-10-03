@@ -627,7 +627,7 @@ test('POS cloud writes merge on the server and verify persistence before reporti
   assert.match(pos, /if\(payloadCovers\(verified,payload\)\)break/);
   assert.match(pos, /Cloud did not confirm the latest device changes/);
   assert.match(pos, /localStorage\.getItem\(pendingSyncKey\(\)\)==='1'\)setCloudStatus\('Syncing POS with cloud/);
-  assert.match(worker, /ceylonry-pos-app-shell-v14/);
+  assert.match(worker, /ceylonry-pos-app-shell-v15/);
   assert.match(worker, /new Request\(event\.request,\{cache:'no-store'\}\)/);
 });
 test('an upload finishing preserves additions and deletions made while it was running', async () => {

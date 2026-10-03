@@ -33,6 +33,19 @@
   to = "/app/index.html"
   status = 200
 
+# The legacy single-file POS is retired: old links, bookmarks and installed shortcuts open the React POS.
+[[redirects]]
+  from = "/pos-system/pos-system.html"
+  to = "/posv2/"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/pos-system/pos-system"
+  to = "/posv2/"
+  status = 302
+  force = true
+
 # POS administration portal. Must stay above the generic /posv2/* rule (first match wins).
 [[redirects]]
   from = "/posv2/admin"

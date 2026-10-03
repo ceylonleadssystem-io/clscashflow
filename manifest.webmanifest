@@ -12,7 +12,7 @@
   "theme_color": "#171512",
   "categories": ["business", "productivity"],
   "shortcuts": [
-    {"name": "Open POS", "short_name": "POS", "url": "/pos-system/pos-system.html?source=pwa", "icons": [{"src": "/assets/icons/ceylonry-192.png", "sizes": "192x192", "type": "image/png"}]}
+    {"name": "Open POS", "short_name": "POS", "url": "/posv2/?source=pwa", "icons": [{"src": "/assets/icons/ceylonry-192.png", "sizes": "192x192", "type": "image/png"}]}
   ],
   "icons": [
     {"src": "/assets/icons/ceylonry-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
