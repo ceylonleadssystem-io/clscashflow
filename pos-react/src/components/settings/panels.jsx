@@ -13,6 +13,7 @@ import { usePos } from "../../store/PosProvider";
 import { useSession } from "../../store/SessionProvider";
 import { openBankTransfer } from "../../services/platform.service";
 import { LocationEditorModal } from "../../modals/LocationEditorModal";
+import { FONT_SIZES, FONT_WEIGHTS, useDisplayPrefs } from "../../hooks/useDisplayPrefs";
 import { HardwarePanel } from "./HardwarePanel";
 
 /** Individual Settings panels. Each takes the shared `form` state from Settings.jsx. */
@@ -219,6 +220,43 @@ export function AppearancePanel() {
 				</div>
 				<div className="plan-settings-note" style={{ marginTop: 10 }}>
 					Your selection is saved automatically and restored when you return.
+				</div>
+			</div>
+		</div>
+	);
+}
+
+/** Text size and thickness for the signed-in user only; applied across the whole POS. */
+export function DisplayPanel() {
+	const [prefs, update] = useDisplayPrefs();
+	const group = (label, options, current, key) => (
+		<div className="field full">
+			<label>{label}</label>
+			<div className="settings-theme-picker" role="group" aria-label={label} style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+				{options.map((o) => (
+					<button key={o.id} type="button" className={"settings-theme-option" + (current === o.id ? " active" : "")} aria-pressed={current === o.id} onClick={() => update({ [key]: o.id })}>
+						<span>
+							<strong>{o.label}</strong>
+						</span>
+						<span className="theme-option-check">✓</span>
+					</button>
+				))}
+			</div>
+		</div>
+	);
+	return (
+		<div className="panel" id="pos-display-settings">
+			<div className="panel-head">
+				<div>
+					<div className="panel-title">Text size &amp; thickness</div>
+					<div className="muted">Applies only to your sign-in, on this device, across the whole POS.</div>
+				</div>
+			</div>
+			<div className="modal-body">
+				{group("Text size", FONT_SIZES, prefs.size, "size")}
+				{group("Text thickness", FONT_WEIGHTS, prefs.weight, "weight")}
+				<div className="plan-settings-note" style={{ marginTop: 10 }}>
+					Saved automatically and restored when you sign in again.
 				</div>
 			</div>
 		</div>

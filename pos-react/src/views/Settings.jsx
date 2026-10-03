@@ -11,6 +11,7 @@ import {
 	AppearancePanel,
 	BillingPanel,
 	BusinessProfilePanel,
+	DisplayPanel,
 	FeedbackPanel,
 	LocationsPanel,
 	PlanSupportPanel,
@@ -24,6 +25,7 @@ const TABS = [
 	{ id: "business", label: "Business Profile" },
 	{ id: "pos", label: "POS Setup" },
 	{ id: "operations", label: "Operations" },
+	{ id: "printing", label: "Receipt Printing" },
 	{ id: "plan", label: "Plan & Support" },
 ];
 
@@ -48,7 +50,7 @@ const formFrom = (s) => ({
 	socials: { instagram: "", facebook: "", tiktok: "", website: "", ...(s.receiptSocials || {}) },
 });
 
-/** Settings: business, POS setup, operations and plan & support (tabbed). */
+/** Settings: business, POS setup, operations, receipt printing and plan & support (tabbed). */
 export function Settings() {
 	const { settings } = useData();
 	const { currentUser, svc, setSetupOpen } = usePos();
@@ -92,10 +94,11 @@ export function Settings() {
 		operations: (
 			<>
 				{full && themes && <AppearancePanel />}
-				<PrintingPanel form={form} set={set} setForm={setForm} />
+				<DisplayPanel />
 				{full && <FeedbackPanel form={form} set={set} />}
 			</>
 		),
+		printing: <PrintingPanel form={form} set={set} setForm={setForm} />,
 		plan: full && (
 			<>
 				{billing && <BillingPanel />}

@@ -7,19 +7,19 @@
 [data-pos-theme="sand"]{--ui-accent:#c68d21;--ui-accent-strong:#a96f0c;--ui-ink:#211d17;--ui-sidebar:#1c1915;--ui-sidebar-2:#2b2721;--ui-canvas:#f6f1e8;--ui-surface:#fffdf9;--ui-soft:#f4ede2;--ui-line:#e6ddd0;--ui-text:#201d18;--ui-muted:#756d62;--ui-good:#328557;--ui-danger:#bd4032;--ui-shadow:0 10px 32px rgba(65,45,20,.08);--ui-radius:16px}
 
 html,body{background:var(--ui-canvas)!important;color:var(--ui-text)!important}body{font-family:'DM Sans',system-ui,sans-serif!important}.app,body.full .app{grid-template-columns:248px minmax(0,1fr)!important}.side,body.full .side{width:auto!important;background:linear-gradient(180deg,var(--ui-sidebar),#0d1216)!important;padding:18px 14px!important;border-right:1px solid rgba(255,255,255,.06)}.main{background:var(--ui-canvas)}
-.top,body.full .top{height:74px!important;padding:0 24px!important;background:rgba(255,255,255,.92)!important;border-bottom:1px solid var(--ui-line)!important;backdrop-filter:blur(14px)}.top h1{font-family:'DM Sans',sans-serif!important;font-size:23px!important;font-weight:700!important;letter-spacing:-.03em}.top p{color:var(--ui-muted)!important;font-size:12px!important}.top-actions{display:flex;align-items:center;gap:8px}.theme-picker{display:flex;align-items:center;gap:5px;padding:4px;border:1px solid var(--ui-line);border-radius:12px;background:var(--ui-soft)}.theme-picker button{width:32px;height:32px;padding:0;border:2px solid transparent;border-radius:9px;background:var(--swatch);cursor:pointer;box-shadow:inset 0 0 0 5px rgba(255,255,255,.18)}.theme-picker button.active{border-color:var(--ui-text);transform:scale(1.04)}
-.content,body.full .content{padding:18px!important}.card,.panel{border:1px solid var(--ui-line)!important;border-radius:var(--ui-radius)!important;background:var(--ui-surface)!important;box-shadow:var(--ui-shadow)}.card{border-top:1px solid var(--ui-line)!important;padding:19px!important}.panel-head{padding:16px 18px!important;border-color:var(--ui-line)!important}.panel-title,.value,.plan-settings-price,.grand{font-family:'DM Sans',sans-serif!important;letter-spacing:-.025em}.panel-title{font-size:18px!important}.value{font-size:26px!important}.muted,.label,.field label{color:var(--ui-muted)!important}.label,.field label{letter-spacing:.09em!important}.grid4{gap:12px!important}
-.btn{min-height:40px;border-radius:10px!important;padding:10px 15px!important;font-weight:700!important;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0) scale(.98)}.btn:not(.out):not(.danger),.btn.gold,#complete-btn{background:var(--ui-accent)!important;color:#fff!important;box-shadow:0 7px 16px color-mix(in srgb,var(--ui-accent) 24%,transparent)}.btn.out{background:var(--ui-surface)!important;color:var(--ui-text)!important;border:1px solid var(--ui-line)!important}.btn.danger{background:var(--ui-danger)!important}.input{min-height:42px;border-color:var(--ui-line)!important;border-radius:10px!important;background:var(--ui-surface)!important;color:var(--ui-text)!important}.input:focus{border-color:var(--ui-accent)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-accent) 15%,transparent)!important}
-.side-business-logo,body.full .side-business-logo{height:92px!important;padding:12px!important;margin-bottom:10px!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:13px!important}.brand,body.full .brand{border-color:rgba(255,255,255,.11)!important;background:var(--ui-sidebar-2)!important}.session-user,body.full .session-user{border-color:rgba(255,255,255,.1)!important;background:var(--ui-sidebar-2)!important;border-radius:12px!important}.session-user span{color:var(--ui-accent)!important}.side .nav{gap:5px!important;padding:4px 0!important}.side .nav button,body.full .side .nav button{position:relative;min-height:43px!important;padding:11px 13px!important;border-radius:10px!important;color:#bfc7cc!important;font-size:12px!important;font-weight:600!important;transition:.15s ease}.side .nav button:hover{background:rgba(255,255,255,.07)!important;color:#fff!important}.side .nav button.active{background:var(--ui-accent)!important;color:#fff!important;box-shadow:0 8px 18px color-mix(in srgb,var(--ui-accent) 25%,transparent)!important}.side-foot{border-color:rgba(255,255,255,.1)!important}
+.top,body.full .top{height:74px!important;padding:0 24px!important;background:rgba(255,255,255,.92)!important;border-bottom:1px solid var(--ui-line)!important;backdrop-filter:blur(14px)}.top h1{font-family:'DM Sans',sans-serif!important;font-size:calc(23px * var(--ui-fs, 1))!important;font-weight:calc(700 + var(--ui-fw, 0))!important;letter-spacing:-.03em}.top p{color:var(--ui-muted)!important;font-size:calc(12px * var(--ui-fs, 1))!important}.top-actions{display:flex;align-items:center;gap:8px}.theme-picker{display:flex;align-items:center;gap:5px;padding:4px;border:1px solid var(--ui-line);border-radius:12px;background:var(--ui-soft)}.theme-picker button{width:32px;height:32px;padding:0;border:2px solid transparent;border-radius:9px;background:var(--swatch);cursor:pointer;box-shadow:inset 0 0 0 5px rgba(255,255,255,.18)}.theme-picker button.active{border-color:var(--ui-text);transform:scale(1.04)}
+.content,body.full .content{padding:18px!important}.card,.panel{border:1px solid var(--ui-line)!important;border-radius:var(--ui-radius)!important;background:var(--ui-surface)!important;box-shadow:var(--ui-shadow)}.card{border-top:1px solid var(--ui-line)!important;padding:19px!important}.panel-head{padding:16px 18px!important;border-color:var(--ui-line)!important}.panel-title,.value,.plan-settings-price,.grand{font-family:'DM Sans',sans-serif!important;letter-spacing:-.025em}.panel-title{font-size:calc(18px * var(--ui-fs, 1))!important}.value{font-size:calc(26px * var(--ui-fs, 1))!important}.muted,.label,.field label{color:var(--ui-muted)!important}.label,.field label{letter-spacing:.09em!important}.grid4{gap:12px!important}
+.btn{min-height:40px;border-radius:10px!important;padding:10px 15px!important;font-weight:calc(700 + var(--ui-fw, 0))!important;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0) scale(.98)}.btn:not(.out):not(.danger),.btn.gold,#complete-btn{background:var(--ui-accent)!important;color:#fff!important;box-shadow:0 7px 16px color-mix(in srgb,var(--ui-accent) 24%,transparent)}.btn.out{background:var(--ui-surface)!important;color:var(--ui-text)!important;border:1px solid var(--ui-line)!important}.btn.danger{background:var(--ui-danger)!important}.input{min-height:42px;border-color:var(--ui-line)!important;border-radius:10px!important;background:var(--ui-surface)!important;color:var(--ui-text)!important}.input:focus{border-color:var(--ui-accent)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-accent) 15%,transparent)!important}
+.side-business-logo,body.full .side-business-logo{height:92px!important;padding:12px!important;margin-bottom:10px!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:13px!important}.brand,body.full .brand{border-color:rgba(255,255,255,.11)!important;background:var(--ui-sidebar-2)!important}.session-user,body.full .session-user{border-color:rgba(255,255,255,.1)!important;background:var(--ui-sidebar-2)!important;border-radius:12px!important}.session-user span{color:var(--ui-accent)!important}.side .nav{gap:5px!important;padding:4px 0!important}.side .nav button,body.full .side .nav button{position:relative;min-height:43px!important;padding:11px 13px!important;border-radius:10px!important;color:#bfc7cc!important;font-size:calc(12px * var(--ui-fs, 1))!important;font-weight:calc(600 + var(--ui-fw, 0))!important;transition:.15s ease}.side .nav button:hover{background:rgba(255,255,255,.07)!important;color:#fff!important}.side .nav button.active{background:var(--ui-accent)!important;color:#fff!important;box-shadow:0 8px 18px color-mix(in srgb,var(--ui-accent) 25%,transparent)!important}.side-foot{border-color:rgba(255,255,255,.1)!important}
 
-#pos-cloud-banner{border:1px solid color-mix(in srgb,var(--ui-good) 25%,var(--ui-line))!important;border-radius:12px!important;background:color-mix(in srgb,var(--ui-good) 7%,var(--ui-surface))!important;color:var(--ui-text)!important;box-shadow:none!important}.pos-cloud-dot{background:var(--ui-good)!important}.chip{min-height:40px!important;padding:9px 15px!important;border-color:var(--ui-line)!important;background:var(--ui-soft)!important;color:var(--ui-text)!important;font-weight:600!important}.chip.active{border-color:var(--ui-ink)!important;background:var(--ui-ink)!important;color:#fff!important}.cats{gap:8px!important;padding:13px 16px!important;background:var(--ui-surface)!important;border-color:var(--ui-line)!important}
-#view-checkout .layout{grid-template-columns:minmax(0,1fr) minmax(410px,470px)!important;gap:14px!important}.checkout-business-logo{border-color:var(--ui-line)!important;border-radius:12px!important}.checkout-business-copy strong{font-family:'DM Sans',sans-serif!important;font-size:19px!important;letter-spacing:-.025em}.products{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important;gap:12px!important;padding:16px!important}.product{min-height:184px!important;border:1px solid var(--ui-line)!important;border-radius:13px!important;background:var(--ui-surface)!important;box-shadow:0 5px 16px rgba(20,31,40,.055);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}.product:hover{border-color:color-mix(in srgb,var(--ui-accent) 45%,var(--ui-line))!important;box-shadow:0 11px 24px rgba(20,31,40,.1)}.product-img,.product-placeholder{height:112px!important;background:var(--ui-soft)!important}.product-copy{padding:11px 12px!important;gap:7px!important}.product strong{font-size:13px!important}.price{font-family:'DM Sans',sans-serif!important;color:var(--ui-text)!important;font-size:16px!important;font-weight:800!important}.cart{top:90px!important;border-radius:16px!important}.cart>.panel-head{padding:17px 18px!important}.cart-list{padding:2px 18px!important}.line{padding:13px 0!important;border-color:var(--ui-line)!important}.qty{gap:0!important;border:1px solid var(--ui-line);border-radius:9px;overflow:hidden}.qty button{width:34px!important;height:34px!important;border:0!important;border-radius:0!important;background:var(--ui-soft)!important}.cart-foot{border-color:var(--ui-line)!important;background:var(--ui-surface)!important}.grand{font-size:23px!important}.cart #complete-btn{min-height:54px!important;font-size:14px!important}.plan-settings,#discount-panel{border-color:color-mix(in srgb,var(--ui-accent) 25%,var(--ui-line))!important;background:color-mix(in srgb,var(--ui-accent) 5%,var(--ui-surface))!important}
+#pos-cloud-banner{border:1px solid color-mix(in srgb,var(--ui-good) 25%,var(--ui-line))!important;border-radius:12px!important;background:color-mix(in srgb,var(--ui-good) 7%,var(--ui-surface))!important;color:var(--ui-text)!important;box-shadow:none!important}.pos-cloud-dot{background:var(--ui-good)!important}.chip{min-height:40px!important;padding:9px 15px!important;border-color:var(--ui-line)!important;background:var(--ui-soft)!important;color:var(--ui-text)!important;font-weight:calc(600 + var(--ui-fw, 0))!important}.chip.active{border-color:var(--ui-ink)!important;background:var(--ui-ink)!important;color:#fff!important}.cats{gap:8px!important;padding:13px 16px!important;background:var(--ui-surface)!important;border-color:var(--ui-line)!important}
+#view-checkout .layout{grid-template-columns:minmax(0,1fr) minmax(410px,470px)!important;gap:14px!important}.checkout-business-logo{border-color:var(--ui-line)!important;border-radius:12px!important}.checkout-business-copy strong{font-family:'DM Sans',sans-serif!important;font-size:calc(19px * var(--ui-fs, 1))!important;letter-spacing:-.025em}.products{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important;gap:12px!important;padding:16px!important}.product{min-height:184px!important;border:1px solid var(--ui-line)!important;border-radius:13px!important;background:var(--ui-surface)!important;box-shadow:0 5px 16px rgba(20,31,40,.055);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}.product:hover{border-color:color-mix(in srgb,var(--ui-accent) 45%,var(--ui-line))!important;box-shadow:0 11px 24px rgba(20,31,40,.1)}.product-img,.product-placeholder{height:112px!important;background:var(--ui-soft)!important}.product-copy{padding:11px 12px!important;gap:7px!important}.product strong{font-size:calc(13px * var(--ui-fs, 1))!important}.price{font-family:'DM Sans',sans-serif!important;color:var(--ui-text)!important;font-size:calc(16px * var(--ui-fs, 1))!important;font-weight:calc(800 + var(--ui-fw, 0))!important}.cart{top:90px!important;border-radius:16px!important}.cart>.panel-head{padding:17px 18px!important}.cart-list{padding:2px 18px!important}.line{padding:13px 0!important;border-color:var(--ui-line)!important}.qty{gap:0!important;border:1px solid var(--ui-line);border-radius:9px;overflow:hidden}.qty button{width:34px!important;height:34px!important;border:0!important;border-radius:0!important;background:var(--ui-soft)!important}.cart-foot{border-color:var(--ui-line)!important;background:var(--ui-surface)!important}.grand{font-size:calc(23px * var(--ui-fs, 1))!important}.cart #complete-btn{min-height:54px!important;font-size:calc(14px * var(--ui-fs, 1))!important}.plan-settings,#discount-panel{border-color:color-mix(in srgb,var(--ui-accent) 25%,var(--ui-line))!important;background:color-mix(in srgb,var(--ui-accent) 5%,var(--ui-surface))!important}
 
 table{background:var(--ui-surface)}th{padding:13px 15px!important;background:var(--ui-soft)!important;color:var(--ui-muted)!important}td{padding:14px 15px!important;border-color:var(--ui-line)!important}tbody tr{transition:background .12s ease}tbody tr:hover{background:color-mix(in srgb,var(--ui-accent) 3%,var(--ui-surface))}.badge,.role-pill{border-radius:999px!important}.customer,.mini,.modifier-assignment,.category-card,.catalog-product-card{border-color:var(--ui-line)!important;border-radius:12px!important;background:var(--ui-surface)!important}.modal{background:rgba(10,15,19,.66)!important;backdrop-filter:blur(6px)}.modal-box{border:1px solid rgba(255,255,255,.14);border-radius:18px!important;background:var(--ui-surface)!important;box-shadow:0 28px 80px rgba(0,0,0,.28)}.modal-foot{border-color:var(--ui-line)!important}.notice{border:1px solid color-mix(in srgb,var(--ui-good) 28%,var(--ui-line))!important;border-left:4px solid var(--ui-good)!important;border-radius:10px;background:color-mix(in srgb,var(--ui-good) 8%,var(--ui-surface))!important}
 
 @media(max-width:1180px){.app,body.full .app{grid-template-columns:210px minmax(0,1fr)!important}#view-checkout .layout{grid-template-columns:minmax(0,1fr) minmax(370px,430px)!important}.products{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))!important}}
 @media(max-width:900px){.app,body.full .app{display:block!important}.side,body.full .side{position:sticky!important;top:0!important;width:100%!important;padding:8px 10px!important}.top,body.full .top{top:57px!important}.theme-picker{display:none}#view-checkout .layout{grid-template-columns:1fr!important}.products{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important}}
-@media(max-width:560px){.content,body.full .content{padding:9px!important}.top,body.full .top{padding:0 12px!important}.top h1{font-size:19px!important}.products{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:10px!important;gap:9px!important}.product{min-height:164px!important}.product-img,.product-placeholder{height:94px!important}.grid4{grid-template-columns:1fr!important}.panel-head{align-items:flex-start!important;flex-wrap:wrap}.table-wrap{border-radius:0 0 var(--ui-radius) var(--ui-radius)}}
+@media(max-width:560px){.content,body.full .content{padding:9px!important}.top,body.full .top{padding:0 12px!important}.top h1{font-size:calc(19px * var(--ui-fs, 1))!important}.products{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:10px!important;gap:9px!important}.product{min-height:164px!important}.product-img,.product-placeholder{height:94px!important}.grid4{grid-template-columns:1fr!important}.panel-head{align-items:flex-start!important;flex-wrap:wrap}.table-wrap{border-radius:0 0 var(--ui-radius) var(--ui-radius)}}
 @media(pointer:coarse){.side .nav button,.btn,.chip,.input{min-height:46px!important}.product{touch-action:manipulation}.qty button{min-width:44px!important;min-height:44px!important}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
 
@@ -31,7 +31,7 @@ table{background:var(--ui-surface)}th{padding:13px 15px!important;background:var
   --ui-warning:#e99a18;--ui-danger:#e43c2f;--ui-radius:13px;
   --ui-shadow:0 5px 18px rgba(17,25,32,.055);
 }
-html{font-size:clamp(13px,.12vw + 12px,15px)}
+html{font-size:calc(clamp(13px,.12vw + 12px,15px) * var(--ui-fs, 1))}
 body{line-height:1.42;-webkit-font-smoothing:antialiased}
 .main{min-width:0}.content{max-width:1920px;width:100%;margin:0 auto}
 .view{animation:pos-view-in .16s ease-out}.view.active{min-width:0}
@@ -40,9 +40,9 @@ body{line-height:1.42;-webkit-font-smoothing:antialiased}
 /* Navigation and application chrome. */
 .side,body.full .side{box-shadow:8px 0 28px rgba(8,13,17,.08)}
 .brand,body.full .brand{min-height:50px!important;border:0!important;background:transparent!important;box-shadow:none!important}
-.session-user{padding:12px!important}.session-user strong{font-size:13px}.session-user span{font-size:10px!important}
+.session-user{padding:12px!important}.session-user strong{font-size:calc(13px * var(--ui-fs, 1))}.session-user span{font-size:calc(10px * var(--ui-fs, 1))!important}
 .side .nav button,body.full .side .nav button{display:flex!important;align-items:center;gap:9px;letter-spacing:.005em}
-.side .nav button.active:after{content:'›';margin-left:auto;font-size:18px;line-height:1}
+.side .nav button.active:after{content:'›';margin-left:auto;font-size:calc(18px * var(--ui-fs, 1));line-height:1}
 .side-foot{margin-top:auto!important;padding-top:14px!important}.side-foot:before{content:'';display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:var(--ui-good);box-shadow:0 0 0 4px rgba(17,167,104,.12)}
 .top,body.full .top{position:sticky;top:0;z-index:45;box-shadow:0 1px 0 rgba(17,25,32,.02)}
 .top h1{line-height:1.15}.top p{margin-top:5px!important}
@@ -52,19 +52,19 @@ body{line-height:1.42;-webkit-font-smoothing:antialiased}
 .grid4{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 .card{position:relative;min-height:116px;overflow:hidden}
 .card:before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--ui-accent);opacity:.9}
-.card .label{font-size:9px!important}.card .value{margin-top:10px!important;font-size:clamp(21px,1.7vw,29px)!important}
+.card .label{font-size:calc(9px * var(--ui-fs, 1))!important}.card .value{margin-top:10px!important;font-size:clamp(21px,1.7vw,29px)!important}
 .card .muted{margin-top:5px}.dashboard-toolbar{border:1px solid var(--ui-line);border-radius:var(--ui-radius);padding:14px 16px;background:var(--ui-surface);box-shadow:var(--ui-shadow)}
 .dashboard-two{gap:14px!important}.cashflow-grid{gap:10px!important;padding:16px!important}
 .mini{border:1px solid var(--ui-line)!important;background:var(--ui-soft)!important}
-.mini strong{font-size:15px!important}.payment-bar{border-radius:999px!important;overflow:hidden;background:var(--ui-soft)!important}.payment-bar span{background:var(--ui-accent)!important}
+.mini strong{font-size:calc(15px * var(--ui-fs, 1))!important}.payment-bar{border-radius:999px!important;overflow:hidden;background:var(--ui-soft)!important}.payment-bar span{background:var(--ui-accent)!important}
 
 /* Tables remain dense enough for operational use while matching the reference. */
 .table-wrap{width:100%;overflow:auto;scrollbar-width:thin}
-table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!important;font-weight:800!important;letter-spacing:.08em!important;white-space:nowrap}td{height:48px;font-size:12px!important;vertical-align:middle}tbody tr:last-child td{border-bottom:0}.table-actions,.tools{align-items:center}
-.badge,.role-pill{display:inline-flex!important;align-items:center;gap:5px;font-weight:800!important;white-space:nowrap}.badge:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
+table{min-width:680px}thead{position:relative}th{height:42px;font-size:calc(9px * var(--ui-fs, 1))!important;font-weight:calc(800 + var(--ui-fw, 0))!important;letter-spacing:.08em!important;white-space:nowrap}td{height:48px;font-size:calc(12px * var(--ui-fs, 1))!important;vertical-align:middle}tbody tr:last-child td{border-bottom:0}.table-actions,.tools{align-items:center}
+.badge,.role-pill{display:inline-flex!important;align-items:center;gap:5px;font-weight:calc(800 + var(--ui-fw, 0))!important;white-space:nowrap}.badge:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
 
 /* Inputs, toolbars and settings share one control language. */
-.input{width:100%;font-size:12px!important}.field{gap:7px!important}.field label,.label{font-size:9px!important;font-weight:800!important}
+.input{width:100%;font-size:calc(12px * var(--ui-fs, 1))!important}.field{gap:7px!important}.field label,.label{font-size:calc(9px * var(--ui-fs, 1))!important;font-weight:calc(800 + var(--ui-fw, 0))!important}
 .catalog-toolbar,.customer-directory-tools{background:var(--ui-surface)}
 .settings-tabs{border-bottom:1px solid var(--ui-line);padding:0 0 10px!important}.settings-tab{min-height:38px!important;border-radius:9px!important}.settings-tab.active{background:var(--ui-accent)!important;border-color:var(--ui-accent)!important}
 .category-card{box-shadow:0 2px 8px rgba(17,25,32,.035)}.subcategory-chip{background:var(--ui-soft)!important}
@@ -78,14 +78,14 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 /* Operational sections: orders, products, CRM, inventory, sales and staff. */
 #view-products>div,#view-settings>div{gap:14px!important}
 #view-orders .grid4,#view-inventory .grid4,#view-reports .grid4,#view-crm .grid4{margin-bottom:14px}
-.crm-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;gap:14px!important}.customer{box-shadow:var(--ui-shadow)}.customer h3{font-size:15px!important;letter-spacing:-.015em}.customer-stats{gap:7px!important}
+.crm-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;gap:14px!important}.customer{box-shadow:var(--ui-shadow)}.customer h3{font-size:calc(15px * var(--ui-fs, 1))!important;letter-spacing:-.015em}.customer-stats{gap:7px!important}
 .cash-positive,.positive{color:var(--ui-good)!important}.cash-negative{color:var(--ui-danger)!important}
 
 /* Checkout mirrors the compact sales/payment reference without removing controls. */
 #view-checkout .panel{box-shadow:0 4px 16px rgba(17,25,32,.05)!important}
 #view-checkout .cart>.panel-head{background:linear-gradient(180deg,#fff,#fbfcfd)}
 #view-checkout #order-actions .danger{box-shadow:none!important}
-#view-checkout .cart-foot>.row{font-weight:600}.cart .grand{font-weight:900!important;letter-spacing:-.035em!important}
+#view-checkout .cart-foot>.row{font-weight:calc(600 + var(--ui-fw, 0))}.cart .grand{font-weight:calc(900 + var(--ui-fw, 0))!important;letter-spacing:-.035em!important}
 #complete-btn{letter-spacing:.01em}.cash-tender-panel{border-color:color-mix(in srgb,var(--ui-good) 34%,var(--ui-line))!important;background:color-mix(in srgb,var(--ui-good) 7%,#fff)!important}
 .cash-change-row strong{font-family:'DM Sans',sans-serif!important;color:var(--ui-good)!important}
 
@@ -165,7 +165,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				border-top: 1px solid #36322d;
 				padding: 18px 10px 0;
 				color: #948f87;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			.main {
 				min-width: 0;
@@ -187,7 +187,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			.top p {
 				margin: 3px 0 0;
 				color: #756f66;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			.top-actions {
 				display: flex;
@@ -225,11 +225,11 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				border-top: 3px solid #171512;
 			}
 			.label {
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 				color: #756f66;
 				letter-spacing: 0.13em;
 				text-transform: uppercase;
-				font-weight: 700;
+				font-weight: calc(700 + var(--ui-fw, 0));
 			}
 			.value {
 				font: 700 26px "Playfair Display";
@@ -237,7 +237,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			.muted {
 				color: #756f66;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			.positive {
 				color: #168653;
@@ -264,8 +264,8 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				color: #fff;
 				padding: 10px 15px;
 				border-radius: 7px;
-				font-weight: 700;
-				font-size: 12px;
+				font-weight: calc(700 + var(--ui-fw, 0));
+				font-size: calc(12px * var(--ui-fs, 1));
 				cursor: pointer;
 			}
 			.btn.gold {
@@ -309,7 +309,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				background: #fff;
 				padding: 7px 11px;
 				border-radius: 30px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 				cursor: pointer;
 			}
 			.chip.active {
@@ -340,7 +340,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				transform: translateY(-2px);
 			}
 			.product strong {
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 			}
 			.price {
 				color: #9a7217;
@@ -384,7 +384,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				justify-content: space-between;
 				gap: 10px;
 				margin: 7px 0;
-				font-size: 13px;
+				font-size: calc(13px * var(--ui-fs, 1));
 			}
 			.grand {
 				font: 700 22px "Playfair Display";
@@ -400,7 +400,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				text-align: center;
 				padding: 35px 15px;
 				color: #99938a;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			table {
 				width: 100%;
@@ -411,13 +411,13 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				text-align: left;
 				padding: 12px 15px;
 				border-bottom: 1px solid #e5e1d9;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			th {
 				background: #faf9f6;
 				color: #756f66;
 				text-transform: uppercase;
-				font-size: 9px;
+				font-size: calc(9px * var(--ui-fs, 1));
 				letter-spacing: 0.12em;
 			}
 			td:last-child,
@@ -433,7 +433,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				border-radius: 20px;
 				background: #e9f6ef;
 				color: #168653;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 			}
 			.crm-grid {
 				display: grid;
@@ -445,10 +445,10 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			.customer h3 {
 				margin: 0 0 5px;
-				font-size: 15px;
+				font-size: calc(15px * var(--ui-fs, 1));
 			}
 			.customer-meta {
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 				color: #756f66;
 				line-height: 1.6;
 			}
@@ -462,11 +462,11 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				background: #faf9f6;
 				padding: 9px;
 				border-radius: 7px;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 			}
 			.mini strong {
 				display: block;
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 				margin-top: 3px;
 			}
 			.modal {
@@ -505,11 +505,11 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				grid-column: 1/-1;
 			}
 			.field label {
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 				text-transform: uppercase;
 				letter-spacing: 0.1em;
 				color: #756f66;
-				font-weight: 700;
+				font-weight: calc(700 + var(--ui-fw, 0));
 			}
 			.modal-foot {
 				padding: 14px 18px;
@@ -643,7 +643,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				place-items: center;
 				background: #e9e5dd;
 				color: #8b857c;
-				font-size: 24px;
+				font-size: calc(24px * var(--ui-fs, 1));
 			}
 			.image-preview {
 				height: 150px;
@@ -679,7 +679,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				border: 1px solid #d8d2c8;
 				border-radius: 7px;
 				padding: 8px 10px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			.customer-lookup {
 				display: grid;
@@ -704,16 +704,16 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			.customer-tab strong {
 				display: block;
-				font-size: 13px;
+				font-size: calc(13px * var(--ui-fs, 1));
 			}
 			.customer-tab span {
 				display: block;
 				color: #756f66;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 				margin-top: 2px;
 			}
 			.customer-find-note {
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 				color: #756f66;
 				line-height: 1.4;
 			}
@@ -744,7 +744,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				color: #9a7217;
 			}
 			.plan-settings-note {
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 				color: #756f66;
 				line-height: 1.5;
 			}
@@ -755,7 +755,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				margin-top: 12px;
 				padding-top: 12px;
 				border-top: 1px solid #e4d4a5;
-				font-weight: 700;
+				font-weight: calc(700 + var(--ui-fw, 0));
 			}
 			.modifier-picker-box {
 				width: min(680px, 100%);
@@ -790,10 +790,10 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				margin-bottom: 9px;
 			}
 			.modifier-pick-title strong {
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 			}
 			.modifier-pick-title span {
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 				color: #756f66;
 				text-transform: uppercase;
 				letter-spacing: 0.08em;
@@ -813,7 +813,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 11px 12px;
 				cursor: pointer;
 				background: #fff;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			.modifier-choice:has(input:checked) {
 				border-color: #b58b25;
@@ -826,7 +826,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			.line-modifiers {
 				margin-top: 4px;
 				color: #9a7217;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 				line-height: 1.5;
 			}
 			.line-edit {
@@ -834,7 +834,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				background: transparent;
 				color: #756f66;
 				padding: 2px 0;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 				text-decoration: underline;
 				cursor: pointer;
 			}
@@ -875,7 +875,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			.login-error {
 				min-height: 20px;
 				color: #a5362b;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 				margin-top: 8px;
 			}
 			.session-user {
@@ -887,10 +887,10 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			.session-user strong {
 				display: block;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			.session-user span {
-				font-size: 9px;
+				font-size: calc(9px * var(--ui-fs, 1));
 				color: #d4aa43;
 				text-transform: uppercase;
 				letter-spacing: 0.12em;
@@ -931,7 +931,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 4px 8px;
 				border-radius: 20px;
 				background: #eee9df;
-				font-size: 9px;
+				font-size: calc(9px * var(--ui-fs, 1));
 				text-transform: uppercase;
 				letter-spacing: 0.08em;
 			}
@@ -958,7 +958,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 10px;
 				background: #faf9f6;
 				border-radius: 7px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 				color: #756f66;
 				line-height: 1.5;
 			}
@@ -1035,7 +1035,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			.cashflow-metric span {
 				display: block;
 				color: #756f66;
-				font-size: 9px;
+				font-size: calc(9px * var(--ui-fs, 1));
 				text-transform: uppercase;
 				letter-spacing: 0.1em;
 			}
@@ -1054,7 +1054,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				grid-template-columns: 110px 1fr auto;
 				align-items: center;
 				gap: 10px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			.payment-bar {
 				height: 8px;
@@ -1075,7 +1075,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				border-radius: 50%;
 				background: #171512;
 				color: #fff;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 			}
 			@media (max-width: 900px) {
 				.dashboard-two {
@@ -1127,8 +1127,8 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				background: #faf9f6;
 			}
 			.modifier-assignment label {
-				font-size: 12px;
-				font-weight: 700;
+				font-size: calc(12px * var(--ui-fs, 1));
+				font-weight: calc(700 + var(--ui-fw, 0));
 			}
 			.modifier-assignment select:disabled {
 				opacity: 0.45;
@@ -1174,21 +1174,21 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			body.full .nav button {
 				min-height: 50px;
 				padding: 14px;
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 			}
 			body.full .btn {
 				min-height: 46px;
 				padding: 12px 17px;
-				font-size: 13px;
+				font-size: calc(13px * var(--ui-fs, 1));
 			}
 			body.full .input {
 				min-height: 48px;
-				font-size: 16px;
+				font-size: calc(16px * var(--ui-fs, 1));
 			}
 			body.full .chip {
 				min-height: 44px;
 				padding: 11px 16px;
-				font-size: 13px;
+				font-size: calc(13px * var(--ui-fs, 1));
 			}
 			body.full .products {
 				grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -1205,20 +1205,20 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				filter: brightness(0.94);
 			}
 			body.full .product strong {
-				font-size: 16px;
+				font-size: calc(16px * var(--ui-fs, 1));
 			}
 			body.full .price {
-				font-size: 20px;
+				font-size: calc(20px * var(--ui-fs, 1));
 			}
 			body.full .qty button {
 				width: 44px;
 				height: 44px;
-				font-size: 22px;
-				font-weight: 700;
+				font-size: calc(22px * var(--ui-fs, 1));
+				font-weight: calc(700 + var(--ui-fw, 0));
 			}
 			body.full .line {
 				padding: 15px 0;
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 			}
 			body.full .cart-list {
 				max-height: calc(100vh - 510px);
@@ -1229,7 +1229,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			body.full #complete-btn {
 				min-height: 56px;
-				font-size: 15px;
+				font-size: calc(15px * var(--ui-fs, 1));
 			}
 			body.full .customer-lookup {
 				grid-template-columns: minmax(160px, 1fr) auto auto;
@@ -1329,7 +1329,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 16px 18px 13px;
 			}
 			#view-checkout .cart > .panel-head > .panel-title {
-				font-size: 22px;
+				font-size: calc(22px * var(--ui-fs, 1));
 				margin-bottom: 12px;
 				white-space: nowrap;
 			}
@@ -1390,7 +1390,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			.cart #complete-btn {
 				min-height: 52px;
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 			}
 			.cart .muted label {
 				line-height: 1.35;
@@ -1540,7 +1540,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			.checkout-business-copy span {
 				display: block;
 				color: #756f66;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 				margin-top: 2px;
 			}
 			.side-business-logo {
@@ -1557,7 +1557,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				opacity: 0.82;
 			}
 			.side.has-business-logo .brand small {
-				font-size: 8px;
+				font-size: calc(8px * var(--ui-fs, 1));
 			}
 			#set-logo-preview {
 				height: 190px;
@@ -1580,8 +1580,8 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				border-radius: 8px;
 				padding: 11px 14px;
 				margin-bottom: 14px;
-				font-size: 12px;
-				font-weight: 700;
+				font-size: calc(12px * var(--ui-fs, 1));
+				font-weight: calc(700 + var(--ui-fw, 0));
 			}
 			.support-readonly .support-session-banner {
 				display: flex;
@@ -1603,7 +1603,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 					height: 42px;
 				}
 				.checkout-business-copy strong {
-					font-size: 16px;
+					font-size: calc(16px * var(--ui-fs, 1));
 					max-width: 190px;
 				}
 			}
@@ -1645,7 +1645,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 0 20px;
 			}
 			body.full:has(#view-dashboard.active) .top h1 {
-				font-size: 21px;
+				font-size: calc(21px * var(--ui-fs, 1));
 			}
 			body.full:has(#view-dashboard.active) .content {
 				height: calc(100vh - 58px);
@@ -1671,12 +1671,12 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			body.full #view-dashboard .btn {
 				min-height: 34px;
 				padding: 7px 12px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard .input {
 				min-height: 36px;
 				padding: 7px 10px;
-				font-size: 13px;
+				font-size: calc(13px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard .range-fields .field {
 				min-width: 130px;
@@ -1688,7 +1688,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 10px 14px;
 			}
 			body.full #view-dashboard .value {
-				font-size: 21px;
+				font-size: calc(21px * var(--ui-fs, 1));
 				margin-top: 4px;
 			}
 			body.full #view-dashboard .dashboard-two {
@@ -1704,20 +1704,20 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 9px 13px;
 			}
 			body.full #view-dashboard .panel-title {
-				font-size: 16px;
+				font-size: calc(16px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard th,
 			body.full #view-dashboard td {
 				padding: 7px 12px;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard th {
-				font-size: 8px;
+				font-size: calc(8px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard .rank {
 				width: 21px;
 				height: 21px;
-				font-size: 9px;
+				font-size: calc(9px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard #best-items tr:nth-child(n + 7),
 			body.full #view-dashboard #recent-sales tr:nth-child(n + 4) {
@@ -1729,7 +1729,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			body.full #view-dashboard .payment-bar-row {
 				grid-template-columns: 75px 1fr auto;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard #cashflow-panel {
 				margin: 0 !important;
@@ -1743,7 +1743,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 8px;
 			}
 			body.full #view-dashboard .cashflow-metric strong {
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 				margin-top: 4px;
 				white-space: nowrap;
 			}
@@ -1759,7 +1759,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				margin-bottom: 6px;
 			}
 			body.full:has(#view-dashboard.active) .brand {
-				font-size: 20px;
+				font-size: calc(20px * var(--ui-fs, 1));
 				padding: 0 7px 10px;
 			}
 			body.full:has(#view-dashboard.active) .session-user {
@@ -1773,17 +1773,17 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			body.full:has(#view-dashboard.active) .nav button {
 				min-height: 34px;
 				padding: 7px 9px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			body.full:has(#view-dashboard.active) .side-foot {
 				padding: 8px 7px 0;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 			}
 			body.full:has(#view-dashboard.active) .side-foot .btn {
 				min-height: 32px !important;
 				margin-top: 5px !important;
 				padding: 6px;
-				font-size: 10px;
+				font-size: calc(10px * var(--ui-fs, 1));
 			}
 			@media (max-height: 800px) {
 				body.full #view-dashboard > .panel:last-child {
@@ -1799,16 +1799,16 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				}
 				body.full #view-dashboard .dashboard-toolbar .label,
 				body.full #view-dashboard .dashboard-toolbar .field label {
-					font-size: 8px;
+					font-size: calc(8px * var(--ui-fs, 1));
 				}
 				body.full #view-dashboard .card {
 					padding: 8px 12px;
 				}
 				body.full #view-dashboard .value {
-					font-size: 18px;
+					font-size: calc(18px * var(--ui-fs, 1));
 				}
 				body.full #view-dashboard .muted {
-					font-size: 10px;
+					font-size: calc(10px * var(--ui-fs, 1));
 				}
 				body.full #view-dashboard #best-items tr:nth-child(n + 6) {
 					display: none;
@@ -1820,7 +1820,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 					padding: 6px;
 				}
 				body.full #view-dashboard .cashflow-metric strong {
-					font-size: 12px;
+					font-size: calc(12px * var(--ui-fs, 1));
 				}
 			}
 			/* Balanced full-screen presentation: compact without looking miniaturised. */
@@ -1840,22 +1840,22 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 13px 16px;
 			}
 			body.full #view-dashboard .value {
-				font-size: 24px;
+				font-size: calc(24px * var(--ui-fs, 1));
 				margin-top: 6px;
 			}
 			body.full #view-dashboard .panel-head {
 				padding: 12px 15px;
 			}
 			body.full #view-dashboard .panel-title {
-				font-size: 18px;
+				font-size: calc(18px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard th,
 			body.full #view-dashboard td {
 				padding: 9px 14px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard th {
-				font-size: 8px;
+				font-size: calc(8px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard .payment-bars {
 				padding: 16px;
@@ -1863,7 +1863,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			body.full #view-dashboard .payment-bar-row {
 				grid-template-columns: 82px 1fr auto;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			body.full #view-dashboard .cashflow-grid {
 				padding: 11px 14px;
@@ -1873,12 +1873,12 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 9px;
 			}
 			body.full #view-dashboard .cashflow-metric strong {
-				font-size: 15px;
+				font-size: calc(15px * var(--ui-fs, 1));
 			}
 			body.full:has(#view-dashboard.active) .nav button {
 				min-height: 38px;
 				padding: 9px 10px;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			@media (max-height: 950px) {
 				body.full #view-dashboard {
@@ -1890,19 +1890,19 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 					padding: 9px 13px;
 				}
 				body.full #view-dashboard .value {
-					font-size: 20px;
+					font-size: calc(20px * var(--ui-fs, 1));
 					margin-top: 3px;
 				}
 				body.full #view-dashboard .panel-head {
 					padding: 9px 13px;
 				}
 				body.full #view-dashboard .panel-title {
-					font-size: 16px;
+					font-size: calc(16px * var(--ui-fs, 1));
 				}
 				body.full #view-dashboard th,
 				body.full #view-dashboard td {
 					padding: 7px 12px;
-					font-size: 10px;
+					font-size: calc(10px * var(--ui-fs, 1));
 				}
 				body.full #view-dashboard #best-items tr:nth-child(n + 6) {
 					display: none;
@@ -1921,12 +1921,12 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 					padding: 7px;
 				}
 				body.full #view-dashboard .cashflow-metric strong {
-					font-size: 13px;
+					font-size: calc(13px * var(--ui-fs, 1));
 				}
 				body.full:has(#view-dashboard.active) .nav button {
 					min-height: 35px;
 					padding: 7px 9px;
-					font-size: 11px;
+					font-size: calc(11px * var(--ui-fs, 1));
 				}
 			}
 			/* Consistent full-screen workspace for every POS page. */
@@ -1935,10 +1935,10 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 0 20px;
 			}
 			body.full .top h1 {
-				font-size: 22px;
+				font-size: calc(22px * var(--ui-fs, 1));
 			}
 			body.full .top p {
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			body.full .content {
 				height: calc(100vh - 64px);
@@ -1962,7 +1962,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 13px 16px;
 			}
 			body.full .view.active .panel-title {
-				font-size: 18px;
+				font-size: calc(18px * var(--ui-fs, 1));
 			}
 			body.full .view.active th,
 			body.full .view.active td {
@@ -2010,10 +2010,10 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				gap: 7px;
 			}
 			body.full #view-checkout .product strong {
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .price {
-				font-size: 17px;
+				font-size: calc(17px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .cart {
 				height: 100%;
@@ -2026,7 +2026,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 12px 14px 10px;
 			}
 			body.full #view-checkout .cart > .panel-head > .panel-title {
-				font-size: 20px;
+				font-size: calc(20px * var(--ui-fs, 1));
 				margin-bottom: 9px;
 			}
 			body.full #view-checkout #order-actions {
@@ -2035,7 +2035,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			body.full #view-checkout #order-actions .btn {
 				min-height: 38px;
 				padding: 8px 6px;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .cart-list {
 				min-height: 0;
@@ -2047,14 +2047,14 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			body.full #view-checkout .line {
 				padding: 9px 0;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .qty button {
 				width: 36px;
 				height: 36px;
 				min-width: 36px;
 				min-height: 36px;
-				font-size: 17px;
+				font-size: calc(17px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .cart-foot {
 				min-height: 0;
@@ -2070,7 +2070,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			body.full #view-checkout .input {
 				min-height: 40px;
 				padding: 8px 10px;
-				font-size: 14px;
+				font-size: calc(14px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .btn {
 				min-height: 40px;
@@ -2086,7 +2086,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				box-shadow: 0 -8px 15px #fff;
 			}
 			body.full #view-checkout .grand {
-				font-size: 20px;
+				font-size: calc(20px * var(--ui-fs, 1));
 				margin-bottom: 4px;
 			}
 			/* Tables and long management forms scroll inside the workspace, not the page. */
@@ -2149,7 +2149,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			body.full .side .nav button {
 				min-height: 34px;
 				padding: 7px 10px;
-				font-size: 12px;
+				font-size: calc(12px * var(--ui-fs, 1));
 			}
 			body.full .side .side-foot {
 				padding-top: 10px;
@@ -2158,7 +2158,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				min-height: 36px !important;
 				padding: 8px !important;
 				margin-top: 6px !important;
-				font-size: 11px;
+				font-size: calc(11px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .cart {
 				grid-template-rows: auto auto minmax(0, 1fr);
@@ -2172,7 +2172,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 			}
 			body.full #view-checkout .cart > .panel-head > .panel-title {
 				margin: 0;
-				font-size: 21px;
+				font-size: calc(21px * var(--ui-fs, 1));
 			}
 			body.full #view-checkout .cart > .panel-head > .btn {
 				min-width: 120px;
@@ -2233,8 +2233,8 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				margin-bottom: 20px;
 				color: #625b52;
 				text-decoration: none;
-				font-size: 11px;
-				font-weight: 800;
+				font-size: calc(11px * var(--ui-fs, 1));
+				font-weight: calc(800 + var(--ui-fw, 0));
 			}
 			.account-home:hover {
 				color: #b58b25;
@@ -2255,8 +2255,8 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				padding: 7px 9px;
 				background: #eee9df;
 				color: #171512;
-				font-size: 10px;
-				font-weight: 800;
+				font-size: calc(10px * var(--ui-fs, 1));
+				font-weight: calc(800 + var(--ui-fw, 0));
 				cursor: pointer;
 			}
 
@@ -2356,7 +2356,7 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				display: flex;
 				align-items: center;
 				gap: 8px;
-				font-weight: 700;
+				font-weight: calc(700 + var(--ui-fw, 0));
 				cursor: pointer;
 			}
 			.discount-toggle input {
@@ -2384,11 +2384,11 @@ table{min-width:680px}thead{position:relative}th{height:42px;font-size:9px!impor
 				}
 				.nav button {
 					padding: 9px 8px;
-					font-size: 11px;
+					font-size: calc(11px * var(--ui-fs, 1));
 				}
 				.side-foot {
 					padding: 11px 7px 0;
-					font-size: 10px;
+					font-size: calc(10px * var(--ui-fs, 1));
 				}
 				.top {
 					height: 64px;

@@ -13,6 +13,7 @@ import { WelcomeModal } from "../../modals/WelcomeModal";
 import { CheckoutModeGate } from "../../gates/CheckoutModeGate";
 import { CustomerModalHost } from "../../modals/CustomerModal";
 import { ModifierPickerModal } from "../../modals/ModifierPickerModal";
+import { useApplyDisplayPrefs } from "../../hooks/useDisplayPrefs";
 import { useBarcodeScanning } from "../../hooks/useBarcodeScanning";
 import { ProductModalHost } from "../../modals/ProductModal";
 import { CashModal } from "../../modals/CashModal";
@@ -26,6 +27,7 @@ export function Shell() {
 	const notice = useNotice();
 	const [locationsOpen, setLocationsOpen] = useState(false);
 	useBarcodeScanning();
+	useApplyDisplayPrefs();
 	return (
 		<LocationSwitcherOpenProvider open={() => setLocationsOpen(true)}>
 			<div className="app">
