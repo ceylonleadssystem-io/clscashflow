@@ -1,3 +1,7 @@
+/**
+ * Pricing sheet component: the four plan cards, the additional-features offer, plan highlights and the
+ * conditions note, all driven by config/plans.
+ */
 import { ADDITIONAL_FEATURES, PLANS, PLAN_CONDITIONS, PLAN_HIGHLIGHTS } from "../config/plans";
 
 const fmt = (n) => n.toLocaleString("en-US");

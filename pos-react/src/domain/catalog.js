@@ -1,3 +1,7 @@
+/**
+ * Catalogue helpers: category/subcategory lists and visibility rules, margin, and parsing of Excel/CSV
+ * (Ceylonry template or Square export) and stock-count sheets for import.
+ */
 import { STALE_PRESET_CATEGORIES } from "../config/presets";
 
 /** Category / subcategory helpers and spreadsheet parsing for catalogue import. */

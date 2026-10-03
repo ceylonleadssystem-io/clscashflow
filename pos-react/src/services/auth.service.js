@@ -1,3 +1,7 @@
+/**
+ * Authentication abstraction with two providers behind one interface: Appwrite (production business account)
+ * and a local provider (offline/dev owner login with a SHA-256 password hash). Also password hashing and friendly error messages.
+ */
 import { env } from "../config/env";
 import { STORAGE } from "../config/constants";
 import { createLogger } from "../utils/logger";

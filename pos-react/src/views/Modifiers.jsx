@@ -1,3 +1,6 @@
+/**
+ * Modifier groups page: list, add, edit and delete groups (keeping the current order consistent after a delete).
+ */
 import { useState } from "react";
 import { money } from "../domain/format";
 import { Panel } from "../components/ui";

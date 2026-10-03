@@ -1,0 +1,21 @@
+/* Icons-only nav rail that expands as an overlay on hover / keyboard focus, so content never shifts. */
+.nav button .nav-icon{flex:none;margin-right:10px}
+.nav button{display:flex;align-items:center;white-space:nowrap;transition:background .15s,transform .1s}
+.nav button:active{transform:scale(.97)}
+@media (min-width:1101px){
+	html body.nav-rail:not(.mobile-checkout) .app{grid-template-columns:64px minmax(0,1fr)!important}
+	html body.nav-rail:not(.mobile-checkout) .main{grid-column:2}
+	html body.nav-rail:not(.mobile-checkout) .side{position:fixed;inset:0 auto 0 0;z-index:60;width:248px!important;overflow:hidden;
+		transition:width .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s;box-shadow:6px 0 24px rgba(0,0,0,.28)}
+	/* Same layout in both states: the header/footer keep their expanded size (clipped + invisible when
+	   collapsed) and icons keep one x position, so nothing shifts when the rail opens. */
+	html body.nav-rail .side{padding:16px 14px!important}
+	html body.nav-rail .side #nav{padding:3px 0 6px!important}
+	html body.nav-rail .side #nav button{justify-content:flex-start;padding:8px 8px!important;overflow:hidden}
+	html body.nav-rail .side .nav button .nav-icon{width:20px;height:20px}
+	html body.nav-rail:not(.mobile-checkout) .side:not(:hover):not(:has(:focus-visible)){width:64px!important;box-shadow:none}
+	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) > :not(nav){min-width:220px;visibility:hidden}
+	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) #nav{width:36px}
+	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) #nav button::after{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){html body .side{transition:none!important}}

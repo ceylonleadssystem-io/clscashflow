@@ -1,3 +1,6 @@
+/**
+ * Combines every table spec into T (keyed by JS name), TABLE_LIST and TABLE_BY_NAME.
+ */
 import * as catalog from "./catalog";
 import * as customers from "./customers";
 import * as sales from "./sales";

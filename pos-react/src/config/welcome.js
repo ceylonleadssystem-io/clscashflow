@@ -1,3 +1,7 @@
+/**
+ * Default first-login welcome message (editable by admins, stored in settings.welcome) and the
+ * resolver that merges saved values over the defaults.
+ */
 /** First-login welcome message (editable in the Admin Dashboard, stored in settings.welcome). */
 export const DEFAULT_WELCOME = {
 	enabled: true,

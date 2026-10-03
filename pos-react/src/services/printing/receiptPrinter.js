@@ -1,3 +1,7 @@
+/**
+ * Direct 80 mm ESC/POS receipt printing over WebUSB: connect, restore a remembered printer, and send the
+ * logo, receipt text, QR code and cut command in the right byte order.
+ */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
 import { receiptText } from "./documents";
 import { escPosRaster } from "./imageTools";

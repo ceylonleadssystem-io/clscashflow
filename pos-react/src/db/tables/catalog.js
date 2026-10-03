@@ -1,3 +1,6 @@
+/**
+ * Table definitions for the catalogue: products, categories, subcategories and modifier groups.
+ */
 import { defineTable } from "../defineTable";
 
 export const products = defineTable(

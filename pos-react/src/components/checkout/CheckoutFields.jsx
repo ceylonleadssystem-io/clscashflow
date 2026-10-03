@@ -1,3 +1,7 @@
+/**
+ * Form sections of the checkout panel: customer lookup (with insights, memberships and next-visit
+ * discounts), order discount, table/order reference and channel, payment method with cash tender, split bill, and receipt options.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { PAYMENT_ICONS, PAYMENT_METHODS, PLATFORM_CHANNELS } from "../../config/constants";
 import { birthdayInfo, customerInsights, customerSegment } from "../../domain/analytics";

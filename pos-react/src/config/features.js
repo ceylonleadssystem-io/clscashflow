@@ -1,4 +1,8 @@
 /**
+ * Feature registry behind the Admin Dashboard switches: every feature with its group, default and
+ * dependencies, plus resolveFeatures() (applies dependency rules), dependentsOf() and the view-to-feature map.
+ */
+/**
  * Feature registry used by the Admin Dashboard.
  *
  * Every entry is a switch that can be turned on/off for the whole POS
@@ -127,7 +131,7 @@ export const FEATURES = [
 
 	// ----------------------------------------------------------------- shell
 	f("shell.fullscreen", "shell", "Full screen / kiosk mode", "Full screen toggle, touch kiosk mode and iOS install guide."),
-	f("shell.sidebarToggle", "shell", "Sidebar toggle", "Show / hide menu button.", { requires: ["shell.fullscreen"] }),
+	f("shell.sidebarToggle", "shell", "Sidebar toggle", "Show / hide menu button."),
 	f("shell.sessionButtons", "shell", "Lock POS / Sign out buttons", "Session buttons in the top bar.", { core: true }),
 
 	// -------------------------------------------------------------- industry

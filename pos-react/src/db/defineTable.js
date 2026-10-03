@@ -1,3 +1,7 @@
+/**
+ * Declarative table definition helper: from one field list it builds the column specs and the
+ * WatermelonDB Model class, and provides encode/decode for string, number, boolean and JSON columns.
+ */
 import { Model } from "@nozbe/watermelondb";
 
 /**

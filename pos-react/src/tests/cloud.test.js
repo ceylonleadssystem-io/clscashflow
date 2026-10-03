@@ -1,3 +1,7 @@
+/**
+ * Test for cloud sync: bootstraps a fresh workspace against an in-memory fake backend, pushes local edits and
+ * lets a second device pull them.
+ */
 import { describe, expect, it } from "vitest";
 import { createDatabase } from "../db/database";
 import { PosStore } from "../db/PosStore";

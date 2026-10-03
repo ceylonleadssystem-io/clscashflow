@@ -1,3 +1,7 @@
+/**
+ * Admin portal root: handles the separate administrator sign-in, loads the list of POS accounts with
+ * summary stats, and shows either that list (with search) or the selected account's AccountDetail.
+ */
 import { useCallback, useEffect, useState } from "react";
 import { env } from "../config/env";
 import { adminSession } from "./adminSession";

@@ -1,3 +1,7 @@
+/**
+ * Converts between the relational WatermelonDB snapshot and the legacy cloud payload format, and lists
+ * which arrays are merged by id and timestamp.
+ */
 import { TABLE_LIST, T } from "../../db/tables";
 import { EMPTY_SNAPSHOT } from "../../db/PosStore";
 

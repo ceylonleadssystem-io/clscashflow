@@ -1,3 +1,7 @@
+/**
+ * CRM & Feedback page: customer cards with segment, birthday and spend insights, filters and search, WhatsApp
+ * messages, feedback requests and next-visit discount badges.
+ */
 import { useMemo, useState } from "react";
 import { crmRows } from "../domain/analytics";
 import { money } from "../domain/format";

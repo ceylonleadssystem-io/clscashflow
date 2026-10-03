@@ -1,3 +1,6 @@
+/**
+ * Settings panel for support: download or clear the on-device log file. Nothing leaves the device unless shared.
+ */
 import { useState } from "react";
 import { Panel } from "../ui";
 import { clearLogs, downloadLogFile, getLogs } from "../../utils/logger";

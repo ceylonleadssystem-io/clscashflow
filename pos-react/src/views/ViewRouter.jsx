@@ -1,3 +1,6 @@
+/**
+ * Maps the active view id to its page component and renders it.
+ */
 import { Dashboard } from "./Dashboard";
 import { Checkout } from "./Checkout";
 import { Orders } from "./Orders";

@@ -1,3 +1,7 @@
+/**
+ * Location (branch) actions and helpers: active locations, which locations a user may access, saving a
+ * location (with stock buckets for new ones) and audit entries for switching location and logging in.
+ */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { createLogger } from "../../utils/logger";

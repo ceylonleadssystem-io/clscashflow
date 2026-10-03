@@ -1,3 +1,6 @@
+/**
+ * Table definitions for customers and the log of communications sent to them.
+ */
 import { defineTable } from "../defineTable";
 
 export const customers = defineTable(

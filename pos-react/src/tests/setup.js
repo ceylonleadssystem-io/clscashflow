@@ -1,3 +1,6 @@
+/**
+ * Minimal browser globals (localStorage, sessionStorage, navigator, window, document) so the service tests run in Node.
+ */
 /** Minimal browser globals for service tests that run in Node. */
 const store = new Map();
 globalThis.localStorage = {

@@ -1,3 +1,7 @@
+/**
+ * Tests for the catalogue workflow: product validation, categories and subcategories, modifier groups and
+ * catalogue import modes.
+ */
 import { describe, it, expect, beforeEach } from "vitest";
 import { addProduct, createHarness, productForm } from "./harness";
 

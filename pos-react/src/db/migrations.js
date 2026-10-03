@@ -1,3 +1,6 @@
+/**
+ * WatermelonDB schema migrations (currently none, schema version 1). Keep in step with SCHEMA_VERSION in schema.js.
+ */
 import { schemaMigrations } from "@nozbe/watermelondb/Schema/migrations";
 
 /**

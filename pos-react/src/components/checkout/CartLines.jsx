@@ -1,3 +1,7 @@
+/**
+ * Checkout cart list: the order lines with images, modifiers, quantity +/- buttons and an
+ * "Edit modifiers" link. Scrolls to the newest line when one is added.
+ */
 import { useEffect, useRef } from "react";
 import { money } from "../../domain/format";
 import { useCheckout } from "../../store/CheckoutProvider";

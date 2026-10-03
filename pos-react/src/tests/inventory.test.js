@@ -1,3 +1,7 @@
+/**
+ * Tests for the inventory workflow: stock item validation and opening stock, adjustments by reason, deleting
+ * stock rows, branch stock counts and count-sheet import.
+ */
 import { describe, it, expect, beforeEach } from "vitest";
 import { availableProductStock } from "../domain/inventory";
 import { addProduct, createHarness, line, noDiscount } from "./harness";

@@ -1,3 +1,6 @@
+/**
+ * Shows a QR code (and link) that opens the phone stock-count page, with the steps for counting stock on a phone.
+ */
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { Modal, ModalBody } from "../components/ui";

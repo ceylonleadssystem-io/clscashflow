@@ -1,3 +1,7 @@
+/**
+ * Admin portal sign-in form (separate from the business/staff login). Enforces the @ceylonrylabs.io
+ * domain and shows the dev credentials when running against the local back end.
+ */
 import { useState } from "react";
 import { env } from "../config/env";
 import { DEV_ADMIN } from "./localAdmin";

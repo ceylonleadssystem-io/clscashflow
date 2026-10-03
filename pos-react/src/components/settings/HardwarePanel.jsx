@@ -1,3 +1,7 @@
+/**
+ * Hardware controls in Settings: connect the USB receipt printer, the USB label printer (with gap
+ * calibration) and the USB barcode scanner, with status lines and a scanner test.
+ */
 import { useEffect, useState } from "react";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
@@ -78,21 +82,23 @@ export function HardwarePanel() {
 						<strong>USB barcode label printer</strong>
 						<div className="plan-settings-note">Saved USB label printers reconnect automatically after the first browser permission approval.</div>
 					</div>
-					<button className="btn out" type="button" onClick={() => attempt(() => labelPrinter.connect(), "Could not connect the USB barcode printer.")}>
-						Connect Label Printer
-					</button>
-					<button
-						className="btn out"
-						type="button"
-						onClick={() =>
-							attempt(async () => {
-								await labelPrinter.calibrate(settings.barcodePrinter || {});
-								ui.notice("Barcode label printer calibrated. Print one test label next.");
-							}, "Barcode label printer calibration failed.")
-						}
-					>
-						Calibrate Label Gap
-					</button>
+					<div className="hw-actions">
+						<button className="btn out" type="button" onClick={() => attempt(() => labelPrinter.connect(), "Could not connect the USB barcode printer.")}>
+							Connect Label Printer
+						</button>
+						<button
+							className="btn out"
+							type="button"
+							onClick={() =>
+								attempt(async () => {
+									await labelPrinter.calibrate(settings.barcodePrinter || {});
+									ui.notice("Barcode label printer calibrated. Print one test label next.");
+								}, "Barcode label printer calibration failed.")
+							}
+						>
+							Calibrate Label Gap
+						</button>
+					</div>
 					<div id="settings-barcode-printer-status" className={"hardware-status" + (labels.connected ? "" : " offline")}>
 						{labels.message}
 					</div>
@@ -106,30 +112,32 @@ export function HardwarePanel() {
 							Android usually exposes USB scanners as keyboards. Tap Start Scanner Test, scan a label, and it will add matched item codes to Current Order.
 						</div>
 					</div>
-					<button
-						className="btn out"
-						type="button"
-						onClick={async () => {
-							const res = await barcodeScanner.connect().catch(() => "error");
-							if (res === "unsupported") setTestOpen(true);
-						}}
-					>
-						Connect USB Scanner
-					</button>
+					<div className="hw-actions">
+						<button
+							className="btn out"
+							type="button"
+							onClick={async () => {
+								const res = await barcodeScanner.connect().catch(() => "error");
+								if (res === "unsupported") setTestOpen(true);
+							}}
+						>
+							Connect USB Scanner
+						</button>
+						<button
+							className="btn out"
+							type="button"
+							onClick={() => {
+								setTestValue("");
+								setTestOpen(true);
+								barcodeScanner.setMessage("Scanner test active. Scan any item barcode now.", true);
+							}}
+						>
+							Start Scanner Test
+						</button>
+					</div>
 					<div id="settings-scanner-status" className={"hardware-status" + (scan.connected ? "" : " offline")}>
 						{scan.message}
 					</div>
-					<button
-						className="btn out"
-						type="button"
-						onClick={() => {
-							setTestValue("");
-							setTestOpen(true);
-							barcodeScanner.setMessage("Scanner test active. Scan any item barcode now.", true);
-						}}
-					>
-						Start Scanner Test
-					</button>
 					{testOpen && (
 						<input
 							className="input"

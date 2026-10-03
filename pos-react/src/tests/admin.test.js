@@ -1,3 +1,7 @@
+/**
+ * Tests for the admin portal: dev administrator sign-in, the local admin API (access, per-location features,
+ * welcome message, plan, invoices), feature switches per location, plan tiers, invoice billing and the welcome message.
+ */
 import { describe, it, expect, beforeAll } from "vitest";
 import { ADDITIONAL_FEATURES, PLANS, PLAN_FEATURE_OFF } from "../config/plans";
 import { FEATURES, resolveFeatures } from "../config/features";

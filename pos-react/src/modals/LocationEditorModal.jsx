@@ -1,3 +1,6 @@
+/**
+ * Add or edit a business location (branch) with validation: name, code, contact details, hours and receipt header/footer.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { FieldError } from "../components/ui/FieldError";

@@ -1,3 +1,7 @@
+/**
+ * Table definitions for sales: completed sales (header), their order lines, open orders, void orders
+ * and kitchen tickets.
+ */
 import { defineTable } from "../defineTable";
 
 /** A completed sale (order header). Lines live in `sale_lines`. */

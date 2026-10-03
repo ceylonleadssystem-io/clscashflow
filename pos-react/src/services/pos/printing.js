@@ -1,3 +1,7 @@
+/**
+ * Receipt and kitchen-ticket output: USB ESC/POS or system printing, receipt download, WhatsApp receipt
+ * sharing, test receipts, and queueing/sending kitchen tickets (KOT) to the Kitchen POS or a printer hook.
+ */
 import { kitchenPrinterHook } from "../platform.service";
 import { T } from "../../db/tables";
 import { downloadBlob, whatsappPhone } from "../../domain/format";

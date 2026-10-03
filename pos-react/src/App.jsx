@@ -1,3 +1,7 @@
+/**
+ * Root of the POS app: builds the provider tree (UI, session, data, features, modals, POS, checkout) and
+ * chooses what to show - loading bar, business sign-in, staff PIN gate, stock-count page or the main Shell.
+ */
 import { useEffect, useRef, useState } from "react";
 import { UiProvider, useUi } from "./store/UiProvider";
 import { SessionProvider, useSession } from "./store/SessionProvider";
@@ -78,6 +82,11 @@ function Root() {
 
 function Ready() {
 	const data = useData();
+	// platform.js (payment screens) prices the POS plan from this; the server re-derives the amount itself.
+	const tier = data.settings?.plan?.tier;
+	useEffect(() => {
+		window._posPlanTier = tier || "starter";
+	}, [tier]);
 	if (!data.ready) return <Loading progress={72}>Opening local database…</Loading>;
 	return (
 		<FeatureProvider>

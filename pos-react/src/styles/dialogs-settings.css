@@ -1,3 +1,7 @@
+/*
+ * Styles for the full-screen sidebar, the customer modal, tablet landscape layout, the receipt print choice and the
+ * receipt social settings, merged in cascade order.
+ */
 /* dialogs-settings.css — merged in original cascade order (do not reorder). */
 
 /* ---- 28-sidebar-fullscreen.css ---- */
@@ -44,7 +48,7 @@
 					min-width: 82px;
 					flex: 0 0 auto;
 					padding: 7px 9px !important;
-					font-size: 10px !important;
+					font-size: calc(10px * var(--ui-fs, 1)) !important;
 				}
 			}
 
@@ -203,7 +207,7 @@
 				border-radius: 8px;
 				background: var(--ui-soft, #faf9f6);
 				color: var(--ui-text, #171512) !important;
-				font-weight: 700;
+				font-weight: calc(700 + var(--ui-fw, 0));
 			}
 			.receipt-print-choice input {
 				width: 18px;
@@ -222,7 +226,7 @@
 			}
 			.product.out-of-stock .stock-available {
 				color: #a5362b;
-				font-weight: 800;
+				font-weight: calc(800 + var(--ui-fw, 0));
 			}
 
 /* ---- 32-receipt-social-settings.css ---- */

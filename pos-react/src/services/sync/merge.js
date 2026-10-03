@@ -1,3 +1,7 @@
+/**
+ * Merge rules for cloud sync: per-row last-writer-wins lists, per-location inventory merging, tombstoned
+ * deletions, per-setting timestamps, and payloadCovers() to confirm a push landed.
+ */
 import { MERGE_ARRAYS } from "./payload";
 
 /** Ported 1:1 from the legacy cloud layer (mergeList/mergePayload/...). */

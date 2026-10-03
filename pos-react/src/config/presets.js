@@ -1,3 +1,7 @@
+/**
+ * Business-type presets (restaurant, cafe, retail, hardware, grocery, salon, pharmacy, services, other):
+ * default categories, kitchen workflow flags, guidance notes, the common modifier groups and legacy clean-up lists.
+ */
 /** POS business-type presets (categories, kitchen workflow, guidance). */
 export const POS_TYPE_PRESETS = {
 	restaurant: {

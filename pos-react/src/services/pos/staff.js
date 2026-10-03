@@ -1,3 +1,7 @@
+/**
+ * Staff actions: clock in/out, breaks, opening and closing the cash register (with expected-versus-actual
+ * variance), and saving or deleting POS users with validation (PIN rules, last-owner protection).
+ */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { activeTimeEntry, currentCashShift, expectedCash } from "../../domain/sales";

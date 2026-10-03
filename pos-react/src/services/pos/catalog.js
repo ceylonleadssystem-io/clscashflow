@@ -1,3 +1,7 @@
+/**
+ * Catalogue actions: save/delete products, categories and subcategories (with tombstones), modifier
+ * groups, common modifier presets, catalogue import and applying bundled product images.
+ */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { categoryKey, productCategories } from "../../domain/catalog";

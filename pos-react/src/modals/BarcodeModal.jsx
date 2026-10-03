@@ -1,3 +1,7 @@
+/**
+ * Product Barcode Labels dialog (30 x 25 mm): previews the label, sets the number of copies and prints
+ * through the USB label printer or the browser (Android Print). Makes sure the product has a clean scannable code first.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { cleanBarcode, uniqueBarcode } from "../services/printing/barcode";

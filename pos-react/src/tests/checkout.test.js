@@ -1,3 +1,7 @@
+/**
+ * Tests for the checkout workflow: cash and card sales, change, receipt numbering, discounts, stock and recipe
+ * deduction, order e-mail, split bills, restaurant service charge, and open orders.
+ */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../services/platform.service", async (orig) => ({ ...(await orig()), sendOrderEmail: vi.fn(async () => true) }));
 import { sendOrderEmail } from "../services/platform.service";

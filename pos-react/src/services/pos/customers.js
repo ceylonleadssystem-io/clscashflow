@@ -1,3 +1,7 @@
+/**
+ * Customer actions: validate and save customers, prepare feedback e-mail requests, and WhatsApp
+ * birthday/special messages recorded in the communications log.
+ */
 import { T } from "../../db/tables";
 import { isEmail, nowIso, phoneKey, whatsappPhone } from "../../domain/format";
 import { newId } from "./common";

@@ -1,3 +1,7 @@
+/**
+ * First-login welcome message (shown again when an admin bumps its version) and the "View plans" pricing
+ * dialog opened from Settings.
+ */
 import { Modal, ModalBody } from "../components/ui";
 import { PlansGrid } from "../components/PlansGrid";
 import { resolveWelcome } from "../config/welcome";

@@ -1,3 +1,7 @@
+/**
+ * Cloud sync for one business workspace: mirrors the local WatermelonDB data to the legacy cloud document
+ * with per-row last-writer-wins merge, offline tolerance, pending flags, catalogue recovery and periodic pull/push loops.
+ */
 import { env } from "../config/env";
 import { STORAGE } from "../config/constants";
 import { exactly } from "../db/rowMapper";

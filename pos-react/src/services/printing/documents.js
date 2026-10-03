@@ -1,3 +1,7 @@
+/**
+ * Printable documents as pure functions: the 80 mm receipt HTML, the kitchen order ticket (no prices),
+ * the WhatsApp receipt text and the 48-column ESC/POS receipt text.
+ */
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER } from "../../config/constants";
 import { esc, money } from "../../domain/format";
 import { receiptDate } from "../../domain/sales";

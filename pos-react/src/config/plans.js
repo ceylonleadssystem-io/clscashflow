@@ -1,3 +1,7 @@
+/**
+ * Subscription plans shown on the pricing sheet (prices in LKR), the additional-features offer, plan
+ * highlights/conditions, and which features each plan excludes (used for invoicing).
+ */
 /** Ceylonry POS plans shown to users (pricing sheet). Prices in LKR. */
 export const PLANS = [
 	{
@@ -75,6 +79,9 @@ export const PLANS = [
 		cta: "Talk to Our Team",
 	},
 ];
+
+/** The tier an account is on (set by an administrator); new accounts start on Starter. */
+export const planForSettings = (settings) => PLANS.find((p) => p.id === settings?.plan?.tier) || PLANS[0];
 
 export const ADDITIONAL_FEATURES = { freeCount: 2, pricePerFeature: 5500 };
 

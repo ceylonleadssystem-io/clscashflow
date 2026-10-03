@@ -1,3 +1,6 @@
+/**
+ * Exports the WatermelonDB model classes generated from the table specs, plus a few named model shortcuts.
+ */
 import { TABLE_LIST } from "../tables";
 
 /**

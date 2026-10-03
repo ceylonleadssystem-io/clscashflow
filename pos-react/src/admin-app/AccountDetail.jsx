@@ -1,3 +1,7 @@
+/**
+ * Admin portal: detail screen for one business account, with tabs for access (enable/disable and
+ * fixed-amount pricing), per-business and per-location feature switches, the first-login welcome message and invoices.
+ */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FEATURES, FEATURE_GROUPS, FEATURE_MAP, defaultFeatureFlags, dependentsOf, resolveFeatures } from "../config/features";
 import { PLANS } from "../config/plans";

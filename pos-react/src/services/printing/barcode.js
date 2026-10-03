@@ -1,3 +1,7 @@
+/**
+ * Barcode helpers for product labels: Code 39 and Code 128 encoders, cleaning/generating codes, an SVG
+ * Code 39 for previews and browser print, and a canvas drawer for bitmap label printing.
+ */
 import { esc } from "../../domain/format";
 
 /** Code 39 + Code 128 encoders used for product barcode labels. */

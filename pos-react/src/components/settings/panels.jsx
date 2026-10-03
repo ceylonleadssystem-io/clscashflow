@@ -1,8 +1,13 @@
+/**
+ * All Settings panels: business profile, locations, POS type, service charge, appearance theme,
+ * text size and thickness, receipts and printing, customer feedback, billing, and plan and support.
+ */
 import { useState } from "react";
 import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS, KITCHEN_TYPES } from "../../config/presets";
-import { ORDER_CHANNELS, UI_THEMES, POS_BASE_PRICE, POS_INCLUDED_USERS, POS_EXTRA_USER_PRICE } from "../../config/constants";
+import { ORDER_CHANNELS, UI_THEMES } from "../../config/constants";
+import { ADDITIONAL_FEATURES, planForSettings } from "../../config/plans";
 import { env } from "../../config/env";
-import { money, posMonthlyPrice } from "../../domain/format";
+import { money } from "../../domain/format";
 import { Panel, Field } from "../ui";
 import { FieldError } from "../ui/FieldError";
 import { emailError } from "../../domain/validators";
@@ -12,6 +17,7 @@ import { usePos } from "../../store/PosProvider";
 import { useSession } from "../../store/SessionProvider";
 import { openBankTransfer } from "../../services/platform.service";
 import { LocationEditorModal } from "../../modals/LocationEditorModal";
+import { FONT_SIZES, FONT_WEIGHTS, useDisplayPrefs } from "../../hooks/useDisplayPrefs";
 import { HardwarePanel } from "./HardwarePanel";
 
 /** Individual Settings panels. Each takes the shared `form` state from Settings.jsx. */
@@ -224,6 +230,43 @@ export function AppearancePanel() {
 	);
 }
 
+/** Text size and thickness for the signed-in user only; applied across the whole POS. */
+export function DisplayPanel() {
+	const [prefs, update] = useDisplayPrefs();
+	const group = (label, options, current, key) => (
+		<div className="field full">
+			<label>{label}</label>
+			<div className="settings-theme-picker" role="group" aria-label={label} style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+				{options.map((o) => (
+					<button key={o.id} type="button" className={"settings-theme-option" + (current === o.id ? " active" : "")} aria-pressed={current === o.id} onClick={() => update({ [key]: o.id })}>
+						<span>
+							<strong>{o.label}</strong>
+						</span>
+						<span className="theme-option-check">✓</span>
+					</button>
+				))}
+			</div>
+		</div>
+	);
+	return (
+		<div className="panel" id="pos-display-settings">
+			<div className="panel-head">
+				<div>
+					<div className="panel-title">Text size &amp; thickness</div>
+					<div className="muted">Applies only to your sign-in, on this device, across the whole POS.</div>
+				</div>
+			</div>
+			<div className="modal-body">
+				{group("Text size", FONT_SIZES, prefs.size, "size")}
+				{group("Text thickness", FONT_WEIGHTS, prefs.weight, "weight")}
+				<div className="plan-settings-note" style={{ marginTop: 10 }}>
+					Saved automatically and restored when you sign in again.
+				</div>
+			</div>
+		</div>
+	);
+}
+
 export function PrintingPanel({ form, set, setForm }) {
 	const { svc, kitchen, currentUser } = usePos();
 	const data = useData();
@@ -407,7 +450,7 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 	const supportOn = useFeature("settings.supportAccess");
 	const s = data.settings;
 	const [enabled, setEnabled] = [form.supportEnabled, (v) => set("supportEnabled")({ target: { type: "checkbox", checked: v } })];
-	const total = posMonthlyPrice(form.posUsers);
+	const plan = planForSettings(s);
 	const expires = s.supportCodeExpiresAt;
 	return (
 		<Panel title="Plan & Support">
@@ -415,22 +458,20 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 				<div className="plan-settings">
 					<div className="plan-settings-head">
 						<div>
-							<div className="label">POS subscription</div>
-							<div className="plan-settings-price">LKR {POS_BASE_PRICE.toLocaleString()} / month</div>
+							<div className="label">{plan.name}</div>
+							<div className="plan-settings-price">
+								LKR {plan.price.toLocaleString()} {plan.term}
+							</div>
 						</div>
 						<div className="plan-settings-note">
-							Includes up to {POS_INCLUDED_USERS} users.
+							{plan.features[0]}.
 							<br />
-							Each additional user: LKR {POS_EXTRA_USER_PRICE}/month.
+							{ADDITIONAL_FEATURES.freeCount} additional features free, then LKR {ADDITIONAL_FEATURES.pricePerFeature.toLocaleString()} per feature.
 						</div>
 					</div>
 					<div className="field">
 						<label>Number of POS users</label>
 						<input className="input" id="set-pos-users" type="number" min="1" step="1" value={form.posUsers} onChange={set("posUsers")} />
-					</div>
-					<div className="plan-total">
-						<span>Estimated monthly price</span>
-						<span id="pos-plan-total">{money(total)}</span>
 					</div>
 					<button className="btn out" type="button" style={{ marginTop: 10 }} onClick={() => setWelcomeUser({ id: currentUser?.id, name: currentUser?.name, firstTime: false })}>
 						View plans & pricing

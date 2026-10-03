@@ -1,3 +1,7 @@
+/**
+ * Tiny external store holding the active POS location of this browser tab, shared by the feature switches and
+ * the POS session without a provider cycle.
+ */
 import { STORAGE } from "../config/constants";
 
 /**

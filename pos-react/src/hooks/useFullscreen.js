@@ -1,3 +1,7 @@
+/**
+ * Full screen / kiosk behaviour: iPad viewport-locked kiosk, Android/touch kiosk plus the Fullscreen API,
+ * and desktop fullscreen with the menu collapsed while full.
+ */
 import { useCallback, useEffect } from "react";
 import { usePos } from "../store/PosProvider";
 import { createLogger } from "../utils/logger";

@@ -44,16 +44,20 @@
       file: 'growth.html',
       monthlyPayLink: '', annualPayLink: ''
     },
-    pos: {
-      name: 'POS',
-      userLimit: 5,
-      userLabel: 'Up to 5 users',
-      monthlyPrice: 3500,
-      price: 42000,
-      file: 'pos-system/pos-system.html',
-      monthlyPayLink: '', annualPayLink: ''
-    }
   };
+  // POS pricing follows the account's tier (Starter / Business / Pro). The POS app publishes the tier as
+  // window._posPlanTier; the server re-derives the amount from the workspace, so this is display only.
+  var POS_TIERS = {
+    starter: { name: 'POS Starter', userLimit: 2, userLabel: 'Up to 2 users', monthlyPrice: 5500, price: 62000 },
+    business: { name: 'POS Business', userLimit: 10, userLabel: 'Up to 10 users', monthlyPrice: 7500, price: 83000 },
+    pro: { name: 'POS Pro', userLimit: Infinity, userLabel: 'Unlimited users', monthlyPrice: 15500, price: 180000 }
+  };
+  Object.defineProperty(PLAN_DETAILS, 'pos', {
+    enumerable: true,
+    get: function() {
+      return Object.assign({ file: 'pos-system/pos-system.html', monthlyPayLink: '', annualPayLink: '' }, POS_TIERS[window._posPlanTier] || POS_TIERS.starter);
+    }
+  });
   var PLAN_RANK = { solo: 1, studio: 2, business: 3, pos: 1 };
   var BILLING_ID = 'cls-billing-widget';
   var CLS_BANK = {accountName:'Ceylonry Life Care',bank:'Commercial Bank',accountNumber:'1001069904',branch:'City Office',email:'accounts@ceylonrylabs.io'};

@@ -1,4 +1,8 @@
 /**
+ * Role-based access: which pages each role can open, page titles/subtitles, the sidebar order and
+ * labels (NAV_ITEMS) and the role groups used for settings, management, reporting and ownership checks.
+ */
+/**
  * Role based access. `roleViews` is the final (post-upgrade) mapping taken from
  * the original application; the admin dashboard can additionally switch whole
  * views off for every role through feature flags.

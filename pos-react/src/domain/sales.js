@@ -1,3 +1,7 @@
+/**
+ * Sale lifecycle rules: active statuses, refundable lines, refund and void maths (applyReversal),
+ * expected cash for a register shift, current shift/time-entry helpers, discount and service-charge lines and receipt dates.
+ */
 import { nowIso } from "./format";
 
 /** Sale status helpers, refund maths and cash-drawer reconciliation. */

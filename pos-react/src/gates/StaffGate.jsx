@@ -1,3 +1,6 @@
+/**
+ * Staff PIN gate after business sign-in: choose location (when multiple locations are on), user and PIN to open the register.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { env } from "../config/env";
 import { usePos } from "../store/PosProvider";

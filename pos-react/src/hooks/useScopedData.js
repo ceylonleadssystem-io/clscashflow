@@ -1,3 +1,7 @@
+/**
+ * Hook returning sales, cash shifts and time entries limited to the active location (everything when
+ * "All Locations" is selected), used by the dashboard, reports and sales history.
+ */
 import { useMemo } from "react";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";

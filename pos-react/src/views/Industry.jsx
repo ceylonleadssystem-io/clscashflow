@@ -1,3 +1,7 @@
+/**
+ * Business Tools page (Salon / Services / Pharmacy): appointments, memberships, prescriptions, medicine
+ * batches with expiry status, and staff commissions.
+ */
 import { useMemo, useState } from "react";
 import { money, today } from "../domain/format";
 import { Kpi } from "../components/ui";

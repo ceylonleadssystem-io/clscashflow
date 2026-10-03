@@ -1,3 +1,6 @@
+/**
+ * Builds the WatermelonDB app schema from the table specs and holds SCHEMA_VERSION.
+ */
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 import { TABLE_LIST } from "./tables";
 

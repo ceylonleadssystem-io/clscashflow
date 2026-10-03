@@ -1,3 +1,7 @@
+/**
+ * Top bar: page title, location switcher, the "more" menu (page links on small screens, Lock POS,
+ * Sign Out, Switch Checkout, printer status, full screen) and the mobile "View Order" button.
+ */
 import { useEffect, useState } from "react";
 import { usePos } from "../../store/PosProvider";
 import { NAV_ITEMS } from "../../config/roles";
@@ -19,7 +23,6 @@ export function Topbar({ onOpenLocations }) {
 	const { cart, totals } = useCheckout();
 	const ui = useUi();
 	const fullscreenOn = useFeature("shell.fullscreen");
-	const sidebarToggle = useFeature("shell.sidebarToggle");
 	const locations = useFeature("business.locations");
 	const modeChooser = useFeature("checkout.modeChooser");
 	const headerPrinter = useFeature("hardware.headerPrinterButton");
@@ -94,17 +97,6 @@ export function Topbar({ onOpenLocations }) {
 						<button className="btn out session-action" type="button" onClick={signOut}>
 							Sign Out Business
 						</button>
-						{sidebarToggle && (
-							<button
-								id="sidebar-toggle"
-								type="button"
-								className="btn out"
-								aria-pressed={layout.sidebarCollapsed}
-								onClick={() => setLayout((l) => ({ ...l, sidebarCollapsed: !l.sidebarCollapsed }))}
-							>
-								{layout.sidebarCollapsed ? "Show Menu" : "Hide Menu"}
-							</button>
-						)}
 						{modeChooser && (
 							<button id="switch-checkout-top" type="button" className="btn out" onClick={() => setChooserOpen(true)}>
 								Switch Checkout

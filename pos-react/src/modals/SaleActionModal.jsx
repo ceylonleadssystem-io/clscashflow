@@ -1,3 +1,6 @@
+/**
+ * Refund (full or partial by line) or void a completed sale, with the refund amount preview and a mandatory reason.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { money } from "../domain/format";

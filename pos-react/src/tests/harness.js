@@ -1,3 +1,7 @@
+/**
+ * Test harness: builds the real POS services on a real in-memory WatermelonDB with a fake UI and session, and
+ * exposes helpers (productForm, line, openShift, addProduct) so service tests read like real workflows.
+ */
 import { vi } from "vitest";
 import { createDatabase } from "../db/database";
 import { PosStore } from "../db/PosStore";

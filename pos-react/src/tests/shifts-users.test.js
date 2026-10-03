@@ -1,3 +1,7 @@
+/**
+ * Tests for shifts, attendance and user management: clock-in with register, breaks, closing with variance, and
+ * user validation, PIN rules and deletion permissions.
+ */
 import { describe, it, expect, beforeEach } from "vitest";
 import { createHarness } from "./harness";
 

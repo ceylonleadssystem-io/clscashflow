@@ -1,3 +1,7 @@
+/**
+ * Formatting and small parsing helpers: LKR money, dates (local business date), phone/WhatsApp numbers,
+ * number parsing and grouping, ids, CSV building and download, and HTML escaping for print documents.
+ */
 /** Formatting + small parsing helpers (ported from the legacy globals). */
 
 export const money = (n) =>
@@ -82,5 +86,3 @@ export function downloadCsv(rows, filename) {
 export const esc = (s) =>
 	String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-export const posMonthlyPrice = (users, base = 3500, included = 5, extra = 500) =>
-	base + Math.max(0, Math.max(1, +users || 1) - included) * extra;

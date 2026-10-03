@@ -1,3 +1,7 @@
+/**
+ * Staff & Shifts page: attendance (clock in/out, breaks), cash register, the signed-in user, user management
+ * and the shift and register history.
+ */
 import { useState } from "react";
 import { MANAGER_ROLES, OWNER_ROLES } from "../config/roles";
 import { activeTimeEntry, currentCashShift, expectedCash, isOnBreak } from "../domain/sales";

@@ -1,3 +1,7 @@
+/**
+ * Translates between WatermelonDB raw rows and the plain camelCase objects the POS uses, sorts rows in
+ * legacy order, builds canonical strings for change detection, and maps sale lines to and from rows.
+ */
 import { decode, encode } from "./defineTable";
 
 /**

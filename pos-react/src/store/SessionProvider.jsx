@@ -1,3 +1,7 @@
+/**
+ * Business-account session: authentication, opening the per-account database, cloud sync, subscription
+ * access checks and paywall, and sign-in, register, sign-out and password-reset actions.
+ */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { env } from "../config/env";
 import { DEFAULT_OWNER_PIN, STORAGE } from "../config/constants";

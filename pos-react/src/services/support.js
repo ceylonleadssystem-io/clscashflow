@@ -1,3 +1,7 @@
+/**
+ * Read-only support session helpers: detect an active session from the developer portal, end it, and the
+ * support user identity. Every action in this mode is audited and mutations are blocked.
+ */
 import { STORAGE } from "../config/constants";
 import { env } from "../config/env";
 import { createLogger } from "../utils/logger";

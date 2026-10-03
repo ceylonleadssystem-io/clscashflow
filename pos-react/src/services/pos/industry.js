@@ -1,3 +1,7 @@
+/**
+ * Business Tools actions (owner/manager only): appointments, memberships, prescriptions, medicine
+ * batches, record deletion, commission rates and commission payments.
+ */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { newId } from "./common";

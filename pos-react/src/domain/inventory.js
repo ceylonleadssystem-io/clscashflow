@@ -1,3 +1,7 @@
+/**
+ * Inventory maths: stock status, per-location quantities, recipe ingredient needs, stock movements,
+ * sellable-product stock availability and guards, auto-created product stock rows and adjustment rules.
+ */
 import { nowIso } from "./format";
 
 /** Inventory maths: recipes, product stock and per-location quantities. */
