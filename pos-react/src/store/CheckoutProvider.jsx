@@ -235,7 +235,9 @@ export function CheckoutProvider({ children }) {
 				log.info("order placed", { orderId: result.sale.id, lines: cart.length, payment });
 				resetOrder();
 				if (result.printRequested) await svc.sales.printCompletedSale(result.sale);
+				return true; // lets the Pay popups close only after the sale really went through
 			}
+			return false;
 		} catch (e) {
 			log.error("sale could not be completed", e);
 			throw e;

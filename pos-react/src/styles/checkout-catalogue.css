@@ -974,7 +974,7 @@
 					margin: 2px 0 0 !important;
 					background: var(--ui-surface, #fff);
 				}
-				body.full #view-checkout #complete-btn {
+				body.full #view-checkout .pay-actions {
 					position: relative !important;
 					bottom: auto !important;
 					z-index: 2 !important;
@@ -1427,7 +1427,7 @@
 					padding: 7px 0 3px !important;
 					font-size: calc(20px * var(--ui-fs, 1)) !important;
 				}
-				body.full #view-checkout #complete-btn {
+				body.full #view-checkout .pay-actions {
 					min-height: 48px !important;
 					margin-top: 5px !important;
 					font-size: calc(14px * var(--ui-fs, 1)) !important;
@@ -1805,7 +1805,7 @@
 				padding-top: 7px !important;
 				font-size: calc(19px * var(--ui-fs, 1)) !important;
 			}
-			body.mobile-checkout #view-checkout #complete-btn {
+			body.mobile-checkout #view-checkout .pay-actions {
 				min-height: 48px !important;
 				margin-top: 4px !important;
 			}
@@ -2096,7 +2096,7 @@
 					margin-top: 2px !important;
 					font-size: calc(17px * var(--ui-fs, 1)) !important;
 				}
-				body:not(.mobile-checkout) #view-checkout #complete-btn {
+				body:not(.mobile-checkout) #view-checkout .pay-actions {
 					position: relative !important;
 					min-height: 40px !important;
 					margin-top: 3px !important;

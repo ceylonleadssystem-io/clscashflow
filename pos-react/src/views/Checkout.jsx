@@ -1,8 +1,8 @@
 /**
  * Sales register page: product catalogue (search, categories, product grid) on the left and the current order
- * (lines, customer, discount, payment, totals, Complete Sale) on the right.
+ * (lines and totals, with Quick Pay / Pay Now buttons that open the payment popups) on the right.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { money } from "../domain/format";
 import { visibleProductCategories } from "../domain/catalog";
 import { useData } from "../store/DataProvider";
@@ -13,7 +13,7 @@ import { usePos } from "../store/PosProvider";
 import { CategoryRail } from "../components/checkout/CategoryRail";
 import { ProductGrid } from "../components/checkout/ProductGrid";
 import { CartLines } from "../components/checkout/CartLines";
-import { CheckoutFields } from "../components/checkout/CheckoutFields";
+import { PayPopup } from "../components/checkout/PayPopup";
 
 /** Sales register: catalogue on the left, current order on the right. */
 export function Checkout() {
@@ -38,6 +38,7 @@ export function Checkout() {
 		[data.products, category, q],
 	);
 	const t = c.totals;
+	const [payMode, setPayMode] = useState(null); // "quick" | "full" | null
 	const rate = +settings.serviceChargeRate || 0;
 
 	return (
@@ -83,7 +84,6 @@ export function Checkout() {
 					</div>
 					<CartLines />
 					<div className="cart-foot">
-						<CheckoutFields />
 						<div className="row">
 							<span>Items</span>
 							<span id="cart-count">{t.count}</span>
@@ -104,12 +104,18 @@ export function Checkout() {
 							<span>Total</span>
 							<span id="cart-total">{money(t.total)}</span>
 						</div>
-						<button className="btn gold" id="complete-btn" style={{ width: "100%", marginTop: 10 }} onClick={c.completeSale} disabled={!c.cart.length || c.busy}>
-							Complete Sale<span className="complete-amount"> · {money(t.total)}</span>
-						</button>
+						<div className="pay-actions">
+							<button className="btn out" id="quick-pay-btn" type="button" onClick={() => setPayMode("quick")} disabled={!c.cart.length || c.busy}>
+								Quick Pay
+							</button>
+							<button className="btn gold" id="pay-now-btn" type="button" onClick={() => setPayMode("full")} disabled={!c.cart.length || c.busy}>
+								Pay Now<span className="complete-amount"> · {money(t.total)}</span>
+							</button>
+						</div>
 					</div>
 				</aside>
 			</div>
+			<PayPopup mode={payMode} onClose={() => setPayMode(null)} />
 		</section>
 	);
 }

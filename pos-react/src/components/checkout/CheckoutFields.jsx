@@ -228,7 +228,7 @@ function ReferenceSection() {
 	);
 }
 
-function PaymentSection() {
+export function PaymentSection() {
 	const c = useCheckout();
 	const cashTender = useFeature("checkout.cashTender");
 	const split = useFeature("checkout.splitBill");
@@ -302,7 +302,7 @@ function PaymentSection() {
 	);
 }
 
-function ReceiptOptions() {
+export function ReceiptOptions() {
 	const c = useCheckout();
 	const email = useFeature("checkout.emailReceipt");
 	const whatsapp = useFeature("checkout.whatsappReceipt");
