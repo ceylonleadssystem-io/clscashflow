@@ -90,12 +90,12 @@ secrets here** (the Appwrite API key and SMTP passwords stay in Netlify).
 | `VITE_ONBOARDING_EMAIL_URL` | `/.netlify/functions/pos-onboarding-email` | Welcome e-mails after first sign-in |
 | `VITE_PLATFORM_SCRIPT_URL` | `/assets/platform.js` | Shared platform script (see §4) |
 | `VITE_DEVELOPER_EMAIL` | `devteam@ceylonrylabs.io` | This account is redirected to the developer portal after sign-in |
-| `VITE_SUPPORT_PORTAL_URL` | `/pos-system/pos-admin.html` | "Open Admin Portal" / "Exit Support Session" target |
+| `VITE_SUPPORT_PORTAL_URL` | `/posv2/admin` | "Open Admin Portal" / "Exit Support Session" target |
 | `VITE_HOME_URL` / `VITE_ONBOARDING_URL` | `/index.html` / `/pos-onboarding.html` | Links on the sign-in gate |
 | `VITE_EJS_KEY` / `VITE_EJS_SERVICE` / `VITE_EJS_RECEIPT_TEMPLATE` | legacy EmailJS ids | Defaults for receipt e-mails (per-business override in settings) |
 | `VITE_CATALOGUE_IMAGES_URL` | *(empty)* | Optional bundle defining `window.CLS_AZURE_SWIM_IMAGES` |
 | `VITE_SYNC_PULL_MS` / `VITE_SYNC_PUSH_MS` | `1500` / `2500` | Cloud sync cadence |
-| `VITE_BASE_PATH` | `/posv2/` | Use `/pos-system/` (or any sub-path) when hosting beside the legacy pages |
+| `VITE_BASE_PATH` | `/posv2/` | Use another sub-path only if you host the POS somewhere other than `/posv2/` |
 
 ---
 
@@ -108,15 +108,13 @@ secrets here** (the Appwrite API key and SMTP passwords stay in Netlify).
 | **`platform.js`** | copied to `public/assets/platform.js` from the main repo | Loaded lazily after sign-in. Provides `clsSendPaymentReceiptEmail` (EmailJS), the subscription paywall and the bank-transfer dialog. If it fails to load the POS keeps working; e-mail receipts and the paywall are then unavailable. Re-copy it when the main repo updates it. It needs `window.clsBackend`, which `services/appwrite/appwriteCompat.js` installs. |
 | **EmailJS** | CDN, loaded by `platform.js` | Needs the business' EmailJS key/service/template (Settings) or the `VITE_EJS_*` defaults. |
 | **SheetJS (xlsx)** | `https://cdn.jsdelivr.net/npm/xlsx@0.18.5/...` | Lazy-loaded for catalogue import and stock-count upload (`services/xlsx.js`). |
-| **Catalogue template** | `public/assets/Ceylonry-POS-Catalogue-Template.xlsx` | Copied from `pos-system/assets/`. |
+| **Catalogue template** | `public/assets/Ceylonry-POS-Catalogue-Template.xlsx` | Originally copied from the legacy POS (archived as posv1). |
 | **Azure Swim catalogue photos** | `assets/azure-swim-products.js` (15 MB, **not copied**) | Optional: host it and set `VITE_CATALOGUE_IMAGES_URL`; empty product images are filled for businesses named "Azure Swim". |
-| **Developer/support portal** | `pos-system/pos-admin.html` | Separate legacy page, linked from Settings. Read-only support sessions (`?support=1`) are honoured by the React app (audit + write-lock). |
+| **Developer/support portal** | `/posv2/admin` (`src/admin-app`) | Separate administration app, linked from Settings. Read-only support sessions (`?support=1`) are honoured by the React app (audit + write-lock). |
 | **Hardware** | Chrome/Android: WebUSB (ESC/POS receipt printer, TSPL label printer), WebHID/keyboard-wedge barcode scanner | `services/printing/*`. Requires HTTPS and a user gesture the first time. |
 | **Landing/onboarding pages** | `index.html`, `pos-onboarding.html`, `reset-password.html` of the main site | Linked from the gates; password-reset e-mails point to `/reset-password.html`. |
 
-Deploying next to the legacy site: build with `VITE_BASE_PATH=/pos-system/` (or another sub-path), publish
-`dist/` there and forward unknown paths to `index.html`. `public/sw.js` is the React shell's own service
-worker (the legacy root `sw.js` is untouched).
+Deployment: the site serves `dist/` at `/posv2/` through the Netlify rewrite in `netlify.toml`. `public/sw.js` is the React shell's own service worker (the root `sw.js` belongs to the main site).
 
 ---
 

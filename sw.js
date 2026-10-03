@@ -18,7 +18,6 @@ self.addEventListener('fetch',function(event){
   if(url.origin!==location.origin)return;
   var publicAsset=PUBLIC_SHELL.includes(url.pathname)||url.pathname==='/app';
   if(!publicAsset)return;
-  var posShell=url.pathname==='/pos-system/pos-system'||url.pathname==='/pos-system/pos-system.html';
-  var request=posShell?new Request(event.request,{cache:'no-store'}):event.request;
+  var request=event.request;
   event.respondWith(fetch(request).then(function(response){if(response&&response.ok){var copy=response.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(event.request,copy)})}return response}).catch(function(){return caches.match(event.request).then(function(response){return response||caches.match('/app/index.html')})}));
 });

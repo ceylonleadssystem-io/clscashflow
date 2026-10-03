@@ -106,13 +106,6 @@ for (const file of files.filter((item) => /\.(?:html|js|mjs|json|toml|sql|md)$/.
   }
 }
 
-const primaryPos = path.join(root, 'pos-system', 'pos-system.html');
-const mirrorPos = path.join(root, '.pos-system', 'pos-system.html');
-if (fs.existsSync(primaryPos) && fs.existsSync(mirrorPos)) {
-  if (fs.readFileSync(primaryPos, 'utf8') !== fs.readFileSync(mirrorPos, 'utf8')) {
-    warnings.push('The hidden .pos-system mirror differs from pos-system/pos-system.html.');
-  }
-}
 
 if (warnings.length) console.warn(`Warnings:\n- ${warnings.join('\n- ')}`);
 if (failures.length) {

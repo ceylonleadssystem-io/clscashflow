@@ -7,10 +7,6 @@ const compat = fs.readFileSync(
   path.join(__dirname, '..', 'assets', 'appwrite-compat.js'),
   'utf8'
 );
-const pos = fs.readFileSync(
-  path.join(__dirname, '..', 'pos-system', 'pos-system.html'),
-  'utf8'
-);
 
 test('Appwrite document requests use a short-lived authenticated JWT', () => {
   assert.match(compat, /account\.createJWT\(\)/);
@@ -22,7 +18,3 @@ test('Appwrite password recovery uses the configured application URL', () => {
   assert.match(compat, /account\.createRecovery\(email,location\.origin\+'\/reset-password\.html'\)/);
 });
 
-test('POS stops cloud polling after confirmed session expiry', () => {
-  assert.match(pos, /onAuthStateChanged\(function\(user\).*if\(syncTimer\).*clearInterval\(syncTimer\).*if\(cloudUnsubscribe\).*clearInterval\(cloudUnsubscribe\)/s);
-  assert.match(pos, /Sign in again to resume cloud sync\. Changes on this device are preserved/);
-});

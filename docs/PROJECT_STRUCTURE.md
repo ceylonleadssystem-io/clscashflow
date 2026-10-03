@@ -14,7 +14,7 @@ Moving a page would change its URL, so the pages stay put and are grouped here i
 | PWA | `manifest.webmanifest`, `sw.js`, `app/` |
 
 ## Applications
-- `pos-system/` - legacy single-file POS, retired: `/pos-system/pos-system(.html)` redirects to the React POS. Its support and guide pages (`pos-admin.html`, `pos-support.html`, `pos-guide-demo.html`) are still served
+- The original single-file POS (`pos-system/`) was retired and archived as `posv1.zip`; `/pos-system/*` redirects to the React POS.
 - `pos-react/` - React POS (served at `/posv2`); see `pos-react/README.md`
 
 ## Shared
@@ -28,4 +28,4 @@ Moving a page would change its URL, so the pages stay put and are grouped here i
 - `docs/setup/` - email and payment environment setup
 - `docs/reference/` - reference material
 - `email-templates/` - EmailJS body templates
-- `tests/` - root test suite; `scripts/` - build checks; `tmp/` - scratch assets (still used by `pos-system/pos-guide-demo.html`)
+- `tests/` - root test suite; `scripts/` - build checks
