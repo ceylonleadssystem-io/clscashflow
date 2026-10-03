@@ -8,7 +8,7 @@ Moving a page would change its URL, so the pages stay put and are grouped here i
 |---|---|
 | Marketing | `index.html`, `pos.html`, `privacy.html`, `terms.html`, `mrs-gamage-story.html`, `story-thank-you.html` |
 | Sign-in and onboarding | `signin.html`, `onboarding.html`, `pos-onboarding.html`, `accept-invite.html`, `reset-password.html`, `upgrade.html`, `success.html`, `payable-return.html` |
-| CashFlow plans | `solo.html`, `starter.html`, `starter_3.html` (legacy), `premium.html`, `growth.html` |
+| CashFlow plans | `solo.html`, `starter.html`, `starter_3.html` (legacy), `premium.html`, `growth.html`, `team.html` (team access and invites) |
 | Admin | `ceylonry-admin.html` (CashFlow admin); POS administration is the React app at `/posv2/admin` |
 | Invoices | `invoice-public.html` |
 | PWA | `manifest.webmanifest`, `sw.js`, `app/` |

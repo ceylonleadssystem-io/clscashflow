@@ -74,7 +74,7 @@ Customers prepay each month by bank transfer and upload a PDF or image payment s
 
 ## Team Invites
 
-The team-access page (`access-admin.html`) was retired; its links now open the administration app at `/posv2/admin`. The invite functions (`send-invite`, `accept-invite.html`) and the `users/{ownerUid}/team/{inviteId}` records are unchanged. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
+`team.html` (Team Access, replaces the retired `access-admin.html`) creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
 
 If invite creation shows `Not allowed`, confirm the user is signed in and the invite is being written under `users/{ownerUid}/team` in the Appwrite `app_documents` collection.
 
