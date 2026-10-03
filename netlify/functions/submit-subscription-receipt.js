@@ -4,12 +4,32 @@ const { appwriteAdmin, getUserFromEvent, getDocument } = require('../lib/appwrit
 const log = require('../lib/log').createLogger('submit-subscription-receipt');
 
 const MAX_FILE_BYTES = 3000000;
+// CashFlow plans (solo/studio/business pages). Unchanged: CashFlow pricing is separate from POS pricing.
 const PLANS = {
   Starter: { name: 'Starter', monthly: 5500, annual: 62000 },
   studio: { name: 'Studio', monthly: 7500, annual: 83000 },
   business: { name: 'Business', monthly: 15500, annual: 180000 },
 };
 const PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
+
+// POS tiers (LKR). Keep in sync with pos-react/src/config/plans.js and POS_TIERS in assets/platform.js.
+const POS_PLANS = {
+  starter: { name: 'POS Starter', monthly: 5500, annual: 62000 },
+  business: { name: 'POS Business', monthly: 7500, annual: 83000 },
+  pro: { name: 'POS Pro', monthly: 15500, annual: 180000 },
+};
+
+// 'pos' means "this account's POS tier": the tier an administrator set on the workspace
+// (settings.plan.tier), defaulting to Starter. The client never chooses the price.
+// Every other key is a CashFlow plan and resolves exactly as before.
+function resolvePlan(rawPlan, workspaceTier) {
+  if (rawPlan === 'pos') {
+    const planKey = String(workspaceTier || 'starter').toLowerCase();
+    return { planKey, plan: POS_PLANS[planKey] || POS_PLANS.starter };
+  }
+  const planKey = PLAN_ALIASES[rawPlan] || rawPlan;
+  return { planKey, plan: PLANS[planKey] };
+}
 
 function clean(value, max) { return String(value == null ? '' : value).trim().slice(0, max || 500); }
 function esc(value) { return clean(value, 2000).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -49,11 +69,9 @@ exports.handler = async function(event) {
 
   const cycle = clean(data.billingCycle, 20) === 'annual' ? 'annual' : 'monthly';
   const rawPlan = clean(data.planKey, 30).toLowerCase();
-  const planKey = PLAN_ALIASES[rawPlan] || rawPlan;
-  const plan = PLANS[planKey];
   const period = clean(data.period, 20);
-  if (!plan || !validPeriod(period)) log.warn('receipt rejected', { status: 400, reason: 'invalid-plan-or-period', uid: user.id });
-  if (!plan || !validPeriod(period)) return json(400, { ok: false, error: 'Invalid subscription plan or billing period.' });
+  if (!validPeriod(period) || !resolvePlan(rawPlan).plan && rawPlan !== 'pos') log.warn('receipt rejected', { status: 400, reason: 'invalid-plan-or-period', uid: user.id });
+  if (!validPeriod(period) || !resolvePlan(rawPlan).plan && rawPlan !== 'pos') return json(400, { ok: false, error: 'Invalid subscription plan or billing period.' });
 
   let profile = null;
   try { profile = await getDocument('users', user.id); } catch (e) { log.error('billing profile lookup failed', e, { uid: user.id }); return json(503, { ok: false, error: 'Could not verify the billing account.' }); }
@@ -63,6 +81,14 @@ exports.handler = async function(event) {
   if (!ownerUid || !validEmail(email)) log.warn('receipt rejected', { status: 400, reason: 'missing-billing-email', uid: user.id });
   if (!ownerUid || !validEmail(email)) return json(400, { ok: false, error: 'Your account needs a valid billing email.' });
 
+  let workspaceTier = '';
+  if (rawPlan === 'pos') {
+    try {
+      const workspace = await getDocument('users/' + ownerUid + '/pos', 'main');
+      workspaceTier = workspace && workspace.data && workspace.data.payload && workspace.data.payload.settings && workspace.data.payload.settings.plan && workspace.data.payload.settings.plan.tier;
+    } catch (e) { log.warn('workspace tier lookup failed; using Starter', { uid: ownerUid }); }
+  }
+  const { planKey, plan } = resolvePlan(rawPlan, workspaceTier);
   const amountLkr = cycle === 'annual' ? plan.annual : plan.monthly;
   const name = clean(profileData.name || (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)), 160) || 'Customer';
   const businessName = clean(profileData.bizName || profileData.invoiceBiz || profileData.businessName, 180);
@@ -94,7 +120,7 @@ exports.handler = async function(event) {
       attachments: [{ filename: safeFileName, content: upload.base64, encoding: 'base64', contentType: mimeType }]
     });
     const stamp = admin.firestore.FieldValue.serverTimestamp();
-    await receiptRef.set({ uid: ownerUid, submittedByUid: user.id, email, name, businessName, plan: planKey, billingCycle: cycle, amountLkr, currency: 'LKR', period, status: 'receipt-submitted', source: 'bank-receipt-email', receiptName: safeFileName, receiptType: mimeType, receiptSize: upload.file.length, contentHash, emailRecipient: 'accounts@ceylonrylabs.io', emailSent: true, receivedAt: stamp, receivedAtUtc: new Date().toISOString() }, { merge: true });
+    await receiptRef.set({ uid: ownerUid, submittedByUid: user.id, email, name, businessName, plan: rawPlan === 'pos' ? 'pos' : planKey, tier: planKey, billingCycle: cycle, amountLkr, currency: 'LKR', period, status: 'receipt-submitted', source: 'bank-receipt-email', receiptName: safeFileName, receiptType: mimeType, receiptSize: upload.file.length, contentHash, emailRecipient: 'accounts@ceylonrylabs.io', emailSent: true, receivedAt: stamp, receivedAtUtc: new Date().toISOString() }, { merge: true });
     log.info('receipt emailed and stored', { receiptId, plan: planKey, cycle, bytes: upload.file.length });
     return json(200, { ok: true, sent: true, adminStored: true });
   } catch (error) {
@@ -103,4 +129,4 @@ exports.handler = async function(event) {
   }
 };
 
-exports._test = { decodedFile, validPeriod };
+exports._test = { decodedFile, validPeriod, resolvePlan, PLANS, POS_PLANS };

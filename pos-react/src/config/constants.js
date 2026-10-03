@@ -98,9 +98,6 @@ export const UI_THEMES = [
 
 export const VIP_SPEND = 10000;
 export const SUPPORT_CODE_TTL_MS = 24 * 60 * 60 * 1000;
-export const POS_BASE_PRICE = 3500;
-export const POS_INCLUDED_USERS = 5;
-export const POS_EXTRA_USER_PRICE = 500;
 export const DEFAULT_RECEIPT_FOOTER = "Thank you for your purchase";
 export const DEFAULT_BUSINESS_NAME = "My Business";
 export const DEFAULT_OWNER_PIN = "1234";

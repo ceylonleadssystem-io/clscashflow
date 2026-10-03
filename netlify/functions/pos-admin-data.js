@@ -189,7 +189,7 @@ async function handle(event) {
       const realIds = new Set(rows.filter(function(row){ return !isTestAccount(row.data); }).map(function(row){ return String(row.id); }));
       const currentMonth = new Date().toISOString().slice(0, 7);
       const confirmed = paymentRows.filter(function(row){ const data=row.data||{}; return realIds.has(String(data.uid||'')) && ['paid','confirmed','verified'].includes(String(data.status||'').toLowerCase()) && String(data.verifiedAtUtc||data.receivedAtUtc||'').slice(0,7)===currentMonth; });
-      const revenueThisMonth = confirmed.reduce(function(total,row){ const data=row.data||{}; return total+(Number(data.amountLkr)||((data.billingCycle==='annual')?42000:3500)); },0);
+      const revenueThisMonth = confirmed.reduce(function(total,row){ const data=row.data||{}; return total+(Number(data.amountLkr)||((data.billingCycle==='annual')?62000:5500)); },0);
       const receipts = paymentRows.map(function(row){ const data=row.data||{}; return {id:row.id,uid:data.uid||'',email:data.email||'',businessName:data.businessName||'',billingCycle:data.billingCycle||'monthly',amountLkr:Number(data.amountLkr)||0,period:data.period||'',status:data.status||'receipt-submitted',receiptName:data.receiptName||'',receiptAvailable:!!data.receiptData,receivedAtUtc:data.receivedAtUtc||'',verifiedAtUtc:data.verifiedAtUtc||''}; });
       return response(200, { ok: true, users, receipts, stats: { realCustomers: realIds.size, testAccounts: rows.length-realIds.size, revenueThisMonth, confirmedPaymentsThisMonth: confirmed.length, authAvailable, missingAuthAccounts: users.filter(function(user){ return user.authStatus === 'missing'; }).length, disabledAuthAccounts: users.filter(function(user){ return user.authStatus === 'disabled'; }).length } });
     }
@@ -216,7 +216,7 @@ async function handle(event) {
     }
 
     if (action === 'confirmPayment') {
-      const receiptId=clean(body.receiptId,240),cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)|| (cycle==='annual'?42000:3500);
+      const receiptId=clean(body.receiptId,240),cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)|| (cycle==='annual'?62000:5500);
       if(!receiptId)return response(400,{ok:false,error:'Select a payment receipt.'});
       await db.collection('subscriptionPayments').doc(receiptId).set({status:'verified',verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL,billingCycle:cycle,amountLkr:amount},{merge:true});
       await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:addBillingPeriod(now,cycle),posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
@@ -225,7 +225,7 @@ async function handle(event) {
     }
 
     if (action === 'recordPayment') {
-      const cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)||(cycle==='annual'?42000:3500),paymentId='pos-admin-'+uid+'-'+Date.now();
+      const cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)||(cycle==='annual'?62000:5500),paymentId='pos-admin-'+uid+'-'+Date.now();
       await db.collection('subscriptionPayments').doc(paymentId).set({uid,email:profile.email||'',businessName:profile.posBusinessName||profile.bizName||'',plan:'pos',status:'verified',source:'admin-confirmed',billingCycle:cycle,amountLkr:amount,period:now.slice(0,7),receivedAtUtc:now,verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL});
       const nextPaymentDue=addBillingPeriod(now,cycle);await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:nextPaymentDue,posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
       log.info('payment recorded',{uid,paymentId,cycle});

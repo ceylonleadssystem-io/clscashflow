@@ -82,5 +82,3 @@ export function downloadCsv(rows, filename) {
 export const esc = (s) =>
 	String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-export const posMonthlyPrice = (users, base = 3500, included = 5, extra = 500) =>
-	base + Math.max(0, Math.max(1, +users || 1) - included) * extra;

@@ -1,7 +1,7 @@
 import { T } from "../../db/tables";
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } from "../../config/constants";
 import { POS_TYPE_PRESETS } from "../../config/presets";
-import { nowIso, posMonthlyPrice } from "../../domain/format";
+import { nowIso } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
 import { supportAuditEntry } from "./common";
 import { addCommonModifiers } from "./catalog";
@@ -134,4 +134,4 @@ export async function dismissPosSetup(ctx, dontAsk) {
 	ctx.ui.notice("Setup reminder dismissed. You can reopen it from Settings at any time.");
 }
 
-export { supportAuditEntry, T, posMonthlyPrice };
+export { supportAuditEntry, T };

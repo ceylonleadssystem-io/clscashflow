@@ -76,6 +76,9 @@ export const PLANS = [
 	},
 ];
 
+/** The tier an account is on (set by an administrator); new accounts start on Starter. */
+export const planForSettings = (settings) => PLANS.find((p) => p.id === settings?.plan?.tier) || PLANS[0];
+
 export const ADDITIONAL_FEATURES = { freeCount: 2, pricePerFeature: 5500 };
 
 export const PLAN_HIGHLIGHTS = [

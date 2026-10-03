@@ -78,6 +78,11 @@ function Root() {
 
 function Ready() {
 	const data = useData();
+	// platform.js (payment screens) prices the POS plan from this; the server re-derives the amount itself.
+	const tier = data.settings?.plan?.tier;
+	useEffect(() => {
+		window._posPlanTier = tier || "starter";
+	}, [tier]);
 	if (!data.ready) return <Loading progress={72}>Opening local database…</Loading>;
 	return (
 		<FeatureProvider>

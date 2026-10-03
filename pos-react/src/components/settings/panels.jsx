@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS, KITCHEN_TYPES } from "../../config/presets";
-import { ORDER_CHANNELS, UI_THEMES, POS_BASE_PRICE, POS_INCLUDED_USERS, POS_EXTRA_USER_PRICE } from "../../config/constants";
+import { ORDER_CHANNELS, UI_THEMES } from "../../config/constants";
+import { ADDITIONAL_FEATURES, planForSettings } from "../../config/plans";
 import { env } from "../../config/env";
-import { money, posMonthlyPrice } from "../../domain/format";
+import { money } from "../../domain/format";
 import { Panel, Field } from "../ui";
 import { FieldError } from "../ui/FieldError";
 import { emailError } from "../../domain/validators";
@@ -407,7 +408,7 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 	const supportOn = useFeature("settings.supportAccess");
 	const s = data.settings;
 	const [enabled, setEnabled] = [form.supportEnabled, (v) => set("supportEnabled")({ target: { type: "checkbox", checked: v } })];
-	const total = posMonthlyPrice(form.posUsers);
+	const plan = planForSettings(s);
 	const expires = s.supportCodeExpiresAt;
 	return (
 		<Panel title="Plan & Support">
@@ -415,22 +416,20 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 				<div className="plan-settings">
 					<div className="plan-settings-head">
 						<div>
-							<div className="label">POS subscription</div>
-							<div className="plan-settings-price">LKR {POS_BASE_PRICE.toLocaleString()} / month</div>
+							<div className="label">{plan.name}</div>
+							<div className="plan-settings-price">
+								LKR {plan.price.toLocaleString()} {plan.term}
+							</div>
 						</div>
 						<div className="plan-settings-note">
-							Includes up to {POS_INCLUDED_USERS} users.
+							{plan.features[0]}.
 							<br />
-							Each additional user: LKR {POS_EXTRA_USER_PRICE}/month.
+							{ADDITIONAL_FEATURES.freeCount} additional features free, then LKR {ADDITIONAL_FEATURES.pricePerFeature.toLocaleString()} per feature.
 						</div>
 					</div>
 					<div className="field">
 						<label>Number of POS users</label>
 						<input className="input" id="set-pos-users" type="number" min="1" step="1" value={form.posUsers} onChange={set("posUsers")} />
-					</div>
-					<div className="plan-total">
-						<span>Estimated monthly price</span>
-						<span id="pos-plan-total">{money(total)}</span>
 					</div>
 					<button className="btn out" type="button" style={{ marginTop: 10 }} onClick={() => setWelcomeUser({ id: currentUser?.id, name: currentUser?.name, firstTime: false })}>
 						View plans & pricing

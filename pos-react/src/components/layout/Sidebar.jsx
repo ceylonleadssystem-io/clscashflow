@@ -1,5 +1,5 @@
 import { NAV_ITEMS } from "../../config/roles";
-import { posMonthlyPrice } from "../../domain/format";
+import { planForSettings } from "../../config/plans";
 import { usePos } from "../../store/PosProvider";
 import { useSession } from "../../store/SessionProvider";
 import { useData } from "../../store/DataProvider";
@@ -10,15 +10,14 @@ export function Sidebar() {
 	const { signOut } = useSession();
 	const { settings } = useData();
 	const logo = settings.logo;
-	const users = Math.max(1, +settings.posUsers || 1);
-	const monthly = posMonthlyPrice(users);
+	const plan = planForSettings(settings);
 	return (
 		<aside className={"side" + (logo ? " has-business-logo" : "")}>
 			{logo && <img id="side-business-logo" className="side-business-logo" alt={(settings.business || "") + " logo"} src={logo} />}
 			<div className="brand" aria-label="Powered by Ceylonry POS">
 				Ceylonry<span>POS</span>
 				<small className="plan">
-					POS · LKR {monthly.toLocaleString()} / month · {Math.max(5, users)} users
+					{plan.name} · LKR {plan.price.toLocaleString()} {plan.term}
 				</small>
 			</div>
 			<div className="session-user" id="session-user">

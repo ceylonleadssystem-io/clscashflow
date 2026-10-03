@@ -1009,6 +1009,172 @@
 				font-weight: 800;
 				margin-right: 8px;
 			}
+			.plans-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 18px;
+				align-items: stretch;
+			}
+			.plan-card {
+				position: relative;
+				display: flex;
+				flex-direction: column;
+				background: #fff;
+				border: 1px solid var(--line);
+				border-radius: 20px;
+				padding: 28px 22px 24px;
+			}
+			.plan-card.popular {
+				border: 2px solid var(--gold);
+				box-shadow: 0 14px 40px rgba(255, 90, 0, 0.14);
+			}
+			.plan-badge {
+				position: absolute;
+				top: -13px;
+				left: 50%;
+				transform: translateX(-50%);
+				background: var(--gold);
+				color: #fff;
+				font-size: 11px;
+				font-weight: 800;
+				letter-spacing: 0.08em;
+				padding: 6px 14px;
+				border-radius: 999px;
+				white-space: nowrap;
+			}
+			.plan-name {
+				font-size: 22px;
+				font-weight: 800;
+				margin: 0 0 6px;
+			}
+			.plan-tag {
+				color: var(--muted);
+				font-size: 14px;
+				margin: 0;
+				min-height: 64px;
+			}
+			.plan-price {
+				font-size: 34px;
+				font-weight: 800;
+				letter-spacing: -0.04em;
+				margin: 8px 0 18px;
+			}
+			.plan-annual {
+				margin: -12px 0 16px;
+				font-size: 13px;
+				color: var(--muted);
+			}
+			.plan-card.popular .plan-price {
+				color: var(--gold);
+			}
+			.plan-price small {
+				white-space: nowrap;
+				font-size: 14px;
+				font-weight: 500;
+				color: var(--muted);
+				letter-spacing: 0;
+			}
+			.plan-card ul {
+				list-style: none;
+				padding: 0;
+				margin: 0 0 24px;
+				display: grid;
+				gap: 11px;
+				font-size: 14px;
+				flex: 1;
+				align-content: start;
+			}
+			.plan-card li:before {
+				content: "✓";
+				color: var(--gold);
+				font-weight: 800;
+				margin-right: 8px;
+			}
+			.plan-card li.off {
+				color: var(--muted);
+			}
+			.plan-card li.off:before {
+				content: "✕";
+				color: var(--muted);
+			}
+			.plan-card .btn {
+				text-align: center;
+			}
+			.plan-extras {
+				display: grid;
+				grid-template-columns: 1.6fr 1fr 1fr;
+				gap: 18px;
+				align-items: center;
+				margin-top: 22px;
+				padding: 24px;
+				background: var(--sand);
+				border: 1px solid var(--line);
+				border-radius: 20px;
+			}
+			.plan-extras h3 {
+				margin: 0 0 6px;
+				font-size: 22px;
+			}
+			.plan-extras p {
+				margin: 0;
+				color: var(--muted);
+			}
+			.plan-extra-box {
+				display: grid;
+				gap: 2px;
+				padding: 16px;
+				background: #fff;
+				border-radius: 14px;
+				font-size: 14px;
+			}
+			.plan-extra-box strong {
+				color: var(--gold);
+				font-size: 28px;
+				letter-spacing: -0.03em;
+			}
+			.plan-highlights {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 16px;
+				margin-top: 18px;
+				font-size: 13px;
+				color: var(--muted);
+			}
+			.plan-highlights strong {
+				display: block;
+				color: var(--ink);
+				font-size: 14px;
+			}
+			.plan-conditions {
+				margin: 18px 0 0;
+				padding: 14px 18px;
+				background: var(--sand);
+				border: 1px solid var(--line);
+				border-radius: 14px;
+				font-size: 13px;
+				color: var(--muted);
+			}
+			.plan-conditions strong {
+				color: var(--ink);
+			}
+			@media (max-width: 1100px) {
+				.plans-grid {
+					grid-template-columns: repeat(2, 1fr);
+				}
+				.plan-highlights {
+					grid-template-columns: repeat(2, 1fr);
+				}
+			}
+			@media (max-width: 760px) {
+				.plans-grid,
+				.plan-extras,
+				.plan-highlights {
+					grid-template-columns: 1fr;
+				}
+				.plan-tag {
+					min-height: 0;
+				}
+			}
 			.faq {
 				display: grid;
 				gap: 9px;
@@ -1275,7 +1441,7 @@
 							><a class="btn light" href="#features">Explore features</a>
 						</div>
 						<p class="hero-note">
-							No credit card required · Monthly or discounted annual billing
+							No credit card required · Plans from LKR 5,500 / month
 						</p>
 					</div>
 					<div class="screen" aria-label="POS checkout preview">
@@ -1705,39 +1871,91 @@
 			<section class="section" id="pricing">
 				<div class="wrap">
 					<div class="head">
-						<p class="eyebrow">Simple POS pricing</p>
-						<h2>Choose monthly or save annually.</h2>
+						<p class="eyebrow">Simple &amp; transparent pricing</p>
+						<h2>Choose the right plan for your business.</h2>
+						<p class="lead">Powerful POS features to help you sell, manage and grow. Every plan starts with a 7-day free trial.</p>
 					</div>
-					<div class="pricing-box">
-						<div>
-							<div class="billing-toggle">
-								<button class="active" type="button" data-cycle="monthly">
-									Monthly</button
-								><button type="button" data-cycle="annual">
-									Annual · Save LKR 6,000
-								</button>
-							</div>
-							<div class="price">
-								<span id="price-value">LKR 5,500</span>
-								<small id="price-term">/ month</small>
-							</div>
-							<p class="price-copy" id="price-copy">
-								Billed monthly. Includes up to 2 POS users.
-							</p>
-							<div class="price-list">
-								<span>7-day free trial</span><span>Up to 2 users included</span
-								><span>All business presets</span
-								><span>Offline transaction storage</span
-								><span>Inventory and reporting</span
-								><span>LKR 500 per additional user/month</span>
-							</div>
-						</div>
-						<div>
-							<a class="btn gold" href="pos-onboarding.html"
-								>Start POS trial →</a
-							>
-						</div>
+					<div class="plans-grid">
+							<article class="plan-card">
+								<h3 class="plan-name">POS Starter</h3>
+								<p class="plan-tag">Perfect for small businesses getting started.</p>
+								<div class="plan-price"><small>LKR</small> 5,500 <small>/ month</small></div>
+								<p class="plan-annual">or LKR 62,000 billed annually</p>
+								<ul>
+									<li>Up to 2 users</li>
+									<li>Sales &amp; inventory management</li>
+									<li>Customer management</li>
+									<li>Reports &amp; analytics</li>
+									<li>Receipt printing</li>
+									<li>Cloud access (web &amp; mobile)</li>
+									<li class="off">Barcode &amp; label printing (not included)</li>
+								</ul>
+								<a class="btn" href="pos-onboarding.html">Get Started →</a>
+							</article>
+							<article class="plan-card popular"><span class="plan-badge">MOST POPULAR</span>
+								<h3 class="plan-name">POS Business</h3>
+								<p class="plan-tag">Ideal for growing businesses with more locations and customer engagement.</p>
+								<div class="plan-price"><small>LKR</small> 7,500 <small>/ month</small></div>
+								<p class="plan-annual">or LKR 83,000 billed annually</p>
+								<ul>
+									<li>Up to 10 users</li>
+									<li>All Starter features</li>
+									<li>Barcode &amp; label printing</li>
+									<li>CRM with loyalty features (points, rewards, promotions)</li>
+									<li>Customer insights</li>
+									<li>Multi-location support (up to 3 locations)</li>
+									<li>Advanced reports</li>
+								</ul>
+								<a class="btn gold" href="pos-onboarding.html">Get Started →</a>
+							</article>
+							<article class="plan-card">
+								<h3 class="plan-name">POS Pro</h3>
+								<p class="plan-tag">For larger businesses that need more flexibility and advanced features.</p>
+								<div class="plan-price"><small>LKR</small> 15,500 <small>/ month</small></div>
+								<p class="plan-annual">or LKR 180,000 billed annually</p>
+								<ul>
+									<li>Unlimited users</li>
+									<li>All Business features</li>
+									<li>Advanced CRM with feedback &amp; customer insights</li>
+									<li>Unlimited locations</li>
+									<li>Advanced inventory management</li>
+									<li>Detailed analytics &amp; reporting</li>
+									<li>Role-based access control</li>
+									<li>Priority support</li>
+								</ul>
+								<a class="btn" href="pos-onboarding.html">Get Started →</a>
+							</article>
+							<article class="plan-card">
+								<h3 class="plan-name">POS Enterprise</h3>
+								<p class="plan-tag">A fully customised solution tailored to your business requirements.</p>
+								<div class="plan-price"><small>LKR</small> 150,000 <small>one-time</small></div>
+								<ul>
+									<li>Customised deployment</li>
+									<li>Tailor-made features as per your business needs</li>
+									<li>Unlimited users &amp; locations</li>
+									<li>Advanced integrations (e.g. accounting, e-commerce, etc.)</li>
+									<li>Dedicated onboarding &amp; training</li>
+									<li>Annual maintenance &amp; support arrangement</li>
+									<li>Priority technical support</li>
+								</ul>
+								<a class="btn" href="mailto:hello@ceylonrylabs.io?subject=Ceylonry%20POS%20Enterprise&amp;body=Hello%20Ceylonry%20Labs%2C%0A%0AI%20would%20like%20to%20discuss%20POS%20Enterprise%20for%20my%20business.%0A">Talk to Our Team →</a>
+							</article>
 					</div>
+					<div class="plan-extras">
+						<div>
+							<h3>Customise your POS with additional features</h3>
+							<p>Get up to 2 additional features <strong>free</strong> with any plan. Need more? Additional features can be added at <strong>LKR 5,500 per feature</strong>.</p>
+						</div>
+						<div class="plan-extra-box"><span>Up to 2 additional features</span><strong>FREE</strong></div>
+						<div class="plan-extra-box"><span>Additional features</span><strong>LKR 5,500</strong><span>per feature</span></div>
+					</div>
+					<div class="plan-highlights">
+						<div><strong>Cloud based</strong>Access anywhere, anytime</div>
+						<div><strong>Secure &amp; reliable</strong>Your data is always protected</div>
+						<div><strong>Local support</strong>We're here when you need us</div>
+						<div><strong>Easy to use</strong>Get started in no time</div>
+					</div>
+					<p class="plan-conditions"><strong>Conditions applied:</strong> Prices are subject to change. Applicable taxes (if any) are additional. Additional features, integrations, and customisations may incur extra charges. Terms and conditions apply.</p>
 				</div>
 			</section>
 
@@ -2133,23 +2351,6 @@
 					}
 				});
 			renderHardwareCart();
-			document.querySelectorAll("[data-cycle]").forEach(function (button) {
-				button.addEventListener("click", function () {
-					document.querySelectorAll("[data-cycle]").forEach(function (item) {
-						item.classList.toggle("active", item === button);
-					});
-					var annual = button.dataset.cycle === "annual";
-					document.getElementById("price-value").textContent = annual
-						? "LKR 5,000"
-						: "LKR 5,500";
-					document.getElementById("price-term").textContent = annual
-						? "/ month, paid annually"
-						: "/ month";
-					document.getElementById("price-copy").textContent = annual
-						? "LKR 60,000 billed annually. Save LKR 6,000 per year. Includes up to 2 POS users."
-						: "Billed monthly. Includes up to 2 POS users.";
-				});
-			});
 		</script>
 	</body>
 </html>

@@ -11,7 +11,7 @@ export function posAccessProfile(profile, user) {
 		bizName: profile.posBusinessName || profile.bizName || "",
 		plan: "pos",
 		currentPlan: "pos",
-		planMonthlyPrice: 3500,
+		planMonthlyPrice: 5500, // POS Starter monthly price (config/plans.js)
 		planPrice: 42000,
 		billingCycle: profile.posBillingCycle || "monthly",
 		trialStart: profile.posTrialStart || profile.trialStart,
