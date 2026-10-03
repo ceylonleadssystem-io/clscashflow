@@ -32,7 +32,7 @@
 				});
 				var posSignIn = document.querySelector(".signin a");
 				if (posSignIn) {
-					posSignIn.href = "/pos-system/pos-system.html?login=business";
+					posSignIn.href = "/posv2/";
 					posSignIn.textContent = "Sign in to POS";
 				}
 				var business = document.getElementById("business"),
@@ -496,7 +496,7 @@
 					<div class="error" id="error" role="alert"></div>
 					<div class="signin">
 						Already registered?
-						<a href="signin.html?next=pos-system%2Fpos-system.html">Sign in</a>
+						<a href="signin.html?next=posv2%2F">Sign in</a>
 					</div>
 				</form>
 			</section>
@@ -659,7 +659,7 @@
 					sessionStorage.removeItem("ceylonry-business-auth");
 					sessionStorage.removeItem("ceylonry-pos-user");
 					sessionStorage.removeItem("ceylonry-pos-business-uid");
-					location.href = "pos-system/pos-system.html";
+					location.href = "/posv2/";
 				} catch (err) {
 					console.error(err);
 					error.textContent = err?.message || "Could not start the POS trial.";

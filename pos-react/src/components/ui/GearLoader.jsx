@@ -1,7 +1,7 @@
 /**
  * Rotating gear shown centred on screen while data loads (CSS in styles/app.css).
  */
-export function GearLoader({ label }) {
+export function GearLoader({ label = "Loading information......" }) {
 	return (
 		<div className="gear-loader" role="status" aria-live="polite">
 			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
