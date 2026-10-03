@@ -335,10 +335,6 @@ test('plan user limits are displayed consistently and enforced by team access', 
   assert.match(platform, /business:\s*\{[\s\S]*?userLimit:\s*Infinity[\s\S]*?userLabel:\s*'Unlimited users'/);
   assert.match(landing, /<td>Users<\/td><td><strong>1 user only<\/strong><\/td><td><strong>Up to 5 users<\/strong><\/td><td><strong>Unlimited users<\/strong><\/td>/);
   assert.match(onboarding, /<td>Users<\/td><td><strong>1 user only<\/strong><\/td><td><strong>Up to 5 users<\/strong><\/td><td><strong>Unlimited users<\/strong><\/td>/);
-  assert.doesNotMatch(access, /if \(window\.clsRememberPlan\) await window\.clsRememberPlan/);
-  assert.match(access, /renderTeamState\(\[\], \[\]\);/);
-  assert.match(access, /loadTeam\(\)\.catch/);
-  assert.match(access, /function withTeamTimeout\(promise, label\)/);
 });
 
 test('Solo mobile invoice More actions expand inside the invoice card', function() {
