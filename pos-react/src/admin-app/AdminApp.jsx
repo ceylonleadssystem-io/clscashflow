@@ -2,6 +2,7 @@
  * Admin portal root: handles the separate administrator sign-in, loads the list of POS accounts with
  * summary stats, and shows either that list (with search) or the selected account's AccountDetail.
  */
+import { GearLoader } from "../components/ui/GearLoader";
 import { useCallback, useEffect, useState } from "react";
 import { env } from "../config/env";
 import { adminSession } from "./adminSession";
@@ -84,7 +85,7 @@ export function AdminApp() {
 		}
 	};
 
-	if (!ready) return <div className="app-loading">Loading…</div>;
+	if (!ready) return <div className="app-loading"><GearLoader /></div>;
 	if (!user) return <AdminLogin onSignIn={signIn} error={error} busy={busy} />;
 
 	const list = accounts.filter((a) => !q.trim() || (a.business + " " + a.email + " " + a.name).toLowerCase().includes(q.trim().toLowerCase()));
@@ -92,6 +93,7 @@ export function AdminApp() {
 
 	return (
 		<div className="admin-app">
+			{loading && !accounts.length && <div className="gear-overlay"><GearLoader /></div>}
 			<header className="admin-top">
 				<div>
 					<div className="admin-brand">

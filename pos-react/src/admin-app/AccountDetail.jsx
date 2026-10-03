@@ -2,6 +2,7 @@
  * Admin portal: detail screen for one business account, with tabs for access (enable/disable and
  * fixed-amount pricing), per-business and per-location feature switches, the first-login welcome message and invoices.
  */
+import { GearLoader } from "../components/ui/GearLoader";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FEATURES, FEATURE_GROUPS, FEATURE_MAP, defaultFeatureFlags, dependentsOf, resolveFeatures } from "../config/features";
 import { PLANS } from "../config/plans";
@@ -53,7 +54,7 @@ export function AccountDetail({ account, onBack, onChanged }) {
 		}
 	};
 
-	if (!data) return <div className="app-loading" style={{ minHeight: 200 }}>Loading account…</div>;
+	if (!data) return <div className="gear-overlay"><GearLoader /></div>;
 	return (
 		<div>
 			<div className="admin-crumb">

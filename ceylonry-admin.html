@@ -580,6 +580,28 @@
 			.data-status.loading::before {
 				animation: adminPulse 0.8s ease-in-out infinite alternate;
 			}
+			.admin-gear {
+				position: fixed;
+				inset: 0;
+				z-index: 9999;
+				display: none;
+				align-items: center;
+				justify-content: center;
+				background: rgba(255, 255, 255, 0.85);
+			}
+			.admin-gear.show {
+				display: flex;
+			}
+			.admin-gear svg {
+				width: 64px;
+				height: 64px;
+				animation: adminGearSpin 1.6s linear infinite;
+			}
+			@keyframes adminGearSpin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
 			@keyframes adminPulse {
 				to {
 					opacity: 0.25;
@@ -1120,6 +1142,7 @@
 					<div class="utc" id="utc-clock"></div>
 				</div>
 
+<div class="admin-gear" id="admin-gear" role="status" aria-label="Loading"><svg viewBox="0 0 24 24" fill="none" stroke="#1f2937" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
 				<div
 					class="data-status loading"
 					id="data-status"
@@ -3647,6 +3670,7 @@
 						$("user-breakdown").innerHTML =
 							'<div class="card muted">Loading per-user breakdown...</div>';
 						setDataStatus("loading", "Loading platform data…");
+						$("admin-gear").classList.add("show");
 					} else {
 						setDataStatus("loading", "Refreshing in the background…");
 					}
@@ -3894,6 +3918,7 @@
 					);
 				} finally {
 					adminLoading = false;
+					if ($("admin-gear")) $("admin-gear").classList.remove("show");
 					setRefreshState(false);
 				}
 			}
