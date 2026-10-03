@@ -1,3 +1,7 @@
+/**
+ * Generic repository over one table: reads return plain objects, writes go through PosStore. Offers
+ * all, byId, count, where, first, save, saveMany, remove and observe.
+ */
 import { Q } from "@nozbe/watermelondb";
 import { rawToPlain, sortBySeq } from "../rowMapper";
 

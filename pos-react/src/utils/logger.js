@@ -1,4 +1,8 @@
 /**
+ * Application logger: createLogger(scope) with debug/info/warn/error, an in-memory ring buffer mirrored
+ * to localStorage, redaction of sensitive values, log download for support, and global error/offline capture.
+ */
+/**
  * POS application logger.
  *
  *   const log = createLogger("sync");

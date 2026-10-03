@@ -1,3 +1,7 @@
+/**
+ * Customer profile dialog (opened from the directory, CRM and checkout): contact details, type, tags,
+ * notes and the optional next-visit discount, with validation.
+ */
 import { useEffect, useState } from "react";
 import { CUSTOMER_TYPES } from "../config/constants";
 import { cap } from "../domain/format";

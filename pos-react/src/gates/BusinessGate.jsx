@@ -1,3 +1,7 @@
+/**
+ * Business account sign-in screen: Appwrite sign-in (with forgot-password and a trial link) or the local
+ * owner login / first-time account creation in offline or dev mode. Routes the developer email to the developer portal.
+ */
 import { useState } from "react";
 import { env } from "../config/env";
 import { useSession } from "../store/SessionProvider";

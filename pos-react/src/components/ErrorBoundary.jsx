@@ -1,3 +1,6 @@
+/**
+ * React error boundary: catches a crash in any screen, logs it, and shows a reload prompt instead of a blank page.
+ */
 import { Component } from "react";
 import { createLogger } from "../utils/logger";
 

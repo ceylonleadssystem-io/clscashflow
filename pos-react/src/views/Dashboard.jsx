@@ -1,3 +1,7 @@
+/**
+ * Dashboard page: date-range sales KPIs, best-selling items, payment mix, cashflow overview, recent sales and
+ * the per-branch location status panel.
+ */
 import { useMemo, useState } from "react";
 import { dashboardData, defaultRange, rangeDates } from "../domain/analytics";
 import { money, today } from "../domain/format";

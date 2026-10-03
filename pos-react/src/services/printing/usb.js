@@ -1,3 +1,7 @@
+/**
+ * Shared WebUSB helpers for receipt and label printers: find and claim the bulk-OUT endpoint, send data in
+ * 4 KB chunks, and a tiny event emitter for hardware status.
+ */
 /** Shared WebUSB helpers for receipt printers and label printers. */
 
 export function findUsbOutput(device) {

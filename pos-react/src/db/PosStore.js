@@ -1,3 +1,7 @@
+/**
+ * Data-access facade over WatermelonDB: reads plain snapshots, observe() streams live changes to React,
+ * write() runs atomic multi-table transactions with updatedAt bookkeeping, and replaceAll() applies a cloud snapshot by diffing.
+ */
 import { Q } from "@nozbe/watermelondb";
 import { createLogger } from "../utils/logger";
 import { T, TABLE_LIST } from "./tables";

@@ -1,3 +1,7 @@
+/**
+ * USB TSPL label printer (gap labels, default 30 x 25 mm): label layouts, bitmap print jobs, WebUSB connect/
+ * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
+ */
 import { claimUsbOutput, createEmitter } from "./usb";
 import { barcodeSvg, cleanBarcode, drawCode128 } from "./barcode";
 import { esc, money } from "../../domain/format";

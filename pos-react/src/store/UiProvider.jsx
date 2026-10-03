@@ -1,3 +1,7 @@
+/**
+ * UI services for business logic: transient notices and promise-based alert, confirm and prompt dialogs
+ * (replacing window.alert/confirm/prompt).
+ */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 /**

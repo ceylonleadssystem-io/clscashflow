@@ -1,3 +1,7 @@
+/**
+ * Root of the POS app: builds the provider tree (UI, session, data, features, modals, POS, checkout) and
+ * chooses what to show - loading bar, business sign-in, staff PIN gate, stock-count page or the main Shell.
+ */
 import { useEffect, useRef, useState } from "react";
 import { UiProvider, useUi } from "./store/UiProvider";
 import { SessionProvider, useSession } from "./store/SessionProvider";

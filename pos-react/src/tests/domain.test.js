@@ -1,3 +1,7 @@
+/**
+ * Tests for the pure domain logic: cart maths, refunds and cash drawer, analytics, catalogue parsing, order
+ * numbering, inventory, feature flags, sync merge, formatting, stock reasons, invoices and validators.
+ */
 import { describe, expect, it } from "vitest";
 import { addConfiguredLine, cartTotals, changeQty, equalSplit, productModifiers } from "../domain/cart";
 import { applyReversal, calculateRefundAmount, expectedCash, refundableLines, selectedRefundLines } from "../domain/sales";

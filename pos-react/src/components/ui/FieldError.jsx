@@ -1,3 +1,6 @@
+/**
+ * Small inline validation message shown under an input.
+ */
 /** Inline validation message under an input. */
 export const FieldError = ({ message }) =>
 	message ? (

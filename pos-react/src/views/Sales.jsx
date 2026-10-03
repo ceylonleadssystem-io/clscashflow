@@ -1,3 +1,7 @@
+/**
+ * Sales History page: search and date filters, and per-sale actions (print, download, WhatsApp, refund,
+ * void, permanent delete) with CSV export.
+ */
 import { useMemo, useState } from "react";
 import { MANAGER_ROLES, OWNER_ROLES } from "../config/roles";
 import { downloadCsv, money } from "../domain/format";

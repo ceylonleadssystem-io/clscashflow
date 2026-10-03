@@ -1,3 +1,7 @@
+/**
+ * State and actions of the order being rung up: cart, discount, split bill, customer, payment, receipt options,
+ * category/search, and the checkout actions (add items, complete sale, void, hold as open order, recall, rewards).
+ */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ORDER_CHANNELS, STORAGE } from "../config/constants";
 import { addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";

@@ -1,3 +1,7 @@
+/*
+ * Admin portal, plans and welcome message, stock search and phone stock count, loading screen and responsive
+ * hardening (mobile checkout, short screens, tablet and phone layouts). Loaded near last so it wins over earlier files.
+ */
 /* app.css — admin portal, plans, stock tools and responsive hardening. */
 
 /* Admin Dashboard + small additions for the React port. Uses the legacy theme tokens. */

@@ -1,3 +1,6 @@
+/**
+ * Lazy loader for the SheetJS (XLSX) library from the CDN, used by catalogue and stock imports.
+ */
 import { env } from "../config/env";
 import { createLogger } from "../utils/logger";
 

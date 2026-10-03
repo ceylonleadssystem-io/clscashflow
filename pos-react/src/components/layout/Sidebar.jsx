@@ -1,3 +1,7 @@
+/**
+ * Left navigation: business logo, brand and plan, signed-in user, role-filtered page buttons with
+ * icons, and Lock POS / Sign Out. Collapses to an icon strip and expands on hover (see styles/nav-rail.css).
+ */
 import { useEffect } from "react";
 import { NavIcon } from "./NavIcon";
 import { NAV_ITEMS } from "../../config/roles";

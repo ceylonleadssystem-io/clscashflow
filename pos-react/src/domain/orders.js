@@ -1,3 +1,7 @@
+/**
+ * Order numbering (ORD-0001): parsing and formatting, picking the next sequence, a one-off migration of
+ * legacy receipt numbers, and the open-order total.
+ */
 /** Order numbering (ORD-0001) and open-order helpers. */
 
 export const orderSequenceFrom = (value) => {

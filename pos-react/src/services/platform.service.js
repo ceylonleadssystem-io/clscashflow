@@ -1,3 +1,7 @@
+/**
+ * Bridge to the shared Ceylonry platform script (billing paywall, bank-transfer dialog, receipt e-mail):
+ * lazy-loads it and wraps order e-mail (EmailJS), payment-slip bookkeeping, onboarding e-mails and optional catalogue images.
+ */
 import { env } from "../config/env";
 import { createLogger } from "../utils/logger";
 

@@ -1,3 +1,7 @@
+/**
+ * Top bar: page title, location switcher, the "more" menu (page links on small screens, Lock POS,
+ * Sign Out, Switch Checkout, printer status, full screen) and the mobile "View Order" button.
+ */
 import { useEffect, useState } from "react";
 import { usePos } from "../../store/PosProvider";
 import { NAV_ITEMS } from "../../config/roles";

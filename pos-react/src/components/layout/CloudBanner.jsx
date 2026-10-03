@@ -1,3 +1,7 @@
+/**
+ * Banner under the top bar showing cloud sync state (saved, syncing, retry, offline) and billing
+ * reminders. Tapping it retries a failed sync.
+ */
 import { useSession } from "../../store/SessionProvider";
 import { useFeature } from "../../store/FeatureProvider";
 

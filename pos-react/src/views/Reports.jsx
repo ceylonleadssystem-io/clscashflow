@@ -1,3 +1,7 @@
+/**
+ * Reports page: date-range KPIs, sales by item and payment type, cash register reconciliation, staff hours,
+ * customer intelligence and CSV export.
+ */
 import { useMemo, useState } from "react";
 import { closedShiftsInRange, customerReport, defaultRange, rangeDates, reportData, reportKpis, staffHours, birthdayInfo, customerSegment, customerInsights } from "../domain/analytics";
 import { downloadCsv, money } from "../domain/format";

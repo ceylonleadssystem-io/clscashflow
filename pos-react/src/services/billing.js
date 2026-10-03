@@ -1,3 +1,7 @@
+/**
+ * Subscription and trial rules: builds the access profile, decides whether access is allowed, checks POS
+ * entitlement, and produces the trial/payment-due warning text.
+ */
 /** Subscription / trial access rules (ported from the legacy cloud layer). */
 
 const DAY = 86400000;

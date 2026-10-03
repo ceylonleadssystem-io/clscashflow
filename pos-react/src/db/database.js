@@ -1,3 +1,7 @@
+/**
+ * Creates the WatermelonDB database (LokiJS adapter persisted to IndexedDB) and names each business
+ * workspace's database.
+ */
 import { Database } from "@nozbe/watermelondb";
 import LokiJSAdapter from "@nozbe/watermelondb/adapters/lokijs";
 import { schema } from "./schema";

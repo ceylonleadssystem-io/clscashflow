@@ -1,3 +1,7 @@
+/**
+ * "Choose Modifiers" dialog shown at checkout: pick the options for a product (or edit an existing
+ * line) with required-group validation and a live price.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "../components/ui";
 import { missingRequiredGroup, productModifiers, selectionExtra } from "../domain/cart";

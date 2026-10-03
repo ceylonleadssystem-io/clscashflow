@@ -1,3 +1,7 @@
+/**
+ * Tests for customers and loyalty: validation, duplicate phone detection, discount rules, visits and spend,
+ * and feedback requests.
+ */
 import { describe, it, expect, beforeEach } from "vitest";
 import { customerInsights, customerSegment, customerStats, validCustomerSales } from "../domain/analytics";
 import { addProduct, createHarness, line, noDiscount } from "./harness";

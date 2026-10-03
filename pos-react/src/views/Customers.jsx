@@ -1,3 +1,6 @@
+/**
+ * Customer directory page: searchable and filterable table of customers with visits and total spent, and add/edit actions.
+ */
 import { useMemo, useState } from "react";
 import { CUSTOMER_TYPES } from "../config/constants";
 import { customerStats } from "../domain/analytics";

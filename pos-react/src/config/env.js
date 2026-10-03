@@ -1,3 +1,7 @@
+/**
+ * Single place for every environment-driven value (Vite env vars with defaults): auth provider,
+ * Appwrite endpoint/project, Netlify function URLs, admin and EmailJS settings, sync intervals and base path.
+ */
 /** Central place for every environment-driven value (see .env.example). */
 const e = import.meta.env;
 

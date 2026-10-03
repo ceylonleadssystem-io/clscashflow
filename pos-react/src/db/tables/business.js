@@ -1,3 +1,7 @@
+/**
+ * Table definitions for business-level data: locations, location and support audit logs, key/value
+ * settings (one row per key so each merges independently in cloud sync) and app metadata.
+ */
 import { defineTable } from "../defineTable";
 
 export const locations = defineTable("locations", {

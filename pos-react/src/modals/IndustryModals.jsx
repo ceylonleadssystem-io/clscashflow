@@ -1,3 +1,6 @@
+/**
+ * One dialog serving the Business Tools records: appointments, memberships, prescriptions and medicine batches.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { today } from "../domain/format";

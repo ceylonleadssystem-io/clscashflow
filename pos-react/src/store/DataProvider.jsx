@@ -1,3 +1,7 @@
+/**
+ * Provides the live, plain-object snapshot of the WatermelonDB data (products, sales, customers, settings...),
+ * plus the store and repositories. dataRef always holds the newest snapshot for service code.
+ */
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { EMPTY_SNAPSHOT } from "../db/PosStore";
 import { createRepositories } from "../db/repositories";

@@ -1,3 +1,7 @@
+/**
+ * Hook that listens for keyboard-wedge / HID barcode scans and adds the matching product to the
+ * current order (switching to Checkout if needed), with a notice when nothing matches.
+ */
 import { useEffect } from "react";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";

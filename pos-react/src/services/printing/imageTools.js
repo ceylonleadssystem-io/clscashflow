@@ -1,3 +1,7 @@
+/**
+ * Canvas image helpers: compress product photos, crop and fit the business logo, clean the social QR
+ * artwork, and convert images to monochrome ESC/POS raster blocks for the receipt printer.
+ */
 /** Canvas helpers: image compression, logo cropping, raster conversion for ESC/POS / TSPL. */
 
 export const readFileAsDataUrl = (file) =>

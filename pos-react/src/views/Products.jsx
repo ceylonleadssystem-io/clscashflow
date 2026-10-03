@@ -1,3 +1,7 @@
+/**
+ * Catalogue management page: a category manager (categories and subcategories) and the products and
+ * services list or thumbnail grid, with import, barcode labels, edit and delete.
+ */
 import { useMemo, useState } from "react";
 import { money } from "../domain/format";
 import { productMargin, subcategoriesFor, categoryKey, visibleProductCategories } from "../domain/catalog";

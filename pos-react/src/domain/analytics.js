@@ -1,3 +1,7 @@
+/**
+ * Pure analytics for the dashboard, reports and CRM: date ranges, revenue/cost/profit and best sellers,
+ * per-item report rows (refund-aware), shift and staff-hour summaries, and customer insights (visits, spend, favourite item, birthdays, segment, feedback due).
+ */
 import { VIP_SPEND } from "../config/constants";
 import { isActiveSale, refundableLines } from "./sales";
 import { localDateValue, today } from "./format";

@@ -1,3 +1,7 @@
+/**
+ * The register chrome: left sidebar, top bar, notice area and the active view, plus the global
+ * modals (customers, products, cash, split bill, locations, setup, shift start, welcome).
+ */
 import { useState } from "react";
 import { usePos } from "../../store/PosProvider";
 import { useNotice } from "../../store/UiProvider";

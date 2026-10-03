@@ -1,3 +1,7 @@
+/**
+ * Hardware controls in Settings: connect the USB receipt printer, the USB label printer (with gap
+ * calibration) and the USB barcode scanner, with status lines and a scanner test.
+ */
 import { useEffect, useState } from "react";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";

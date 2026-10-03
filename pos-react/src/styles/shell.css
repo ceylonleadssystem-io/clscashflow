@@ -1,3 +1,7 @@
+/*
+ * Application shell styles, merged in cascade order: cloud sync banner and billing warning, the viewport-fit
+ * checkout layout, the sidebar toggle and collapsed state, fixed cart totals, and the tabbed Settings page.
+ */
 /* shell.css — merged in original cascade order (do not reorder). */
 
 /* ---- 08-cloud-banner-billing.css ---- */

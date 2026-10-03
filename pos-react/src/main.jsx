@@ -1,3 +1,7 @@
+/**
+ * Entry point of the POS app: installs global logging, mounts <App/> into #root and registers the
+ * service worker (production only) for offline use.
+ */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";

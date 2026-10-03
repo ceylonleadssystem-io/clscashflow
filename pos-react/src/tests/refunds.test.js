@@ -1,3 +1,7 @@
+/**
+ * Tests for refunds, voids and permanent deletion: reasons, partial and full refunds, cash register rules,
+ * stock restoration and role restrictions.
+ */
 import { describe, it, expect, beforeEach } from "vitest";
 import { addProduct, createHarness, line, noDiscount, openShift } from "./harness";
 

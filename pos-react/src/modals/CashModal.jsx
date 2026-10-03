@@ -1,3 +1,7 @@
+/**
+ * Cash register dialog used for clock-in with opening cash, opening the register and closing it with
+ * the expected-versus-counted reconciliation.
+ */
 import { useEffect, useState } from "react";
 import { money } from "../domain/format";
 import { currentCashShift, expectedCash } from "../domain/sales";

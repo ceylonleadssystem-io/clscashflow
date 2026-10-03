@@ -1,3 +1,7 @@
+/**
+ * Local development back end for the admin portal (VITE_AUTH_PROVIDER=local): a dev admin login plus
+ * an adminApi stand-in that reads and writes this browser's POS database and stores invoices in localStorage.
+ */
 import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
 import { snapshotToPayload } from "../services/sync/payload";

@@ -1,3 +1,6 @@
+/**
+ * Create or edit a modifier group: name, single or multiple choice, required or optional, and options with extra prices.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody, NumberInput } from "../components/ui";
 import { useData } from "../store/DataProvider";

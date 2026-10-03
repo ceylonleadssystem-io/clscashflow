@@ -1,3 +1,7 @@
+/**
+ * Input validation helpers (email, phone, required) that return an error message or an empty string,
+ * plus phone input cleaning.
+ */
 /** Input validation helpers (return an error message, or "" when valid). */
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 

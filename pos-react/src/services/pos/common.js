@@ -1,3 +1,7 @@
+/**
+ * Shared plumbing for the POS action services: the ctx builder, id generation, stamping rows with
+ * location/device metadata, audit entries, deletion tombstones, stock-change helpers and business-type checks.
+ */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 

@@ -1,3 +1,6 @@
+/**
+ * Context that lets any view open the location picker modal rendered by the Shell.
+ */
 import { createContext, createElement, useContext } from "react";
 
 /** Lets any view open the location picker rendered by the Shell. */

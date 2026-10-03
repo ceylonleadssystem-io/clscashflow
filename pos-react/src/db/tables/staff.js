@@ -1,3 +1,6 @@
+/**
+ * Table definitions for staff: users, time entries (clock in/out and breaks) and cash register shifts.
+ */
 import { defineTable } from "../defineTable";
 
 export const users = defineTable(

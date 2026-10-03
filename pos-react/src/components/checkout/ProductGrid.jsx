@@ -1,3 +1,7 @@
+/**
+ * Checkout product tiles for the active category or search, with images, prices and live stock
+ * levels (out-of-stock items are disabled when the stock guard is on).
+ */
 import { useMemo } from "react";
 import { money } from "../../domain/format";
 import { availableProductStock } from "../../domain/inventory";

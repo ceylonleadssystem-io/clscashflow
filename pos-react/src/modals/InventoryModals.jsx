@@ -1,3 +1,7 @@
+/**
+ * Inventory dialogs: add stock (search, receive or create), edit a stock item, adjust stock with a
+ * reason, set one item's count per branch, and bulk-set many items for one branch.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { ADJUST_REASONS, STOCK_TYPES, STOCK_UNITS } from "../config/constants";
 import { Modal, ModalBody, NumberInput } from "../components/ui";

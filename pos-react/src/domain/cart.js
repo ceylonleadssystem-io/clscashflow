@@ -1,3 +1,7 @@
+/**
+ * Pure cart maths for checkout: modifier handling and validation, adding/editing/merging order lines,
+ * quantity changes, discount and service-charge calculation, order totals and equal bill splitting.
+ */
 import { PLATFORM_CHANNELS } from "../config/constants";
 
 /** Cart maths and modifier logic (final behaviour of the legacy checkout). */

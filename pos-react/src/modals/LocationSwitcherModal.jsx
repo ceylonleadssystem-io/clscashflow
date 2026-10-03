@@ -1,3 +1,6 @@
+/**
+ * "Select POS Location" dialog: switch the branch for this session, or All Locations for reporting roles.
+ */
 import { REPORTING_ROLES } from "../config/roles";
 import { Modal, ModalBody } from "../components/ui";
 import { useData } from "../store/DataProvider";

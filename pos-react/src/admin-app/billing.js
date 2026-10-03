@@ -1,3 +1,7 @@
+/**
+ * Invoice maths for the admin portal: which enabled features fall outside a plan tier, and
+ * buildInvoiceLines() which produces the invoice lines and total (tier price, chargeable extras or a fixed-amount exception).
+ */
 import { ADDITIONAL_FEATURES, PLANS, PLAN_FEATURE_OFF } from "../config/plans";
 import { FEATURE_MAP, resolveFeatures } from "../config/features";
 

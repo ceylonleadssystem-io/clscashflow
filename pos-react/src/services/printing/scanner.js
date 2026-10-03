@@ -1,3 +1,7 @@
+/**
+ * Barcode scanning: keyboard-wedge detection (fast keystroke bursts ending in Enter) and WebHID scanner
+ * support, with code matching against products and a status emitter for the settings UI.
+ */
 import { createEmitter } from "./usb";
 import { createLogger } from "../../utils/logger";
 

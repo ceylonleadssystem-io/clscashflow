@@ -1,3 +1,6 @@
+/**
+ * Table definitions for inventory: stock items, stock movements and stock transfers.
+ */
 import { defineTable } from "../defineTable";
 
 export const inventoryItems = defineTable(

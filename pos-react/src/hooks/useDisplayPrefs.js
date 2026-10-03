@@ -1,3 +1,7 @@
+/**
+ * Per-user text size and thickness. Preferences are stored on this device under the signed-in staff
+ * user and applied app-wide through the --ui-fs and --ui-fw CSS variables.
+ */
 import { useEffect, useState } from "react";
 import { usePos } from "../store/PosProvider";
 

@@ -1,3 +1,7 @@
+/**
+ * Tests for the database layer: PosStore ordering and lossless extra data, sale persistence with cloud payload
+ * round trips, removals, and the repositories.
+ */
 import { describe, it, expect } from "vitest";
 import { createDatabase } from "../db/database";
 import { PosStore } from "../db/PosStore";

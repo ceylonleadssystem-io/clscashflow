@@ -1,3 +1,7 @@
+/**
+ * Checkout category chips: a horizontally scrolling rail with previous/next buttons, wheel and
+ * arrow-key support, keeping the active chip in view.
+ */
 import { useEffect, useRef, useState } from "react";
 
 /** Horizontally scrolling category chips with previous/next buttons. */

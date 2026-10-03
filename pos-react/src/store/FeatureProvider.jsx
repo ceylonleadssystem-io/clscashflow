@@ -1,3 +1,7 @@
+/**
+ * Provides the resolved feature switches (business-wide, overridden per location) and the
+ * useFeature(id) hook used across the app.
+ */
 import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import { resolveFeatures } from "../config/features";
 import { useData } from "./DataProvider";

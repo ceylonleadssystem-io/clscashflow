@@ -1,3 +1,7 @@
+/**
+ * All Settings panels: business profile, locations, POS type, service charge, appearance theme,
+ * text size and thickness, receipts and printing, customer feedback, billing, and plan and support.
+ */
 import { useState } from "react";
 import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS, KITCHEN_TYPES } from "../../config/presets";
 import { ORDER_CHANNELS, UI_THEMES } from "../../config/constants";

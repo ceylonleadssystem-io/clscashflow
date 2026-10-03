@@ -1,3 +1,7 @@
+/**
+ * Split Bill dialog: equal or custom shares, a payment method per share, and taking each share's payment
+ * (cash received, change, card approval) before continuing to checkout.
+ */
 import { useEffect } from "react";
 import { SPLIT_PAYMENT_METHODS } from "../config/constants";
 import { equalSplit } from "../domain/cart";

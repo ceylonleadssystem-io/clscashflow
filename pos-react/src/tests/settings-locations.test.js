@@ -1,3 +1,7 @@
+/**
+ * Tests for locations and business settings: location validation and stock buckets, saving settings, service
+ * charge limits, support codes, POS setup presets and themes.
+ */
 import { describe, it, expect, beforeEach } from "vitest";
 import { createHarness } from "./harness";
 

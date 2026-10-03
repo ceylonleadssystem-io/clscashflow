@@ -1,3 +1,7 @@
+/**
+ * Sales actions: completeSale (validation, stock deduction, cash-shift totals, e-mail/WhatsApp/KOT follow-ups,
+ * all in one database write), refunds and voids, permanent deletion, and open orders (save, resend to kitchen, void).
+ */
 import { T } from "../../db/tables";
 import { nowIso, isEmail, money, today, whatsappPhone } from "../../domain/format";
 import { cartTotals, discountAmount, serviceChargeAmount } from "../../domain/cart";

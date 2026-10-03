@@ -1,3 +1,7 @@
+/**
+ * Inventory & Stock page: stock KPIs, counting tools (phone count QR, count sheet upload, low-stock WhatsApp),
+ * the stock items table with per-location views for owners, and recent stock movements.
+ */
 import { useMemo, useState } from "react";
 import { money } from "../domain/format";
 import { locationStock, stockStatus } from "../domain/inventory";

@@ -1,3 +1,7 @@
+/**
+ * Register session: who is signed in by PIN, active location, current screen and navigation, access control,
+ * kiosk/layout flags and body classes, theme, background data maintenance, and the bound action services (svc).
+ */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { locationStore } from "./locationStore";
 import { STORAGE, UI_THEMES } from "../config/constants";

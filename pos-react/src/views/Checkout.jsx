@@ -1,3 +1,7 @@
+/**
+ * Sales register page: product catalogue (search, categories, product grid) on the left and the current order
+ * (lines, customer, discount, payment, totals, Complete Sale) on the right.
+ */
 import { useMemo } from "react";
 import { money } from "../domain/format";
 import { visibleProductCategories } from "../domain/catalog";

@@ -1,3 +1,7 @@
+/**
+ * Binds every action service (staff, catalog, customers, inventory, sales, printing, settings, locations,
+ * industry) to a context, so components call e.g. svc.sales.completeSale().
+ */
 import * as staff from "./staff";
 import * as catalog from "./catalog";
 import * as customers from "./customers";

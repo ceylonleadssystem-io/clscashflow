@@ -1,3 +1,8 @@
+/*
+ * Base styles, merged in original cascade order (do not reorder): the modern presentation layer and colour-theme
+ * tokens (Ceylonry orange, Graphite, Gold), then the original base layout (app grid, sidebar, top bar, buttons, inputs, tables,
+ * modals, cards, KPIs and the shared control language) and theme token overrides. Sizes and weights follow --ui-fs / --ui-fw.
+ */
 /* base.css — merged in original cascade order (do not reorder). */
 
 /* ---- pos-modern.css ---- */

@@ -1,3 +1,6 @@
+/**
+ * Browser printing helpers: print an HTML document through a hidden iframe or open it in a pop-up window.
+ */
 /** Browser printing helpers (hidden iframe, pop-up window). */
 
 export function printHtmlInFrame(html, title = "Print job") {

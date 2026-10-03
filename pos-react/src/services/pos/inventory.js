@@ -1,3 +1,7 @@
+/**
+ * Inventory actions: save stock items (with opening stock and movements), adjust stock by reason, delete items,
+ * set branch and bulk branch counts, import a count sheet, and build the low-stock WhatsApp alert link.
+ */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { adjustmentChange, locationStock, stockMovement } from "../../domain/inventory";

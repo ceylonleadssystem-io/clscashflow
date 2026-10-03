@@ -1,3 +1,6 @@
+/**
+ * "Choose Your Checkout" dialog: pick the mobile layout or the full POS layout, optionally remembering the choice on this device.
+ */
 import { useState } from "react";
 import { usePos } from "../store/PosProvider";
 

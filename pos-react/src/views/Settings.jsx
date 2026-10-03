@@ -1,3 +1,7 @@
+/**
+ * Settings page: tabbed sections (Business Profile, POS Setup, Operations, Receipt Printing, Plan & Support)
+ * sharing one form state with a single Save All Settings button.
+ */
 import { useEffect, useState } from "react";
 import { FULL_SETTINGS_ROLES } from "../config/roles";
 import { KITCHEN_TYPES, SERVICE_CHARGE_TYPES } from "../config/presets";

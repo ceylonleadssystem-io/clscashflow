@@ -1,3 +1,7 @@
+/**
+ * Table definitions for the Business Tools: appointments, memberships, prescriptions, medicine batches
+ * and staff commission payments.
+ */
 import { defineTable } from "../defineTable";
 
 export const appointments = defineTable("appointments", {

@@ -1,3 +1,7 @@
+/**
+ * Add or edit a product or service: name, type, code, category/subcategory, prices, image upload with
+ * drag/arrow positioning, modifier assignment and recipe (stock usage). Mounted globally via ProductModalHost.
+ */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, ModalBody, NumberInput } from "../components/ui";
 import { productCategories, subcategoriesFor } from "../domain/catalog";

@@ -1,3 +1,6 @@
+/**
+ * Order Queue page: open orders with KPIs and actions to recall and pay, resend to the kitchen, or void.
+ */
 import { useMemo } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";

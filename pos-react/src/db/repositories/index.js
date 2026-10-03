@@ -1,3 +1,7 @@
+/**
+ * Table-specific repositories (products, customers, sales, users, shifts, inventory, settings, meta...)
+ * with their custom queries, and createRepositories() which builds the full set for a store.
+ */
 import { T } from "../tables";
 import { BaseRepository } from "./BaseRepository";
 import { categoryId } from "../PosStore";

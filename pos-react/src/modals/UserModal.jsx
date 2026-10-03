@@ -1,3 +1,6 @@
+/**
+ * POS user dialog: name, PIN, role, status, clock-in and register behaviour, and branch access.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { useData } from "../store/DataProvider";

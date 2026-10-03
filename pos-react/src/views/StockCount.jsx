@@ -1,3 +1,7 @@
+/**
+ * Phone-friendly stock count page (opened from the QR code at #/count): search an item, enter the counted
+ * quantity and save it as a stock count correction.
+ */
 import { useMemo, useState } from "react";
 import { locationStock } from "../domain/inventory";
 import { NumberInput } from "../components/ui";

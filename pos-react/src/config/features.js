@@ -1,4 +1,8 @@
 /**
+ * Feature registry behind the Admin Dashboard switches: every feature with its group, default and
+ * dependencies, plus resolveFeatures() (applies dependency rules), dependentsOf() and the view-to-feature map.
+ */
+/**
  * Feature registry used by the Admin Dashboard.
  *
  * Every entry is a switch that can be turned on/off for the whole POS

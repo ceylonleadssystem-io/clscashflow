@@ -1,3 +1,7 @@
+/**
+ * Admin portal network layer: adminApi() calls the admin Netlify function with the administrator's token
+ * (or the local dev back end), and emailInvoice() sends an invoice through the SMTP function.
+ */
 import { env } from "../config/env";
 import { adminSession } from "./adminSession";
 import { localAdminApi } from "./localAdmin";

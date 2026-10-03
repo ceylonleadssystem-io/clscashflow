@@ -1,3 +1,7 @@
+/**
+ * Import Catalogue dialog: upload an Excel/CSV/Square file, preview and edit the parsed rows, choose
+ * merge/add/replace and import the items.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { catalogueNumber, parseCatalogueRows } from "../domain/catalog";

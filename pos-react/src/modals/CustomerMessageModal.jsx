@@ -1,3 +1,7 @@
+/**
+ * WhatsApp dialog for a customer (birthday or special message): edit the prepared text, then open
+ * WhatsApp and log the message in the communications history.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { useData } from "../store/DataProvider";

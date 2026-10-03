@@ -1,3 +1,7 @@
+/**
+ * Builds the order e-mail sent to the customer after checkout (subject and styled HTML with items,
+ * modifiers, totals and payment method).
+ */
 import { DEFAULT_RECEIPT_FOOTER } from "../../config/constants";
 import { esc, money } from "../../domain/format";
 

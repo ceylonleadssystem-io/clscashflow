@@ -1,3 +1,7 @@
+/**
+ * Shared UI building blocks: Modal, Panel, Field, Kpi card, Badge, TableWrap, NumberInput (with
+ * thousands separators), Switch, and the useDismiss and useForm hooks.
+ */
 import { useEffect, useRef, useState } from "react";
 import { groupedValue } from "../../domain/format";
 

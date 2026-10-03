@@ -1,3 +1,6 @@
+/**
+ * "Set Up Your POS" dialog: choose a business preset and apply its categories and kitchen-ticket defaults.
+ */
 import { useEffect, useState } from "react";
 import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS } from "../config/presets";
 import { Modal, ModalBody } from "../components/ui";

@@ -1,3 +1,7 @@
+/**
+ * Compatibility layer exposing Appwrite through the older "clsBackend" auth/firestore-style API, so the
+ * Netlify docs function and the shared platform script keep working. Components use auth.service.js instead.
+ */
 import { Account, Client, ID } from "appwrite";
 import { env } from "../../config/env";
 import { createLogger } from "../../utils/logger";

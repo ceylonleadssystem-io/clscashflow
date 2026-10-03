@@ -1,3 +1,7 @@
+/**
+ * Settings actions: save all business settings, patch single keys, regenerate the support code, upload or
+ * remove the business logo and social QR, set the theme, and apply or dismiss the POS setup preset.
+ */
 import { T } from "../../db/tables";
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } from "../../config/constants";
 import { POS_TYPE_PRESETS } from "../../config/presets";

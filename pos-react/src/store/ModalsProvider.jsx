@@ -1,3 +1,6 @@
+/**
+ * Open-state for modals that can be launched from several screens: product, barcode labels and cash register.
+ */
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 /** Open-state of modals that can be launched from several screens. */

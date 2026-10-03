@@ -1,3 +1,7 @@
+/**
+ * Literals shared across the POS: localStorage/sessionStorage keys, payment methods and icons, order
+ * channels, stock types/units/adjustment reasons, customer types, UI colour themes and a few defaults (VIP spend, support-code lifetime, default PIN).
+ */
 /** Storage keys, limits and other literals shared across the POS. */
 export const STORAGE = {
 	/** Default (pre-login) database name / legacy localStorage key. */

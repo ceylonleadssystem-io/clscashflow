@@ -1,3 +1,7 @@
+/**
+ * Workspace bootstrap and normalisation for cloud sync: fresh account data, owner and main location,
+ * cleaning a payload (tombstones, defaults), catalogue backup and recovery, and a push-safe payload.
+ */
 import { PAYLOAD_ARRAYS } from "./payload";
 import { env } from "../../config/env";
 import { DEFAULT_OWNER_PIN, STORAGE } from "../../config/constants";

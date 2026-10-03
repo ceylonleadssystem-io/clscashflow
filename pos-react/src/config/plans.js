@@ -1,3 +1,7 @@
+/**
+ * Subscription plans shown on the pricing sheet (prices in LKR), the additional-features offer, plan
+ * highlights/conditions, and which features each plan excludes (used for invoicing).
+ */
 /** Ceylonry POS plans shown to users (pricing sheet). Prices in LKR. */
 export const PLANS = [
 	{

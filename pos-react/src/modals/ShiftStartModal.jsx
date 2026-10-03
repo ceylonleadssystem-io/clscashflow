@@ -1,3 +1,6 @@
+/**
+ * "Start your shift" prompt shown after sign-in, offering clock-in and opening the register according to the user's behaviour settings.
+ */
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { activeTimeEntry, currentCashShift } from "../domain/sales";
