@@ -329,7 +329,7 @@ test('plan user limits are displayed consistently and enforced by team access', 
   const platform = read('assets/platform.js');
   const landing = read('index.html');
   const onboarding = read('onboarding.html');
-  const access = read('access-admin.html');
+  const access = read('team.html');
 
   assert.match(platform, /solo:\s*\{[\s\S]*?userLimit:\s*1[\s\S]*?userLabel:\s*'1 user only'/);
   assert.match(platform, /studio:\s*\{[\s\S]*?userLimit:\s*5[\s\S]*?userLabel:\s*'Up to 5 users'/);
@@ -479,7 +479,7 @@ test('all application pages load the current invoice renderer without stale cach
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
-    'access-admin.html', 'ceylonry-admin.html', 'mrs-gamage-story.html',
+    'team.html', 'ceylonry-admin.html', 'mrs-gamage-story.html',
     'privacy.html', 'terms.html'
   ];
   for (const file of pages) {
@@ -649,7 +649,7 @@ test('all three plan dashboards greet the signed-in user by first name and local
 });
 
 test('Team Access shares the editorial UI and uses cached parallel loading', function() {
-  const page = read('access-admin.html');
+  const page = read('team.html');
   assert.match(page, /editorial-app\.css\?v=20260801-team/);
   assert.match(page, /TEAM_REQUEST_TIMEOUT = 3000/);
   assert.match(page, /if\(cached\) renderTeamState\(cached\.members, cached\.pending\)/);

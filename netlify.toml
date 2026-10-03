@@ -33,15 +33,10 @@
   to = "/app/index.html"
   status = 200
 
-# The legacy single-file POS is retired: old links, bookmarks and installed shortcuts open the React POS.
+# The legacy single-file POS is retired (archived as posv1): old links, bookmarks and installed
+# shortcuts open the React POS.
 [[redirects]]
-  from = "/pos-system/pos-system.html"
-  to = "/posv2/"
-  status = 302
-  force = true
-
-[[redirects]]
-  from = "/pos-system/pos-system"
+  from = "/pos-system/*"
   to = "/posv2/"
   status = 302
   force = true
@@ -105,18 +100,6 @@
     Cache-Control = "public, max-age=0, must-revalidate"
     Netlify-CDN-Cache-Control = "public, max-age=0, must-revalidate"
 
-[[headers]]
-  for = "/pos-system/pos-system.html"
-  [headers.values]
-    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
-    Netlify-CDN-Cache-Control = "no-store"
-
-[[headers]]
-  for = "/pos-system/pos-system"
-  [headers.values]
-    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
-    Netlify-CDN-Cache-Control = "no-store"
-
 # Public invoice links can become available immediately after a reminder is
 # created. Never retain an earlier not-found page in a mobile browser cache.
 [[headers]]
@@ -173,12 +156,6 @@
     Cache-Control = "no-store"
     X-Robots-Tag = "noindex, nofollow"
 
-[[headers]]
-  for = "/access-admin.html"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    Cache-Control = "no-store"
-    X-Robots-Tag = "noindex, nofollow"
 
 # Source, tests and internal docs live in the repo but are not part of the site.
 # These paths used to be downloadable because the publish directory is the repo root.
@@ -240,6 +217,14 @@
 
 [[headers]]
   for = "/posv2/admin/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+# Team access (CashFlow invites): an authenticated page, never framed, cached or indexed.
+[[headers]]
+  for = "/team.html"
   [headers.values]
     X-Frame-Options = "DENY"
     Cache-Control = "no-store"

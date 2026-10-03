@@ -2,7 +2,7 @@
   "name": "ceylonry-pos-react",
   "version": "1.0.0",
   "private": true,
-  "description": "Ceylonry POS - modular React + WatermelonDB port of pos-system.html",
+  "description": "Ceylonry POS - modular React + WatermelonDB port of the original single-file POS (archived as posv1)",
   "type": "module",
   "scripts": {
     "dev": "vite",
