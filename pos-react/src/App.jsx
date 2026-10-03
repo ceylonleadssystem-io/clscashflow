@@ -36,8 +36,8 @@ export default function App() {
 	);
 }
 
-// `progress` is accepted for call-site compatibility; the gear spinner needs no percentage.
-const Loading = ({ children = "Loading…" }) => (
+// Gear spinner; children replace the default "Loading information......" text.
+const Loading = ({ children }) => (
 	<div className="app-loading">
 		<GearLoader label={children} />
 	</div>
@@ -47,9 +47,9 @@ const Loading = ({ children = "Loading…" }) => (
 // instead of leaking the previous workspace's snapshot, staff session and cart.
 function Root() {
 	const { phase, workspace } = useSession();
-	if (phase === "booting") return <Loading progress={12}>Starting up…</Loading>;
+	if (phase === "booting") return <Loading />;
 	if (phase === "signed-out") return <BusinessGate />;
-	if (phase === "activating" || !workspace) return <Loading progress={40}>Loading your POS…</Loading>;
+	if (phase === "activating" || !workspace) return <Loading />;
 	return (
 		<DataProvider key={workspace.dbName} store={workspace.store}>
 			<Ready />
@@ -64,7 +64,7 @@ function Ready() {
 	useEffect(() => {
 		window._posPlanTier = tier || "starter";
 	}, [tier]);
-	if (!data.ready) return <Loading progress={72}>Opening local database…</Loading>;
+	if (!data.ready) return <Loading />;
 	return (
 		<FeatureProvider>
 			<ModalsProvider>
