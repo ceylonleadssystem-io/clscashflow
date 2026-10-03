@@ -342,3 +342,8 @@ html body.mobile-checkout #view-checkout .cart-foot>.row.grand{position:sticky;b
 	html body.mobile-checkout #view-checkout .cart-foot>.row.grand{bottom:134px}
 }
 .hw-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.gear-loader{display:grid;justify-items:center;gap:12px;color:#1a1714;font:600 14px "DM Sans",sans-serif}
+.gear-loader svg{width:56px;height:56px;animation:gear-spin 1.6s linear infinite}
+.gear-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(245,243,238,.85)}
+@keyframes gear-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.gear-loader svg{animation-duration:4s}}
