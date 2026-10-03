@@ -1,6 +1,6 @@
 /**
  * Business account sign-in screen: Appwrite sign-in (with forgot-password and a trial link) or the local
- * owner login / first-time account creation in offline or dev mode. Routes the developer email to the developer portal.
+ * owner login / first-time account creation in offline or dev mode.
  */
 import { useState } from "react";
 import { env } from "../config/env";
@@ -15,7 +15,6 @@ export function BusinessGate() {
 	const [password, setPassword] = useState("");
 	const [confirm, setConfirm] = useState("");
 	const [show, setShow] = useState(false);
-	const developer = email.trim().toLowerCase() === env.developerEmail;
 	const creating = local && !hasAccount;
 	const busy = phase === "activating" || authError === "Signing in securely…";
 
@@ -30,14 +29,12 @@ export function BusinessGate() {
 		return signIn(mail, password);
 	};
 
-	const heading = developer ? "POS developer sign in" : creating ? "Create the main business login" : local ? "Business owner sign in" : "POS business sign in";
-	const copy = developer
-		? "Sign in to open the separate POS Developer Portal."
-		: creating
-			? "Set the main email and password for this business. Staff PIN access appears next."
-			: local
-				? "Sign in with the business email and password before staff access the register."
-				: "Enter your business email and password to continue.";
+	const heading = creating ? "Create the main business login" : local ? "Business owner sign in" : "POS business sign in";
+	const copy = creating
+		? "Set the main email and password for this business. Staff PIN access appears next."
+		: local
+			? "Sign in with the business email and password before staff access the register."
+			: "Enter your business email and password to continue.";
 
 	return (
 		<div className="account-gate" id="account-gate">
@@ -92,7 +89,7 @@ export function BusinessGate() {
 				<div className="login-error" id="account-error">
 					{authError}
 				</div>
-				{!local && !developer && (
+				{!local && (
 					<div className="pos-auth-note" id="pos-new-account-note">
 						New to POS? <a href={env.onboardingUrl}>Start a 7-day POS trial</a> · Your sales are stored on this device if the internet drops and sync when it returns.
 					</div>
