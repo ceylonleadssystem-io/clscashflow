@@ -3,7 +3,6 @@
  * access checks and paywall, and sign-in, register, sign-out and password-reset actions.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { env } from "../config/env";
 import { DEFAULT_OWNER_PIN, STORAGE } from "../config/constants";
 import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
@@ -193,10 +192,6 @@ export function SessionProvider({ children }) {
 				sessionStorage.setItem(STORAGE.loginUid, user.uid);
 				setAuthError("");
 				log.info("business login succeeded");
-				if (email === env.developerEmail) {
-					window.location.href = env.supportPortalUrl;
-					return;
-				}
 				await activate(user);
 			} catch (e) {
 				sessionStorage.removeItem(STORAGE.loginUid);
