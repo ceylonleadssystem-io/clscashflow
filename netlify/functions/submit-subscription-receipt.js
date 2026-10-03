@@ -5,10 +5,9 @@ const log = require('../lib/log').createLogger('submit-subscription-receipt');
 
 const MAX_FILE_BYTES = 3000000;
 const PLANS = {
-  solo: { name: 'Solo', monthly: 3500, annual: 36000 },
-  studio: { name: 'Studio', monthly: 5500, annual: 60000 },
-  business: { name: 'Business', monthly: 8500, annual: 94800 },
-  pos: { name: 'POS', monthly: 3500, annual: 42000 }
+  Starter: { name: 'Starter', monthly: 5500, annual: 62000 },
+  studio: { name: 'Studio', monthly: 7500, annual: 83000 },
+  business: { name: 'Business', monthly: 15500, annual: 180000 },
 };
 const PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
 
