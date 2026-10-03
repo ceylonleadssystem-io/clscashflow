@@ -80,6 +80,8 @@ for (const file of htmlFiles) {
     if (!target || /^(?:https?:|mailto:|tel:|data:|javascript:|#|\/\/)/i.test(target) || /[{$]/.test(target)) continue;
     target = target.split(/[?#]/)[0];
     if (!target) continue;
+    // /posv2/ is the React POS: it only exists after `pos-react` is built, and Netlify rewrites it (see netlify.toml).
+    if (/^\/?posv2(?:\/|$)/.test(target)) continue;
     let resolved = target.startsWith('/')
       ? path.join(root, target.slice(1))
       : path.resolve(path.dirname(file), target);
