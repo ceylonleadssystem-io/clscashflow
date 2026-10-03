@@ -156,12 +156,6 @@
     Cache-Control = "no-store"
     X-Robots-Tag = "noindex, nofollow"
 
-[[headers]]
-  for = "/access-admin.html"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    Cache-Control = "no-store"
-    X-Robots-Tag = "noindex, nofollow"
 
 # Source, tests and internal docs live in the repo but are not part of the site.
 # These paths used to be downloadable because the publish directory is the repo root.

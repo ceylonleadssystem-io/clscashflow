@@ -25,7 +25,6 @@ test('Solo does not render or route to Team Access or Edit Backlog', () => {
   assert.doesNotMatch(solo, /id="view-team"/);
   assert.doesNotMatch(solo, /id="view-backlog"/);
   assert.match(solo, /if\(view==='team'\|\|view==='backlog'\)\{[\s\S]*?window\.nav\('dashboard'\)/);
-  assert.match(read('access-admin.html'), /if\(_plan === 'solo'\)\{[\s\S]*?solo\.html\?notice=team-access-unavailable/);
 });
 
 test('plan comparisons no longer advertise Edit Backlog as a Solo feature', () => {

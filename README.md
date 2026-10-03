@@ -11,7 +11,6 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 - `starter.html` - Studio dashboard
 - `growth.html` - Business dashboard
 - `premium.html` - legacy premium prototype page, no longer linked in the active plan flow
-- `access-admin.html` - team access and invite management
 - `accept-invite.html` - invite acceptance page
 - `netlify/functions/send-invoice.js` - built-in SMTP invoice email fallback
 - `netlify/functions/send-invite.js` - team invite email function
@@ -75,7 +74,7 @@ Customers prepay each month by bank transfer and upload a PDF or image payment s
 
 ## Team Invites
 
-`access-admin.html` now creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
+The team-access page (`access-admin.html`) was retired; its links now open the administration app at `/posv2/admin`. The invite functions (`send-invite`, `accept-invite.html`) and the `users/{ownerUid}/team/{inviteId}` records are unchanged. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
 
 If invite creation shows `Not allowed`, confirm the user is signed in and the invite is being written under `users/{ownerUid}/team` in the Appwrite `app_documents` collection.
 

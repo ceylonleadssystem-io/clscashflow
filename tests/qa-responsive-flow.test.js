@@ -329,15 +329,12 @@ test('plan user limits are displayed consistently and enforced by team access', 
   const platform = read('assets/platform.js');
   const landing = read('index.html');
   const onboarding = read('onboarding.html');
-  const access = read('access-admin.html');
 
   assert.match(platform, /solo:\s*\{[\s\S]*?userLimit:\s*1[\s\S]*?userLabel:\s*'1 user only'/);
   assert.match(platform, /studio:\s*\{[\s\S]*?userLimit:\s*5[\s\S]*?userLabel:\s*'Up to 5 users'/);
   assert.match(platform, /business:\s*\{[\s\S]*?userLimit:\s*Infinity[\s\S]*?userLabel:\s*'Unlimited users'/);
   assert.match(landing, /<td>Users<\/td><td><strong>1 user only<\/strong><\/td><td><strong>Up to 5 users<\/strong><\/td><td><strong>Unlimited users<\/strong><\/td>/);
   assert.match(onboarding, /<td>Users<\/td><td><strong>1 user only<\/strong><\/td><td><strong>Up to 5 users<\/strong><\/td><td><strong>Unlimited users<\/strong><\/td>/);
-  assert.match(access, /var used = 1 \+ activeCount \+ pendingCount;/);
-  assert.match(access, /if\(s\.full\)\{[\s\S]*?btn\.disabled = true;/);
   assert.doesNotMatch(access, /if \(window\.clsRememberPlan\) await window\.clsRememberPlan/);
   assert.match(access, /renderTeamState\(\[\], \[\]\);/);
   assert.match(access, /loadTeam\(\)\.catch/);
@@ -479,7 +476,7 @@ test('all application pages load the current invoice renderer without stale cach
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
     'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
-    'access-admin.html', 'ceylonry-admin.html', 'mrs-gamage-story.html',
+    'ceylonry-admin.html', 'mrs-gamage-story.html',
     'privacy.html', 'terms.html'
   ];
   for (const file of pages) {
@@ -646,14 +643,6 @@ test('all three plan dashboards greet the signed-in user by first name and local
   assert.match(studio, /clsUpdateTimeGreeting\('studio-greet-h',_profile,_auth\.currentUser,'there'\)/);
   assert.match(business, /id="greet-h"/);
   assert.match(business, /clsUpdateTimeGreeting\('greet-h',_profile,_fauth\.currentUser,'there'\)/);
-});
-
-test('Team Access shares the editorial UI and uses cached parallel loading', function() {
-  const page = read('access-admin.html');
-  assert.match(page, /editorial-app\.css\?v=20260801-team/);
-  assert.match(page, /TEAM_REQUEST_TIMEOUT = 3000/);
-  assert.match(page, /if\(cached\) renderTeamState\(cached\.members, cached\.pending\)/);
-  assert.match(page, /var reads = await Promise\.all\(/);
 });
 
 test('Business payroll provides consolidated PDF and individual PDF email actions', function() {

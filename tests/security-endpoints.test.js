@@ -7,7 +7,6 @@ const root = path.resolve(__dirname, '..');
 const receiptSource = fs.readFileSync(path.join(root, 'netlify/functions/submit-subscription-receipt.js'), 'utf8');
 const docsSource = fs.readFileSync(path.join(root, 'netlify/functions/appwrite-docs.js'), 'utf8');
 const platformSource = fs.readFileSync(path.join(root, 'assets/platform.js'), 'utf8');
-const accessAdminSource = fs.readFileSync(path.join(root, 'access-admin.html'), 'utf8');
 const ceylonryAdminSource = fs.readFileSync(path.join(root, 'ceylonry-admin.html'), 'utf8');
 const appwriteCompatSource = fs.readFileSync(path.join(root, 'assets/appwrite-compat.js'), 'utf8');
 const adminSigninSource = fs.readFileSync(path.join(root, 'netlify/functions/admin-signin.js'), 'utf8');
@@ -41,7 +40,6 @@ test('public invite reads validate token and expose only allowlisted fields', ()
   assert.match(docsSource, /d\.status\|\|'pending'/);
   assert.match(docsSource, /Date\.parse\(d\.expiresAt\)>Date\.now\(\)/);
   assert.match(docsSource, /var publicInvite=/);
-  assert.match(accessAdminSource, /expiresAt:\s*new Date/);
   assert.doesNotMatch(docsSource, /doc:invite/);
 });
 
