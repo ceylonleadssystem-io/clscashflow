@@ -127,7 +127,7 @@ export const FEATURES = [
 
 	// ----------------------------------------------------------------- shell
 	f("shell.fullscreen", "shell", "Full screen / kiosk mode", "Full screen toggle, touch kiosk mode and iOS install guide."),
-	f("shell.sidebarToggle", "shell", "Sidebar toggle", "Show / hide menu button.", { requires: ["shell.fullscreen"] }),
+	f("shell.sidebarToggle", "shell", "Sidebar toggle", "Show / hide menu button."),
 	f("shell.sessionButtons", "shell", "Lock POS / Sign out buttons", "Session buttons in the top bar.", { core: true }),
 
 	// -------------------------------------------------------------- industry

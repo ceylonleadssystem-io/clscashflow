@@ -475,9 +475,6 @@
 /* ---- 10-sidebar-toggle.css ---- */
 /* Distraction-free register mode: the operator can reclaim the sidebar width. */
 			#sidebar-toggle {
-				display: none;
-			}
-			body.full #sidebar-toggle {
 				display: inline-flex;
 				align-items: center;
 				justify-content: center;
@@ -485,10 +482,10 @@
 			#nav button[hidden] {
 				display: none !important;
 			}
-			body.full.sidebar-collapsed .side {
+			body.sidebar-collapsed .side {
 				display: none !important;
 			}
-			body.full.sidebar-collapsed .app {
+			body.sidebar-collapsed .app {
 				grid-template-columns: 1fr !important;
 			}
 			body.full:not(.sidebar-collapsed) .side {
