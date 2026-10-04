@@ -23,7 +23,6 @@ import {
 	PrintingPanel,
 	ServiceChargePanel,
 } from "../components/settings/panels";
-import { DiagnosticsPanel } from "../components/settings/DiagnosticsPanel";
 
 const TABS = [
 	{ id: "business", label: "Business Profile" },
@@ -107,7 +106,6 @@ export function Settings() {
 			<>
 				{billing && <BillingPanel />}
 				<PlanSupportPanel form={form} set={set} onRegenerate={() => svc.settings.regenerateSupportCode()} />
-				<DiagnosticsPanel />
 			</>
 		),
 	};

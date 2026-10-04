@@ -84,6 +84,34 @@ function isTestAccount(data) {
   return data && (data.posIsTestAccount === true || data.isTestAccount === true || String(data.customerType || '').toLowerCase() === 'test');
 }
 
+const ACCOUNT_STATUSES = ['trial', 'test', 'live'];
+
+// Explicit posAccountStatus wins; otherwise derive from the legacy test flag, then payment.
+function accountStatus(data) {
+  const set = String(data.posAccountStatus || '').toLowerCase();
+  if (ACCOUNT_STATUSES.includes(set)) return set;
+  if (isTestAccount(data)) return 'test';
+  return data.posPaid === true ? 'live' : 'trial';
+}
+
+function clampNum(v, min, max) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min;
+}
+
+// Validators for the newer saveSettings keys; return undefined to skip an invalid value.
+const SETTING_SANITIZERS = {
+  invoiceExtras: function(v) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return;
+    return { enabled: v.enabled === true, description: clean(v.description, 200), amount: clampNum(v.amount, 0, 1e12) };
+  },
+  invoiceTax: function(v) {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return;
+    return { enabled: v.enabled === true, rate: clampNum(v.rate, 0, 100) };
+  },
+  businessCategory: function(v) { return typeof v === 'string' ? clean(v, 40) : undefined; }
+};
+
 function addBillingPeriod(start, cycle) {
   const date = new Date(start);
   if (cycle === 'annual') date.setUTCFullYear(date.getUTCFullYear() + 1);
@@ -181,17 +209,17 @@ async function handle(event) {
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
           products: (payload.products || []).length, categories: (payload.categories || []).length,
-          updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: isTestAccount(row.data), paused: row.data.posAccountPaused === true,
+          updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: accountStatus(row.data) === 'test', status: accountStatus(row.data), subscriptionType: clean(row.data.posBillingCycle) === 'annual' ? 'annual' : 'monthly', paused: row.data.posAccountPaused === true,
           authStatus: !authAvailable ? 'unavailable' : !authUser ? 'missing' : authUser.disabled ? 'disabled' : 'ready',
           authLastSignInAt: authUser && authUser.metadata && authUser.metadata.lastSignInTime || ''
         };
       }));
-      const realIds = new Set(rows.filter(function(row){ return !isTestAccount(row.data); }).map(function(row){ return String(row.id); }));
+      const realIds = new Set(rows.filter(function(row){ return accountStatus(row.data) !== 'test'; }).map(function(row){ return String(row.id); }));
       const currentMonth = new Date().toISOString().slice(0, 7);
       const confirmed = paymentRows.filter(function(row){ const data=row.data||{}; return realIds.has(String(data.uid||'')) && ['paid','confirmed','verified'].includes(String(data.status||'').toLowerCase()) && String(data.verifiedAtUtc||data.receivedAtUtc||'').slice(0,7)===currentMonth; });
       const revenueThisMonth = confirmed.reduce(function(total,row){ const data=row.data||{}; return total+(Number(data.amountLkr)||((data.billingCycle==='annual')?62000:5500)); },0);
       const receipts = paymentRows.map(function(row){ const data=row.data||{}; return {id:row.id,uid:data.uid||'',email:data.email||'',businessName:data.businessName||'',billingCycle:data.billingCycle||'monthly',amountLkr:Number(data.amountLkr)||0,period:data.period||'',status:data.status||'receipt-submitted',receiptName:data.receiptName||'',receiptAvailable:!!data.receiptData,receivedAtUtc:data.receivedAtUtc||'',verifiedAtUtc:data.verifiedAtUtc||''}; });
-      return response(200, { ok: true, users, receipts, stats: { realCustomers: realIds.size, testAccounts: rows.length-realIds.size, revenueThisMonth, confirmedPaymentsThisMonth: confirmed.length, authAvailable, missingAuthAccounts: users.filter(function(user){ return user.authStatus === 'missing'; }).length, disabledAuthAccounts: users.filter(function(user){ return user.authStatus === 'disabled'; }).length } });
+      return response(200, { ok: true, users, receipts, stats: { realCustomers: realIds.size, testAccounts: rows.length-realIds.size, trialAccounts: users.filter(function(u){ return u.status === 'trial'; }).length, liveAccounts: users.filter(function(u){ return u.status === 'live'; }).length, revenueThisMonth, confirmedPaymentsThisMonth: confirmed.length, authAvailable, missingAuthAccounts: users.filter(function(user){ return user.authStatus === 'missing'; }).length, disabledAuthAccounts: users.filter(function(user){ return user.authStatus === 'disabled'; }).length } });
     }
 
     const uid = clean(body.userId || params.userId, 100);
@@ -205,8 +233,24 @@ async function handle(event) {
 
     if (action === 'markTest') {
       const test = body.test === true;
-      await db.collection('users').doc(uid).set({ posIsTestAccount:test, posTestAccountUpdatedAtUtc:new Date().toISOString(), posTestAccountUpdatedBy:ADMIN_EMAIL }, { merge:true });
+      await db.collection('users').doc(uid).set({ posIsTestAccount:test, posAccountStatus:test ? 'test' : (profile.posPaid === true ? 'live' : 'trial'), posTestAccountUpdatedAtUtc:new Date().toISOString(), posTestAccountUpdatedBy:ADMIN_EMAIL }, { merge:true });
       return response(200,{ok:true,test});
+    }
+
+    if (action === 'setAccountStatus') {
+      const status = String(body.status || '').toLowerCase();
+      if (!ACCOUNT_STATUSES.includes(status)) return response(400, { ok: false, error: 'Status must be trial, test or live.' });
+      await db.collection('users').doc(uid).set({ posAccountStatus:status, posIsTestAccount:status === 'test', posAccountStatusUpdatedAtUtc:new Date().toISOString(), posAccountStatusUpdatedBy:ADMIN_EMAIL }, { merge:true });
+      log.info('account status set', { uid, status });
+      return response(200,{ok:true,status});
+    }
+
+    if (action === 'setSubscriptionType') {
+      const type = String(body.subscriptionType || '').toLowerCase();
+      if (!['monthly', 'annual'].includes(type)) return response(400, { ok: false, error: 'Subscription type must be monthly or annual.' });
+      await db.collection('users').doc(uid).set({ posBillingCycle:type, posBillingCycleUpdatedAtUtc:new Date().toISOString(), posBillingCycleUpdatedBy:ADMIN_EMAIL }, { merge:true });
+      log.info('subscription type set', { uid, type });
+      return response(200,{ok:true,subscriptionType:type});
     }
 
     if (action === 'setAccess') {
@@ -338,6 +382,8 @@ async function handle(event) {
         lines: lines, amount: amount, status: clean(inv.status, 20) || 'unpaid',
         emailedTo: inv.emailedTo ? clean(inv.emailedTo, 200) : '', emailedAtUtc: inv.emailedTo ? now : ''
       };
+      if (inv.tax && typeof inv.tax === 'object') doc.tax = { enabled: inv.tax.enabled === true, rate: clampNum(inv.tax.rate, 0, 100), amount: clampNum(inv.tax.amount, 0, 1e12) };
+      if (inv.extras && typeof inv.extras === 'object') doc.extras = { description: clean(inv.extras.description, 200), amount: clampNum(inv.extras.amount, 0, 1e12) };
       await db.collection('users/' + uid + '/posInvoices').doc(number).set(doc, { merge: true });
       return response(200, { ok: true, invoice: doc });
     }
@@ -346,7 +392,7 @@ async function handle(event) {
       // Admin dashboard: feature switches (business + per location) and the first-login welcome message.
       // Written with per-key timestamps so the POS cloud merge accepts them as the newest value.
       const incoming = body.settings && typeof body.settings === 'object' ? body.settings : {};
-      const allowedKeys = ['features', 'locationFeatures', 'welcome', 'plan'];
+      const allowedKeys = ['features', 'locationFeatures', 'welcome', 'plan'].concat(Object.keys(SETTING_SANITIZERS));
       const now = new Date().toISOString();
       const payload = Object.assign({}, workspace.payload);
       payload.settings = Object.assign({}, payload.settings);
@@ -356,8 +402,15 @@ async function handle(event) {
       allowedKeys.forEach(function(key) {
         if (!Object.prototype.hasOwnProperty.call(incoming, key)) return;
         const value = incoming[key];
-        if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
-        payload.settings[key] = JSON.parse(JSON.stringify(value));
+        const sanitize = SETTING_SANITIZERS[key];
+        if (sanitize) {
+          const clean2 = sanitize(value);
+          if (clean2 === undefined) return;
+          payload.settings[key] = clean2;
+        } else {
+          if (value === null || typeof value !== 'object' || Array.isArray(value)) return;
+          payload.settings[key] = JSON.parse(JSON.stringify(value));
+        }
         payload.syncMeta.settings[key] = now;
         changed.push(key);
       });

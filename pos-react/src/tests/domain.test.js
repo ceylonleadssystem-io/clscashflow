@@ -173,11 +173,8 @@ describe("stock reasons", () => {
 
 describe("invoices", () => {
 	const flags = { ...defaultFeatureFlags() };
-	it("charges tier price plus additional features beyond the free ones", () => {
-		const r = buildInvoiceLines({ tier: "starter", flags, period: "2026-10" });
-		// starter excludes 9 features that are all on in `flags` -> 9 extras, 2 free
-		expect(r.extras.length).toBeGreaterThan(2);
-		expect(r.total).toBe(5500 + (r.extras.length - 2) * 5500);
+	it("charges the tier price only by default", () => {
+		expect(buildInvoiceLines({ tier: "starter", flags, period: "2026-10" }).total).toBe(5500);
 	});
 	it("uses the fixed-amount exception when set", () => {
 		const r = buildInvoiceLines({ tier: "business", flags, exceptionAmount: 6000, exceptionNote: "legacy deal" });

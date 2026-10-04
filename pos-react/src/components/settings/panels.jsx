@@ -8,7 +8,7 @@ import { ORDER_CHANNELS, UI_THEMES } from "../../config/constants";
 import { ADDITIONAL_FEATURES, planForSettings } from "../../config/plans";
 import { env } from "../../config/env";
 import { money } from "../../domain/format";
-import { Panel, Field } from "../ui";
+import { Panel, Field, Switch } from "../ui";
 import { FieldError } from "../ui/FieldError";
 import { emailError } from "../../domain/validators";
 import { useData } from "../../store/DataProvider";
@@ -18,6 +18,7 @@ import { useSession } from "../../store/SessionProvider";
 import { openBankTransfer } from "../../services/platform.service";
 import { LocationEditorModal } from "../../modals/LocationEditorModal";
 import { FONT_SIZES, FONT_WEIGHTS, useDisplayPrefs } from "../../hooks/useDisplayPrefs";
+import { applyDark, resolveDark, storedDark } from "../../utils/theme";
 import { HardwarePanel } from "./HardwarePanel";
 
 /** Individual Settings panels. Each takes the shared `form` state from Settings.jsx. */
@@ -193,6 +194,7 @@ export function ServiceChargePanel({ form, set }) {
 export function AppearancePanel() {
 	const { svc } = usePos();
 	const theme = useData().settings.uiTheme || "ceylonry";
+	const dark = resolveDark(useData().settings.darkMode, storedDark());
 	return (
 		<div className="panel" id="pos-theme-settings">
 			<div className="panel-head">
@@ -202,6 +204,20 @@ export function AppearancePanel() {
 				</div>
 			</div>
 			<div className="modal-body">
+				<div className="field full" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+					<div>
+						<strong>Dark mode</strong>
+						<div className="muted">Use a dark display on this account. Printed receipts stay light.</div>
+					</div>
+					<Switch
+						checked={dark}
+						label="Dark mode"
+						onChange={(v) => {
+							applyDark(v);
+							svc.settings.patchSettings({ darkMode: v });
+						}}
+					/>
+				</div>
 				<div className="settings-theme-picker" role="group" aria-label="POS colour theme">
 					{UI_THEMES.map((t) => (
 						<button

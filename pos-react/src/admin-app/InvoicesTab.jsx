@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import { FEATURE_MAP, defaultFeatureFlags } from "../config/features";
 import { PLANS } from "../config/plans";
 import { adminApi, emailInvoice } from "./adminApi";
 import { buildInvoiceLines } from "./billing";
 import { fmt } from "./format";
+import { Switch } from "../components/ui";
 
-export function InvoicesTab({ account, profile, settings, invoices, reload, ui }) {
+export function InvoicesTab({ account, profile, settings, save, saving, invoices, reload, ui }) {
 	const plan = settings.plan || {};
 	const tier = plan.tier || "starter";
 	const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
@@ -13,14 +13,28 @@ export function InvoicesTab({ account, profile, settings, invoices, reload, ui }
 	const [to, setTo] = useState(profile.email || account.email || "");
 	const [note, setNote] = useState("");
 	const [busy, setBusy] = useState(false);
-	const flags = { ...defaultFeatureFlags(), ...(settings.features || {}) };
-	const calc = useMemo(() => buildInvoiceLines({ tier, flags, exceptionAmount: plan.exceptionAmount, exceptionNote: plan.exceptionNote, period }), [tier, settings.features, plan.exceptionAmount, plan.exceptionNote, period]); // eslint-disable-line
+	const [ex, setEx] = useState({ enabled: !!settings.invoiceExtras?.enabled, description: settings.invoiceExtras?.description || "", amount: settings.invoiceExtras?.amount ?? "" });
+	const [tx, setTx] = useState({ enabled: !!settings.invoiceTax?.enabled, rate: settings.invoiceTax?.rate ?? "" });
+	const calc = useMemo(
+		() => buildInvoiceLines({ tier, exceptionAmount: plan.exceptionAmount, exceptionNote: plan.exceptionNote, period, extras: ex, tax: tx }),
+		[tier, plan.exceptionAmount, plan.exceptionNote, period, ex, tx],
+	);
+	const saveExtras = () => {
+		const amount = Number(ex.amount) || 0;
+		if (ex.enabled && (amount < 0 || !ex.description.trim())) return ui.alert("Enter a description and an amount of 0 or more.");
+		save({ invoiceExtras: { enabled: ex.enabled, description: ex.description.trim().slice(0, 200), amount: Math.max(0, amount) } }, "Invoice additional features");
+	};
+	const saveTax = () => {
+		const rate = Number(tx.rate) || 0;
+		if (rate < 0 || rate > 100) return ui.alert("Tax must be between 0 and 100%.");
+		save({ invoiceTax: { enabled: tx.enabled, rate: Math.round(rate * 100) / 100 } }, "Invoice tax");
+	};
 
 	const create = async (send) => {
 		if (send && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(to)) return ui.alert("Enter a valid e-mail address to send the invoice to.");
 		setBusy(true);
 		try {
-			const res = await adminApi({ action: "saveInvoice", userId: account.id, invoice: { tier, period, dueDate: due, note, exception: calc.exception, lines: calc.lines } });
+			const res = await adminApi({ action: "saveInvoice", userId: account.id, invoice: { tier, period, dueDate: due, note, exception: calc.exception, lines: calc.lines, extras: calc.extras, tax: calc.tax, total: calc.total } });
 			let inv = res.invoice;
 			if (send) {
 				await emailInvoice({ to, invoice: inv, clientName: profile.name, businessName: account.business });
@@ -57,7 +71,7 @@ export function InvoicesTab({ account, profile, settings, invoices, reload, ui }
 					<div>
 						<div className="panel-title">New invoice</div>
 						<div className="muted">
-							{plainTier?.name} · {calc.exception ? "fixed amount exception" : "tier price + additional features"}
+							{plainTier?.name} · {calc.exception ? "fixed amount exception" : "tier price"}
 						</div>
 					</div>
 				</div>
@@ -88,8 +102,43 @@ export function InvoicesTab({ account, profile, settings, invoices, reload, ui }
 						<span>Total</span>
 						<span>{fmt(calc.total)}</span>
 					</div>
-					{calc.exception && <div className="plan-settings-note">Computed from the tier would be {fmt(calc.computedTotal)}; the client has an agreed fixed amount.</div>}
-					{!calc.exception && calc.extras.length > 0 && <div className="plan-settings-note">{calc.extras.length} additional feature(s) outside the tier: {calc.extras.map((id) => FEATURE_MAP[id].label).join(", ")}.</div>}
+					{calc.exception && <div className="plan-settings-note">Computed from the tier would be {fmt(calc.computedTotal)}; the client has an agreed fixed amount. The fixed amount is final: additional features and tax are not added.</div>}
+					<div className="inv-block">
+						<div className="inv-block-head">
+							<b>Additional features</b>
+							<Switch checked={ex.enabled} onChange={(v) => setEx({ ...ex, enabled: v })} label="Additional features" />
+						</div>
+						{ex.enabled && (
+							<div className="form-grid">
+								<div className="field">
+									<label>Description</label>
+									<input className="input" maxLength={200} value={ex.description} onChange={(e) => setEx({ ...ex, description: e.target.value })} />
+								</div>
+								<div className="field">
+									<label>Amount (LKR)</label>
+									<input className="input" type="number" min="0" step="0.01" value={ex.amount} onChange={(e) => setEx({ ...ex, amount: e.target.value })} />
+								</div>
+							</div>
+						)}
+						<button className="btn out" disabled={saving} onClick={saveExtras}>
+							Save
+						</button>
+					</div>
+					<div className="inv-block">
+						<div className="inv-block-head">
+							<b>Tax</b>
+							<Switch checked={tx.enabled} onChange={(v) => setTx({ ...tx, enabled: v })} label="Tax" />
+						</div>
+						{tx.enabled && (
+							<div className="field">
+								<label>Tax (%)</label>
+								<input className="input" type="number" min="0" max="100" step="0.01" value={tx.rate} onChange={(e) => setTx({ ...tx, rate: e.target.value })} />
+							</div>
+						)}
+						<button className="btn out" disabled={saving} onClick={saveTax}>
+							Save
+						</button>
+					</div>
 					<div className="form-grid" style={{ marginTop: 12 }}>
 						<div className="field">
 							<label>Billing period</label>
@@ -139,6 +188,7 @@ export function InvoicesTab({ account, profile, settings, invoices, reload, ui }
 										{inv.number}
 										<small className="table-subcategory">
 											{inv.period} · {inv.exception ? "fixed" : inv.tier}
+											{inv.tax?.amount ? " · tax " + fmt(inv.tax.amount) : ""}
 											{inv.emailedTo ? " · e-mailed" : ""}
 										</small>
 									</td>

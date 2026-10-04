@@ -359,3 +359,18 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .pay-popup .panel-head,.pay-popup .modal-foot{flex:0 0 auto}
 .pay-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin-bottom:12px;background:var(--ui-surface-2,#faf6f1);border:1px solid var(--line,#eadbd1);border-radius:12px}
 .pay-summary-total{font-size:24px;letter-spacing:-.02em}
+
+/* ---- admin: business category presets (Features tab) ---- */
+.admin-presets{margin:0 0 22px}
+.admin-presets-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.admin-presets-list{display:grid;gap:8px}
+.admin-presets-types{position:sticky;top:12px;padding:14px;background:var(--ui-surface-2,#faf6f1);border:1px solid var(--line,#eadbd1);border-radius:12px}
+.admin-presets-types h3{margin:0 0 8px;font-size:calc(15px * var(--ui-fs, 1))}
+.admin-presets-types ul{margin:0 0 10px;padding-left:18px;columns:2;column-gap:18px}
+.admin-presets-types small{display:block;opacity:.8}
+@media (max-width:720px){.admin-presets-body{grid-template-columns:1fr}.admin-presets-types{position:static}}
+
+/* Invoices tab: additional-features and tax blocks */
+.inv-block { border: 1px solid var(--line, #ddd); border-radius: 10px; padding: 10px 12px; margin-top: 12px; display: grid; gap: 10px; justify-items: start; }
+.inv-block-head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.inv-block .form-grid { width: 100%; }

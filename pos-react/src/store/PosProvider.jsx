@@ -5,6 +5,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { locationStore } from "./locationStore";
 import { STORAGE, UI_THEMES } from "../config/constants";
+import { applyDark, resolveDark, storedDark } from "../utils/theme";
 import { ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
 import { INDUSTRY_TYPES, KITCHEN_TYPES, RETIRED_MODIFIER_NAMES } from "../config/presets";
 import { VIEW_FEATURE } from "../config/features";
@@ -252,6 +253,10 @@ export function PosProvider({ children }) {
 		const meta = document.querySelector('meta[name="theme-color"]');
 		if (meta) meta.content = UI_THEMES.find((t) => t.id === id).color;
 	}, [theme]);
+
+	// dark mode (settings value syncs from the cloud; localStorage mirror covers first paint)
+	const dark = resolveDark(settings.darkMode, storedDark());
+	useEffect(() => applyDark(dark), [dark]);
 
 	// ---------------------------------------------------- data maintenance --
 	const maintained = useRef("");

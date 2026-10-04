@@ -10,12 +10,12 @@ import { createLogger } from "../utils/logger";
 const log = createLogger("admin");
 
 /** Calls the admin Netlify function with the signed-in administrator's Appwrite JWT. */
-export async function adminApi(body) {
+export async function adminApi(body, url) {
 	if (env.authProvider === "local") return localAdminApi(body);
 	const session = adminSession.get();
 	if (!session) throw Object.assign(new Error("Your administrator session has expired. Please sign in again."), { status: 401 });
 	const token = session.token;
-	const res = await fetch(env.adminFunctionUrl + (body ? "" : "?fresh=" + Date.now()), {
+	const res = await fetch((url || env.adminFunctionUrl) + (body ? "" : "?fresh=" + Date.now()), {
 		method: body ? "POST" : "GET",
 		cache: "no-store",
 		headers: { Authorization: "Bearer " + token, ...(body ? { "Content-Type": "application/json" } : {}) },
@@ -30,6 +30,12 @@ export async function adminApi(body) {
 	// Single choke point for admin actions (account lookup, plan/billing/access changes): log ids only, never payloads.
 	if (body) log.info("admin action", { action: body.action, accountId: body.userId });
 	return json;
+}
+
+/** Diagnostics (request/status/cancel/download a POS device log) via the dedicated admin function. */
+export function diagnosticsApi(body) {
+	if (env.authProvider === "local") return Promise.reject(new Error("Diagnostics need the cloud back end."));
+	return adminApi(body, "/.netlify/functions/pos-admin-diagnostics");
 }
 
 /** Sends an invoice through the existing SMTP function. */

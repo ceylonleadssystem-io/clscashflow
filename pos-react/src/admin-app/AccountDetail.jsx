@@ -75,7 +75,7 @@ export function AccountDetail({ account, onBack, onChanged }) {
 			{tab === "features" && <FeaturesTab settings={settings} locations={locations} save={save} saving={saving} ui={ui} />}
 			{tab === "welcome" && <WelcomeTab settings={settings} save={save} saving={saving} />}
 			{tab === "diagnostics" && <DiagnosticsTab account={account} ui={ui} />}
-			{tab === "invoices" && <InvoicesTab account={account} profile={profile} settings={settings} invoices={invoices} reload={reload} ui={ui} />}
+			{tab === "invoices" && <InvoicesTab account={account} profile={profile} settings={settings} save={save} saving={saving} invoices={invoices} reload={reload} ui={ui} />}
 		</div>
 	);
 }
