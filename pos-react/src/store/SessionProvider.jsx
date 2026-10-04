@@ -4,6 +4,7 @@
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_OWNER_PIN, STORAGE } from "../config/constants";
+import { env } from "../config/env";
 import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
 import { friendlyAuthError, getAuthService } from "../services/auth.service";
@@ -156,9 +157,9 @@ export function SessionProvider({ children }) {
 		return () => unsub?.();
 	}, [auth, activate]);
 
-	// Support: upload the device log when an administrator requests it (cloud accounts only)
+	// Support: send the device log straight to the administrator's browser when they request it (cloud accounts, or local dev)
 	useEffect(() => {
-		if (phase !== "ready" || !workspace?.cloud) return undefined;
+		if (phase !== "ready" || (!workspace?.cloud && env.authProvider !== "local")) return undefined;
 		return startDiagnostics(() => auth.currentUser?.getIdToken());
 	}, [phase, workspace, auth]);
 
