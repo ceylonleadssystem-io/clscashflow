@@ -170,6 +170,12 @@ export function PosProvider({ children }) {
 			const multi = enabled["business.locations"];
 			const allowed = userLocationIds(user, d);
 			let chosen = location;
+			// The sign-in screen no longer asks for a location: use the one this device used last if the user may
+			// work there, otherwise their first permitted location. The location switcher in the top bar changes it later.
+			if (!chosen && multi) {
+				const last = localStorage.getItem(STORAGE.lastLocation);
+				chosen = allowed.includes(last) ? last : allowed[0] || "";
+			}
 			if (!multi || activeLocations(d).length === 1) chosen = allowed[0] || activeLocations(d)[0]?.id || "";
 			if (!chosen) return "Select your POS location before signing in.";
 			if (user && !allowed.includes(chosen) && multi) {
@@ -182,6 +188,7 @@ export function PosProvider({ children }) {
 			}
 			log.info("staff login", { userId: user.id, role: user.role, locationId: chosen });
 			sessionStorage.setItem(STORAGE.userSession, user.id);
+			localStorage.setItem(STORAGE.lastLocation, chosen);
 			setCurrentUserId(user.id);
 			setLocationId(chosen);
 			sessionRef.current = { ...sessionRef.current, userId: user.id, user, locationId: chosen };

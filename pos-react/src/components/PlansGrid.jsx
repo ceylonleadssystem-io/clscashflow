@@ -2,12 +2,13 @@
  * Pricing sheet component: the four plan cards, the additional-features offer, plan highlights and the
  * conditions note, all driven by config/plans.
  */
-import { ADDITIONAL_FEATURES, PLANS, PLAN_CONDITIONS, PLAN_HIGHLIGHTS } from "../config/plans";
+import { ADDITIONAL_FEATURES, PLANS, PLAN_CONDITIONS, PLAN_CONTACT, PLAN_HIGHLIGHTS } from "../config/plans";
 
 const fmt = (n) => n.toLocaleString("en-US");
 
-/** Pricing sheet: four plans, additional-features offer, highlights and conditions. */
-export function PlansGrid({ currentPlan, onSelect }) {
+/** Pricing sheet: four plans, additional-features offer, highlights, contact options and conditions. */
+export function PlansGrid({ currentPlan, businessName = "" }) {
+	const note = "Hello Ceylonry Labs, I would like to talk about my Ceylonry POS plan" + (businessName ? " for " + businessName : "") + ".";
 	return (
 		<div className="plans">
 			<div className="plans-grid">
@@ -38,9 +39,7 @@ export function PlansGrid({ currentPlan, onSelect }) {
 								</li>
 							))}
 						</ul>
-						<button className={"btn " + (p.popular ? "gold" : "out")} type="button" onClick={() => onSelect?.(p)}>
-							{currentPlan === p.id ? "Your plan" : p.cta} →
-						</button>
+						{currentPlan === p.id && <span className="plan-current-tag">Your plan</span>}
 					</article>
 				))}
 			</div>
@@ -77,6 +76,20 @@ export function PlansGrid({ currentPlan, onSelect }) {
 						</div>
 					</div>
 				))}
+			</div>
+			<div className="plans-contact">
+				<div>
+					<strong>Questions about a plan, or want to change yours?</strong>
+					<small>Contact us and we will help you choose.</small>
+				</div>
+				<div className="plans-contact-actions">
+					<a className="btn gold" href={"https://wa.me/" + PLAN_CONTACT.whatsapp + "?text=" + encodeURIComponent(note)} target="_blank" rel="noreferrer">
+						Contact us on WhatsApp
+					</a>
+					<a className="btn out" href={"mailto:" + PLAN_CONTACT.email + "?subject=" + encodeURIComponent("Ceylonry POS plans") + "&body=" + encodeURIComponent(note)}>
+						Email us
+					</a>
+				</div>
 			</div>
 			<p className="plans-conditions">
 				<strong>Conditions Applied:</strong> {PLAN_CONDITIONS}
