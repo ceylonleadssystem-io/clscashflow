@@ -60,10 +60,21 @@ await new Promise((r) => setTimeout(r, 4000));
 await once("admins email index (unique)", () => db.createIndex(DB, "admins", "email_unique", "unique", ["email"]));
 await once("audit_log time index", () => db.createIndex(DB, "audit_log", "at_idx", "key", ["at"], ["DESC"]));
 
+// diag_signals only ever holds short-lived handshakes, so it is safe to rebuild. It is dropped and recreated so an
+// earlier half-finished run (attributes too large for one record) cannot leave it in a broken state.
+try {
+	await db.deleteCollection(DB, "diag_signals");
+	console.log("removed  ", "old collection diag_signals");
+	await new Promise((r) => setTimeout(r, 3000)); // Appwrite deletes collections asynchronously
+} catch (e) {
+	if (e.code !== 404) throw e;
+}
 await once("collection diag_signals", () => db.createCollection(DB, "diag_signals", "Diagnostics signals", [], false));
+// offer/answer are capped at 8000 characters by the functions; the column is 20000 so Appwrite stores it as TEXT
+// (columns up to 16383 characters count in full toward the ~64 KB record limit and two of them would not fit).
 await once("diag_signals.uid", () => db.createStringAttribute(DB, "diag_signals", "uid", 40, true));
 await once("diag_signals.requestId", () => db.createStringAttribute(DB, "diag_signals", "requestId", 40, true));
-await once("diag_signals.offer", () => db.createStringAttribute(DB, "diag_signals", "offer", 8000, true));
-await once("diag_signals.answer", () => db.createStringAttribute(DB, "diag_signals", "answer", 8000, false));
+await once("diag_signals.offer", () => db.createStringAttribute(DB, "diag_signals", "offer", 20000, true));
+await once("diag_signals.answer", () => db.createStringAttribute(DB, "diag_signals", "answer", 20000, false));
 await once("diag_signals.createdAt", () => db.createStringAttribute(DB, "diag_signals", "createdAt", 40, true));
 console.log("\nDone. Now add the first record to `admins` and set POS_ADMIN_TOKEN_SECRET in Netlify.");
