@@ -22,6 +22,12 @@ URL: `https://<main domain>/posv2/admin` (also reachable at `/posv2/admin.html`)
 ## Admin screens
 Account list, then per account: Access (enable/disable, optional fixed invoice amount), Features (one switch per feature, per business or per location), Welcome message, Invoices. Pricing tier information is no longer shown.
 
-## Diagnostics bucket
-POS log files are never stored in a database. An administrator clicks "Request logs from this POS" on the account's Diagnostics tab; the POS uploads its log on its next 30 s check-in into Appwrite Storage bucket `pos_diagnostics` (override with `APPWRITE_DIAGNOSTICS_BUCKET_ID`), files `r_<uid>` (request marker) and `l_<uid>` (log). The bucket has no client permissions (server API key only), 2 MB max, txt/json only. A request unanswered for 24 h expires and a received log is deleted after download or after 24 h.
-Create it with `APPWRITE_API_KEY=... node scripts/setup-admin-db.mjs` (the key needs the buckets/storage scope too). Until it exists the diagnostics endpoints answer 503.
+## Diagnostics
+An administrator clicks "Request logs from this POS" on the account's Diagnostics tab. The log then travels **directly from the POS browser to the admin browser over a WebRTC data channel**. The POS keeps its log in its own browser storage until requested; the admin browser holds the received copy in its cache until it is downloaded or discarded. **No log data is ever sent to or stored on any server.**
+
+Only a connection handshake (one SDP offer and one SDP answer, a few KB) goes through the server, in collection `diag_signals` of the `pos_admin` database (one document `s_<uid>` per account, no client permissions). It lives at most 10 minutes (checked on every read) and is deleted when the transfer finishes or is cancelled. The POS checks for a request every 15 s, so connecting takes up to ~15 s.
+
+**Setup:** re-run `APPWRITE_API_KEY=... node scripts/setup-admin-db.mjs` once to create `diag_signals` (databases scope only; no bucket or storage is used any more). Until it exists the diagnostics endpoints answer 503. The old `APPWRITE_DIAGNOSTICS_BUCKET_ID` variable and `pos_diagnostics` bucket are no longer used and can be deleted.
+
+**STUN servers:** `stun.l.google.com:19302` and `stun1.l.google.com:19302` (they only reveal public addresses; no data passes through them).
+**Limitation:** strict NATs/firewalls (some corporate or mobile networks) can block the direct connection. There is no TURN relay by design, so the request then fails with a "try again / try another network" message.

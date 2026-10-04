@@ -1,44 +1,131 @@
 /**
- * Remote diagnostics: while signed in and online, ask the server every 30 s whether an administrator
- * requested this POS's log; if so upload the current log text. Never throws, never logs the log text.
+ * Remote diagnostics (POS side). While signed in and online, every 15 s ask the server whether an administrator
+ * requested this POS's log. If so, answer the WebRTC offer and send the log straight to the administrator's
+ * browser over a data channel. Only the SDP handshake touches the server; the log text never does.
+ * Never throws into the UI; logs progress (never the log text or SDP).
  */
-import { createLogger, formatLogs } from "../utils/logger";
+import { createLogger, diagnosticsSnapshot, formatLogs } from "../utils/logger";
+import { CHANNEL, LOCAL_UID, POLL_POS_MS, RTC_CONFIG, CHUNK_CHARS, capTail, chunkText, isLocalMode, localSignals, sendAll, waitIce } from "./diagnosticsShared";
 
 const log = createLogger("diagnostics");
 const URL = "/.netlify/functions/pos-diagnostics";
-export const POLL_MS = 30000;
+const SESSION_TIMEOUT_MS = 60000;
+export const POLL_MS = POLL_POS_MS;
 
 export function buildLogText() {
-	const header = `# Ceylonry POS diagnostics\n# Uploaded ${new Date().toISOString()}\n# User agent: ${navigator.userAgent}\n# Online: ${navigator.onLine}\n\n`;
-	return header + formatLogs() + "\n";
+	const header = `# Ceylonry POS diagnostics\n# Sent ${new Date().toISOString()}\n# User agent: ${navigator.userAgent}\n# Online: ${navigator.onLine}\n# Snapshot: ${JSON.stringify(diagnosticsSnapshot())}\n\n`;
+	return capTail(header + formatLogs() + "\n");
 }
 
-/** One check-in. `getToken` resolves the Appwrite JWT. Returns "idle" | "uploaded" | "skipped" | "error". */
-export async function checkIn(getToken, fetchFn = fetch, text = buildLogText) {
-	try {
-		if (typeof navigator !== "undefined" && navigator.onLine === false) return "skipped";
+/** Signalling client for the cloud: `check()` and `answer(requestId, sdp)` against pos-diagnostics. */
+export function cloudSignals(getToken, fetchFn = fetch) {
+	const call = async (method, body, query) => {
 		const token = await getToken();
-		if (!token) return "skipped";
-		const headers = { Authorization: "Bearer " + token };
-		const check = await (await fetchFn(URL + "?action=check", { headers, cache: "no-store" })).json();
-		if (!check?.ok || !check.requested) return "idle";
-		log.info("log requested by support; uploading");
-		const res = await fetchFn(URL, {
-			method: "POST",
-			headers: { ...headers, "Content-Type": "application/json" },
-			body: JSON.stringify({ action: "upload", text: text() }),
+		if (!token) return null;
+		const res = await fetchFn(URL + (query || ""), {
+			method,
+			cache: "no-store",
+			headers: { Authorization: "Bearer " + token, ...(body ? { "Content-Type": "application/json" } : {}) },
+			body: body ? JSON.stringify(body) : undefined,
 		});
-		log.info("log upload finished", { status: res.status });
-		return res.ok ? "uploaded" : "error";
+		return res.json().catch(() => ({}));
+	};
+	return {
+		check: () => call("GET", null, "?action=check"),
+		answer: (requestId, answer) => call("POST", { action: "answer", requestId, answer }),
+	};
+}
+const localPosSignals = { check: () => localSignals.check(LOCAL_UID), answer: (id, a) => localSignals.answer(LOCAL_UID, id, a) };
+
+/** Answers one offer and sends the log. Resolves when the session is over (acked, timed out or failed). */
+export async function serveRequest(signals, req, makeText = buildLogText) {
+	const pc = new RTCPeerConnection(RTC_CONFIG);
+	let finish;
+	const over = new Promise((res) => (finish = res));
+	const timer = setTimeout(() => finish("timeout"), SESSION_TIMEOUT_MS);
+	const sendLog = async (dc) => {
+		try {
+			const text = makeText();
+			const chunks = chunkText(text, CHUNK_CHARS);
+			log.info("sending log", { chars: text.length, chunks: chunks.length });
+			dc.send(JSON.stringify({ type: "start", bytes: new TextEncoder().encode(text).length, total: text.length }));
+			await sendAll(dc, chunks);
+			dc.send(JSON.stringify({ type: "end" }));
+		} catch (e) {
+			log.warn("sending log failed", e);
+			finish("send-failed");
+		}
+	};
+	pc.ondatachannel = (ev) => {
+		const dc = ev.channel;
+		if (dc.label !== CHANNEL) return;
+		dc.onmessage = (m) => {
+			try {
+				if (JSON.parse(m.data).type === "ack") finish("acked");
+			} catch {
+				/* ignore */
+			}
+		};
+		dc.onclose = () => finish("closed");
+		if (dc.readyState === "open") sendLog(dc);
+		else dc.onopen = () => sendLog(dc);
+	};
+	pc.onconnectionstatechange = () => {
+		if (pc.connectionState === "failed") finish("connection-failed");
+	};
+	try {
+		await pc.setRemoteDescription({ type: "offer", sdp: req.offer });
+		await pc.setLocalDescription(await pc.createAnswer());
+		await waitIce(pc);
+		const res = await signals.answer(req.requestId, pc.localDescription.sdp);
+		if (!res?.ok) {
+			log.warn("answer rejected");
+			return "rejected";
+		}
+		log.info("answered log request; waiting for the administrator to connect");
+		const why = await over;
+		log.info("log session ended", { why });
+		return why;
+	} catch (e) {
+		log.warn("log session failed", e);
+		return "error";
+	} finally {
+		clearTimeout(timer);
+		try {
+			pc.close();
+		} catch {
+			/* ignore */
+		}
+	}
+}
+
+let busy = false;
+const handled = new Set();
+
+/** One check-in. Returns "idle" | "serving" | "skipped" | "error". The session itself continues in the background. */
+export async function checkIn(signals, serve = serveRequest) {
+	try {
+		if (busy || (typeof navigator !== "undefined" && navigator.onLine === false)) return "skipped";
+		const r = await signals.check();
+		if (!r?.ok || !r.requested || !r.requestId || !r.offer) return "idle";
+		if (handled.has(r.requestId)) return "idle";
+		handled.add(r.requestId);
+		busy = true;
+		log.info("log requested by support");
+		serve(signals, r)
+			.catch((e) => log.warn("log session crashed", e))
+			.finally(() => (busy = false));
+		return "serving";
 	} catch (e) {
 		log.warn("diagnostics check-in failed", e);
 		return "error";
 	}
 }
 
-/** Starts polling; returns a stop function. */
+/** Starts polling every 15 s (and when the browser comes back online); returns a stop function. */
 export function startDiagnostics(getToken) {
-	const run = () => checkIn(getToken);
+	const signals = isLocalMode() ? localPosSignals : cloudSignals(async () => (await getToken?.()) || "");
+	const run = () => checkIn(signals);
 	run();
 	const id = setInterval(run, POLL_MS);
 	window.addEventListener("online", run);
@@ -47,3 +134,8 @@ export function startDiagnostics(getToken) {
 		window.removeEventListener("online", run);
 	};
 }
+
+export const _resetForTests = () => {
+	busy = false;
+	handled.clear();
+};

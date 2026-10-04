@@ -374,3 +374,8 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .inv-block { border: 1px solid var(--line, #ddd); border-radius: 10px; padding: 10px 12px; margin-top: 12px; display: grid; gap: 10px; justify-items: start; }
 .inv-block-head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .inv-block .form-grid { width: 100%; }
+
+/* Diagnostics tab */
+.diag-state { margin: 0 0 10px; }
+.diag-failed { color: var(--danger, #b3261e); }
+.modal-body progress { width: 100%; max-width: 360px; display: block; margin-bottom: 10px; }

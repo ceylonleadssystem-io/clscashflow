@@ -1,100 +1,90 @@
 /**
- * Admin Diagnostics tab: ask a POS device to upload its log, then download it once (the stored copy is deleted).
- * Logs live in Appwrite Storage for at most 24 h, never in the database.
+ * Admin Diagnostics tab: ask a POS to send its log directly to this browser (WebRTC), then download it.
+ * The log never touches a server; the received copy lives in this browser's cache until downloaded or discarded.
  */
-import { useCallback, useEffect, useState } from "react";
-import { diagnosticsApi } from "./adminApi";
+import { useEffect, useRef, useState } from "react";
+import { discardLog, loadLog, requestLog } from "./diagnosticsPeer";
 
-const POLL_MS = 10000;
+const BUSY = ["waiting", "connecting", "receiving"];
 
 export function DiagnosticsTab({ account, ui }) {
-	const [st, setSt] = useState({ state: "none" });
-	const [busy, setBusy] = useState(false);
+	const [st, setSt] = useState({ state: "idle" });
+	const req = useRef(null);
 
-	const refresh = useCallback(async () => {
-		try {
-			setSt(await diagnosticsApi({ action: "status", userId: account.id }));
-		} catch (e) {
-			setSt({ state: "error", error: e.message });
-		}
+	// A log received earlier but not yet downloaded is still in the cache.
+	useEffect(() => {
+		let on = true;
+		loadLog(account.id).then((l) => on && l && setSt((cur) => (cur.state === "idle" ? { state: "received", ...l } : cur)));
+		return () => {
+			on = false;
+			req.current?.detach();
+			req.current = null;
+		};
 	}, [account.id]);
 
-	useEffect(() => {
-		refresh();
-	}, [refresh]);
-
-	// Poll only while waiting for the device; the interval is cleared on unmount or state change.
-	useEffect(() => {
-		if (st.state !== "waiting") return undefined;
-		const id = setInterval(refresh, POLL_MS);
-		return () => clearInterval(id);
-	}, [st.state, refresh]);
-
-	const act = async (action) => {
-		setBusy(true);
-		try {
-			setSt(await diagnosticsApi({ action, userId: account.id }));
-		} catch (e) {
-			await ui.alert(e.message);
-		}
-		setBusy(false);
+	const request = () => {
+		req.current?.detach();
+		setSt({ state: "waiting" });
+		req.current = requestLog(account.id, setSt);
 	};
+	const cancel = () => req.current?.cancel();
 
 	const download = async () => {
-		setBusy(true);
-		try {
-			const r = await diagnosticsApi({ action: "download", userId: account.id });
-			const safe = String(account.business || account.id).replace(/[^\w.-]+/g, "-").slice(0, 40);
-			const a = document.createElement("a");
-			a.href = URL.createObjectURL(new Blob([r.text], { type: "text/plain;charset=utf-8" }));
-			a.download = `pos-log-${safe}-${new Date().toISOString().slice(0, 10)}.log`;
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-			setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-			ui.notice("Log downloaded. The stored copy was deleted.");
-		} catch (e) {
-			await ui.alert(e.message);
-		}
-		await refresh();
-		setBusy(false);
+		const l = st.text != null ? st : await loadLog(account.id);
+		if (!l) return;
+		const safe = String(account.business || account.id).replace(/[^\w.-]+/g, "-").slice(0, 40);
+		const a = document.createElement("a");
+		a.href = URL.createObjectURL(new Blob([l.text], { type: "text/plain;charset=utf-8" }));
+		a.download = `pos-log-${safe}-${new Date().toISOString().slice(0, 10)}.log`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+		if (await ui.confirm("Log downloaded. Remove the copy held in this browser?")) discard();
+	};
+	const discard = async () => {
+		await discardLog(account.id);
+		setSt({ state: "idle" });
 	};
 
-	const label =
-		st.state === "waiting"
-			? "Waiting for the device (it answers when the POS is online, usually within a minute)."
-			: st.state === "received"
-				? `Received at ${new Date(st.receivedAt).toLocaleString()}, ${(st.size / 1024).toFixed(1)} KB.`
-				: st.state === "error"
-					? st.error
-					: "No request.";
+	const label = {
+		idle: "No request.",
+		waiting: "Waiting for the POS to check in (it checks every ~15 seconds).",
+		connecting: "Connecting directly to the POS...",
+		receiving: `Receiving log... ${st.percent ?? 0}%`,
+		received: `Received ${st.receivedAt ? new Date(st.receivedAt).toLocaleString() : ""}, ${((st.size || 0) / 1024).toFixed(1)} KB.`,
+		failed: st.reason,
+	}[st.state];
 
 	return (
 		<div className="panel">
 			<div className="panel-head">
 				<div>
 					<div className="panel-title">POS log file</div>
-					<div className="muted">Logs are held temporarily (24 h, not in the database) and deleted after download.</div>
+					<div className="muted">Sent directly from the POS to this browser. It is not stored on any server.</div>
 				</div>
 			</div>
 			<div className="modal-body">
-				<p>{label}</p>
+				<p className={"diag-state diag-" + st.state} data-state={st.state}>{label}</p>
+				{st.state === "receiving" && <progress max="100" value={st.percent ?? 0} />}
 				<div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-					<button type="button" className="btn gold" disabled={busy} onClick={() => act("request")}>
+					<button type="button" className="btn gold" disabled={BUSY.includes(st.state)} onClick={request}>
 						Request logs from this POS
 					</button>
-					<button type="button" className="btn" disabled={busy} onClick={refresh}>
-						Refresh
-					</button>
-					{st.state === "received" && (
-						<button type="button" className="btn gold" disabled={busy} onClick={download}>
-							Download log file
-						</button>
-					)}
-					{st.state === "waiting" && (
-						<button type="button" className="btn" disabled={busy} onClick={() => act("cancel")}>
+					{BUSY.includes(st.state) && (
+						<button type="button" className="btn" onClick={cancel}>
 							Cancel request
 						</button>
+					)}
+					{st.state === "received" && (
+						<>
+							<button type="button" className="btn gold" onClick={download}>
+								Download log file
+							</button>
+							<button type="button" className="btn" onClick={discard}>
+								Discard
+							</button>
+						</>
 					)}
 				</div>
 			</div>

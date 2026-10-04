@@ -32,12 +32,6 @@ export async function adminApi(body, url) {
 	return json;
 }
 
-/** Diagnostics (request/status/cancel/download a POS device log) via the dedicated admin function. */
-export function diagnosticsApi(body) {
-	if (env.authProvider === "local") return Promise.reject(new Error("Diagnostics need the cloud back end."));
-	return adminApi(body, "/.netlify/functions/pos-admin-diagnostics");
-}
-
 /** Sends an invoice through the existing SMTP function. */
 export async function emailInvoice({ to, invoice, clientName, businessName }) {
 	if (env.authProvider === "local") {

@@ -1,11 +1,13 @@
-// POS device side of diagnostics: cheap `check` for a pending request, and `upload` of the log text.
+// POS device side of diagnostics signalling: `check` for a pending WebRTC offer, `answer` to reply to it.
+// Only the connection handshake passes here; the log itself travels browser to browser.
 const { guard, reply } = require('../lib/security');
 const { getUserFromEvent, getDocument, clean } = require('../lib/appwrite');
 const store = require('../lib/diagnostics-store');
 const log = require('../lib/log').createLogger('pos-diagnostics');
 
 exports.handler = async function handler(event) {
-  const blocked = guard(event, { name: 'pos-diagnostics', methods: ['GET', 'POST'], limit: 60, windowMs: 60000, maxBody: 2000000 });
+  // The device polls `check` every 15 s (4/min), so 120/min per IP leaves room for shared networks.
+  const blocked = guard(event, { name: 'pos-diagnostics', methods: ['GET', 'POST'], limit: 120, windowMs: 60000, maxBody: 20000 });
   if (blocked) return blocked;
   try {
     const user = await getUserFromEvent(event);
@@ -17,16 +19,18 @@ exports.handler = async function handler(event) {
     const ownerUid = store.safeUid(clean((profileDoc && profileDoc.data && profileDoc.data.ownerUid) || user.id, 240));
     if (!ownerUid) return reply(event, 400, { ok: false, error: 'Invalid account.' });
 
-    const pending = await store.getRequest(ownerUid);
-    if (action === 'check') return reply(event, 200, { ok: true, requested: !!pending });
-    if (action === 'upload') {
+    if (action === 'check') {
+      const sig = await store.get(ownerUid);
+      if (!sig || !sig.offer || sig.answer) return reply(event, 200, { ok: true, requested: false });
+      return reply(event, 200, { ok: true, requested: true, requestId: sig.requestId, offer: sig.offer });
+    }
+    if (action === 'answer') {
       if (event.httpMethod !== 'POST') return reply(event, 405, { ok: false, error: 'Method not allowed' });
-      if (!pending) return reply(event, 409, { ok: false, error: 'No log has been requested.' });
-      const text = store.capText(body.text);
-      if (!text) return reply(event, 400, { ok: false, error: 'Log text is required.' });
-      await store.putLog(ownerUid, text);
-      await store.clearRequest(ownerUid);
-      log.info('log uploaded', { ownerUid, by: user.id, size: text.length });
+      const requestId = store.safeRequestId(body.requestId);
+      if (!requestId) return reply(event, 400, { ok: false, error: 'A valid request id is required.' });
+      const stored = await store.putAnswer(ownerUid, requestId, body.answer);
+      if (!stored) return reply(event, 409, { ok: false, error: 'No matching log request is pending.' });
+      log.info('answer stored', { ownerUid, by: user.id });
       return reply(event, 200, { ok: true });
     }
     return reply(event, 400, { ok: false, error: 'Unknown action.' });

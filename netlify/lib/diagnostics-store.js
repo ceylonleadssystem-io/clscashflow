@@ -1,101 +1,78 @@
 'use strict';
 
-// POS diagnostics exchange kept in Appwrite Storage (never the database): per account a tiny
-// request marker `r_<uid>` and, once the POS device answers, the log text `l_<uid>`.
-// The bucket has no client permissions, so only the server API key can touch it.
+// Signalling store for POS diagnostics. Holds ONLY a tiny, short-lived WebRTC handshake (one SDP offer and
+// one SDP answer, no log data) per account in `diag_signals` of the admin database. Document id `s_<uid>`,
+// one per account (a new request overwrites it), 10-minute TTL checked lazily on every read.
 
-const { Storage } = require('node-appwrite');
-const { InputFile } = require('node-appwrite/file');
+const { Databases } = require('node-appwrite');
 const { serverClient } = require('./appwrite');
+const { ADMIN_DATABASE_ID } = require('./admin-store');
 
-const BUCKET_ID = process.env.APPWRITE_DIAGNOSTICS_BUCKET_ID || 'pos_diagnostics';
-const EXPIRY_MS = 24 * 3600 * 1000; // unanswered request / undownloaded log lifetime
-const MAX_LOG_CHARS = 1500000;
+const COLLECTION = 'diag_signals';
+const TTL_MS = 10 * 60 * 1000;
+const MAX_SDP = 8000;
 
-// Appwrite file ids: <= 36 chars of [a-zA-Z0-9._-]. Returns '' for anything unusable.
+// Document ids are <= 36 chars: "s_" + at most 34 id chars. Returns '' for anything unusable.
 function safeUid(uid) {
   const v = String(uid == null ? '' : uid).trim();
-  return /^[a-zA-Z0-9._-]{1,34}$/.test(v) ? v : '';
+  return /^[A-Za-z0-9_-]{1,34}$/.test(v) ? v : '';
 }
-const requestId = (uid) => 'r_' + safeUid(uid);
-const logId = (uid) => 'l_' + safeUid(uid);
+const safeRequestId = (id) => { const v = String(id == null ? '' : id).trim(); return /^[A-Za-z0-9_-]{1,40}$/.test(v) ? v : ''; };
+const docId = (uid) => 's_' + safeUid(uid);
 
 function expired(iso, now) {
   const t = Date.parse(iso);
-  return !Number.isFinite(t) || (now == null ? Date.now() : now) - t > EXPIRY_MS;
+  return !Number.isFinite(t) || (now == null ? Date.now() : now) - t > TTL_MS;
 }
 
-// Text only, capped; when too long the newest lines (the tail) are kept.
-function capText(text, max) {
-  text = typeof text === 'string' ? text : '';
-  max = max || MAX_LOG_CHARS;
-  return text.length > max ? text.slice(text.length - max) : text;
+function badRequest(message) { const e = new Error(message); e.statusCode = 400; return e; }
+// Throws 400 unless `sdp` is a non-empty string within the cap.
+function checkSdp(sdp) {
+  if (typeof sdp !== 'string' || !sdp) throw badRequest('A connection description is required.');
+  if (sdp.length > MAX_SDP) throw badRequest('The connection description is too large.');
+  return sdp;
 }
 
-function storage() { return new Storage(serverClient()); }
-const isMissing = (e) => e && (e.code === 404 || e.type === 'storage_file_not_found');
-
+const db = () => new Databases(serverClient());
+const missingDoc = (e) => e && e.code === 404 && !/collection|database/i.test(String(e.type || ''));
 function unavailable(e) {
-  const err = new Error('Diagnostics storage is not available. Create the "' + BUCKET_ID + '" bucket (node scripts/setup-admin-db.mjs).');
+  const err = new Error('Diagnostics signalling is not available. Run node scripts/setup-admin-db.mjs once to create the "' + COLLECTION + '" collection.');
   err.statusCode = 503; err.cause = e;
   return err;
 }
-// Bucket missing/misconfigured (404 on bucket, 401/403) -> clear 503 instead of a crash.
-function wrap(e) { if (e && e.statusCode === 503) return e; if (e && (e.code === 404 || e.code === 401 || e.code === 403 || e.type === 'storage_bucket_not_found')) return unavailable(e); return e; }
+function wrap(e) { if (e && e.statusCode) return e; if (e && (e.code === 404 || e.code === 401 || e.code === 403)) return unavailable(e); return e; }
 
-async function remove(id) {
-  try { await storage().deleteFile(BUCKET_ID, id); } catch (e) { if (!isMissing(e)) throw wrap(e); }
+async function remove(uid) {
+  try { await db().deleteDocument(ADMIN_DATABASE_ID, COLLECTION, docId(uid)); } catch (e) { if (!missingDoc(e)) throw wrap(e); }
 }
-async function put(id, text, name) {
-  await remove(id);
-  try { await storage().createFile(BUCKET_ID, id, InputFile.fromBuffer(Buffer.from(text, 'utf8'), name)); } catch (e) { throw wrap(e); }
+
+// The live signal {uid, requestId, offer, answer, createdAt} or null. Expired ones are deleted on the way.
+async function get(uid) {
+  let doc;
+  try { doc = await db().getDocument(ADMIN_DATABASE_ID, COLLECTION, docId(uid)); } catch (e) { if (missingDoc(e)) return null; throw wrap(e); }
+  if (expired(doc.createdAt)) { await remove(uid); return null; }
+  return { uid: doc.uid, requestId: doc.requestId, offer: doc.offer || '', answer: doc.answer || '', createdAt: doc.createdAt };
 }
-async function read(id) {
+
+// Creates (or overwrites) the account's signal with a fresh offer.
+async function putOffer(uid, requestId, offer) {
+  const data = { uid, requestId, offer: checkSdp(offer), answer: '', createdAt: new Date().toISOString() };
   try {
-    const st = storage();
-    const meta = await st.getFile(BUCKET_ID, id);
-    const buf = await st.getFileDownload(BUCKET_ID, id);
-    return { createdAt: meta.$createdAt, size: meta.sizeOriginal, text: Buffer.from(buf).toString('utf8') };
-  } catch (e) { if (isMissing(e)) return null; throw wrap(e); }
-}
-
-// Pending request marker, or null. Expired markers are deleted on the way.
-async function getRequest(uid) {
-  const got = await read(requestId(uid));
-  if (!got) return null;
-  let data = {};
-  try { data = JSON.parse(got.text); } catch (_) { /* treated as expired below */ }
-  if (expired(data.requestedAt)) { await remove(requestId(uid)); return null; }
-  return { requestedAt: data.requestedAt, requestedBy: data.requestedBy || '' };
-}
-async function setRequest(uid, by) {
-  const data = { requestedAt: new Date().toISOString(), requestedBy: String(by || '').slice(0, 254) };
-  await put(requestId(uid), JSON.stringify(data), 'request.json');
+    await db().updateDocument(ADMIN_DATABASE_ID, COLLECTION, docId(uid), data);
+  } catch (e) {
+    if (!missingDoc(e)) throw wrap(e);
+    try { await db().createDocument(ADMIN_DATABASE_ID, COLLECTION, docId(uid), data, []); } catch (e2) { throw wrap(e2); }
+  }
   return data;
 }
-const clearRequest = (uid) => remove(requestId(uid));
 
-async function putLog(uid, text) { await put(logId(uid), capText(text), 'log.txt'); }
-// Received log {receivedAt, size, text} or null; expired logs are deleted on the way.
-async function getLog(uid) {
-  const got = await read(logId(uid));
-  if (!got) return null;
-  if (expired(got.createdAt)) { await remove(logId(uid)); return null; }
-  return { receivedAt: got.createdAt, size: got.size, text: got.text };
+// Accepts an answer only while a matching offer is pending and unanswered. Returns true when stored.
+async function putAnswer(uid, requestId, answer) {
+  checkSdp(answer);
+  const cur = await get(uid);
+  if (!cur || !cur.offer || cur.answer || cur.requestId !== requestId) return false;
+  try { await db().updateDocument(ADMIN_DATABASE_ID, COLLECTION, docId(uid), { answer }); } catch (e) { throw wrap(e); }
+  return true;
 }
-// Cheap status for the admin tab: reads metadata only for the log, marker content for the request.
-async function status(uid) {
-  const log = await (async () => {
-    try {
-      const meta = await storage().getFile(BUCKET_ID, logId(uid));
-      if (expired(meta.$createdAt)) { await remove(logId(uid)); return null; }
-      return { receivedAt: meta.$createdAt, size: meta.sizeOriginal };
-    } catch (e) { if (isMissing(e)) return null; throw wrap(e); }
-  })();
-  if (log) return { state: 'received', receivedAt: log.receivedAt, size: log.size };
-  const req = await getRequest(uid);
-  return req ? { state: 'waiting', requestedAt: req.requestedAt } : { state: 'none' };
-}
-const clearLog = (uid) => remove(logId(uid));
 
-module.exports = { BUCKET_ID, EXPIRY_MS, MAX_LOG_CHARS, safeUid, requestId, logId, expired, capText, getRequest, setRequest, clearRequest, putLog, getLog, clearLog, status };
+module.exports = { COLLECTION, TTL_MS, MAX_SDP, safeUid, safeRequestId, docId, expired, checkSdp, get, putOffer, putAnswer, remove };

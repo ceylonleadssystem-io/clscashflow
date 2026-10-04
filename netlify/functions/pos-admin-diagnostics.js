@@ -1,4 +1,4 @@
-// Admin side of POS diagnostics: request a device log, see its status, download it once.
+// Admin side of POS diagnostics signalling: post a WebRTC offer, poll for the POS's answer. No log data passes here.
 // Auth is identical to pos-admin-data (admin HS256 token + active admin record).
 const { guard, reply } = require('../lib/security');
 const { isAdminEmail, verifyToken } = require('../lib/admin-auth');
@@ -20,7 +20,7 @@ async function verifyAdmin(event) {
 }
 
 exports.handler = async function handler(event) {
-  const blocked = guard(event, { name: 'pos-admin-diagnostics', methods: ['POST'], limit: 120, windowMs: 600000 });
+  const blocked = guard(event, { name: 'pos-admin-diagnostics', methods: ['POST'], limit: 120, windowMs: 600000, maxBody: 20000 });
   if (blocked) return blocked;
   try {
     const admin = await verifyAdmin(event);
@@ -30,22 +30,24 @@ exports.handler = async function handler(event) {
     if (!uid) return reply(event, 400, { ok: false, error: 'A valid account id is required.' });
     const action = String(body.action || '');
 
-    if (action === 'status') return reply(event, 200, Object.assign({ ok: true }, await store.status(uid)));
-    if (action === 'request') {
-      await store.clearLog(uid);
-      const r = await store.setRequest(uid, admin.email);
+    if (action === 'offer') {
+      const requestId = store.safeRequestId(body.requestId);
+      if (!requestId) return reply(event, 400, { ok: false, error: 'A valid request id is required.' });
+      await store.putOffer(uid, requestId, body.offer);
       await audit({ adminEmail: admin.email, action: 'diagnostics.request', target: uid });
       log.info('log requested', { uid, by: admin.email });
-      return reply(event, 200, { ok: true, state: 'waiting', requestedAt: r.requestedAt });
+      return reply(event, 200, { ok: true, state: 'waiting', requestId });
     }
-    if (action === 'cancel') { await store.clearRequest(uid); return reply(event, 200, { ok: true, state: 'none' }); }
-    if (action === 'download') {
-      const got = await store.getLog(uid);
-      if (!got) return reply(event, 404, { ok: false, error: 'No log has been received (it may have expired).' });
-      await store.clearLog(uid);
-      await audit({ adminEmail: admin.email, action: 'diagnostics.download', target: uid, detail: got.size + ' bytes' });
-      log.info('log downloaded', { uid, by: admin.email, size: got.size });
-      return reply(event, 200, { ok: true, filename: 'pos-log-' + uid + '-' + new Date().toISOString().slice(0, 10) + '.log', text: got.text });
+    if (action === 'status') {
+      const sig = await store.get(uid);
+      if (!sig) return reply(event, 200, { ok: true, state: 'idle' });
+      if (!sig.answer) return reply(event, 200, { ok: true, state: 'waiting', requestId: sig.requestId });
+      return reply(event, 200, { ok: true, state: 'answered', requestId: sig.requestId, answer: sig.answer });
+    }
+    if (action === 'cancel' || action === 'done') {
+      await store.remove(uid);
+      if (action === 'cancel') await audit({ adminEmail: admin.email, action: 'diagnostics.cancel', target: uid });
+      return reply(event, 200, { ok: true, state: 'idle' });
     }
     return reply(event, 400, { ok: false, error: 'Unknown action.' });
   } catch (err) {

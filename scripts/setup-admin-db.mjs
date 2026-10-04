@@ -6,15 +6,15 @@
 //   admins     administrator accounts (email must be unique)
 //   audit_log  sign-ins and admin actions
 // Collections get no client permissions: only the server API key can read or write them.
-//   bucket     `pos_diagnostics` (override with APPWRITE_DIAGNOSTICS_BUCKET_ID): temporary POS log files,
-//              no client permissions, 2 MB max, txt/json only
-// The API key needs the databases and buckets (storage) scopes. It can be removed after setup.
+//   diag_signals  tiny (<= 10 min) WebRTC handshake for remote POS diagnostics, one document per account.
+//                 It never holds log data: logs travel browser to browser.
+// The API key needs the databases scope. It can be removed after setup.
 //
 // Add the first administrator by creating a record in `admins` (Appwrite console):
 //   email (lowercase @ceylonrylabs.io), name, passwordHash (from scripts/hash-admin-password.mjs),
 //   active = true, failedAttempts = 0
 
-import { Client, Databases, Storage } from "node-appwrite";
+import { Client, Databases } from "node-appwrite";
 
 const endpoint = process.env.APPWRITE_ENDPOINT || "https://sgp.cloud.appwrite.io/v1";
 const project = process.env.APPWRITE_PROJECT_ID || "6a947d6e0012c551dfde";
@@ -59,8 +59,11 @@ await once("audit_log.detail", () => db.createStringAttribute(DB, "audit_log", "
 await new Promise((r) => setTimeout(r, 4000));
 await once("admins email index (unique)", () => db.createIndex(DB, "admins", "email_unique", "unique", ["email"]));
 await once("audit_log time index", () => db.createIndex(DB, "audit_log", "at_idx", "key", ["at"], ["DESC"]));
-const BUCKET = process.env.APPWRITE_DIAGNOSTICS_BUCKET_ID || "pos_diagnostics";
-await once("bucket " + BUCKET, () =>
-	new Storage(new Client().setEndpoint(endpoint).setProject(project).setKey(key)).createBucket(BUCKET, "POS diagnostics", [], false, true, 2000000, ["txt", "json"]),
-);
+
+await once("collection diag_signals", () => db.createCollection(DB, "diag_signals", "Diagnostics signals", [], false));
+await once("diag_signals.uid", () => db.createStringAttribute(DB, "diag_signals", "uid", 40, true));
+await once("diag_signals.requestId", () => db.createStringAttribute(DB, "diag_signals", "requestId", 40, true));
+await once("diag_signals.offer", () => db.createStringAttribute(DB, "diag_signals", "offer", 8000, true));
+await once("diag_signals.answer", () => db.createStringAttribute(DB, "diag_signals", "answer", 8000, false));
+await once("diag_signals.createdAt", () => db.createStringAttribute(DB, "diag_signals", "createdAt", 40, true));
 console.log("\nDone. Now add the first record to `admins` and set POS_ADMIN_TOKEN_SECRET in Netlify.");
