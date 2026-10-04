@@ -36,18 +36,30 @@ export async function localAdminApi(body) {
 	const snap = await s.readSnapshot();
 	const owner = snap.users.find((u) => u.role === "owner") || {};
 	const profile = { name: owner.name || "Owner", email: snap.settings.email || "", posAccountPaused: snap.settings.devAccountPaused === true, posPaid: false };
-	const payment = { paid: false, status: profile.posAccountPaused ? "paused" : "trial", billingCycle: "monthly", trialEnd: "", nextPaymentDue: "" };
-	const account = { id: "local", name: profile.name, email: profile.email || "owner@local", business: snap.settings.business || "My Business", setupStatus: "local", payment, paused: profile.posAccountPaused };
+	const status = snap.settings.devAccountStatus || "trial";
+	const cycle = snap.settings.devBillingCycle || "monthly";
+	const payment = { paid: false, status: profile.posAccountPaused ? "paused" : "trial", billingCycle: cycle, trialEnd: "", nextPaymentDue: "" };
+	const account = { id: "local", name: profile.name, email: profile.email || "owner@local", business: snap.settings.business || "My Business", setupStatus: "local", payment, paused: profile.posAccountPaused, status, subscriptionType: cycle, isTestAccount: status === "test" };
 	const action = body?.action || "list";
-	if (action === "list") return { ok: true, users: [account], stats: { realCustomers: 1, testAccounts: 0, revenueThisMonth: 0 } };
+	if (action === "list") return { ok: true, users: [account], stats: { realCustomers: status === "test" ? 0 : 1, testAccounts: status === "test" ? 1 : 0, trialAccounts: status === "trial" ? 1 : 0, liveAccounts: status === "live" ? 1 : 0, revenueThisMonth: 0 } };
 	if (action === "get") return { ok: true, user: { id: "local", profile, payment }, workspace: snapshotToPayload(snap) };
 	if (action === "setAccess") {
 		await s.write((tx) => tx.setSetting("devAccountPaused", body.paused === true));
 		return { ok: true };
 	}
+	if (action === "setAccountStatus") {
+		if (!["trial", "test", "live"].includes(body.status)) throw new Error("Status must be trial, test or live.");
+		await s.write((tx) => tx.setSetting("devAccountStatus", body.status));
+		return { ok: true, status: body.status };
+	}
+	if (action === "setSubscriptionType") {
+		if (!["monthly", "annual"].includes(body.subscriptionType)) throw new Error("Subscription type must be monthly or annual.");
+		await s.write((tx) => tx.setSetting("devBillingCycle", body.subscriptionType));
+		return { ok: true, subscriptionType: body.subscriptionType };
+	}
 	if (action === "saveSettings") {
 		await s.write((tx) => {
-			for (const k of ["features", "locationFeatures", "welcome", "plan"]) if (body.settings && k in body.settings) tx.setSetting(k, body.settings[k]);
+			for (const k of ["features", "locationFeatures", "welcome", "plan", "invoiceExtras", "invoiceTax", "businessCategory"]) if (body.settings && k in body.settings) tx.setSetting(k, body.settings[k]);
 		});
 		return { ok: true };
 	}

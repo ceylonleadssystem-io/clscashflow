@@ -10,6 +10,7 @@ import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
+import { STATUSES, SUBSCRIPTIONS, statusOf, subscriptionOf } from "./status";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("admin");
@@ -27,6 +28,8 @@ export function AdminApp() {
 	const [loading, setLoading] = useState(false);
 	const [selected, setSelected] = useState("");
 	const [q, setQ] = useState("");
+	const [fStatus, setFStatus] = useState("");
+	const [fSub, setFSub] = useState("");
 
 	// Restore a still-valid administrator session (kept in sessionStorage for this tab only).
 	useEffect(() => {
@@ -88,7 +91,7 @@ export function AdminApp() {
 	if (!ready) return <div className="app-loading"><GearLoader /></div>;
 	if (!user) return <AdminLogin onSignIn={signIn} error={error} busy={busy} />;
 
-	const list = accounts.filter((a) => !q.trim() || (a.business + " " + a.email + " " + a.name).toLowerCase().includes(q.trim().toLowerCase()));
+	const list = accounts.filter((a) => (!fStatus || statusOf(a).value === fStatus) && (!fSub || subscriptionOf(a).value === fSub)).filter((a) => !q.trim() || (a.business + " " + a.email + " " + a.name).toLowerCase().includes(q.trim().toLowerCase()));
 	const current = accounts.find((a) => a.id === selected);
 
 	return (
@@ -125,14 +128,23 @@ export function AdminApp() {
 				<>
 					{stats && (
 						<section className="admin-summary">
-							<div className="card"><div className="label">POS customers</div><div className="value">{stats.realCustomers}</div></div>
-							<div className="card"><div className="label">Test accounts</div><div className="value">{stats.testAccounts}</div></div>
+							<div className="card"><div className="label">Trial</div><div className="value">{stats.trialAccounts ?? accounts.filter((a) => statusOf(a).value === "trial").length}</div></div>
+							<div className="card"><div className="label">Test</div><div className="value">{stats.testAccounts}</div></div>
+							<div className="card"><div className="label">Live</div><div className="value">{stats.liveAccounts ?? accounts.filter((a) => statusOf(a).value === "live").length}</div></div>
 							<div className="card"><div className="label">Revenue this month</div><div className="value admin-small">LKR {Number(stats.revenueThisMonth || 0).toLocaleString()}</div></div>
 							<div className="card"><div className="label">Disabled accounts</div><div className="value" style={{ color: accounts.some((a) => a.paused) ? "#a5362b" : undefined }}>{accounts.filter((a) => a.paused).length}</div></div>
 						</section>
 					)}
-					<section className="admin-toolbar" style={{ gridTemplateColumns: "1fr" }}>
+					<section className="admin-toolbar" style={{ gridTemplateColumns: "1fr auto auto" }}>
 						<input className="input" placeholder="Search business, e-mail or name…" value={q} onChange={(e) => setQ(e.target.value)} />
+						<select className="input" aria-label="Filter by status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+							<option value="">All statuses</option>
+							{STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+						</select>
+						<select className="input" aria-label="Filter by subscription" value={fSub} onChange={(e) => setFSub(e.target.value)}>
+							<option value="">All subscriptions</option>
+							{SUBSCRIPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+						</select>
 					</section>
 					<div className="panel">
 						<div className="table-wrap">
@@ -141,6 +153,8 @@ export function AdminApp() {
 									<tr>
 										<th>Business</th>
 										<th>Contact</th>
+										<th>Status</th>
+										<th>Subscription</th>
 										<th>Payment</th>
 										<th>Next due</th>
 										<th>Access</th>
@@ -157,6 +171,12 @@ export function AdminApp() {
 											<td>
 												{a.name || "—"}
 												<small className="table-subcategory">{a.email}</small>
+											</td>
+											<td>
+												<span className="badge" style={statusOf(a).style}>{statusOf(a).label}</span>
+											</td>
+											<td>
+												<span className="badge">{subscriptionOf(a).label}</span>
 											</td>
 											<td>
 												<span className="badge">{a.payment?.status || "trial"}</span>
@@ -176,7 +196,7 @@ export function AdminApp() {
 									))}
 									{!list.length && (
 										<tr>
-											<td colSpan="6">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
+											<td colSpan="8">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
 										</tr>
 									)}
 								</tbody>

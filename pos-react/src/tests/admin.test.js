@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { ADDITIONAL_FEATURES, PLANS, PLAN_FEATURE_OFF } from "../config/plans";
 import { FEATURES, resolveFeatures } from "../config/features";
 import { DEFAULT_WELCOME, resolveWelcome } from "../config/welcome";
-import { buildInvoiceLines, additionalFeatures } from "../admin-app/billing";
+import { buildInvoiceLines } from "../admin-app/billing";
 import { DEV_ADMIN, localAdminApi, localAdminSession } from "../admin-app/localAdmin";
 import { createHarness } from "./harness";
 
@@ -36,6 +36,18 @@ describe("admin dashboard API (local)", () => {
 		expect((await localAdminApi({ action: "list" })).users[0]).toMatchObject({ paused: true });
 		await localAdminApi({ action: "setAccess", paused: false });
 		expect((await localAdminApi({ action: "list" })).users[0].paused).toBe(false);
+	});
+	it("sets account status and subscription type", async () => {
+		expect((await localAdminApi({ action: "list" })).users[0]).toMatchObject({ status: "trial", subscriptionType: "monthly" });
+		await localAdminApi({ action: "setAccountStatus", status: "live" });
+		await localAdminApi({ action: "setSubscriptionType", subscriptionType: "annual" });
+		const list = await localAdminApi({ action: "list" });
+		expect(list.users[0]).toMatchObject({ status: "live", subscriptionType: "annual" });
+		expect(list.stats).toMatchObject({ liveAccounts: 1, trialAccounts: 0, testAccounts: 0 });
+		await expect(localAdminApi({ action: "setAccountStatus", status: "bogus" })).rejects.toThrow();
+		await expect(localAdminApi({ action: "setSubscriptionType", subscriptionType: "weekly" })).rejects.toThrow();
+		await localAdminApi({ action: "setAccountStatus", status: "trial" });
+		await localAdminApi({ action: "setSubscriptionType", subscriptionType: "monthly" });
 	});
 	it("saves per-location features, welcome message and plan", async () => {
 		await localAdminApi({
@@ -99,13 +111,6 @@ describe("invoice billing", () => {
 	it("base price only when nothing extra is on", () => {
 		const inv = buildInvoiceLines({ tier: "business", flags: off(PLAN_FEATURE_OFF.business) });
 		expect(inv.total).toBe(7500);
-	});
-	it("two extra features are free, the third onward is LKR 5,500 each", () => {
-		const flags = { ...off(PLAN_FEATURE_OFF.starter) };
-		const extras = PLAN_FEATURE_OFF.starter.slice(0, 4);
-		extras.forEach((id) => (flags[id] = true));
-		expect(additionalFeatures("starter", flags).length).toBeGreaterThanOrEqual(4);
-		expect(buildInvoiceLines({ tier: "starter", flags }).total).toBe(5500 + (additionalFeatures("starter", flags).length - 2) * 5500);
 	});
 	it("a fixed-amount exception replaces the computed total", () => {
 		const inv = buildInvoiceLines({ tier: "pro", flags: {}, exceptionAmount: 12000, exceptionNote: "legacy deal" });

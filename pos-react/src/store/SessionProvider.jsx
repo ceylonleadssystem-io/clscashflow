@@ -8,6 +8,7 @@ import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
 import { friendlyAuthError, getAuthService } from "../services/auth.service";
 import { CloudSyncService } from "../services/cloud.service";
+import { startDiagnostics } from "../services/diagnostics.service";
 import { accessAllowed, billingWarning, posAccessProfile } from "../services/billing";
 import {
 	loadCatalogueImages,
@@ -154,6 +155,12 @@ export function SessionProvider({ children }) {
 		});
 		return () => unsub?.();
 	}, [auth, activate]);
+
+	// Support: upload the device log when an administrator requests it (cloud accounts only)
+	useEffect(() => {
+		if (phase !== "ready" || !workspace?.cloud) return undefined;
+		return startDiagnostics(() => auth.currentUser?.getIdToken());
+	}, [phase, workspace, auth]);
 
 	// Administrators can disable/enable an account (non-payment) at any time: re-check the profile
 	useEffect(() => {
