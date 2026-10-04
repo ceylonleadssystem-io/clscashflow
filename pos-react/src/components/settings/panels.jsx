@@ -489,7 +489,7 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 						<label>Number of POS users</label>
 						<input className="input" id="set-pos-users" type="number" min="1" step="1" value={form.posUsers} onChange={set("posUsers")} />
 					</div>
-					<button className="btn out" type="button" style={{ marginTop: 10 }} onClick={() => setWelcomeUser({ id: currentUser?.id, name: currentUser?.name, firstTime: false })}>
+					<button className="btn out" type="button" style={{ marginTop: 10 }} onClick={() => setWelcomeUser({ id: currentUser?.id, name: currentUser?.name, firstTime: false, plansOnly: true })}>
 						View plans & pricing
 					</button>
 				</div>
