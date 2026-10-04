@@ -5,7 +5,6 @@
 import { Modal, ModalBody } from "../components/ui";
 import { PlansGrid } from "../components/PlansGrid";
 import { resolveWelcome } from "../config/welcome";
-import { env } from "../config/env";
 import { planForSettings } from "../config/plans";
 import { T } from "../db/tables";
 import { useData } from "../store/DataProvider";
@@ -43,7 +42,7 @@ export function WelcomeModal() {
 				}
 			>
 				<ModalBody>
-					<PlansGrid currentPlan={planForSettings(data.settings).id} onSelect={() => window.open(env.onboardingUrl, "_blank", "noopener")} />
+					<PlansGrid currentPlan={planForSettings(data.settings).id} businessName={data.settings.business} />
 				</ModalBody>
 			</Modal>
 		);
@@ -64,7 +63,7 @@ export function WelcomeModal() {
 			<ModalBody>
 				{welcome.message && <p className="welcome-message">{welcome.message}</p>}
 				{welcome.showPlans && (
-					<PlansGrid currentPlan={data.settings.plan?.tier} onSelect={() => window.open(env.onboardingUrl, "_blank", "noopener")} />
+					<PlansGrid currentPlan={data.settings.plan?.tier} businessName={data.settings.business} />
 				)}
 			</ModalBody>
 		</Modal>

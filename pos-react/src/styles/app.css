@@ -386,3 +386,12 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .plans-modal .panel-head,.plans-modal .modal-foot{flex:0 0 auto}
 @media (max-width:1100px){.plans-modal .plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.plans-modal .plans-grid{grid-template-columns:1fr}}
+
+/* Pricing sheet: "Your plan" tag and contact bar (replaces the per-plan Get Started buttons) */
+.plan-current-tag{align-self:flex-start;margin-top:4px;padding:6px 12px;border-radius:999px;background:rgba(22,134,83,.12);color:#168653;font-weight:700;font-size:calc(12px * var(--ui-fs, 1))}
+.plans-contact{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;padding:16px 18px;border:1px solid var(--line,#eadbd1);border-radius:16px;background:var(--ui-surface-2,#fff8f3)}
+.plans-contact small{display:block;color:#6b6258;margin-top:2px}
+.plans-contact-actions{display:flex;gap:8px;flex-wrap:wrap}
+.plans-contact-actions .btn{text-decoration:none;display:inline-flex;align-items:center}
+.plans-modal .panel-head{align-items:flex-start;gap:10px}
+.plans-modal .panel-head .btn{width:auto!important;min-width:44px;flex:0 0 auto}

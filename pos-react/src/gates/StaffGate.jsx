@@ -1,50 +1,47 @@
 /**
- * Staff PIN gate after business sign-in: choose location (when multiple locations are on), user and PIN to open the register.
+ * Staff PIN gate after business sign-in: staff only type their PIN. The PIN identifies the user (PINs are unique per
+ * user, enforced when users are saved) and signs them in as soon as it is complete. The location is no longer chosen
+ * here: staffLogin picks the last used location the user is allowed to work at.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { env } from "../config/env";
 import { usePos } from "../store/PosProvider";
 import { useData } from "../store/DataProvider";
-import { useFeature } from "../store/FeatureProvider";
-import { activeLocations, userLocationIds } from "../services/pos/locations";
 
-/** Staff PIN gate: location, user and PIN. */
+/** Staff PIN gate: type the PIN to sign in. */
 export function StaffGate() {
 	const { staffLogin } = usePos();
 	const data = useData();
-	const multi = useFeature("business.locations");
-	const locations = useMemo(() => activeLocations(data), [data]);
-	const [location, setLocation] = useState("");
-	const [userId, setUserId] = useState("");
 	const [pin, setPin] = useState("");
 	const [error, setError] = useState("");
+	const [pickId, setPickId] = useState("");
 
-	const allowedUsers = useMemo(
-		() =>
-			data.users.filter((u) => {
-				if (u.active === false) return false;
-				if (!multi || !location) return true;
-				return userLocationIds(u, data).includes(location);
-			}),
-		[data, multi, location],
-	);
-	useEffect(() => {
-		if (!allowedUsers.some((u) => u.id === userId)) setUserId(allowedUsers[0]?.id || "");
-	}, [allowedUsers, userId]);
+	const activeUsers = useMemo(() => data.users.filter((u) => u.active !== false && u.pin), [data.users]);
+	// Normally exactly one user per PIN. Older data may still share a PIN: then (and only then) ask who is signing in.
+	const matches = useMemo(() => (pin ? activeUsers.filter((u) => u.pin === pin) : []), [activeUsers, pin]);
 
-	const user = data.users.find((u) => u.id === userId);
-	const userLocations = useMemo(() => {
-		const ids = user ? userLocationIds(user, data) : locations.map((l) => l.id);
-		return locations.filter((l) => ids.includes(l.id));
-	}, [user, locations, data]);
-	useEffect(() => {
-		if (!userLocations.some((l) => l.id === location)) setLocation(userLocations.length === 1 ? userLocations[0].id : location && userLocations.some((l) => l.id === location) ? location : "");
-	}, [userLocations, location]);
-
-	const submit = async () => {
-		const message = await staffLogin({ userId, pin, location });
+	const signIn = async (value, userId) => {
+		const found = activeUsers.filter((u) => u.pin === value);
+		const user = userId ? found.find((u) => u.id === userId) : found.length === 1 ? found[0] : null;
+		if (!user) {
+			setError(found.length > 1 ? "More than one user has this PIN. Choose who you are." : "Incorrect PIN.");
+			return;
+		}
+		const message = await staffLogin({ userId: user.id, pin: value, location: "" });
 		setError(message);
 		if (!message) setPin("");
+	};
+
+	const onChange = (raw) => {
+		const value = raw.replace(/\D/g, "").slice(0, 6);
+		setPin(value);
+		setError("");
+		setPickId("");
+		// Sign in automatically once the typed PIN is exactly one user's PIN, unless a longer PIN could still be
+		// meant (e.g. 1234 and 123456 both exist): then Enter / Sign In confirms.
+		const exact = activeUsers.filter((u) => u.pin === value);
+		const longer = activeUsers.some((u) => u.pin.length > value.length && u.pin.startsWith(value));
+		if (value.length >= 4 && exact.length === 1 && !longer) signIn(value);
 	};
 
 	return (
@@ -58,47 +55,35 @@ export function StaffGate() {
 				</div>
 				<div className="muted">Staff access</div>
 				<h2>Sign in to the register</h2>
-				{multi && (
-					<div className="field" style={{ marginTop: 10 }}>
-						<label>Location</label>
-						<select className="input" id="login-location" value={location} onChange={(e) => setLocation(e.target.value)}>
-							<option value="">Select location</option>
-							{userLocations.map((l) => (
-								<option key={l.id} value={l.id}>
-									{l.name} — {l.code}
-								</option>
-							))}
-						</select>
-						<div className="plan-settings-note" id="login-location-note">
-							Choose the branch first. Only staff allowed at that location are shown.
-						</div>
-					</div>
-				)}
-				<div className="field">
-					<label>User</label>
-					<select className="input" id="login-user" value={userId} onChange={(e) => setUserId(e.target.value)}>
-						{allowedUsers.map((u) => (
-							<option key={u.id} value={u.id}>
-								{u.name} — {u.role}
-							</option>
-						))}
-					</select>
-				</div>
 				<div className="field" style={{ marginTop: 10 }}>
-					<label>PIN</label>
+					<label>Enter your PIN</label>
 					<input
 						className="input"
 						id="login-pin"
 						type="password"
 						inputMode="numeric"
+						autoComplete="off"
 						maxLength={6}
 						value={pin}
-						onChange={(e) => setPin(e.target.value)}
-						onKeyDown={(e) => e.key === "Enter" && submit()}
+						onChange={(e) => onChange(e.target.value)}
+						onKeyDown={(e) => e.key === "Enter" && signIn(pin, pickId)}
 						autoFocus
 					/>
 				</div>
-				<button className="btn gold" style={{ width: "100%", marginTop: 15 }} onClick={submit}>
+				{matches.length > 1 && (
+					<div className="field">
+						<label>Who is signing in?</label>
+						<select className="input" id="login-user" value={pickId} onChange={(e) => setPickId(e.target.value)}>
+							<option value="">Choose your name</option>
+							{matches.map((u) => (
+								<option key={u.id} value={u.id}>
+									{u.name} — {u.role}
+								</option>
+							))}
+						</select>
+					</div>
+				)}
+				<button className="btn gold" style={{ width: "100%", marginTop: 15 }} onClick={() => signIn(pin, pickId)}>
 					Sign In
 				</button>
 				<div className="login-error" id="login-error">

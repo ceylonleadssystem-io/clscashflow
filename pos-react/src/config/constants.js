@@ -4,6 +4,7 @@
  */
 /** Storage keys, limits and other literals shared across the POS. */
 export const STORAGE = {
+	lastLocation: "ceylonry-pos-last-location",
 	/** Default (pre-login) database name / legacy localStorage key. */
 	KEY: "ceylonry-pos-v1",
 	userSession: "ceylonry-pos-user",
