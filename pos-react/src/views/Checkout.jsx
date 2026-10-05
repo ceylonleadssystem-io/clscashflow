@@ -55,7 +55,7 @@ export function Checkout() {
 	const category = categories.includes(c.category) ? c.category : "All";
 	const q = c.search.trim().toLowerCase();
 	// Second chip row: the subcategories of the chosen category. Picking one shows only its items; with none picked
-	// the category shows the items that have no subcategory. Searching looks through every item.
+	// the category shows all its items. Searching looks through every item.
 	const subsOn = useFeature("catalogue.subcategories");
 	const subs = useMemo(() => (subsOn && category !== "All" ? subcategoriesFor(data.subcategories, category) : []), [subsOn, category, data.subcategories]);
 	const [subPick, setSubPick] = useState("");
