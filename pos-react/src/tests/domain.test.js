@@ -105,6 +105,9 @@ describe("catalogue + orders + inventory", () => {
 	});
 	it("hides empty preset categories but keeps custom ones", () => {
 		expect(visibleProductCategories(["Drinks", "My Special"], [], [])).toEqual(["My Special"]);
+		// a category the user added stays visible even when its name matches a hidden preset name
+		expect(visibleProductCategories(["Clothing"], [], [])).toEqual([]);
+		expect(visibleProductCategories(["Clothing"], [], [], ["clothing"])).toEqual(["Clothing"]);
 	});
 	it("migrates and sequences order numbers", () => {
 		const m = migrateOrderNumbers([{ id: "a", receipt: "X1", createdAt: "2026-01-02" }, { id: "b", receipt: "X2", createdAt: "2026-01-01" }], [], {});

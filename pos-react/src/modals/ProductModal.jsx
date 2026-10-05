@@ -19,6 +19,7 @@ const blank = () => ({
 	category: "",
 	newCategory: "",
 	subcategory: "",
+	description: "",
 	cost: "",
 	price: "",
 	stock: "",
@@ -58,6 +59,7 @@ function ProductModal({ id, open, onClose }) {
 			...blank(),
 			...p,
 			category: p.category || "",
+			description: p.description || "",
 			cost: p.cost ?? "",
 			stock: p.trackStock === false ? "" : (p.stock ?? ""),
 			price: p.price ?? "",
@@ -200,6 +202,10 @@ function ProductModal({ id, open, onClose }) {
 							</select>
 						</div>
 					)}
+					<div className="field full">
+						<label htmlFor="p-description">Description</label>
+						<input className="input" id="p-description" maxLength={200} placeholder="Optional, printed on barcode labels and receipts" value={f.description} onChange={set("description")} />
+					</div>
 					<div className="field">
 						<label>Cost Price *</label>
 						<NumberInput id="p-cost" value={f.cost} onChange={(v) => setF((x) => ({ ...x, cost: v }))} />
