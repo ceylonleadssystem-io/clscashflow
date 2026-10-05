@@ -112,6 +112,8 @@ describe("checkout workflow", () => {
 		expect(arg.to).toBe("buyer@test.lk");
 		expect(arg.html).toContain("Milk Tea");
 		expect(arg.html.toLowerCase()).not.toContain("payment received");
+		expect(arg.variables).toMatchObject({ receipt_number: res.sale.receipt, order_number: res.sale.receipt, total: "LKR 250.00", payment_method: "Card", has_discount: "" });
+		expect(arg.variables.orders).toEqual([expect.objectContaining({ name: "Milk Tea", quantity: "1", line_total: "LKR 250.00" })]);
 		expect(h.data().sales[0].receiptSentAt).toBeTruthy();
 		expect(res.sale.receiptEmail).toBe("buyer@test.lk");
 	});
