@@ -19,3 +19,7 @@
 	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) #nav button::after{display:none!important}
 }
 @media (prefers-reduced-motion:reduce){html body .side{transition:none!important}}
+
+.nav-group{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;opacity:.55;padding:12px 8px 3px;white-space:nowrap;overflow:hidden}
+.nav-group.nav-sep{padding:0;margin:8px 6px;border-top:1px solid currentColor;opacity:.18}
+@media (min-width:821px){html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) .nav-group:not(.nav-sep){visibility:hidden;height:6px;padding:0}}

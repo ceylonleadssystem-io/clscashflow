@@ -294,6 +294,16 @@ export function CheckoutProvider({ children }) {
 		[data.openOrders, ui, go, kitchen],
 	);
 
+	/** Recalls an open order and opens the split dialog for it. */
+	const splitOpenOrder = useCallback(
+		async (id) => {
+			if (!data.openOrders.some((o) => o.id === id && o.status === "open")) return;
+			await loadOpenOrder(id);
+			setSplitOpen(true);
+		},
+		[data.openOrders, loadOpenOrder],
+	);
+
 	const newOpenOrder = useCallback(() => {
 		resetOrder();
 		go("checkout");
@@ -317,7 +327,7 @@ export function CheckoutProvider({ children }) {
 		orderChannel, setOrderChannel, platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
 		picker, setPicker, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
 		addProduct, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
-		completeSale, voidOrder, saveOrder, loadOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
+		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
 	};
 	return <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>;
 }

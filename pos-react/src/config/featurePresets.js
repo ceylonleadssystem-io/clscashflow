@@ -3,7 +3,7 @@
  * switched OFF, everything else is ON (same convention as PLAN_FEATURE_OFF in plans.js). `posType` is the default
  * POS businessType (key of POS_TYPE_PRESETS). The chosen category id is stored as settings.businessCategory.
  */
-const KITCHEN = ["view.orders", "checkout.openOrders", "checkout.kitchenTickets", "checkout.orderReference", "checkout.orderChannels", "inventory.recipes", "view.modifiers", "modifiers.commonPresets"];
+const KITCHEN = ["view.orders", "view.tables", "checkout.openOrders", "checkout.kitchenTickets", "checkout.orderReference", "checkout.orderChannels", "inventory.recipes", "view.modifiers", "modifiers.commonPresets"];
 const SHOP = ["catalogue.barcodeLabels", "hardware.labelPrinter", "hardware.barcodeScanner", "checkout.stockGuard", "inventory.productStock", "inventory.stockTools"];
 const TOOLS = ["industry.tools"];
 

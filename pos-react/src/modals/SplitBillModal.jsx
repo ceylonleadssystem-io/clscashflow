@@ -2,9 +2,9 @@
  * Split Bill dialog: equal or custom shares, a payment method per share, and taking each share's payment
  * (cash received, change, card approval) before continuing to checkout.
  */
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { SPLIT_PAYMENT_METHODS } from "../config/constants";
-import { equalSplit } from "../domain/cart";
+import { equalSplit, splitByItems } from "../domain/cart";
 import { money } from "../domain/format";
 import { Modal, ModalBody } from "../components/ui";
 import { useCheckout } from "../store/CheckoutProvider";
@@ -26,6 +26,9 @@ export function SplitBillModal() {
 	const { currentUser } = usePos();
 	const total = c.totals.total;
 	const open = c.splitOpen;
+	const [itemMode, setItemMode] = useState(false);
+	const [guests, setGuests] = useState(2);
+	const [assign, setAssign] = useState({}); // "<line key>:<unit>" -> guest index
 	useEffect(() => {
 		if (open && !c.splitPayments.length)
 			c.setSplitPayments([
@@ -113,7 +116,45 @@ export function SplitBillModal() {
 					<button className="btn out" onClick={() => c.setSplitPayments([...shares, { method: "Card", amount: 0, paid: false }])}>
 						+ Add Share
 					</button>
+					<button className={"btn " + (itemMode ? "gold" : "out")} id="split-by-item" onClick={() => setItemMode(!itemMode)}>
+						By Item
+					</button>
 				</div>
+				{itemMode && (
+					<div id="split-item-panel" className="plan-settings" style={{ marginBottom: 14 }}>
+						<div className="tools" style={{ marginBottom: 8 }}>
+							<label className="label">Guests</label>
+							<select className="input" style={{ width: 80 }} value={guests} onChange={(e) => setGuests(+e.target.value)}>
+								{[2, 3, 4, 5, 6, 7, 8].map((n) => <option key={n}>{n}</option>)}
+							</select>
+						</div>
+						<div style={{ display: "grid", gap: 6 }}>
+							{c.cart.filter((l) => !l.isDiscount && !l.isServiceCharge).flatMap((l) =>
+								Array.from({ length: l.qty }, (_, u) => (
+									<div key={l.key + u} className="tools" style={{ justifyContent: "space-between" }}>
+										<span>{l.name} <span className="muted">{money(l.price)}</span></span>
+										<select className="input" style={{ width: 120 }} aria-label={"Who pays for " + l.name} value={Math.min(guests - 1, assign[l.key + ":" + u] ?? 0)} onChange={(e) => setAssign({ ...assign, [l.key + ":" + u]: +e.target.value })}>
+											{Array.from({ length: guests }, (_, g) => <option key={g} value={g}>Guest {g + 1}</option>)}
+										</select>
+									</div>
+								)),
+							)}
+						</div>
+						<button
+							className="btn gold"
+							id="split-item-apply"
+							style={{ marginTop: 10 }}
+							onClick={() => {
+								const next = splitByItems(c.cart, assign, guests, total);
+								if (!next || next.length < 2) return ui.alert("Give items to at least two guests.");
+								c.setSplitPayments(next);
+								setItemMode(false);
+							}}
+						>
+							Create shares from items
+						</button>
+					</div>
+				)}
 				<div id="split-payment-rows" style={{ display: "grid", gap: 9 }}>
 					{shares.map((p, i) => (
 						<div className={"split-payment-row " + (p.paid ? "is-paid" : "")} key={i}>

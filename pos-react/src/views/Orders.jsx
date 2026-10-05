@@ -1,7 +1,7 @@
 /**
  * Order Queue page: open orders with KPIs and actions to recall and pay, resend to the kitchen, or void.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
 import { customerName, userName } from "../domain/names";
@@ -10,12 +10,15 @@ import { useFeature } from "../store/FeatureProvider";
 import { useCheckout } from "../store/CheckoutProvider";
 import { usePos } from "../store/PosProvider";
 import { Kpi, Panel } from "../components/ui";
+import { MoveCheckModal } from "../modals/MoveCheckModal";
 
 /** Order Queue: open checks waiting for payment / kitchen sending. */
 export function Orders() {
 	const data = useData();
 	const { kitchen, svc } = usePos();
-	const { loadOpenOrder, newOpenOrder } = useCheckout();
+	const { loadOpenOrder, splitOpenOrder, newOpenOrder } = useCheckout();
+	const canSplit = useFeature("checkout.splitBill");
+	const [moving, setMoving] = useState(null);
 	const tickets = useFeature("checkout.kitchenTickets");
 	const open = useMemo(
 		() => data.openOrders.filter((o) => o.status === "open").sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
@@ -92,6 +95,14 @@ export function Orders() {
 													{o.kitchenSentAt ? "Resend KOT" : "Send KOT"}
 												</button>
 											)}
+											{canSplit && (
+												<button className="btn out" onClick={() => splitOpenOrder(o.id)}>
+													Split
+												</button>
+											)}
+											<button className="btn out" onClick={() => setMoving(o)}>
+												Move / Merge
+											</button>
 											<button className="btn danger" onClick={() => svc.sales.voidOpenOrder(o.id)}>
 												Void
 											</button>
@@ -108,6 +119,7 @@ export function Orders() {
 					</table>
 				</div>
 			</Panel>
+			<MoveCheckModal order={moving} onClose={() => setMoving(null)} />
 		</section>
 	);
 }
