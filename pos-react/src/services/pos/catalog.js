@@ -34,6 +34,13 @@ export async function saveProduct(ctx, form) {
 		await ctx.ui.alert("Enter a valid name, main category, cost price and selling price.");
 		return null;
 	}
+	// Stock count typed in the item form: empty = always available, a number = tracked. Items that already have a
+	// stock row keep it (adjust it under Inventory & Stock); callers that send no `stock` keep the old behaviour.
+	const rawStock = form.stock === undefined || form.stock === null ? undefined : String(form.stock).replace(/,/g, "").trim();
+	if (rawStock && (!Number.isFinite(Number(rawStock)) || Number(rawStock) < 0)) {
+		await ctx.ui.alert("Stock count must be a number of zero or more, or left empty if the item is always available.");
+		return null;
+	}
 	const existingCategory = productCategories(d.categories, d.products).find((c) => c.toLowerCase() === chosen.toLowerCase());
 	const category = existingCategory || chosen;
 	const existing = d.products.find((p) => p.id === form.id);
@@ -54,6 +61,11 @@ export async function saveProduct(ctx, form) {
 		modifierRules: form.modifierRules || {},
 		recipe: form.recipe || [],
 	};
+	const hasStockRow = d.inventory.some((i) => String(i.productId || "") === String(product.id));
+	if (rawStock !== undefined && !hasStockRow) {
+		product.trackStock = rawStock !== "";
+		product.stock = rawStock !== "" ? Number(rawStock) : 0;
+	}
 	await ctx.store.write(async (tx) => {
 		if (!d.categories.some((c) => categoryKey(c) === categoryKey(category))) {
 			tx.addCategory(category);

@@ -83,6 +83,19 @@ describe("inventory workflow", () => {
 		expect(h.data().inventory).toHaveLength(0);
 	});
 
+	it("item form: empty stock count = always available, a number = tracked", async () => {
+		const base = { category: "Drinks", cost: "1", price: "5", type: "Product", code: "", image: "" };
+		const free = await h.svc.catalog.saveProduct({ ...base, name: "Free", stock: "" });
+		expect(free.trackStock).toBe(false);
+		expect(h.data().inventory.some((i) => i.productId === free.id)).toBe(false);
+		expect(availableProductStock(free, h.data().inventory, "loc-main")).toBe(Infinity);
+		const counted = await h.svc.catalog.saveProduct({ ...base, name: "Counted", stock: "7" });
+		expect(h.data().inventory.find((i) => i.productId === counted.id).qty).toBe(7);
+		expect(availableProductStock(counted, h.data().inventory, "loc-main")).toBe(7);
+		await h.svc.catalog.saveProduct({ ...base, name: "Bad", stock: "-2" });
+		expect(h.lastAlert()).toMatch(/Stock count/);
+	});
+
 	it("re-adding stock for a product turns tracking back on", async () => {
 		const p = await addProduct(h, { name: "Bun", type: "Product" });
 		await h.svc.inventory.deleteInventoryItem(h.data().inventory[0].id);
