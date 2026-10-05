@@ -38,6 +38,15 @@ export const cleanBarcode = (value) =>
 		.replace(/[^0-9A-Z. $/+%-]/g, "-")
 		.slice(0, 32);
 
+/** A size name reduced to what a barcode can carry: "2XL" -> "2XL", "Extra Large" -> "EXTRALARGE". */
+export const sizeSlug = (size) => String(size || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+
+/** Barcode for one size of an item: the item code, "-", the size ("POS-07666-M"). No size = the plain item code. */
+export function sizedBarcode(code, size) {
+	const slug = sizeSlug(size);
+	return slug ? cleanBarcode(code).slice(0, 31 - slug.length) + "-" + slug : cleanBarcode(code);
+}
+
 /** Random, collision-free "AS-########" code (used when a product has none). */
 export function uniqueBarcode(existingCodes = []) {
 	let code;

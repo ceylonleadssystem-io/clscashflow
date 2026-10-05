@@ -5,7 +5,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ORDER_CHANNELS, STORAGE } from "../config/constants";
 import { addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
-import { availableProductStock, cartQtyForProduct } from "../domain/inventory";
+import { productSizeGroup } from "../domain/catalog";
+import { availableProductStock, cartQtyForProduct, hasSizedStock, stockSizeFor } from "../domain/inventory";
 import { phoneKey } from "../domain/format";
 import { serviceChargeSupported } from "../services/pos/common";
 import { useData } from "./DataProvider";
@@ -84,8 +85,9 @@ export function CheckoutProvider({ children }) {
 		(product, selections, lineKey = "") => {
 			const requested = lineKey ? cart.find((l) => l.key === lineKey)?.qty || 1 : 1;
 			if (enabled["checkout.stockGuard"] && enabled["inventory.productStock"]) {
-				const available = availableProductStock(product, data.inventory, locationId);
-				if (Number.isFinite(available) && cartQtyForProduct(cart, product.id, lineKey) + requested > available) {
+				const size = stockSizeFor(data.inventory, product.id, selections);
+				const available = availableProductStock(product, data.inventory, locationId, size || "");
+				if (Number.isFinite(available) && cartQtyForProduct(cart, product.id, lineKey, size) + requested > available) {
 					ui.notice(`${product.name} has only ${available} in stock.`);
 					return false;
 				}
@@ -96,15 +98,33 @@ export function CheckoutProvider({ children }) {
 		[cart, enabled, data.inventory, locationId, ui],
 	);
 
-	// `scanned` (barcode scan) adds the item straight away: the modifier question is only asked when tapping a tile.
 	const addProduct = useCallback(
-		(id, scanned = false) => {
+		(id) => {
 			const product = data.products.find((p) => p.id === id);
 			if (!product) return;
-			if (scanned !== true && productModifiers(product, data.modifiers).length) return setPicker({ productId: id, lineKey: "" });
+			if (productModifiers(product, data.modifiers).length) return setPicker({ productId: id, lineKey: "" });
 			addConfigured(product, []);
 		},
 		[data.products, data.modifiers, addConfigured],
+	);
+
+	/**
+	 * Barcode scan: adds the item without asking for modifiers. A size barcode ("<code>-M") adds it with that Size option,
+	 * so the size shows on the receipt and in reports. A plain code of an item counted per size has to ask the size.
+	 * Returns false when the item could not be added (stock guard).
+	 */
+	const addScanned = useCallback(
+		(id, size = "") => {
+			const product = data.products.find((p) => p.id === id);
+			if (!product) return undefined;
+			const group = size ? productSizeGroup(product, data.modifiers) : null;
+			const option = group?.options.find((o) => o.name === size);
+			if (group && option)
+				return addConfigured(product, [{ groupId: group.id, groupName: group.name, optionName: option.name, price: +option.price || 0 }]);
+			if (hasSizedStock(data.inventory, product.id)) return void setPicker({ productId: id, lineKey: "" });
+			return addConfigured(product, []);
+		},
+		[data.products, data.modifiers, data.inventory, addConfigured],
 	);
 
 	const changeLineQty = useCallback(
@@ -112,8 +132,9 @@ export function CheckoutProvider({ children }) {
 			const line = cart.find((l) => l.key === key);
 			if (line && delta > 0 && enabled["checkout.stockGuard"] && enabled["inventory.productStock"]) {
 				const product = data.products.find((p) => p.id === line.productId);
-				const available = availableProductStock(product, data.inventory, locationId);
-				if (Number.isFinite(available) && cartQtyForProduct(cart, line.productId, key) + line.qty + delta > available) {
+				const size = stockSizeFor(data.inventory, line.productId, line.modifiers);
+				const available = availableProductStock(product, data.inventory, locationId, size || "");
+				if (Number.isFinite(available) && cartQtyForProduct(cart, line.productId, key, size) + line.qty + delta > available) {
 					ui.notice(`${line.name} has only ${available} in stock.`);
 					return;
 				}
@@ -327,7 +348,7 @@ export function CheckoutProvider({ children }) {
 		wantsWhatsApp, setWantsWhatsApp, printAfter, setPrintAfter, cashTendered, setCashTendered, orderReference, setOrderReference,
 		orderChannel, setOrderChannel, platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
 		picker, setPicker, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
-		addProduct, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
+		addProduct, addScanned, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
 		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
 	};
 	return <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>;

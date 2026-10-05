@@ -64,6 +64,7 @@ export function dashboardData(sales, { from, to }) {
 export function reportData(sales, { from, to }) {
 	const list = salesInRange(sales, from, to);
 	const items = {};
+	const mods = {};
 	list.forEach((s) => {
 		const refunded = {};
 		(s.refunds || []).forEach((r) =>
@@ -80,9 +81,19 @@ export function reportData(sales, { from, to }) {
 			item.qty += x.qty;
 			item.revenue += x.l.price * x.qty * rate;
 			item.cost += (+x.l.cost || 0) * x.qty;
+			// modifier options (sizes, add-ons...) on the line: units sold, the sales value of the lines carrying the option,
+			// and what the option itself added to the price
+			(x.l.modifiers || []).forEach((m) => {
+				const key = (m.groupName || "Modifier") + "\u0000" + (m.optionName || "");
+				const row = mods[key] || (mods[key] = { group: m.groupName || "Modifier", option: m.optionName || "", qty: 0, revenue: 0, extra: 0 });
+				row.qty += x.qty;
+				row.revenue += x.l.price * x.qty * rate;
+				row.extra += (+m.price || 0) * x.qty;
+			});
 		});
 	});
-	return { from, to, sales: list, items: Object.values(items).sort((a, b) => b.revenue - a.revenue) };
+	const modifiers = Object.values(mods).sort((a, b) => a.group.localeCompare(b.group) || b.qty - a.qty || a.option.localeCompare(b.option));
+	return { from, to, sales: list, items: Object.values(items).sort((a, b) => b.revenue - a.revenue), modifiers };
 }
 
 export function reportKpis(data) {
