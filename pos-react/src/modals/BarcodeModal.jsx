@@ -38,7 +38,7 @@ export function BarcodeModalHost() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [barcodeProductId]);
 	if (!product) return null;
-	const safe = { ...product, code: cleanBarcode(product.code || "") };
+	const safe = { ...product, code: cleanBarcode(product.code || ""), company: String(data.settings.business || "").trim() };
 	const n = Math.max(1, Math.min(100, Number(copies) || 1));
 	// The item's Size group (the one named "Size" first, else any group with "size" in its name) gives the label sizes.
 	const groups = data.modifiers.filter((m) => (product.modifierIds || []).includes(m.id) && /size/i.test(m.name));
@@ -80,7 +80,7 @@ export function BarcodeModalHost() {
 			id="barcode-modal"
 			open
 			title="Product Barcode Labels"
-			subtitle={`${stock.width} × ${stock.height} mm labels with name, description, size, barcode and price`}
+			subtitle={`${stock.width} × ${stock.height} mm labels with business name, item name, description, size, barcode and price`}
 			onClose={closeBarcode}
 			footer={
 				<>

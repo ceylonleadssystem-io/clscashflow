@@ -73,20 +73,25 @@ export function labelBitmapLayout(width, height) {
 	const L = (o) => ({ darken: true, gapMm: 3, ...o });
 	// 60 x 40 mm (480 x 320 dots): name, description, size, barcode, price (the retail artwork)
 	if (width >= 60 && height >= 40)
-		return L({ margin: 28, nameFont: 40, descFont: 22, sizeFont: 22, priceFont: 40, top: 8, lineGap: 4, barcodeMax: 130, barcodeMin: 60, priceGap: 8, bottomPad: 14 });
+		return L({ margin: 28, companyFont: 20, nameFont: 40, descFont: 22, sizeFont: 22, priceFont: 40, top: 8, lineGap: 4, barcodeMax: 130, barcodeMin: 60, priceGap: 8, bottomPad: 14 });
 	// 50 x 25 mm (400 x 200 dots)
 	if (width >= 50)
-		return L({ margin: 24, nameFont: 26, descFont: 15, sizeFont: 16, priceFont: 26, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
+		return L({ margin: 24, companyFont: 13, nameFont: 26, descFont: 15, sizeFont: 16, priceFont: 26, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
 	// 30 x 20 mm (240 x 160 dots): name, barcode and price must all fit above the gap; no description line
-	return L({ margin: 24, nameFont: 14, descFont: 0, sizeFont: 12, priceFont: 14, top: 4, lineGap: 2, barcodeMax: 84, barcodeMin: 40, priceGap: 6, bottomPad: 14 });
+	return L({ margin: 24, companyFont: 11, nameFont: 14, descFont: 0, sizeFont: 12, priceFont: 14, top: 4, lineGap: 2, barcodeMax: 84, barcodeMin: 40, priceGap: 6, bottomPad: 14 });
 }
 
 /**
  * Vertical positions (dots) of the label rows: name, then the description and size lines when present, the barcode
  * (as tall as the room left allows, between barcodeMin and barcodeMax) and the price right under it. Pure so it can be tested.
  */
-export function labelRows(layout, dotsH, { desc = false, size = false } = {}) {
+export function labelRows(layout, dotsH, { desc = false, size = false, company = false } = {}) {
 	let y = layout.top;
+	let companyY = null;
+	if (company && layout.companyFont) {
+		companyY = y;
+		y += layout.companyFont + layout.lineGap;
+	}
 	const nameY = y;
 	y += layout.nameFont + layout.lineGap;
 	let descY = null;
@@ -102,7 +107,7 @@ export function labelRows(layout, dotsH, { desc = false, size = false } = {}) {
 	const barcodeY = y;
 	const room = dotsH - layout.bottomPad - layout.priceFont - layout.priceGap - barcodeY;
 	const barcodeH = Math.max(layout.barcodeMin, Math.min(layout.barcodeMax, room));
-	return { nameY, descY, sizeY, barcodeY, barcodeH, priceY: barcodeY + barcodeH + layout.priceGap };
+	return { companyY, nameY, descY, sizeY, barcodeY, barcodeH, priceY: barcodeY + barcodeH + layout.priceGap };
 }
 
 function fitText(ctx, text, maxWidth, font) {
@@ -128,7 +133,8 @@ export function tsplBitmapBytes(product, copies, size, opts) {
 	const name = String(product.name || "Item");
 	const description = layout.descFont ? String(product.description || product.subcategory || product.category || "") : "";
 	const sizeText = product.sizeLabel && layout.sizeFont ? "Size: " + product.sizeLabel : "";
-	const rows = labelRows(layout, dotsH, { desc: !!description, size: !!sizeText });
+	const company = layout.companyFont ? String(product.company || "").trim() : "";
+	const rows = labelRows(layout, dotsH, { desc: !!description, size: !!sizeText, company: !!company });
 	const g = labelGeometry(dotsW, layout, o, code128Units(product.code));
 	const price = money(product.price);
 	const textW = g.right - g.left;
@@ -137,6 +143,10 @@ export function tsplBitmapBytes(product, copies, size, opts) {
 	ctx.fillStyle = "#000";
 	ctx.textAlign = "center";
 	ctx.textBaseline = "top";
+	if (company) {
+		ctx.font = "700 " + layout.companyFont + "px Arial";
+		ctx.fillText(fitText(ctx, company, textW, ctx.font), g.cx, rows.companyY + g.dy);
+	}
 	ctx.font = "900 " + layout.nameFont + "px Arial";
 	ctx.fillText(fitText(ctx, name, textW, ctx.font), g.cx, rows.nameY + g.dy);
 	if (description) {
@@ -356,7 +366,8 @@ export const labelPrinter = new LabelPrinter();
 export function barcodeLabelCopy(product) {
 	const description = product.description || product.subcategory || product.category || "";
 	const size = product.sizeLabel ? `<strong class="label-size">Size: ${esc(product.sizeLabel)}</strong>` : "";
-	return `<div class="barcode-label-copy"><strong class="label-name">${esc(product.name || "Item")}</strong><span class="label-description">${esc(
+	const company = product.company ? `<span class="label-company">${esc(product.company)}</span>` : "";
+	return `<div class="barcode-label-copy">${company}<strong class="label-name">${esc(product.name || "Item")}</strong><span class="label-description">${esc(
 		description || "Scan this label at checkout",
 	)}</span>${size}<div class="label-barcode">${barcodeSvg(product.code)}</div><strong class="label-price">${money(product.price)}</strong></div>`;
 }
@@ -369,7 +380,7 @@ export function barcodeLabelsHtml(product, copies, size) {
 	const description = product.description || product.subcategory || product.category || "";
 	const runs = Array.isArray(copies) ? copies : [{ sizeLabel: product.sizeLabel || "", copies }];
 	const one = (sizeLabel) =>
-		`<div class="copy"><strong class="copy-name">${esc(product.name || "Item")}</strong><span class="copy-description">${esc(
+		`<div class="copy">${product.company ? `<span class="copy-company">${esc(product.company)}</span>` : ""}<strong class="copy-name">${esc(product.name || "Item")}</strong><span class="copy-description">${esc(
 			description || "Scan this label at checkout",
 		)}</span>${sizeLabel ? `<strong class="copy-size">Size: ${esc(sizeLabel)}</strong>` : ""}<div class="copy-barcode">${barcodeSvg(cleanBarcode(product.code))}</div><b class="copy-price">${money(product.price)}</b></div>`;
 	const labels = runs.flatMap((r) => Array.from({ length: r.copies }, () => `<section>${one(r.sizeLabel)}</section>`)).join("");
@@ -377,5 +388,5 @@ export function barcodeLabelsHtml(product, copies, size) {
 		Number(size[0]) - 2
 	}mm;height:${
 		Number(size[1]) - 2
-	}mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;overflow:hidden}.copy{width:100%;display:grid;justify-items:center;gap:.45mm}.copy-name,.copy-price{display:block;font-size:10pt;font-weight:900;line-height:1}.copy-description{display:block;max-width:96%;font-size:7.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-size{display:block;font-size:8pt;font-weight:900;line-height:1}.copy-barcode{width:100%;display:grid;place-items:center;margin:.2mm 0}svg{display:block;width:95%;height:auto;max-height:14mm;margin:0 auto}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
+	}mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;overflow:hidden}.copy{width:100%;display:grid;justify-items:center;gap:.45mm}.copy-name,.copy-price{display:block;font-size:10pt;font-weight:900;line-height:1}.copy-company{display:block;max-width:96%;font-size:6.5pt;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-description{display:block;max-width:96%;font-size:7.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-size{display:block;font-size:8pt;font-weight:900;line-height:1}.copy-barcode{width:100%;display:grid;place-items:center;margin:.2mm 0}svg{display:block;width:95%;height:auto;max-height:14mm;margin:0 auto}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
 }
