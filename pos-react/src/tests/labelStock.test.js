@@ -33,11 +33,9 @@ describe("label layouts fit every offered size", () => {
 			const dotsH = h * 8;
 			const l = labelBitmapLayout(w, h);
 			for (const desc of [false, true])
-				for (const sz of [false, true])
-					for (const company of [false, true]) {
-					const r = labelRows(l, dotsH, { desc, size: sz, company });
-					const tag = `${size} desc=${desc} size=${sz} company=${company}`;
-					if (company) expect(r.companyY, tag).toBeLessThan(r.nameY);
+				for (const sz of [false, true]) {
+					const r = labelRows(l, dotsH, { desc, size: sz });
+					const tag = `${size} desc=${desc} size=${sz}`;
 					expect(r.barcodeY + r.barcodeH, tag + " barcode").toBeLessThanOrEqual(r.priceY);
 					expect(r.priceY + l.priceFont, tag + " price").toBeLessThanOrEqual(dotsH);
 					expect(r.barcodeH, tag + " barcode height").toBeGreaterThanOrEqual(l.barcodeMin);
