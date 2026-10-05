@@ -4,6 +4,7 @@
 import { Dashboard } from "./Dashboard";
 import { Checkout } from "./Checkout";
 import { Orders } from "./Orders";
+import { Tables } from "./Tables";
 import { Products } from "./Products";
 import { Modifiers } from "./Modifiers";
 import { Customers } from "./Customers";
@@ -19,6 +20,7 @@ const VIEWS = {
 	dashboard: Dashboard,
 	checkout: Checkout,
 	orders: Orders,
+	tables: Tables,
 	products: Products,
 	modifiers: Modifiers,
 	customers: Customers,

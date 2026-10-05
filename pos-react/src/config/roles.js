@@ -14,6 +14,7 @@ export const ROLE_VIEWS = {
 		"dashboard",
 		"checkout",
 		"orders",
+		"tables",
 		"products",
 		"modifiers",
 		"customers",
@@ -29,6 +30,7 @@ export const ROLE_VIEWS = {
 		"dashboard",
 		"checkout",
 		"orders",
+		"tables",
 		"products",
 		"modifiers",
 		"customers",
@@ -40,7 +42,7 @@ export const ROLE_VIEWS = {
 		"settings",
 	],
 	accountant: ["dashboard", "sales", "reports", "inventory", "industry", "staff", "settings"],
-	cashier: ["checkout", "orders", "customers", "staff", "settings"],
+	cashier: ["checkout", "orders", "tables", "customers", "staff", "settings"],
 };
 ROLE_VIEWS.admin = ROLE_VIEWS.owner.slice();
 
@@ -48,6 +50,7 @@ export const VIEW_TITLES = {
 	dashboard: ["Dashboard", "Sales, customers and profit at a glance"],
 	checkout: ["Checkout", "Create a new counter sale"],
 	orders: ["Order Queue", "Open checks, tables and kitchen sending"],
+	tables: ["Tables", "Floor plan: seat guests and open table checks"],
 	products: [
 		"Products & Services",
 		"Manage items, pricing, images and categories",
@@ -74,6 +77,7 @@ export const NAV_ITEMS = [
 	{ view: "dashboard", label: "▦ Dashboard" },
 	{ view: "checkout", label: "▣ Checkout" },
 	{ view: "orders", label: "☰ Order Queue" },
+	{ view: "tables", label: "▦ Tables" },
 	{ view: "products", label: "□ Products & Services" },
 	{ view: "modifiers", label: "＋ Modifiers" },
 	{ view: "customers", label: "♙ Customers" },

@@ -401,3 +401,21 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 /* Loading screen uses the accent colour chosen under Settings > Operations (applied early from localStorage) */
 .app-loading-brand span{color:var(--ui-accent,#ff4d0a)}
 .app-loading-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--ui-accent,#ff4d0a) 62%,#fff),var(--ui-accent,#ff4d0a))}
+
+/* Tables page: restaurant floor plan */
+.floor-wrap{overflow-x:auto}
+.floor{position:relative;width:100%;min-width:560px;background:var(--surface-2,#f6f3ec);border:1px solid var(--line,#e2dccd);border-radius:12px;overflow:hidden}
+.floor.editing{touch-action:none;background-image:radial-gradient(circle,rgba(0,0,0,.14) 1px,transparent 1px);background-size:1.11% 1.79%}
+.floor-table{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box;border:2px solid var(--line,#cbbf9f);background:#e7f4e4;color:#1f4d1a;cursor:pointer;user-select:none;font-size:.8rem;text-align:center;overflow:hidden}
+.floor-table strong{font-size:1.1rem}
+.floor-table.round{border-radius:50%}
+.floor-table.square,.floor-table.rect{border-radius:10px}
+.floor-table.busy{background:#fde3dc;color:#8a2a14}
+.floor-table.inactive{background:repeating-linear-gradient(45deg,#e4e1d9,#e4e1d9 8px,#f3f1ec 8px,#f3f1ec 16px);color:#6d6a60;cursor:default}
+.floor.editing .floor-table{cursor:move}
+.floor-table.selected{outline:3px solid var(--gold,#c8a24a)}
+.floor-total{font-weight:700}
+.floor-resize{position:absolute;right:2px;bottom:2px;width:16px;height:16px;cursor:nwse-resize;border-right:4px solid #777;border-bottom:4px solid #777;border-radius:0 0 6px 0}
+.floor-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted,#777);padding:20px;text-align:center}
+.floor-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:14px}
+.floor-form .field{min-width:150px;flex:1}

@@ -83,6 +83,7 @@ export function PosProvider({ children }) {
 			if (!(ROLE_VIEWS[currentUser.role] || []).includes(v)) return false;
 			// the Order Queue belongs to kitchen presets, but saved orders of any preset stay reachable
 			if (v === "orders" && !kitchen && !hasOpenOrders) return false;
+			if (v === "tables" && !kitchen) return false;
 			if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
 			if (v === "checkout" && locationId === "all") return false;
 			const flag = VIEW_FEATURE[v];
@@ -98,6 +99,7 @@ export function PosProvider({ children }) {
 	);
 	function canView2(user, v) {
 		if (v === "orders" && !kitchen && !hasOpenOrders) return false;
+		if (v === "tables" && !kitchen) return false;
 		if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
 		const flag = VIEW_FEATURE[v];
 		return flag ? !!enabled[flag] : true;
