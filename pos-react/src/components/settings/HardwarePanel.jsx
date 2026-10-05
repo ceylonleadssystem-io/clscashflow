@@ -9,6 +9,7 @@ import { usePos } from "../../store/PosProvider";
 import { useUi } from "../../store/UiProvider";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { labelPrinter } from "../../services/printing/labelPrinter";
+import { LabelStockPicker } from "./LabelStockPicker";
 import { barcodeScanner, findScannedProduct } from "../../services/printing/scanner";
 
 const AZURE = "Azure Swim tablet printer: USB 1046:20497 · 80 mm ESC/POS";
@@ -96,6 +97,7 @@ export function HardwarePanel() {
 						<strong>USB barcode label printer</strong>
 						<div className="plan-settings-note">Saved USB label printers reconnect automatically after the first browser permission approval.</div>
 					</div>
+					<LabelStockPicker />
 					<div className="hw-actions">
 						<ConnectButton className="btn out" name={labelPrinter.deviceName} label="Connect Label Printer" onClick={() => attempt(() => labelPrinter.connect(), "Could not connect the USB barcode printer.")} />
 						<button
@@ -103,8 +105,8 @@ export function HardwarePanel() {
 							type="button"
 							onClick={() =>
 								attempt(async () => {
-									await labelPrinter.calibrate(settings.barcodePrinter || {});
-									ui.notice("Barcode label printer calibrated. Print one test label next.");
+									await labelPrinter.calibrate(settings.barcodePrinter || {}, settings.labelStock);
+									ui.notice("Barcode label printer calibrated for the selected label size and gap. Print one test label next.");
 								}, "Barcode label printer calibration failed.")
 							}
 						>

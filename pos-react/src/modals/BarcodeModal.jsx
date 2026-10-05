@@ -5,7 +5,8 @@
 import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { cleanBarcode, uniqueBarcode } from "../services/printing/barcode";
-import { barcodeLabelCopy, barcodeLabelsHtml, labelPrinter } from "../services/printing/labelPrinter";
+import { barcodeLabelCopy, barcodeLabelsHtml, labelPrinter, resolveLabelStock } from "../services/printing/labelPrinter";
+import { LabelStockPicker } from "../components/settings/LabelStockPicker";
 import { printHtmlInFrame } from "../services/printing/printDocument";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
@@ -37,7 +38,8 @@ export function BarcodeModalHost() {
 	if (!product) return null;
 	const safe = { ...product, code: cleanBarcode(product.code || "") };
 	const n = Math.max(1, Math.min(100, Number(copies) || 1));
-	const size = ["30", "25"];
+	const stock = resolveLabelStock(data.settings.labelStock);
+	const size = [String(stock.width), String(stock.height)];
 
 	const printBrowser = () => {
 		printHtmlInFrame(barcodeLabelsHtml(safe, n, size), "Barcode label print job");
@@ -46,9 +48,9 @@ export function BarcodeModalHost() {
 	};
 	const printUsb = async () => {
 		try {
-			await labelPrinter.print(safe, n, size, data.settings.barcodePrinter || {});
+			await labelPrinter.print(safe, n, size, data.settings.barcodePrinter || {}, { gapMm: stock.gap, offsetX: stock.offsetX, offsetY: stock.offsetY, marginMm: stock.marginMm });
 			closeBarcode();
-			ui.notice(`${n} 30 × 25 mm barcode label${n === 1 ? "" : "s"} sent to the USB label printer using item code ${safe.code}.`);
+			ui.notice(`${n} ${stock.width} × ${stock.height} mm barcode label${n === 1 ? "" : "s"} sent to the USB label printer using item code ${safe.code}.`);
 		} catch (e) {
 			await ui.alert("Barcode labels were not printed. " + (e.message || "Reconnect the USB barcode printer and try again."));
 		}
@@ -66,7 +68,7 @@ export function BarcodeModalHost() {
 			id="barcode-modal"
 			open
 			title="Product Barcode Labels"
-			subtitle="Labels are fixed to 30 × 25 mm with product name, barcode and price only"
+			subtitle={`${stock.width} × ${stock.height} mm labels with product name, barcode and price only`}
 			onClose={closeBarcode}
 			footer={
 				<>
@@ -96,13 +98,8 @@ export function BarcodeModalHost() {
 						<label>Label copies</label>
 						<input className="input" id="barcode-copies" type="number" min="1" max="100" value={copies} onChange={(e) => setCopies(e.target.value)} />
 					</div>
-					<div className="field">
-						<label>Label size</label>
-						<select className="input" id="barcode-size" defaultValue="30x25">
-							<option value="30x25">30 × 25 mm standard</option>
-						</select>
-					</div>
 				</div>
+				<LabelStockPicker />
 				<div className={"hardware-status" + (status.connected ? "" : " offline")} id="barcode-printer-status">
 					{status.message}
 				</div>

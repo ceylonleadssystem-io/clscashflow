@@ -81,6 +81,11 @@ export function code128Values(value) {
 	return values;
 }
 
+/** Number of narrow-bar modules in a Code 128 symbol (start + data + check + stop), used to size labels. */
+export function code128Units(value) {
+	return code128Values(value).reduce((total, item) => total + CODE128[item].split("").reduce((sum, d) => sum + Number(d), 0), 0);
+}
+
 /** Draws a Code 128 barcode onto a canvas context (for bitmap label printing). */
 export function drawCode128(ctx, value, x, y, width, height, darken) {
 	const values = code128Values(value);
