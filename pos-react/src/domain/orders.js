@@ -3,6 +3,7 @@
  * legacy receipt numbers, and the open-order total.
  */
 /** Order numbering (ORD-0001) and open-order helpers. */
+import { discountAmount } from "./cart";
 
 export const orderSequenceFrom = (value) => {
 	const m = String(value || "").match(/^ORD-(\d+)$/);
@@ -79,4 +80,24 @@ export function migrateOrderNumbers(sales, openOrders, meta) {
 export function orderTotal(order) {
 	const subtotal = (order.lines || []).reduce((a, l) => a + l.price * l.qty, 0);
 	return Math.max(0, subtotal - (order.discount?.amount || 0));
+}
+
+/**
+ * Merges open order `source` into `target`: identical lines (same key) add up quantities, the target keeps its
+ * reference, customer and discount (falling back to the source's when it has none).
+ * Returns { target, source } ready to save; the source is marked merged.
+ */
+export function mergeOrders(target, source, now = new Date().toISOString()) {
+	const lines = (target.lines || []).map((l) => ({ ...l }));
+	for (const l of source.lines || []) {
+		const same = lines.find((x) => x.key && x.key === l.key);
+		if (same) same.qty += l.qty;
+		else lines.push({ ...l });
+	}
+	const base = +target.discount?.value > 0 ? target.discount : +source.discount?.value > 0 ? source.discount : target.discount || { type: "percent", value: 0 };
+	const discount = { type: base.type, value: base.value, amount: discountAmount(lines, base) };
+	return {
+		target: { ...target, lines, discount, customerId: target.customerId || source.customerId || "", updatedAt: now },
+		source: { ...source, status: "merged", mergedInto: target.id, closedAt: now },
+	};
 }

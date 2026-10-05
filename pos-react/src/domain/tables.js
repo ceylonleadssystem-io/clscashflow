@@ -46,3 +46,17 @@ export function tableStatus(table, openOrders) {
 	const open = openOrders.find((o) => o.status === "open" && o.orderReference === tableReference(table)) || null;
 	return { open, free: !open };
 }
+
+/**
+ * Where a check can go: every other active table (free = move there, busy = merge into its check) and open
+ * orders that are not on a table (merge only). The check itself is excluded.
+ */
+export function moveTargets(order, tables, openOrders) {
+	const open = openOrders.filter((o) => o.status === "open" && o.id !== order.id);
+	const refs = new Set(tables.map(tableReference));
+	const byTable = tables
+		.filter((t) => t.active && tableReference(t) !== order.orderReference)
+		.map((t) => ({ kind: "table", table: t, into: open.find((o) => o.orderReference === tableReference(t)) || null }));
+	const loose = open.filter((o) => !refs.has(o.orderReference)).map((o) => ({ kind: "order", into: o }));
+	return [...byTable, ...loose];
+}

@@ -67,6 +67,8 @@ export function bindServices(ctx) {
 			saveOpenOrder: sales.saveOpenOrder,
 			resendOpenOrder: sales.resendOpenOrder,
 			voidOpenOrder: sales.voidOpenOrder,
+			transferOpenOrder: sales.transferOpenOrder,
+			mergeOpenOrders: sales.mergeOpenOrders,
 		}),
 		printing: bind(ctx, {
 			printReceipt: printing.printReceipt,

@@ -12,7 +12,9 @@ import { useData } from "../store/DataProvider";
 import { useCheckout } from "../store/CheckoutProvider";
 import { usePos } from "../store/PosProvider";
 import { useUi } from "../store/UiProvider";
-import { Panel } from "../components/ui";
+import { Modal, ModalBody, Panel } from "../components/ui";
+import { MoveCheckModal } from "../modals/MoveCheckModal";
+import { useFeature } from "../store/FeatureProvider";
 
 const SHAPE_LABEL = { square: "Square", round: "Round", rect: "Rectangle" };
 
@@ -21,7 +23,10 @@ export function Tables() {
 	const data = useData();
 	const ui = useUi();
 	const { currentUser, svc } = usePos();
-	const { loadOpenOrder, newOpenOrder, setOrderReference, setOrderChannel } = useCheckout();
+	const { loadOpenOrder, splitOpenOrder, newOpenOrder, setOrderReference, setOrderChannel } = useCheckout();
+	const canSplit = useFeature("checkout.splitBill");
+	const [action, setAction] = useState(null); // busy table tapped: its open order
+	const [moving, setMoving] = useState(null); // open order being moved / merged
 	const saved = useMemo(() => (data.settings.tableLayout || []).map(normalizeTable), [data.settings.tableLayout]);
 	const [draft, setDraft] = useState(null); // null = not editing
 	const [selectedId, setSelectedId] = useState("");
@@ -84,7 +89,7 @@ export function Tables() {
 
 	const openTable = (t) => {
 		const { open } = tableStatus(t, data.openOrders);
-		if (open) return loadOpenOrder(open.id);
+		if (open) return setAction({ table: t, order: open });
 		newOpenOrder();
 		setOrderReference(tableReference(t));
 		setOrderChannel("Dine-in");
@@ -93,8 +98,8 @@ export function Tables() {
 	return (
 		<section className="view active" id="view-tables">
 			<Panel
-				title="Tables"
-				subtitle={editing ? "Drag to move, use the corner arrow to resize, click a table to edit it" : "Tap a table to open or start its check"}
+				title="Table Layout"
+				subtitle={editing ? "Drag to move, use the corner arrow to resize, click a table to edit it" : "Tap a free table to start its check, or a busy table to open, split, move or merge it"}
 				actions={
 					editing ? (
 						<div className="tools">
@@ -139,6 +144,18 @@ export function Tables() {
 						{!tables.length && <div className="floor-empty">{canEdit ? "No tables yet. Press Edit, then Add Table." : "No tables yet. Ask the owner to set up the layout."}</div>}
 					</div>
 				</div>
+				{action && (
+					<Modal id="table-action-modal" open title={"Table " + action.table.number} subtitle={"Check total " + money(orderTotal(action.order))} onClose={() => setAction(null)}>
+						<ModalBody>
+							<div style={{ display: "grid", gap: 8 }}>
+								<button className="btn gold" onClick={() => { loadOpenOrder(action.order.id); setAction(null); }}>Open / Pay</button>
+								{canSplit && <button className="btn out" onClick={() => { splitOpenOrder(action.order.id); setAction(null); }}>Split bill</button>}
+								<button className="btn out" onClick={() => { setMoving(action.order); setAction(null); }}>Move or merge check</button>
+							</div>
+						</ModalBody>
+					</Modal>
+				)}
+				<MoveCheckModal order={moving} onClose={() => setMoving(null)} />
 				{editing && selected && (
 					<div className="floor-form" id="table-form">
 						<div className="field">
