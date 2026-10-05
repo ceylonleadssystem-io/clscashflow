@@ -18,7 +18,7 @@ import {
 import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem } from "../../domain/inventory";
 import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
-import { orderEmailHtml, orderEmailSubject } from "../printing/orderEmail";
+import { orderEmailHtml, orderEmailSubject, orderEmailVariables } from "../printing/orderEmail";
 import { applyStockChange, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
 import { createLogger } from "../../utils/logger";
 import { printKotForSale, printReceipt, queueKitchenTicket, shareReceiptWhatsApp } from "./printing";
@@ -251,6 +251,7 @@ export async function completeSale(ctx, input) {
 				to: email,
 				subject: orderEmailSubject(sale, settings.business),
 				html: orderEmailHtml(sale, { settings, customerName: customer?.name || "Customer" }),
+				variables: orderEmailVariables(sale, { settings, customerName: customer?.name || "Customer" }),
 				customerName: customer?.name || "Customer",
 				settings,
 			});

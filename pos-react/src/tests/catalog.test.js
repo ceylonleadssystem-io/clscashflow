@@ -127,3 +127,28 @@ describe("catalogue workflow", () => {
 		});
 	});
 });
+
+describe("EmailJS order template", () => {
+	it("every variable the template uses is sent by the POS", async () => {
+		const fs = await import("node:fs");
+		const html = fs.readFileSync(new URL("../../public/email-templates/pos-order-email.html", import.meta.url), "utf8");
+		const body = html.slice(html.indexOf("-->") + 3);
+		const { orderEmailVariables } = await import("../services/printing/orderEmail");
+		const sale = {
+			receipt: "ORD-0001", createdAt: "2026-10-05T10:00:00Z", payment: "Card", total: 4500, orderReference: "Table 4", orderChannel: "Dine-in",
+			discount: { amount: 100, subtotal: 4600 }, serviceCharge: { amount: 0 },
+			lines: [{ name: "Polo Shirt", description: "Cotton", qty: 1, price: 4600, modifiers: [{ groupName: "Size", optionName: "M" }] }],
+		};
+		const vars = orderEmailVariables(sale, { settings: { business: "Shop", address: "Colombo", email: "a@b.lk" }, customerName: "Sam" });
+		const lineKeys = Object.keys(vars.orders[0]);
+		const used = [...body.matchAll(/\{\{[#^/]?\s*([a-z_]+)\s*\}\}/g)].map((m) => m[1]);
+		const known = new Set([...Object.keys(vars), ...lineKeys, "subject", "to_email", "from_name", "reply_to"]);
+		expect(used.filter((v) => !known.has(v))).toEqual([]);
+		expect(vars).toMatchObject({ order_number: "ORD-0001", total: "LKR 4,500.00", subtotal: "LKR 4,600.00", discount: "LKR 100.00", has_discount: "yes", has_service_charge: "", has_reference: "yes" });
+		expect(vars.orders[0]).toMatchObject({ name: "Polo Shirt", modifiers: "Size: M", description: "Cotton", quantity: "1" });
+		// every {{#x}} opens and closes
+		const open = [...body.matchAll(/\{\{#([a-z_]+)\}\}/g)].map((m) => m[1]).sort();
+		const close = [...body.matchAll(/\{\{\/([a-z_]+)\}\}/g)].map((m) => m[1]).sort();
+		expect(open).toEqual(close);
+	});
+});
