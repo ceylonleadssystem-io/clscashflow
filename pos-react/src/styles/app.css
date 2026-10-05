@@ -401,3 +401,8 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 /* Loading screen uses the accent colour chosen under Settings > Operations (applied early from localStorage) */
 .app-loading-brand span{color:var(--ui-accent,#ff4d0a)}
 .app-loading-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--ui-accent,#ff4d0a) 62%,#fff),var(--ui-accent,#ff4d0a))}
+
+/* Label alignment nudge (Settings > Printing / Barcode dialog) */
+.label-nudge{display:flex;align-items:center;gap:10px}
+.label-nudge strong{min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
+.label-nudge .btn{min-width:44px}

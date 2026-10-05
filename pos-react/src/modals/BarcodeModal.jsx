@@ -48,7 +48,7 @@ export function BarcodeModalHost() {
 	};
 	const printUsb = async () => {
 		try {
-			await labelPrinter.print(safe, n, size, data.settings.barcodePrinter || {}, stock.gap);
+			await labelPrinter.print(safe, n, size, data.settings.barcodePrinter || {}, { gapMm: stock.gap, offsetX: stock.offsetX, offsetY: stock.offsetY, marginMm: stock.marginMm });
 			closeBarcode();
 			ui.notice(`${n} ${stock.width} × ${stock.height} mm barcode label${n === 1 ? "" : "s"} sent to the USB label printer using item code ${safe.code}.`);
 		} catch (e) {

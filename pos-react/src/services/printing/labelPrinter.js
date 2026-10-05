@@ -3,7 +3,7 @@
  * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
-import { barcodeSvg, cleanBarcode, drawCode128 } from "./barcode";
+import { barcodeSvg, cleanBarcode, code128Units, drawCode128 } from "./barcode";
 import { esc, money } from "../../domain/format";
 import { createLogger } from "../../utils/logger";
 
@@ -17,7 +17,7 @@ const log = createLogger("printing");
  */
 export const DEFAULT_LABEL_STOCK = { width: 30, height: 25, gap: 3 };
 export const LABEL_SIZES = ["25x25", "30x20", "30x25", "35x25", "40x25", "35x35", "40x30", "45x30", "50x30"];
-export const LABEL_GAPS = [2, 2.5, 3, 4];
+export const LABEL_GAPS = [2, 2.5, 3, 3.5, 4];
 
 /** Clamp/normalise a saved stock setting. */
 export function resolveLabelStock(saved) {
@@ -29,7 +29,34 @@ export function resolveLabelStock(saved) {
 		width: num(saved?.width, DEFAULT_LABEL_STOCK.width, 15, 100),
 		height: num(saved?.height, DEFAULT_LABEL_STOCK.height, 10, 100),
 		gap: num(saved?.gap, DEFAULT_LABEL_STOCK.gap, 1, 8),
+		// Alignment: how far (mm) the printed content is moved right (+) / down (+) to sit on the physical label, and the
+		// blank side margin (mm; null = the layout default). Printers register the paper against a guide, so a label is
+		// rarely exactly where the print head's zero point is: these three values fix cropped / off-centre output.
+		offsetX: num(saved?.offsetX, 0, -10, 10),
+		offsetY: num(saved?.offsetY, 0, -6, 6),
+		marginMm: saved?.marginMm == null ? null : num(saved.marginMm, null, 1, 10),
 	};
+}
+
+/**
+ * Where things go on the label, in printer dots (8 dots = 1 mm at 203 dpi). Pure so it can be tested.
+ * The content box runs from `margin` to `dotsW - margin`, moved by the alignment offset; it is kept inside the label
+ * (4 dots from each edge) and never made narrower than 1 dot per barcode module, the scannable minimum.
+ */
+export function labelGeometry(dotsW, layout, offsets = {}, units = 0) {
+	const dx = Math.round((Number(offsets.offsetX) || 0) * 8);
+	const dy = Math.round((Number(offsets.offsetY) || 0) * 8);
+	const margin = offsets.marginMm == null ? layout.margin : Math.round(offsets.marginMm * 8);
+	const safe = 4;
+	let left = Math.max(safe, margin + dx);
+	let right = Math.min(dotsW - safe, dotsW - margin + dx);
+	const tooWide = units > right - left;
+	if (tooWide) {
+		const centre = (left + right) / 2;
+		left = Math.max(0, Math.min(dotsW - units, Math.round(centre - units / 2)));
+		right = left + units;
+	}
+	return { dx, dy, margin, left, right, cx: (left + right) / 2, barcodeX: left, barcodeW: right - left, tooWide };
 }
 
 /** TSPL block that tells the printer the label geometry (same block for printing and calibration). */
@@ -67,8 +94,9 @@ function fitText(ctx, text, maxWidth, font) {
 	return text + "...";
 }
 
-/** Bitmap TSPL job: name, Code 128 barcode, price rendered on a canvas at 203 dpi. */
-export function tsplBitmapBytes(product, copies, size, gapMm) {
+/** Bitmap TSPL job: name, Code 128 barcode, price rendered on a canvas at 203 dpi. `opts` = gap (mm) or {gapMm, offsetX, offsetY, marginMm}. */
+export function tsplBitmapBytes(product, copies, size, opts) {
+	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
 	const width = Number(size[0]) || 30;
 	const height = Number(size[1]) || 25;
 	const dotsW = Math.round(width * 8);
@@ -78,10 +106,11 @@ export function tsplBitmapBytes(product, copies, size, gapMm) {
 	canvas.height = dotsH;
 	const ctx = canvas.getContext("2d");
 	const layout = labelBitmapLayout(width, height);
+	const g = labelGeometry(dotsW, layout, o, code128Units(product.code));
 	const name = String(product.name || "Item");
 	const description = layout.descFont ? String(product.description || product.subcategory || product.category || "") : "";
 	const price = money(product.price);
-	const margin = layout.margin;
+	const textW = g.right - g.left;
 	ctx.fillStyle = "#fff";
 	ctx.fillRect(0, 0, dotsW, dotsH);
 	ctx.fillStyle = "#000";
@@ -89,30 +118,30 @@ export function tsplBitmapBytes(product, copies, size, gapMm) {
 	ctx.textBaseline = "top";
 	if (layout.nameFont) {
 		ctx.font = "900 " + layout.nameFont + "px Arial";
-		ctx.fillText(fitText(ctx, name, dotsW - margin * 2, ctx.font), dotsW / 2, layout.nameY);
+		ctx.fillText(fitText(ctx, name, textW, ctx.font), g.cx, layout.nameY + g.dy);
 	}
 	if (description) {
 		ctx.font = "400 " + layout.descFont + "px Arial";
-		ctx.fillText(fitText(ctx, description, dotsW - margin * 2, ctx.font), dotsW / 2, layout.descY);
+		ctx.fillText(fitText(ctx, description, textW, ctx.font), g.cx, layout.descY + g.dy);
 	}
-	drawCode128(ctx, product.code, margin, layout.barcodeY, dotsW - margin * 2, layout.barcodeH, layout.darken);
+	drawCode128(ctx, product.code, g.barcodeX, layout.barcodeY + g.dy, g.barcodeW, layout.barcodeH, layout.darken);
 	if (layout.underNameFont) {
 		ctx.font = "900 " + layout.underNameFont + "px Arial";
-		ctx.fillText(
-			fitText(ctx, name, dotsW - margin * 2, ctx.font),
-			dotsW / 2,
-			layout.barcodeY + layout.barcodeH + layout.underNameGap,
-		);
+		ctx.fillText(fitText(ctx, name, textW, ctx.font), g.cx, layout.barcodeY + layout.barcodeH + layout.underNameGap + g.dy);
 	}
 	ctx.font = "900 " + layout.priceFont + "px Arial";
 	ctx.fillText(
-		fitText(ctx, price, dotsW - margin * 2, ctx.font),
-		dotsW / 2,
-		Math.min(dotsH - layout.bottomPad, layout.barcodeY + layout.barcodeH + layout.priceGap),
+		fitText(ctx, price, textW, ctx.font),
+		g.cx,
+		Math.min(dotsH - layout.bottomPad, layout.barcodeY + layout.barcodeH + layout.priceGap) + g.dy,
 	);
-	const pixels = ctx.getImageData(0, 0, dotsW, dotsH).data;
+	return tsplFromCanvas(canvas, dotsW, dotsH, width, height, copies, o.gapMm || layout.gapMm || 3);
+}
+
+/** Convert a drawn canvas to a TSPL job (BITMAP mode 0: a set bit is a WHITE dot, so black pixels stay 0). */
+function tsplFromCanvas(canvas, dotsW, dotsH, width, height, copies, gapMm) {
+	const pixels = canvas.getContext("2d").getImageData(0, 0, dotsW, dotsH).data;
 	const rowBytes = Math.ceil(dotsW / 8);
-	// TSPL BITMAP mode 0: a set bit is a WHITE dot, so black pixels stay 0.
 	const raster = new Uint8Array(rowBytes * dotsH);
 	for (let y = 0; y < dotsH; y++)
 		for (let x = 0; x < dotsW; x++) {
@@ -122,7 +151,7 @@ export function tsplBitmapBytes(product, copies, size, gapMm) {
 		}
 	const count = Math.max(1, Number(copies) || 1);
 	const enc = new TextEncoder();
-	const setup = enc.encode(tsplSetup(width, height, Number(gapMm) || layout.gapMm || 3));
+	const setup = enc.encode(tsplSetup(width, height, Number(gapMm) || 3));
 	const head = enc.encode(`CLS\r\nBITMAP 0,0,${rowBytes},${dotsH},0,`);
 	const tail = enc.encode(`\r\nPRINT 1,${count}\r\n`);
 	const bytes = new Uint8Array(setup.length + head.length + raster.length + tail.length);
@@ -132,6 +161,53 @@ export function tsplBitmapBytes(product, copies, size, gapMm) {
 		pos += part.length;
 	});
 	return bytes;
+}
+
+/**
+ * Alignment test label: a border on the very edge of the label, a centre cross, L/R/T/B markers and a 1 mm ruler.
+ * Whatever is missing or cut on the printed label shows which way to move the content (Settings > Printing).
+ */
+export function tsplAlignmentBytes(size, opts) {
+	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
+	const width = Number(size[0]) || 30;
+	const height = Number(size[1]) || 25;
+	const dotsW = Math.round(width * 8);
+	const dotsH = Math.round(height * 8);
+	const dx = Math.round((Number(o.offsetX) || 0) * 8);
+	const dy = Math.round((Number(o.offsetY) || 0) * 8);
+	const canvas = document.createElement("canvas");
+	canvas.width = dotsW;
+	canvas.height = dotsH;
+	const ctx = canvas.getContext("2d");
+	ctx.fillStyle = "#fff";
+	ctx.fillRect(0, 0, dotsW, dotsH);
+	ctx.fillStyle = "#000";
+	ctx.translate(dx, dy);
+	ctx.strokeStyle = "#000";
+	ctx.lineWidth = 3;
+	ctx.strokeRect(1.5, 1.5, dotsW - 3, dotsH - 3); // the label edge
+	ctx.lineWidth = 1;
+	ctx.beginPath(); // centre cross
+	ctx.moveTo(dotsW / 2, dotsH / 2 - 14);
+	ctx.lineTo(dotsW / 2, dotsH / 2 + 14);
+	ctx.moveTo(dotsW / 2 - 14, dotsH / 2);
+	ctx.lineTo(dotsW / 2 + 14, dotsH / 2);
+	ctx.stroke();
+	for (let mm = 1; mm < Math.max(width, height); mm++) {
+		const long = mm % 5 === 0 ? 14 : 7;
+		if (mm < width) ctx.fillRect(mm * 8, 4, 1, long); // top edge ruler
+		if (mm < height) ctx.fillRect(4, mm * 8, long, 1); // left edge ruler
+	}
+	ctx.font = "900 20px Arial";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText("T", dotsW / 2, 30);
+	ctx.fillText("B", dotsW / 2, dotsH - 22);
+	ctx.fillText("L", 32, dotsH / 2);
+	ctx.fillText("R", dotsW - 32, dotsH / 2);
+	ctx.font = "700 12px Arial";
+	ctx.fillText(`${width}x${height}mm  X${Number(o.offsetX || 0).toFixed(1)} Y${Number(o.offsetY || 0).toFixed(1)}`, dotsW / 2, dotsH / 2 + 28);
+	return tsplFromCanvas(canvas, dotsW, dotsH, width, height, 1, o.gapMm || 3);
 }
 
 class LabelPrinter {
@@ -222,9 +298,9 @@ class LabelPrinter {
 		log.info("label printer calibrated", { device: this.name, width: s.width, height: s.height, gap: s.gap });
 		this._set(`${this.name} calibrated for ${s.width} × ${s.height} mm labels with a ${s.gap} mm gap.`, true);
 	}
-	async print(product, copies, size, saved, gapMm) {
+	async print(product, copies, size, saved, opts) {
 		await this._ensure(saved);
-		const bytes = tsplBitmapBytes(product, copies, size, gapMm);
+		const bytes = tsplBitmapBytes(product, copies, size, opts);
 		// Sent in 4 KB chunks like the receipt printer: one 6 KB bulk transfer is rejected or truncated by some printers.
 		try {
 			await transferChunks(this.device, this.endpoint, bytes);
@@ -232,8 +308,21 @@ class LabelPrinter {
 			log.error("label print rejected by printer", error, { device: this.name, bytes: bytes.length });
 			throw new Error("The USB barcode printer stopped accepting label data.");
 		}
-		log.info("labels sent to USB printer", { device: this.name, copies: Number(copies) || 1, bytes: bytes.length, size: size.join("x"), gapMm: Number(gapMm) || 3 });
+		log.info("labels sent to USB printer", { device: this.name, copies: Number(copies) || 1, bytes: bytes.length, size: size.join("x"), gapMm: Number(opts?.gapMm ?? opts) || 3, offsetX: opts?.offsetX || 0, offsetY: opts?.offsetY || 0 });
 		this._set(this.name + " ready for barcode labels.", true);
+	}
+	/** Print one alignment test label (see tsplAlignmentBytes). */
+	async printAlignment(saved, stock) {
+		await this._ensure(saved);
+		const st = resolveLabelStock(stock);
+		const bytes = tsplAlignmentBytes([String(st.width), String(st.height)], { gapMm: st.gap, offsetX: st.offsetX, offsetY: st.offsetY });
+		try {
+			await transferChunks(this.device, this.endpoint, bytes);
+		} catch (error) {
+			log.error("alignment label rejected by printer", error, { device: this.name });
+			throw new Error("The USB barcode printer stopped accepting label data.");
+		}
+		log.info("alignment test label sent", { device: this.name, offsetX: st.offsetX, offsetY: st.offsetY });
 	}
 }
 
