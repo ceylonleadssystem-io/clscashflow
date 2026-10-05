@@ -427,3 +427,5 @@
 			.barcode-action {
 				white-space: nowrap;
 			}
+
+.barcode-label-copy .label-size{font-size:.8rem}

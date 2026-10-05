@@ -49,6 +49,7 @@ export async function saveProduct(ctx, form) {
 		name,
 		category,
 		subcategory: form.subcategory || "",
+		description: form.description === undefined ? (existing || {}).description || "" : String(form.description).trim().slice(0, 200),
 		cost,
 		price,
 		type: form.type,
@@ -112,6 +113,9 @@ export async function addCategory(ctx, rawName) {
 	await ctx.store.write(async (tx) => {
 		tx.addCategory(name);
 		await unmarkDeletedCategory(tx, name);
+		// remembered so it shows even while empty when it shares a name with a hidden legacy preset category
+		const mine = d.settings.userCategories || [];
+		if (!mine.some((c) => categoryKey(c) === categoryKey(name))) tx.setSetting("userCategories", [...mine, name]);
 	});
 	ctx.ui.notice(name + " category added.");
 	return true;

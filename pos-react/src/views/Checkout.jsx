@@ -49,8 +49,8 @@ export function Checkout() {
 	const [tool, setTool] = useState(null); // "discount" | "customer" | null
 	const { settings } = data;
 	const categories = useMemo(
-		() => ["All", ...visibleProductCategories(data.categories, data.products, data.subcategories)].sort((a, b) => a.localeCompare(b)),
-		[data.categories, data.products, data.subcategories],
+		() => ["All", ...visibleProductCategories(data.categories, data.products, data.subcategories, data.settings.userCategories || [])].sort((a, b) => a.localeCompare(b)),
+		[data.categories, data.products, data.subcategories, data.settings.userCategories],
 	);
 	const category = categories.includes(c.category) ? c.category : "All";
 	const q = c.search.trim().toLowerCase();

@@ -17,13 +17,17 @@ export function productCategories(categories, products) {
 
 export const stalePresetCategory = (name) => STALE_PRESET_CATEGORIES.includes(categoryKey(name));
 
-/** Preset categories stay hidden while empty; user-created ones always show. */
-export function visibleProductCategories(categories, products, subcategories) {
+/**
+ * Preset categories stay hidden while empty; categories the user added (`userCategories`, saved by "Add Category")
+ * always show, even when they share a preset name such as "Clothing".
+ */
+export function visibleProductCategories(categories, products, subcategories, userCategories = []) {
+	const mine = new Set(userCategories.map(categoryKey));
 	return productCategories(categories, products).filter((name) => {
 		const key = categoryKey(name);
 		const count = products.filter((p) => categoryKey(p.category) === key).length;
 		const subs = subcategories.filter((s) => categoryKey(s.parent) === key).length;
-		return count || subs || !stalePresetCategory(name);
+		return count || subs || mine.has(key) || !stalePresetCategory(name);
 	});
 }
 

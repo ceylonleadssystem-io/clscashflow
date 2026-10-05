@@ -3,13 +3,19 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_LABEL_STOCK, resolveLabelStock, tsplSetup } from "../services/printing/labelPrinter";
 
 describe("label stock", () => {
-	it("defaults to 30 x 25 mm with a 3 mm gap", () => {
+	it("defaults to 30 x 20 mm with a 3 mm gap", () => {
 		expect(resolveLabelStock(undefined)).toMatchObject(DEFAULT_LABEL_STOCK);
-		expect(resolveLabelStock({})).toMatchObject({ width: 30, height: 25, gap: 3, offsetX: 0, offsetY: 0, marginMm: null });
+		expect(resolveLabelStock({})).toMatchObject({ width: 30, height: 20, gap: 3, offsetX: 0, offsetY: 0, marginMm: null });
 	});
-	it("keeps valid values and rejects out-of-range ones", () => {
-		expect(resolveLabelStock({ width: 40, height: 30, gap: 2 })).toMatchObject({ width: 40, height: 30, gap: 2 });
-		expect(resolveLabelStock({ width: 0, height: "x", gap: 99 })).toMatchObject(DEFAULT_LABEL_STOCK);
+	it("supports only 30x20, 50x25 and 60x40 with a fixed 3 mm gap", async () => {
+		const { LABEL_SIZES } = await import("../services/printing/labelPrinter");
+		expect(LABEL_SIZES).toEqual(["30x20", "50x25", "60x40"]);
+		expect(resolveLabelStock({ width: 50, height: 25, gap: 2 })).toMatchObject({ width: 50, height: 25, gap: 3 });
+		expect(resolveLabelStock({ width: 60, height: 40 })).toMatchObject({ width: 60, height: 40 });
+		// an older saved size snaps to the nearest supported one
+		expect(resolveLabelStock({ width: 30, height: 25 })).toMatchObject({ width: 30, height: 20 });
+		expect(resolveLabelStock({ width: 45, height: 30 })).toMatchObject({ width: 50, height: 25 });
+		expect(resolveLabelStock({ width: 0, height: "x" })).toMatchObject(DEFAULT_LABEL_STOCK);
 	});
 	it("puts the configured size and gap into the TSPL setup", () => {
 		const setup = tsplSetup(40, 30, 2);
@@ -20,17 +26,29 @@ describe("label stock", () => {
 });
 
 describe("label layouts fit every offered size", () => {
-	it("keeps the barcode and the price inside the label height", async () => {
-		const { LABEL_SIZES, labelBitmapLayout } = await import("../services/printing/labelPrinter");
-		expect(LABEL_SIZES).toContain("30x20");
+	it("keeps every row, the barcode and the price inside the label height, with or without description and size", async () => {
+		const { LABEL_SIZES, labelBitmapLayout, labelRows } = await import("../services/printing/labelPrinter");
 		for (const size of LABEL_SIZES) {
 			const [w, h] = size.split("x").map(Number);
 			const dotsH = h * 8;
 			const l = labelBitmapLayout(w, h);
-			const priceY = Math.min(dotsH - l.bottomPad, l.barcodeY + l.barcodeH + l.priceGap);
-			expect(l.barcodeY + l.barcodeH, size + " barcode").toBeLessThanOrEqual(dotsH);
-			expect(priceY + l.priceFont, size + " price").toBeLessThanOrEqual(dotsH);
+			for (const desc of [false, true])
+				for (const sz of [false, true]) {
+					const r = labelRows(l, dotsH, { desc, size: sz });
+					const tag = `${size} desc=${desc} size=${sz}`;
+					expect(r.barcodeY + r.barcodeH, tag + " barcode").toBeLessThanOrEqual(r.priceY);
+					expect(r.priceY + l.priceFont, tag + " price").toBeLessThanOrEqual(dotsH);
+					expect(r.barcodeH, tag + " barcode height").toBeGreaterThanOrEqual(l.barcodeMin);
+					if (r.descY != null) expect(r.descY).toBeGreaterThan(r.nameY);
+					if (r.sizeY != null) expect(r.sizeY + l.sizeFont).toBeLessThanOrEqual(r.barcodeY);
+				}
 		}
+	});
+	it("30x20 has no description line; 50x25 and 60x40 do", async () => {
+		const { labelBitmapLayout } = await import("../services/printing/labelPrinter");
+		expect(labelBitmapLayout(30, 20).descFont).toBe(0);
+		expect(labelBitmapLayout(50, 25).descFont).toBeGreaterThan(0);
+		expect(labelBitmapLayout(60, 40).descFont).toBeGreaterThan(0);
 	});
 });
 
