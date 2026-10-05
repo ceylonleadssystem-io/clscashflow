@@ -179,10 +179,10 @@ function tsplFromCanvas(canvas, dotsW, dotsH, width, height, copies, gapMm) {
 }
 
 /**
- * Alignment test label: a border on the very edge of the label, a centre cross, L/R/T/B markers and a 1 mm ruler.
+ * Alignment test label (canvas, shared by the print job and the on-screen preview): a border on the very edge of the label, a centre cross, L/R/T/B markers and a 1 mm ruler.
  * Whatever is missing or cut on the printed label shows which way to move the content (Settings > Printing).
  */
-export function tsplAlignmentBytes(size, opts) {
+export function drawAlignmentLabel(size, opts) {
 	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
 	const width = Number(size[0]) || 30;
 	const height = Number(size[1]) || 25;
@@ -222,8 +222,17 @@ export function tsplAlignmentBytes(size, opts) {
 	ctx.fillText("R", dotsW - 32, dotsH / 2);
 	ctx.font = "700 12px Arial";
 	ctx.fillText(`${width}x${height}mm  X${Number(o.offsetX || 0).toFixed(1)} Y${Number(o.offsetY || 0).toFixed(1)}`, dotsW / 2, dotsH / 2 + 28);
-	return tsplFromCanvas(canvas, dotsW, dotsH, width, height, 1, o.gapMm || 3);
+	return canvas;
 }
+
+export function tsplAlignmentBytes(size, opts) {
+	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
+	const width = Number(size[0]) || 30;
+	const height = Number(size[1]) || 25;
+	const canvas = drawAlignmentLabel(size, o);
+	return tsplFromCanvas(canvas, canvas.width, canvas.height, width, height, 1, o.gapMm || 3);
+}
+
 
 class LabelPrinter {
 	constructor() {

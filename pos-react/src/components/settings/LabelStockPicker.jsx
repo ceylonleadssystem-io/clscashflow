@@ -1,4 +1,5 @@
-import { LABEL_SIZES, labelPrinter, resolveLabelStock } from "../../services/printing/labelPrinter";
+import { LABEL_SIZES, drawAlignmentLabel, labelPrinter, resolveLabelStock } from "../../services/printing/labelPrinter";
+import { useEffect, useRef } from "react";
 import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 import { useUi } from "../../store/UiProvider";
@@ -37,6 +38,16 @@ export function LabelStockPicker() {
 	const ui = useUi();
 	const stock = resolveLabelStock(settings.labelStock);
 	const size = `${stock.width}x${stock.height}`;
+	// Live preview of the alignment test label exactly as it will print (size and shift included).
+	const previewRef = useRef(null);
+	useEffect(() => {
+		const host = previewRef.current;
+		if (!host) return;
+		const canvas = drawAlignmentLabel([String(stock.width), String(stock.height)], stock);
+		canvas.setAttribute("role", "img");
+		canvas.setAttribute("aria-label", `Preview of the ${stock.width} × ${stock.height} mm alignment test label`);
+		host.replaceChildren(canvas);
+	}, [stock.width, stock.height, stock.offsetX, stock.offsetY]);
 	const save = (patch) => svc.settings.patchSettings({ labelStock: { ...stock, ...patch } });
 	const test = async () => {
 		try {
@@ -102,6 +113,10 @@ export function LabelStockPicker() {
 					</select>
 					<div className="plan-settings-note">A bigger margin makes the barcode narrower so it stays inside the label.</div>
 				</div>
+			</div>
+			<div className="label-test-preview" id="label-test-preview">
+				<div className="plan-settings-note">Test label preview ({stock.width} × {stock.height} mm). Shows what the printer will draw, including your shift.</div>
+				<div ref={previewRef} className="label-test-canvas" />
 			</div>
 			<button type="button" className="btn out" id="label-alignment-test" onClick={test} style={{ marginTop: 10 }}>
 				Print alignment test label

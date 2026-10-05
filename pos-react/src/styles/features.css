@@ -429,3 +429,7 @@
 			}
 
 .barcode-label-copy .label-size{font-size:.8rem}
+
+.label-test-preview{margin-top:10px}
+.label-test-canvas{display:flex;justify-content:center;padding:8px;background:rgba(127,127,127,.12);border-radius:8px}
+.label-test-canvas canvas{max-width:100%;height:auto;background:#fff;border:1px dashed #999;box-shadow:0 1px 4px rgba(0,0,0,.2)}
