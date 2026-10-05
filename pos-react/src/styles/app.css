@@ -440,5 +440,6 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .order-tool.danger:hover:not(:disabled){background:#bd3a2c}
 
 /* Desktop cart: header and totals take their natural height, the item list gets the rest (and scrolls), so nothing is cropped */
-html body:not(.mobile-checkout) #view-checkout aside.cart.panel{grid-template-rows:auto minmax(72px,1fr) auto!important}
+html body:not(.mobile-checkout) #view-checkout aside.cart.panel{grid-template-rows:auto minmax(72px,1fr) auto!important;grid-template-columns:minmax(0,1fr)!important}
+html body:not(.mobile-checkout) #view-checkout aside.cart.panel>*{min-width:0}
 html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-height:none!important;overflow:visible!important}
