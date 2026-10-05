@@ -117,15 +117,15 @@ export function Checkout() {
 								</button>
 							)}
 						</div>
+						<dl className="order-info" id="order-info">
+							{info.map(([k, v]) => (
+								<div key={k}>
+									<dt>{k}</dt>
+									<dd>{v}</dd>
+								</div>
+							))}
+						</dl>
 					</div>
-					<dl className="order-info" id="order-info">
-						{info.map(([k, v]) => (
-							<div key={k}>
-								<dt>{k}</dt>
-								<dd>{v}</dd>
-							</div>
-						))}
-					</dl>
 					<CartLines />
 					<div className="cart-foot">
 						<div className="row">
