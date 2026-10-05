@@ -4,6 +4,8 @@
  */
 import { useMemo, useState } from "react";
 import { money } from "../domain/format";
+import { formatOrderNumber, nextSequence } from "../domain/orders";
+import { customerName } from "../domain/names";
 import { visibleProductCategories } from "../domain/catalog";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
@@ -19,7 +21,7 @@ import { PayPopup } from "../components/checkout/PayPopup";
 export function Checkout() {
 	const data = useData();
 	const c = useCheckout();
-	const { kitchen } = usePos();
+	const { kitchen, currentUser } = usePos();
 	const { openProduct } = useModals();
 	const openOrders = useFeature("checkout.openOrders");
 	const kitchenTickets = useFeature("checkout.kitchenTickets");
@@ -40,6 +42,21 @@ export function Checkout() {
 	const t = c.totals;
 	const [payMode, setPayMode] = useState(null); // "quick" | "full" | null
 	const rate = +settings.serviceChargeRate || 0;
+	// Order details: a saved order keeps its number (it becomes the receipt number on payment), a new one gets the next.
+	const saved = data.openOrders.find((o) => o.id === c.openOrderId && o.status === "open");
+	const orderNo = saved?.orderNumber || formatOrderNumber(nextSequence(data.meta, data.sales, data.openOrders));
+	const ref = c.orderReference.trim();
+	const isTable = /^table\b/i.test(ref);
+	const info = [
+		[isTable ? "Table" : "Reference", ref ? (isTable ? ref.replace(/^table\s*/i, "") : ref) : "—"],
+		["Order no.", orderNo],
+		["Receipt no.", orderNo],
+		kitchen && ["Channel", c.orderChannel],
+		["Served by", currentUser?.name || "—"],
+		["Customer", c.customerId ? customerName(data.customers, c.customerId) : "Walk-in"],
+		saved && ["Opened", new Date(saved.openedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })],
+		saved && kitchen && ["Kitchen", saved.kitchenSentAt ? "Sent" : "Not sent"],
+	].filter(Boolean);
 
 	return (
 		<section className="view active" id="view-checkout">
@@ -82,6 +99,14 @@ export function Checkout() {
 							</button>
 						</div>
 					</div>
+					<dl className="order-info" id="order-info">
+						{info.map(([k, v]) => (
+							<div key={k}>
+								<dt>{k}</dt>
+								<dd>{v}</dd>
+							</div>
+						))}
+					</dl>
 					<CartLines />
 					<div className="cart-foot">
 						<div className="row">

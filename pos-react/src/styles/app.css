@@ -423,3 +423,8 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .label-nudge{display:flex;align-items:center;gap:10px}
 .label-nudge strong{min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
 .label-nudge .btn{min-width:44px}
+
+/* Current Order: order details under the title */
+.order-info{flex:none;align-content:start;display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px 12px;margin:0;padding:8px 14px;border-bottom:1px solid var(--line,#e6e1d6);font-size:.78rem}
+.order-info dt{font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6}
+.order-info dd{margin:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
