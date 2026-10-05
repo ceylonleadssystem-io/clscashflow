@@ -65,8 +65,7 @@ export function Checkout() {
 			data.products.filter((p) => {
 				if (q) return (String(p.name || "") + " " + String(p.code || "") + " " + String(p.category || "")).toLowerCase().includes(q);
 				if (category !== "All" && p.category !== category) return false;
-				if (!subs.length) return true;
-				return sub ? p.subcategory === sub : !subs.some((x) => x.name === p.subcategory);
+				return !sub || p.subcategory === sub;
 			}),
 		[data.products, category, q, subs, sub],
 	);
