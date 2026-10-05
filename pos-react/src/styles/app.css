@@ -424,10 +424,13 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .label-nudge strong{min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
 .label-nudge .btn{min-width:44px}
 
-/* Current Order: order details under the title */
-.order-info{flex:none;align-content:start;display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px 12px;margin:0;padding:8px 14px;border-bottom:1px solid var(--line,#e6e1d6);font-size:.78rem}
-.order-info dt{font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6}
-.order-info dd{margin:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Current Order: order details, one line under the title (inside the header so the cart grid rows stay intact) */
+.order-info{display:flex;gap:6px 16px;flex:1 1 100%;width:100%;margin:6px 0 0;padding:0;overflow-x:auto;white-space:nowrap;font-size:.74rem;scrollbar-width:none}
+.order-info>div{display:flex;gap:5px;flex:none}
+.order-info dt{opacity:.6}
+.order-info dt::after{content:":"}
+.order-info dd{margin:0;font-weight:600}
+
 /* Current Order: tool boxes above Quick Pay / Pay Now */
 .order-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin:10px 0 0}
 .order-tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border:1px solid var(--line,#ddd);border-radius:12px;background:transparent;color:inherit;font:inherit;font-size:.74rem;font-weight:600;cursor:pointer}
@@ -435,3 +438,8 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .order-tool:disabled{opacity:.45;cursor:not-allowed}
 .order-tool.danger{background:#d64535;border-color:#d64535;color:#fff}
 .order-tool.danger:hover:not(:disabled){background:#bd3a2c}
+
+/* Desktop cart: header and totals take their natural height, the item list gets the rest (and scrolls), so nothing is cropped */
+html body:not(.mobile-checkout) #view-checkout aside.cart.panel{grid-template-rows:auto minmax(72px,1fr) auto!important;grid-template-columns:minmax(0,1fr)!important}
+html body:not(.mobile-checkout) #view-checkout aside.cart.panel>*{min-width:0}
+html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-height:none!important;overflow:visible!important}
