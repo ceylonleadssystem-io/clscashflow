@@ -30,7 +30,7 @@ export function useBarcodeScanning() {
 				if (!product) log.info("scanned barcode matched no item");
 				if (!product) return ui.notice(`Barcode ${code} was scanned but no matching item code was found.`);
 				if (canView("checkout") && view !== "checkout") go("checkout");
-				addProduct(product.id);
+				addProduct(product.id, true); // no modifier question for scans
 				ui.notice(`${product.name} added to current order by barcode ${product.code || code}.`);
 			},
 		);

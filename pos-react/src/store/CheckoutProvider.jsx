@@ -96,11 +96,12 @@ export function CheckoutProvider({ children }) {
 		[cart, enabled, data.inventory, locationId, ui],
 	);
 
+	// `scanned` (barcode scan) adds the item straight away: the modifier question is only asked when tapping a tile.
 	const addProduct = useCallback(
-		(id) => {
+		(id, scanned = false) => {
 			const product = data.products.find((p) => p.id === id);
 			if (!product) return;
-			if (productModifiers(product, data.modifiers).length) return setPicker({ productId: id, lineKey: "" });
+			if (scanned !== true && productModifiers(product, data.modifiers).length) return setPicker({ productId: id, lineKey: "" });
 			addConfigured(product, []);
 		},
 		[data.products, data.modifiers, addConfigured],
