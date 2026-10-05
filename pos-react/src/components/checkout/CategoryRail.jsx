@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 
 /** Horizontally scrolling category chips with previous/next buttons. */
-export function CategoryRail({ categories, active, onSelect }) {
+export function CategoryRail({ categories, active, onSelect, id = "categories", label = "Product categories", prev = "Previous categories", next = "Next categories", className = "" }) {
 	const ref = useRef(null);
 	const [edges, setEdges] = useState({ start: true, end: true });
 	const update = () => {
@@ -46,18 +46,18 @@ export function CategoryRail({ categories, active, onSelect }) {
 		}
 	};
 	return (
-		<div className="category-rail" aria-label="Product categories">
-			<button type="button" className="category-scroll btn out" aria-label="Previous categories" disabled={edges.start} onClick={() => scroll(-1)}>
+		<div className={"category-rail " + className} aria-label={label}>
+			<button type="button" className="category-scroll btn out" aria-label={prev} disabled={edges.start} onClick={() => scroll(-1)}>
 				&#8249;
 			</button>
-			<div className="cats" id="categories" ref={ref} onScroll={update} onWheel={onWheel} onKeyDown={onKeyDown}>
+			<div className="cats" id={id} ref={ref} onScroll={update} onWheel={onWheel} onKeyDown={onKeyDown}>
 				{categories.map((name) => (
 					<button type="button" key={name} className={"chip " + (name === active ? "active" : "")} data-category={name} onClick={() => onSelect(name)}>
 						{name}
 					</button>
 				))}
 			</div>
-			<button type="button" className="category-scroll btn out" aria-label="Next categories" disabled={edges.end} onClick={() => scroll(1)}>
+			<button type="button" className="category-scroll btn out" aria-label={next} disabled={edges.end} onClick={() => scroll(1)}>
 				&#8250;
 			</button>
 		</div>

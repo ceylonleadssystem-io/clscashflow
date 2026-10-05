@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { money } from "../domain/format";
 import { formatOrderNumber, nextSequence } from "../domain/orders";
 import { customerName } from "../domain/names";
-import { visibleProductCategories } from "../domain/catalog";
+import { subcategoriesFor, visibleProductCategories } from "../domain/catalog";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useCheckout } from "../store/CheckoutProvider";
@@ -54,12 +54,21 @@ export function Checkout() {
 	);
 	const category = categories.includes(c.category) ? c.category : "All";
 	const q = c.search.trim().toLowerCase();
+	// Second chip row: the subcategories of the chosen category. Picking one shows only its items; with none picked
+	// the category shows the items that have no subcategory. Searching looks through every item.
+	const subsOn = useFeature("catalogue.subcategories");
+	const subs = useMemo(() => (subsOn && category !== "All" ? subcategoriesFor(data.subcategories, category) : []), [subsOn, category, data.subcategories]);
+	const [subPick, setSubPick] = useState("");
+	const sub = subs.some((x) => x.name === subPick) ? subPick : "";
 	const products = useMemo(
 		() =>
-			data.products.filter(
-				(p) => (category === "All" || p.category === category) && (!q || (String(p.name || "") + " " + String(p.code || "") + " " + String(p.category || "")).toLowerCase().includes(q)),
-			),
-		[data.products, category, q],
+			data.products.filter((p) => {
+				if (q) return (String(p.name || "") + " " + String(p.code || "") + " " + String(p.category || "")).toLowerCase().includes(q);
+				if (category !== "All" && p.category !== category) return false;
+				if (!subs.length) return true;
+				return sub ? p.subcategory === sub : !subs.some((x) => x.name === p.subcategory);
+			}),
+		[data.products, category, q, subs, sub],
 	);
 	const t = c.totals;
 	const [payMode, setPayMode] = useState(null); // "quick" | "full" | null
@@ -99,7 +108,21 @@ export function Checkout() {
 							</button>
 						</div>
 					</div>
-					<CategoryRail categories={categories} active={category} onSelect={c.setCategory} />
+					<div className="category-rails">
+					<CategoryRail categories={categories} active={category} onSelect={(name) => { setSubPick(""); c.setCategory(name); }} />
+					{subs.length > 0 && (
+						<CategoryRail
+							id="subcategories"
+							className="category-rail-sub"
+							label={category + " subcategories"}
+							prev="Previous subcategories"
+							next="Next subcategories"
+							categories={subs.map((x) => x.name)}
+							active={sub}
+							onSelect={(name) => setSubPick(name === sub ? "" : name)}
+						/>
+					)}
+					</div>
 					<ProductGrid products={products} />
 				</div>
 				<aside className="panel cart">
