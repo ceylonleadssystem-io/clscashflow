@@ -18,3 +18,18 @@ describe("label stock", () => {
 		expect(setup.endsWith("BACKFEED 0\r\n")).toBe(true);
 	});
 });
+
+describe("label layouts fit every offered size", () => {
+	it("keeps the barcode and the price inside the label height", async () => {
+		const { LABEL_SIZES, labelBitmapLayout } = await import("../services/printing/labelPrinter");
+		expect(LABEL_SIZES).toContain("30x20");
+		for (const size of LABEL_SIZES) {
+			const [w, h] = size.split("x").map(Number);
+			const dotsH = h * 8;
+			const l = labelBitmapLayout(w, h);
+			const priceY = Math.min(dotsH - l.bottomPad, l.barcodeY + l.barcodeH + l.priceGap);
+			expect(l.barcodeY + l.barcodeH, size + " barcode").toBeLessThanOrEqual(dotsH);
+			expect(priceY + l.priceFont, size + " price").toBeLessThanOrEqual(dotsH);
+		}
+	});
+});

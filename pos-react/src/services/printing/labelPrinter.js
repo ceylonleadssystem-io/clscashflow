@@ -16,7 +16,7 @@ const log = createLogger("printing");
  * physical labels: a mismatch is the usual reason a gap-label printer prints one label and then feeds a blank one.
  */
 export const DEFAULT_LABEL_STOCK = { width: 30, height: 25, gap: 3 };
-export const LABEL_SIZES = ["25x25", "30x25", "35x25", "40x25", "35x35", "40x30", "45x30", "50x30"];
+export const LABEL_SIZES = ["25x25", "30x20", "30x25", "35x25", "40x25", "35x35", "40x30", "45x30", "50x30"];
 export const LABEL_GAPS = [2, 2.5, 3, 4];
 
 /** Clamp/normalise a saved stock setting. */
@@ -41,6 +41,9 @@ export function labelBitmapLayout(width, height) {
 	const L = (o) => ({ darken: true, gapMm: 3, descFont: 0, underNameFont: 0, nameFont: 0, nameY: 0, descY: 0, ...o });
 	if (width <= 25 && height <= 25)
 		return L({ margin: 22, nameFont: 14, descFont: 7, priceFont: 15, nameY: 8, descY: 25, barcodeY: 40, barcodeH: 98, priceGap: 10, bottomPad: 16 });
+	// 30 x 20 mm (160 dots high): name, barcode and price must all fit above the gap
+	if (width <= 30 && height <= 20)
+		return L({ margin: 24, nameFont: 14, priceFont: 14, nameY: 4, barcodeY: 22, barcodeH: 84, priceGap: 6, bottomPad: 18 });
 	if (width <= 30 && height <= 25)
 		return L({ margin: 24, nameFont: 16, priceFont: 16, nameY: 6, barcodeY: 28, barcodeH: 96, priceGap: 6, bottomPad: 30 });
 	if (width <= 35 && height <= 25)
