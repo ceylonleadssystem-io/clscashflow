@@ -27,7 +27,7 @@ export function CheckoutFields() {
 	);
 }
 
-function CustomerSection() {
+export function CustomerSection() {
 	const data = useData();
 	const c = useCheckout();
 	const enabled = useFeature("checkout.customerLookup");
@@ -133,7 +133,7 @@ function CustomerSection() {
 	);
 }
 
-function DiscountSection() {
+export function DiscountSection() {
 	const c = useCheckout();
 	const enabled = useFeature("checkout.discounts");
 	const [type, setType] = useDiscountDraft(c);
