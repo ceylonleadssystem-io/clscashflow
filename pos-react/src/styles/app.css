@@ -424,6 +424,10 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .label-nudge strong{min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
 .label-nudge .btn{min-width:44px}
 
+/* Current Order: order details under the title */
+.order-info{flex:none;align-content:start;display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px 12px;margin:0;padding:8px 14px;border-bottom:1px solid var(--line,#e6e1d6);font-size:.78rem}
+.order-info dt{font-size:.64rem;text-transform:uppercase;letter-spacing:.06em;opacity:.6}
+.order-info dd{margin:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Current Order: tool boxes above Quick Pay / Pay Now */
 .order-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;margin:10px 0 0}
 .order-tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border:1px solid var(--line,#ddd);border-radius:12px;background:transparent;color:inherit;font:inherit;font-size:.74rem;font-weight:600;cursor:pointer}
