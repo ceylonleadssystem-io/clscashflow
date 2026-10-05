@@ -443,3 +443,9 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 html body:not(.mobile-checkout) #view-checkout aside.cart.panel{grid-template-rows:auto minmax(72px,1fr) auto!important;grid-template-columns:minmax(0,1fr)!important}
 html body:not(.mobile-checkout) #view-checkout aside.cart.panel>*{min-width:0}
 html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-height:none!important;overflow:visible!important}
+
+/* Checkout: the subcategory row under the category row is slimmer so the item grid keeps its space */
+#view-checkout .category-rail.category-rail-sub{padding:5px 12px;grid-template-columns:32px minmax(0,1fr) 32px}
+#view-checkout .category-rail-sub .category-scroll{width:32px;height:32px}
+#view-checkout .category-rail-sub .cats .chip{min-height:32px;padding:4px 12px;font-size:.88em}
+#view-checkout .category-rails{min-width:0}
