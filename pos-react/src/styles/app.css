@@ -419,3 +419,7 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .floor-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted,#777);padding:20px;text-align:center}
 .floor-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:14px}
 .floor-form .field{min-width:150px;flex:1}
+/* Label alignment nudge (Settings > Printing / Barcode dialog) */
+.label-nudge{display:flex;align-items:center;gap:10px}
+.label-nudge strong{min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
+.label-nudge .btn{min-width:44px}
