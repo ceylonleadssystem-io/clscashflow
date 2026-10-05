@@ -189,3 +189,37 @@ html[data-theme="dark"] [style*="background: rgb(253, 233, 231)"] { background: 
 	html[data-theme="dark"],
 	html[data-theme="dark"] body { background: #fff !important; color: #000 !important; color-scheme: light; }
 }
+
+/* Loading screen in dark mode: readable brand/text, darker track; the fill keeps the user's accent colour */
+html[data-theme="dark"] .app-loading-brand { color: #eceff2; }
+html[data-theme="dark"] .app-loading-text { color: #c3cbd3; }
+html[data-theme="dark"] .app-loading-bar { background: #2a323a; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4); }
+html[data-theme="dark"] .app-loading-pct { color: #a3adb7; }
+html[data-theme="dark"] .btn.connected { color: #52d28b !important; border-color: #2f9e66 !important; background: rgba(82, 210, 139, 0.1) !important; }
+
+/* "Pay by bank transfer" dialog (rendered by platform.js with its own light styles) */
+html[data-theme="dark"] .cls-bank-card { background: #1b2127 !important; color: #eceff2 !important; border: 1px solid #343d46 !important; }
+html[data-theme="dark"] .cls-bank-card h2,
+html[data-theme="dark"] .cls-bank-card strong,
+html[data-theme="dark"] .cls-bank-card b,
+html[data-theme="dark"] .cls-payment-choice-title { color: #eceff2 !important; }
+html[data-theme="dark"] .cls-bank-close { background: #2a323a !important; color: #eceff2 !important; border-color: #3a444e !important; }
+html[data-theme="dark"] .cls-billing-kicker { color: var(--ui-accent, #ff4d0a) !important; }
+html[data-theme="dark"] .cls-payment-copy { color: #c3cbd3 !important; }
+html[data-theme="dark"] .cls-payment-copy b { color: #eceff2 !important; }
+html[data-theme="dark"] .cls-payment-choice-grid button { background: #232a31 !important; border-color: #3a444e !important; color: #eceff2 !important; }
+html[data-theme="dark"] .cls-payment-choice-grid button.active { background: #2a323a !important; border-color: var(--ui-accent, #ff4d0a) !important; }
+html[data-theme="dark"] .cls-payment-choice-grid button span,
+html[data-theme="dark"] .cls-payment-choice-grid button strong { color: #eceff2 !important; }
+html[data-theme="dark"] .cls-payment-choice-grid button small { color: #a3adb7 !important; }
+html[data-theme="dark"] .cls-payment-choice-summary { background: rgba(224, 178, 74, 0.12) !important; color: #e9dcc0 !important; }
+html[data-theme="dark"] .cls-bank-details { background: #232a31 !important; color: #c3cbd3 !important; }
+html[data-theme="dark"] .cls-bank-details * { color: #c3cbd3; }
+html[data-theme="dark"] .cls-bank-details b,
+html[data-theme="dark"] .cls-bank-details strong { color: #eceff2 !important; }
+html[data-theme="dark"] .cls-payment-timeline { background: transparent !important; border-color: #343d46 !important; color: #c3cbd3 !important; }
+html[data-theme="dark"] .cls-payment-timeline * { color: #c3cbd3; }
+html[data-theme="dark"] .cls-payment-timeline strong,
+html[data-theme="dark"] .cls-payment-timeline b { color: #eceff2 !important; }
+html[data-theme="dark"] .cls-bank-primary { background: var(--ui-accent, #ff4d0a) !important; color: #14110d !important; border-color: transparent !important; }
+html[data-theme="dark"] .cls-bank-status { color: #a3adb7 !important; }

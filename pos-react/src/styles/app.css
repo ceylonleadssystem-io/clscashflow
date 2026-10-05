@@ -395,3 +395,9 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .plans-contact-actions .btn{text-decoration:none;display:inline-flex;align-items:center}
 .plans-modal .panel-head{align-items:flex-start;gap:10px}
 .plans-modal .panel-head .btn{width:auto!important;min-width:44px;flex:0 0 auto}
+
+/* Connected hardware button (Settings > Printing) */
+.btn.connected{border-color:#168653!important;color:#168653!important;background:rgba(22,134,83,.08)!important}
+/* Loading screen uses the accent colour chosen under Settings > Operations (applied early from localStorage) */
+.app-loading-brand span{color:var(--ui-accent,#ff4d0a)}
+.app-loading-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--ui-accent,#ff4d0a) 62%,#fff),var(--ui-accent,#ff4d0a))}

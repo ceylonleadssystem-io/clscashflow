@@ -53,6 +53,10 @@ class ReceiptPrinter {
 	get connected() {
 		return !!(this.device && this.device.opened);
 	}
+	/** Name of the connected USB receipt printer ("" when none). */
+	get deviceName() {
+		return this.connected ? this.device.productName || "USB receipt printer" : "";
+	}
 
 	async _claim(device) {
 		const out = await claimUsbOutput(device, "USB receipt printer");

@@ -71,6 +71,10 @@ class BarcodeScanner {
 		fn(this.status);
 		return this.emitter.subscribe(fn);
 	}
+	/** Name of the connected USB scanner ("" when none), so the Settings button can show what is connected. */
+	get deviceName() {
+		return this.device ? this.device.productName || "USB barcode scanner" : "";
+	}
 	_set(message, connected) {
 		this.status = { message, connected: !!connected };
 		this.emitter.emit(this.status);
