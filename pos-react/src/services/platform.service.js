@@ -40,16 +40,16 @@ export const platformAvailable = () => typeof window !== "undefined" && !!window
 
 /**
  * E-mails the ORDER to the customer (items, modifiers, totals, payment method)
- * through EmailJS. Uses the business' EmailJS service and an order template whose
- * body is `{{{message_html}}}` (see public/email-templates/pos-order-email.html).
- * Template id: settings.ejsOrderTemplate -> VITE_EJS_ORDER_TEMPLATE -> the legacy
- * receipt template (same `message_html` body).
+ * through EmailJS, using the business' EmailJS service.
+ * Template id: settings.ejsOrderTemplate -> VITE_EJS_ORDER_TEMPLATE (an EmailJS template built from `variables`, see
+ * public/email-templates/pos-order-email.html) -> the legacy receipt template (one `message_html` body).
  */
-export async function sendOrderEmail({ to, subject, html, customerName, settings }) {
+export async function sendOrderEmail({ to, subject, html, variables, customerName, settings }) {
 	await loadPlatformScript();
 	const publicKey = settings.ejsKey || env.ejsKey;
 	const serviceId = settings.ejsService || env.ejsService;
-	const templateId = settings.ejsOrderTemplate || env.ejsOrderTemplate || settings.ejsReceiptTemplate || env.ejsReceiptTemplate;
+	const orderTemplate = settings.ejsOrderTemplate || env.ejsOrderTemplate;
+	const templateId = orderTemplate || settings.ejsReceiptTemplate || env.ejsReceiptTemplate;
 	if (!publicKey || !serviceId || !templateId) throw new Error("EmailJS is not configured for order e-mails.");
 	if (!window.emailjs || typeof window.emailjs.send !== "function") {
 		if (!window.clsLoadScriptOnce) throw new Error("Email service unavailable");
@@ -69,8 +69,10 @@ export async function sendOrderEmail({ to, subject, html, customerName, settings
 		from_name: settings.business || "Ceylonry POS",
 		reply_to: settings.email || "",
 		subject,
-		message_html: html,
 		business_name: settings.business || "",
+		...variables,
+		// the legacy receipt template shows one ready-made HTML body; the order template builds its own from the variables
+		...(orderTemplate ? {} : { message_html: html }),
 	};
 	try {
 		await window.emailjs.send(serviceId, templateId, params, { publicKey });
