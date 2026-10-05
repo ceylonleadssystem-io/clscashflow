@@ -13,6 +13,22 @@ import { barcodeScanner, findScannedProduct } from "../../services/printing/scan
 
 const AZURE = "Azure Swim tablet printer: USB 1046:20497 · 80 mm ESC/POS";
 
+/** Connect button that turns into "Connected · <device name>" once a device is attached (tap again to pick another). */
+function ConnectButton({ name, label, className = "btn", onClick }) {
+	return (
+		<button className={className + (name ? " connected" : "")} type="button" onClick={onClick} title={name ? "Tap to choose a different device" : undefined}>
+			{name ? (
+				<>
+					<span aria-hidden="true">✓ </span>
+					Connected · {name}
+				</>
+			) : (
+				label
+			)}
+		</button>
+	);
+}
+
 /** USB receipt printer, label printer and barcode scanner connection controls. */
 export function HardwarePanel() {
 	const data = useData();
@@ -68,9 +84,7 @@ export function HardwarePanel() {
 						<strong>USB receipt printer</strong>
 						<div className="plan-settings-note">{AZURE}</div>
 					</div>
-					<button className="btn" type="button" onClick={() => attempt(() => receiptPrinter.connect(), "Could not connect the USB printer.")}>
-						Connect USB Printer
-					</button>
+					<ConnectButton name={receiptPrinter.deviceName} label="Connect USB Printer" onClick={() => attempt(() => receiptPrinter.connect(), "Could not connect the USB printer.")} />
 					<div id="register-hardware-status" className={"hardware-status" + (printer.connected ? "" : " offline")}>
 						{printer.message}
 					</div>
@@ -83,9 +97,7 @@ export function HardwarePanel() {
 						<div className="plan-settings-note">Saved USB label printers reconnect automatically after the first browser permission approval.</div>
 					</div>
 					<div className="hw-actions">
-						<button className="btn out" type="button" onClick={() => attempt(() => labelPrinter.connect(), "Could not connect the USB barcode printer.")}>
-							Connect Label Printer
-						</button>
+						<ConnectButton className="btn out" name={labelPrinter.deviceName} label="Connect Label Printer" onClick={() => attempt(() => labelPrinter.connect(), "Could not connect the USB barcode printer.")} />
 						<button
 							className="btn out"
 							type="button"
@@ -113,16 +125,15 @@ export function HardwarePanel() {
 						</div>
 					</div>
 					<div className="hw-actions">
-						<button
+						<ConnectButton
 							className="btn out"
-							type="button"
+							name={barcodeScanner.deviceName}
+							label="Connect USB Scanner"
 							onClick={async () => {
 								const res = await barcodeScanner.connect().catch(() => "error");
 								if (res === "unsupported") setTestOpen(true);
 							}}
-						>
-							Connect USB Scanner
-						</button>
+						/>
 						<button
 							className="btn out"
 							type="button"

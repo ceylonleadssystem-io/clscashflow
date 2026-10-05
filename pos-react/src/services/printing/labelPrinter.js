@@ -140,6 +140,10 @@ class LabelPrinter {
 	get connected() {
 		return !!(this.device && this.device.opened);
 	}
+	/** Name of the connected USB label printer ("" when none). */
+	get deviceName() {
+		return this.connected ? this.device.productName || this.name || "USB barcode label printer" : "";
+	}
 	async _claim(device) {
 		const out = await claimUsbOutput(device, "USB label printer");
 		this.device = device;
