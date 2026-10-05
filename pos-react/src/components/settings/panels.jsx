@@ -485,48 +485,10 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 							{ADDITIONAL_FEATURES.freeCount} additional features free, then LKR {ADDITIONAL_FEATURES.pricePerFeature.toLocaleString()} per feature.
 						</div>
 					</div>
-					<div className="field">
-						<label>Number of POS users</label>
-						<input className="input" id="set-pos-users" type="number" min="1" step="1" value={form.posUsers} onChange={set("posUsers")} />
-					</div>
 					<button className="btn out" type="button" style={{ marginTop: 10 }} onClick={() => setWelcomeUser({ id: currentUser?.id, name: currentUser?.name, firstTime: false, plansOnly: true })}>
 						View plans & pricing
 					</button>
 				</div>
-				{supportOn && (
-					<div className="support-box">
-						<div className="label">Authorized support access</div>
-						<div className="plan-settings-note">Owner-controlled diagnostic access. Every support action is recorded.</div>
-						<label className="muted">
-							<input
-								type="checkbox"
-								id="set-support-enabled"
-								checked={enabled}
-								onChange={(e) => {
-									setEnabled(e.target.checked);
-									if (e.target.checked && !s.supportCode) onRegenerate();
-								}}
-							/>{" "}
-							Enable Ceylonry support portal
-						</label>
-						{enabled && (
-							<div id="support-code-wrap">
-								<div className="support-code" id="support-code">
-									{s.supportCode || "------"}
-								</div>
-								<div className="plan-settings-note" id="support-expiry-note" style={{ margin: "8px 0" }}>
-									{expires ? "Code expires " + new Date(expires).toLocaleString() : "Generate a new code to create a 24-hour support window."}
-								</div>
-								<button className="btn out" type="button" onClick={() => onRegenerate()}>
-									Generate New Code
-								</button>
-								<a className="btn out" href={env.supportPortalUrl} target="_blank" rel="noreferrer">
-									Open Admin Portal
-								</a>
-							</div>
-						)}
-					</div>
-				)}
 			</div>
 		</Panel>
 	);

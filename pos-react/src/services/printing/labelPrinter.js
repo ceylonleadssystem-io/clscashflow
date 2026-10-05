@@ -2,14 +2,40 @@
  * USB TSPL label printer (gap labels, default 30 x 25 mm): label layouts, bitmap print jobs, WebUSB connect/
  * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
  */
-import { claimUsbOutput, createEmitter } from "./usb";
+import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
 import { barcodeSvg, cleanBarcode, drawCode128 } from "./barcode";
 import { esc, money } from "../../domain/format";
 import { createLogger } from "../../utils/logger";
 
 const log = createLogger("printing");
 
-/** USB TSPL label printer (30 × 25 mm gap labels) + browser print fallback. */
+/** USB TSPL label printer (gap labels, default 30 × 25 mm with a 3 mm gap) + browser print fallback. */
+
+/**
+ * Label roll the printer is loaded with. The size and gap sent with every job (and every calibration) MUST match the
+ * physical labels: a mismatch is the usual reason a gap-label printer prints one label and then feeds a blank one.
+ */
+export const DEFAULT_LABEL_STOCK = { width: 30, height: 25, gap: 3 };
+export const LABEL_SIZES = ["25x25", "30x25", "35x25", "40x25", "35x35", "40x30", "45x30", "50x30"];
+export const LABEL_GAPS = [2, 2.5, 3, 4];
+
+/** Clamp/normalise a saved stock setting. */
+export function resolveLabelStock(saved) {
+	const num = (v, d, min, max) => {
+		const n = Number(v);
+		return Number.isFinite(n) && n >= min && n <= max ? n : d;
+	};
+	return {
+		width: num(saved?.width, DEFAULT_LABEL_STOCK.width, 15, 100),
+		height: num(saved?.height, DEFAULT_LABEL_STOCK.height, 10, 100),
+		gap: num(saved?.gap, DEFAULT_LABEL_STOCK.gap, 1, 8),
+	};
+}
+
+/** TSPL block that tells the printer the label geometry (same block for printing and calibration). */
+export function tsplSetup(width, height, gapMm) {
+	return `SIZE ${width} mm,${height} mm\r\nGAP ${gapMm} mm,0\r\nOFFSET 0 mm\r\nREFERENCE 0,0\r\nDIRECTION 0\r\nDENSITY 15\r\nSPEED 2\r\nSET TEAR OFF\r\nSET PEEL OFF\r\nSET CUTTER OFF\r\nBACKFEED 0\r\n`;
+}
 
 export function labelBitmapLayout(width, height) {
 	const L = (o) => ({ darken: true, gapMm: 3, descFont: 0, underNameFont: 0, nameFont: 0, nameY: 0, descY: 0, ...o });
@@ -39,7 +65,7 @@ function fitText(ctx, text, maxWidth, font) {
 }
 
 /** Bitmap TSPL job: name, Code 128 barcode, price rendered on a canvas at 203 dpi. */
-export function tsplBitmapBytes(product, copies, size) {
+export function tsplBitmapBytes(product, copies, size, gapMm) {
 	const width = Number(size[0]) || 30;
 	const height = Number(size[1]) || 25;
 	const dotsW = Math.round(width * 8);
@@ -93,9 +119,7 @@ export function tsplBitmapBytes(product, copies, size) {
 		}
 	const count = Math.max(1, Number(copies) || 1);
 	const enc = new TextEncoder();
-	const setup = enc.encode(
-		`SIZE ${width} mm,${height} mm\r\nGAP ${layout.gapMm || 3} mm,0\r\nOFFSET 0 mm\r\nREFERENCE 0,0\r\nDIRECTION 0\r\nDENSITY 15\r\nSPEED 2\r\nSET TEAR OFF\r\nSET PEEL OFF\r\nSET CUTTER OFF\r\nBACKFEED 0\r\n`,
-	);
+	const setup = enc.encode(tsplSetup(width, height, Number(gapMm) || layout.gapMm || 3));
 	const head = enc.encode(`CLS\r\nBITMAP 0,0,${rowBytes},${dotsH},0,`);
 	const tail = enc.encode(`\r\nPRINT 1,${count}\r\n`);
 	const bytes = new Uint8Array(setup.length + head.length + raster.length + tail.length);
@@ -185,24 +209,27 @@ class LabelPrinter {
 		if (!this.connected && !(await this.restore(saved)))
 			throw new Error("USB barcode printer is not connected. Tap Detect USB Label Printer first.");
 	}
-	async calibrate(saved) {
+	/** Teach the printer the label length and gap of the loaded roll (use the real size/gap of the labels). */
+	async calibrate(saved, stock) {
 		await this._ensure(saved);
-		const cmd = new TextEncoder().encode(
-			"SIZE 30 mm,25 mm\r\nGAP 3 mm,0\r\nOFFSET 0 mm\r\nREFERENCE 0,0\r\nDIRECTION 0\r\nDENSITY 15\r\nSPEED 2\r\nSET TEAR OFF\r\nSET PEEL OFF\r\nSET CUTTER OFF\r\nBACKFEED 0\r\nGAPDETECT\r\n",
-		);
+		const s = resolveLabelStock(stock);
+		const cmd = new TextEncoder().encode(tsplSetup(s.width, s.height, s.gap) + "GAPDETECT\r\n");
 		const result = await this.device.transferOut(this.endpoint, cmd);
 		if (result.status !== "ok") throw new Error("The label printer did not accept calibration.");
-		this._set(this.name + " calibrated for 30 × 25 mm gap labels.", true);
+		log.info("label printer calibrated", { device: this.name, width: s.width, height: s.height, gap: s.gap });
+		this._set(`${this.name} calibrated for ${s.width} × ${s.height} mm labels with a ${s.gap} mm gap.`, true);
 	}
-	async print(product, copies, size, saved) {
+	async print(product, copies, size, saved, gapMm) {
 		await this._ensure(saved);
-		const bytes = tsplBitmapBytes(product, copies, size);
-		const result = await this.device.transferOut(this.endpoint, bytes);
-		if (result.status !== "ok") {
-			log.error("label print rejected by printer", new Error("transferOut status " + result.status), { device: this.name, bytes: bytes.length });
+		const bytes = tsplBitmapBytes(product, copies, size, gapMm);
+		// Sent in 4 KB chunks like the receipt printer: one 6 KB bulk transfer is rejected or truncated by some printers.
+		try {
+			await transferChunks(this.device, this.endpoint, bytes);
+		} catch (error) {
+			log.error("label print rejected by printer", error, { device: this.name, bytes: bytes.length });
 			throw new Error("The USB barcode printer stopped accepting label data.");
 		}
-		log.info("labels sent to USB printer", { device: this.name, copies: Number(copies) || 1, bytes: bytes.length });
+		log.info("labels sent to USB printer", { device: this.name, copies: Number(copies) || 1, bytes: bytes.length, size: size.join("x"), gapMm: Number(gapMm) || 3 });
 		this._set(this.name + " ready for barcode labels.", true);
 	}
 }
