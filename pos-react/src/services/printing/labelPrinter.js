@@ -237,6 +237,23 @@ export function tsplAlignmentBytes(size, opts) {
 }
 
 
+/**
+ * Alignment wizard rule: `sides` = how many mm of the test label's border are missing at each edge (top, bottom, left,
+ * right). A missing left edge means the content has to move right (+X), a missing top edge down (+Y), and so on. Returns
+ * the new shift (kept within the allowed range) and `clash` when opposite edges are both cut off, which no shift can fix
+ * (the wrong size is selected or the roll is not the size the printer was calibrated for).
+ */
+export function alignmentAdjust(stock, sides = {}) {
+	const n = (k) => Math.max(0, Number(sides[k]) || 0);
+	const fit = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(v * 10) / 10));
+	return {
+		offsetX: fit((Number(stock.offsetX) || 0) + n("left") - n("right"), -10, 10),
+		offsetY: fit((Number(stock.offsetY) || 0) + n("top") - n("bottom"), -6, 6),
+		clash: (n("left") > 0 && n("right") > 0) || (n("top") > 0 && n("bottom") > 0),
+		any: n("left") + n("right") + n("top") + n("bottom") > 0,
+	};
+}
+
 class LabelPrinter {
 	constructor() {
 		this.device = null;
