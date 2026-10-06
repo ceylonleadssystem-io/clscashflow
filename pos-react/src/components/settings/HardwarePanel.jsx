@@ -80,7 +80,7 @@ export function HardwarePanel() {
 	return (
 		<div className="usb-printer-controls">
 			{usb && (
-				<>
+				<div className="hw-section" id="hw-receipt-printer">
 					<div>
 						<strong>USB receipt printer</strong>
 						<div className="plan-settings-note">{AZURE}</div>
@@ -89,7 +89,7 @@ export function HardwarePanel() {
 					<div id="register-hardware-status" className={"hardware-status" + (printer.connected ? "" : " offline")}>
 						{printer.message}
 					</div>
-				</>
+				</div>
 			)}
 			{label && (
 				<div className="hw-section" id="hw-label-printer">
@@ -115,11 +115,13 @@ export function HardwarePanel() {
 					<div id="settings-barcode-printer-status" className={"hardware-status" + (labels.connected ? "" : " offline")}>
 						{labels.message}
 					</div>
-					<LabelStockPicker />
+					<div className="hw-wide">
+						<LabelStockPicker />
+					</div>
 				</div>
 			)}
 			{scanner && (
-				<>
+				<div className="hw-section" id="hw-scanner">
 					<div>
 						<strong>USB barcode scanner</strong>
 						<div className="plan-settings-note">
@@ -153,7 +155,7 @@ export function HardwarePanel() {
 					</div>
 					{testOpen && (
 						<input
-							className="input"
+							className="input hw-wide"
 							id="scanner-test-input"
 							placeholder="Scan barcode now"
 							value={testValue}
@@ -168,7 +170,7 @@ export function HardwarePanel() {
 							onBlur={() => testValue && finishTest()}
 						/>
 					)}
-				</>
+				</div>
 			)}
 		</div>
 	);
