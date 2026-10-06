@@ -1,115 +1,43 @@
-import { LABEL_SIZES, drawAlignmentLabel, resolveLabelStock } from "../../services/printing/labelPrinter";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { LABEL_SIZES, resolveLabelStock } from "../../services/printing/labelPrinter";
 import { LabelAlignWizard } from "./LabelAlignWizard";
 import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 
-const STEP = 0.5;
-const fmt = (v) => (v > 0 ? "+" : "") + v.toFixed(1) + " mm";
-
-/** − / + control for a signed millimetre value. */
-function Nudge({ label, hint, value, onChange, min, max, minusLabel, plusLabel }) {
-	const set = (v) => onChange(Math.max(min, Math.min(max, Math.round(v * 10) / 10)));
-	return (
-		<div className="field">
-			<label>{label}</label>
-			<div className="label-nudge">
-				<button type="button" className="btn out" aria-label={minusLabel} onClick={() => set(value - STEP)} disabled={value <= min}>
-					−
-				</button>
-				<strong aria-live="polite">{fmt(value)}</strong>
-				<button type="button" className="btn out" aria-label={plusLabel} onClick={() => set(value + STEP)} disabled={value >= max}>
-					+
-				</button>
-			</div>
-			<div className="plan-settings-note">{hint}</div>
-		</div>
-	);
-}
-
 /**
- * Size of the label roll loaded in the USB label printer (30 × 20, 38 × 25, 50 × 25 or 60 × 40 mm, 3 mm gap) plus the alignment of the printed content, saved in
- * settings.labelStock and used for every print job and calibration. A wrong size/gap makes the printer feed a blank
- * label between prints; a wrong shift crops one edge of the barcode or leaves it off-centre.
+ * Size of the label roll loaded in the USB label printer (30 × 20, 38 × 25, 50 × 25 or 60 × 40 mm, 3 mm gap), saved in
+ * settings.labelStock and used for every print job and calibration, plus the button that opens the guided alignment
+ * wizard (which saves the shift). A wrong size makes the printer feed a blank label between prints; a wrong shift crops
+ * one edge of the barcode or leaves it off-centre.
  */
 export function LabelStockPicker() {
 	const { svc } = usePos();
 	const { settings } = useData();
 	const stock = resolveLabelStock(settings.labelStock);
 	const size = `${stock.width}x${stock.height}`;
-	// Live preview of the alignment test label exactly as it will print (size and shift included).
-	const previewRef = useRef(null);
-	useEffect(() => {
-		const host = previewRef.current;
-		if (!host) return;
-		const canvas = drawAlignmentLabel([String(stock.width), String(stock.height)], stock);
-		canvas.setAttribute("role", "img");
-		canvas.setAttribute("aria-label", `Preview of the ${stock.width} × ${stock.height} mm alignment test label`);
-		host.replaceChildren(canvas);
-	}, [stock.width, stock.height, stock.offsetX, stock.offsetY]);
 	const [aligning, setAligning] = useState(false);
 	const save = (patch) => svc.settings.patchSettings({ labelStock: { ...stock, ...patch } });
 	return (
 		<div className="label-stock-picker">
-			<div className="form-grid">
-				<div className="field">
-					<label htmlFor="label-stock-size">Label size</label>
-					<select
-						className="input"
-						id="label-stock-size"
-						value={size}
-						onChange={(e) => {
-							const [width, height] = e.target.value.split("x").map(Number);
-							save({ width, height });
-						}}
-					>
-						{LABEL_SIZES.map((s) => (
-							<option key={s} value={s}>
-								{s.replace("x", " × ")} mm
-							</option>
-						))}
-					</select>
-				</div>
+			<div className="field" style={{ maxWidth: 360 }}>
+				<label htmlFor="label-stock-size">Label size</label>
+				<select
+					className="input"
+					id="label-stock-size"
+					value={size}
+					onChange={(e) => {
+						const [width, height] = e.target.value.split("x").map(Number);
+						save({ width, height });
+					}}
+				>
+					{LABEL_SIZES.map((s) => (
+						<option key={s} value={s}>
+							{s.replace("x", " × ")} mm
+						</option>
+					))}
+				</select>
 			</div>
 			<div className="plan-settings-note">Must match the labels in the printer (the gap between labels is 3 mm). If every other label comes out blank, pick the real size here, then press Calibrate Label Gap.</div>
-			<div className="form-grid" style={{ marginTop: 10 }}>
-				<Nudge
-					label="Move left / right"
-					hint="Barcode cut on the left or sitting too far left: press +. Cut on the right: press −."
-					value={stock.offsetX}
-					min={-10}
-					max={10}
-					minusLabel="Move content left"
-					plusLabel="Move content right"
-					onChange={(v) => save({ offsetX: v })}
-				/>
-				<Nudge
-					label="Move up / down"
-					hint="Top cut off: press +. Bottom cut off: press −."
-					value={stock.offsetY}
-					min={-6}
-					max={6}
-					minusLabel="Move content up"
-					plusLabel="Move content down"
-					onChange={(v) => save({ offsetY: v })}
-				/>
-				<div className="field">
-					<label htmlFor="label-stock-margin">Side margin</label>
-					<select className="input" id="label-stock-margin" value={stock.marginMm == null ? "" : String(stock.marginMm)} onChange={(e) => save({ marginMm: e.target.value === "" ? null : Number(e.target.value) })}>
-						<option value="">Automatic</option>
-						{[2, 3, 4, 5, 6].map((m) => (
-							<option key={m} value={m}>
-								{m} mm
-							</option>
-						))}
-					</select>
-					<div className="plan-settings-note">A bigger margin makes the barcode narrower so it stays inside the label.</div>
-				</div>
-			</div>
-			<div className="label-test-preview" id="label-test-preview">
-				<div className="plan-settings-note">Test label preview ({stock.width} × {stock.height} mm). Shows what the printer will draw, including your shift.</div>
-				<div ref={previewRef} className="label-test-canvas" />
-			</div>
 			<button type="button" className="btn out" id="label-alignment-test" onClick={() => setAligning(true)} style={{ marginTop: 10 }}>
 				Align label printer…
 			</button>

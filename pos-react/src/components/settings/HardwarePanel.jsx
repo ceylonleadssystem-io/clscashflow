@@ -92,12 +92,11 @@ export function HardwarePanel() {
 				</>
 			)}
 			{label && (
-				<>
+				<div className="hw-section" id="hw-label-printer">
 					<div>
 						<strong>USB barcode label printer</strong>
 						<div className="plan-settings-note">Saved USB label printers reconnect automatically after the first browser permission approval.</div>
 					</div>
-					<LabelStockPicker />
 					<div className="hw-actions">
 						<ConnectButton className="btn out" name={labelPrinter.deviceName} label="Connect Label Printer" onClick={() => attempt(() => labelPrinter.connect(), "Could not connect the USB barcode printer.")} />
 						<button
@@ -116,7 +115,8 @@ export function HardwarePanel() {
 					<div id="settings-barcode-printer-status" className={"hardware-status" + (labels.connected ? "" : " offline")}>
 						{labels.message}
 					</div>
-				</>
+					<LabelStockPicker />
+				</div>
 			)}
 			{scanner && (
 				<>
