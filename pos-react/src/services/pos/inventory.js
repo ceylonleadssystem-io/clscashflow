@@ -97,7 +97,11 @@ export async function deleteInventoryItem(ctx, id) {
 		usedBy.forEach((p) => tx.put(T.products, { ...p, recipe: (p.recipe || []).filter((r) => r.itemId !== id) }));
 		// deleting a sellable product's stock row turns stock tracking off: always available
 		const product = item.productId && d.products.find((p) => String(p.id) === String(item.productId));
-		if (product) tx.put(T.products, { ...product, trackStock: false });
+		if (product && item.sizeName) {
+			// one size's count removed: that size becomes always available; the other sizes keep counting
+			const left = (product.sizedStock || []).filter((x) => x !== item.sizeName);
+			tx.put(T.products, { ...product, sizedStock: left, trackStock: left.length > 0 });
+		} else if (product) tx.put(T.products, { ...product, trackStock: false });
 		await markDeleted(tx, "inventory", id);
 		tx.remove(T.inventoryItems, id);
 	});

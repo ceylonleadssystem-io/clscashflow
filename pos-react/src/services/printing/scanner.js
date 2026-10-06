@@ -3,6 +3,8 @@
  * support, with code matching against products and a status emitter for the settings UI.
  */
 import { createEmitter } from "./usb";
+import { sizeSlug } from "./barcode";
+import { productSizeGroup } from "../../domain/catalog";
 import { createLogger } from "../../utils/logger";
 
 const log = createLogger("scanner");
@@ -49,6 +51,23 @@ export function findScannedProduct(products, code) {
 		const values = [p.code, p.barcode, p.sku].map((v) => String(v || "").trim().toLowerCase());
 		return variants.some((v) => values.includes(v));
 	});
+}
+
+/**
+ * What a scan means: { product, size } for an item code, or for a size barcode "<item code>-<size>" (the size is
+ * the item's own Size option, "" for a plain code). undefined when nothing matches.
+ */
+export function findScannedItem(products, modifierGroups, code) {
+	const product = findScannedProduct(products, code);
+	if (product) return { product, size: "" };
+	for (const v of scannerCodeVariants(code)) {
+		const i = v.lastIndexOf("-");
+		if (i <= 0) continue;
+		const base = findScannedProduct(products, v.slice(0, i));
+		const option = base && productSizeGroup(base, modifierGroups)?.options.find((o) => sizeSlug(o.name).toLowerCase() === v.slice(i + 1));
+		if (option) return { product: base, size: option.name };
+	}
+	return undefined;
 }
 
 class BarcodeScanner {

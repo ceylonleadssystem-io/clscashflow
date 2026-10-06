@@ -52,11 +52,40 @@ export function stockMovement(item, change, reason, note = "", userId = "") {
 
 /** Product-backed stock row (sellable product) -> item for a product id. */
 export const productStockItem = (inventory, productId) =>
-	inventory.find((i) => String(i.productId || "") === String(productId));
+	inventory.find((i) => String(i.productId || "") === String(productId) && !i.sizeName);
 
-/** Stock available for a product at a location (Infinity for services). */
-export function availableProductStock(product, inventory, locationId) {
+/** Size of a cart/sale line: its option of a "size" modifier group ("" when it has none). */
+export const lineSize = (line) => (line.modifiers || []).find((m) => /size/i.test(m.groupName || ""))?.optionName || "";
+
+/** Stock row of one size of a product (size "" = the product's single, unsized row). */
+export const productSizeItem = (inventory, productId, size = "") =>
+	inventory.find((i) => String(i.productId || "") === String(productId) && String(i.sizeName || "") === String(size));
+
+/** True when the product keeps a separate stock count per size. */
+export const hasSizedStock = (inventory, productId) => inventory.some((i) => String(i.productId || "") === String(productId) && i.sizeName);
+
+/** The stock row a sale line draws from: its size's row, else the product's single row, else none (untracked). */
+export function stockRowForLine(rows, line) {
+	const mine = rows.filter((i) => String(i.productId || "") === String(line.productId));
+	const size = lineSize(line);
+	return (size && mine.find((i) => i.sizeName === size)) || mine.find((i) => !i.sizeName) || null;
+}
+
+/**
+ * Stock available for a product at a location (Infinity for services). With `size`, the stock of that size when the
+ * product is counted per size (Infinity for a size that is not counted); without it, the total of the counted sizes.
+ */
+export function availableProductStock(product, inventory, locationId, size = "") {
 	if (!product || isService(product)) return Infinity;
+	if (hasSizedStock(inventory, product.id)) {
+		if (size) {
+			const row = productSizeItem(inventory, product.id, size);
+			return row ? locationStock(row, locationId) : Infinity;
+		}
+		return inventory
+			.filter((i) => String(i.productId || "") === String(product.id) && i.sizeName)
+			.reduce((t, i) => t + locationStock(i, locationId), 0);
+	}
 	const item = productStockItem(inventory, product.id);
 	if (item) return locationStock(item, locationId);
 	// stock row deleted on purpose: the item is sellable without restrictions
@@ -64,9 +93,12 @@ export function availableProductStock(product, inventory, locationId) {
 	return Number(product.stock) || 0;
 }
 
-export const cartQtyForProduct = (cart, productId, exceptKey) =>
+/** Size to count a line against: its size when the product is counted per size, else undefined (whole product). */
+export const stockSizeFor = (inventory, productId, modifiers) => (hasSizedStock(inventory, productId) ? lineSize({ modifiers }) : undefined);
+
+export const cartQtyForProduct = (cart, productId, exceptKey, size) =>
 	cart
-		.filter((l) => String(l.productId) === String(productId) && l.key !== exceptKey)
+		.filter((l) => String(l.productId) === String(productId) && l.key !== exceptKey && (size === undefined || lineSize(l) === size))
 		.reduce((t, l) => t + (Number(l.qty) || 0), 0);
 
 /** Returns the first cart line exceeding available stock, if any. */
@@ -74,8 +106,9 @@ export function stockProblem(cart, products, inventory, locationId) {
 	return cart.find((line) => {
 		if (line.isDiscount || line.isServiceCharge) return false;
 		const product = products.find((p) => p.id === line.productId);
-		const available = availableProductStock(product, inventory, locationId);
-		const requested = cartQtyForProduct(cart, line.productId, line.key) + (Number(line.qty) || 0);
+		const size = stockSizeFor(inventory, line.productId, line.modifiers);
+		const available = availableProductStock(product, inventory, locationId, size || "");
+		const requested = cartQtyForProduct(cart, line.productId, line.key, size) + (Number(line.qty) || 0);
 		return Number.isFinite(available) && requested > available;
 	});
 }
@@ -86,7 +119,7 @@ export function ensureProductInventory(products, inventory, locations) {
 	const active = locations.filter((l) => l.active !== false);
 	let changed = false;
 	products
-		.filter((p) => !isService(p) && p.trackStock !== false)
+		.filter((p) => !isService(p) && p.trackStock !== false && !(p.sizedStock || []).length)
 		.forEach((product) => {
 			let item = next.find((e) => String(e.productId || "") === String(product.id));
 			if (!item) {

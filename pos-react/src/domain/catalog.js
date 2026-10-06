@@ -117,3 +117,12 @@ export function parseStockCountRows(rows) {
 	});
 	return out;
 }
+
+/**
+ * The modifier group that holds an item's sizes: the group named "Size" first, else any assigned group with "size"
+ * in its name. null when the item has none.
+ */
+export function productSizeGroup(product, modifierGroups) {
+	const groups = (modifierGroups || []).filter((m) => (product?.modifierIds || []).includes(m.id) && /size/i.test(m.name));
+	return groups.find((m) => m.name.trim().toLowerCase() === "size") || groups[0] || null;
+}
