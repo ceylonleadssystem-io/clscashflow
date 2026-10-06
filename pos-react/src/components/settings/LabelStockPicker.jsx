@@ -1,8 +1,8 @@
-import { LABEL_SIZES, drawAlignmentLabel, labelPrinter, resolveLabelStock } from "../../services/printing/labelPrinter";
-import { useEffect, useRef } from "react";
+import { LABEL_SIZES, drawAlignmentLabel, resolveLabelStock } from "../../services/printing/labelPrinter";
+import { useEffect, useRef, useState } from "react";
+import { LabelAlignWizard } from "./LabelAlignWizard";
 import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
-import { useUi } from "../../store/UiProvider";
 
 const STEP = 0.5;
 const fmt = (v) => (v > 0 ? "+" : "") + v.toFixed(1) + " mm";
@@ -35,7 +35,6 @@ function Nudge({ label, hint, value, onChange, min, max, minusLabel, plusLabel }
 export function LabelStockPicker() {
 	const { svc } = usePos();
 	const { settings } = useData();
-	const ui = useUi();
 	const stock = resolveLabelStock(settings.labelStock);
 	const size = `${stock.width}x${stock.height}`;
 	// Live preview of the alignment test label exactly as it will print (size and shift included).
@@ -48,15 +47,8 @@ export function LabelStockPicker() {
 		canvas.setAttribute("aria-label", `Preview of the ${stock.width} × ${stock.height} mm alignment test label`);
 		host.replaceChildren(canvas);
 	}, [stock.width, stock.height, stock.offsetX, stock.offsetY]);
+	const [aligning, setAligning] = useState(false);
 	const save = (patch) => svc.settings.patchSettings({ labelStock: { ...stock, ...patch } });
-	const test = async () => {
-		try {
-			await labelPrinter.printAlignment(settings.barcodePrinter || {}, settings.labelStock);
-			ui.notice("Alignment test label sent. Check which edges are cut, adjust the shift, and print it again.");
-		} catch (e) {
-			await ui.alert("The alignment label was not printed. " + (e.message || "Connect the USB label printer first."));
-		}
-	};
 	return (
 		<div className="label-stock-picker">
 			<div className="form-grid">
@@ -118,9 +110,10 @@ export function LabelStockPicker() {
 				<div className="plan-settings-note">Test label preview ({stock.width} × {stock.height} mm). Shows what the printer will draw, including your shift.</div>
 				<div ref={previewRef} className="label-test-canvas" />
 			</div>
-			<button type="button" className="btn out" id="label-alignment-test" onClick={test} style={{ marginTop: 10 }}>
-				Print alignment test label
+			<button type="button" className="btn out" id="label-alignment-test" onClick={() => setAligning(true)} style={{ marginTop: 10 }}>
+				Align label printer…
 			</button>
+			{aligning && <LabelAlignWizard onClose={() => setAligning(false)} />}
 		</div>
 	);
 }
