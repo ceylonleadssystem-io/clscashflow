@@ -1,5 +1,5 @@
 /**
- * Product Barcode Labels dialog (30 x 20, 50 x 25 or 60 x 40 mm): previews the label, sets the number of copies and prints
+ * Product Barcode Labels dialog (30 x 20, 38 x 25, 50 x 25 or 60 x 40 mm): previews the label, sets the number of copies and prints
  * through the USB label printer or the browser (Android Print). Makes sure the product has a clean scannable code first.
  */
 import { useEffect, useState } from "react";

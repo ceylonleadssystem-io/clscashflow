@@ -28,7 +28,7 @@ function Nudge({ label, hint, value, onChange, min, max, minusLabel, plusLabel }
 }
 
 /**
- * Size of the label roll loaded in the USB label printer (30 × 20, 50 × 25 or 60 × 40 mm, 3 mm gap) plus the alignment of the printed content, saved in
+ * Size of the label roll loaded in the USB label printer (30 × 20, 38 × 25, 50 × 25 or 60 × 40 mm, 3 mm gap) plus the alignment of the printed content, saved in
  * settings.labelStock and used for every print job and calibration. A wrong size/gap makes the printer feed a blank
  * label between prints; a wrong shift crops one edge of the barcode or leaves it off-centre.
  */
