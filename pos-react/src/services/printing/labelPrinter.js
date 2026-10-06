@@ -1,5 +1,5 @@
 /**
- * USB TSPL label printer (gap labels: 30 x 20, 50 x 25 or 60 x 40 mm, 3 mm gap): label layouts, bitmap print jobs, WebUSB connect/
+ * USB TSPL label printer (gap labels: 30 x 20, 38 x 25, 50 x 25 or 60 x 40 mm, 3 mm gap): label layouts, bitmap print jobs, WebUSB connect/
  * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
@@ -17,7 +17,7 @@ const log = createLogger("printing");
  */
 export const DEFAULT_LABEL_STOCK = { width: 30, height: 20, gap: 3 };
 /** The only paper sizes supported (width x height, mm). The gap between labels is always 3 mm. */
-export const LABEL_SIZES = ["30x20", "50x25", "60x40"];
+export const LABEL_SIZES = ["30x20", "50x25", "60x40", "38x25"];
 
 /** Clamp/normalise a saved stock setting. A saved size that is not one of LABEL_SIZES snaps to the nearest one. */
 export function resolveLabelStock(saved) {
@@ -77,6 +77,9 @@ export function labelBitmapLayout(width, height) {
 	// 50 x 25 mm (400 x 200 dots)
 	if (width >= 50)
 		return L({ margin: 24, nameFont: 26, descFont: 15, sizeFont: 16, priceFont: 26, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
+	// 38 x 25 mm (304 x 200 dots)
+	if (width >= 38)
+		return L({ margin: 22, nameFont: 22, descFont: 13, sizeFont: 14, priceFont: 22, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
 	// 30 x 20 mm (240 x 160 dots): name, barcode and price must all fit above the gap; no description line
 	return L({ margin: 24, nameFont: 14, descFont: 0, sizeFont: 12, priceFont: 14, top: 4, lineGap: 2, barcodeMax: 84, barcodeMin: 40, priceGap: 6, bottomPad: 14 });
 }

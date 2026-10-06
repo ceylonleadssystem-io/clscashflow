@@ -7,11 +7,12 @@ describe("label stock", () => {
 		expect(resolveLabelStock(undefined)).toMatchObject(DEFAULT_LABEL_STOCK);
 		expect(resolveLabelStock({})).toMatchObject({ width: 30, height: 20, gap: 3, offsetX: 0, offsetY: 0, marginMm: null });
 	});
-	it("supports only 30x20, 50x25 and 60x40 with a fixed 3 mm gap", async () => {
+	it("supports only 30x20, 50x25, 60x40 and 38x25 with a fixed 3 mm gap", async () => {
 		const { LABEL_SIZES } = await import("../services/printing/labelPrinter");
-		expect(LABEL_SIZES).toEqual(["30x20", "50x25", "60x40"]);
+		expect(LABEL_SIZES).toEqual(["30x20", "50x25", "60x40", "38x25"]);
 		expect(resolveLabelStock({ width: 50, height: 25, gap: 2 })).toMatchObject({ width: 50, height: 25, gap: 3 });
 		expect(resolveLabelStock({ width: 60, height: 40 })).toMatchObject({ width: 60, height: 40 });
+		expect(resolveLabelStock({ width: 38, height: 25, gap: 5 })).toMatchObject({ width: 38, height: 25, gap: 3 });
 		// an older saved size snaps to the nearest supported one
 		expect(resolveLabelStock({ width: 30, height: 25 })).toMatchObject({ width: 30, height: 20 });
 		expect(resolveLabelStock({ width: 45, height: 30 })).toMatchObject({ width: 50, height: 25 });
@@ -44,9 +45,10 @@ describe("label layouts fit every offered size", () => {
 				}
 		}
 	});
-	it("30x20 has no description line; 50x25 and 60x40 do", async () => {
+	it("30x20 has no description line; 38x25, 50x25 and 60x40 do", async () => {
 		const { labelBitmapLayout } = await import("../services/printing/labelPrinter");
 		expect(labelBitmapLayout(30, 20).descFont).toBe(0);
+		expect(labelBitmapLayout(38, 25).descFont).toBeGreaterThan(0);
 		expect(labelBitmapLayout(50, 25).descFont).toBeGreaterThan(0);
 		expect(labelBitmapLayout(60, 40).descFont).toBeGreaterThan(0);
 	});
