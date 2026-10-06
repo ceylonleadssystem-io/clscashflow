@@ -4,7 +4,8 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, ModalBody, NumberInput } from "../components/ui";
-import { productCategories, subcategoriesFor } from "../domain/catalog";
+import { productCategories, productSizeGroup, subcategoriesFor } from "../domain/catalog";
+import { productSizeItem } from "../domain/inventory";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useModals } from "../store/ModalsProvider";
@@ -23,6 +24,7 @@ const blank = () => ({
 	cost: "",
 	price: "",
 	stock: "",
+	sizeStock: {},
 	image: "",
 	imageFit: "cover",
 	imagePositionX: 50,
@@ -62,6 +64,7 @@ function ProductModal({ id, open, onClose }) {
 			description: p.description || "",
 			cost: p.cost ?? "",
 			stock: p.trackStock === false ? "" : (p.stock ?? ""),
+			sizeStock: {},
 			price: p.price ?? "",
 			subcategory: p.subcategory || "",
 			imageFit: p.imageFit || "cover",
@@ -74,7 +77,9 @@ function ProductModal({ id, open, onClose }) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open, id]);
 
-	const stockRow = id ? data.inventory.find((i) => String(i.productId || "") === String(id)) : null;
+	const stockRow = id ? data.inventory.find((i) => String(i.productId || "") === String(id) && !i.sizeName) : null;
+	// An item with a Size group and no single stock row counts stock per size (blank = that size is always available).
+	const sizeNames = !stockRow && String(f.type).toLowerCase() !== "service" ? (productSizeGroup({ modifierIds: f.modifierIds }, data.modifiers)?.options || []).map((o) => o.name) : [];
 	const set = (k) => (e) => setF((v) => ({ ...v, [k]: e.target.value }));
 	const categories = useMemo(() => productCategories(data.categories, data.products), [data.categories, data.products]);
 	const subs = useMemo(() => subcategoriesFor(data.subcategories, f.category), [data.subcategories, f.category]);
@@ -126,6 +131,8 @@ function ProductModal({ id, open, onClose }) {
 			cost: String(f.cost).replace(/,/g, ""),
 			price: String(f.price).replace(/,/g, ""),
 			recipe: recipes ? f.recipe.filter((r) => r.qty > 0) : [],
+			stock: sizeNames.length ? undefined : f.stock,
+			sizeStock: sizeNames.length ? Object.fromEntries(sizeNames.map((n) => [n, f.sizeStock[n] ?? ""])) : undefined,
 		});
 		if (saved) onClose();
 	};
@@ -214,7 +221,7 @@ function ProductModal({ id, open, onClose }) {
 						<label>Selling Price *</label>
 						<NumberInput id="p-price" value={f.price} onChange={(v) => setF((x) => ({ ...x, price: v }))} />
 					</div>
-					{String(f.type).toLowerCase() !== "service" && (
+					{String(f.type).toLowerCase() !== "service" && !sizeNames.length && (
 						<div className="field">
 							<label>Stock Count</label>
 							<input
@@ -227,6 +234,31 @@ function ProductModal({ id, open, onClose }) {
 								onChange={(e) => setF((x) => ({ ...x, stock: e.target.value.replace(/[^\d.]/g, "") }))}
 							/>
 							{stockRow && <small className="muted">Change it under Inventory & Stock.</small>}
+						</div>
+					)}
+					{sizeNames.length > 0 && (
+						<div className="field full" id="p-size-stock">
+							<label>Stock Count per Size</label>
+							<div className="form-grid">
+								{sizeNames.map((size) => {
+									const row = id ? productSizeItem(data.inventory, id, size) : null;
+									return (
+										<div className="field" key={size}>
+											<label htmlFor={"p-stock-" + size}>Size {size}</label>
+											<input
+												className="input"
+												id={"p-stock-" + size}
+												inputMode="numeric"
+												placeholder="Empty = always available"
+												disabled={!!row}
+												value={row ? row.qty : f.sizeStock[size] ?? ""}
+												onChange={(e) => setF((x) => ({ ...x, sizeStock: { ...x.sizeStock, [size]: e.target.value.replace(/[^\d.]/g, "") } }))}
+											/>
+										</div>
+									);
+								})}
+							</div>
+							<small className="muted">Each size is counted on its own. Counts that already exist are changed under Inventory & Stock.</small>
 						</div>
 					)}
 					<div className="field full">

@@ -15,7 +15,7 @@ import {
 	calculateRefundAmount,
 	statusOf,
 } from "../../domain/sales";
-import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem } from "../../domain/inventory";
+import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem, stockRowForLine } from "../../domain/inventory";
 import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
 import { orderEmailHtml, orderEmailSubject, orderEmailVariables } from "../printing/orderEmail";
@@ -197,7 +197,7 @@ export async function completeSale(ctx, input) {
 			lines
 				.filter((l) => !l.isDiscount && !l.isServiceCharge)
 				.forEach((line) => {
-					const item = [...items.values()].find((i) => String(i.productId || "") === String(line.productId));
+					const item = stockRowForLine([...items.values()], line);
 					if (!item) return;
 					const res = applyStockChange(item, -(Number(line.qty) || 0), loc.id);
 					items.set(item.id, res.item);
@@ -330,7 +330,7 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 					movements.push(movementRow(res.item, res.balance, returned, reasonText, sale.receipt + " · " + text, s));
 				});
 			if (sale.productStockDeducted) {
-				const item = [...items.values()].find((i) => String(i.productId || "") === String(line.productId));
+				const item = stockRowForLine([...items.values()], line);
 				if (item) {
 					const res = applyStockChange(item, ref.qty, sale.locationId || s.locationId);
 					items.set(item.id, res.item);

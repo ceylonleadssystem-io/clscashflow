@@ -3,7 +3,7 @@
  * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
-import { barcodeSvg, cleanBarcode, code128Units, drawCode128 } from "./barcode";
+import { barcodeSvg, cleanBarcode, code128Units, drawCode128, sizedBarcode } from "./barcode";
 import { esc, money } from "../../domain/format";
 import { createLogger } from "../../utils/logger";
 
@@ -237,6 +237,23 @@ export function tsplAlignmentBytes(size, opts) {
 }
 
 
+/**
+ * Alignment wizard rule: `sides` = how many mm of the test label's border are missing at each edge (top, bottom, left,
+ * right). A missing left edge means the content has to move right (+X), a missing top edge down (+Y), and so on. Returns
+ * the new shift (kept within the allowed range) and `clash` when opposite edges are both cut off, which no shift can fix
+ * (the wrong size is selected or the roll is not the size the printer was calibrated for).
+ */
+export function alignmentAdjust(stock, sides = {}) {
+	const n = (k) => Math.max(0, Number(sides[k]) || 0);
+	const fit = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(v * 10) / 10));
+	return {
+		offsetX: fit((Number(stock.offsetX) || 0) + n("left") - n("right"), -10, 10),
+		offsetY: fit((Number(stock.offsetY) || 0) + n("top") - n("bottom"), -6, 6),
+		clash: (n("left") > 0 && n("right") > 0) || (n("top") > 0 && n("bottom") > 0),
+		any: n("left") + n("right") + n("top") + n("bottom") > 0,
+	};
+}
+
 class LabelPrinter {
 	constructor() {
 		this.device = null;
@@ -366,7 +383,7 @@ export function barcodeLabelCopy(product) {
 
 /**
  * Full HTML document for "Android Print". `copies` is a number, or a list of { sizeLabel, copies } to print several
- * sizes of the same item in one job.
+ * sizes of the same item in one job (each size prints its own barcode, "<item code>-<size>").
  */
 export function barcodeLabelsHtml(product, copies, size) {
 	const description = product.description || product.subcategory || product.category || "";
@@ -374,7 +391,7 @@ export function barcodeLabelsHtml(product, copies, size) {
 	const one = (sizeLabel) =>
 		`<div class="copy"><strong class="copy-name">${esc(product.name || "Item")}</strong><span class="copy-description">${esc(
 			description || "Scan this label at checkout",
-		)}</span>${sizeLabel ? `<strong class="copy-size">Size: ${esc(sizeLabel)}</strong>` : ""}<div class="copy-barcode">${barcodeSvg(cleanBarcode(product.code))}</div><b class="copy-price">${money(product.price)}</b></div>`;
+		)}</span>${sizeLabel ? `<strong class="copy-size">Size: ${esc(sizeLabel)}</strong>` : ""}<div class="copy-barcode">${barcodeSvg(sizedBarcode(product.code, sizeLabel))}</div><b class="copy-price">${money(product.price)}</b></div>`;
 	const labels = runs.flatMap((r) => Array.from({ length: r.copies }, () => `<section>${one(r.sizeLabel)}</section>`)).join("");
 	return `<!doctype html><html><head><style>@page{size:${size[0]}mm ${size[1]}mm;margin:1mm}*{box-sizing:border-box}body{margin:0;font-family:Arial;color:#000}section{width:${
 		Number(size[0]) - 2

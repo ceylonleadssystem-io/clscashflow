@@ -35,6 +35,9 @@ export function Reports() {
 				[],
 				["ITEM", "UNITS", "REVENUE", "COST", "GROSS PROFIT"],
 				...d.items.map((x) => [x.name, x.qty, x.revenue, x.cost, x.revenue - x.cost]),
+				[],
+				["MODIFIER GROUP", "MODIFIER OPTION", "UNITS SOLD", "SALES OF THESE ITEMS", "EXTRA CHARGED"],
+				...d.modifiers.map((x) => [x.group, x.option, x.qty, x.revenue, x.extra]),
 			],
 			`pos-report-${range.from}-${range.to}.csv`,
 		);
@@ -106,6 +109,43 @@ export function Reports() {
 								{!d.items.length && (
 									<tr>
 										<td colSpan="5">No item sales in this period.</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div className="panel" id="report-modifiers-panel">
+					<div className="panel-head">
+						<div className="panel-title">Sales by Modifier</div>
+						<div className="muted">Sizes, add-ons and other options sold in this period</div>
+					</div>
+					<div className="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Group</th>
+									<th>Option</th>
+									<th>Units</th>
+									<th>Sales</th>
+									<th>Extra charged</th>
+								</tr>
+							</thead>
+							<tbody id="report-modifiers">
+								{d.modifiers.map((x) => (
+									<tr key={x.group + "|" + x.option}>
+										<td>{x.group}</td>
+										<td>
+											<strong>{x.option}</strong>
+										</td>
+										<td>{x.qty}</td>
+										<td>{money(x.revenue)}</td>
+										<td>{money(x.extra)}</td>
+									</tr>
+								))}
+								{!d.modifiers.length && (
+									<tr>
+										<td colSpan="5">No modifier sales in this period.</td>
 									</tr>
 								)}
 							</tbody>

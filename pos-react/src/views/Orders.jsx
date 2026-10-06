@@ -74,7 +74,19 @@ export function Orders() {
 									</td>
 									<td>{customerName(data.customers, o.customerId)}</td>
 									<td>{userName(data.users, o.staffId)}</td>
-									<td>{(o.lines || []).reduce((a, l) => a + l.qty, 0)}</td>
+									<td>
+										<strong>{(o.lines || []).filter((l) => !l.isDiscount && !l.isServiceCharge).reduce((a, l) => a + l.qty, 0)}</strong>
+										<ul className="order-queue-items">
+											{(o.lines || [])
+												.filter((l) => !l.isDiscount && !l.isServiceCharge)
+												.map((l, i) => (
+													<li key={l.key || i}>
+														{l.qty} × {l.name}
+														{(l.modifiers || []).length > 0 && <small>{l.modifiers.map((m) => m.groupName + ": " + m.optionName).join(", ")}</small>}
+													</li>
+												))}
+										</ul>
+									</td>
 									<td>{money(orderTotal(o))}</td>
 									<td>
 										{showKitchen ? (

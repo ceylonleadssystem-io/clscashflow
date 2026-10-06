@@ -5,7 +5,8 @@
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { categoryKey, productCategories } from "../../domain/catalog";
-import { ensureProductInventory } from "../../domain/inventory";
+import { ensureProductInventory, productSizeItem } from "../../domain/inventory";
+import { sizeSlug } from "../printing/barcode";
 import { commonModifierPresets } from "../../config/presets";
 import { createLogger } from "../../utils/logger";
 import { markDeleted, newId, unmarkDeletedCategory } from "./common";
@@ -41,6 +42,13 @@ export async function saveProduct(ctx, form) {
 		await ctx.ui.alert("Stock count must be a number of zero or more, or left empty if the item is always available.");
 		return null;
 	}
+	// Stock counted per size (item form with a Size group): { "S": "5", "M": "" }. A number starts counting that size,
+	// empty leaves it uncounted (always available). Sizes that already have a count keep it (adjust under Inventory & Stock).
+	const sizeEntries = form.sizeStock && typeof form.sizeStock === "object" ? Object.entries(form.sizeStock).map(([k, v]) => [k, String(v ?? "").replace(/,/g, "").trim()]) : null;
+	if (sizeEntries && sizeEntries.some(([, v]) => v && (!Number.isFinite(Number(v)) || Number(v) < 0))) {
+		await ctx.ui.alert("Stock counts must be numbers of zero or more, or left empty for sizes that are always available.");
+		return null;
+	}
 	const existingCategory = productCategories(d.categories, d.products).find((c) => c.toLowerCase() === chosen.toLowerCase());
 	const category = existingCategory || chosen;
 	const existing = d.products.find((p) => p.id === form.id);
@@ -67,12 +75,40 @@ export async function saveProduct(ctx, form) {
 		product.trackStock = rawStock !== "";
 		product.stock = rawStock !== "" ? Number(rawStock) : 0;
 	}
+	const newSizeRows = [];
+	if (sizeEntries && !d.inventory.some((i) => String(i.productId || "") === String(product.id) && !i.sizeName)) {
+		const activeLocs = d.locations.filter((l) => l.active !== false);
+		sizeEntries.forEach(([size, raw]) => {
+			if (!raw || productSizeItem(d.inventory, product.id, size)) return;
+			const qty = Number(raw);
+			newSizeRows.push({
+				id: "inv-product-" + product.id + "-" + sizeSlug(size),
+				productId: product.id,
+				sizeName: size,
+				name: `${name} – ${size}`,
+				sku: `${product.code}-${sizeSlug(size)}`,
+				type: "Sellable Product",
+				unit: "each",
+				qty,
+				reorder: 0,
+				cost,
+				supplier: "",
+				autoProductStock: true,
+				locationQuantities: Object.fromEntries(activeLocs.map((l) => [l.id, qty])),
+				createdAt: nowIso(),
+			});
+		});
+		const counted = [...d.inventory.filter((i) => String(i.productId || "") === String(product.id) && i.sizeName).map((i) => i.sizeName), ...newSizeRows.map((r) => r.sizeName)];
+		product.sizedStock = counted;
+		product.trackStock = counted.length > 0;
+	}
 	await ctx.store.write(async (tx) => {
 		if (!d.categories.some((c) => categoryKey(c) === categoryKey(category))) {
 			tx.addCategory(category);
 			await unmarkDeletedCategory(tx, category);
 		}
 		tx.put(T.products, product);
+		newSizeRows.forEach((row) => tx.put(T.inventoryItems, row));
 		const products = existing ? d.products.map((p) => (p.id === product.id ? product : p)) : [product, ...d.products];
 		if (ctx.features()["inventory.productStock"]) syncProductInventory(tx, d, products);
 	});
