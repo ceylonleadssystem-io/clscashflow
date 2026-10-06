@@ -19,8 +19,10 @@ const blank = () => ({
 	category: "",
 	newCategory: "",
 	subcategory: "",
+	description: "",
 	cost: "",
 	price: "",
+	stock: "",
 	image: "",
 	imageFit: "cover",
 	imagePositionX: 50,
@@ -57,7 +59,9 @@ function ProductModal({ id, open, onClose }) {
 			...blank(),
 			...p,
 			category: p.category || "",
+			description: p.description || "",
 			cost: p.cost ?? "",
+			stock: p.trackStock === false ? "" : (p.stock ?? ""),
 			price: p.price ?? "",
 			subcategory: p.subcategory || "",
 			imageFit: p.imageFit || "cover",
@@ -70,6 +74,7 @@ function ProductModal({ id, open, onClose }) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open, id]);
 
+	const stockRow = id ? data.inventory.find((i) => String(i.productId || "") === String(id)) : null;
 	const set = (k) => (e) => setF((v) => ({ ...v, [k]: e.target.value }));
 	const categories = useMemo(() => productCategories(data.categories, data.products), [data.categories, data.products]);
 	const subs = useMemo(() => subcategoriesFor(data.subcategories, f.category), [data.subcategories, f.category]);
@@ -197,6 +202,10 @@ function ProductModal({ id, open, onClose }) {
 							</select>
 						</div>
 					)}
+					<div className="field full">
+						<label htmlFor="p-description">Description</label>
+						<input className="input" id="p-description" maxLength={200} placeholder="Optional, printed on barcode labels and receipts" value={f.description} onChange={set("description")} />
+					</div>
 					<div className="field">
 						<label>Cost Price *</label>
 						<NumberInput id="p-cost" value={f.cost} onChange={(v) => setF((x) => ({ ...x, cost: v }))} />
@@ -205,6 +214,21 @@ function ProductModal({ id, open, onClose }) {
 						<label>Selling Price *</label>
 						<NumberInput id="p-price" value={f.price} onChange={(v) => setF((x) => ({ ...x, price: v }))} />
 					</div>
+					{String(f.type).toLowerCase() !== "service" && (
+						<div className="field">
+							<label>Stock Count</label>
+							<input
+								className="input"
+								id="p-stock"
+								inputMode="numeric"
+								placeholder="Leave empty = always available"
+								disabled={!!stockRow}
+								value={stockRow ? stockRow.qty : f.stock}
+								onChange={(e) => setF((x) => ({ ...x, stock: e.target.value.replace(/[^\d.]/g, "") }))}
+							/>
+							{stockRow && <small className="muted">Change it under Inventory & Stock.</small>}
+						</div>
+					)}
 					<div className="field full">
 						<label>Product Image</label>
 						<div

@@ -16,9 +16,9 @@ import {
 	statusOf,
 } from "../../domain/sales";
 import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem } from "../../domain/inventory";
-import { formatOrderNumber, nextSequence } from "../../domain/orders";
+import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
-import { orderEmailHtml, orderEmailSubject } from "../printing/orderEmail";
+import { orderEmailHtml, orderEmailSubject, orderEmailVariables } from "../printing/orderEmail";
 import { applyStockChange, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
 import { createLogger } from "../../utils/logger";
 import { printKotForSale, printReceipt, queueKitchenTicket, shareReceiptWhatsApp } from "./printing";
@@ -251,6 +251,7 @@ export async function completeSale(ctx, input) {
 				to: email,
 				subject: orderEmailSubject(sale, settings.business),
 				html: orderEmailHtml(sale, { settings, customerName: customer?.name || "Customer" }),
+				variables: orderEmailVariables(sale, { settings, customerName: customer?.name || "Customer" }),
 				customerName: customer?.name || "Customer",
 				settings,
 			});
@@ -482,6 +483,32 @@ export async function voidOpenOrder(ctx, id) {
 	);
 	log.info("open order voided", { order: order.orderNumber });
 	ctx.ui.notice(order.orderNumber + " voided.");
+}
+
+/** Moves an open check to another reference (e.g. "Table 7"). */
+export async function transferOpenOrder(ctx, id, reference) {
+	const d = ctx.data();
+	const order = d.openOrders.find((o) => o.id === id && o.status === "open");
+	if (!order) return;
+	await ctx.store.write((tx) => tx.put(T.openOrders, stamp({ ...order, orderReference: reference, updatedAt: nowIso() }, ctx.session())));
+	log.info("open order moved", { order: order.orderNumber, to: reference });
+	ctx.ui.notice(order.orderNumber + " moved to " + reference + ".");
+}
+
+/** Merges open order `fromId` into `intoId` (lines add up, the source is closed as merged). */
+export async function mergeOpenOrders(ctx, fromId, intoId) {
+	const d = ctx.data();
+	const from = d.openOrders.find((o) => o.id === fromId && o.status === "open");
+	const into = d.openOrders.find((o) => o.id === intoId && o.status === "open");
+	if (!from || !into || from.id === into.id) return;
+	const merged = mergeOrders(into, from);
+	const s = ctx.session();
+	await ctx.store.write((tx) => {
+		tx.put(T.openOrders, stamp(merged.target, s));
+		tx.put(T.openOrders, stamp(merged.source, s));
+	});
+	log.info("open orders merged", { from: from.orderNumber, into: into.orderNumber });
+	ctx.ui.notice(from.orderNumber + " merged into " + into.orderNumber + ".");
 }
 
 export { refundableLines, whatsappPhone };

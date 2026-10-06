@@ -1,4 +1,99 @@
-<!-- EmailJS template body for POS order e-mails.
-     Settings: Subject = {{subject}} · To Email = {{to_email}} · From Name = {{from_name}} · Reply To = {{reply_to}}
-     The POS renders the complete order (items, modifiers, totals, payment) into message_html. -->
-{{{message_html}}}
+<!-- ============================================================================================================
+  EmailJS template: POS order e-mail (items, modifiers, totals, payment). Paste everything BELOW this comment into the
+  EmailJS template editor (Email Templates > Create > Code editor / HTML), then set the fields:
+
+    Subject    : {{subject}}
+    To Email   : {{to_email}}
+    From Name  : {{from_name}}
+    Reply To   : {{reply_to}}
+
+  Then put the new template's id in VITE_EJS_ORDER_TEMPLATE (or the business setting ejsOrderTemplate). The POS sends
+  these variables (all ready-to-show text, money already formatted):
+
+    order_number  receipt_number  order_date  order_reference  order_channel
+    customer_name  business_name  business_address  business_email  business_logo (https only)
+    orders  -> list, one entry per line:  name  description  modifiers  quantity  unit_price  line_total
+    items_count  subtotal  discount  service_charge  total  payment_method  footer_message  year
+    has_discount  has_service_charge  has_reference  has_address  has_logo   ("yes" or empty: wrap optional blocks)
+
+  Loops and optional blocks use {{#name}} ... {{/name}}. Plain {{x}} is HTML-escaped by EmailJS.
+============================================================================================================= -->
+<div style="margin:0;background:#f6f2ea;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">
+  <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5d9c8;border-radius:10px;overflow:hidden;">
+
+    <!-- header -->
+    <div style="background:#171512;color:#ffffff;padding:26px 28px;border-bottom:5px solid #ff4d0a;">
+      {{#has_logo}}<img src="{{business_logo}}" alt="" style="max-height:54px;max-width:160px;display:block;margin-bottom:12px;">{{/has_logo}}
+      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#ff4d0a;">Your order</div>
+      <h1 style="margin:8px 0 2px;font-size:26px;line-height:1.2;color:#ffffff;">Order {{receipt_number}}</h1>
+      <div style="color:#eadfce;font-size:14px;">{{business_name}}{{#has_address}} &middot; {{business_address}}{{/has_address}}</div>
+    </div>
+
+    <div style="padding:26px 28px;">
+      <p style="margin:0 0 6px;font-size:16px;">Hi {{customer_name}},</p>
+      <p style="margin:0 0 18px;color:#6f6258;line-height:1.6;">Thank you for your order. Here is a copy of everything you ordered on {{order_date}}.</p>
+
+      <!-- items -->
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+        <thead>
+          <tr style="background:#faf5ec;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#7a6f63;">
+            <th align="left" style="padding:10px 8px;">Item</th>
+            <th align="center" style="padding:10px 8px;">Qty</th>
+            <th align="right" style="padding:10px 8px;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#orders}}
+          <tr>
+            <td style="padding:10px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;">
+              <strong>{{name}}</strong>
+              {{#description}}<div style="font-size:12px;color:#7a6f63;margin-top:3px;">{{description}}</div>{{/description}}
+              {{#modifiers}}<div style="font-size:12px;color:#7a6f63;margin-top:3px;">{{modifiers}}</div>{{/modifiers}}
+            </td>
+            <td align="center" style="padding:10px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;">{{quantity}}</td>
+            <td align="right" style="padding:10px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;white-space:nowrap;">{{line_total}}</td>
+          </tr>
+          {{/orders}}
+        </tbody>
+      </table>
+
+      <!-- totals -->
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-top:14px;font-size:14px;">
+        <tr>
+          <td align="right" style="padding:4px 8px;color:#6f6258;">Subtotal</td>
+          <td align="right" style="padding:4px 8px;width:140px;white-space:nowrap;">{{subtotal}}</td>
+        </tr>
+        {{#has_discount}}
+        <tr>
+          <td align="right" style="padding:4px 8px;color:#6f6258;">Discount</td>
+          <td align="right" style="padding:4px 8px;white-space:nowrap;">- {{discount}}</td>
+        </tr>
+        {{/has_discount}}
+        {{#has_service_charge}}
+        <tr>
+          <td align="right" style="padding:4px 8px;color:#6f6258;">Service charge</td>
+          <td align="right" style="padding:4px 8px;white-space:nowrap;">{{service_charge}}</td>
+        </tr>
+        {{/has_service_charge}}
+      </table>
+      <div style="text-align:right;margin:12px 0 6px;">
+        <div style="display:inline-block;min-width:240px;background:#171512;color:#ffffff;padding:14px 18px;border-radius:8px;font-size:18px;font-weight:700;">Total {{total}}</div>
+      </div>
+
+      <!-- order details -->
+      <p style="margin:14px 0 0;font-size:13px;color:#6f6258;line-height:1.7;">
+        Order no.: <strong>{{order_number}}</strong><br>
+        {{#has_reference}}Reference: <strong>{{order_reference}}</strong><br>{{/has_reference}}
+        Order type: {{order_channel}}<br>
+        Items: {{items_count}}<br>
+        Payment method: {{payment_method}}
+      </p>
+
+      <p style="margin:22px 0 0;font-size:14px;line-height:1.6;color:#6f6258;border-left:4px solid #ff4d0a;padding-left:14px;">{{footer_message}}</p>
+    </div>
+
+    <div style="padding:14px 28px;background:#f7f2ea;text-align:center;font-size:12px;color:#8b7c6f;">
+      {{business_name}}{{#business_email}} &middot; {{business_email}}{{/business_email}}<br>&copy; {{year}}
+    </div>
+  </div>
+</div>

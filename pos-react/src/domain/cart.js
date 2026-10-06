@@ -145,3 +145,20 @@ export function equalSplit(total, count) {
 		paid: false,
 	}));
 }
+
+/**
+ * Split by item: `assign["<line key>:<unit>"]` is the guest index (0-based) who pays that unit. Each guest's share
+ * of the order total (after discount / service charge) is proportional to the items they picked; the rounding
+ * remainder goes to the last guest with items. Guests with nothing are dropped. Returns null when nothing is assigned.
+ */
+export function splitByItems(cart, assign, guests, total) {
+	const sums = Array(guests).fill(0);
+	for (const l of cart.filter(isChargeable))
+		for (let u = 0; u < l.qty; u++) sums[Math.min(guests - 1, Math.max(0, assign[l.key + ":" + u] ?? 0))] += +l.price || 0;
+	const sub = sums.reduce((a, b) => a + b, 0);
+	if (!sub) return null;
+	const shares = sums.map((s) => Math.floor(((total * s) / sub) * 100) / 100);
+	const last = sums.map((s) => s > 0).lastIndexOf(true);
+	shares[last] = +(total - shares.reduce((a, v, i) => (i === last ? a : a + v), 0)).toFixed(2);
+	return shares.map((amount, i) => ({ amount, i })).filter((x) => sums[x.i] > 0).map((x, n) => ({ method: n ? "Card" : "Cash", amount: x.amount, paid: false }));
+}

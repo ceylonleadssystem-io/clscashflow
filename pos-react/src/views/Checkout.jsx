@@ -4,7 +4,9 @@
  */
 import { useMemo, useState } from "react";
 import { money } from "../domain/format";
-import { visibleProductCategories } from "../domain/catalog";
+import { formatOrderNumber, nextSequence } from "../domain/orders";
+import { customerName } from "../domain/names";
+import { subcategoriesFor, visibleProductCategories } from "../domain/catalog";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useCheckout } from "../store/CheckoutProvider";
@@ -14,32 +16,77 @@ import { CategoryRail } from "../components/checkout/CategoryRail";
 import { ProductGrid } from "../components/checkout/ProductGrid";
 import { CartLines } from "../components/checkout/CartLines";
 import { PayPopup } from "../components/checkout/PayPopup";
+import { CustomerSection, DiscountSection } from "../components/checkout/CheckoutFields";
+import { Modal, ModalBody } from "../components/ui";
+
+// Stroke icons (24px grid) for the order tool boxes.
+const TOOL_ICONS = {
+	discount: <><path d="M19 5 5 19" /><circle cx="7" cy="7" r="2.5" /><circle cx="17" cy="17" r="2.5" /></>,
+	split: <><path d="M12 3v6M12 9 5 15M12 9l7 6" /><circle cx="5" cy="18" r="2.5" /><circle cx="19" cy="18" r="2.5" /></>,
+	customer: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></>,
+	void: <><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 10v6M14 10v6" /></>,
+};
+const ToolBox = ({ icon, label, onClick, danger, disabled, id }) => (
+	<button type="button" id={id} className={"order-tool" + (danger ? " danger" : "")} onClick={onClick} disabled={disabled}>
+		<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+			{TOOL_ICONS[icon]}
+		</svg>
+		<span>{label}</span>
+	</button>
+);
 
 /** Sales register: catalogue on the left, current order on the right. */
 export function Checkout() {
 	const data = useData();
 	const c = useCheckout();
-	const { kitchen } = usePos();
+	const { kitchen, currentUser } = usePos();
 	const { openProduct } = useModals();
 	const openOrders = useFeature("checkout.openOrders");
 	const kitchenTickets = useFeature("checkout.kitchenTickets");
+	const discounts = useFeature("checkout.discounts");
+	const splitBill = useFeature("checkout.splitBill");
+	const customerLookup = useFeature("checkout.customerLookup");
+	const [tool, setTool] = useState(null); // "discount" | "customer" | null
 	const { settings } = data;
 	const categories = useMemo(
-		() => ["All", ...visibleProductCategories(data.categories, data.products, data.subcategories)].sort((a, b) => a.localeCompare(b)),
-		[data.categories, data.products, data.subcategories],
+		() => ["All", ...visibleProductCategories(data.categories, data.products, data.subcategories, data.settings.userCategories || [])].sort((a, b) => a.localeCompare(b)),
+		[data.categories, data.products, data.subcategories, data.settings.userCategories],
 	);
 	const category = categories.includes(c.category) ? c.category : "All";
 	const q = c.search.trim().toLowerCase();
+	// Second chip row: the subcategories of the chosen category. Picking one shows only its items; with none picked
+	// the category shows all its items. Searching looks through every item.
+	const subsOn = useFeature("catalogue.subcategories");
+	const subs = useMemo(() => (subsOn && category !== "All" ? subcategoriesFor(data.subcategories, category) : []), [subsOn, category, data.subcategories]);
+	const [subPick, setSubPick] = useState("");
+	const sub = subs.some((x) => x.name === subPick) ? subPick : "";
 	const products = useMemo(
 		() =>
-			data.products.filter(
-				(p) => (category === "All" || p.category === category) && (!q || (String(p.name || "") + " " + String(p.code || "") + " " + String(p.category || "")).toLowerCase().includes(q)),
-			),
-		[data.products, category, q],
+			data.products.filter((p) => {
+				if (q) return (String(p.name || "") + " " + String(p.code || "") + " " + String(p.category || "")).toLowerCase().includes(q);
+				if (category !== "All" && p.category !== category) return false;
+				return !sub || p.subcategory === sub;
+			}),
+		[data.products, category, q, subs, sub],
 	);
 	const t = c.totals;
 	const [payMode, setPayMode] = useState(null); // "quick" | "full" | null
 	const rate = +settings.serviceChargeRate || 0;
+	// Order details: a saved order keeps its number (it becomes the receipt number on payment), a new one gets the next.
+	const saved = data.openOrders.find((o) => o.id === c.openOrderId && o.status === "open");
+	const orderNo = saved?.orderNumber || formatOrderNumber(nextSequence(data.meta, data.sales, data.openOrders));
+	const ref = c.orderReference.trim();
+	const isTable = /^table\b/i.test(ref);
+	const info = [
+		[isTable ? "Table" : "Reference", ref ? (isTable ? ref.replace(/^table\s*/i, "") : ref) : "—"],
+		["Order no.", orderNo],
+		["Receipt no.", orderNo],
+		kitchen && ["Channel", c.orderChannel],
+		["Served by", currentUser?.name || "—"],
+		["Customer", c.customerId ? customerName(data.customers, c.customerId) : "Walk-in"],
+		saved && ["Opened", new Date(saved.openedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })],
+		saved && kitchen && ["Kitchen", saved.kitchenSentAt ? "Sent" : "Not sent"],
+	].filter(Boolean);
 
 	return (
 		<section className="view active" id="view-checkout">
@@ -60,7 +107,21 @@ export function Checkout() {
 							</button>
 						</div>
 					</div>
-					<CategoryRail categories={categories} active={category} onSelect={c.setCategory} />
+					<div className="category-rails">
+					<CategoryRail categories={categories} active={category} onSelect={(name) => { setSubPick(""); c.setCategory(name); }} />
+					{subs.length > 0 && (
+						<CategoryRail
+							id="subcategories"
+							className="category-rail-sub"
+							label={category + " subcategories"}
+							prev="Previous subcategories"
+							next="Next subcategories"
+							categories={subs.map((x) => x.name)}
+							active={sub}
+							onSelect={(name) => setSubPick(name === sub ? "" : name)}
+						/>
+					)}
+					</div>
 					<ProductGrid products={products} />
 				</div>
 				<aside className="panel cart">
@@ -77,10 +138,15 @@ export function Checkout() {
 									Send to Kitchen
 								</button>
 							)}
-							<button className="btn danger" onClick={c.voidOrder}>
-								Void Order
-							</button>
 						</div>
+						<dl className="order-info" id="order-info">
+							{info.map(([k, v]) => (
+								<div key={k}>
+									<dt>{k}</dt>
+									<dd>{v}</dd>
+								</div>
+							))}
+						</dl>
 					</div>
 					<CartLines />
 					<div className="cart-foot">
@@ -104,6 +170,12 @@ export function Checkout() {
 							<span>Total</span>
 							<span id="cart-total">{money(t.total)}</span>
 						</div>
+						<div className="order-tools" id="order-tools">
+							{discounts && <ToolBox id="tool-discount" icon="discount" label="Discount" disabled={!c.cart.length} onClick={() => setTool("discount")} />}
+							{splitBill && <ToolBox id="tool-split" icon="split" label="Split Order" disabled={!c.cart.length} onClick={() => c.setSplitOpen(true)} />}
+							{customerLookup && <ToolBox id="tool-customer" icon="customer" label="Customer" onClick={() => setTool("customer")} />}
+							<ToolBox id="tool-void" icon="void" label="Void Order" danger disabled={!c.cart.length} onClick={c.voidOrder} />
+						</div>
 						<div className="pay-actions">
 							<button className="btn out" id="quick-pay-btn" type="button" onClick={() => setPayMode("quick")} disabled={!c.cart.length || c.busy}>
 								Quick Pay
@@ -115,6 +187,9 @@ export function Checkout() {
 					</div>
 				</aside>
 			</div>
+			<Modal id="order-tool-modal" open={!!tool} title={tool === "discount" ? "Order Discount" : "Customer"} onClose={() => setTool(null)} footer={<button className="btn gold" onClick={() => setTool(null)}>Done</button>}>
+				<ModalBody>{tool === "discount" ? <DiscountSection /> : <CustomerSection />}</ModalBody>
+			</Modal>
 			<PayPopup mode={payMode} onClose={() => setPayMode(null)} />
 		</section>
 	);

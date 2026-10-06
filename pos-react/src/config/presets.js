@@ -139,6 +139,17 @@ export function commonModifierPresets(businessType = "other") {
 			]
 		: [
 				{
+					name: "Size",
+					mode: "single",
+					required: true,
+					options: [
+						{ name: "S", price: 0 },
+						{ name: "M", price: 0 },
+						{ name: "XL", price: 0 },
+						{ name: "2XL", price: 0 },
+					],
+				},
+				{
 					name: "Size / Variant",
 					mode: "single",
 					required: true,

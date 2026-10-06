@@ -1,5 +1,5 @@
 /**
- * USB TSPL label printer (gap labels, default 30 x 25 mm): label layouts, bitmap print jobs, WebUSB connect/
+ * USB TSPL label printer (gap labels: 30 x 20, 38 x 25, 50 x 25 or 60 x 40 mm, 3 mm gap): label layouts, bitmap print jobs, WebUSB connect/
  * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
@@ -9,26 +9,31 @@ import { createLogger } from "../../utils/logger";
 
 const log = createLogger("printing");
 
-/** USB TSPL label printer (gap labels, default 30 × 25 mm with a 3 mm gap) + browser print fallback. */
+/** USB TSPL label printer (gap labels, 3 mm gap) + browser print fallback. */
 
 /**
  * Label roll the printer is loaded with. The size and gap sent with every job (and every calibration) MUST match the
  * physical labels: a mismatch is the usual reason a gap-label printer prints one label and then feeds a blank one.
  */
-export const DEFAULT_LABEL_STOCK = { width: 30, height: 25, gap: 3 };
-export const LABEL_SIZES = ["25x25", "30x20", "30x25", "35x25", "40x25", "35x35", "40x30", "45x30", "50x30"];
-export const LABEL_GAPS = [2, 2.5, 3, 3.5, 4];
+export const DEFAULT_LABEL_STOCK = { width: 30, height: 20, gap: 3 };
+/** The only paper sizes supported (width x height, mm). The gap between labels is always 3 mm. */
+export const LABEL_SIZES = ["30x20", "50x25", "60x40", "38x25"];
 
-/** Clamp/normalise a saved stock setting. */
+/** Clamp/normalise a saved stock setting. A saved size that is not one of LABEL_SIZES snaps to the nearest one. */
 export function resolveLabelStock(saved) {
 	const num = (v, d, min, max) => {
 		const n = Number(v);
 		return Number.isFinite(n) && n >= min && n <= max ? n : d;
 	};
+	const w = Number(saved?.width);
+	const h = Number(saved?.height);
+	const [width, height] = Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
+		? LABEL_SIZES.map((x) => x.split("x").map(Number)).sort((a, b) => Math.abs(a[0] - w) + Math.abs(a[1] - h) - (Math.abs(b[0] - w) + Math.abs(b[1] - h)))[0]
+		: [DEFAULT_LABEL_STOCK.width, DEFAULT_LABEL_STOCK.height];
 	return {
-		width: num(saved?.width, DEFAULT_LABEL_STOCK.width, 15, 100),
-		height: num(saved?.height, DEFAULT_LABEL_STOCK.height, 10, 100),
-		gap: num(saved?.gap, DEFAULT_LABEL_STOCK.gap, 1, 8),
+		width,
+		height,
+		gap: DEFAULT_LABEL_STOCK.gap,
 		// Alignment: how far (mm) the printed content is moved right (+) / down (+) to sit on the physical label, and the
 		// blank side margin (mm; null = the layout default). Printers register the paper against a guide, so a label is
 		// rarely exactly where the print head's zero point is: these three values fix cropped / off-centre output.
@@ -65,25 +70,42 @@ export function tsplSetup(width, height, gapMm) {
 }
 
 export function labelBitmapLayout(width, height) {
-	const L = (o) => ({ darken: true, gapMm: 3, descFont: 0, underNameFont: 0, nameFont: 0, nameY: 0, descY: 0, ...o });
-	if (width <= 25 && height <= 25)
-		return L({ margin: 22, nameFont: 14, descFont: 7, priceFont: 15, nameY: 8, descY: 25, barcodeY: 40, barcodeH: 98, priceGap: 10, bottomPad: 16 });
-	// 30 x 20 mm (160 dots high): name, barcode and price must all fit above the gap
-	if (width <= 30 && height <= 20)
-		return L({ margin: 24, nameFont: 14, priceFont: 14, nameY: 4, barcodeY: 22, barcodeH: 84, priceGap: 6, bottomPad: 18 });
-	if (width <= 30 && height <= 25)
-		return L({ margin: 24, nameFont: 16, priceFont: 16, nameY: 6, barcodeY: 28, barcodeH: 96, priceGap: 6, bottomPad: 30 });
-	if (width <= 35 && height <= 25)
-		return L({ margin: 32, underNameFont: 8, priceFont: 11, barcodeY: 34, barcodeH: 84, underNameGap: 6, priceGap: 24, bottomPad: 15 });
-	if (width <= 40 && height <= 25)
-		return L({ margin: 38, underNameFont: 8, priceFont: 13, barcodeY: 34, barcodeH: 86, underNameGap: 6, priceGap: 25, bottomPad: 18 });
-	if (width <= 35 && height <= 35)
-		return L({ margin: 30, nameFont: 14, underNameFont: 9, priceFont: 14, nameY: 8, barcodeY: 34, barcodeH: 132, underNameGap: 5, priceGap: 27, bottomPad: 20 });
-	if (width <= 40 && height <= 30)
-		return L({ margin: 42, nameFont: 18, descFont: 8, priceFont: 18, nameY: 14, descY: 36, barcodeY: 56, barcodeH: 110, priceGap: 12, bottomPad: 22 });
-	if (width <= 45 || height <= 30)
-		return L({ margin: 30, nameFont: 20, descFont: 9, priceFont: 20, nameY: 8, descY: 34, barcodeY: 52, barcodeH: 94, priceGap: 8, bottomPad: 26 });
-	return L({ margin: 20, nameFont: 28, descFont: 13, priceFont: 28, nameY: 12, descY: 44, barcodeY: 68, barcodeH: 100, priceGap: 9, bottomPad: 34 });
+	const L = (o) => ({ darken: true, gapMm: 3, ...o });
+	// 60 x 40 mm (480 x 320 dots): name, description, size, barcode, price (the retail artwork)
+	if (width >= 60 && height >= 40)
+		return L({ margin: 28, nameFont: 40, descFont: 22, sizeFont: 22, priceFont: 40, top: 8, lineGap: 4, barcodeMax: 130, barcodeMin: 60, priceGap: 8, bottomPad: 14 });
+	// 50 x 25 mm (400 x 200 dots)
+	if (width >= 50)
+		return L({ margin: 24, nameFont: 26, descFont: 15, sizeFont: 16, priceFont: 26, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
+	// 38 x 25 mm (304 x 200 dots)
+	if (width >= 38)
+		return L({ margin: 22, nameFont: 22, descFont: 13, sizeFont: 14, priceFont: 22, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
+	// 30 x 20 mm (240 x 160 dots): name, barcode and price must all fit above the gap; no description line
+	return L({ margin: 24, nameFont: 14, descFont: 0, sizeFont: 12, priceFont: 14, top: 4, lineGap: 2, barcodeMax: 84, barcodeMin: 40, priceGap: 6, bottomPad: 14 });
+}
+
+/**
+ * Vertical positions (dots) of the label rows: name, then the description and size lines when present, the barcode
+ * (as tall as the room left allows, between barcodeMin and barcodeMax) and the price right under it. Pure so it can be tested.
+ */
+export function labelRows(layout, dotsH, { desc = false, size = false } = {}) {
+	let y = layout.top;
+	const nameY = y;
+	y += layout.nameFont + layout.lineGap;
+	let descY = null;
+	let sizeY = null;
+	if (desc && layout.descFont) {
+		descY = y;
+		y += layout.descFont + layout.lineGap;
+	}
+	if (size && layout.sizeFont) {
+		sizeY = y;
+		y += layout.sizeFont + layout.lineGap;
+	}
+	const barcodeY = y;
+	const room = dotsH - layout.bottomPad - layout.priceFont - layout.priceGap - barcodeY;
+	const barcodeH = Math.max(layout.barcodeMin, Math.min(layout.barcodeMax, room));
+	return { nameY, descY, sizeY, barcodeY, barcodeH, priceY: barcodeY + barcodeH + layout.priceGap };
 }
 
 function fitText(ctx, text, maxWidth, font) {
@@ -94,7 +116,7 @@ function fitText(ctx, text, maxWidth, font) {
 	return text + "...";
 }
 
-/** Bitmap TSPL job: name, Code 128 barcode, price rendered on a canvas at 203 dpi. `opts` = gap (mm) or {gapMm, offsetX, offsetY, marginMm}. */
+/** Bitmap TSPL job: name, description, size, Code 128 barcode, price rendered on a canvas at 203 dpi. `opts` = gap (mm) or {gapMm, offsetX, offsetY, marginMm}. */
 export function tsplBitmapBytes(product, copies, size, opts) {
 	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
 	const width = Number(size[0]) || 30;
@@ -106,9 +128,11 @@ export function tsplBitmapBytes(product, copies, size, opts) {
 	canvas.height = dotsH;
 	const ctx = canvas.getContext("2d");
 	const layout = labelBitmapLayout(width, height);
-	const g = labelGeometry(dotsW, layout, o, code128Units(product.code));
 	const name = String(product.name || "Item");
 	const description = layout.descFont ? String(product.description || product.subcategory || product.category || "") : "";
+	const sizeText = product.sizeLabel && layout.sizeFont ? "Size: " + product.sizeLabel : "";
+	const rows = labelRows(layout, dotsH, { desc: !!description, size: !!sizeText });
+	const g = labelGeometry(dotsW, layout, o, code128Units(product.code));
 	const price = money(product.price);
 	const textW = g.right - g.left;
 	ctx.fillStyle = "#fff";
@@ -116,25 +140,19 @@ export function tsplBitmapBytes(product, copies, size, opts) {
 	ctx.fillStyle = "#000";
 	ctx.textAlign = "center";
 	ctx.textBaseline = "top";
-	if (layout.nameFont) {
-		ctx.font = "900 " + layout.nameFont + "px Arial";
-		ctx.fillText(fitText(ctx, name, textW, ctx.font), g.cx, layout.nameY + g.dy);
-	}
+	ctx.font = "900 " + layout.nameFont + "px Arial";
+	ctx.fillText(fitText(ctx, name, textW, ctx.font), g.cx, rows.nameY + g.dy);
 	if (description) {
 		ctx.font = "400 " + layout.descFont + "px Arial";
-		ctx.fillText(fitText(ctx, description, textW, ctx.font), g.cx, layout.descY + g.dy);
+		ctx.fillText(fitText(ctx, description, textW, ctx.font), g.cx, rows.descY + g.dy);
 	}
-	drawCode128(ctx, product.code, g.barcodeX, layout.barcodeY + g.dy, g.barcodeW, layout.barcodeH, layout.darken);
-	if (layout.underNameFont) {
-		ctx.font = "900 " + layout.underNameFont + "px Arial";
-		ctx.fillText(fitText(ctx, name, textW, ctx.font), g.cx, layout.barcodeY + layout.barcodeH + layout.underNameGap + g.dy);
+	if (sizeText) {
+		ctx.font = "900 " + layout.sizeFont + "px Arial";
+		ctx.fillText(fitText(ctx, sizeText, textW, ctx.font), g.cx, rows.sizeY + g.dy);
 	}
+	drawCode128(ctx, product.code, g.barcodeX, rows.barcodeY + g.dy, g.barcodeW, rows.barcodeH, layout.darken);
 	ctx.font = "900 " + layout.priceFont + "px Arial";
-	ctx.fillText(
-		fitText(ctx, price, textW, ctx.font),
-		g.cx,
-		Math.min(dotsH - layout.bottomPad, layout.barcodeY + layout.barcodeH + layout.priceGap) + g.dy,
-	);
+	ctx.fillText(fitText(ctx, price, textW, ctx.font), g.cx, rows.priceY + g.dy);
 	return tsplFromCanvas(canvas, dotsW, dotsH, width, height, copies, o.gapMm || layout.gapMm || 3);
 }
 
@@ -164,10 +182,10 @@ function tsplFromCanvas(canvas, dotsW, dotsH, width, height, copies, gapMm) {
 }
 
 /**
- * Alignment test label: a border on the very edge of the label, a centre cross, L/R/T/B markers and a 1 mm ruler.
+ * Alignment test label (canvas, shared by the print job and the on-screen preview): a border on the very edge of the label, a centre cross, L/R/T/B markers and a 1 mm ruler.
  * Whatever is missing or cut on the printed label shows which way to move the content (Settings > Printing).
  */
-export function tsplAlignmentBytes(size, opts) {
+export function drawAlignmentLabel(size, opts) {
 	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
 	const width = Number(size[0]) || 30;
 	const height = Number(size[1]) || 25;
@@ -207,8 +225,17 @@ export function tsplAlignmentBytes(size, opts) {
 	ctx.fillText("R", dotsW - 32, dotsH / 2);
 	ctx.font = "700 12px Arial";
 	ctx.fillText(`${width}x${height}mm  X${Number(o.offsetX || 0).toFixed(1)} Y${Number(o.offsetY || 0).toFixed(1)}`, dotsW / 2, dotsH / 2 + 28);
-	return tsplFromCanvas(canvas, dotsW, dotsH, width, height, 1, o.gapMm || 3);
+	return canvas;
 }
+
+export function tsplAlignmentBytes(size, opts) {
+	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
+	const width = Number(size[0]) || 30;
+	const height = Number(size[1]) || 25;
+	const canvas = drawAlignmentLabel(size, o);
+	return tsplFromCanvas(canvas, canvas.width, canvas.height, width, height, 1, o.gapMm || 3);
+}
+
 
 class LabelPrinter {
 	constructor() {
@@ -328,24 +355,30 @@ class LabelPrinter {
 
 export const labelPrinter = new LabelPrinter();
 
-/** Screen preview of one label. */
+/** Screen preview of one label (`product.sizeLabel` adds the "Size: M" line). */
 export function barcodeLabelCopy(product) {
 	const description = product.description || product.subcategory || product.category || "";
+	const size = product.sizeLabel ? `<strong class="label-size">Size: ${esc(product.sizeLabel)}</strong>` : "";
 	return `<div class="barcode-label-copy"><strong class="label-name">${esc(product.name || "Item")}</strong><span class="label-description">${esc(
 		description || "Scan this label at checkout",
-	)}</span><div class="label-barcode">${barcodeSvg(product.code)}</div><strong class="label-price">${money(product.price)}</strong></div>`;
+	)}</span>${size}<div class="label-barcode">${barcodeSvg(product.code)}</div><strong class="label-price">${money(product.price)}</strong></div>`;
 }
 
-/** Full HTML document for "Android Print" of N labels. */
+/**
+ * Full HTML document for "Android Print". `copies` is a number, or a list of { sizeLabel, copies } to print several
+ * sizes of the same item in one job.
+ */
 export function barcodeLabelsHtml(product, copies, size) {
 	const description = product.description || product.subcategory || product.category || "";
-	const label = `<div class="copy"><strong class="copy-name">${esc(product.name || "Item")}</strong><span class="copy-description">${esc(
-		description || "Scan this label at checkout",
-	)}</span><div class="copy-barcode">${barcodeSvg(cleanBarcode(product.code))}</div><b class="copy-price">${money(product.price)}</b></div>`;
-	const labels = Array.from({ length: copies }, () => `<section>${label}</section>`).join("");
+	const runs = Array.isArray(copies) ? copies : [{ sizeLabel: product.sizeLabel || "", copies }];
+	const one = (sizeLabel) =>
+		`<div class="copy"><strong class="copy-name">${esc(product.name || "Item")}</strong><span class="copy-description">${esc(
+			description || "Scan this label at checkout",
+		)}</span>${sizeLabel ? `<strong class="copy-size">Size: ${esc(sizeLabel)}</strong>` : ""}<div class="copy-barcode">${barcodeSvg(cleanBarcode(product.code))}</div><b class="copy-price">${money(product.price)}</b></div>`;
+	const labels = runs.flatMap((r) => Array.from({ length: r.copies }, () => `<section>${one(r.sizeLabel)}</section>`)).join("");
 	return `<!doctype html><html><head><style>@page{size:${size[0]}mm ${size[1]}mm;margin:1mm}*{box-sizing:border-box}body{margin:0;font-family:Arial;color:#000}section{width:${
 		Number(size[0]) - 2
 	}mm;height:${
 		Number(size[1]) - 2
-	}mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;overflow:hidden}.copy{width:100%;display:grid;justify-items:center;gap:.45mm}.copy-name,.copy-price{display:block;font-size:10pt;font-weight:900;line-height:1}.copy-description{display:block;max-width:96%;font-size:7.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-barcode{width:100%;display:grid;place-items:center;margin:.2mm 0}svg{display:block;width:95%;height:auto;max-height:14mm;margin:0 auto}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
+	}mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;overflow:hidden}.copy{width:100%;display:grid;justify-items:center;gap:.45mm}.copy-name,.copy-price{display:block;font-size:10pt;font-weight:900;line-height:1}.copy-description{display:block;max-width:96%;font-size:7.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-size{display:block;font-size:8pt;font-weight:900;line-height:1}.copy-barcode{width:100%;display:grid;place-items:center;margin:.2mm 0}svg{display:block;width:95%;height:auto;max-height:14mm;margin:0 auto}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
 }

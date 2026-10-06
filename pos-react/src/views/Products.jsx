@@ -12,11 +12,13 @@ import { useModals } from "../store/ModalsProvider";
 import { usePos } from "../store/PosProvider";
 import { CatalogueImportModal } from "../modals/CatalogueImportModal";
 import { useCheckout } from "../store/CheckoutProvider";
+import { useUi } from "../store/UiProvider";
 
 /** Catalogue management: categories, subcategories and products & services. */
 export function Products() {
 	const data = useData();
 	const { svc } = usePos();
+	const ui = useUi();
 	const { openProduct, openBarcode } = useModals();
 	const { removeProductFromCart } = useCheckout();
 	const subcats = useFeature("catalogue.subcategories");
@@ -35,7 +37,7 @@ export function Products() {
 	const [typeFilter, setTypeFilter] = useState("all");
 	const mode = thumbs && data.settings.productManagementView === "grid" ? "grid" : "list";
 
-	const visible = useMemo(() => visibleProductCategories(data.categories, data.products, data.subcategories), [data.categories, data.products, data.subcategories]);
+	const visible = useMemo(() => visibleProductCategories(data.categories, data.products, data.subcategories, data.settings.userCategories || []), [data.categories, data.products, data.subcategories, data.settings.userCategories]);
 	const categories = useMemo(
 		() =>
 			visible.filter((name) => {
@@ -67,6 +69,11 @@ export function Products() {
 	const addCategory = async () => {
 		if (await svc.catalog.addCategory(newCategory)) setNewCategory("");
 	};
+	// The header button asks for the name itself; the box below keeps adding what is typed in it.
+	const addCategoryPrompt = async () => {
+		const name = ((await ui.prompt("New main category name")) || "").trim();
+		if (name) await svc.catalog.addCategory(name);
+	};
 	const Actions = ({ p }) => (
 		<div className="table-actions">
 			{barcodes && (
@@ -90,7 +97,7 @@ export function Products() {
 					title="Categories"
 					subtitle="Organise main categories and subcategories"
 					actions={
-						<button className="btn" type="button" onClick={addCategory}>
+						<button className="btn" type="button" onClick={addCategoryPrompt}>
 							+ Add Category
 						</button>
 					}

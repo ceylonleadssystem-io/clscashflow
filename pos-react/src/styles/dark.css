@@ -223,3 +223,8 @@ html[data-theme="dark"] .cls-payment-timeline strong,
 html[data-theme="dark"] .cls-payment-timeline b { color: #eceff2 !important; }
 html[data-theme="dark"] .cls-bank-primary { background: var(--ui-accent, #ff4d0a) !important; color: #14110d !important; border-color: transparent !important; }
 html[data-theme="dark"] .cls-bank-status { color: #a3adb7 !important; }
+
+html[data-theme="dark"] .floor{background-color:#1b2128}
+html[data-theme="dark"] .floor-table{background:#1f3a22;color:#bfe8b8}
+html[data-theme="dark"] .floor-table.busy{background:#4a2218;color:#ffc9b8}
+html[data-theme="dark"] .floor-table.inactive{background:repeating-linear-gradient(45deg,#2a3038,#2a3038 8px,#222830 8px,#222830 16px);color:#9aa3ad}

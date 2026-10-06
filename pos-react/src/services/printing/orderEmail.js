@@ -14,6 +14,53 @@ export function orderEmailSubject(sale, business) {
 	return `Your order ${sale.receipt} from ${business || "our store"}`;
 }
 
+/**
+ * Variables for the EmailJS order template (public/email-templates/pos-order-email.html). Everything is a ready-to-show
+ * string (money already formatted); the items are the `orders` list for the template's {{#orders}} loop. Optional blocks
+ * have a matching has_* flag that is "" when the block should be hidden, so the template can wrap it in {{#has_x}}.
+ */
+export function orderEmailVariables(sale, { settings = {}, customerName = "Customer" } = {}) {
+	const lines = sale.lines || [];
+	const real = lines.filter((l) => !l.isDiscount && !l.isServiceCharge);
+	const discount = Number(sale.discount?.amount) || 0;
+	const service = Number(sale.serviceCharge?.amount) || 0;
+	const subtotal = sale.discount?.subtotal ?? real.reduce((a, l) => a + (+l.price || 0) * (+l.qty || 0), 0);
+	const logo = /^https?:\/\//i.test(settings.logo || "") ? settings.logo : ""; // data-URL logos do not survive e-mail
+	return {
+		order_number: sale.orderNumber || sale.receipt,
+		receipt_number: sale.receipt,
+		order_date: new Date(sale.createdAt || Date.now()).toLocaleString(),
+		order_reference: sale.orderReference || "",
+		order_channel: sale.orderChannel || "Retail",
+		customer_name: customerName,
+		business_name: settings.business || "",
+		business_address: settings.address || "",
+		business_email: settings.email || "",
+		business_logo: logo,
+		orders: lines.map((l) => ({
+			name: l.name || "Item",
+			description: l.description || "",
+			modifiers: (l.modifiers || []).map((m) => `${m.groupName}: ${m.optionName}`).join(", "),
+			quantity: l.isDiscount || l.isServiceCharge ? "" : String(l.qty),
+			unit_price: l.isDiscount || l.isServiceCharge ? "" : money(l.price),
+			line_total: money(l.price * l.qty),
+		})),
+		items_count: String(real.reduce((a, l) => a + (+l.qty || 0), 0)),
+		subtotal: money(subtotal),
+		discount: money(discount),
+		service_charge: money(service),
+		total: money(sale.total),
+		payment_method: sale.payment === "Split" ? (sale.payments || []).map((p) => `${p.method} ${money(p.amount)}`).join(" · ") : sale.payment || "",
+		footer_message: settings.receiptFooter || DEFAULT_RECEIPT_FOOTER,
+		year: String(new Date().getFullYear()),
+		has_discount: discount > 0 ? "yes" : "",
+		has_service_charge: service > 0 ? "yes" : "",
+		has_reference: sale.orderReference ? "yes" : "",
+		has_address: settings.address ? "yes" : "",
+		has_logo: logo ? "yes" : "",
+	};
+}
+
 export function orderEmailHtml(sale, { settings = {}, customerName = "Customer" } = {}) {
 	const lines = sale.lines || [];
 	const rows = lines

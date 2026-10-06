@@ -196,10 +196,12 @@ Use in code: `useFeature("checkout.splitBill")`; services read `ctx.features()["
 appending to `src/config/features.js`. *Business Tools* is off by default (removed by the last legacy layer).
 
 ### Order e-mail
-After checkout the customer receives the **order itself** (items, modifiers, totals, payment) built by
-`services/printing/orderEmail.js` and sent through EmailJS with body `{{{message_html}}}`
-(`public/email-templates/pos-order-email.html`). Set `VITE_EJS_ORDER_TEMPLATE` (or settings `ejsOrderTemplate`);
-empty reuses the legacy receipt template id.
+After checkout the customer receives the **order itself** (items, modifiers, totals, payment) through EmailJS.
+The POS sends the order as variables (`order_number`, `orders` list, `total`, ... see
+`services/printing/orderEmail.js` `orderEmailVariables`) to an EmailJS template whose layout lives in
+`public/email-templates/pos-order-email.html` (paste it into EmailJS; the file header lists the fields and variables).
+Set `VITE_EJS_ORDER_TEMPLATE` (or settings `ejsOrderTemplate`) to that template's id. If it is empty the POS falls back to
+the legacy receipt template id and sends the old single `message_html` body instead.
 
 ### Inventory behaviour
 * Deleting a product's stock row turns stock tracking **off** for it: always sellable (re-enable via *Add Stock*).

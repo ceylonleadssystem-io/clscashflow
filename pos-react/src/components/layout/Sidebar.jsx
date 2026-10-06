@@ -2,7 +2,7 @@
  * Left navigation: business logo, brand and plan, signed-in user, role-filtered page buttons with
  * icons, and Lock POS / Sign Out. Collapses to an icon strip and expands on hover (see styles/nav-rail.css).
  */
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 import { NavIcon } from "./NavIcon";
 import { NAV_ITEMS } from "../../config/roles";
 import { planForSettings } from "../../config/plans";
@@ -36,12 +36,20 @@ export function Sidebar() {
 				<span>{currentUser?.role || "Staff session"}</span>
 			</div>
 			<nav className="nav" id="nav">
-				{NAV_ITEMS.filter((item) => canView(item.view)).map((item) => (
-					<button key={item.view} data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => go(item.view)}>
-						<NavIcon view={item.view} />
-							<span>{item.label.slice(2)}</span>
-					</button>
-				))}
+				{NAV_ITEMS.filter((item) => canView(item.view)).map((item, i, list) => {
+					const group = item.group || "";
+					const heading = i && (list[i - 1].group || "") !== group ? group || "-" : "";
+					return (
+						<Fragment key={item.view}>
+							{heading === "-" && <div className="nav-group nav-sep" role="separator" />}
+							{heading && heading !== "-" && <div className="nav-group">{heading}</div>}
+							<button data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => go(item.view)}>
+								<NavIcon view={item.view} />
+								<span>{item.label.slice(2)}</span>
+							</button>
+						</Fragment>
+					);
+				})}
 			</nav>
 			<div className="side-foot">
 				<strong id="side-business">{settings.business || "My Business"}</strong>

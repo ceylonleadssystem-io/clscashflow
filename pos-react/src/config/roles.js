@@ -14,6 +14,7 @@ export const ROLE_VIEWS = {
 		"dashboard",
 		"checkout",
 		"orders",
+		"tables",
 		"products",
 		"modifiers",
 		"customers",
@@ -29,6 +30,7 @@ export const ROLE_VIEWS = {
 		"dashboard",
 		"checkout",
 		"orders",
+		"tables",
 		"products",
 		"modifiers",
 		"customers",
@@ -40,7 +42,7 @@ export const ROLE_VIEWS = {
 		"settings",
 	],
 	accountant: ["dashboard", "sales", "reports", "inventory", "industry", "staff", "settings"],
-	cashier: ["checkout", "orders", "customers", "staff", "settings"],
+	cashier: ["checkout", "orders", "tables", "customers", "staff", "settings"],
 };
 ROLE_VIEWS.admin = ROLE_VIEWS.owner.slice();
 
@@ -48,6 +50,7 @@ export const VIEW_TITLES = {
 	dashboard: ["Dashboard", "Sales, customers and profit at a glance"],
 	checkout: ["Checkout", "Create a new counter sale"],
 	orders: ["Order Queue", "Open checks, tables and kitchen sending"],
+	tables: ["Table Layout", "Floor plan: seat guests and open table checks"],
 	products: [
 		"Products & Services",
 		"Manage items, pricing, images and categories",
@@ -69,20 +72,24 @@ export const VIEW_TITLES = {
 	settings: ["Settings", "Business, printing and support preferences"],
 };
 
-/** Sidebar order + glyph labels, exactly as shown by the original POS. */
+/**
+ * Sidebar order + glyph labels. `group` is a heading shown above the first item of each group; an item
+ * without a group (Settings) after a group is separated by a divider.
+ */
 export const NAV_ITEMS = [
-	{ view: "dashboard", label: "▦ Dashboard" },
 	{ view: "checkout", label: "▣ Checkout" },
 	{ view: "orders", label: "☰ Order Queue" },
-	{ view: "products", label: "□ Products & Services" },
-	{ view: "modifiers", label: "＋ Modifiers" },
-	{ view: "customers", label: "♙ Customers" },
-	{ view: "crm", label: "♡ CRM & Feedback" },
-	{ view: "sales", label: "↗ Sales History" },
-	{ view: "reports", label: "▤ Reports" },
-	{ view: "inventory", label: "▥ Inventory & Stock" },
-	{ view: "industry", label: "✦ Business Tools" },
-	{ view: "staff", label: "◷ Staff & Shifts" },
+	{ view: "tables", label: "▦ Table Layout" },
+	{ view: "products", label: "□ Products & Services", group: "Items" },
+	{ view: "modifiers", label: "＋ Modifiers", group: "Items" },
+	{ view: "inventory", label: "▥ Inventory & Stock", group: "Items" },
+	{ view: "industry", label: "✦ Business Tools", group: "Items" },
+	{ view: "dashboard", label: "▦ Dashboard", group: "Reports" },
+	{ view: "sales", label: "↗ Sales History", group: "Reports" },
+	{ view: "reports", label: "▤ Reports", group: "Reports" },
+	{ view: "customers", label: "♙ Customers", group: "Customer Relationship" },
+	{ view: "crm", label: "♡ CRM & Feedback", group: "Customer Relationship" },
+	{ view: "staff", label: "◷ Staff & Shifts", group: "User management" },
 	{ view: "settings", label: "⚙ Settings" },
 ];
 

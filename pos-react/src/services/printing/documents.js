@@ -28,7 +28,7 @@ export function receiptHtml(sale, { settings = {}, location = null, autoPrint = 
 	const lines = (sale.lines || [])
 		.map(
 			(l) =>
-				`<tr><td>${esc(l.name)}${
+				`<tr><td>${esc(l.name)}${l.description ? "<small>" + esc(l.description) + "</small>" : ""}${
 					(l.modifiers || []).length
 						? "<small>" + l.modifiers.map((m) => esc(m.groupName + ": " + m.optionName)).join("<br>") + "</small>"
 						: ""
@@ -114,6 +114,7 @@ export function receiptText(sale, { settings = {}, location = null } = {}) {
 	lines.push(rule);
 	(sale.lines || []).forEach((line) => {
 		lines.push(padRight(line.qty + " x " + line.name, 32) + padLeft(money(line.price * line.qty).replace("LKR ", ""), 16));
+		if (line.description) lines.push("  " + line.description);
 		(line.modifiers || []).forEach((m) => lines.push("  " + m.groupName + ": " + m.optionName));
 	});
 	lines.push(rule);

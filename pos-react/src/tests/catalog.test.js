@@ -22,6 +22,31 @@ describe("catalogue workflow", () => {
 		expect(h.data().products).toHaveLength(1);
 		expect(h.data().products[0].price).toBe(300);
 	});
+	it("saves an optional description and keeps it when a caller does not send one", async () => {
+		const p = await h.svc.catalog.saveProduct(productForm({ description: "  Lightweight cotton top  " }));
+		expect(p.description).toBe("Lightweight cotton top");
+		await h.svc.catalog.saveProduct(productForm({ id: p.id, price: "300" })); // no description key
+		expect(h.data().products[0].description).toBe("Lightweight cotton top");
+		await h.svc.catalog.saveProduct(productForm({ id: p.id, description: "" }));
+		expect(h.data().products[0].description).toBe("");
+	});
+	it("retail common modifiers include a Size group S, M, XL, 2XL", async () => {
+		const { commonModifierPresets } = await import("../config/presets");
+		const size = commonModifierPresets("retail").find((m) => m.name === "Size");
+		expect(size.options.map((o) => o.name)).toEqual(["S", "M", "XL", "2XL"]);
+		expect(commonModifierPresets("restaurant").some((m) => m.options.some((o) => o.name === "2XL"))).toBe(false);
+	});
+	it("prints the item description under the line on receipts", async () => {
+		const { receiptText } = await import("../services/printing/documents");
+		const text = receiptText({ receipt: "ORD-1", lines: [{ name: "Island Top", description: "Lightweight cotton top", qty: 1, price: 8500 }], total: 8500, payment: "Cash" });
+		expect(text).toMatch(/Island Top[\s\S]*\n {2}Lightweight cotton top\n/);
+	});
+	it("an added category with a preset name is remembered so it shows while empty", async () => {
+		expect(await h.svc.catalog.addCategory("Clothing")).toBe(true);
+		expect(h.data().settings.userCategories).toEqual(["Clothing"]);
+		await h.svc.catalog.addCategory("clothing"); // duplicate: alert, not stored twice
+		expect(h.data().settings.userCategories).toEqual(["Clothing"]);
+	});
 	it("creates a new category from the product form", async () => {
 		await addProduct(h, { category: "__new__", newCategory: "Cakes" });
 		expect(h.data().categories).toContain("Cakes");
@@ -125,5 +150,30 @@ describe("catalogue workflow", () => {
 			await h.svc.catalog.importCatalogue([row()], "replace");
 			expect(h.data().products.map((p) => p.name)).toEqual(["Roll"]);
 		});
+	});
+});
+
+describe("EmailJS order template", () => {
+	it("every variable the template uses is sent by the POS", async () => {
+		const fs = await import("node:fs");
+		const html = fs.readFileSync(new URL("../../public/email-templates/pos-order-email.html", import.meta.url), "utf8");
+		const body = html.slice(html.indexOf("-->") + 3);
+		const { orderEmailVariables } = await import("../services/printing/orderEmail");
+		const sale = {
+			receipt: "ORD-0001", createdAt: "2026-10-05T10:00:00Z", payment: "Card", total: 4500, orderReference: "Table 4", orderChannel: "Dine-in",
+			discount: { amount: 100, subtotal: 4600 }, serviceCharge: { amount: 0 },
+			lines: [{ name: "Polo Shirt", description: "Cotton", qty: 1, price: 4600, modifiers: [{ groupName: "Size", optionName: "M" }] }],
+		};
+		const vars = orderEmailVariables(sale, { settings: { business: "Shop", address: "Colombo", email: "a@b.lk" }, customerName: "Sam" });
+		const lineKeys = Object.keys(vars.orders[0]);
+		const used = [...body.matchAll(/\{\{[#^/]?\s*([a-z_]+)\s*\}\}/g)].map((m) => m[1]);
+		const known = new Set([...Object.keys(vars), ...lineKeys, "subject", "to_email", "from_name", "reply_to"]);
+		expect(used.filter((v) => !known.has(v))).toEqual([]);
+		expect(vars).toMatchObject({ order_number: "ORD-0001", total: "LKR 4,500.00", subtotal: "LKR 4,600.00", discount: "LKR 100.00", has_discount: "yes", has_service_charge: "", has_reference: "yes" });
+		expect(vars.orders[0]).toMatchObject({ name: "Polo Shirt", modifiers: "Size: M", description: "Cotton", quantity: "1" });
+		// every {{#x}} opens and closes
+		const open = [...body.matchAll(/\{\{#([a-z_]+)\}\}/g)].map((m) => m[1]).sort();
+		const close = [...body.matchAll(/\{\{\/([a-z_]+)\}\}/g)].map((m) => m[1]).sort();
+		expect(open).toEqual(close);
 	});
 });

@@ -96,11 +96,12 @@ export function CheckoutProvider({ children }) {
 		[cart, enabled, data.inventory, locationId, ui],
 	);
 
+	// `scanned` (barcode scan) adds the item straight away: the modifier question is only asked when tapping a tile.
 	const addProduct = useCallback(
-		(id) => {
+		(id, scanned = false) => {
 			const product = data.products.find((p) => p.id === id);
 			if (!product) return;
-			if (productModifiers(product, data.modifiers).length) return setPicker({ productId: id, lineKey: "" });
+			if (scanned !== true && productModifiers(product, data.modifiers).length) return setPicker({ productId: id, lineKey: "" });
 			addConfigured(product, []);
 		},
 		[data.products, data.modifiers, addConfigured],
@@ -294,6 +295,16 @@ export function CheckoutProvider({ children }) {
 		[data.openOrders, ui, go, kitchen],
 	);
 
+	/** Recalls an open order and opens the split dialog for it. */
+	const splitOpenOrder = useCallback(
+		async (id) => {
+			if (!data.openOrders.some((o) => o.id === id && o.status === "open")) return;
+			await loadOpenOrder(id);
+			setSplitOpen(true);
+		},
+		[data.openOrders, loadOpenOrder],
+	);
+
 	const newOpenOrder = useCallback(() => {
 		resetOrder();
 		go("checkout");
@@ -317,7 +328,7 @@ export function CheckoutProvider({ children }) {
 		orderChannel, setOrderChannel, platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
 		picker, setPicker, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
 		addProduct, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
-		completeSale, voidOrder, saveOrder, loadOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
+		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
 	};
 	return <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>;
 }
