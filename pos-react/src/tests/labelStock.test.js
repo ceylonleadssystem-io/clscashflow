@@ -90,3 +90,20 @@ describe("label alignment", () => {
 		expect(g.barcodeX + g.barcodeW).toBeLessThanOrEqual(240);
 	});
 });
+
+describe("alignment wizard rule", () => {
+	it("moves content right/down when the left/top edge is cut off, left/up for right/bottom", async () => {
+		const { alignmentAdjust } = await import("../services/printing/labelPrinter");
+		expect(alignmentAdjust({ offsetX: 0, offsetY: 0 }, { left: 2 })).toMatchObject({ offsetX: 2, offsetY: 0, clash: false, any: true });
+		expect(alignmentAdjust({ offsetX: 1, offsetY: 0.5 }, { right: 1.5, top: 1 })).toMatchObject({ offsetX: -0.5, offsetY: 1.5 });
+		expect(alignmentAdjust({ offsetX: 0, offsetY: 1 }, { bottom: 2 })).toMatchObject({ offsetY: -1 });
+	});
+	it("stays inside the allowed range and flags opposite edges that are both cut off", async () => {
+		const { alignmentAdjust } = await import("../services/printing/labelPrinter");
+		expect(alignmentAdjust({ offsetX: 9, offsetY: 5 }, { left: 5, top: 5 })).toMatchObject({ offsetX: 10, offsetY: 6 });
+		expect(alignmentAdjust({}, { left: 1, right: 1 }).clash).toBe(true);
+		expect(alignmentAdjust({}, { top: 1, bottom: 1 }).clash).toBe(true);
+		expect(alignmentAdjust({}, {}).any).toBe(false);
+		expect(alignmentAdjust({}, { left: "x", top: -3 }).any).toBe(false); // junk or negative counts as nothing
+	});
+});
