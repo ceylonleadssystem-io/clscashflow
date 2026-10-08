@@ -3,6 +3,7 @@
  * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
+import { localPrintPreview, showLabelPreview } from "./localPrintPreview";
 import { barcodeSvg, cleanBarcode, code128Units, drawCode128, sizedBarcode } from "./barcode";
 import { esc, money } from "../../domain/format";
 import { createLogger } from "../../utils/logger";
@@ -343,6 +344,8 @@ class LabelPrinter {
 		this._set(`${this.name} calibrated for ${s.width} × ${s.height} mm labels with a ${s.gap} mm gap.`, true);
 	}
 	async print(product, copies, size, saved, opts) {
+		// local test mode: no printer needed, show the label that would be printed
+		if (localPrintPreview()) return void showLabelPreview({ title: "Label · " + (product.name || "Item"), bytes: tsplBitmapBytes(product, copies, size, opts), size, copies });
 		await this._ensure(saved);
 		const bytes = tsplBitmapBytes(product, copies, size, opts);
 		// Sent in 4 KB chunks like the receipt printer: one 6 KB bulk transfer is rejected or truncated by some printers.
@@ -357,9 +360,11 @@ class LabelPrinter {
 	}
 	/** Print one alignment test label (see tsplAlignmentBytes). */
 	async printAlignment(saved, stock) {
-		await this._ensure(saved);
 		const st = resolveLabelStock(stock);
 		const bytes = tsplAlignmentBytes([String(st.width), String(st.height)], { gapMm: st.gap, offsetX: st.offsetX, offsetY: st.offsetY });
+		// local test mode: no printer needed, show the calibration label that would be printed
+		if (localPrintPreview()) return void showLabelPreview({ title: "Calibration label", bytes, size: [String(st.width), String(st.height)] });
+		await this._ensure(saved);
 		try {
 			await transferChunks(this.device, this.endpoint, bytes);
 		} catch (error) {

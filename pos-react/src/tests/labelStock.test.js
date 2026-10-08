@@ -107,3 +107,10 @@ describe("alignment wizard rule", () => {
 		expect(alignmentAdjust({}, { left: "x", top: -3 }).any).toBe(false); // junk or negative counts as nothing
 	});
 });
+
+describe("local print preview", () => {
+	it("is off outside the local dev environment (tests, production)", async () => {
+		const { localPrintPreview } = await import("../services/printing/localPrintPreview");
+		expect(localPrintPreview()).toBe(false);
+	});
+});

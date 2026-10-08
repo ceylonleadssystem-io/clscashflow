@@ -453,3 +453,11 @@ html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-h
 /* Order Queue: item lines with their modifier options under the item count */
 .order-queue-items{margin:4px 0 0;padding:0;list-style:none;font-size:.82rem;line-height:1.35}
 .order-queue-items small{display:block;opacity:.7}
+
+/* Settings > Printing: receipt printer, label printer and scanner are separate sections with the same layout
+   (title and note on the left, buttons on the right, status underneath) inside the hardware box */
+.usb-printer-controls>.hw-section{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px 12px;align-items:end}
+.usb-printer-controls>.hw-section+.hw-section{margin-top:10px;padding-top:16px;border-top:1px solid var(--ui-line,#dedad1)}
+.usb-printer-controls .hw-section>.hardware-status,.usb-printer-controls .hw-section>.hw-wide{grid-column:1/-1}
+.usb-printer-controls .hw-section>.hw-actions{justify-content:flex-end}
+@media(max-width:600px){.usb-printer-controls>.hw-section{grid-template-columns:1fr}.usb-printer-controls .hw-section>.hw-actions{justify-content:flex-start}}

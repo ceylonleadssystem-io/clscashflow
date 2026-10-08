@@ -196,3 +196,32 @@ describe("validators", () => {
 		expect(phoneError("123")).not.toBe("");
 	});
 });
+
+describe("receipt QR frame cleanup", () => {
+	const make = (w, h, fn) => {
+		const px = new Uint8ClampedArray(w * h * 4);
+		for (let y = 0; y < h; y++)
+			for (let x = 0; x < w; x++) {
+				const v = fn(x, y) ? 0 : 255;
+				const o = (y * w + x) * 4;
+				px[o] = px[o + 1] = px[o + 2] = v;
+				px[o + 3] = 255;
+			}
+		return px;
+	};
+	it("leaves the dense rows and columns of a real QR alone", async () => {
+		const { solidBarLines } = await import("../services/printing/imageTools");
+		// 100x100: an inner block with 70% dark rows/columns (like the finder patterns), white margin around it
+		const px = make(100, 100, (x, y) => x >= 15 && x < 85 && y >= 15 && y < 85 && (x * 7 + y * 3) % 10 < 7);
+		expect(solidBarLines(px, 100, 100)).toEqual({ rows: [], cols: [] });
+		const full = make(100, 100, (x, y) => (x * 7 + y * 3) % 10 < 7); // even a dense code that fills the whole image
+		expect(solidBarLines(full, 100, 100)).toEqual({ rows: [], cols: [] });
+	});
+	it("still removes a solid dark frame line at the edge", async () => {
+		const { solidBarLines } = await import("../services/printing/imageTools");
+		const px = make(100, 100, (x, y) => y === 2 || x === 97);
+		expect(solidBarLines(px, 100, 100)).toEqual({ rows: [2], cols: [97] });
+		const inner = make(100, 100, (x, y) => y === 50); // a dark line through the middle is never a frame
+		expect(solidBarLines(inner, 100, 100)).toEqual({ rows: [], cols: [] });
+	});
+});
