@@ -122,14 +122,15 @@ class ReceiptPrinter {
 			if (!restored)
 				throw new Error("USB printer is not connected. Tap Printer, select the receipt printer, and allow USB access.");
 		}
-		// Byte order matters: logo raster, ESC @ (init) + the receipt lines (each with its own alignment), QR raster, then the
-		// QR caption and "Powered by Ceylonry POS", then feed + GS V B 0 (feed + partial cut).
+		// Byte order matters: logo raster, ESC @ (init) + the receipt lines (each with its own alignment), QR raster, then
+		// "Powered by Ceylonry POS", then feed + GS V B 0 (feed + partial cut).
 		const encoder = new TextEncoder();
-		const { main, caption, powered } = receiptLayout(sale, ctx);
+		const { main, powered } = receiptLayout(sale, ctx);
+		// left-aligned lines get one blank column on the left (the text is 46 columns of the 48), centred lines are centred
 		const lines = (list) =>
-			list.flatMap((l) => [27, 97, l.align === "center" ? 1 : 0, ...encoder.encode(l.text), 10]);
+			list.flatMap((l) => [27, 97, l.align === "center" ? 1 : 0, ...encoder.encode((l.align === "center" ? "" : " ") + l.text), 10]);
 		const head = new Uint8Array([27, 64, ...lines(main)]);
-		const tail = new Uint8Array([...lines([...caption, ...powered]), 27, 97, 0, 10, 10, 10]);
+		const tail = new Uint8Array([...lines(powered), 27, 97, 0, 10, 10, 10]);
 		const cut = new Uint8Array([29, 86, 66, 0]);
 		const logo = await escPosRaster(ctx.settings.logo, { size: 240, threshold: 160 });
 		const qr = await escPosRaster(ctx.settings.receiptSocialQr, { size: 320, threshold: 170, leadingFeed: true, qr: true });
