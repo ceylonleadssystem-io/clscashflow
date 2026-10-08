@@ -1,12 +1,15 @@
 /**
  * Staff PIN gate after business sign-in: staff only type their PIN. The PIN identifies the user (PINs are unique per
- * user, enforced when users are saved) and signs them in as soon as it is complete. The location is no longer chosen
- * here: staffLogin picks the last used location the user is allowed to work at.
+ * user, enforced when users are saved) and signs them in as soon as it is complete. Owners, single-location users and
+ * single-location businesses go straight in (staffLogin uses the last used location they may work at); any other user
+ * who may work at several locations is asked which one to sign in to right after the PIN.
  */
 import { useMemo, useState } from "react";
 import { env } from "../config/env";
 import { usePos } from "../store/PosProvider";
 import { useData } from "../store/DataProvider";
+import { useFeature } from "../store/FeatureProvider";
+import { loginLocationChoices } from "../services/pos/locations";
 
 /** Staff PIN gate: type the PIN to sign in. */
 export function StaffGate() {
@@ -15,6 +18,8 @@ export function StaffGate() {
 	const [pin, setPin] = useState("");
 	const [error, setError] = useState("");
 	const [pickId, setPickId] = useState("");
+	const [choosing, setChoosing] = useState(null); // { user, pin, locations } while a multi-location user picks where to sign in
+	const multi = useFeature("business.locations");
 
 	const activeUsers = useMemo(() => data.users.filter((u) => u.active !== false && u.pin), [data.users]);
 	// Normally exactly one user per PIN. Older data may still share a PIN: then (and only then) ask who is signing in.
@@ -27,9 +32,24 @@ export function StaffGate() {
 			setError(found.length > 1 ? "More than one user has this PIN. Choose who you are." : "Incorrect PIN.");
 			return;
 		}
+		const locations = loginLocationChoices(user, data, multi);
+		if (locations.length) return void setChoosing({ user, pin: value, locations });
 		const message = await staffLogin({ userId: user.id, pin: value, location: "" });
 		setError(message);
 		if (!message) setPin("");
+	};
+
+	const signInAt = async (locationId) => {
+		const message = await staffLogin({ userId: choosing.user.id, pin: choosing.pin, location: locationId });
+		if (message) return void setError(message);
+		setChoosing(null);
+		setPin("");
+	};
+
+	const backToPin = () => {
+		setChoosing(null);
+		setPin("");
+		setError("");
 	};
 
 	const onChange = (raw) => {
@@ -54,44 +74,66 @@ export function StaffGate() {
 					Ceylonry<span>POS</span>
 				</div>
 				<div className="muted">Staff access</div>
-				<h2>Sign in to the register</h2>
-				<div className="field" style={{ marginTop: 10 }}>
-					<label>Enter your PIN</label>
-					<input
-						className="input"
-						id="login-pin"
-						type="password"
-						inputMode="numeric"
-						autoComplete="off"
-						maxLength={6}
-						value={pin}
-						onChange={(e) => onChange(e.target.value)}
-						onKeyDown={(e) => e.key === "Enter" && signIn(pin, pickId)}
-						autoFocus
-					/>
-				</div>
-				{matches.length > 1 && (
-					<div className="field">
-						<label>Who is signing in?</label>
-						<select className="input" id="login-user" value={pickId} onChange={(e) => setPickId(e.target.value)}>
-							<option value="">Choose your name</option>
-							{matches.map((u) => (
-								<option key={u.id} value={u.id}>
-									{u.name} — {u.role}
-								</option>
+				{choosing ? (
+					<>
+						<h2>Choose your location</h2>
+						<div className="muted">Hi {choosing.user.name}, which location are you signing in to?</div>
+						<div id="login-locations" style={{ display: "grid", gap: 8, marginTop: 12 }}>
+							{choosing.locations.map((l) => (
+								<button key={l.id} type="button" className="btn out" data-location={l.id} onClick={() => signInAt(l.id)}>
+									{l.name}
+								</button>
 							))}
-						</select>
-					</div>
+						</div>
+						<button type="button" className="btn" id="login-back" style={{ width: "100%", marginTop: 12 }} onClick={backToPin}>
+							Back
+						</button>
+						<div className="login-error" id="login-error">
+							{error}
+						</div>
+					</>
+				) : (
+					<>
+						<h2>Sign in to the register</h2>
+						<div className="field" style={{ marginTop: 10 }}>
+							<label>Enter your PIN</label>
+							<input
+								className="input"
+								id="login-pin"
+								type="password"
+								inputMode="numeric"
+								autoComplete="off"
+								maxLength={6}
+								value={pin}
+								onChange={(e) => onChange(e.target.value)}
+								onKeyDown={(e) => e.key === "Enter" && signIn(pin, pickId)}
+								autoFocus
+							/>
+						</div>
+						{matches.length > 1 && (
+							<div className="field">
+								<label>Who is signing in?</label>
+								<select className="input" id="login-user" value={pickId} onChange={(e) => setPickId(e.target.value)}>
+									<option value="">Choose your name</option>
+									{matches.map((u) => (
+										<option key={u.id} value={u.id}>
+											{u.name} — {u.role}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
+						<button className="btn gold" style={{ width: "100%", marginTop: 15 }} onClick={() => signIn(pin, pickId)}>
+							Sign In
+						</button>
+						<div className="login-error" id="login-error">
+							{error}
+						</div>
+						<div className="print-note">
+							First-time owner PIN: <strong>1234</strong>. Change it under Staff & Shifts.
+						</div>
+					</>
 				)}
-				<button className="btn gold" style={{ width: "100%", marginTop: 15 }} onClick={() => signIn(pin, pickId)}>
-					Sign In
-				</button>
-				<div className="login-error" id="login-error">
-					{error}
-				</div>
-				<div className="print-note">
-					First-time owner PIN: <strong>1234</strong>. Change it under Staff & Shifts.
-				</div>
 			</div>
 		</div>
 	);

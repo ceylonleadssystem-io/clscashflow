@@ -20,6 +20,13 @@ export function userLocationIds(user, data) {
 	return (Array.isArray(user.locationIds) ? user.locationIds : []).filter((id) => active.some((l) => l.id === id));
 }
 
+/** Locations a signing-in user must choose between: only non-owners of a multi-location business who may work at more than one. */
+export function loginLocationChoices(user, data, multi) {
+	if (!multi || !user || user.role === "owner") return [];
+	const ids = userLocationIds(user, data);
+	return ids.length > 1 ? activeLocations(data).filter((l) => ids.includes(l.id)) : [];
+}
+
 export const locationLabel = (data, id) => data.locations.find((l) => l.id === id)?.name || "Unknown location";
 
 export async function saveLocation(ctx, form) {
