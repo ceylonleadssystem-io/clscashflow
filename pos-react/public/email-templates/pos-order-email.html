@@ -1,74 +1,78 @@
-<div style="margin:0;background:#f6f2ea;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;color:#2d2117;">
-  <div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #e5d9c8;border-radius:10px;overflow:hidden;">
+<div style="margin:0;background:#f4efe6;padding:28px 12px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#2d2117;">
+  <div style="max-width:620px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e8dccb;">
 
-    <div style="background:#171512;color:#ffffff;padding:26px 28px;border-bottom:5px solid #ff4d0a;">
-      {{#has_logo}}<img src="{{business_logo}}" alt="" style="max-height:54px;max-width:160px;display:block;margin-bottom:12px;">{{/has_logo}}
-      <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#ff4d0a;">Your order</div>
-      <h1 style="margin:8px 0 2px;font-size:26px;line-height:1.2;color:#ffffff;">Order {{receipt_number}}</h1>
-      <div style="color:#eadfce;font-size:14px;">{{business_name}}{{#has_address}} &middot; {{business_address}}{{/has_address}}</div>
+    <div style="background:#171512;padding:30px 32px 26px;text-align:center;border-bottom:5px solid #ff4d0a;">
+      {{#has_logo}}<img src="{{business_logo}}" alt="" style="max-height:56px;max-width:180px;display:block;margin:0 auto 14px;">{{/has_logo}}
+      <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#ff7a3d;font-weight:700;">Thank you for your order</div>
+      <h1 style="margin:10px 0 6px;font-size:28px;line-height:1.2;color:#ffffff;font-weight:700;">Order {{receipt_number}}</h1>
+      <div style="color:#d9cdbb;font-size:14px;line-height:1.5;">{{business_name}}{{#has_address}} &middot; {{business_address}}{{/has_address}}</div>
     </div>
 
-    <div style="padding:26px 28px;">
-      <p style="margin:0 0 6px;font-size:16px;">Hi {{customer_name}},</p>
-      <p style="margin:0 0 18px;color:#6f6258;line-height:1.6;">Thank you for your order. Here is a copy of everything you ordered on {{order_date}}.</p>
+    <div style="padding:30px 32px 8px;">
+      <p style="margin:0 0 8px;font-size:18px;font-weight:700;">Hi {{customer_name}},</p>
+      <p style="margin:0 0 24px;color:#6f6258;font-size:15px;line-height:1.65;">Here is a copy of everything you ordered on {{order_date}}.</p>
 
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
         <thead>
-          <tr style="background:#faf5ec;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#7a6f63;">
-            <th align="left" style="padding:10px 8px;">Item</th>
-            <th align="center" style="padding:10px 8px;">Qty</th>
-            <th align="right" style="padding:10px 8px;">Amount</th>
+          <tr>
+            <th align="left" style="padding:0 0 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8c7c;border-bottom:2px solid #171512;">Item</th>
+            <th align="center" style="padding:0 0 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8c7c;border-bottom:2px solid #171512;">Qty</th>
+            <th align="right" style="padding:0 0 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8c7c;border-bottom:2px solid #171512;">Amount</th>
           </tr>
         </thead>
         <tbody>
           {{#orders}}
           <tr>
-            <td style="padding:10px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;">
+            <td style="padding:14px 8px 14px 0;border-bottom:1px solid #eee7dc;vertical-align:top;font-size:15px;">
               <strong>{{name}}</strong>
-              {{#has_description}}<div style="font-size:12px;color:#7a6f63;margin-top:3px;">{{description}}</div>{{/has_description}}
-              {{#has_modifiers}}<div style="font-size:12px;color:#7a6f63;margin-top:3px;">{{modifiers}}</div>{{/has_modifiers}}
+              {{#has_description}}<div style="font-size:12px;color:#8b7c6f;margin-top:3px;line-height:1.5;">{{description}}</div>{{/has_description}}
+              {{#has_modifiers}}<div style="display:inline-block;margin-top:6px;padding:2px 9px;background:#faf1e4;border-radius:10px;font-size:12px;color:#b4540c;font-weight:600;">{{modifiers}}</div>{{/has_modifiers}}
             </td>
-            <td align="center" style="padding:10px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;">{{quantity}}</td>
-            <td align="right" style="padding:10px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;white-space:nowrap;">{{line_total}}</td>
+            <td align="center" style="padding:14px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;font-size:15px;color:#6f6258;">{{quantity}}</td>
+            <td align="right" style="padding:14px 0 14px 8px;border-bottom:1px solid #eee7dc;vertical-align:top;font-size:15px;font-weight:600;white-space:nowrap;">{{line_total}}</td>
           </tr>
           {{/orders}}
         </tbody>
       </table>
 
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-top:14px;font-size:14px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-top:16px;font-size:14px;">
         <tr>
-          <td align="right" style="padding:4px 8px;color:#6f6258;">Subtotal</td>
-          <td align="right" style="padding:4px 8px;width:140px;white-space:nowrap;">{{subtotal}}</td>
+          <td align="right" style="padding:5px 8px;color:#6f6258;">Subtotal</td>
+          <td align="right" style="padding:5px 0;width:150px;white-space:nowrap;">{{subtotal}}</td>
         </tr>
         {{#has_discount}}
         <tr>
-          <td align="right" style="padding:4px 8px;color:#6f6258;">Discount</td>
-          <td align="right" style="padding:4px 8px;white-space:nowrap;">- {{discount}}</td>
+          <td align="right" style="padding:5px 8px;color:#6f6258;">Discount</td>
+          <td align="right" style="padding:5px 0;white-space:nowrap;color:#2f7d4f;">- {{discount}}</td>
         </tr>
         {{/has_discount}}
         {{#has_service_charge}}
         <tr>
-          <td align="right" style="padding:4px 8px;color:#6f6258;">Service charge</td>
-          <td align="right" style="padding:4px 8px;white-space:nowrap;">{{service_charge}}</td>
+          <td align="right" style="padding:5px 8px;color:#6f6258;">Service charge</td>
+          <td align="right" style="padding:5px 0;white-space:nowrap;">{{service_charge}}</td>
         </tr>
         {{/has_service_charge}}
       </table>
-      <div style="text-align:right;margin:12px 0 6px;">
-        <div style="display:inline-block;min-width:240px;background:#171512;color:#ffffff;padding:14px 18px;border-radius:8px;font-size:18px;font-weight:700;">Total {{total}}</div>
+
+      <div style="margin:16px 0 26px;padding:16px 20px;background:#171512;border-radius:10px;color:#ffffff;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
+          <td style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#d9cdbb;">Total</td>
+          <td align="right" style="font-size:22px;font-weight:700;color:#ffffff;white-space:nowrap;">{{total}}</td>
+        </tr></table>
       </div>
 
-      <p style="margin:14px 0 0;font-size:13px;color:#6f6258;line-height:1.7;">
-        Order no.: <strong>{{order_number}}</strong><br>
-        {{#has_reference}}Reference: <strong>{{order_reference}}</strong><br>{{/has_reference}}
-        Order type: {{order_channel}}<br>
-        Items: {{items_count}}<br>
-        Payment method: {{payment_method}}
-      </p>
+      <div style="padding:16px 18px;background:#faf6ee;border-radius:10px;font-size:13px;color:#6f6258;line-height:1.9;">
+        <div>Order no. <strong style="color:#2d2117;">{{order_number}}</strong></div>
+        {{#has_reference}}<div>Reference <strong style="color:#2d2117;">{{order_reference}}</strong></div>{{/has_reference}}
+        <div>Order type <strong style="color:#2d2117;">{{order_channel}}</strong></div>
+        <div>Items <strong style="color:#2d2117;">{{items_count}}</strong></div>
+        <div>Payment <strong style="color:#2d2117;">{{payment_method}}</strong></div>
+      </div>
 
-      <p style="margin:22px 0 0;font-size:14px;line-height:1.6;color:#6f6258;border-left:4px solid #ff4d0a;padding-left:14px;">{{footer_message}}</p>
+      <p style="margin:26px 0 22px;font-size:15px;line-height:1.65;color:#6f6258;border-left:4px solid #ff4d0a;padding-left:14px;">{{footer_message}}</p>
     </div>
 
-    <div style="padding:14px 28px;background:#f7f2ea;text-align:center;font-size:12px;color:#8b7c6f;">
+    <div style="padding:18px 32px;background:#f7f2ea;text-align:center;font-size:12px;line-height:1.7;color:#8b7c6f;border-top:1px solid #eee7dc;">
       {{business_name}}{{#has_email}} &middot; {{business_email}}{{/has_email}}<br>&copy; {{year}}
     </div>
   </div>
