@@ -154,26 +154,68 @@ describe("catalogue workflow", () => {
 });
 
 describe("EmailJS order template", () => {
-	it("every variable the template uses is sent by the POS", async () => {
+	const load = async () => {
 		const fs = await import("node:fs");
-		const html = fs.readFileSync(new URL("../../public/email-templates/pos-order-email.html", import.meta.url), "utf8");
-		const body = html.slice(html.indexOf("-->") + 3);
+		return fs.readFileSync(new URL("../../public/email-templates/pos-order-email.html", import.meta.url), "utf8");
+	};
+	const sale = {
+		receipt: "ORD-0001", createdAt: "2026-10-05T10:00:00Z", payment: "Card", total: 4500, orderReference: "Table 4", orderChannel: "Dine-in",
+		discount: { amount: 100, subtotal: 4600 }, serviceCharge: { amount: 0 },
+		lines: [{ name: "Polo Shirt", description: "Cotton", qty: 1, price: 4600, modifiers: [{ groupName: "Size", optionName: "M" }] }],
+	};
+	it("every variable the template uses is sent by the POS", async () => {
+		const body = await load();
 		const { orderEmailVariables } = await import("../services/printing/orderEmail");
-		const sale = {
-			receipt: "ORD-0001", createdAt: "2026-10-05T10:00:00Z", payment: "Card", total: 4500, orderReference: "Table 4", orderChannel: "Dine-in",
-			discount: { amount: 100, subtotal: 4600 }, serviceCharge: { amount: 0 },
-			lines: [{ name: "Polo Shirt", description: "Cotton", qty: 1, price: 4600, modifiers: [{ groupName: "Size", optionName: "M" }] }],
-		};
 		const vars = orderEmailVariables(sale, { settings: { business: "Shop", address: "Colombo", email: "a@b.lk" }, customerName: "Sam" });
 		const lineKeys = Object.keys(vars.orders[0]);
 		const used = [...body.matchAll(/\{\{[#^/]?\s*([a-z_]+)\s*\}\}/g)].map((m) => m[1]);
 		const known = new Set([...Object.keys(vars), ...lineKeys, "subject", "to_email", "from_name", "reply_to"]);
 		expect(used.filter((v) => !known.has(v))).toEqual([]);
-		expect(vars).toMatchObject({ order_number: "ORD-0001", total: "LKR 4,500.00", subtotal: "LKR 4,600.00", discount: "LKR 100.00", has_discount: "yes", has_service_charge: "", has_reference: "yes" });
-		expect(vars.orders[0]).toMatchObject({ name: "Polo Shirt", modifiers: "Size: M", description: "Cotton", quantity: "1" });
-		// every {{#x}} opens and closes
-		const open = [...body.matchAll(/\{\{#([a-z_]+)\}\}/g)].map((m) => m[1]).sort();
-		const close = [...body.matchAll(/\{\{\/([a-z_]+)\}\}/g)].map((m) => m[1]).sort();
-		expect(open).toEqual(close);
+		expect(vars).toMatchObject({ order_number: "ORD-0001", total: "LKR 4,500.00", subtotal: "LKR 4,600.00", discount: "LKR 100.00", has_discount: "yes", has_service_charge: "", has_reference: "yes", has_email: "yes" });
+		expect(vars.orders[0]).toMatchObject({ name: "Polo Shirt", modifiers: "Size: M", description: "Cotton", quantity: "1", has_description: "yes", has_modifiers: "yes" });
+	});
+	it("is a clean paste: no comments, every section closed and nested, no section wraps a variable of its own name", async () => {
+		const body = await load();
+		expect(body).not.toContain("<!--"); // nothing but the template body, so pasting the whole file is safe
+		const stack = [];
+		for (const m of body.matchAll(/\{\{([#/])([a-z_]+)\}\}/g)) {
+			if (m[1] === "#") stack.push(m[2]);
+			else expect(stack.pop(), "closing {{/" + m[2] + "}}").toBe(m[2]);
+		}
+		expect(stack, "sections left open").toEqual([]);
+		expect(body.match(/\{\{/g).length).toBe(body.match(/\}\}/g).length); // no half tag
+		for (const m of body.matchAll(/\{\{#([a-z_]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g)) expect(m[2]).not.toContain("{{" + m[1] + "}}");
+	});
+	it("gives each optional line a flag that is empty when the block should be hidden", async () => {
+		const { orderEmailVariables } = await import("../services/printing/orderEmail");
+		const plain = orderEmailVariables({ ...sale, lines: [{ name: "Tea", qty: 1, price: 100, modifiers: [] }] }, { settings: {}, customerName: "Sam" });
+		expect(plain.orders[0]).toMatchObject({ has_description: "", has_modifiers: "" });
+		expect(plain.has_email).toBe("");
+	});
+	it("renders with no tag left over, and optional blocks follow their flags", async () => {
+		const body = await load();
+		const { orderEmailVariables } = await import("../services/printing/orderEmail");
+		// minimal Mustache-style renderer (sections, inverted sections, variables): the syntax EmailJS uses
+		const render = (t, ctx) =>
+			t
+				.replace(/\{\{([#^])([a-z_]+)\}\}([\s\S]*?)\{\{\/\2\}\}/g, (m, kind, k, inner) => {
+					const v = ctx[k];
+					if (kind === "^") return v && (!Array.isArray(v) || v.length) ? "" : render(inner, ctx);
+					if (Array.isArray(v)) return v.map((x) => render(inner, { ...ctx, ...x })).join("");
+					return v ? render(inner, ctx) : "";
+				})
+				.replace(/\{\{([a-z_]+)\}\}/g, (m, k) => String(ctx[k] ?? ""));
+		const full = render(body, orderEmailVariables(sale, { settings: { business: "Shop", address: "Colombo", email: "a@b.lk" }, customerName: "Sam" }));
+		expect(full).not.toContain("{{");
+		expect(full).toContain("Polo Shirt");
+		expect(full).toContain("Size: M");
+		expect(full).toContain("Cotton");
+		expect(full).toContain("a@b.lk");
+		const bare = render(body, orderEmailVariables({ ...sale, discount: { amount: 0, subtotal: 4600 }, orderReference: "", lines: [{ name: "Tea", qty: 1, price: 100, modifiers: [] }] }, { settings: { business: "Shop" }, customerName: "Sam" }));
+		expect(bare).not.toContain("{{");
+		expect(bare).not.toContain("Discount");
+		expect(bare).not.toContain("Reference:");
+		expect(bare).not.toContain("Size: M");
+		expect(bare).not.toContain("&middot; a@b.lk");
 	});
 });

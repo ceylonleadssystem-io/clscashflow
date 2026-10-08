@@ -199,7 +199,7 @@ appending to `src/config/features.js`. *Business Tools* is off by default (remov
 After checkout the customer receives the **order itself** (items, modifiers, totals, payment) through EmailJS.
 The POS sends the order as variables (`order_number`, `orders` list, `total`, ... see
 `services/printing/orderEmail.js` `orderEmailVariables`) to an EmailJS template whose layout lives in
-`public/email-templates/pos-order-email.html` (paste it into EmailJS; the file header lists the fields and variables).
+`public/email-templates/pos-order-email.html` (paste the whole file into EmailJS; setup, variables and the "dynamic variables are corrupted" fix are in `docs/emailjs-order-template.md`).
 Set `VITE_EJS_ORDER_TEMPLATE` (or settings `ejsOrderTemplate`) to that template's id. If it is empty the POS falls back to
 the legacy receipt template id and sends the old single `message_html` body instead.
 

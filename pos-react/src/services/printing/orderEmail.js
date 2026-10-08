@@ -17,7 +17,8 @@ export function orderEmailSubject(sale, business) {
 /**
  * Variables for the EmailJS order template (public/email-templates/pos-order-email.html). Everything is a ready-to-show
  * string (money already formatted); the items are the `orders` list for the template's {{#orders}} loop. Optional blocks
- * have a matching has_* flag that is "" when the block should be hidden, so the template can wrap it in {{#has_x}}.
+ * have a matching has_* flag that is "" when the block should be hidden, so the template can wrap it in {{#has_x}}. A flag always has a
+ * different name from the value it guards: a section tag never wraps a plain variable of the same name.
  */
 export function orderEmailVariables(sale, { settings = {}, customerName = "Customer" } = {}) {
 	const lines = sale.lines || [];
@@ -40,7 +41,9 @@ export function orderEmailVariables(sale, { settings = {}, customerName = "Custo
 		orders: lines.map((l) => ({
 			name: l.name || "Item",
 			description: l.description || "",
+			has_description: l.description ? "yes" : "",
 			modifiers: (l.modifiers || []).map((m) => `${m.groupName}: ${m.optionName}`).join(", "),
+			has_modifiers: (l.modifiers || []).length ? "yes" : "",
 			quantity: l.isDiscount || l.isServiceCharge ? "" : String(l.qty),
 			unit_price: l.isDiscount || l.isServiceCharge ? "" : money(l.price),
 			line_total: money(l.price * l.qty),
@@ -57,6 +60,7 @@ export function orderEmailVariables(sale, { settings = {}, customerName = "Custo
 		has_service_charge: service > 0 ? "yes" : "",
 		has_reference: sale.orderReference ? "yes" : "",
 		has_address: settings.address ? "yes" : "",
+		has_email: settings.email ? "yes" : "",
 		has_logo: logo ? "yes" : "",
 	};
 }
