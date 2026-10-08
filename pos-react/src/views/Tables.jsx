@@ -5,7 +5,7 @@
 import { useMemo, useRef, useState } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
-import { GRID, TABLE_SHAPES, normalizeTable, nextTableNumber, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, TABLE_SHAPES, findFreeSpot, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus } from "../domain/tables";
 import { OWNER_ROLES } from "../config/roles";
 import { newId } from "../services/pos/common";
 import { useData } from "../store/DataProvider";
@@ -38,32 +38,67 @@ export function Tables() {
 	const canEdit = OWNER_ROLES.includes(currentUser?.role);
 	const dirty = editing && JSON.stringify(draft) !== JSON.stringify(saved);
 
-	const update = (id, patch) => setDraft((d) => d.map((t) => (t.id === id ? normalizeTable({ ...t, ...patch }) : t)));
+	// the editor's tables, also kept in a ref so drag handlers (created once per drag) always see the latest layout
+	const draftRef = useRef(null);
+	draftRef.current = draft;
+	const commit = (next) => {
+		draftRef.current = next;
+		setDraft(next);
+	};
+
+	// a move, resize or reshape that would land on another table is ignored: the table stays where it last fitted
+	const update = (id, patch) => {
+		const cur = draftRef.current;
+		const next = normalizeTable({ ...cur.find((t) => t.id === id), ...patch });
+		const geometry = ["x", "y", "w", "h", "shape"].some((k) => k in patch);
+		if (geometry && overlapsOthers(cur, next)) return void setError("Tables can't overlap. Move it to a free spot.");
+		setError("");
+		commit(cur.map((t) => (t.id === id ? next : t)));
+	};
 
 	const addTable = () => {
-		const t = normalizeTable({ id: newId("tbl"), number: nextTableNumber(draft), seats: 4, shape: "square", x: 20, y: 20, w: 100 });
-		setDraft([...draft, t]);
+		const spot = findFreeSpot(draft, 100, 100);
+		if (!spot) return void setError("No room for another table. Make a table smaller or remove one first.");
+		const t = normalizeTable({ id: newId("tbl"), number: nextTableNumber(draft), seats: 4, shape: "square", w: 100, ...spot });
+		setError("");
+		commit([...draft, t]);
 		setSelectedId(t.id);
 	};
 
+	/** Validates and stores the layout; true when saved. */
 	const save = async () => {
 		const bad = draft.map((t) => tableNumberError(draft, t)).find(Boolean);
-		if (bad) return void setError(bad);
+		if (bad) {
+			setError(bad);
+			return false;
+		}
 		setError("");
 		await svc.settings.patchSettings({ tableLayout: draft });
 		ui.notice("Table layout saved.");
+		return true;
 	};
 
-	const done = async () => {
-		if (dirty && !(await ui.confirm("Leave without saving your table changes?"))) return;
-		setDraft(null);
+	const leave = () => {
+		commit(null);
 		setSelectedId("");
 		setError("");
 	};
 
+	// Done Editing: with unsaved changes, ask whether to save them (OK saves and leaves; Cancel then offers to discard)
+	const done = async () => {
+		if (dirty) {
+			if (await ui.confirm("Save the changes you made to the table layout?")) {
+				if (await save()) leave();
+				return;
+			}
+			if (!(await ui.confirm("Discard your table changes and stop editing?"))) return;
+		}
+		leave();
+	};
+
 	const remove = async () => {
 		if (!(await ui.confirm("Delete table " + selected.number + "?"))) return;
-		setDraft(draft.filter((t) => t.id !== selected.id));
+		commit(draft.filter((t) => t.id !== selected.id));
 		setSelectedId("");
 	};
 
@@ -109,12 +144,38 @@ export function Tables() {
 						</div>
 					) : (
 						canEdit && (
-							<button className="btn out" id="table-edit" onClick={() => setDraft(saved)}>Edit</button>
+							<button className="btn out" id="table-edit" onClick={() => commit(saved)}>Edit</button>
 						)
 					)
 				}
 			>
 				{error && <div className="login-error">{error}</div>}
+				{editing && selected && (
+					<div className="floor-form" id="table-form">
+						<div className="field">
+							<label>Table number</label>
+							<input className="input" id="table-number" value={selected.number} maxLength={12} onChange={(e) => update(selected.id, { number: e.target.value })} />
+						</div>
+						<div className="field">
+							<label>Number of seats</label>
+							<input className="input" id="table-seats" type="number" min="1" max="40" value={selected.seats} onChange={(e) => update(selected.id, { seats: e.target.value })} />
+						</div>
+						<div className="field">
+							<label>Shape</label>
+							<select className="input" id="table-shape" value={selected.shape} onChange={(e) => update(selected.id, { shape: e.target.value })}>
+								{TABLE_SHAPES.map((s) => <option key={s} value={s}>{SHAPE_LABEL[s]}</option>)}
+							</select>
+						</div>
+						<div className="field">
+							<label>Status</label>
+							<select className="input" id="table-active" value={selected.active ? "1" : "0"} onChange={(e) => update(selected.id, { active: e.target.value === "1" })}>
+								<option value="1">Active (seating)</option>
+								<option value="0">Inactive (bar, podium, landmark)</option>
+							</select>
+						</div>
+						<button className="btn danger" id="table-delete" onClick={remove}>Delete</button>
+					</div>
+				)}
 				<div className="floor-wrap">
 					<div
 						className={"floor" + (editing ? " editing" : "")}
@@ -156,32 +217,6 @@ export function Tables() {
 					</Modal>
 				)}
 				<MoveCheckModal order={moving} onClose={() => setMoving(null)} />
-				{editing && selected && (
-					<div className="floor-form" id="table-form">
-						<div className="field">
-							<label>Table number</label>
-							<input className="input" id="table-number" value={selected.number} maxLength={12} onChange={(e) => update(selected.id, { number: e.target.value })} />
-						</div>
-						<div className="field">
-							<label>Number of seats</label>
-							<input className="input" id="table-seats" type="number" min="1" max="40" value={selected.seats} onChange={(e) => update(selected.id, { seats: e.target.value })} />
-						</div>
-						<div className="field">
-							<label>Shape</label>
-							<select className="input" id="table-shape" value={selected.shape} onChange={(e) => update(selected.id, { shape: e.target.value })}>
-								{TABLE_SHAPES.map((s) => <option key={s} value={s}>{SHAPE_LABEL[s]}</option>)}
-							</select>
-						</div>
-						<div className="field">
-							<label>Status</label>
-							<select className="input" id="table-active" value={selected.active ? "1" : "0"} onChange={(e) => update(selected.id, { active: e.target.value === "1" })}>
-								<option value="1">Active (seating)</option>
-								<option value="0">Inactive (bar, podium, landmark)</option>
-							</select>
-						</div>
-						<button className="btn danger" id="table-delete" onClick={remove}>Delete</button>
-					</div>
-				)}
 			</Panel>
 		</section>
 	);

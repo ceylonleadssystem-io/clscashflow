@@ -403,8 +403,9 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .app-loading-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--ui-accent,#ff4d0a) 62%,#fff),var(--ui-accent,#ff4d0a))}
 
 /* Tables page: restaurant floor plan */
-.floor-wrap{overflow-x:auto}
-.floor{position:relative;width:100%;min-width:560px;background:var(--surface-2,#f6f3ec);border:1px solid var(--line,#e2dccd);border-radius:12px;overflow:hidden}
+.floor-wrap{overflow:hidden}
+/* the whole floor always fits the screen: as wide as the page allows, never taller than the space under the header */
+.floor{position:relative;width:min(100%,calc((100dvh - 230px) * 900 / 560));min-width:0;margin:0 auto;background:var(--surface-2,#f6f3ec);border:1px solid var(--line,#e2dccd);border-radius:12px;overflow:hidden}
 .floor.editing{touch-action:none;background-image:radial-gradient(circle,rgba(0,0,0,.14) 1px,transparent 1px);background-size:1.11% 1.79%}
 .floor-table{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box;border:2px solid var(--line,#cbbf9f);background:#e7f4e4;color:#1f4d1a;cursor:pointer;user-select:none;font-size:.8rem;text-align:center;overflow:hidden}
 .floor-table strong{font-size:1.1rem}
@@ -417,7 +418,7 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .floor-total{font-weight:700}
 .floor-resize{position:absolute;right:2px;bottom:2px;width:16px;height:16px;cursor:nwse-resize;border-right:4px solid #777;border-bottom:4px solid #777;border-radius:0 0 6px 0}
 .floor-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted,#777);padding:20px;text-align:center}
-.floor-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:14px}
+.floor-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin:0 0 14px}
 .floor-form .field{min-width:150px;flex:1}
 /* Label alignment nudge (Settings > Printing / Barcode dialog) */
 .label-nudge{display:flex;align-items:center;gap:10px}

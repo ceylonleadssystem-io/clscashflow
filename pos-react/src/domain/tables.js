@@ -27,6 +27,18 @@ export function normalizeTable(t) {
 	};
 }
 
+/** True when the table's box shares floor area with any other table (touching edges is fine). */
+export function overlapsOthers(tables, t) {
+	return tables.some((o) => o.id !== t.id && t.x < o.x + o.w && t.x + t.w > o.x && t.y < o.y + o.h && t.y + t.h > o.y);
+}
+
+/** First free spot (left to right, top to bottom, one grid step apart) for a table of the given size, or null when the floor is full. */
+export function findFreeSpot(tables, w = 100, h = w) {
+	for (let y = 0; y <= GRID.h - h; y += GRID.step)
+		for (let x = 0; x <= GRID.w - w; x += GRID.step) if (!overlapsOthers(tables, { id: "", x, y, w, h })) return { x, y };
+	return null;
+}
+
 /** Next free numeric table number ("1", "2", ...). */
 export function nextTableNumber(tables) {
 	const used = new Set(tables.map((t) => String(t.number)));

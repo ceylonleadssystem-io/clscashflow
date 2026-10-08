@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mergeOrders } from "../domain/orders";
 import { splitByItems } from "../domain/cart";
 import { NAV_ITEMS, ROLE_VIEWS } from "../config/roles";
-import { GRID, moveTargets, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, findFreeSpot, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus } from "../domain/tables";
 
 describe("table layout", () => {
 	it("snaps and keeps tables inside the floor", () => {
@@ -10,6 +10,17 @@ describe("table layout", () => {
 		expect(t).toMatchObject({ number: "7", seats: 40, shape: "square", w: GRID.max, h: GRID.max, x: GRID.w - GRID.max, y: 0, active: true });
 		expect(normalizeTable({ id: "b", number: "1", shape: "rect", w: 160, h: 60 })).toMatchObject({ w: 160, h: 60 });
 		expect(normalizeTable({ id: "c", number: "2", shape: "round", w: 120, h: 60 }).h).toBe(120);
+	});
+
+	it("detects overlapping tables and finds a free spot for a new one", () => {
+		const a = { id: "a", x: 0, y: 0, w: 100, h: 100 };
+		expect(overlapsOthers([a], { id: "b", x: 50, y: 50, w: 100, h: 100 })).toBe(true);
+		expect(overlapsOthers([a], { id: "b", x: 100, y: 0, w: 100, h: 100 })).toBe(false); // touching edges
+		expect(overlapsOthers([a], a)).toBe(false); // a table never overlaps itself
+		expect(findFreeSpot([a], 100, 100)).toEqual({ x: 100, y: 0 });
+		const row = Array.from({ length: GRID.w / 100 }, (_, i) => ({ id: "r" + i, x: i * 100, y: 0, w: 100, h: 100 }));
+		expect(findFreeSpot(row, 100, 100)).toEqual({ x: 0, y: 100 });
+		expect(findFreeSpot([{ id: "wall", x: 0, y: 0, w: GRID.w, h: GRID.h }], 100, 100)).toBeNull();
 	});
 
 	it("numbers new tables and rejects duplicates", () => {
