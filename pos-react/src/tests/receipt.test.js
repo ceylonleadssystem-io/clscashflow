@@ -65,3 +65,26 @@ describe("receipt layout", () => {
 		expect(texts).toContain("  Size: M");
 	});
 });
+
+describe("report PDF document", () => {
+	it("builds an escaped A4 document with KPIs, aligned tables and empty-section notes", async () => {
+		const { reportHtml } = await import("../services/printing/reportDocument");
+		const html = reportHtml({
+			title: "POS Report 2026-10-01 to 2026-10-08",
+			business: "Cafe <b>",
+			kpis: [{ label: "Revenue", value: "LKR 1,500.00" }],
+			sections: [
+				{ title: "Sales by Item", head: ["Item", "Units"], rows: [["Tea & Co", 2], ["Cake", 10]] },
+				{ title: "Staff Hours", head: ["Staff", "Hours"], rows: [], empty: "No staff hours in this period." },
+			],
+		});
+		expect(html).toContain("<title>POS Report 2026-10-01 to 2026-10-08</title>");
+		expect(html).toContain("@page{size:A4");
+		expect(html).toContain("Cafe &lt;b&gt;");
+		expect(html).toContain("Tea &amp; Co");
+		expect(html).toContain('<th class="n">Units</th>'); // numeric column right-aligned
+		expect(html).toContain("<th>Item</th>");
+		expect(html).toContain("No staff hours in this period.");
+		expect(html).not.toContain("<script");
+	});
+});
