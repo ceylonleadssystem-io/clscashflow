@@ -11,6 +11,7 @@ import { useFeature } from "../store/FeatureProvider";
 import { useScopedData } from "../hooks/useScopedData";
 import { printHtmlInFrame } from "../services/printing/printDocument";
 import { reportHtml } from "../services/printing/reportDocument";
+import { downloadReportPdf, pdfSupportsText } from "../services/printing/reportPdf";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("ui");
@@ -45,8 +46,8 @@ export function Reports() {
 		);
 	};
 
-	// PDF: the same report as a printable A4 document; the print dialog's "Save as PDF" writes the file
-	const exportPdf = () => {
+	// PDF: downloaded directly; a report with text the PDF font cannot draw (e.g. Sinhala names) goes through the print dialog instead
+	const exportPdf = async () => {
 		log.info("report exported as pdf", { from: range.from, to: range.to });
 		const sections = [
 			{ title: "Sales by Item", head: ["Item", "Units", "Revenue", "Cost", "Gross Profit"], rows: d.items.map((x) => [x.name, x.qty, money(x.revenue), money(x.cost), money(x.revenue - x.cost)]), empty: "No item sales in this period." },
@@ -72,21 +73,26 @@ export function Reports() {
 				empty: "No customer-linked sales in this period.",
 			});
 		const title = `POS Report ${range.from} to ${range.to}`;
-		printHtmlInFrame(
-			reportHtml({
-				title,
-				business: data.settings.business || "",
-				subtitle: range.from + " to " + range.to,
-				kpis: [
-					{ label: "Transactions", value: d.sales.length },
-					{ label: "Revenue", value: money(k.revenue) },
-					{ label: "Gross Profit", value: money(k.profit) },
-					{ label: "Gross Margin", value: k.margin.toFixed(1) + "%" },
-				],
-				sections,
-			}),
+		const report = {
 			title,
-		);
+			business: data.settings.business || "",
+			subtitle: range.from + " to " + range.to,
+			kpis: [
+				{ label: "Transactions", value: d.sales.length },
+				{ label: "Revenue", value: money(k.revenue) },
+				{ label: "Gross Profit", value: money(k.profit) },
+				{ label: "Gross Margin", value: k.margin.toFixed(1) + "%" },
+			],
+			sections,
+		};
+		if (pdfSupportsText(report)) {
+			try {
+				return await downloadReportPdf(report, `pos-report-${range.from}-${range.to}.pdf`);
+			} catch (e) {
+				log.error("pdf download failed, using the print dialog", e);
+			}
+		}
+		printHtmlInFrame(reportHtml(report), title);
 	};
 
 	return (
@@ -116,7 +122,7 @@ export function Reports() {
 							<button className="btn" onClick={exportReport}>
 								Export Report
 							</button>
-							<button className="btn" id="report-pdf" onClick={exportPdf} title="Opens the print dialog: choose Save as PDF">
+							<button className="btn" id="report-pdf" onClick={exportPdf} title="Download this report as a PDF">
 								Export PDF
 							</button>
 						</>

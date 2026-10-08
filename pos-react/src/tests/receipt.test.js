@@ -88,3 +88,30 @@ describe("report PDF document", () => {
 		expect(html).not.toContain("<script");
 	});
 });
+
+describe("report PDF download", () => {
+	const report = {
+		title: "POS Report",
+		business: "Cafe — Main",
+		kpis: [{ label: "Revenue", value: "LKR 1,500.00" }],
+		sections: [
+			{ title: "Sales by Item", head: ["Item", "Units", "Revenue"], rows: Array.from({ length: 80 }, (_, i) => ["Item " + i, i, "LKR " + i * 10 + ".00"]) },
+			{ title: "Staff Hours", head: ["Staff", "Hours"], rows: [], empty: "No staff hours." },
+		],
+	};
+	it("draws a real multi-page PDF", async () => {
+		Object.assign(globalThis.window, { atob: globalThis.atob, btoa: globalThis.btoa }); // the test setup's window stub lacks what jsPDF reads at load time
+		const { buildReportPdf } = await import("../services/printing/reportPdf");
+		const { jsPDF } = await import("jspdf");
+		const { default: autoTable } = await import("jspdf-autotable");
+		const doc = buildReportPdf(new jsPDF({ unit: "mm", format: "a4" }), autoTable, report);
+		const bytes = new Uint8Array(doc.output("arraybuffer"));
+		expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
+		expect(doc.getNumberOfPages()).toBeGreaterThan(1);
+	});
+	it("only claims PDF support for text the built-in font can draw", async () => {
+		const { pdfSupportsText } = await import("../services/printing/reportPdf");
+		expect(pdfSupportsText(report)).toBe(true); // the dash is replaced by a plain one
+		expect(pdfSupportsText({ ...report, sections: [{ title: "Items", head: ["Item"], rows: [["කෝපි"]] }] })).toBe(false);
+	});
+});
