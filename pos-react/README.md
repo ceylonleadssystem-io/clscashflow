@@ -203,6 +203,15 @@ The POS sends the order as variables (`order_number`, `orders` list, `total`, ..
 Set `VITE_EJS_ORDER_TEMPLATE` (or settings `ejsOrderTemplate`) to that template's id. If it is empty the POS falls back to
 the legacy receipt template id and sends the old single `message_html` body instead.
 
+### Image storage
+Product photos, the business logo and the receipt QR are uploaded (already compressed in the browser) through the Netlify
+function `netlify/functions/appwrite-files.js` into an Appwrite Storage bucket, and only the file URL is saved in the
+business data, so the data every device syncs stays small. The bucket (`pos-images` by default, override with
+`APPWRITE_IMAGES_BUCKET_ID`) is created on first upload; the server API key needs the `buckets.write` and `files.write`
+scopes. The bucket is publicly readable, so anyone holding an image URL can view it. In local mode, offline, or when an
+upload fails the image stays inside the business data as before, and **Settings > Business Profile > Move saved images
+to cloud storage** moves images saved earlier. Replaced or deleted images are not removed from the bucket yet.
+
 ### Inventory behaviour
 * Deleting a product's stock row turns stock tracking **off** for it: always sellable (re-enable via *Add Stock*).
 * Adjustments: *Stock received* adds; *Wastage / Damaged / Internal use / Return to supplier* subtract;

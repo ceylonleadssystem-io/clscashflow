@@ -7,6 +7,7 @@ import { nowIso } from "../../domain/format";
 import { categoryKey, productCategories } from "../../domain/catalog";
 import { ensureProductInventory, productSizeItem } from "../../domain/inventory";
 import { sizeSlug } from "../printing/barcode";
+import { storeImage } from "../imageStorage";
 import { commonModifierPresets } from "../../config/presets";
 import { createLogger } from "../../utils/logger";
 import { markDeleted, newId, unmarkDeletedCategory } from "./common";
@@ -62,7 +63,7 @@ export async function saveProduct(ctx, form) {
 		price,
 		type: form.type,
 		code: form.code.trim() || "POS-" + String(Date.now()).slice(-5),
-		image: form.image || "",
+		image: await storeImage(form.image || "", "product"), // a new photo goes to cloud storage; a link or an offline failure is kept as is
 		imageFit: form.imageFit || "cover",
 		imagePositionX: Number.isFinite(form.imagePositionX) ? form.imagePositionX : 50,
 		imagePositionY: Number.isFinite(form.imagePositionY) ? form.imagePositionY : 50,
