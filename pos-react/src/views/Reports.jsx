@@ -1,6 +1,6 @@
 /**
  * Reports page: date-range KPIs, sales by item and payment type, cash register reconciliation, staff hours,
- * customer intelligence and CSV export.
+ * customer intelligence and CSV / PDF export.
  */
 import { useMemo, useState } from "react";
 import { closedShiftsInRange, customerReport, defaultRange, rangeDates, reportData, reportKpis, staffHours, birthdayInfo, customerSegment, customerInsights } from "../domain/analytics";
@@ -9,6 +9,9 @@ import { Kpi } from "../components/ui";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useScopedData } from "../hooks/useScopedData";
+import { printHtmlInFrame } from "../services/printing/printDocument";
+import { reportHtml } from "../services/printing/reportDocument";
+import { downloadReportPdf, pdfSupportsText } from "../services/printing/reportPdf";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("ui");
@@ -43,6 +46,55 @@ export function Reports() {
 		);
 	};
 
+	// PDF: downloaded directly; a report with text the PDF font cannot draw (e.g. Sinhala names) goes through the print dialog instead
+	const exportPdf = async () => {
+		log.info("report exported as pdf", { from: range.from, to: range.to });
+		const sections = [
+			{ title: "Sales by Item", head: ["Item", "Units", "Revenue", "Cost", "Gross Profit"], rows: d.items.map((x) => [x.name, x.qty, money(x.revenue), money(x.cost), money(x.revenue - x.cost)]), empty: "No item sales in this period." },
+			{ title: "Sales by Modifier", head: ["Group", "Option", "Units", "Sales", "Extra charged"], rows: d.modifiers.map((x) => [x.group, x.option, x.qty, money(x.revenue), money(x.extra)]), empty: "No modifier sales in this period." },
+			{ title: "Sales by Payment Type", head: ["Payment", "Amount"], rows: Object.entries(k.payments).sort((a, b) => b[1] - a[1]).map(([name, v]) => [name, money(v)]), empty: "No payments in this period." },
+			{
+				title: "Cash Register Reconciliation",
+				head: ["User", "Closed", "Expected", "Actual", "Variance"],
+				rows: shifts.map((x) => [data.users.find((u) => u.id === x.userId)?.name || "Unknown", new Date(x.closedAt).toLocaleString(), money(x.expectedCash), money(x.actualCash), money(x.variance)]),
+				empty: "No closed registers in this period.",
+			},
+			{ title: "Staff Hours", head: ["Staff", "Hours", "Break"], rows: hours.map((x) => [x.name, (x.work / 3600000).toFixed(2), (x.break / 3600000).toFixed(2)]), empty: "No staff hours in this period." },
+		];
+		if (intelligence)
+			sections.push({
+				title: "Customer Intelligence",
+				note: `${cr.unique} customers served · ${cr.repeat} repeat · average sale ${money(cr.avg)} · ${cr.birthdays} upcoming birthdays`,
+				head: ["Customer", "Mobile", "Visits", "Revenue", "Average Spend", "Last Visit", "Birthday"],
+				rows: cr.rows.map((x) => {
+					const b = birthdayInfo(x.c);
+					return [x.c.name, x.c.phone || "—", x.visits, money(x.revenue), money(x.revenue / x.visits), x.last, b.label + (b.upcoming ? " · " + b.days + " days" : "")];
+				}),
+				empty: "No customer-linked sales in this period.",
+			});
+		const title = `POS Report ${range.from} to ${range.to}`;
+		const report = {
+			title,
+			business: data.settings.business || "",
+			subtitle: range.from + " to " + range.to,
+			kpis: [
+				{ label: "Transactions", value: d.sales.length },
+				{ label: "Revenue", value: money(k.revenue) },
+				{ label: "Gross Profit", value: money(k.profit) },
+				{ label: "Gross Margin", value: k.margin.toFixed(1) + "%" },
+			],
+			sections,
+		};
+		if (pdfSupportsText(report)) {
+			try {
+				return await downloadReportPdf(report, `pos-report-${range.from}-${range.to}.pdf`);
+			} catch (e) {
+				log.error("pdf download failed, using the print dialog", e);
+			}
+		}
+		printHtmlInFrame(reportHtml(report), title);
+	};
+
 	return (
 		<section className="view active" id="view-reports">
 			<div className="dashboard-toolbar">
@@ -66,9 +118,14 @@ export function Reports() {
 						This Month
 					</button>
 					{exportOn && (
-						<button className="btn" onClick={exportReport}>
-							Export Report
-						</button>
+						<>
+							<button className="btn" onClick={exportReport}>
+								Export Report
+							</button>
+							<button className="btn" id="report-pdf" onClick={exportPdf} title="Download this report as a PDF">
+								Export PDF
+							</button>
+						</>
 					)}
 				</div>
 			</div>

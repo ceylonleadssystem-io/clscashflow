@@ -7,6 +7,8 @@ import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } fr
 import { POS_TYPE_PRESETS } from "../../config/presets";
 import { nowIso } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
+import { isAppwrite } from "../../config/env";
+import { isDataImage, storeImage } from "../imageStorage";
 import { supportAuditEntry } from "./common";
 import { addCommonModifiers } from "./catalog";
 import { createLogger } from "../../utils/logger";
@@ -86,7 +88,7 @@ export async function uploadBusinessLogo(ctx, file) {
 	if (!file) return;
 	if (!file.type.startsWith("image/")) return void (await ctx.ui.alert("Choose an image file for the business logo."));
 	try {
-		const logo = await fitBusinessLogo(file);
+		const logo = await storeImage(await fitBusinessLogo(file), "logo");
 		await patchSettings(ctx, { logo });
 		ctx.ui.notice("Business logo saved and fitted for the POS and receipts.");
 	} catch (e) {
@@ -105,8 +107,44 @@ export async function uploadSocialQr(ctx, file) {
 		reader.onload = () => resolve(String(reader.result || ""));
 		reader.readAsDataURL(file);
 	});
-	const cleaned = await cleanReceiptQrImage(dataUrl);
+	const cleaned = await storeImage(await cleanReceiptQrImage(dataUrl), "qr");
 	await patchSettings(ctx, { receiptSocialQr: cleaned, receiptSocialQrCleanedVersion: "qr-white-v2" });
+}
+
+/**
+ * One-time move of the images already saved inside the business data (product photos, logo, receipt QR) into cloud
+ * storage, so every sync stops carrying them. Images that cannot be uploaded stay as they are; run it again later.
+ */
+export async function moveImagesToCloud(ctx) {
+	if (!isAppwrite()) return void (await ctx.ui.alert("Cloud image storage needs a cloud (Appwrite) account. It is not available in local mode."));
+	const d = ctx.data();
+	const products = d.products.filter((p) => isDataImage(p.image));
+	const settingKeys = ["logo", "receiptSocialQr"].filter((k) => isDataImage(d.settings[k]));
+	const total = products.length + settingKeys.length;
+	if (!total) return void ctx.ui.notice("All images are already in cloud storage.");
+	if (!(await ctx.ui.confirm(`Move ${total} image${total === 1 ? "" : "s"} to cloud storage? Keep this page open until it finishes.`))) return;
+	const uploaded = new Map(); // identical images are uploaded once
+	const upload = async (image, kind) => {
+		if (!uploaded.has(image)) uploaded.set(image, await storeImage(image, kind));
+		return uploaded.get(image);
+	};
+	const movedProducts = [];
+	const movedSettings = {};
+	for (const p of products) {
+		const image = await upload(p.image, "product");
+		if (!isDataImage(image)) movedProducts.push({ ...p, image });
+	}
+	for (const key of settingKeys) {
+		const image = await upload(d.settings[key], key === "logo" ? "logo" : "qr");
+		if (!isDataImage(image)) movedSettings[key] = image;
+	}
+	await ctx.store.write((tx) => {
+		movedProducts.forEach((p) => tx.put(T.products, p));
+		for (const [key, value] of Object.entries(movedSettings)) tx.setSetting(key, value);
+	});
+	const moved = movedProducts.length + Object.keys(movedSettings).length;
+	log.info("images moved to cloud storage", { moved, failed: total - moved });
+	ctx.ui.notice(moved === total ? `${moved} image${moved === 1 ? "" : "s"} moved to cloud storage.` : `${moved} of ${total} images moved. The rest stay on this device; try again when you are online.`);
 }
 
 export const setTheme = async (ctx, id, label) => {

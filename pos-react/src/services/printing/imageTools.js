@@ -12,13 +12,31 @@ export const readFileAsDataUrl = (file) =>
 		reader.readAsDataURL(file);
 	});
 
-const loadImage = (src) =>
-	new Promise((resolve, reject) => {
-		const img = new Image();
-		img.onload = () => resolve(img);
-		img.onerror = () => reject(new Error("The selected image could not be read."));
-		img.src = src;
-	});
+// Pictures kept in cloud storage are fetched once per session and read back from memory, so printing a receipt
+// does not wait for the network (and the canvas stays readable: a blob is same-origin, a plain cross-site <img> is not).
+const remoteBlobs = new Map();
+
+const loadImage = async (src) => {
+	let url = src;
+	if (/^https?:\/\//i.test(src)) {
+		if (!remoteBlobs.has(src)) {
+			const res = await fetch(src, { mode: "cors" });
+			if (!res.ok) throw new Error("The image could not be downloaded.");
+			remoteBlobs.set(src, await res.blob());
+		}
+		url = URL.createObjectURL(remoteBlobs.get(src));
+	}
+	try {
+		return await new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => resolve(img);
+			img.onerror = () => reject(new Error("The selected image could not be read."));
+			img.src = url;
+		});
+	} finally {
+		if (url !== src) URL.revokeObjectURL(url);
+	}
+};
 
 /** Product photo -> JPEG max 700px (stored in the local database). */
 export async function compressProductImage(file, max = 700, quality = 0.78) {

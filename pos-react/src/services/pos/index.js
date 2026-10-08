@@ -86,6 +86,7 @@ export function bindServices(ctx) {
 			uploadBusinessLogo: settings.uploadBusinessLogo,
 			removeBusinessLogo: settings.removeBusinessLogo,
 			uploadSocialQr: settings.uploadSocialQr,
+			moveImagesToCloud: settings.moveImagesToCloud,
 			setTheme: settings.setTheme,
 			applyPosSetup: settings.applyPosSetup,
 			dismissPosSetup: settings.dismissPosSetup,

@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { createHarness } from "./harness";
+import { loginLocationChoices } from "../services/pos/locations";
 
 const loc = (o = {}) => ({ name: "Galle", code: "gal", address: "", phone: "", email: "", openingHours: "", active: true, receiptHeader: "", receiptFooter: "", ...o });
 const settingsForm = (o = {}) => ({
@@ -81,5 +82,18 @@ describe("business settings", () => {
 	it("records per-setting update times for sync", async () => {
 		await h.svc.settings.saveSettings(settingsForm());
 		expect(h.data().settingsUpdatedAt.business).toBeTruthy();
+	});
+});
+
+describe("login location choice", () => {
+	const data = { locations: [{ id: "a", name: "A" }, { id: "b", name: "B" }, { id: "c", name: "C", active: false }] };
+	const user = (o) => ({ id: "u", role: "cashier", locationAccess: "selected", locationIds: ["a", "b"], ...o });
+	it("asks only non-owners of a multi-location business who may work at several locations", () => {
+		expect(loginLocationChoices(user(), data, true).map((l) => l.id)).toEqual(["a", "b"]);
+		expect(loginLocationChoices(user({ role: "manager", locationAccess: "all" }), data, true).map((l) => l.id)).toEqual(["a", "b"]);
+		expect(loginLocationChoices(user({ role: "owner" }), data, true)).toEqual([]);
+		expect(loginLocationChoices(user(), data, false)).toEqual([]); // locations feature off
+		expect(loginLocationChoices(user({ locationIds: ["a"] }), data, true)).toEqual([]); // one location: no question
+		expect(loginLocationChoices(user({ locationIds: ["a", "c"] }), data, true)).toEqual([]); // inactive locations do not count
 	});
 });

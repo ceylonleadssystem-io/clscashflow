@@ -65,3 +65,53 @@ describe("receipt layout", () => {
 		expect(texts).toContain("  Size: M");
 	});
 });
+
+describe("report PDF document", () => {
+	it("builds an escaped A4 document with KPIs, aligned tables and empty-section notes", async () => {
+		const { reportHtml } = await import("../services/printing/reportDocument");
+		const html = reportHtml({
+			title: "POS Report 2026-10-01 to 2026-10-08",
+			business: "Cafe <b>",
+			kpis: [{ label: "Revenue", value: "LKR 1,500.00" }],
+			sections: [
+				{ title: "Sales by Item", head: ["Item", "Units"], rows: [["Tea & Co", 2], ["Cake", 10]] },
+				{ title: "Staff Hours", head: ["Staff", "Hours"], rows: [], empty: "No staff hours in this period." },
+			],
+		});
+		expect(html).toContain("<title>POS Report 2026-10-01 to 2026-10-08</title>");
+		expect(html).toContain("@page{size:A4");
+		expect(html).toContain("Cafe &lt;b&gt;");
+		expect(html).toContain("Tea &amp; Co");
+		expect(html).toContain('<th class="n">Units</th>'); // numeric column right-aligned
+		expect(html).toContain("<th>Item</th>");
+		expect(html).toContain("No staff hours in this period.");
+		expect(html).not.toContain("<script");
+	});
+});
+
+describe("report PDF download", () => {
+	const report = {
+		title: "POS Report",
+		business: "Cafe — Main",
+		kpis: [{ label: "Revenue", value: "LKR 1,500.00" }],
+		sections: [
+			{ title: "Sales by Item", head: ["Item", "Units", "Revenue"], rows: Array.from({ length: 80 }, (_, i) => ["Item " + i, i, "LKR " + i * 10 + ".00"]) },
+			{ title: "Staff Hours", head: ["Staff", "Hours"], rows: [], empty: "No staff hours." },
+		],
+	};
+	it("draws a real multi-page PDF", async () => {
+		Object.assign(globalThis.window, { atob: globalThis.atob, btoa: globalThis.btoa }); // the test setup's window stub lacks what jsPDF reads at load time
+		const { buildReportPdf } = await import("../services/printing/reportPdf");
+		const { jsPDF } = await import("jspdf");
+		const { default: autoTable } = await import("jspdf-autotable");
+		const doc = buildReportPdf(new jsPDF({ unit: "mm", format: "a4" }), autoTable, report);
+		const bytes = new Uint8Array(doc.output("arraybuffer"));
+		expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
+		expect(doc.getNumberOfPages()).toBeGreaterThan(1);
+	});
+	it("only claims PDF support for text the built-in font can draw", async () => {
+		const { pdfSupportsText } = await import("../services/printing/reportPdf");
+		expect(pdfSupportsText(report)).toBe(true); // the dash is replaced by a plain one
+		expect(pdfSupportsText({ ...report, sections: [{ title: "Items", head: ["Item"], rows: [["කෝපි"]] }] })).toBe(false);
+	});
+});

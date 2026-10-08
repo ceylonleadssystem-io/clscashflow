@@ -6,7 +6,7 @@ import { useState } from "react";
 import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS, KITCHEN_TYPES } from "../../config/presets";
 import { ORDER_CHANNELS, UI_THEMES } from "../../config/constants";
 import { ADDITIONAL_FEATURES, planForSettings } from "../../config/plans";
-import { env } from "../../config/env";
+import { env, isAppwrite } from "../../config/env";
 import { money } from "../../domain/format";
 import { Panel, Field, Switch } from "../ui";
 import { FieldError } from "../ui/FieldError";
@@ -65,6 +65,14 @@ export function BusinessProfilePanel({ form, set }) {
 								}}
 							/>
 							<span className="business-logo-help">PNG, JPG or WebP · transparent background recommended</span>
+						</Field>
+					)}
+					{isAppwrite() && (
+						<Field label="Image storage" full>
+							<button className="btn out" id="move-images-to-cloud" type="button" onClick={svc.settings.moveImagesToCloud}>
+								Move saved images to cloud storage
+							</button>
+							<span className="business-logo-help">New photos, the logo and the receipt QR are stored in cloud storage automatically. Use this once to move the ones saved earlier, so syncing stays fast.</span>
 						</Field>
 					)}
 				</div>
