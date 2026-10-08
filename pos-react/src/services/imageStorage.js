@@ -27,6 +27,12 @@ async function call(body) {
 	return json;
 }
 
+let onUploadFailed = null;
+/** Lets the app show why an image stayed on this device (set once by the session provider). */
+export const setUploadFailureHandler = (fn) => {
+	onUploadFailed = fn;
+};
+
 /** Uploads a data-URL image and returns its file URL; returns the input unchanged when it is not a data-URL or cannot be uploaded. */
 export async function storeImage(image, kind = "product") {
 	if (!isDataImage(image) || !isAppwrite() || (typeof navigator !== "undefined" && navigator.onLine === false)) return image;
@@ -35,6 +41,7 @@ export async function storeImage(image, kind = "product") {
 		return json?.url || image;
 	} catch (e) {
 		log.warn("image kept on this device (upload failed)", e);
+		onUploadFailed?.(e.message);
 		return image;
 	}
 }
