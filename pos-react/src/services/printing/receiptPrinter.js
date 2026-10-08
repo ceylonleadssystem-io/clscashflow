@@ -4,7 +4,7 @@
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
 import { localPrintPreview, showPrintPreview } from "./localPrintPreview";
-import { receiptHtml, receiptText } from "./documents";
+import { receiptHtml, receiptLayout } from "./documents";
 import { escPosRaster } from "./imageTools";
 import { createLogger } from "../../utils/logger";
 
@@ -122,20 +122,24 @@ class ReceiptPrinter {
 			if (!restored)
 				throw new Error("USB printer is not connected. Tap Printer, select the receipt printer, and allow USB access.");
 		}
-		// Byte order matters: logo raster, then ESC @ (init) + text, then QR raster, then GS V B 0 (feed + partial cut).
+		// Byte order matters: logo raster, ESC @ (init) + the receipt lines (each with its own alignment), QR raster, then the
+		// QR caption and "Powered by Ceylonry POS", then feed + GS V B 0 (feed + partial cut).
 		const encoder = new TextEncoder();
-		const text = encoder.encode(receiptText(sale, ctx));
-		const body = new Uint8Array(2 + text.length);
-		body.set([27, 64], 0);
-		body.set(text, 2);
+		const { main, caption, powered } = receiptLayout(sale, ctx);
+		const lines = (list) =>
+			list.flatMap((l) => [27, 97, l.align === "center" ? 1 : 0, ...encoder.encode(l.text), 10]);
+		const head = new Uint8Array([27, 64, ...lines(main)]);
+		const tail = new Uint8Array([...lines([...caption, ...powered]), 27, 97, 0, 10, 10, 10]);
 		const cut = new Uint8Array([29, 86, 66, 0]);
 		const logo = await escPosRaster(ctx.settings.logo, { size: 240, threshold: 160 });
 		const qr = await escPosRaster(ctx.settings.receiptSocialQr, { size: 320, threshold: 170, leadingFeed: true, qr: true });
-		const bytes = new Uint8Array(logo.length + body.length + qr.length + cut.length);
-		bytes.set(logo);
-		bytes.set(body, logo.length);
-		bytes.set(qr, logo.length + body.length);
-		bytes.set(cut, logo.length + body.length + qr.length);
+		const parts = [logo, head, qr, tail, cut];
+		const bytes = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+		let at = 0;
+		parts.forEach((p) => {
+			bytes.set(p, at);
+			at += p.length;
+		});
 		await transferChunks(this.device, this.endpoint, bytes);
 		log.info("receipt bytes sent to USB printer", { receipt: sale.receipt, bytes: bytes.length, device: this.device.productName || "USB receipt printer" });
 		this._set(`${this.device.productName || "USB receipt printer"} connected and ready.`, true);

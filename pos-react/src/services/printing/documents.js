@@ -21,43 +21,17 @@ export function receiptSocialLines(settings) {
 }
 
 const RECEIPT_CSS =
-	"@page{size:80mm auto;margin:4mm}body{font:12px Arial;width:72mm;margin:0;color:#000}.logo{display:block;width:30mm;height:30mm;max-width:30mm;max-height:30mm;object-fit:contain;margin:0 auto 8px}h1{text-align:center;font-size:18px;margin:0}p{text-align:center;margin:4px 0;white-space:pre-line}table{width:100%;border-collapse:collapse;margin:12px 0}td{padding:5px 0;border-bottom:1px dashed #999}td:nth-child(2){text-align:center}td:last-child{text-align:right}small{display:block;color:#555}.total{font-size:17px;font-weight:bold;text-align:right}.foot{margin-top:15px;border-top:1px dashed #999;padding-top:10px}.powered{font-size:8px;color:#777;letter-spacing:.08em;margin-top:12px}.social-qr{display:block;width:42mm;height:42mm;object-fit:contain;margin:12px auto 5px}.receipt-socials{text-align:center;font-size:11px;line-height:1.5;margin-top:8px}";
+	"@page{size:80mm auto;margin:4mm}*{box-sizing:border-box}body{width:72mm;margin:0;color:#000}.rc{font:9.4px/1.45 'Courier New',Courier,monospace}.ln{white-space:pre;min-height:1.45em}.ln.center{text-align:center}.logo{display:block;width:34mm;height:34mm;max-width:34mm;max-height:34mm;object-fit:contain;margin:0 auto 6px}.social-qr{display:block;width:42mm;height:42mm;object-fit:contain;margin:8px auto 4px}";
 
-/** Final receipt HTML (logo, location, cash tender, socials, footer). */
+/** Final receipt HTML: the same lines as the thermal receipt (see receiptLayout), in a monospace 80 mm page. */
 export function receiptHtml(sale, { settings = {}, location = null, autoPrint = true } = {}) {
-	const lines = (sale.lines || [])
-		.map(
-			(l) =>
-				`<tr><td>${esc(l.name)}${l.description ? "<small>" + esc(l.description) + "</small>" : ""}${
-					(l.modifiers || []).length
-						? "<small>" + l.modifiers.map((m) => esc(m.groupName + ": " + m.optionName)).join("<br>") + "</small>"
-						: ""
-				}</td><td>${l.qty}</td><td>${money(l.price * l.qty)}</td></tr>`,
-		)
-		.join("");
+	const { main, caption, powered } = receiptLayout(sale, { settings, location });
+	const line = (seg) => `<div class="ln ${seg.align}">${esc(seg.text)}</div>`;
 	const logo = settings.logo ? `<img class="logo" src="${esc(settings.logo)}" alt="Business logo">` : "";
-	const footerText = (location && location.receiptFooter) || settings.receiptFooter || DEFAULT_RECEIPT_FOOTER;
-	const cashDetail =
-		sale.payment === "Cash" || (sale.payment === "Split" && sale.cashDue > 0)
-			? `<p><strong>Cash received:</strong> ${money(sale.cashTendered ?? sale.cashDue ?? sale.total)}<br><strong>Change:</strong> ${money(sale.changeGiven || 0)}</p>`
-			: "";
-	const social = receiptSocialLines(settings);
-	const qr = settings.receiptSocialQr
-		? `<img class="social-qr" src="${esc(settings.receiptSocialQr)}" alt="Social QR code">`
-		: "";
-	const socials = social.length
-		? `<div class="receipt-socials"><strong>Follow us</strong><br>${social.map(esc).join("<br>")}</div>`
-		: "";
-	const locationBlock = location ? `<p><b>${esc(location.name)}</b></p>` : "";
-	return `<!doctype html><html><head><title>${esc(sale.receipt)}</title><style>${RECEIPT_CSS}</style></head><body>${logo}<h1>${esc(
-		settings.business || DEFAULT_BUSINESS_NAME,
-	)}</h1>${locationBlock}<p>${esc(settings.address || "")}</p><p>${esc(settings.email || "")}</p><p>${esc(sale.receipt)} · ${new Date(
-		sale.createdAt || Date.now(),
-	).toLocaleString()}</p><table>${lines}</table><div class="total">TOTAL ${money(sale.total)}</div>${cashDetail}<p>Paid by ${esc(
-		sale.payment,
-	)}</p><p class="foot">${esc(footerText)}</p>${qr}${socials}<p class="powered">Powered by Ceylonry POS</p>${
-		autoPrint ? "<script>onload=()=>print()</script>" : ""
-	}</body></html>`;
+	const qr = settings.receiptSocialQr ? `<img class="social-qr" src="${esc(settings.receiptSocialQr)}" alt="Social QR code">` : "";
+	return `<!doctype html><html><head><title>${esc(sale.receipt)}</title><style>${RECEIPT_CSS}</style></head><body>${logo}<div class="rc">${main
+		.map(line)
+		.join("")}${qr}${caption.map(line).join("")}${powered.map(line).join("")}</div>${autoPrint ? "<script>onload=()=>print()</script>" : ""}</body></html>`;
 }
 
 /** Kitchen order ticket (no prices, quantities + modifiers only). */
@@ -101,28 +75,72 @@ const padLeft = (v, w) => {
 	return v.length > w ? v.slice(0, w) : " ".repeat(w - v.length) + v;
 };
 
-export function receiptText(sale, { settings = {}, location = null } = {}) {
-	const width = 48;
+const RECEIPT_WIDTH = 48;
+
+/** Word-wraps `text` into lines of at most `width` characters (long words are cut). */
+function wrapLine(text, width) {
+	const out = [];
+	for (const raw of String(text ?? "").split("\n")) {
+		let cur = "";
+		for (const word of raw.split(/\s+/).filter(Boolean)) {
+			const w = word.length > width ? word.slice(0, width) : word;
+			if (!cur) cur = w;
+			else if ((cur + " " + w).length <= width) cur += " " + w;
+			else {
+				out.push(cur);
+				cur = w;
+			}
+		}
+		out.push(cur);
+	}
+	return out;
+}
+
+/**
+ * The receipt as aligned 48-column lines, shared by the thermal (ESC/POS) printout and the HTML receipt so both look the
+ * same: business, location, rule, receipt number and date, items, total, payment, footer and socials (centred). The
+ * QR code goes between `main` and `caption`; "Powered by Ceylonry POS" is always the last line.
+ * Returns { main, caption, powered }, each a list of { align: "left" | "center", text }.
+ */
+export function receiptLayout(sale, { settings = {}, location = null } = {}) {
+	const width = RECEIPT_WIDTH;
 	const rule = "-".repeat(width);
-	const lines = [];
-	lines.push(settings.business || DEFAULT_BUSINESS_NAME);
-	if (location) lines.push(location.name);
-	if (location && location.address) lines.push(location.address);
-	else if (settings.address) lines.push(settings.address);
-	lines.push(rule);
-	lines.push((sale.receipt || "RECEIPT") + "  " + receiptDate(sale));
-	lines.push(rule);
+	const left = (text) => ({ align: "left", text });
+	const center = (text) => ({ align: "center", text });
+	const main = [];
+	main.push(left(settings.business || DEFAULT_BUSINESS_NAME));
+	if (location) main.push(left(location.name));
+	if (location && location.address) main.push(left(location.address));
+	else if (settings.address) main.push(left(settings.address));
+	main.push(left(rule));
+	main.push(left((sale.receipt || "RECEIPT") + "  " + receiptDate(sale)));
+	main.push(left(rule));
 	(sale.lines || []).forEach((line) => {
-		lines.push(padRight(line.qty + " x " + line.name, 32) + padLeft(money(line.price * line.qty).replace("LKR ", ""), 16));
-		if (line.description) lines.push("  " + line.description);
-		(line.modifiers || []).forEach((m) => lines.push("  " + m.groupName + ": " + m.optionName));
+		const [first, ...rest] = wrapLine(line.qty + " x " + line.name, 31);
+		main.push(left(padRight(first, 32) + padLeft(money(line.price * line.qty).replace("LKR ", ""), 16)));
+		rest.forEach((r) => main.push(left("  " + r)));
+		if (line.description) wrapLine(line.description, width - 2).forEach((r) => main.push(left("  " + r)));
+		(line.modifiers || []).forEach((m) => main.push(left("  " + m.groupName + ": " + m.optionName)));
 	});
-	lines.push(rule);
-	lines.push(padRight("TOTAL", 28) + padLeft(money(sale.total), 20));
-	lines.push("Paid by " + (sale.payment || "Cash"));
-	lines.push(rule);
-	lines.push((location && location.receiptFooter) || settings.receiptFooter || DEFAULT_RECEIPT_FOOTER);
-	lines.push(...receiptSocialLines(settings));
-	lines.push("Powered by Ceylonry POS");
-	return lines.join("\n") + "\n\n\n";
+	main.push(left(rule));
+	main.push(left(padRight("TOTAL", 28) + padLeft(money(sale.total), 20)));
+	main.push(left("Paid by " + (sale.payment || "Cash")));
+	if (sale.cashTendered != null) {
+		main.push(left(padRight("Cash received", 28) + padLeft(money(sale.cashTendered), 20)));
+		main.push(left(padRight("Change", 28) + padLeft(money(sale.changeGiven || 0), 20)));
+	}
+	main.push(left(rule));
+	wrapLine((location && location.receiptFooter) || settings.receiptFooter || DEFAULT_RECEIPT_FOOTER, width).forEach((l) => main.push(center(l)));
+	receiptSocialLines(settings).forEach((l) => wrapLine(l, width).forEach((x) => main.push(center(x))));
+	// the QR (when there is one) is captioned with the first social handle, like the printed example
+	const social = settings.receiptSocials || {};
+	const handle = ["instagram", "facebook", "tiktok", "website"].map((k) => String(social[k] || "").trim()).find(Boolean);
+	const caption = settings.receiptSocialQr && handle ? [center(handle)] : [];
+	return { main, caption, powered: [center("Powered by Ceylonry POS")] };
+}
+
+/** Plain-text version of receiptLayout (no QR, no alignment). */
+export function receiptText(sale, ctx = {}) {
+	const { main, caption, powered } = receiptLayout(sale, ctx);
+	return [...main, ...caption, ...powered].map((l) => l.text).join("\n") + "\n\n\n";
 }
