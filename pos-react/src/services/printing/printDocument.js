@@ -2,8 +2,10 @@
  * Browser printing helpers: print an HTML document through a hidden iframe or open it in a pop-up window.
  */
 /** Browser printing helpers (hidden iframe, pop-up window). */
+import { localPrintPreview, showPrintPreview } from "./localPrintPreview";
 
 export function printHtmlInFrame(html, title = "Print job") {
+	if (localPrintPreview()) return void showPrintPreview({ title, html }); // local test mode: preview instead of printing
 	document.querySelectorAll(".pos-print-frame").forEach((f) => f.remove());
 	const frame = document.createElement("iframe");
 	frame.className = "pos-print-frame";
@@ -30,6 +32,7 @@ export function printHtmlInFrame(html, title = "Print job") {
 
 /** Opens a pop-up with the document (legacy behaviour). Returns false when blocked. */
 export function printHtmlInWindow(html) {
+	if (localPrintPreview()) return showPrintPreview({ title: "Kitchen ticket", html }); // local test mode
 	const w = window.open("", "_blank", "width=420,height=700");
 	if (!w) return false;
 	w.document.open();

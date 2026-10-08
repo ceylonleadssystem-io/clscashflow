@@ -3,7 +3,8 @@
  * logo, receipt text, QR code and cut command in the right byte order.
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
-import { receiptText } from "./documents";
+import { localPrintPreview, showPrintPreview } from "./localPrintPreview";
+import { receiptHtml, receiptText } from "./documents";
 import { escPosRaster } from "./imageTools";
 import { createLogger } from "../../utils/logger";
 
@@ -114,6 +115,8 @@ class ReceiptPrinter {
 	}
 
 	async print(sale, ctx) {
+		// local test mode: no printer needed, show the receipt that would be printed
+		if (localPrintPreview()) return void showPrintPreview({ title: "Receipt " + sale.receipt + " (USB receipt printer)", html: receiptHtml(sale, ctx) });
 		if (!this.connected) {
 			const restored = await this.restore(ctx.saved || {});
 			if (!restored)
