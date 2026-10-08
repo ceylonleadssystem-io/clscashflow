@@ -31,8 +31,8 @@ export async function compressProductImage(file, max = 700, quality = 0.78) {
 	return c.toDataURL("image/jpeg", quality);
 }
 
-/** Crops transparent / white margins, scales to <=800px and returns a PNG data URL. */
-export async function fitBusinessLogo(file, max = 800) {
+/** Crops transparent / white margins, scales to <=512px and returns a WebP data URL (PNG when WebP is not available). */
+export async function fitBusinessLogo(file, max = 512) {
 	const img = await loadImage(await readFileAsDataUrl(file));
 	const source = document.createElement("canvas");
 	const ctx = source.getContext("2d", { willReadFrequently: true });
@@ -74,34 +74,56 @@ export async function fitBusinessLogo(file, max = 800) {
 	out.width = Math.max(1, Math.round(sw * scale));
 	out.height = Math.max(1, Math.round(sh * scale));
 	out.getContext("2d").drawImage(source, sx, sy, sw, sh, 0, 0, out.width, out.height);
-	return out.toDataURL("image/png");
+	const webp = out.toDataURL("image/webp", 0.85); // browsers that cannot encode WebP answer with a PNG instead
+	return webp.startsWith("data:image/webp") ? webp : out.toDataURL("image/png");
 }
 
-/** Removes solid dark bars that scanners mistake for QR borders. */
+/**
+ * Rows/columns of solid dark pixels that are a frame around the QR rather than part of it: nearly fully dark (>= 90%)
+ * and inside the outer 10% of the image. A real QR code never has a row or column that dark, and its dense inner rows
+ * (often > 55% dark) must be left alone, otherwise white bars cut through the printed code.
+ */
+export function solidBarLines(px, width, height) {
+	const dark = (o) => px[o + 3] > 40 && 0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2] < 115;
+	const edgeY = Math.ceil(height * 0.1);
+	const edgeX = Math.ceil(width * 0.1);
+	const rows = [];
+	const cols = [];
+	for (let y = 0; y < height; y++) {
+		if (y >= edgeY && y < height - edgeY) continue;
+		let n = 0;
+		for (let x = 0; x < width; x++) if (dark((y * width + x) * 4)) n++;
+		if (n >= width * 0.9) rows.push(y);
+	}
+	for (let x = 0; x < width; x++) {
+		if (x >= edgeX && x < width - edgeX) continue;
+		let n = 0;
+		for (let y = 0; y < height; y++) if (dark((y * width + x) * 4)) n++;
+		if (n >= height * 0.9) cols.push(x);
+	}
+	return { rows, cols };
+}
+
+/** Pure black or white pixels (no greys): a QR needs nothing else and the PNG shrinks to a few KB. */
+function binarize(canvas) {
+	const ctx = canvas.getContext("2d");
+	const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	const px = img.data;
+	for (let o = 0; o < px.length; o += 4) {
+		const v = px[o + 3] > 40 && 0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2] < 140 ? 0 : 255;
+		px[o] = px[o + 1] = px[o + 2] = v;
+		px[o + 3] = 255;
+	}
+	ctx.putImageData(img, 0, 0);
+}
+
+/** Removes solid dark frame bars that scanners mistake for QR borders (see solidBarLines). */
 export function whitenSolidQrBackground(canvas) {
 	const ctx = canvas.getContext("2d");
 	const { width, height } = canvas;
 	const imageData = ctx.getImageData(0, 0, width, height);
 	const px = imageData.data;
-	const rows = [];
-	const cols = [];
-	const luma = (o) => 0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2];
-	for (let y = 0; y < height; y++) {
-		let dark = 0;
-		for (let x = 0; x < width; x++) {
-			const o = (y * width + x) * 4;
-			if (px[o + 3] > 40 && luma(o) < 115) dark++;
-		}
-		if (dark > width * 0.55) rows.push(y);
-	}
-	for (let x = 0; x < width; x++) {
-		let dark = 0;
-		for (let y = 0; y < height; y++) {
-			const o = (y * width + x) * 4;
-			if (px[o + 3] > 40 && luma(o) < 115) dark++;
-		}
-		if (dark > height * 0.55) cols.push(x);
-	}
+	const { rows, cols } = solidBarLines(px, width, height);
 	const white = (o) => {
 		px[o] = px[o + 1] = px[o + 2] = px[o + 3] = 255;
 	};
@@ -115,7 +137,7 @@ export function whitenSolidQrBackground(canvas) {
 	return canvas;
 }
 
-/** Crops the light QR artwork out of its backdrop and returns a clean 640px PNG. */
+/** Crops the light QR artwork out of its backdrop and returns a clean 384px black-and-white PNG (a few KB). */
 export async function cleanReceiptQrImage(source) {
 	try {
 		const image = await loadImage(source);
@@ -147,7 +169,7 @@ export async function cleanReceiptQrImage(source) {
 		const cropY = Math.max(0, minY);
 		const cropW = Math.min(scan.width - cropX, maxX - minX + 1);
 		const cropH = Math.min(scan.height - cropY, maxY - minY + 1);
-		const size = 640;
+		const size = 384;
 		const out = document.createElement("canvas");
 		out.width = size;
 		out.height = size;
@@ -159,6 +181,7 @@ export async function cleanReceiptQrImage(source) {
 		const dh = Math.round(cropH * scale);
 		ctx.drawImage(image, cropX, cropY, cropW, cropH, Math.round((size - dw) / 2), Math.round((size - dh) / 2), dw, dh);
 		whitenSolidQrBackground(out);
+		binarize(out);
 		return out.toDataURL("image/png");
 	} catch (error) {
 		console.warn("Receipt QR background cleanup failed:", error);
