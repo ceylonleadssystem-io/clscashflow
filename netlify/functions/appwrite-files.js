@@ -53,7 +53,9 @@ async function handle(event) {
     return response(400, { ok: false, error: 'Unknown action.' });
   } catch (error) {
     log.error('image request failed', error);
-    return response(error && error.statusCode >= 400 && error.statusCode < 600 ? error.statusCode : 500, { ok: false, error: 'The image could not be stored.' });
+    // Appwrite's own message (e.g. a missing API key scope) is safe to show and is what the owner needs to fix it.
+    const detail = String((error && error.message) || '').slice(0, 200);
+    return response(error && error.statusCode >= 400 && error.statusCode < 600 ? error.statusCode : 500, { ok: false, error: 'The image could not be stored.' + (detail ? ' (' + detail + ')' : '') });
   }
 }
 

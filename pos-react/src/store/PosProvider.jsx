@@ -22,6 +22,7 @@ import { useFeatures } from "./FeatureProvider";
 import { useSession } from "./SessionProvider";
 import { resolveWelcome } from "../config/welcome";
 import { useUi } from "./UiProvider";
+import { setUploadFailureHandler } from "../services/imageStorage";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("staff");
@@ -49,6 +50,11 @@ export function PosProvider({ children }) {
 	const { enabled } = useFeatures();
 	const { workspace } = useSession();
 	const ui = useUi();
+	// tell the owner when a photo could not reach cloud storage (it stays on this device and is retried by the move button)
+	useEffect(() => {
+		setUploadFailureHandler((why) => ui.notice("Image saved on this device only: cloud storage said \"" + why + "\"."));
+		return () => setUploadFailureHandler(null);
+	}, [ui]);
 	const support = useMemo(() => supportModeActive(), []);
 
 	const [currentUserId, setCurrentUserId] = useState(() => sessionStorage.getItem(STORAGE.userSession) || "");
