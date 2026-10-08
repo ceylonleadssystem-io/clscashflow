@@ -7,6 +7,18 @@ const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://sgp.cloud.ap
 const APPWRITE_PROJECT_ID = process.env.APPWRITE_PROJECT_ID || '6a947d6e0012c551dfde';
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID || 'ceylonry';
 const COLLECTION_ID = process.env.APPWRITE_COLLECTION_ID || 'app_documents';
+// POS business data (users/{uid}/pos, its split "large document" pieces and posCatalogBackups) lives in its own database
+// so it is separated from the other system's documents. posInvoices and everything else stay in the main database.
+// APPWRITE_POS_ROUTING=off sends everything back to the main database; APPWRITE_POS_FALLBACK=off stops reading POS rows
+// that have not been copied yet from the main database (turn it off once the migration is verified).
+const POS_DATABASE_ID = process.env.APPWRITE_POS_DATABASE_ID || 'pos';
+const POS_COLLECTION_ID = process.env.APPWRITE_POS_COLLECTION_ID || 'pos_documents';
+const MAIN_STORE = { db: DATABASE_ID, col: COLLECTION_ID };
+const POS_STORE = { db: POS_DATABASE_ID, col: POS_COLLECTION_ID };
+const isPosPath = function(path) { return /^users\/[^/]+\/(pos|posCatalogBackups)(\/|$)/.test(String(path || '')); };
+function storeFor(path) { return process.env.APPWRITE_POS_ROUTING !== 'off' && isPosPath(path) ? POS_STORE : MAIN_STORE; }
+// where a routed (POS) row may still be waiting from before the move; null when the path was never moved
+function legacyStoreFor(path) { return process.env.APPWRITE_POS_FALLBACK !== 'off' && storeFor(path) === POS_STORE ? MAIN_STORE : null; }
 const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 
 function clean(value, max) {
@@ -64,19 +76,21 @@ function storedData(value) {
 function rowToDoc(row) { return { id: row.docId, data: JSON.parse(row.data || '{}') }; }
 function chunkPath(path, id) { return path + '/__large_documents__/' + id; }
 function chunkId(id, index) { return crypto.createHash('sha256').update(id + '\0chunk\0' + index).digest('hex').slice(0, 36); }
-async function removeChunks(path, id, from, count) {
+async function removeChunks(path, id, from, count, store) {
+  store = store || storeFor(path);
   await Promise.all(Array.from({ length: Number(count) || 0 }, async function(_, offset) {
     const logicalId = chunkId(id, (Number(from) || 0) + offset);
-    try { await databases().deleteDocument(DATABASE_ID, COLLECTION_ID, documentKey(chunkPath(path, id), logicalId)); }
+    try { await databases().deleteDocument(store.db, store.col, documentKey(chunkPath(path, id), logicalId)); }
     catch (error) { if (!error || error.code !== 404) throw error; }
   }));
 }
-async function hydratedRowToDoc(row) {
+async function hydratedRowToDoc(row, store) {
+  store = store || storeFor(row.path);
   const parsed = JSON.parse(row.data || '{}');
   if (!parsed.__chunkedDocument) return { id: row.docId, data: parsed };
   const pieces = await Promise.all(Array.from({ length: Number(parsed.chunkCount) || 0 }, async function(_, index) {
     const logicalId = chunkId(row.docId, index);
-    const chunk = await databases().getDocument(DATABASE_ID, COLLECTION_ID, documentKey(chunkPath(row.path, row.docId), logicalId));
+    const chunk = await databases().getDocument(store.db, store.col, documentKey(chunkPath(row.path, row.docId), logicalId));
     return JSON.parse(chunk.data || '{}').chunk || '';
   }));
   return { id: row.docId, data: JSON.parse(pieces.join('')) };
@@ -93,20 +107,33 @@ async function getUserFromEvent(event) {
 }
 
 async function getDocument(path, id) {
-  try { return hydratedRowToDoc(await databases().getDocument(DATABASE_ID, COLLECTION_ID, documentKey(path, id))); }
-  catch (error) { if (error && error.code === 404) return null; throw error; }
+  const stores = [storeFor(path), legacyStoreFor(path)].filter(Boolean);
+  for (const store of stores) {
+    try { return await hydratedRowToDoc(await databases().getDocument(store.db, store.col, documentKey(path, id)), store); }
+    catch (error) { if (!error || error.code !== 404) throw error; }
+  }
+  return null;
 }
 
 async function queryDocuments(path, options) {
   options = options || {};
-  const result = await databases().listDocuments(DATABASE_ID, COLLECTION_ID, [Query.equal('path', [path]), Query.limit(Math.min(Number(options.fetchLimit || 1000), 5000))]);
-  // A large document whose chunk is missing (404) must not break the whole listing - skip it and log.
-  let rows = (await Promise.all(result.documents.map(function(row) {
-    return hydratedRowToDoc(row).catch(function(error) {
-      if (error && error.code === 404) { console.error('Skipping unreadable document', path, row.docId, error.message); return null; }
-      throw error;
-    });
-  }))).filter(Boolean);
+  const limit = Math.min(Number(options.fetchLimit || 1000), 5000);
+  // rows still waiting in the main database (before the POS move) are listed too; a row in the POS database wins
+  const stores = [storeFor(path), legacyStoreFor(path)].filter(Boolean);
+  const seen = new Set();
+  let rows = [];
+  for (const store of stores) {
+    const result = await databases().listDocuments(store.db, store.col, [Query.equal('path', [path]), Query.limit(limit)]);
+    // A large document whose chunk is missing (404) must not break the whole listing - skip it and log.
+    const part = (await Promise.all(result.documents.filter(function(row) { return !seen.has(row.docId); }).map(function(row) {
+      return hydratedRowToDoc(row, store).catch(function(error) {
+        if (error && error.code === 404) { console.error('Skipping unreadable document', path, row.docId, error.message); return null; }
+        throw error;
+      });
+    }))).filter(Boolean);
+    result.documents.forEach(function(row) { seen.add(row.docId); });
+    rows = rows.concat(part);
+  }
   (options.filters || []).forEach(function(filter) { rows = rows.filter(function(row) { return String((row.data || {})[filter.field] ?? '') === String(filter.value ?? ''); }); });
   if (options.order) rows.sort(function(a,b){ const av=(a.data||{})[options.order]||'',bv=(b.data||{})[options.order]||''; return (av < bv ? -1 : av > bv ? 1 : 0) * (options.dir === 'asc' ? 1 : -1); });
   return options.limit ? rows.slice(0, Number(options.limit)) : rows;
@@ -118,10 +145,10 @@ async function upsertDocument(path, id, data, merge) {
   Object.keys(next).forEach(function(key){ if(next[key] && next[key].__delete === true) delete next[key]; });
   const now = new Date().toISOString(), serialized = JSON.stringify(next);
   const payload = { path, docId:id, data:serialized, ownerUid:ownerFrom(path,id,next), email:clean(next.email,320)||null, createdAt:now, updatedAt:now };
-  const key = documentKey(path,id);
+  const key = documentKey(path,id), store = storeFor(path);
   let current = null, oldChunkCount = 0;
   try {
-    current = await databases().getDocument(DATABASE_ID,COLLECTION_ID,key);
+    current = await databases().getDocument(store.db,store.col,key);
     payload.createdAt = current.createdAt || now;
   } catch (error) {
     if (!error || error.code !== 404) throw error;
@@ -131,23 +158,27 @@ async function upsertDocument(path, id, data, merge) {
     const pieces=splitUtf8(serialized,DOCUMENT_CHUNK_SIZE);
     await Promise.all(pieces.map(async function(piece,index){
       const logicalId=chunkId(id,index),chunkPayload={path:chunkPath(path,id),docId:logicalId,data:storedData({chunk:piece}),ownerUid:ownerFrom(path,id,next),email:null,createdAt:now,updatedAt:now},chunkKey=documentKey(chunkPayload.path,logicalId);
-      try{const old=await databases().getDocument(DATABASE_ID,COLLECTION_ID,chunkKey);chunkPayload.createdAt=old.createdAt||now;await databases().updateDocument(DATABASE_ID,COLLECTION_ID,chunkKey,chunkPayload)}catch(error){if(!error||error.code!==404)throw error;await databases().createDocument(DATABASE_ID,COLLECTION_ID,chunkKey,chunkPayload,[])}
+      try{const old=await databases().getDocument(store.db,store.col,chunkKey);chunkPayload.createdAt=old.createdAt||now;await databases().updateDocument(store.db,store.col,chunkKey,chunkPayload)}catch(error){if(!error||error.code!==404)throw error;await databases().createDocument(store.db,store.col,chunkKey,chunkPayload,[])}
     }));
     payload.data=storedData({__chunkedDocument:true,chunkCount:pieces.length});
     if(oldChunkCount>pieces.length)await removeChunks(path,id,pieces.length,oldChunkCount-pieces.length);
   } else if(oldChunkCount) await removeChunks(path,id,0,oldChunkCount);
   payload.data=storedData(payload.data);
-  const saved=current?await databases().updateDocument(DATABASE_ID,COLLECTION_ID,key,payload):await databases().createDocument(DATABASE_ID,COLLECTION_ID,key,payload,[]);
+  const saved=current?await databases().updateDocument(store.db,store.col,key,payload):await databases().createDocument(store.db,store.col,key,payload,[]);
   return {id:saved.docId,data:next};
 }
 
+// Removes the row (and its split pieces) from the routed store and, while a move is in progress, from the old store too
+// so a deleted document cannot reappear from the fallback.
 async function deleteDocument(path,id){
-  try{
-    const current=await databases().getDocument(DATABASE_ID,COLLECTION_ID,documentKey(path,id));
-    let chunkCount=0;try{chunkCount=Number(JSON.parse(current.data||'{}').chunkCount)||0}catch(_){}
-    await databases().deleteDocument(DATABASE_ID,COLLECTION_ID,documentKey(path,id));
-    if(chunkCount)await removeChunks(path,id,0,chunkCount);
-  }catch(error){if(!error||error.code!==404)throw error;}
+  for(const store of [storeFor(path),legacyStoreFor(path)].filter(Boolean)){
+    try{
+      const current=await databases().getDocument(store.db,store.col,documentKey(path,id));
+      let chunkCount=0;try{chunkCount=Number(JSON.parse(current.data||'{}').chunkCount)||0}catch(_){}
+      await databases().deleteDocument(store.db,store.col,documentKey(path,id));
+      if(chunkCount)await removeChunks(path,id,0,chunkCount,store);
+    }catch(error){if(!error||error.code!==404)throw error;}
+  }
 }
 function newId(prefix){return clean((prefix?prefix+'_':'')+ID.unique(),36);}
 async function isAdmin(user){if(clean(user&&user.email,240).toLowerCase()===ADMIN_EMAIL)return true;const p=user&&await getDocument('users',user.id);return !!(p&&p.data&&p.data.adminAccess===true);}
@@ -223,4 +254,4 @@ function appwriteAdmin(){
   };
 }
 
-module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
+module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
