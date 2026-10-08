@@ -1,6 +1,6 @@
 /**
  * Admin portal: detail screen for one business account, with tabs for access (enable/disable and
- * fixed-amount pricing), per-business and per-location feature switches, the first-login welcome message and invoices.
+ * fixed-amount pricing), per-business and per-location feature switches, the first-login welcome message, invoices and the menu export.
  */
 import { GearLoader } from "../components/ui/GearLoader";
 import { useCallback, useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import { FeaturesTab } from "./FeaturesTab";
 import { WelcomeTab } from "./WelcomeTab";
 import { InvoicesTab } from "./InvoicesTab";
 import { DiagnosticsTab } from "./DiagnosticsTab";
+import { MenuTab } from "./MenuTab";
 import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
 
@@ -17,6 +18,7 @@ const TABS = [
 	["features", "Features"],
 	["welcome", "Welcome message"],
 	["invoices", "Invoices"],
+	["menu", "Menu"],
 	["diagnostics", "Diagnostics"],
 ];
 
@@ -74,6 +76,7 @@ export function AccountDetail({ account, onBack, onChanged }) {
 			{tab === "access" && <AccessTab account={account} profile={profile} settings={settings} save={save} saving={saving} onChanged={() => { onChanged(); reload(); }} ui={ui} />}
 			{tab === "features" && <FeaturesTab settings={settings} locations={locations} save={save} saving={saving} ui={ui} />}
 			{tab === "welcome" && <WelcomeTab settings={settings} save={save} saving={saving} />}
+			{tab === "menu" && <MenuTab account={account} workspace={data.workspace} ui={ui} />}
 			{tab === "diagnostics" && <DiagnosticsTab account={account} ui={ui} />}
 			{tab === "invoices" && <InvoicesTab account={account} profile={profile} settings={settings} save={save} saving={saving} invoices={invoices} reload={reload} ui={ui} />}
 		</div>
