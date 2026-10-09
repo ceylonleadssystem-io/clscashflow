@@ -10,6 +10,8 @@ import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { useCheckout } from "../../store/CheckoutProvider";
 import { useFullscreen } from "../../hooks/useFullscreen";
+import { useInstall } from "../../hooks/useInstall";
+import { IosInstallGuide } from "./IosInstallGuide";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { useUi } from "../../store/UiProvider";
 import { locationLabel } from "../../services/pos/locations";
@@ -20,6 +22,8 @@ export function Topbar({ onOpenLocations }) {
 	const { signOut } = useSession();
 	const data = useData();
 	const { full, toggle } = useFullscreen();
+	const { canInstall, install } = useInstall();
+	const [guideOpen, setGuideOpen] = useState(false);
 	const { cart, totals } = useCheckout();
 	const ui = useUi();
 	const fullscreenOn = useFeature("shell.fullscreen");
@@ -115,6 +119,18 @@ export function Topbar({ onOpenLocations }) {
 								<span>Printer</span>
 							</button>
 						)}
+						{fullscreenOn && canInstall && (
+							<button
+								className="btn out"
+								type="button"
+								id="install-btn"
+								onClick={async () => {
+									if ((await install()) === "guide") setGuideOpen(true);
+								}}
+							>
+								Install App
+							</button>
+						)}
 						{fullscreenOn && (
 							<button className="btn out" onClick={toggle} id="full-btn">
 								{full ? "Exit Full Screen" : "Full Screen"}
@@ -123,6 +139,7 @@ export function Topbar({ onOpenLocations }) {
 					</div>
 				</div>
 			</header>
+			<IosInstallGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
 			{view === "checkout" && (
 				<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
 					{layout.mobileCartOpen ? (

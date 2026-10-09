@@ -132,6 +132,18 @@
     Content-Type = "application/manifest+json"
     Cache-Control = "public, max-age=300, must-revalidate"
 
+# The POS is served under /posv2/: its manifest and service worker need the same headers there.
+[[headers]]
+  for = "/posv2/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=300, must-revalidate"
+
+[[headers]]
+  for = "/posv2/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
 # A short browser cache makes switching Solo, Studio, and Business feel
 # immediate without leaving users on stale HTML after an update.
 [[headers]]
