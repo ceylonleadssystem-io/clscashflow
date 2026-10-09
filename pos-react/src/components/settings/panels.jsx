@@ -321,26 +321,24 @@ export function PrintingPanel({ form, set, setForm }) {
 					<Field label="Epson Printer Address">
 						<input className="input" id="set-printer-address" placeholder="IP address (optional)" value={form.printerAddress} onChange={set("printerAddress")} />
 					</Field>
-					<Field>
-						<label>
-							<input type="checkbox" id="set-auto-print" checked={form.autoPrint} onChange={set("autoPrint")} /> Print customer receipt after sale
-						</label>
-					</Field>
 					{kitchen && tickets && (
-						<>
-							<Field>
-								<label>
-									<input type="checkbox" id="set-auto-kot" checked={form.autoPrintKot} onChange={set("autoPrintKot")} /> Print KOT after sale
-								</label>
-							</Field>
-							<Field label="KOT / Kitchen Printer Name">
-								<input className="input" id="set-kot-printer" placeholder="Kitchen, Bar, Epson TM-T20..." value={form.kotPrinter} onChange={set("kotPrinter")} />
-							</Field>
-						</>
+						<Field label="KOT / Kitchen Printer Name">
+							<input className="input" id="set-kot-printer" placeholder="Kitchen, Bar, Epson TM-T20..." value={form.kotPrinter} onChange={set("kotPrinter")} />
+						</Field>
 					)}
 					<Field label="Receipt Footer">
 						<input className="input" id="set-receipt-footer" placeholder="Thank you for your purchase" value={form.receiptFooter} onChange={set("receiptFooter")} />
 					</Field>
+				</div>
+				<div className="channel-setting-grid print-toggles">
+					<label>
+						<input type="checkbox" id="set-auto-print" checked={form.autoPrint} onChange={set("autoPrint")} /> Print customer receipt after sale
+					</label>
+					{kitchen && tickets && (
+						<label>
+							<input type="checkbox" id="set-auto-kot" checked={form.autoPrintKot} onChange={set("autoPrintKot")} /> Print KOT after sale
+						</label>
+					)}
 				</div>
 				<div className="tools" style={{ marginTop: 12 }}>
 					<button className="btn out" type="button" onClick={svc.printing.printTestReceipt}>
