@@ -139,6 +139,16 @@ async function getDocumentStamp(path, id) {
   return { exists: false, stamp: '' };
 }
 
+// Write times of every document directly under a path (no data): one small request tells a device which of them changed.
+async function listStamps(path, limit) {
+  const out = new Map();
+  for (const store of [storeFor(path), legacyStoreFor(path)].filter(Boolean)) {
+    const res = await databases().listDocuments(store.db, store.col, [Query.equal('path', [path]), Query.select(['docId', 'updatedAt', 'ownerUid']), Query.limit(Math.min(Number(limit) || 1000, 5000))]);
+    res.documents.forEach(function(row) { if (!out.has(row.docId)) out.set(row.docId, row.updatedAt || ''); });
+  }
+  return out;
+}
+
 async function queryDocuments(path, options) {
   options = options || {};
   const limit = Math.min(Number(options.fetchLimit || 1000), 5000);
@@ -279,4 +289,4 @@ function appwriteAdmin(){
   };
 }
 
-module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,getDocumentStamp,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
+module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,getDocumentStamp,listStamps,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};

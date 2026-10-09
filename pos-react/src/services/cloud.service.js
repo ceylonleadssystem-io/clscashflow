@@ -6,6 +6,7 @@ import { env } from "../config/env";
 import { STORAGE } from "../config/constants";
 import { exactly } from "../db/rowMapper";
 import { payloadToSnapshot, snapshotToPayload } from "./sync/payload";
+import { SplitRef } from "./sync/salesSplit";
 import { mergePayload, payloadCovers } from "./sync/merge";
 import {
 	cacheCatalogue,
@@ -150,6 +151,7 @@ export class CloudSyncService {
 		this.dbName = dbName;
 		const { profile, workspaceUid, workspaceUser, userRef } = ctx;
 		this.ref = this.fb.firestore().collection("users").doc(workspaceUid).collection("pos").doc("main");
+		if (env.salesSplit) this.ref = new SplitRef(this.ref, this.ref.collection("sales"));
 
 		let localPayload = (await this._hasLocalData()) ? clone(await this._localPayload()) : null;
 		const [legacyWorkspace, legacyRoot] = legacyPayloads;

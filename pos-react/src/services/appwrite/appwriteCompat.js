@@ -237,6 +237,11 @@ export function getAppwriteCompat() {
 		doc(id) {
 			return new DocRef(this.path, id);
 		}
+		/** Last-write time of every document in this collection ({ id: stamp }), without any of their data. */
+		async stamps() {
+			const j = await request({ action: "stamps", path: this.path });
+			return j.stamps || {};
+		}
 		async add(data) {
 			const d = new DocRef(this.path);
 			await d.set(data);

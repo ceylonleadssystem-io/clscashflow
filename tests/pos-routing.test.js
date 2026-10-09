@@ -16,7 +16,7 @@ class FakeDatabases {
   }
 }
 const chain = new Proxy(function () {}, { get: () => () => chain, apply: () => chain });
-const fake = { Client: function () { return chain; }, Account: function () {}, Users: function () {}, Databases: FakeDatabases, ID: { unique: () => 'id' }, Query: { equal: (a, v) => ({ m: 'equal', a, v }), contains: (a, v) => ({ m: 'contains', a, v }), select: (a) => ({ m: 'select', a }), limit: (n) => ({ m: 'limit', n }), offset: (n) => ({ m: 'offset', n }) } };
+const fake = { Client: function () { return chain; }, Account: function () { return { get: async () => ({ $id: 'u12', email: 'o@x.lk', name: 'Owner' }) }; }, Users: function () {}, Databases: FakeDatabases, ID: { unique: () => 'id' }, Query: { equal: (a, v) => ({ m: 'equal', a, v }), contains: (a, v) => ({ m: 'contains', a, v }), select: (a) => ({ m: 'select', a }), limit: (n) => ({ m: 'limit', n }), offset: (n) => ({ m: 'offset', n }) } };
 const realLoad = Module._load;
 Module._load = function (request, ...rest) { return request === 'node-appwrite' ? fake : realLoad.call(this, request, ...rest); };
 process.env.APPWRITE_API_KEY = 'k';
@@ -167,4 +167,46 @@ test('APPWRITE_COMPRESS=off stops compressing new saves but compressed rows stay
     await lib.upsertDocument('users/u10/pos', 'main', big);
     assert.deepEqual(JSON.parse(slot('pos', 'users/u10/pos', 'main').data).payload, big.payload); // plain again
   } finally { delete process.env.APPWRITE_COMPRESS; }
+});
+
+test('stamps lists the write time of every document under a path, and month documents are POS data', async () => {
+  rows.clear();
+  await lib.upsertDocument('users/u11/pos/main/sales', '2026-09', { rows: [{ id: 's1' }] });
+  await lib.upsertDocument('users/u11/pos/main/sales', '2026-10', { rows: [{ id: 's2' }] });
+  await lib.upsertDocument('users/u11/pos/main/sales', '2026-10', { rows: [{ id: 's3' }] }, true);
+  const list = await lib.listStamps('users/u11/pos/main/sales');
+  assert.deepEqual([...list.keys()].sort(), ['2026-09', '2026-10']);
+  assert.equal(list.get('2026-10'), (await lib.getDocumentStamp('users/u11/pos/main/sales', '2026-10')).stamp);
+  assert.ok(slot('pos', 'users/u11/pos/main/sales', '2026-09')); // month documents are POS data: they live in the POS database
+  assert.equal(slot('ceylonry', 'users/u11/pos/main/sales', '2026-09'), undefined);
+});
+
+test('appwrite-docs: month documents union their rows, a salesSplit main document drops its sales, stamps answers without data', async () => {
+  rows.clear();
+  Module._load = function (request, ...rest) { return request === 'node-appwrite' ? fake : realLoad.call(this, request, ...rest); };
+  const docs = require('../netlify/functions/appwrite-docs');
+  Module._load = realLoad;
+  const call = async (body) => { const r = await docs.handler({ httpMethod: 'POST', headers: { authorization: 'Bearer t' }, body: JSON.stringify(body) }); return { code: r.statusCode, json: JSON.parse(r.body) }; };
+  const month = 'users/u12/pos/main/sales';
+  const a = await call({ action: 'set', path: month, id: '2026-10', data: { rows: [{ id: 's1', updatedAt: '2026-10-01T00:00:00.000Z' }] }, merge: true });
+  assert.equal(a.code, 200);
+  assert.equal(a.json.previousStamp, '');
+  const b = await call({ action: 'set', path: month, id: '2026-10', data: { rows: [{ id: 's2', updatedAt: '2026-10-02T00:00:00.000Z' }] }, merge: true });
+  assert.equal(b.json.previousStamp, a.json.stamp); // the version it replaced
+  const got = await call({ action: 'get', path: month, id: '2026-10' });
+  assert.deepEqual(got.json.doc.data.rows.map((r) => r.id).sort(), ['s1', 's2']); // the second save did not drop the first sale
+  const list = await call({ action: 'stamps', path: month });
+  assert.deepEqual(list.json.stamps, { '2026-10': b.json.stamp });
+
+  // the main document: a legacy copy still has sales, the split save removes them
+  await call({ action: 'set', path: 'users/u12/pos', id: 'main', data: { ownerUid: 'u12', payload: { products: [{ id: 'p1', name: 'Tea' }], sales: [{ id: 'old' }] } }, merge: true });
+  const main = await call({ action: 'set', path: 'users/u12/pos', id: 'main', data: { ownerUid: 'u12', payload: { products: [{ id: 'p1', name: 'Tea' }], salesSplit: 1 } }, merge: true });
+  assert.equal(main.code, 200);
+  const stored = await call({ action: 'get', path: 'users/u12/pos', id: 'main' });
+  assert.equal(stored.json.doc.data.payload.sales, undefined);
+  assert.equal(stored.json.doc.data.payload.salesSplit, 1);
+  assert.equal((await call({ action: 'stamp', path: 'users/u12/pos', id: 'main' })).json.stamp, main.json.stamp);
+  // another account cannot read these months
+  const other = await docs.handler({ httpMethod: 'POST', headers: { authorization: 'Bearer t' }, body: JSON.stringify({ action: 'stamps', path: 'users/someone-else/pos/main/sales' }) });
+  assert.equal(other.statusCode, 403);
 });
