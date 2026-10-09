@@ -8,6 +8,21 @@ export const GRID = { w: 900, h: 560, min: 50, max: 300, step: 10 };
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Number.isFinite(+n) ? +n : lo));
 const snap = (n) => Math.round(n / GRID.step) * GRID.step;
 
+/** Settings key that holds one location's floor plan (a key per location, so two branches never overwrite each other when they sync). */
+export const layoutKey = (locationId) => "tableLayout_" + locationId;
+
+/**
+ * The floor plan of one location: its own saved layout, or - until that location saves one - the shared layout that
+ * was saved before layouts became per location (settings.tableLayout), so no existing floor disappears.
+ */
+export function layoutFor(settings, locationId) {
+	const own = locationId ? (settings || {})[layoutKey(locationId)] : null;
+	return Array.isArray(own) ? own : (settings || {}).tableLayout || [];
+}
+
+/** Open checks that belong to a location (checks saved without a location count for every location). */
+export const locationOrders = (openOrders, locationId) => openOrders.filter((o) => !o.locationId || o.locationId === locationId);
+
 export const tableReference = (t) => "Table " + t.number;
 
 /** Safe table from user input / saved data: snapped size and position kept inside the floor. */
