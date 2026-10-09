@@ -212,6 +212,13 @@ scopes. The bucket is publicly readable, so anyone holding an image URL can view
 upload fails the image stays inside the business data as before, and **Settings > Business Profile > Move saved images
 to cloud storage** moves images saved earlier. Replaced or deleted images are not removed from the bucket yet.
 
+### Sync cost
+The business data is one cloud document per business (`users/{uid}/pos/main`). To keep loads and polling cheap:
+- A device first asks for the document's **write stamp** (a few bytes, `stamp` action of `appwrite-docs`) every `VITE_SYNC_PULL_MS` (default 3 s) and downloads the document only when the stamp changed.
+- After a save, if nobody else wrote in between (the server reports the stamp it replaced), the document is not downloaded again to confirm it.
+- Documents over 50 KB are stored **gzip-compressed** (`{"__gz": "<base64>"}` in the same text column), so a business needs far fewer 400 KB pieces. The server decompresses on read, so the app and older clients are unaffected. The Appwrite console shows these rows as compressed text.
+- The sign-in token sent with each request is reused for 10 minutes instead of being created for every request.
+
 ### Inventory behaviour
 * Deleting a product's stock row turns stock tracking **off** for it: always sellable (re-enable via *Add Stock*).
 * Adjustments: *Stock received* adds; *Wastage / Damaged / Internal use / Return to supplier* subtract;

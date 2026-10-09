@@ -16,7 +16,7 @@ class FakeDatabases {
   }
 }
 const chain = new Proxy(function () {}, { get: () => () => chain, apply: () => chain });
-const fake = { Client: function () { return chain; }, Account: function () {}, Users: function () {}, Databases: FakeDatabases, ID: { unique: () => 'id' }, Query: { equal: (a, v) => ({ m: 'equal', a, v }), contains: (a, v) => ({ m: 'contains', a, v }), limit: (n) => ({ m: 'limit', n }), offset: (n) => ({ m: 'offset', n }) } };
+const fake = { Client: function () { return chain; }, Account: function () {}, Users: function () {}, Databases: FakeDatabases, ID: { unique: () => 'id' }, Query: { equal: (a, v) => ({ m: 'equal', a, v }), contains: (a, v) => ({ m: 'contains', a, v }), select: (a) => ({ m: 'select', a }), limit: (n) => ({ m: 'limit', n }), offset: (n) => ({ m: 'offset', n }) } };
 const realLoad = Module._load;
 Module._load = function (request, ...rest) { return request === 'node-appwrite' ? fake : realLoad.call(this, request, ...rest); };
 process.env.APPWRITE_API_KEY = 'k';
@@ -80,12 +80,12 @@ test('deleting removes the row from both databases so it cannot come back', asyn
 
 test('large documents are split in the POS database and read back', async () => {
   rows.clear();
-  const big = 'x'.repeat(950000);
+  const big = require('node:crypto').randomBytes(700000).toString('base64'); // barely compresses, so it still needs pieces
   await lib.upsertDocument('users/u5/pos', 'main', { payload: big });
   const pieces = [...rows.keys()].filter((k) => k.startsWith('pos/pos_documents/'));
   assert.ok(pieces.length >= 3, 'main row plus at least two pieces');
   assert.ok(![...rows.keys()].some((k) => k.startsWith('ceylonry/')));
-  assert.equal((await lib.getDocument('users/u5/pos', 'main')).data.payload.length, 950000);
+  assert.equal((await lib.getDocument('users/u5/pos', 'main')).data.payload, big);
 });
 
 test('the migration script copies only missing POS rows, keeps ids, never deletes, and verify spots gaps', async () => {
@@ -106,4 +106,65 @@ test('the migration script copies only missing POS rows, keeps ids, never delete
   assert.equal(slot('pos', 'users/a/posInvoices', 'INV'), undefined);
   assert.ok(slot('ceylonry', 'users/a/pos', 'main')); // nothing deleted from the source
   assert.deepEqual(await verify(db), { checked: 3, missing: 0, different: 1 }); // users/b was newer in the POS database
+});
+
+test('big documents are stored compressed and read back unchanged, small ones stay plain', async () => {
+  rows.clear();
+  const big = { payload: { sales: Array.from({ length: 2000 }, (_, i) => ({ id: 's' + i, total: i, note: 'cash sale number ' + i })) } };
+  const saved = await lib.upsertDocument('users/u6/pos', 'main', big);
+  const stored = slot('pos', 'users/u6/pos', 'main');
+  assert.ok(JSON.parse(stored.data).__gz, 'stored compressed');
+  assert.ok(stored.data.length < JSON.stringify(big).length / 3, 'much smaller than the plain JSON');
+  assert.equal([...rows.keys()].filter((k) => k.startsWith('pos/')).length, 1, 'one row, no pieces needed');
+  const back = await lib.getDocument('users/u6/pos', 'main');
+  assert.deepEqual(back.data, big);
+  assert.equal(back.stamp, saved.stamp);
+  await lib.upsertDocument('users/u6', 'u6', { email: 'a@b.c' });
+  assert.equal(JSON.parse(slot('ceylonry', 'users/u6', 'u6').data).email, 'a@b.c'); // small document: plain JSON
+});
+
+test('the stamp call returns only the last-write time and changes with every write', async () => {
+  rows.clear();
+  assert.deepEqual(await lib.getDocumentStamp('users/u7/pos', 'main'), { exists: false, stamp: '' });
+  const first = await lib.upsertDocument('users/u7/pos', 'main', { payload: { a: 1 } });
+  const head = await lib.getDocumentStamp('users/u7/pos', 'main');
+  assert.equal(head.exists, true);
+  assert.equal(head.stamp, first.stamp);
+  await new Promise((r) => setTimeout(r, 5));
+  const second = await lib.upsertDocument('users/u7/pos', 'main', { payload: { a: 2 } }, true);
+  assert.notEqual(second.stamp, first.stamp);
+  assert.equal((await lib.getDocumentStamp('users/u7/pos', 'main')).stamp, second.stamp);
+  // a row that is still in the old table is found too (fallback), like getDocument
+  seed('ceylonry', 'users/u8/pos', 'main', { x: 1 });
+  rows.get('ceylonry/app_documents/' + keyOf('users/u8/pos', 'main')).updatedAt = '2026-01-01T00:00:00.000Z';
+  assert.equal((await lib.getDocumentStamp('users/u8/pos', 'main')).stamp, '2026-01-01T00:00:00.000Z');
+});
+
+test('a document the caller has just read is not read again by canWrite / upsertDocument', async () => {
+  rows.clear();
+  await lib.upsertDocument('users/u9/pos', 'main', { payload: { a: 1 } });
+  let reads = 0;
+  const realGet = FakeDatabases.prototype.getDocument;
+  const key = keyOf('users/u9/pos', 'main');
+  FakeDatabases.prototype.getDocument = async function (...a) { if (a[2] === key) reads++; return realGet.apply(this, a); };
+  try {
+    const current = await lib.getDocument('users/u9/pos', 'main');
+    const afterRead = reads;
+    assert.equal(await lib.canWrite('users/u9/pos', 'main', {}, { id: 'u9', email: 'x@y.z' }, current), true);
+    await lib.upsertDocument('users/u9/pos', 'main', { payload: { a: 2 } }, true, current);
+    assert.equal(reads - afterRead, 1, 'only the row lookup inside upsertDocument (created time and piece count): the document itself is not read again');
+  } finally { FakeDatabases.prototype.getDocument = realGet; }
+});
+
+test('APPWRITE_COMPRESS=off stops compressing new saves but compressed rows stay readable', async () => {
+  rows.clear();
+  const big = { payload: { items: Array.from({ length: 3000 }, (_, i) => 'item number ' + i) } };
+  await lib.upsertDocument('users/u10/pos', 'main', big);
+  assert.ok(JSON.parse(slot('pos', 'users/u10/pos', 'main').data).__gz);
+  process.env.APPWRITE_COMPRESS = 'off';
+  try {
+    assert.deepEqual((await lib.getDocument('users/u10/pos', 'main')).data, big); // still readable
+    await lib.upsertDocument('users/u10/pos', 'main', big);
+    assert.deepEqual(JSON.parse(slot('pos', 'users/u10/pos', 'main').data).payload, big.payload); // plain again
+  } finally { delete process.env.APPWRITE_COMPRESS; }
 });

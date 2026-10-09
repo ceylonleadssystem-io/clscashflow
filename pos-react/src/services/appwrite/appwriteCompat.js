@@ -29,6 +29,14 @@ export function getAppwriteCompat() {
 	const account = new Account(client);
 	let currentUser = null;
 	let listeners = [];
+	// An Appwrite sign-in token (JWT) is valid for 15 minutes and creating one is a call to Appwrite (rate limited), so one
+	// token is reused for 10 minutes instead of asking for a new one with every sync request.
+	let jwt = { uid: "", token: "", at: 0 };
+	const idToken = async (uid, force) => {
+		if (!force && jwt.uid === uid && jwt.token && Date.now() - jwt.at < 600000) return jwt.token;
+		jwt = { uid, token: (await account.createJWT()).jwt, at: Date.now() };
+		return jwt.token;
+	};
 
 	const userShape = (user) =>
 		user
@@ -38,7 +46,7 @@ export function getAppwriteCompat() {
 					displayName: user.name || "",
 					photoURL: (user.prefs || {}).photoURL || "",
 					emailVerified: !!user.emailVerification,
-					getIdToken: async () => (await account.createJWT()).jwt,
+					getIdToken: (force) => idToken(user.$id, force),
 					updateProfile: async (p) => {
 						if (p.displayName != null) await account.updateName(p.displayName);
 						currentUser = await loadUser();
@@ -122,22 +130,27 @@ export function getAppwriteCompat() {
 	// ---- document store (proxied through the Netlify function) --------------
 	const request = (body, publicRead) =>
 		init.then(async () => {
-			const headers = { "Content-Type": "application/json" };
-			if (currentUser && !publicRead) headers.Authorization = "Bearer " + (await currentUser.getIdToken());
-			const r = await fetch(env.docsFunctionUrl, { method: "POST", headers, body: JSON.stringify(body) });
-			const j = await r.json();
-			if (!r.ok || j.ok === false) {
-				log.warn("docs function request failed", null, { action: body.action, path: body.path, status: r.status });
-				throw new Error(j.error || "Appwrite request failed.");
+			for (let attempt = 0; ; attempt++) {
+				const headers = { "Content-Type": "application/json" };
+				if (currentUser && !publicRead) headers.Authorization = "Bearer " + (await currentUser.getIdToken(attempt > 0));
+				const r = await fetch(env.docsFunctionUrl, { method: "POST", headers, body: JSON.stringify(body) });
+				const j = await r.json();
+				// a reused token that the server no longer accepts: get a fresh one and try once more
+				if (r.status === 401 && currentUser && !publicRead && attempt === 0) continue;
+				if (!r.ok || j.ok === false) {
+					log.warn("docs function request failed", null, { action: body.action, path: body.path, status: r.status });
+					throw new Error(j.error || "Appwrite request failed.");
+				}
+				return j;
 			}
-			return j;
 		});
 
 	class Snap {
-		constructor(row) {
+		constructor(row, stamp) {
 			this.id = (row && row.id) || "";
 			this.exists = !!row;
 			this._data = (row && row.data) || null;
+			this.stamp = stamp || ""; // when the document was last written on the server
 		}
 		data() {
 			return this._data ? Object.assign({}, this._data) : undefined;
@@ -196,10 +209,17 @@ export function getAppwriteCompat() {
 		}
 		async get() {
 			const j = await request({ action: "get", path: this.path, id: this.id }, /^users\/[^/]+\/team$/.test(this.path));
-			return new Snap(j.doc);
+			return new Snap(j.doc, j.stamp);
+		}
+		/** Just the last-write time of the document (a few bytes), so a device can tell whether anything changed before downloading it. */
+		async stamp() {
+			const j = await request({ action: "stamp", path: this.path, id: this.id });
+			return { exists: !!j.exists, stamp: j.stamp || "" };
 		}
 		async set(data, opt) {
-			await request({ action: "set", path: this.path, id: this.id, data, merge: !!(opt && opt.merge) });
+			const j = await request({ action: "set", path: this.path, id: this.id, data, merge: !!(opt && opt.merge) });
+			this.lastStamp = j.stamp || ""; // the write time the server gave this save, and the stamp it replaced
+			this.lastPreviousStamp = j.previousStamp || "";
 			return this;
 		}
 		async update(data) {

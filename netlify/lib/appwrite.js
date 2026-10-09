@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const zlib = require('zlib');
 const { Client, Account, Databases, Users, Query, ID } = require('node-appwrite');
 
 const APPWRITE_ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1';
@@ -73,6 +74,18 @@ function storedData(value) {
   if (utf8Length(data) > 1000000) throw new Error('Stored Appwrite data exceeded the document attribute limit.');
   return data;
 }
+// Big documents (a business' whole POS data) are stored gzip-compressed inside the same text column: JSON shrinks 5-10x, so
+// far fewer 400 KB pieces are needed and every read and write moves less data. Small documents stay readable plain JSON.
+const COMPRESS_MIN = 50000;
+// APPWRITE_COMPRESS=off stops compressing new saves (rows already compressed stay readable by this code)
+function packData(serialized) {
+  if (process.env.APPWRITE_COMPRESS === 'off' || utf8Length(serialized) < COMPRESS_MIN) return serialized;
+  const packed = JSON.stringify({ __gz: zlib.gzipSync(Buffer.from(serialized, 'utf8'), { level: 6 }).toString('base64') });
+  return utf8Length(packed) < utf8Length(serialized) ? packed : serialized;
+}
+function unpackData(value) {
+  return value && typeof value === 'object' && typeof value.__gz === 'string' ? JSON.parse(zlib.gunzipSync(Buffer.from(value.__gz, 'base64')).toString('utf8')) : value;
+}
 function rowToDoc(row) { return { id: row.docId, data: JSON.parse(row.data || '{}') }; }
 function chunkPath(path, id) { return path + '/__large_documents__/' + id; }
 function chunkId(id, index) { return crypto.createHash('sha256').update(id + '\0chunk\0' + index).digest('hex').slice(0, 36); }
@@ -87,13 +100,13 @@ async function removeChunks(path, id, from, count, store) {
 async function hydratedRowToDoc(row, store) {
   store = store || storeFor(row.path);
   const parsed = JSON.parse(row.data || '{}');
-  if (!parsed.__chunkedDocument) return { id: row.docId, data: parsed };
+  if (!parsed.__chunkedDocument) return { id: row.docId, data: unpackData(parsed), stamp: row.updatedAt || '' };
   const pieces = await Promise.all(Array.from({ length: Number(parsed.chunkCount) || 0 }, async function(_, index) {
     const logicalId = chunkId(row.docId, index);
     const chunk = await databases().getDocument(store.db, store.col, documentKey(chunkPath(row.path, row.docId), logicalId));
     return JSON.parse(chunk.data || '{}').chunk || '';
   }));
-  return { id: row.docId, data: JSON.parse(pieces.join('')) };
+  return { id: row.docId, data: unpackData(JSON.parse(pieces.join(''))), stamp: row.updatedAt || '' };
 }
 
 async function getUserFromEvent(event) {
@@ -113,6 +126,17 @@ async function getDocument(path, id) {
     catch (error) { if (!error || error.code !== 404) throw error; }
   }
   return null;
+}
+
+// Only the row's last-write time, without reading the (possibly multi-megabyte) data: lets a device ask "did anything change?" cheaply.
+async function getDocumentStamp(path, id) {
+  for (const store of [storeFor(path), legacyStoreFor(path)].filter(Boolean)) {
+    try {
+      const row = await databases().getDocument(store.db, store.col, documentKey(path, id), [Query.select(['path', 'docId', 'ownerUid', 'updatedAt'])]);
+      return { exists: true, stamp: row.updatedAt || '', path: row.path, id: row.docId, ownerUid: row.ownerUid || '' };
+    } catch (error) { if (!error || error.code !== 404) throw error; }
+  }
+  return { exists: false, stamp: '' };
 }
 
 async function queryDocuments(path, options) {
@@ -139,11 +163,12 @@ async function queryDocuments(path, options) {
   return options.limit ? rows.slice(0, Number(options.limit)) : rows;
 }
 
-async function upsertDocument(path, id, data, merge) {
-  const existing = merge ? await getDocument(path, id) : null;
+async function upsertDocument(path, id, data, merge, known) {
+  // `known` lets a caller that has just read the document hand it over instead of reading it (and its pieces) again
+  const existing = merge ? (known !== undefined ? known : await getDocument(path, id)) : null;
   const next = Object.assign({}, existing ? existing.data : {}, normalizeData(data));
   Object.keys(next).forEach(function(key){ if(next[key] && next[key].__delete === true) delete next[key]; });
-  const now = new Date().toISOString(), serialized = JSON.stringify(next);
+  const now = new Date().toISOString(), serialized = packData(JSON.stringify(next));
   const payload = { path, docId:id, data:serialized, ownerUid:ownerFrom(path,id,next), email:clean(next.email,320)||null, createdAt:now, updatedAt:now };
   const key = documentKey(path,id), store = storeFor(path);
   let current = null, oldChunkCount = 0;
@@ -165,7 +190,7 @@ async function upsertDocument(path, id, data, merge) {
   } else if(oldChunkCount) await removeChunks(path,id,0,oldChunkCount);
   payload.data=storedData(payload.data);
   const saved=current?await databases().updateDocument(store.db,store.col,key,payload):await databases().createDocument(store.db,store.col,key,payload,[]);
-  return {id:saved.docId,data:next};
+  return {id:saved.docId,data:next,stamp:now};
 }
 
 // Removes the row (and its split pieces) from the routed store and, while a move is in progress, from the old store too
@@ -185,14 +210,14 @@ async function isAdmin(user){if(clean(user&&user.email,240).toLowerCase()===ADMI
 function belongs(row,user){const d=row.data||{},m=String(row.path||'').match(/^users\/([^/]+)/);return !!user&&(row.id===user.id||d.uid===user.id||d.userUid===user.id||d.ownerUid===user.id||(m&&m[1]===user.id)||clean(d.email,240).toLowerCase()===clean(user.email,240).toLowerCase());}
 async function linkedOwnerUid(user){if(!user)return'';const profile=await getDocument('users',user.id).catch(function(){return null});return clean(profile&&profile.data&&profile.data.ownerUid,240)||user.id;}
 async function canRead(row,user){if(belongs(row,user)||await isAdmin(user))return true;const ownerUid=await linkedOwnerUid(user),pathOwner=(String(row.path||'').match(/^users\/([^/]+)/)||[])[1]||'',dataOwner=clean((row.data||{}).ownerUid,240);return ownerUid!==user.id&&(ownerUid===pathOwner||ownerUid===dataOwner);}
-async function canWrite(path,id,data,user){
+async function canWrite(path,id,data,user,known){
   if(!user)return false;
   if(await isAdmin(user))return true;
   // Ownership is decided from the path, the stored document and the verified
   // user - never from owner fields inside the request body, which the caller controls.
   const pathOwner=(String(path||'').match(/^users\/([^/]+)/)||[])[1]||'';
   const ownerUid=await linkedOwnerUid(user),teamAccess=ownerUid!==user.id&&ownerUid===pathOwner;
-  const old=await getDocument(path,id);
+  const old=known!==undefined?known:await getDocument(path,id);
   if(old)return belongs({path,id,data:old.data},user)||teamAccess;
   if(pathOwner===user.id||teamAccess||id===user.id)return true;
   // New top-level document: it may only be created in the caller's own name.
@@ -254,4 +279,4 @@ function appwriteAdmin(){
   };
 }
 
-module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
+module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,getDocumentStamp,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
