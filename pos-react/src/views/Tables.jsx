@@ -1,11 +1,11 @@
 /**
  * Tables page: the restaurant floor plan. Staff tap a table to open its check (or start one); owners press Edit to
- * add, drag, resize, reshape, activate/deactivate and delete tables. The layout is saved in settings.tableLayout.
+ * add, drag, resize, reshape, activate/deactivate and delete tables. Each location has its own layout (settings key per location, see layoutFor).
  */
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
-import { GRID, TABLE_SHAPES, findFreeSpot, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, TABLE_SHAPES, findFreeSpot, layoutFor, layoutKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus } from "../domain/tables";
 import { OWNER_ROLES } from "../config/roles";
 import { newId } from "../services/pos/common";
 import { useData } from "../store/DataProvider";
@@ -22,12 +22,16 @@ const SHAPE_LABEL = { square: "Square", round: "Round", rect: "Rectangle" };
 export function Tables() {
 	const data = useData();
 	const ui = useUi();
-	const { currentUser, svc } = usePos();
+	const { currentUser, svc, locationId } = usePos();
 	const { loadOpenOrder, splitOpenOrder, newOpenOrder, setOrderReference, setOrderChannel } = useCheckout();
 	const canSplit = useFeature("checkout.splitBill");
 	const [action, setAction] = useState(null); // busy table tapped: its open order
 	const [moving, setMoving] = useState(null); // open order being moved / merged
-	const saved = useMemo(() => (data.settings.tableLayout || []).map(normalizeTable), [data.settings.tableLayout]);
+	// "All Locations" has no floor of its own: pick a branch to see or edit its tables
+	const hasLocation = !!locationId && locationId !== "all";
+	const location = data.locations.find((l) => l.id === locationId);
+	const saved = useMemo(() => layoutFor(data.settings, hasLocation ? locationId : "").map(normalizeTable), [data.settings, locationId, hasLocation]);
+	const openOrders = useMemo(() => locationOrders(data.openOrders, locationId), [data.openOrders, locationId]);
 	const [draft, setDraft] = useState(null); // null = not editing
 	const [selectedId, setSelectedId] = useState("");
 	const [error, setError] = useState("");
@@ -45,6 +49,13 @@ export function Tables() {
 		draftRef.current = next;
 		setDraft(next);
 	};
+
+	// editing one branch's floor never carries over to another branch when the location is switched
+	useEffect(() => {
+		commit(null);
+		setSelectedId("");
+		setError("");
+	}, [locationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// a move, resize or reshape that would land on another table is ignored: the table stays where it last fitted
 	const update = (id, patch) => {
@@ -73,7 +84,7 @@ export function Tables() {
 			return false;
 		}
 		setError("");
-		await svc.settings.patchSettings({ tableLayout: draft });
+		await svc.settings.patchSettings({ [layoutKey(locationId)]: draft });
 		ui.notice("Table layout saved.");
 		return true;
 	};
@@ -123,17 +134,28 @@ export function Tables() {
 	};
 
 	const openTable = (t) => {
-		const { open } = tableStatus(t, data.openOrders);
+		const { open } = tableStatus(t, openOrders);
 		if (open) return setAction({ table: t, order: open });
 		newOpenOrder();
 		setOrderReference(tableReference(t));
 		setOrderChannel("Dine-in");
 	};
 
+	if (!hasLocation)
+		return (
+			<section className="view active" id="view-tables">
+				<Panel title="Table Layout" subtitle="Every branch has its own floor plan">
+					<div className="empty" id="tables-pick-location" style={{ padding: 20 }}>
+						Choose a branch in the location menu at the top to see or edit its tables.
+					</div>
+				</Panel>
+			</section>
+		);
+
 	return (
 		<section className="view active" id="view-tables">
 			<Panel
-				title="Table Layout"
+				title={"Table Layout" + (location && data.locations.length > 1 ? " · " + location.name : "")}
 				subtitle={editing ? "Drag to move, use the corner arrow to resize, click a table to edit it" : "Tap a free table to start its check, or a busy table to open, split, move or merge it"}
 				actions={
 					editing ? (
@@ -184,7 +206,7 @@ export function Tables() {
 						onPointerDown={() => setSelectedId("")}
 					>
 						{tables.map((t) => {
-							const { open } = tableStatus(t, data.openOrders);
+							const { open } = tableStatus(t, openOrders);
 							const cls = ["floor-table", t.shape, !t.active && "inactive", open && "busy", t.id === selectedId && "selected"];
 							return (
 								<div

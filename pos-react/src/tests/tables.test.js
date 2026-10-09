@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mergeOrders } from "../domain/orders";
 import { splitByItems } from "../domain/cart";
 import { NAV_ITEMS, ROLE_VIEWS } from "../config/roles";
-import { GRID, findFreeSpot, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, findFreeSpot, layoutFor, layoutKey, locationOrders, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus } from "../domain/tables";
 
 describe("table layout", () => {
 	it("snaps and keeps tables inside the floor", () => {
@@ -21,6 +21,21 @@ describe("table layout", () => {
 		const row = Array.from({ length: GRID.w / 100 }, (_, i) => ({ id: "r" + i, x: i * 100, y: 0, w: 100, h: 100 }));
 		expect(findFreeSpot(row, 100, 100)).toEqual({ x: 0, y: 100 });
 		expect(findFreeSpot([{ id: "wall", x: 0, y: 0, w: GRID.w, h: GRID.h }], 100, 100)).toBeNull();
+	});
+
+	it("keeps one floor plan per location and falls back to the old shared layout until a location saves its own", () => {
+		const shared = [{ id: "s1", number: "1" }];
+		const settings = { tableLayout: shared, [layoutKey("colombo")]: [{ id: "c1", number: "A" }, { id: "c2", number: "B" }], [layoutKey("galle")]: [] };
+		expect(layoutFor(settings, "colombo").map((t) => t.number)).toEqual(["A", "B"]);
+		expect(layoutFor(settings, "galle")).toEqual([]); // an emptied floor stays empty
+		expect(layoutFor(settings, "kandy")).toBe(shared); // never saved: still the shared one
+		expect(layoutFor({}, "kandy")).toEqual([]);
+		expect(layoutFor(settings, "")).toBe(shared);
+	});
+
+	it("only counts open checks of the active location", () => {
+		const orders = [{ id: "a", locationId: "colombo" }, { id: "b", locationId: "galle" }, { id: "c" }];
+		expect(locationOrders(orders, "galle").map((o) => o.id)).toEqual(["b", "c"]);
 	});
 
 	it("numbers new tables and rejects duplicates", () => {
