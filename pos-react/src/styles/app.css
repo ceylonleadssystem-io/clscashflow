@@ -473,3 +473,9 @@ html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-h
 	html body.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .top{flex:0 0 auto}
 	html body.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .content{flex:1 1 auto;min-height:0;height:auto!important}
 }
+
+/* Wide screens: the full-screen checkout reserved a 248px side column although the navigation bar is the slim rail, which left a blank gap
+   beside the rail. The column now matches the rail (64px, as in nav-rail.css), as on every other page and in normal mode. */
+@media (min-width:1101px){
+	html body.nav-rail.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .app{grid-template-columns:64px minmax(0,1fr)!important}
+}
