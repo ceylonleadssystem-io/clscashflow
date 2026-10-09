@@ -12,6 +12,7 @@ import { useCheckout } from "../../store/CheckoutProvider";
 import { useFullscreen } from "../../hooks/useFullscreen";
 import { useInstall } from "../../hooks/useInstall";
 import { IosInstallGuide } from "./IosInstallGuide";
+import { SyncIndicator } from "./SyncIndicator";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { useUi } from "../../store/UiProvider";
 import { locationLabel } from "../../services/pos/locations";
@@ -76,6 +77,7 @@ export function Topbar({ onOpenLocations }) {
 							<b>⌄</b>
 						</button>
 					)}
+					<SyncIndicator variant="compact" />
 					<button
 						id="top-more"
 						type="button"
@@ -131,6 +133,7 @@ export function Topbar({ onOpenLocations }) {
 								Install App
 							</button>
 						)}
+						<SyncIndicator variant="row" />
 						{fullscreenOn && (
 							<button className="btn out" onClick={toggle} id="full-btn">
 								{full ? "Exit Full Screen" : "Full Screen"}

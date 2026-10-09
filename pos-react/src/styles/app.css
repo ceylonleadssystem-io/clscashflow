@@ -476,3 +476,22 @@ html body.nav-rail.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-
    rest could not be scrolled to the end. */
 html body.full:not(:has(#view-checkout.active)) .main{overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain}
 html body.full:not(:has(#view-checkout.active)) .top{position:sticky!important;top:0!important;z-index:45}
+
+/* Cloud sync indicator (SyncIndicator.jsx): green = online (synced or syncing), red = offline or the sync failed */
+.sync-indicator{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;min-width:40px;padding:0 12px}
+.sync-indicator:disabled{opacity:1;cursor:default}
+.sync-indicator.sync-good{color:#169b62;border-color:#169b62}
+.sync-indicator.sync-bad{color:#c23b32;border-color:#c23b32;background:rgba(194,59,50,.08)}
+.sync-indicator.sync-bad:not(:disabled){cursor:pointer}
+.sync-indicator svg{flex:none}
+.sync-indicator.spinning svg{animation:pos-sync-spin 1s linear infinite}
+@keyframes pos-sync-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.sync-indicator.spinning svg{animation-duration:3s}}
+.sync-indicator .sync-text{font-size:calc(12px * var(--ui-fs, 1));font-weight:700}
+/* big screens: one copy in the actions row (icon and short word); small screens: one copy beside the ... button (icon only) */
+.sync-indicator.sync-compact{display:none}
+@media (max-width:1100px){
+	html body .sync-indicator.sync-row{display:none!important}
+	html body .sync-indicator.sync-compact{display:inline-flex;min-width:46px;min-height:46px;padding:0}
+	html body .sync-indicator.sync-compact .sync-text{display:none}
+}
