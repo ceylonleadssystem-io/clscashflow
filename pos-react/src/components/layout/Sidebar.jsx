@@ -52,7 +52,7 @@ export function Sidebar() {
 			<nav className="nav" id="nav">
 				<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
 					<span className="nav-icon" aria-hidden="true">☰</span>
-					<span>Menu</span>
+					<span>Show Navigation</span>
 				</button>
 				{NAV_ITEMS.filter((item) => canView(item.view)).map((item, i, list) => {
 					const group = item.group || "";
