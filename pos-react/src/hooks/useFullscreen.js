@@ -1,6 +1,6 @@
 /**
  * Full screen / kiosk behaviour: iPad viewport-locked kiosk, Android/touch kiosk plus the Fullscreen API,
- * and desktop fullscreen with the menu collapsed while full.
+ * and desktop fullscreen; the navigation bar stays visible while full.
  */
 import { useCallback, useEffect } from "react";
 import { usePos } from "../store/PosProvider";
@@ -19,7 +19,7 @@ const fsElement = () => document.fullscreenElement || document.webkitFullscreenE
  * Full screen / kiosk behaviour (final legacy logic):
  *  - iPad/iPhone: viewport-locked kiosk (native fullscreen would steal swipe gestures)
  *  - Android / other touch: kiosk classes + Fullscreen API
- *  - desktop: Fullscreen API + body.full, menu collapsed while full
+ *  - desktop: Fullscreen API + body.full (the navigation bar stays visible, as in normal mode)
  */
 export function useFullscreen() {
 	const { layout, setLayout } = usePos();
@@ -27,11 +27,11 @@ export function useFullscreen() {
 	const toggle = useCallback(async () => {
 		const entering = !layout.full && !fsElement();
 		if (appleTouch) {
-			setLayout((l) => ({ ...l, full: entering, sidebarCollapsed: entering, kiosk: entering, mobileCartOpen: false }));
+			setLayout((l) => ({ ...l, full: entering, kiosk: entering, mobileCartOpen: false }));
 			return;
 		}
 		if (entering) {
-			setLayout((l) => ({ ...l, full: true, sidebarCollapsed: true, kiosk: touchKiosk }));
+			setLayout((l) => ({ ...l, full: true, kiosk: touchKiosk }));
 			try {
 				const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
 				if (req) await req.call(document.documentElement);
@@ -40,7 +40,7 @@ export function useFullscreen() {
 				/* the kiosk layout still applies */
 			}
 		} else {
-			setLayout((l) => ({ ...l, full: false, sidebarCollapsed: false, kiosk: false, mobileCartOpen: false }));
+			setLayout((l) => ({ ...l, full: false, kiosk: false, mobileCartOpen: false }));
 			try {
 				if (document.exitFullscreen && document.fullscreenElement) await document.exitFullscreen();
 				else if (document.webkitExitFullscreen && document.webkitFullscreenElement) document.webkitExitFullscreen();
@@ -52,9 +52,9 @@ export function useFullscreen() {
 	}, [layout.full, setLayout]);
 
 	useEffect(() => {
-		if (standalone) setLayout((l) => ({ ...l, full: true, sidebarCollapsed: true, kiosk: true }));
+		if (standalone) setLayout((l) => ({ ...l, full: true, kiosk: true }));
 		const onChange = () => {
-			if (!fsElement() && !touchKiosk) setLayout((l) => ({ ...l, full: false, sidebarCollapsed: false }));
+			if (!fsElement() && !touchKiosk) setLayout((l) => ({ ...l, full: false }));
 		};
 		document.addEventListener("fullscreenchange", onChange);
 		return () => document.removeEventListener("fullscreenchange", onChange);
