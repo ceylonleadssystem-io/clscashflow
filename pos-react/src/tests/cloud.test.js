@@ -62,3 +62,87 @@ describe("CloudSyncService", () => {
 		b.stop();
 	});
 });
+
+/** Fake backend that behaves like the new server: every save gets a write stamp, and the stamp can be read on its own. */
+function stampedBackend() {
+	const docs = new Map();
+	const stamps = new Map();
+	const calls = { get: 0, stamp: 0, set: 0 };
+	const ref = (path) => ({
+		get: async () => {
+			calls.get++;
+			return { exists: docs.has(path), stamp: stamps.get(path) || "", data: () => (docs.has(path) ? JSON.parse(JSON.stringify(docs.get(path))) : undefined) };
+		},
+		stamp: async () => {
+			calls.stamp++;
+			return { exists: docs.has(path), stamp: stamps.get(path) || "" };
+		},
+		set: async function (data, opt) {
+			calls.set++;
+			this.lastPreviousStamp = stamps.get(path) || "";
+			docs.set(path, opt?.merge ? { ...(docs.get(path) || {}), ...JSON.parse(JSON.stringify(data)) } : JSON.parse(JSON.stringify(data)));
+			stamps.set(path, "w" + (Number((stamps.get(path) || "w0").slice(1)) + 1));
+			this.lastStamp = stamps.get(path);
+		},
+	});
+	const coll = (path) => ({ doc: (id) => ({ ...ref(path + "/" + id), collection: (n) => coll(path + "/" + id + "/" + n) }) });
+	return {
+		docs,
+		calls,
+		bump: (path) => stamps.set(path, "w" + (Number((stamps.get(path) || "w0").slice(1)) + 1)),
+		firestore: Object.assign(() => ({ collection: (n) => coll(n) }), { FieldValue: { serverTimestamp: () => new Date().toISOString() } }),
+	};
+}
+
+// each test gets its own account so the shared test storage never leaks one test's data into the next
+const ctxFor2 = (fb, uid) => ({ user: { ...user, uid }, userRef: fb.firestore().collection("users").doc(uid), profile: { name: "Owner", posBusinessName: "Cafe", posEnabled: true }, profileKey: "profile-" + uid, workspaceUid: uid, workspaceUser: { ...user, uid } });
+
+describe("CloudSyncService: cheap polling", () => {
+	it("checks only the write stamp while nothing changed, and downloads when it did", async () => {
+		const fb = stampedBackend();
+		const a = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		await a.attach(new PosStore(createDatabase("cloud-stamp-a")), ctxFor2(fb, "u2"), { dbName: "cloud-stamp-a" });
+		await a.syncNow();
+		const before = { ...fb.calls };
+		for (let i = 0; i < 5; i++) await a.pull();
+		expect(fb.calls.get).toBe(before.get); // no document downloads
+		expect(fb.calls.stamp).toBe(before.stamp + 5);
+		// another device saves: the next pull sees a new stamp and downloads the document
+		fb.bump("users/u2/pos/main");
+		await a.pull();
+		expect(fb.calls.get).toBe(before.get + 1);
+		await a.pull();
+		expect(fb.calls.get).toBe(before.get + 1); // and it is quiet again
+		a.stop();
+	});
+
+	it("skips the read-back after a save when nobody else wrote in between, and reads back when someone did", async () => {
+		const fb = stampedBackend();
+		const a = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		const store = new PosStore(createDatabase("cloud-stamp-b"));
+		await a.attach(store, ctxFor2(fb, "u3"), { dbName: "cloud-stamp-b" });
+		await a.syncNow();
+		const edit = (name) => store.write((tx) => tx.put(T.products, { id: "p1", name, price: 100, cost: 50, type: "Product", category: "Tea" }));
+
+		await edit("Tea 1");
+		a.markPending();
+		const g0 = fb.calls.get;
+		await a.syncNow();
+		expect(fb.calls.get - g0).toBe(1); // one read before the save, none after
+		expect(fb.docs.get("users/u3/pos/main").payload.products[0].name).toBe("Tea 1");
+
+		// another device writes between our read and our save: we must read the result back
+		await edit("Tea 2");
+		a.markPending();
+		const realGet = a.ref.get;
+		a.ref.get = async function () {
+			const snap = await realGet.call(this);
+			fb.bump("users/u3/pos/main"); // someone saved right after our read
+			return snap;
+		};
+		const g1 = fb.calls.get;
+		await a.syncNow();
+		expect(fb.calls.get - g1).toBeGreaterThanOrEqual(2); // read before + read-back after
+		a.stop();
+	});
+});

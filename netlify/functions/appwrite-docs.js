@@ -1,5 +1,5 @@
 'use strict';
-const {headers,getUserFromEvent,getDocument,queryDocuments,upsertDocument,deleteDocument,newId,canRead,canWrite,sanitizeProfileWrite}=require('../lib/appwrite');
+const {headers,getUserFromEvent,getDocument,getDocumentStamp,queryDocuments,upsertDocument,deleteDocument,newId,canRead,canWrite,sanitizeProfileWrite}=require('../lib/appwrite');
 const log=require('../lib/log').createLogger('appwrite-docs');
 function response(code,body){return{statusCode:code,headers:headers(),body:JSON.stringify(body)}}
 function bodyOf(event){try{return JSON.parse(event.body||'{}')}catch(_){return{}}}
@@ -28,7 +28,8 @@ async function handle(event){
   try{var b=bodyOf(event),action=String(b.action||''),path=String(b.path||'').replace(/^\/+|\/+$/g,''),id=String(b.id||''),data=b.data&&typeof b.data==='object'?b.data:{};if(!path)throw new Error('Missing document path.');
     var publicInvite=action==='get'&&id&&/^users\/[^/]+\/team$/.test(path);if(publicInvite){var invite=await getDocument(path,id);if(!invite)return response(200,{ok:true,exists:false,doc:null});var d=invite.data||{},valid=String(d.inviteToken||id)===id&&String(d.status||'pending')==='pending'&&(!d.expiresAt||Date.parse(d.expiresAt)>Date.now());return response(200,{ok:true,exists:valid,doc:valid?{id:invite.id,data:{email:d.email||'',role:d.role||'',status:d.status||'',ownerUid:d.ownerUid||'',inviteToken:id,expiresAt:d.expiresAt||''}}:null});}
     var user=await getUserFromEvent(event);if(!user)return response(401,{ok:false,error:'Please sign in again.'});
-    if(action==='get'){var doc=await getDocument(path,id);if(!doc)return response(200,{ok:true,exists:false,doc:null});if(!await canRead({path,id:doc.id,data:doc.data},user))return response(403,{ok:false,error:'Not allowed.'});return response(200,{ok:true,exists:true,doc});}
+    if(action==='get'){var doc=await getDocument(path,id);if(!doc)return response(200,{ok:true,exists:false,doc:null});if(!await canRead({path,id:doc.id,data:doc.data},user))return response(403,{ok:false,error:'Not allowed.'});return response(200,{ok:true,exists:true,doc,stamp:doc.stamp||''});}
+    if(action==='stamp'){var head=await getDocumentStamp(path,id);if(!head.exists)return response(200,{ok:true,exists:false,stamp:''});if(!await canRead({path,id,data:{ownerUid:head.ownerUid}},user))return response(403,{ok:false,error:'Not allowed.'});return response(200,{ok:true,exists:true,stamp:head.stamp});}
     if(action==='query'){var docs=await queryDocuments(path,b.options||{}),allowed=[];for(const row of docs)if(await canRead({path,id:row.id,data:row.data},user))allowed.push(row);log.info('query rows',{read:docs.length,returned:allowed.length});return response(200,{ok:true,docs:allowed});}
     if(action==='bulkGet'){
       var profile=await getDocument(path,id);
@@ -58,7 +59,7 @@ async function handle(event){
       var saved=await upsertDocument(path,id,data,true);
       return response(200,{ok:true,doc:saved});
     }
-    if(action==='set'||action==='update'||action==='add'){id=id||newId('doc');var beforeKeys=Object.keys(data);data=await sanitizeProfileWrite(path,id,data,user);logStripped(path,beforeKeys,data);if(!await canWrite(path,id,data,user))return response(403,{ok:false,error:'Not allowed.'});if(id==='main'&&/^users\/[^/]+\/pos$/.test(path)&&data.payload){var current=await getDocument(path,id);if(current&&current.data&&current.data.payload)data.payload=mergePosPayload(current.data.payload,data.payload)}return response(200,{ok:true,doc:await upsertDocument(path,id,data,action!=='set'||b.merge!==false)});}
+    if(action==='set'||action==='update'||action==='add'){id=id||newId('doc');var beforeKeys=Object.keys(data);data=await sanitizeProfileWrite(path,id,data,user);logStripped(path,beforeKeys,data);var current=await getDocument(path,id);if(!await canWrite(path,id,data,user,current))return response(403,{ok:false,error:'Not allowed.'});if(id==='main'&&/^users\/[^/]+\/pos$/.test(path)&&data.payload){if(current&&current.data&&current.data.payload)data.payload=mergePosPayload(current.data.payload,data.payload)}var saved=await upsertDocument(path,id,data,action!=='set'||b.merge!==false,current);return response(200,{ok:true,doc:saved,stamp:saved.stamp||'',previousStamp:current&&current.stamp||''});}
     if(action==='delete'){var old=await getDocument(path,id);if(old&&!await canWrite(path,id,old.data,user))return response(403,{ok:false,error:'Not allowed.'});await deleteDocument(path,id);return response(200,{ok:true});}
     return response(400,{ok:false,error:'Unsupported action.'});
   }catch(e){log.error('docs action threw',e);return response(e.statusCode||500,{ok:false,error:e.message||'Appwrite request failed.'})}

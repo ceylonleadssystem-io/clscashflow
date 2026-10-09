@@ -50,6 +50,7 @@ export class CloudSyncService {
 		this.ref = null;
 		this.lastCloudJson = "";
 		this.lastRemoteStamp = "";
+		this.lastServerStamp = ""; // server write time of the cloud document as last seen: lets pull() skip the download when nothing changed
 		this.inFlight = false;
 		this.again = false;
 		this.pullTimer = null;
@@ -169,6 +170,7 @@ export class CloudSyncService {
 			log.warn("remote read failed on attach; starting from local data", e);
 		}
 		const remoteData = remote && remote.exists ? remote.data() : null;
+		this.lastServerStamp = remote?.stamp || "";
 		const remotePayload = remoteData?.payload || null;
 		const hasRemotePos = !!remotePayload;
 		const hasLocalPos = !!(localPayload && typeof localPayload === "object");
@@ -308,10 +310,23 @@ export class CloudSyncService {
 	async pull() {
 		if (!navigator.onLine || this.inFlight || !this.ref) return;
 		try {
+			// Ask for the write time only (a few bytes); the whole document, often several MB, is downloaded only when it changed.
+			if (this.lastServerStamp && typeof this.ref.stamp === "function") {
+				try {
+					const head = await withTimeout(this.ref.stamp());
+					if (head.exists && head.stamp === this.lastServerStamp) {
+						this._status(this.isPending() ? "Syncing POS with cloud…" : "POS is online · cloud synced", this.isPending() ? "syncing" : "saved");
+						return;
+					}
+				} catch (e) {
+					log.warn("cloud stamp check failed; reading the whole document", e);
+				}
+			}
 			const snapshot = await withTimeout(this.ref.get());
 			const remoteData = snapshot.exists ? snapshot.data() : null;
 			const remote = remoteData?.payload || null;
 			if (remote) await this._applyRemote(remote, remoteData?.updatedAt);
+			this.lastServerStamp = snapshot.stamp || "";
 			if (this.isPending() && payloadCovers(remote, await this._localPayload())) this.clearPending();
 			if (this.isPending()) this._status("Syncing POS with cloud…", "syncing");
 			else this._status("POS is online · cloud synced", "saved");
@@ -381,9 +396,19 @@ export class CloudSyncService {
 					),
 					20000,
 				);
-				const confirmation = await withTimeout(this.ref.get());
-				verified = confirmation.exists ? confirmation.data()?.payload : null;
-				this.lastRemoteStamp = confirmation.exists ? confirmation.data()?.updatedAt || "" : "";
+				// Nobody else wrote between our read and our save (the server replaced exactly the version we read): the cloud now holds
+				// what we sent, so there is nothing to download to confirm it. Otherwise read it back as before.
+				const unchangedMeanwhile = !!snapshot.stamp && this.ref.lastPreviousStamp === snapshot.stamp && !!this.ref.lastStamp;
+				if (unchangedMeanwhile) {
+					verified = safePayload(merged);
+					this.lastServerStamp = this.ref.lastStamp;
+					this.lastRemoteStamp = "";
+				} else {
+					const confirmation = await withTimeout(this.ref.get());
+					verified = confirmation.exists ? confirmation.data()?.payload : null;
+					this.lastRemoteStamp = confirmation.exists ? confirmation.data()?.updatedAt || "" : "";
+					this.lastServerStamp = confirmation.stamp || "";
+				}
 				if (payloadCovers(verified, payload)) break;
 				log.warn("cloud did not confirm push; retrying", { attempt: attempt + 1 });
 				if (attempt === 2) throw new Error("Cloud did not confirm the latest device changes.");
