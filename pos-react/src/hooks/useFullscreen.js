@@ -11,7 +11,8 @@ const log = createLogger("fullscreen");
 const ua = typeof navigator !== "undefined" ? navigator : { userAgent: "", platform: "", maxTouchPoints: 0 };
 const appleTouch = /iPad|iPhone|iPod/.test(ua.userAgent) || (ua.platform === "MacIntel" && ua.maxTouchPoints > 1);
 const touchKiosk = typeof matchMedia !== "undefined" && (matchMedia("(pointer:coarse)").matches || ua.maxTouchPoints > 0);
-const standalone = typeof matchMedia !== "undefined" && (matchMedia("(display-mode:standalone)").matches || ua.standalone === true);
+// the installed app opens as "fullscreen" (see manifest.webmanifest) or "standalone" depending on the browser
+const standalone = typeof matchMedia !== "undefined" && (matchMedia("(display-mode:standalone)").matches || matchMedia("(display-mode:fullscreen)").matches || ua.standalone === true);
 
 const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
 
