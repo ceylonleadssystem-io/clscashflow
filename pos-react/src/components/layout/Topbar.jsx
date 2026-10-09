@@ -1,6 +1,7 @@
 /**
  * Top bar: page title, location switcher, the "more" menu (page links on small screens, Lock POS,
- * Sign Out, Switch Checkout, printer status, full screen) and the mobile "View Order" button.
+ * Sign Out, Switch Checkout, printer status, full screen), the page menu that replaces the hidden sidebar while in
+ * full screen, and the mobile "View Order" button (checkout page only).
  */
 import { useEffect, useState } from "react";
 import { usePos } from "../../store/PosProvider";
@@ -28,7 +29,24 @@ export function Topbar({ onOpenLocations }) {
 	const headerPrinter = useFeature("hardware.headerPrinterButton");
 	const [printer, setPrinter] = useState(receiptPrinter.status);
 	const [menuOpen, setMenuOpen] = useState(false);
+	const [navOpen, setNavOpen] = useState(false);
 	useEffect(() => receiptPrinter.subscribe(setPrinter), []);
+	// the full-screen page menu closes on Escape or a tap outside it, and when full screen ends
+	useEffect(() => {
+		if (!navOpen) return;
+		const close = (e) => {
+			if (e.type === "keydown" ? e.key === "Escape" : !e.target.closest?.(".full-nav")) setNavOpen(false);
+		};
+		document.addEventListener("keydown", close);
+		document.addEventListener("pointerdown", close);
+		return () => {
+			document.removeEventListener("keydown", close);
+			document.removeEventListener("pointerdown", close);
+		};
+	}, [navOpen]);
+	useEffect(() => {
+		if (!layout.full) setNavOpen(false);
+	}, [layout.full]);
 	useEffect(() => {
 		if (!menuOpen) return;
 		const close = (e) => {
@@ -58,6 +76,31 @@ export function Topbar({ onOpenLocations }) {
 	return (
 		<>
 			<header className="top">
+				{layout.full && currentUser && (
+					<div className="full-nav">
+						<button id="full-nav-toggle" type="button" className="btn out" aria-haspopup="true" aria-expanded={navOpen} aria-label="Go to another page" onClick={() => setNavOpen((o) => !o)}>
+							<span aria-hidden="true">☰</span> <span className="full-nav-label">Menu</span>
+						</button>
+						{navOpen && (
+							<nav className="full-nav-menu" aria-label="Go to">
+								{NAV_ITEMS.filter((item) => canView(item.view)).map((item) => (
+									<button
+										key={item.view}
+										type="button"
+										className={"btn out" + (view === item.view ? " active" : "")}
+										aria-current={view === item.view ? "page" : undefined}
+										onClick={() => {
+											go(item.view);
+											setNavOpen(false);
+										}}
+									>
+										{item.label}
+									</button>
+								))}
+							</nav>
+						)}
+					</div>
+				)}
 				<div className="top-title">
 					<h1 id="title">{title[0]}</h1>
 					<p id="subtitle">{title[1]}</p>
@@ -123,16 +166,18 @@ export function Topbar({ onOpenLocations }) {
 					</div>
 				</div>
 			</header>
-			<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
-				{layout.mobileCartOpen ? (
-					<span>← Back to Products</span>
-				) : (
-					<>
-						<span>View Order ({count})</span>
-						<strong>{money(total)}</strong>
-					</>
-				)}
-			</button>
+			{view === "checkout" && (
+				<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
+					{layout.mobileCartOpen ? (
+						<span>← Back to Products</span>
+					) : (
+						<>
+							<span>View Order ({count})</span>
+							<strong>{money(total)}</strong>
+						</>
+					)}
+				</button>
+			)}
 		</>
 	);
 }
