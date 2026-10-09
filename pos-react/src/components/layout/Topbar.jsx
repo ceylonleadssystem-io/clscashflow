@@ -1,6 +1,6 @@
 /**
  * Top bar: page title, location switcher, the "more" menu (page links on small screens, Lock POS,
- * Sign Out, Switch Checkout, printer status, full screen) and the mobile "View Order" button.
+ * Sign Out, Switch Checkout, printer status, full screen) and the mobile "View Order" button (checkout page only).
  */
 import { useEffect, useState } from "react";
 import { usePos } from "../../store/PosProvider";
@@ -123,16 +123,18 @@ export function Topbar({ onOpenLocations }) {
 					</div>
 				</div>
 			</header>
-			<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
-				{layout.mobileCartOpen ? (
-					<span>← Back to Products</span>
-				) : (
-					<>
-						<span>View Order ({count})</span>
-						<strong>{money(total)}</strong>
-					</>
-				)}
-			</button>
+			{view === "checkout" && (
+				<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
+					{layout.mobileCartOpen ? (
+						<span>← Back to Products</span>
+					) : (
+						<>
+							<span>View Order ({count})</span>
+							<strong>{money(total)}</strong>
+						</>
+					)}
+				</button>
+			)}
 		</>
 	);
 }

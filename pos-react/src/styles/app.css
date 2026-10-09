@@ -462,3 +462,17 @@ html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-h
 .usb-printer-controls .hw-section>.hardware-status,.usb-printer-controls .hw-section>.hw-wide{grid-column:1/-1}
 .usb-printer-controls .hw-section>.hw-actions{justify-content:flex-end}
 @media(max-width:600px){.usb-printer-controls>.hw-section{grid-template-columns:1fr}.usb-printer-controls .hw-section>.hw-actions{justify-content:flex-start}}
+
+/* Full-screen checkout reserved a 248px side column although the navigation bar is the slim 64px rail (blank gap beside the rail). */
+html body.nav-rail.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .app{grid-template-columns:64px minmax(0,1fr)!important}
+
+/* Receipt printing settings: the "print after sale" switches sit in their own tidy row under the inputs. */
+.print-toggles{margin:14px 0 0}
+.print-toggles label{cursor:pointer}
+.print-toggles input[type=checkbox]{flex:none;width:18px;height:18px;margin:0}
+
+/* Full screen: the page header stays put and the page below it scrolls. The older full-screen layout clipped every page at the
+   screen height (checkout and the dashboard lay themselves out to fit), so on tablets Settings, Reports, Products and the
+   rest could not be scrolled to the end. */
+html body.full:not(:has(#view-checkout.active)) .main{overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain}
+html body.full:not(:has(#view-checkout.active)) .top{position:sticky!important;top:0!important;z-index:45}

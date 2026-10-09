@@ -2,7 +2,7 @@
  * Left navigation: business logo, brand and plan, signed-in user, role-filtered page buttons with
  * icons, and Lock POS / Sign Out. Collapses to an icon strip and expands on hover (see styles/nav-rail.css).
  */
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { NavIcon } from "./NavIcon";
 import { NAV_ITEMS } from "../../config/roles";
 import { planForSettings } from "../../config/plans";
@@ -22,8 +22,22 @@ export function Sidebar() {
 		document.body.classList.add("nav-rail");
 		return () => document.body.classList.remove("nav-rail");
 	}, []);
+	// touch screens: the rail opens from its Menu button (hover does not exist there) and closes on a page choice or any other tap
+	const [open, setOpen] = useState(false);
+	useEffect(() => {
+		if (!open) return;
+		const close = (e) => {
+			if (e.type === "keydown" ? e.key === "Escape" : !e.target.closest?.(".side")) setOpen(false);
+		};
+		document.addEventListener("keydown", close);
+		document.addEventListener("pointerdown", close);
+		return () => {
+			document.removeEventListener("keydown", close);
+			document.removeEventListener("pointerdown", close);
+		};
+	}, [open]);
 	return (
-		<aside className={"side" + (logo ? " has-business-logo" : "")}>
+		<aside className={"side" + (logo ? " has-business-logo" : "") + (open ? " rail-open" : "")}>
 			{logo && <img id="side-business-logo" className="side-business-logo" alt={(settings.business || "") + " logo"} src={logo} />}
 			<div className="brand" aria-label="Powered by Ceylonry POS">
 				Ceylonry<span>POS</span>
@@ -36,6 +50,10 @@ export function Sidebar() {
 				<span>{currentUser?.role || "Staff session"}</span>
 			</div>
 			<nav className="nav" id="nav">
+				<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
+					<span className="nav-icon" aria-hidden="true">☰</span>
+					<span>Show Navigation</span>
+				</button>
 				{NAV_ITEMS.filter((item) => canView(item.view)).map((item, i, list) => {
 					const group = item.group || "";
 					const heading = i && (list[i - 1].group || "") !== group ? group || "-" : "";
@@ -43,7 +61,10 @@ export function Sidebar() {
 						<Fragment key={item.view}>
 							{heading === "-" && <div className="nav-group nav-sep" role="separator" />}
 							{heading && heading !== "-" && <div className="nav-group">{heading}</div>}
-							<button data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => go(item.view)}>
+							<button data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => {
+									go(item.view);
+									setOpen(false);
+								}}>
 								<NavIcon view={item.view} />
 								<span>{item.label.slice(2)}</span>
 							</button>

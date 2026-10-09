@@ -1,8 +1,9 @@
-/* Icons-only nav rail that expands as an overlay on hover / keyboard focus, so content never shifts. */
+/* Icons-only nav rail that expands as an overlay on hover / keyboard focus / tap, so content never shifts. It is the navigation at every
+   screen size (phones and tablets used to get a strip across the top instead); only Mobile Checkout mode has no rail. */
 .nav button .nav-icon{flex:none;margin-right:10px}
 .nav button{display:flex;align-items:center;white-space:nowrap;transition:background .15s,transform .1s}
 .nav button:active{transform:scale(.97)}
-@media (min-width:1101px){
+@media all{
 	html body.nav-rail:not(.mobile-checkout) .app{grid-template-columns:64px minmax(0,1fr)!important}
 	html body.nav-rail:not(.mobile-checkout) .main{grid-column:2}
 	html body.nav-rail:not(.mobile-checkout) .side{position:fixed;inset:0 auto 0 0;z-index:60;width:248px!important;overflow:hidden;
@@ -13,13 +14,50 @@
 	html body.nav-rail .side #nav{padding:3px 0 6px!important}
 	html body.nav-rail .side #nav button{justify-content:flex-start;padding:8px 8px!important;overflow:hidden}
 	html body.nav-rail .side .nav button .nav-icon{width:20px;height:20px}
-	html body.nav-rail:not(.mobile-checkout) .side:not(:hover):not(:has(:focus-visible)){width:64px!important;box-shadow:none}
-	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) > :not(nav){min-width:220px;visibility:hidden}
-	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) #nav{width:36px}
-	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) #nav button::after{display:none!important}
+	html body.nav-rail:not(.mobile-checkout) .side:not(:hover):not(:has(:focus-visible)):not(.rail-open){width:64px!important;box-shadow:none}
+	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) > :not(nav){min-width:220px;visibility:hidden}
+	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav{width:36px}
+	html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav button::after{display:none!important}
 }
 @media (prefers-reduced-motion:reduce){html body .side{transition:none!important}}
 
 .nav-group{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;opacity:.55;padding:12px 8px 3px;white-space:nowrap;overflow:hidden}
 .nav-group.nav-sep{padding:0;margin:8px 6px;border-top:1px solid currentColor;opacity:.18}
-@media (min-width:821px){html body.nav-rail .side:not(:hover):not(:has(:focus-visible)) .nav-group:not(.nav-sep){visibility:hidden;height:6px;padding:0}}
+@media all{html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) .nav-group:not(.nav-sep){visibility:hidden;height:6px;padding:0}}
+
+/* Small screens: undo the older "strip across the top" styling so the same left rail is used. */
+@media (max-width:1100px){
+	html body.nav-rail:not(.mobile-checkout) .app{display:grid!important;grid-template-columns:64px minmax(0,1fr)!important}
+	html body.nav-rail:not(.mobile-checkout) .side{position:fixed!important;inset:0 auto 0 0!important;height:100dvh!important;max-height:none!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;border-radius:0!important;z-index:60}
+	html body.nav-rail:not(.mobile-checkout) .side > .brand,
+	html body.nav-rail:not(.mobile-checkout) .side > .session-user,
+	html body.nav-rail:not(.mobile-checkout) .side > .side-foot{display:block!important}
+	html body.nav-rail:not(.mobile-checkout) .side #nav{display:flex!important;flex-direction:column!important;overflow-x:hidden!important;overflow-y:auto!important;flex:1 1 auto;min-height:0;gap:5px}
+	html body.nav-rail:not(.mobile-checkout) .side #nav button{width:100%;flex:0 0 auto;white-space:nowrap}
+	html body.nav-rail:not(.mobile-checkout) .main{grid-column:2!important;min-width:0}
+	html body.nav-rail:not(.mobile-checkout) .top{top:0!important}
+	/* the compact checkout layout (700-1100px) used to hide the bar and use the page links in the ... menu instead */
+	html body.nav-rail:not(.mobile-checkout):has(#view-checkout.active) .app{display:grid!important;grid-template-columns:64px minmax(0,1fr)!important}
+	html body.nav-rail:not(.mobile-checkout):has(#view-checkout.active) .side{display:flex!important}
+	html body.nav-rail:not(.mobile-checkout) .top-nav{display:none!important} /* page links in the ⋯ menu are redundant now */
+}
+
+/* Phones and tablets without a mouse: tapping must not leave the rail stuck open, so it only expands from its own "Menu" button
+   (.rail-open) and collapses again after a page is chosen or anything else is tapped. */
+html body .side .nav button.rail-toggle{display:none!important}
+@media (hover:none){
+	html body .side .nav button.rail-toggle{display:flex!important}
+	html body.nav-rail:not(.mobile-checkout) .side:not(.rail-open){width:64px!important;box-shadow:none}
+	html body.nav-rail .side:not(.rail-open) > :not(nav){min-width:220px;visibility:hidden}
+	html body.nav-rail .side:not(.rail-open) #nav{width:36px}
+	html body.nav-rail .side:not(.rail-open) #nav button::after{display:none!important}
+	html body.nav-rail .side:not(.rail-open) .nav-group:not(.nav-sep){visibility:hidden;height:6px;padding:0}
+}
+/* Phones: the logo, brand and Lock POS / Sign Out block would push the pages out of sight; those actions are in the header's ... menu. */
+@media (max-width:700px){
+	html body.nav-rail:not(.mobile-checkout) .side > .brand,
+	html body.nav-rail:not(.mobile-checkout) .side > .side-foot,
+	html body.nav-rail:not(.mobile-checkout) .side > .side-business-logo{display:none!important}
+	html body.nav-rail:not(.mobile-checkout) .side{padding-top:12px!important}
+}
+.nav .rail-toggle .nav-icon{font-size:22px;line-height:20px;text-align:center}
