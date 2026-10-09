@@ -479,3 +479,10 @@ html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-h
 @media (min-width:1101px){
 	html body.nav-rail.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .app{grid-template-columns:64px minmax(0,1fr)!important}
 }
+
+/* Phones and small tablets in full screen: the page below the navigation strip is its own clipped area, so the sticky header
+   belongs at the top of that area. The older 57px offset (made for the strip sitting in the same scroll area) pushed the header
+   down over the first lines of every page and left a blank band under the strip. */
+@media (max-width:900px){
+	html body.full .top{top:0!important}
+}
