@@ -463,26 +463,5 @@ html body:not(.mobile-checkout) #view-checkout aside.cart.panel>.cart-foot{max-h
 .usb-printer-controls .hw-section>.hw-actions{justify-content:flex-end}
 @media(max-width:600px){.usb-printer-controls>.hw-section{grid-template-columns:1fr}.usb-printer-controls .hw-section>.hw-actions{justify-content:flex-start}}
 
-/* Full screen keeps the same navigation bar as normal mode. Up to 1100px that bar is the strip across the top, so on the
-   checkout page too it stays a full-width strip above the header (older full-screen rules squeezed it into a side column
-   and sized the page as if the strip was not there): strip + header + content now share the screen height. */
-@media (max-width:1100px){
-	html body.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .app{display:flex!important;flex-direction:column;grid-template-columns:none!important;height:100dvh;overflow:hidden}
-	html body.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .side{flex:0 0 auto}
-	html body.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .main{flex:1 1 auto;min-height:0;height:auto!important;display:flex;flex-direction:column}
-	html body.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .top{flex:0 0 auto}
-	html body.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .content{flex:1 1 auto;min-height:0;height:auto!important}
-}
-
-/* Wide screens: the full-screen checkout reserved a 248px side column although the navigation bar is the slim rail, which left a blank gap
-   beside the rail. The column now matches the rail (64px, as in nav-rail.css), as on every other page and in normal mode. */
-@media (min-width:1101px){
-	html body.nav-rail.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .app{grid-template-columns:64px minmax(0,1fr)!important}
-}
-
-/* Phones and small tablets in full screen: the page below the navigation strip is its own clipped area, so the sticky header
-   belongs at the top of that area. The older 57px offset (made for the strip sitting in the same scroll area) pushed the header
-   down over the first lines of every page and left a blank band under the strip. */
-@media (max-width:900px){
-	html body.full .top{top:0!important}
-}
+/* Full-screen checkout reserved a 248px side column although the navigation bar is the slim 64px rail (blank gap beside the rail). */
+html body.nav-rail.full:not(.mobile-checkout):not(.sidebar-collapsed):has(#view-checkout.active) .app{grid-template-columns:64px minmax(0,1fr)!important}
