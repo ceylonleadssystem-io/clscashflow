@@ -210,3 +210,55 @@ test('appwrite-docs: month documents union their rows, a salesSplit main documen
   const other = await docs.handler({ httpMethod: 'POST', headers: { authorization: 'Bearer t' }, body: JSON.stringify({ action: 'stamps', path: 'users/someone-else/pos/main/sales' }) });
   assert.equal(other.statusCode, 403);
 });
+
+const bigPayload = (tag) => ({ payload: { tag, blob: require('node:crypto').randomBytes(900000).toString('base64') } });
+const piecesOf = (store) => [...rows.keys()].filter((k) => k.startsWith(store + '/') && rows.get(k).path.includes('__large_documents__'));
+
+test('every save writes a complete new set of pieces and removes the previous set afterwards', async () => {
+  rows.clear();
+  await lib.upsertDocument('users/u13/pos', 'main', bigPayload('one'));
+  const first = piecesOf('pos');
+  assert.ok(first.length >= 2);
+  await lib.upsertDocument('users/u13/pos', 'main', bigPayload('two'));
+  const second = piecesOf('pos');
+  assert.ok(second.length >= 2);
+  assert.equal(second.filter((k) => first.includes(k)).length, 0, 'new pieces, none overwritten in place');
+  assert.equal((await lib.getDocument('users/u13/pos', 'main')).data.payload.tag, 'two');
+  await lib.deleteDocument('users/u13/pos', 'main');
+  assert.equal(piecesOf('pos').length, 0, 'deleting the document removes its pieces too');
+});
+
+test('saves at the same moment never leave a mixed, unreadable document', async () => {
+  for (let round = 0; round < 12; round++) {
+    rows.clear();
+    await lib.upsertDocument('users/u14/pos', 'main', bigPayload('start'));
+    const a = bigPayload('A'), b = bigPayload('B'), c = bigPayload('C');
+    await Promise.all([lib.upsertDocument('users/u14/pos', 'main', a), lib.upsertDocument('users/u14/pos', 'main', b), lib.upsertDocument('users/u14/pos', 'main', c)]);
+    const doc = await lib.getDocument('users/u14/pos', 'main'); // must decode, whichever save won
+    assert.ok(['A', 'B', 'C'].includes(doc.data.payload.tag));
+    assert.equal(doc.data.payload.blob.length, 1200000);
+  }
+});
+
+test('a document whose pieces were mixed by the old in-place saves falls back to its previous copy instead of failing every request', async () => {
+  rows.clear();
+  const old = { payload: { tag: 'old copy' } };
+  seed('ceylonry', 'users/u15/pos', 'main', old); // the copy still in the main database
+  await lib.upsertDocument('users/u15/pos', 'main', bigPayload('current'));
+  // break one piece of the stored document: a piece from another save (what the in-place overwrite produced)
+  const key = piecesOf('pos')[0];
+  rows.set(key, { ...rows.get(key), data: JSON.stringify({ chunk: 'not-the-right-text' }) });
+  const doc = await lib.getDocument('users/u15/pos', 'main');
+  assert.equal(doc.data.payload.tag, 'old copy');
+  // the next save replaces the broken document with a good one
+  const saved = await lib.upsertDocument('users/u15/pos', 'main', { payload: { tag: 'healed', blob: 'x'.repeat(10) } }, true, doc);
+  assert.equal((await lib.getDocument('users/u15/pos', 'main')).data.payload.tag, 'healed');
+  assert.equal(piecesOf('pos').length, 0, 'the broken pieces are cleaned up');
+  assert.ok(saved.stamp);
+  // with no earlier copy there is nothing to fall back to: the error is reported, never an empty document
+  rows.clear();
+  await lib.upsertDocument('users/u16/pos', 'main', bigPayload('only'));
+  const k2 = piecesOf('pos')[0];
+  rows.set(k2, { ...rows.get(k2), data: JSON.stringify({ chunk: 'broken' }) });
+  await assert.rejects(() => lib.getDocument('users/u16/pos', 'main'));
+});

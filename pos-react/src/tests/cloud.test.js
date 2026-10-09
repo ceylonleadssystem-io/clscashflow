@@ -146,3 +146,32 @@ describe("CloudSyncService: cheap polling", () => {
 		a.stop();
 	});
 });
+
+describe("CloudSyncService: failing server", () => {
+	it("waits longer after each failed sync instead of retrying every few seconds, and retry() skips the wait", async () => {
+		const fb = stampedBackend();
+		const a = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		const store = new PosStore(createDatabase("cloud-fail"));
+		await a.attach(store, ctxFor2(fb, "u4"), { dbName: "cloud-fail" });
+		await a.syncNow();
+		const realGet = a.ref.get;
+		let gets = 0;
+		a.ref.get = async () => {
+			gets++;
+			throw new Error("incorrect data check");
+		};
+		await store.write((tx) => tx.put(T.products, { id: "p1", name: "Tea", price: 100, cost: 50, type: "Product", category: "Tea" }));
+		a.markPending();
+		await a.syncNow(); // fails
+		expect(gets).toBe(1);
+		for (let i = 0; i < 5; i++) await a.syncNow(); // inside the wait: no new requests
+		await a.pull();
+		expect(gets).toBe(1);
+		await a.retry(); // the user taps retry
+		expect(gets).toBe(2);
+		a.ref.get = realGet;
+		await a.retry();
+		expect(a.failures).toBe(0);
+		a.stop();
+	});
+});

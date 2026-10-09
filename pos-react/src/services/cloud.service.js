@@ -51,6 +51,8 @@ export class CloudSyncService {
 		this.ref = null;
 		this.lastCloudJson = "";
 		this.lastRemoteStamp = "";
+		this.failures = 0; // consecutive failed syncs: the next attempt waits longer each time instead of hammering a failing server
+		this.backoffUntil = 0;
 		this.lastServerStamp = ""; // server write time of the cloud document as last seen: lets pull() skip the download when nothing changed
 		this.inFlight = false;
 		this.again = false;
@@ -304,6 +306,8 @@ export class CloudSyncService {
 	}
 
 	retry() {
+		this.failures = 0;
+		this.backoffUntil = 0;
 		this._status("Retrying cloud sync…", "syncing");
 		return this.syncNow();
 	}
@@ -311,6 +315,7 @@ export class CloudSyncService {
 	/** Pull remote changes and merge them into the local database. */
 	async pull() {
 		if (!navigator.onLine || this.inFlight || !this.ref) return;
+		if (this.backoffUntil && Date.now() < this.backoffUntil) return;
 		try {
 			// Ask for the write time only (a few bytes); the whole document, often several MB, is downloaded only when it changed.
 			if (this.lastServerStamp && typeof this.ref.stamp === "function") {
@@ -333,6 +338,7 @@ export class CloudSyncService {
 			if (this.isPending()) this._status("Syncing POS with cloud…", "syncing");
 			else this._status("POS is online · cloud synced", "saved");
 		} catch (error) {
+			this._failed();
 			this._status("Cloud sync failed · tap to retry", "retry");
 			console.warn("POS live sync paused", error);
 			log.warn("pull failed", error);
@@ -359,8 +365,15 @@ export class CloudSyncService {
 	}
 
 	/** Push local changes (merging with whatever is in the cloud). */
+	/** Remember a failed attempt: wait 5 s, then 10, 20, 40 ... up to a minute before trying again (tapping retry skips the wait). */
+	_failed() {
+		this.failures++;
+		this.backoffUntil = Date.now() + Math.min(60000, 5000 * 2 ** (this.failures - 1));
+	}
+
 	async syncNow() {
 		if (!this.ref || !this.store) return;
+		if (this.backoffUntil && Date.now() < this.backoffUntil) return;
 		if (this.inFlight) {
 			this.again = true;
 			return;
@@ -420,6 +433,8 @@ export class CloudSyncService {
 			const merged = normalizeAccountDb(mergePayload(verified, clone(latest), changedDuringSync), profile, workspaceUser);
 			if (exactly(safePayload(merged)) !== exactly(latest)) await this._apply(merged);
 			this.lastCloudJson = exactly(normalizeAccountDb(JSON.parse(JSON.stringify(verified)), profile, workspaceUser));
+			this.failures = 0;
+			this.backoffUntil = 0;
 			log.info("push finished", { ms: Date.now() - startedAt, changedDuringSync });
 			if (changedDuringSync) {
 				this.markPending();
@@ -430,6 +445,7 @@ export class CloudSyncService {
 				changedDuringSync ? "syncing" : "saved",
 			);
 		} catch (e) {
+			this._failed();
 			this.markPending();
 			this._status(
 				navigator.onLine
