@@ -32,6 +32,8 @@ export const env = {
 	ejsReceiptTemplate: e.VITE_EJS_RECEIPT_TEMPLATE || "template_avm444n",
 	ejsOrderTemplate: e.VITE_EJS_ORDER_TEMPLATE || "",
 	catalogueImagesUrl: e.VITE_CATALOGUE_IMAGES_URL || "",
+	// sales history in monthly cloud documents instead of the main business document (VITE_SALES_SPLIT=on)
+	salesSplit: e.VITE_SALES_SPLIT === "on",
 	syncPullMs: Number(e.VITE_SYNC_PULL_MS) || 3000, // each check is only a tiny stamp request (the document is downloaded when it changed)
 	syncPushMs: Number(e.VITE_SYNC_PUSH_MS) || 2500,
 	xlsxCdn: "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",

@@ -88,26 +88,42 @@ function unpackData(value) {
 }
 function rowToDoc(row) { return { id: row.docId, data: JSON.parse(row.data || '{}') }; }
 function chunkPath(path, id) { return path + '/__large_documents__/' + id; }
-function chunkId(id, index) { return crypto.createHash('sha256').update(id + '\0chunk\0' + index).digest('hex').slice(0, 36); }
-async function removeChunks(path, id, from, count, store) {
+// Pieces of one saved version carry that version in their id and are never overwritten: a save writes a complete new set, switches the
+// main row to it, and only then removes the previous set. Two saves at the same moment therefore cannot mix their pieces (which made
+// the stored document unreadable), and a reader always finds the complete set its main row points to. Rows written before this
+// change have no version (version = '') and keep the old ids.
+function chunkId(id, index, version) { return crypto.createHash('sha256').update(id + '\0chunk\0' + index + (version ? '\0' + version : '')).digest('hex').slice(0, 36); }
+async function removeChunks(path, id, from, count, store, version) {
   store = store || storeFor(path);
   await Promise.all(Array.from({ length: Number(count) || 0 }, async function(_, offset) {
-    const logicalId = chunkId(id, (Number(from) || 0) + offset);
+    const logicalId = chunkId(id, (Number(from) || 0) + offset, version);
     try { await databases().deleteDocument(store.db, store.col, documentKey(chunkPath(path, id), logicalId)); }
     catch (error) { if (!error || error.code !== 404) throw error; }
   }));
 }
-async function hydratedRowToDoc(row, store) {
+async function hydratedRowToDoc(row, store, attempt) {
   store = store || storeFor(row.path);
+  attempt = attempt || 0;
   const parsed = JSON.parse(row.data || '{}');
   if (!parsed.__chunkedDocument) return { id: row.docId, data: unpackData(parsed), stamp: row.updatedAt || '' };
-  const pieces = await Promise.all(Array.from({ length: Number(parsed.chunkCount) || 0 }, async function(_, index) {
-    const logicalId = chunkId(row.docId, index);
-    const chunk = await databases().getDocument(store.db, store.col, documentKey(chunkPath(row.path, row.docId), logicalId));
-    return JSON.parse(chunk.data || '{}').chunk || '';
-  }));
+  let pieces;
+  try {
+    pieces = await Promise.all(Array.from({ length: Number(parsed.chunkCount) || 0 }, async function(_, index) {
+      const logicalId = chunkId(row.docId, index, parsed.chunkVersion);
+      const chunk = await databases().getDocument(store.db, store.col, documentKey(chunkPath(row.path, row.docId), logicalId));
+      return JSON.parse(chunk.data || '{}').chunk || '';
+    }));
+  } catch (error) {
+    // the document was saved again while its pieces were being read (the previous set is removed after a save): read its main row again
+    if (error && error.code === 404 && attempt < 3) return hydratedRowToDoc(await databases().getDocument(store.db, store.col, documentKey(row.path, row.docId)), store, attempt + 1);
+    throw error;
+  }
   return { id: row.docId, data: unpackData(JSON.parse(pieces.join(''))), stamp: row.updatedAt || '' };
 }
+
+// A stored document that cannot be decoded (pieces from two different saves mixed by the old in-place writes, a cut-off compressed
+// text): not "missing", so it is reported, and the old copy of the row (if any) is used instead of failing every request.
+const isCorrupt = function(error) { return !!error && (error instanceof SyntaxError || /^Z_/.test(String(error.code || '')) || /incorrect (data|header) check|unexpected end of file|invalid (stored block|distance|code)/i.test(String(error.message || ''))); };
 
 async function getUserFromEvent(event) {
   const auth = String((event.headers || {}).authorization || (event.headers || {}).Authorization || '').match(/^Bearer\s+(.+)$/i);
@@ -121,10 +137,16 @@ async function getUserFromEvent(event) {
 
 async function getDocument(path, id) {
   const stores = [storeFor(path), legacyStoreFor(path)].filter(Boolean);
+  let unreadable = null;
   for (const store of stores) {
     try { return await hydratedRowToDoc(await databases().getDocument(store.db, store.col, documentKey(path, id)), store); }
-    catch (error) { if (!error || error.code !== 404) throw error; }
+    catch (error) {
+      if (error && error.code === 404) continue;
+      if (isCorrupt(error) && stores.indexOf(store) < stores.length - 1) { console.error('Unreadable stored document, trying the previous copy', path, id, error.message); unreadable = unreadable || error; continue; }
+      throw error;
+    }
   }
+  if (unreadable) throw unreadable; // there is no other copy: report the problem, never answer "no document" (a device would start a new empty workspace)
   return null;
 }
 
@@ -139,6 +161,16 @@ async function getDocumentStamp(path, id) {
   return { exists: false, stamp: '' };
 }
 
+// Write times of every document directly under a path (no data): one small request tells a device which of them changed.
+async function listStamps(path, limit) {
+  const out = new Map();
+  for (const store of [storeFor(path), legacyStoreFor(path)].filter(Boolean)) {
+    const res = await databases().listDocuments(store.db, store.col, [Query.equal('path', [path]), Query.select(['docId', 'updatedAt', 'ownerUid']), Query.limit(Math.min(Number(limit) || 1000, 5000))]);
+    res.documents.forEach(function(row) { if (!out.has(row.docId)) out.set(row.docId, row.updatedAt || ''); });
+  }
+  return out;
+}
+
 async function queryDocuments(path, options) {
   options = options || {};
   const limit = Math.min(Number(options.fetchLimit || 1000), 5000);
@@ -151,7 +183,7 @@ async function queryDocuments(path, options) {
     // A large document whose chunk is missing (404) must not break the whole listing - skip it and log.
     const part = (await Promise.all(result.documents.filter(function(row) { return !seen.has(row.docId); }).map(function(row) {
       return hydratedRowToDoc(row, store).catch(function(error) {
-        if (error && error.code === 404) { console.error('Skipping unreadable document', path, row.docId, error.message); return null; }
+        if (error && (error.code === 404 || isCorrupt(error))) { console.error('Skipping unreadable document', path, row.docId, error.message); return null; }
         throw error;
       });
     }))).filter(Boolean);
@@ -178,18 +210,20 @@ async function upsertDocument(path, id, data, merge, known) {
   } catch (error) {
     if (!error || error.code !== 404) throw error;
   }
-  if (current) { try { oldChunkCount = Number(JSON.parse(current.data || '{}').chunkCount) || 0; } catch (_) {} }
+  let oldVersion = '';
+  if (current) { try { const m = JSON.parse(current.data || '{}'); oldChunkCount = Number(m.chunkCount) || 0; oldVersion = m.chunkVersion || ''; } catch (_) {} }
   if (utf8Length(serialized) > DOCUMENT_DATA_LIMIT) {
-    const pieces=splitUtf8(serialized,DOCUMENT_CHUNK_SIZE);
+    const pieces=splitUtf8(serialized,DOCUMENT_CHUNK_SIZE), version=crypto.randomBytes(6).toString('hex');
     await Promise.all(pieces.map(async function(piece,index){
-      const logicalId=chunkId(id,index),chunkPayload={path:chunkPath(path,id),docId:logicalId,data:storedData({chunk:piece}),ownerUid:ownerFrom(path,id,next),email:null,createdAt:now,updatedAt:now},chunkKey=documentKey(chunkPayload.path,logicalId);
-      try{const old=await databases().getDocument(store.db,store.col,chunkKey);chunkPayload.createdAt=old.createdAt||now;await databases().updateDocument(store.db,store.col,chunkKey,chunkPayload)}catch(error){if(!error||error.code!==404)throw error;await databases().createDocument(store.db,store.col,chunkKey,chunkPayload,[])}
+      const logicalId=chunkId(id,index,version),chunkPayload={path:chunkPath(path,id),docId:logicalId,data:storedData({chunk:piece}),ownerUid:ownerFrom(path,id,next),email:null,createdAt:now,updatedAt:now};
+      await databases().createDocument(store.db,store.col,documentKey(chunkPayload.path,logicalId),chunkPayload,[]);
     }));
-    payload.data=storedData({__chunkedDocument:true,chunkCount:pieces.length});
-    if(oldChunkCount>pieces.length)await removeChunks(path,id,pieces.length,oldChunkCount-pieces.length);
-  } else if(oldChunkCount) await removeChunks(path,id,0,oldChunkCount);
+    payload.data=storedData({__chunkedDocument:true,chunkCount:pieces.length,chunkVersion:version});
+  }
   payload.data=storedData(payload.data);
   const saved=current?await databases().updateDocument(store.db,store.col,key,payload):await databases().createDocument(store.db,store.col,key,payload,[]);
+  // the main row now points at the new set: the previous set (if the document had pieces) is no longer needed
+  if(oldChunkCount)await removeChunks(path,id,0,oldChunkCount,store,oldVersion).catch(function(error){console.error('Could not remove the previous pieces',path,id,error&&error.message)});
   return {id:saved.docId,data:next,stamp:now};
 }
 
@@ -199,9 +233,9 @@ async function deleteDocument(path,id){
   for(const store of [storeFor(path),legacyStoreFor(path)].filter(Boolean)){
     try{
       const current=await databases().getDocument(store.db,store.col,documentKey(path,id));
-      let chunkCount=0;try{chunkCount=Number(JSON.parse(current.data||'{}').chunkCount)||0}catch(_){}
+      let chunkCount=0,version='';try{const m=JSON.parse(current.data||'{}');chunkCount=Number(m.chunkCount)||0;version=m.chunkVersion||''}catch(_){}
       await databases().deleteDocument(store.db,store.col,documentKey(path,id));
-      if(chunkCount)await removeChunks(path,id,0,chunkCount,store);
+      if(chunkCount)await removeChunks(path,id,0,chunkCount,store,version);
     }catch(error){if(!error||error.code!==404)throw error;}
   }
 }
@@ -279,4 +313,4 @@ function appwriteAdmin(){
   };
 }
 
-module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,getDocumentStamp,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
+module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,getDocumentStamp,listStamps,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
