@@ -155,3 +155,16 @@ test('a document the caller has just read is not read again by canWrite / upsert
     assert.equal(reads - afterRead, 1, 'only the row lookup inside upsertDocument (created time and piece count): the document itself is not read again');
   } finally { FakeDatabases.prototype.getDocument = realGet; }
 });
+
+test('APPWRITE_COMPRESS=off stops compressing new saves but compressed rows stay readable', async () => {
+  rows.clear();
+  const big = { payload: { items: Array.from({ length: 3000 }, (_, i) => 'item number ' + i) } };
+  await lib.upsertDocument('users/u10/pos', 'main', big);
+  assert.ok(JSON.parse(slot('pos', 'users/u10/pos', 'main').data).__gz);
+  process.env.APPWRITE_COMPRESS = 'off';
+  try {
+    assert.deepEqual((await lib.getDocument('users/u10/pos', 'main')).data, big); // still readable
+    await lib.upsertDocument('users/u10/pos', 'main', big);
+    assert.deepEqual(JSON.parse(slot('pos', 'users/u10/pos', 'main').data).payload, big.payload); // plain again
+  } finally { delete process.env.APPWRITE_COMPRESS; }
+});

@@ -77,8 +77,9 @@ function storedData(value) {
 // Big documents (a business' whole POS data) are stored gzip-compressed inside the same text column: JSON shrinks 5-10x, so
 // far fewer 400 KB pieces are needed and every read and write moves less data. Small documents stay readable plain JSON.
 const COMPRESS_MIN = 50000;
+// APPWRITE_COMPRESS=off stops compressing new saves (rows already compressed stay readable by this code)
 function packData(serialized) {
-  if (utf8Length(serialized) < COMPRESS_MIN) return serialized;
+  if (process.env.APPWRITE_COMPRESS === 'off' || utf8Length(serialized) < COMPRESS_MIN) return serialized;
   const packed = JSON.stringify({ __gz: zlib.gzipSync(Buffer.from(serialized, 'utf8'), { level: 6 }).toString('base64') });
   return utf8Length(packed) < utf8Length(serialized) ? packed : serialized;
 }
