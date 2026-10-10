@@ -185,4 +185,32 @@ describe("sales history split", () => {
 			env.salesSplit = false;
 		}
 	});
+
+	it("restarts from the device without downloading any month, then uploads only the month that changed", async () => {
+		const fb = serverStandIn();
+		env.salesSplit = true;
+		try {
+			const first = await device(fb, "uc");
+			await first.store.write((tx) => tx.put(T.products, { id: "p1", name: "Tea", price: 100, cost: 50, type: "Product", category: "Tea" })); // a business with a menu
+			await addSale(first.store, sale("c1", "2026-09-10T10:00:00.000Z"));
+			await addSale(first.store, sale("c2", "2026-10-03T10:00:00.000Z"));
+			await settle(first.svc);
+			first.svc.stop();
+
+			const reads = { month: fb.calls.monthGets, main: fb.calls.mainGets };
+			const again = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+			await again.attach(first.store, ctxFor(fb, "uc"), { dbName: "split-uc" });
+			expect(fb.calls.monthGets).toBe(reads.month);
+			expect(fb.calls.mainGets).toBe(reads.main); // started from the device: nothing downloaded
+			expect(await names(first.store)).toEqual(["c1", "c2"]);
+
+			fb.calls.monthSets.length = 0;
+			await addSale(first.store, sale("c3", "2026-10-09T10:00:00.000Z"));
+			await settle(again);
+			expect(fb.calls.monthSets).toEqual(["2026-10"]); // September was not uploaded again
+			again.stop();
+		} finally {
+			env.salesSplit = false;
+		}
+	});
 });

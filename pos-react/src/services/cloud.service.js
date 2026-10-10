@@ -71,7 +71,7 @@ export class CloudSyncService {
 		this.lastRemoteStamp = "";
 		this.failures = 0; // consecutive failed syncs: the next attempt waits longer each time instead of hammering a failing server
 		this.backoffUntil = 0;
-		this.lastServerStamp = ""; // server write time of the cloud document as last seen: lets pull() skip the download when nothing changed
+		this._lastServerStamp = ""; // server write time of the cloud document as last seen: lets pull() skip the download when nothing changed
 		this.inFlight = false;
 		this.again = false;
 		this.pullTimer = null;
@@ -80,6 +80,23 @@ export class CloudSyncService {
 		this.debounce = null;
 		this.unsubWrites = null;
 		this.handlers = [];
+	}
+
+	/** Server write stamp of the cloud document as last confirmed; kept on this device so the next start can skip the full download. */
+	get lastServerStamp() {
+		return this._lastServerStamp;
+	}
+	set lastServerStamp(value) {
+		this._lastServerStamp = value || "";
+		if (!this._lastServerStamp || !this.ctx) return; // an empty value (offline read) must not wipe the remembered stamp
+		try {
+			localStorage.setItem(this.stampKey, this._lastServerStamp);
+		} catch {
+			/* storage full: the next start reads the whole document */
+		}
+	}
+	get stampKey() {
+		return STORAGE.KEY + "-stamp-" + this.ctx.workspaceUid;
 	}
 
 	// -------------------------------------------------------------- identity
@@ -161,6 +178,35 @@ export class CloudSyncService {
 		return !!(s.users.length || s.products.length || s.sales.length || s.settings.business);
 	}
 
+	/**
+	 * Fast start: when this device already holds the business, nothing is waiting to be uploaded, and the cloud document still has
+	 * the write stamp this device last confirmed, the local copy IS the cloud copy. Ask for the stamp only (a few bytes) instead of
+	 * downloading the whole document, and start the sync loops from what is already on the device.
+	 */
+	async _startedFromLocal(localPayload, pending, profile) {
+		const saved = (() => {
+			try {
+				return localStorage.getItem(this.stampKey) || "";
+			} catch {
+				return "";
+			}
+		})();
+		if (!saved || pending || !localPayload?.products?.length || !profileHasPosAccess(profile) || typeof this.ref.stamp !== "function" || !navigator.onLine) return false;
+		try {
+			const head = await withTimeout(this.ref.stamp(), 6000);
+			if (!head.exists || head.stamp !== saved) return false;
+			this.ref.adopt?.(localPayload.sales || []);
+			this.lastServerStamp = head.stamp;
+			this.lastCloudJson = exactly(await this._localPayload());
+			this._status("POS is online · cloud synced", "saved");
+			log.info("attach finished from local data (cloud unchanged since this device last synced)");
+			return true;
+		} catch (e) {
+			log.warn("fast start check failed; reading the whole document", e);
+			return false;
+		}
+	}
+
 	// ---------------------------------------------------------------- attach
 	/**
 	 * Reconcile local + remote data, then start the sync loops.
@@ -185,6 +231,7 @@ export class CloudSyncService {
 
 		log.info("attach started", { dbName, hasLocal: !!localPayload, hasLegacy: !!legacyWorkspace });
 		let pending = this.isPending();
+		if (await this._startedFromLocal(localPayload, pending, profile)) return { restoredCatalogue: false };
 		let remote = null;
 		try {
 			remote = await withTimeout(this.ref.get());

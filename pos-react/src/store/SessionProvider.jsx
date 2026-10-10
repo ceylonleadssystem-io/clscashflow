@@ -70,6 +70,7 @@ export function SessionProvider({ children }) {
 			if (!user || activating.current === user.uid) return;
 			// The ref (not state) guards against duplicate activations from overlapping onChange/signIn calls.
 			activating.current = user.uid;
+			const startedAt = performance.now();
 			log.info("activating workspace", { provider: auth.kind });
 			setPhase("activating");
 			try {
@@ -78,6 +79,7 @@ export function SessionProvider({ children }) {
 					const cloud = new CloudSyncService({ clsBackend: fb, onStatus: setCloudStatus });
 					cloudRef.current = cloud;
 					const ctx = await cloud.resolveWorkspace(user);
+					const profileMs = Math.round(performance.now() - startedAt);
 					const dbName = databaseNameFor(ctx.workspaceUid);
 					const store = new PosStore(createDatabase(dbName));
 					const previousUid = sessionStorage.getItem(STORAGE.businessUid) || "";
@@ -89,6 +91,7 @@ export function SessionProvider({ children }) {
 						dbName,
 						legacyPayloads: [readJson(STORAGE.KEY + "-" + ctx.workspaceUid), readJson(STORAGE.KEY)],
 					});
+					log.info("boot timing", { profileMs, attachMs: Math.round(performance.now() - startedAt) - profileMs });
 					if (restoredCatalogue) setRestoredNotice(true);
 					sessionStorage.setItem(STORAGE.businessAuth, "1");
 					const allowed = accessAllowed(profile);
@@ -126,7 +129,7 @@ export function SessionProvider({ children }) {
 				loadCatalogueImages();
 				setPhase("ready");
 				setAuthError("");
-				log.info("workspace ready", { provider: auth.kind });
+				log.info("workspace ready", { provider: auth.kind, totalMs: Math.round(performance.now() - startedAt) });
 			} catch (e) {
 				log.error("POS account could not be activated", e);
 				activating.current = "";

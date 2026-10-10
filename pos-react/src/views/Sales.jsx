@@ -1,9 +1,8 @@
 /**
- * Sales History page: search and date filters, and per-sale actions (download, WhatsApp, refund,
- * void; printing lives on the Receipts & Refunds page and permanent deletion is not offered here) with CSV export. Three tabs: Transactions (receipts), Voids & deletes and Refunds.
+ * Sales History page: search and date filters, CSV export and per-sale actions (download, WhatsApp). Three tabs:
+ * Transactions (receipts), Voids & deletes and Refunds. Printing, refunds and voids live on the Receipts & Refunds page.
  */
 import { useMemo, useState } from "react";
-import { MANAGER_ROLES } from "../config/roles";
 import { downloadCsv, money } from "../domain/format";
 import { saleItemCount, statusOf } from "../domain/sales";
 import { refundRows, voidRows } from "../domain/salesLog";
@@ -13,7 +12,6 @@ import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
 import { useScopedData } from "../hooks/useScopedData";
-import { SaleActionModal } from "../modals/SaleActionModal";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("ui");
@@ -22,15 +20,12 @@ const log = createLogger("ui");
 export function Sales() {
 	const data = useData();
 	const { sales } = useScopedData();
-	const { role, svc, locationId } = usePos();
-	const refunds = useFeature("sales.refunds");
-	const voids = useFeature("sales.voids");
+	const { svc, locationId } = usePos();
 	const exportCsv = useFeature("sales.exportCsv");
 	const receiptTools = useFeature("sales.receiptDownload");
 	const [q, setQ] = useState("");
 	const [from, setFrom] = useState("");
 	const [to, setTo] = useState("");
-	const [action, setAction] = useState(null); // { id, type }
 	const [tab, setTab] = useState("transactions");
 
 	// the Voids & deletes and Refunds tabs follow the same search and date filters as Transactions
@@ -199,8 +194,6 @@ export function Sales() {
 							{list.map((s) => {
 								const c = data.customers.find((x) => x.id === s.customerId);
 								const status = statusOf(s);
-								const active = ["completed", "partially_refunded"].includes(status);
-								const canReverse = MANAGER_ROLES.includes(role) && active;
 								return (
 									<tr key={s.id}>
 										<td>{s.date}</td>
@@ -233,16 +226,6 @@ export function Sales() {
 														WhatsApp
 													</button>
 												)}
-												{canReverse && refunds && (
-													<button className="btn out" onClick={() => setAction({ id: s.id, type: "refund" })}>
-														Refund
-													</button>
-												)}
-												{canReverse && voids && (
-													<button className="btn danger" onClick={() => setAction({ id: s.id, type: "void" })}>
-														Void
-													</button>
-												)}
 											</div>
 										</td>
 									</tr>
@@ -258,7 +241,6 @@ export function Sales() {
 				</div>
 				)}
 			</Panel>
-			<SaleActionModal target={action} onClose={() => setAction(null)} />
 		</section>
 	);
 }

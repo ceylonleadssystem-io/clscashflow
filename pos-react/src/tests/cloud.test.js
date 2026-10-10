@@ -186,3 +186,57 @@ describe("pullDelay", () => {
 		expect(pullDelay({ idleFor: 999999, hidden: true, live: true })).toBe(env.syncPullMs);
 	});
 });
+
+describe("CloudSyncService: fast start", () => {
+	const boot = async (fb, uid, db, { pending = false, edit } = {}) => {
+		const s = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		const store = new PosStore(createDatabase(db));
+		await s.attach(store, ctxFor2(fb, uid), { dbName: db });
+		return { s, store };
+	};
+	const withCatalogue = async (store) => {
+		await store.write((tx) => tx.put(T.products, { id: "p1", name: "Tea", price: 100, cost: 50, type: "Product", category: "Tea" }));
+	};
+
+	it("starts from the device without downloading the document when the cloud is unchanged since the last sync", async () => {
+		const fb = stampedBackend();
+		const first = await boot(fb, "u10", "fast-a");
+		await withCatalogue(first.store);
+		first.s.markPending();
+		await first.s.syncNow();
+		first.s.stop();
+
+		const gets = fb.calls.get;
+		const second = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		await second.attach(first.store, ctxFor2(fb, "u10"), { dbName: "fast-a" });
+		expect(fb.calls.get).toBe(gets); // no whole-document read
+		expect(second.isPending()).toBe(false);
+		expect((await first.store.readSnapshot()).products.map((p) => p.name)).toEqual(["Tea"]);
+		second.stop();
+	});
+
+	it("downloads when the cloud changed meanwhile, or when this device has unsent changes", async () => {
+		const fb = stampedBackend();
+		const first = await boot(fb, "u11", "fast-b");
+		await withCatalogue(first.store);
+		first.s.markPending();
+		await first.s.syncNow();
+		first.s.stop();
+
+		fb.bump("users/u11/pos/main"); // another device saved
+		let gets = fb.calls.get;
+		const changed = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		await changed.attach(first.store, ctxFor2(fb, "u11"), { dbName: "fast-b" });
+		expect(fb.calls.get).toBeGreaterThan(gets);
+		changed.stop();
+
+		await first.store.write((tx) => tx.put(T.products, { id: "p2", name: "Cake", price: 200, cost: 80, type: "Product", category: "Food" }));
+		changed.markPending(); // an edit that never reached the cloud
+		gets = fb.calls.get;
+		const pending = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		await pending.attach(first.store, ctxFor2(fb, "u11"), { dbName: "fast-b" });
+		expect(fb.calls.get).toBeGreaterThan(gets);
+		expect(fb.docs.get("users/u11/pos/main").payload.products.map((p) => p.name).sort()).toEqual(["Cake", "Tea"]);
+		pending.stop();
+	});
+});
