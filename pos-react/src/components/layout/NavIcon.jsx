@@ -12,6 +12,7 @@ const PATHS = {
 	customers: <><circle cx="9" cy="8" r="4" /><path d="M2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6" /></>,
 	crm: <><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.9A8 8 0 1 1 21 12z" /><path d="M9 11h6M9 14h3" /></>,
 	sales: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5M12 7v5l3 2" /></>,
+	receipts: <><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" /></>,
 	reports: <><path d="M3 3v18h18" /><path d="M7 15v3M12 10v8M17 6v12" /></>,
 	inventory: <><path d="M3 9l1.5-5h15L21 9" /><path d="M3 9v11h18V9M3 9h18M9 13h6" /></>,
 	industry: <><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.5 2.5-2.4-.6-.6-2.4z" /></>,

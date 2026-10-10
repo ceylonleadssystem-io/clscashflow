@@ -79,7 +79,7 @@ export function calculateRefundAmount(sale, refundType, lines) {
  * Applies a refund/void to `sale` (pure: returns the updated sale).
  * `restoredLines` tells the caller which quantities went back to stock.
  */
-export function applyReversal(sale, { type, reason, userId, cashShiftId, refundType, refundLines }) {
+export function applyReversal(sale, { type, reason, userId, cashShiftId, refundType, refundLines, authorizedBy }) {
 	const s = { ...sale, refunds: sale.refunds ? sale.refunds.map((r) => ({ ...r })) : undefined };
 	const isSplit = s.payment === "Split";
 	const splitCash = (s.payments || []).some((p) => p.method === "Cash");
@@ -91,7 +91,7 @@ export function applyReversal(sale, { type, reason, userId, cashShiftId, refundT
 		s.status = "voided";
 		s.voidAt = nowIso();
 		s.voidReason = reason;
-		s.voidBy = userId;
+		s.voidBy = authorizedBy || userId; // the person who approved it (no separate column: a cashier's void is approved with a manager PIN)
 		s.voidAmount = s.total;
 		if (s.payment === "Cash" && cashShiftId) s.voidCashShiftId = cashShiftId;
 		restoredLines = refundableLines(s).map((x) => ({ lineIndex: x.lineIndex, qty: x.available }));
@@ -121,6 +121,7 @@ export function applyReversal(sale, { type, reason, userId, cashShiftId, refundT
 			amount,
 			reason,
 			by: userId,
+			authorizedBy: authorizedBy || userId,
 			cashShiftId: s.payment === "Cash" ? cashShiftId || "" : "",
 		};
 		if (isSplit) {

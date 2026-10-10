@@ -20,6 +20,7 @@ export const ROLE_VIEWS = {
 		"customers",
 		"crm",
 		"sales",
+		"receipts",
 		"reports",
 		"inventory",
 		"industry",
@@ -36,13 +37,14 @@ export const ROLE_VIEWS = {
 		"customers",
 		"crm",
 		"sales",
+		"receipts",
 		"inventory",
 		"industry",
 		"staff",
 		"settings",
 	],
-	accountant: ["dashboard", "sales", "reports", "inventory", "industry", "staff", "settings"],
-	cashier: ["checkout", "orders", "tables", "customers", "staff", "settings"],
+	accountant: ["dashboard", "sales", "receipts", "reports", "inventory", "industry", "staff", "settings"],
+	cashier: ["checkout", "orders", "tables", "receipts", "customers", "staff", "settings"],
 };
 ROLE_VIEWS.admin = ROLE_VIEWS.owner.slice();
 
@@ -59,6 +61,7 @@ export const VIEW_TITLES = {
 	customers: ["Customers", "Customer directory and purchase history"],
 	crm: ["CRM & Feedback", "Customer relationships and feedback requests"],
 	sales: ["Sales History", "Receipts, revenue and profit"],
+	receipts: ["Receipts & Refunds", "Reprint, download, refund or void a receipt"],
 	reports: ["Reports", "Financial and operational performance"],
 	inventory: [
 		"Inventory & Stock",
@@ -80,6 +83,7 @@ export const NAV_ITEMS = [
 	{ view: "checkout", label: "▣ Checkout" },
 	{ view: "orders", label: "☰ Order Queue" },
 	{ view: "tables", label: "▦ Table Layout" },
+	{ view: "receipts", label: "⎙ Receipts & Refunds" },
 	{ view: "products", label: "□ Products & Services", group: "Items" },
 	{ view: "modifiers", label: "＋ Modifiers", group: "Items" },
 	{ view: "inventory", label: "▥ Inventory & Stock", group: "Items" },

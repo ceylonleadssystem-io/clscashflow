@@ -15,6 +15,7 @@ import {
 	calculateRefundAmount,
 	statusOf,
 } from "../../domain/sales";
+import { APPROVER_ROLES, DELETED_ACTION, deletedDetails, findApprover } from "../../domain/salesLog";
 import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem, stockRowForLine } from "../../domain/inventory";
 import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
@@ -277,13 +278,20 @@ export async function printCompletedSale(ctx, sale) {
 }
 
 // =========================================================== reversals ======
-export async function reverseSale(ctx, { saleId, type, reason, refundType = "full", choices = {} }) {
+export async function reverseSale(ctx, { saleId, type, reason, refundType = "full", choices = {}, approverPin = "" }) {
 	const d = ctx.data();
 	const s = ctx.session();
 	const f = ctx.features();
 	const sale = d.sales.find((x) => x.id === saleId);
 	const text = (reason || "").trim();
 	if (!text) return void (await ctx.ui.alert("Enter a reason."));
+	// owners and managers approve their own refunds and voids; anyone else needs a manager's or owner's PIN
+	let authorizedBy = s.userId;
+	if (!APPROVER_ROLES.includes(s.user?.role)) {
+		const approver = findApprover(d.users, approverPin);
+		if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to approve this."));
+		authorizedBy = approver.id;
+	}
 	if (!sale || !["completed", "partially_refunded"].includes(statusOf(sale)))
 		return void (await ctx.ui.alert("This sale has already been fully reversed."));
 	const register = currentCashShift(d.cashShifts, s.userId);
@@ -304,6 +312,7 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 		type,
 		reason: text,
 		userId: s.userId,
+		authorizedBy,
 		cashShiftId: bypassHistoricalCash ? "" : register?.id,
 		refundType,
 		refundLines,
@@ -349,8 +358,8 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 			tx.put(T.supportAudit, {
 				id: "sa" + Date.now(),
 				at: nowIso(),
-				action: "sale-permanently-deleted",
-				details: sale.receipt + " · voided",
+				action: DELETED_ACTION,
+				details: deletedDetails({ receipt: sale.receipt, status: "voided", payment: sale.payment, total: sale.total, reason: text }),
 				userId: s.userId,
 				locationId: sale.locationId || s.locationId || "",
 				sessionId: s.sessionId || "",
@@ -388,8 +397,8 @@ export async function deleteSalePermanently(ctx, id, skipConfirm = false) {
 		tx.put(T.supportAudit, {
 			id: "sa" + Date.now(),
 			at: nowIso(),
-			action: "sale-permanently-deleted",
-			details: sale.receipt + " · " + status,
+			action: DELETED_ACTION,
+			details: deletedDetails({ receipt: sale.receipt, status, payment: sale.payment, total: sale.voidAmount ?? sale.originalTotal ?? sale.total, reason: sale.voidReason || sale.refundReason }),
 			userId: s.userId,
 			locationId: sale.locationId || s.locationId || "",
 			sessionId: s.sessionId || "",

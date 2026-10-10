@@ -8,11 +8,14 @@ import { calculateRefundAmount, refundableLines, selectedRefundLines } from "../
 import { customerName } from "../domain/names";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
+import { APPROVER_ROLES } from "../domain/salesLog";
 
 /** Refund (full / partial by line) or void a completed sale, with a mandatory reason. */
 export function SaleActionModal({ target, onClose }) {
 	const data = useData();
-	const { svc } = usePos();
+	const { svc, role } = usePos();
+	const needsApproval = !APPROVER_ROLES.includes(role);
+	const [pin, setPin] = useState("");
 	const [reason, setReason] = useState("");
 	const [refundType, setRefundType] = useState("full");
 	const [choices, setChoices] = useState({}); // lineIndex -> qty
@@ -20,6 +23,7 @@ export function SaleActionModal({ target, onClose }) {
 		setReason("");
 		setRefundType("full");
 		setChoices({});
+		setPin("");
 	}, [target?.id, target?.type]);
 	const sale = target && data.sales.find((s) => s.id === target.id);
 	if (!target || !sale) return null;
@@ -28,7 +32,7 @@ export function SaleActionModal({ target, onClose }) {
 	const lines = selectedRefundLines(sale, refundType, choices);
 	const amount = calculateRefundAmount(sale, refundType, lines);
 	const confirm = async () => {
-		if (await svc.sales.reverseSale({ saleId: sale.id, type: target.type, reason, refundType, choices })) onClose();
+		if (await svc.sales.reverseSale({ saleId: sale.id, type: target.type, reason, refundType, choices, approverPin: pin })) onClose();
 	};
 	return (
 		<Modal
@@ -112,6 +116,12 @@ export function SaleActionModal({ target, onClose }) {
 					<label>Reason *</label>
 					<textarea className="input" id="sale-action-reason" placeholder="Enter the reason for this action" value={reason} onChange={(e) => setReason(e.target.value)} />
 				</div>
+				{needsApproval && (
+					<div className="field" style={{ marginTop: 14 }}>
+						<label>Manager or owner PIN *</label>
+						<input className="input" id="sale-action-pin" type="password" inputMode="numeric" autoComplete="off" maxLength={6} placeholder="PIN of the person approving this" value={pin} onChange={(e) => setPin(e.target.value)} />
+					</div>
+				)}
 			</ModalBody>
 		</Modal>
 	);
