@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 import { createDatabase } from "../db/database";
 import { PosStore } from "../db/PosStore";
 import { T } from "../db/tables";
-import { CloudSyncService } from "../services/cloud.service";
+import { env } from "../config/env";
+import { CloudSyncService, pullDelay } from "../services/cloud.service";
 
 /** In-memory stand-in for the legacy-style Appwrite facade. */
 function fakeBackend() {
@@ -173,5 +174,15 @@ describe("CloudSyncService: failing server", () => {
 		await a.retry();
 		expect(a.failures).toBe(0);
 		a.stop();
+	});
+});
+
+describe("pullDelay", () => {
+	it("checks at full speed in use, slower when idle or hidden, and always at full speed on a live screen", () => {
+		expect(pullDelay({ idleFor: 1000 })).toBe(env.syncPullMs);
+		expect(pullDelay({ idleFor: 119999 })).toBe(env.syncPullMs);
+		expect(pullDelay({ idleFor: 120000 })).toBe(15000);
+		expect(pullDelay({ idleFor: 0, hidden: true })).toBe(30000);
+		expect(pullDelay({ idleFor: 999999, hidden: true, live: true })).toBe(env.syncPullMs);
 	});
 });

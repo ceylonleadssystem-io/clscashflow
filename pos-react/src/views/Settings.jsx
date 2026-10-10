@@ -17,6 +17,7 @@ import {
 	BusinessProfilePanel,
 	DisplayPanel,
 	FeedbackPanel,
+	LiveScreenPanel,
 	LocationsPanel,
 	PlanSupportPanel,
 	PosTypePanel,
@@ -98,6 +99,7 @@ export function Settings() {
 			<>
 				{full && themes && <AppearancePanel />}
 				<DisplayPanel />
+				<LiveScreenPanel />
 				{full && <FeedbackPanel form={form} set={set} />}
 			</>
 		),

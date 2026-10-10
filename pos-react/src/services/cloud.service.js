@@ -43,6 +43,24 @@ const withTimeout = (promise, ms = 12000) => {
 	return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 };
 
+/** Per-device switch (Settings > Operations) for screens that must always show new orders, e.g. a kitchen display. */
+export const ALWAYS_LIVE_KEY = "pos.alwaysLive";
+const alwaysLive = () => {
+	try {
+		return localStorage.getItem(ALWAYS_LIVE_KEY) === "1";
+	} catch {
+		return false;
+	}
+};
+
+/** Milliseconds until the next cloud check: full speed while in use, slower when idle or hidden, unless this device is always live. */
+export function pullDelay({ idleFor = 0, hidden = false, live = false } = {}) {
+	if (live) return env.syncPullMs;
+	if (hidden && env.syncHiddenPullMs) return Math.max(env.syncPullMs, env.syncHiddenPullMs);
+	if (env.syncIdleAfterMs && idleFor >= env.syncIdleAfterMs) return Math.max(env.syncPullMs, env.syncIdlePullMs);
+	return env.syncPullMs;
+}
+
 export class CloudSyncService {
 	constructor({ clsBackend, onStatus }) {
 		this.fb = clsBackend;
@@ -58,6 +76,7 @@ export class CloudSyncService {
 		this.again = false;
 		this.pullTimer = null;
 		this.pushTimer = null;
+		this.lastActive = Date.now(); // last tap or key press on this device (drives the idle slowdown)
 		this.debounce = null;
 		this.unsubWrites = null;
 		this.handlers = [];
@@ -270,15 +289,36 @@ export class CloudSyncService {
 			clearTimeout(this.debounce);
 			this.debounce = setTimeout(() => this.syncNow(), 250);
 		});
-		this.pull();
-		this.pullTimer = setInterval(() => this.pull(), env.syncPullMs);
+		this.lastActive = Date.now();
+		const loop = async () => {
+			await this.pull();
+			this.pullTimer = setTimeout(loop, pullDelay({ idleFor: Date.now() - this.lastActive, hidden: document.hidden, live: alwaysLive() }));
+		};
+		loop();
 		this.pushTimer = setInterval(() => this.syncNow(), env.syncPushMs);
 		const online = () => {
 			this._online();
 			this.syncNow();
 		};
-		const focus = () => this.syncNow();
-		const visibility = () => !document.hidden && this.syncNow();
+		// back in use: check the cloud straight away and return to full speed
+		const wake = () => {
+			const wasSlow = pullDelay({ idleFor: Date.now() - this.lastActive, hidden: document.hidden }) > env.syncPullMs;
+			this.lastActive = Date.now();
+			if (!wasSlow) return;
+			clearTimeout(this.pullTimer);
+			this.pullTimer = setTimeout(loop, 0);
+		};
+		const focus = () => {
+			wake();
+			this.syncNow();
+		};
+		const visibility = () => {
+			if (document.hidden) return;
+			wake();
+			this.syncNow();
+		};
+		window.addEventListener("pointerdown", wake, { passive: true });
+		window.addEventListener("keydown", wake, { passive: true });
 		const offline = () => this._online();
 		window.addEventListener("online", online);
 		window.addEventListener("offline", offline);
@@ -290,12 +330,14 @@ export class CloudSyncService {
 			["offline", offline],
 			["focus", focus],
 			["beforeunload", focus],
+			["pointerdown", wake],
+			["keydown", wake],
 		];
 		this.visibility = visibility;
 	}
 
 	stop() {
-		clearInterval(this.pullTimer);
+		clearTimeout(this.pullTimer);
 		clearInterval(this.pushTimer);
 		clearTimeout(this.debounce);
 		this.unsubWrites?.();

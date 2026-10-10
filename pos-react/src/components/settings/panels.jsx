@@ -19,6 +19,7 @@ import { openBankTransfer } from "../../services/platform.service";
 import { LocationEditorModal } from "../../modals/LocationEditorModal";
 import { FONT_SIZES, FONT_WEIGHTS, useDisplayPrefs } from "../../hooks/useDisplayPrefs";
 import { applyDark, resolveDark, storedDark } from "../../utils/theme";
+import { ALWAYS_LIVE_KEY } from "../../services/cloud.service";
 import { HardwarePanel } from "./HardwarePanel";
 
 /** Individual Settings panels. Each takes the shared `form` state from Settings.jsx. */
@@ -286,6 +287,36 @@ export function DisplayPanel() {
 				<div className="plan-settings-note" style={{ marginTop: 10 }}>
 					Saved automatically and restored when you sign in again.
 				</div>
+			</div>
+		</div>
+	);
+}
+
+/** Device-only switch: keep checking the cloud at full speed even when nobody touches this screen (kitchen display, order screen). */
+export function LiveScreenPanel() {
+	const [on, setOn] = useState(() => {
+		try {
+			return localStorage.getItem(ALWAYS_LIVE_KEY) === "1";
+		} catch {
+			return false;
+		}
+	});
+	const change = (v) => {
+		setOn(v);
+		try {
+			localStorage.setItem(ALWAYS_LIVE_KEY, v ? "1" : "0");
+		} catch {
+			// storage blocked: the switch applies after the next reload only if it can be saved
+		}
+	};
+	return (
+		<div className="panel" id="pos-live-screen-settings">
+			<div className="panel-head">
+				<div>
+					<div className="panel-title">Always live screen</div>
+					<div className="muted">Turn on for a kitchen display or order screen that nobody touches. New orders from other devices then appear within seconds, even when this screen is idle. Applies to this device only.</div>
+				</div>
+				<Switch checked={on} onChange={change} label="Always live screen" />
 			</div>
 		</div>
 	);
