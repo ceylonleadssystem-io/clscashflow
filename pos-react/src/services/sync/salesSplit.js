@@ -91,7 +91,24 @@ export class SplitRef {
 	/** One stamp for the main document plus all months: changes when any of them is written. */
 	async stamp() {
 		const [head, list] = await Promise.all([this.main.stamp(), this.sales.stamps()]);
+		this.lastHead = { mainStamp: head.stamp || "", list };
 		return { exists: head.exists, stamp: head.exists ? combine(head.stamp, list) : "" };
+	}
+
+	/**
+	 * Start-up shortcut: the cloud still holds exactly what this device holds (stamp() just confirmed it), so take the sales already
+	 * on the device as "what the cloud has" instead of downloading every month again.
+	 */
+	adopt(localSales) {
+		const { mainStamp, list } = this.lastHead || {};
+		if (!list) return;
+		const byMonth = new Map(groupByMonth(localSales));
+		for (const month of Object.keys(list)) {
+			const rows = byMonth.get(month) || [];
+			this.months.set(month, { stamp: list[month], rows, hash: hashRows(rows) });
+		}
+		this.mainStamp = mainStamp;
+		this.lastCombined = combine(this.mainStamp, this._monthStamps());
 	}
 
 	async set(data, opt) {
