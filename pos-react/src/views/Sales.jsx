@@ -1,9 +1,9 @@
 /**
- * Sales History page: search and date filters, and per-sale actions (print, download, WhatsApp, refund,
- * void, permanent delete) with CSV export. Three tabs: Transactions (receipts), Voids & deletes and Refunds.
+ * Sales History page: search and date filters, and per-sale actions (download, WhatsApp, refund,
+ * void; printing lives on the Receipts & Refunds page and permanent deletion is not offered here) with CSV export. Three tabs: Transactions (receipts), Voids & deletes and Refunds.
  */
 import { useMemo, useState } from "react";
-import { MANAGER_ROLES, OWNER_ROLES } from "../config/roles";
+import { MANAGER_ROLES } from "../config/roles";
 import { downloadCsv, money } from "../domain/format";
 import { saleItemCount, statusOf } from "../domain/sales";
 import { refundRows, voidRows } from "../domain/salesLog";
@@ -25,7 +25,6 @@ export function Sales() {
 	const { role, svc, locationId } = usePos();
 	const refunds = useFeature("sales.refunds");
 	const voids = useFeature("sales.voids");
-	const permanent = useFeature("sales.permanentDelete");
 	const exportCsv = useFeature("sales.exportCsv");
 	const receiptTools = useFeature("sales.receiptDownload");
 	const [q, setQ] = useState("");
@@ -202,7 +201,6 @@ export function Sales() {
 								const status = statusOf(s);
 								const active = ["completed", "partially_refunded"].includes(status);
 								const canReverse = MANAGER_ROLES.includes(role) && active;
-								const canDelete = permanent && OWNER_ROLES.includes(role) && ["refunded", "voided"].includes(status);
 								return (
 									<tr key={s.id}>
 										<td>{s.date}</td>
@@ -225,9 +223,6 @@ export function Sales() {
 										</td>
 										<td>
 											<div className="tools">
-												<button className="btn out" onClick={() => svc.printing.printReceipt(s)}>
-													Print
-												</button>
 												{receiptTools && (
 													<button className="btn out" onClick={() => svc.printing.downloadReceipt(s)}>
 														Download
@@ -246,11 +241,6 @@ export function Sales() {
 												{canReverse && voids && (
 													<button className="btn danger" onClick={() => setAction({ id: s.id, type: "void" })}>
 														Void
-													</button>
-												)}
-												{canDelete && (
-													<button type="button" className="btn danger" data-delete-sale={s.id} onClick={() => svc.sales.deleteSalePermanently(s.id)}>
-														Delete
 													</button>
 												)}
 											</div>

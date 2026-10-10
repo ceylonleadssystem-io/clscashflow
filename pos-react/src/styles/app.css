@@ -495,3 +495,11 @@ html body.full:not(:has(#view-checkout.active)) .top{position:sticky!important;t
 	html body .sync-indicator.sync-compact{display:inline-flex;min-width:46px;min-height:46px;padding:0}
 	html body .sync-indicator.sync-compact .sync-text{display:none}
 }
+
+/* Full-screen dashboard: the page scrolls like every other page. The old fixed-height layout clipped the best-sellers, cashflow and sales panels and hid rows on shorter screens. */
+html body.full:has(#view-dashboard.active) .content{height:auto!important;overflow:visible!important}
+html body.full #view-dashboard.active{display:block!important;height:auto!important}
+html body.full #view-dashboard.active>*+*{margin-top:10px}
+html body.full #view-dashboard #best-items tr,html body.full #view-dashboard #recent-sales tr{display:table-row!important}
+html body.full #view-dashboard>.panel:last-child{display:block!important}
+html body.full #view-dashboard .dashboard-two>.panel{overflow:visible}
