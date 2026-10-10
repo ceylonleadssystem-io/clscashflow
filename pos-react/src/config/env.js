@@ -36,6 +36,10 @@ export const env = {
 	salesSplit: e.VITE_SALES_SPLIT === "on",
 	syncPullMs: Number(e.VITE_SYNC_PULL_MS) || 3000, // each check is only a tiny stamp request (the document is downloaded when it changed)
 	syncPushMs: Number(e.VITE_SYNC_PUSH_MS) || 2500,
+	// slower pull checks when nobody is using this device (0 = never slow down): no input for syncIdleAfterMs, or the tab hidden
+	syncIdleAfterMs: e.VITE_SYNC_IDLE_AFTER_MS === "0" ? 0 : Number(e.VITE_SYNC_IDLE_AFTER_MS) || 120000,
+	syncIdlePullMs: Number(e.VITE_SYNC_IDLE_PULL_MS) || 15000,
+	syncHiddenPullMs: Number(e.VITE_SYNC_HIDDEN_PULL_MS) || 30000,
 	xlsxCdn: "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
 	basePath: e.BASE_URL || "/",
 };
