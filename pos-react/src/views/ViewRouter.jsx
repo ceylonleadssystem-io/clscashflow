@@ -10,6 +10,7 @@ import { Modifiers } from "./Modifiers";
 import { Customers } from "./Customers";
 import { CRM } from "./CRM";
 import { Sales } from "./Sales";
+import { Receipts } from "./Receipts";
 import { Reports } from "./Reports";
 import { Inventory } from "./Inventory";
 import { Industry } from "./Industry";
@@ -26,6 +27,7 @@ const VIEWS = {
 	customers: Customers,
 	crm: CRM,
 	sales: Sales,
+	receipts: Receipts,
 	reports: Reports,
 	inventory: Inventory,
 	industry: Industry,

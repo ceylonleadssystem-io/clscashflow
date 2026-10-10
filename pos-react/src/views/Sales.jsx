@@ -1,11 +1,12 @@
 /**
  * Sales History page: search and date filters, and per-sale actions (print, download, WhatsApp, refund,
- * void, permanent delete) with CSV export.
+ * void, permanent delete) with CSV export. Three tabs: Transactions (receipts), Voids & deletes and Refunds.
  */
 import { useMemo, useState } from "react";
 import { MANAGER_ROLES, OWNER_ROLES } from "../config/roles";
 import { downloadCsv, money } from "../domain/format";
 import { saleItemCount, statusOf } from "../domain/sales";
+import { refundRows, voidRows } from "../domain/salesLog";
 import { customerName } from "../domain/names";
 import { Panel } from "../components/ui";
 import { useData } from "../store/DataProvider";
@@ -21,7 +22,7 @@ const log = createLogger("ui");
 export function Sales() {
 	const data = useData();
 	const { sales } = useScopedData();
-	const { role, svc } = usePos();
+	const { role, svc, locationId } = usePos();
 	const refunds = useFeature("sales.refunds");
 	const voids = useFeature("sales.voids");
 	const permanent = useFeature("sales.permanentDelete");
@@ -31,6 +32,19 @@ export function Sales() {
 	const [from, setFrom] = useState("");
 	const [to, setTo] = useState("");
 	const [action, setAction] = useState(null); // { id, type }
+	const [tab, setTab] = useState("transactions");
+
+	// the Voids & deletes and Refunds tabs follow the same search and date filters as Transactions
+	const matches = (row) => {
+		const query = q.trim().toLowerCase();
+		const hay = [row.receipt, row.payment, row.reason, row.by, row.authorizedBy, row.kind].join(" ").toLowerCase();
+		return (!query || hay.includes(query)) && (!from || row.date >= from) && (!to || row.date <= to);
+	};
+	const voidList = useMemo(
+		() => voidRows({ sales, voidOrders: data.voidOrders, openOrders: data.openOrders, audit: data.supportAudit, users: data.users, locationId }).filter(matches),
+		[sales, data.voidOrders, data.openOrders, data.supportAudit, data.users, locationId, q, from, to], // eslint-disable-line react-hooks/exhaustive-deps
+	);
+	const refundList = useMemo(() => refundRows(sales, data.users).filter(matches), [sales, data.users, q, from, to]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const list = useMemo(() => {
 		const query = q.trim().toLowerCase();
@@ -91,6 +105,82 @@ export function Sales() {
 					</div>
 				}
 			>
+				<div className="settings-tabs" role="tablist" style={{ marginBottom: 14 }}>
+					{[["transactions", "Transactions"], ["voids", "Voids & deletes"], ["refunds", "Refunds"]].map(([id, label]) => (
+						<button key={id} type="button" role="tab" aria-selected={tab === id} id={"sales-tab-" + id} className={"settings-tab" + (tab === id ? " active" : "")} onClick={() => setTab(id)}>
+							{label}
+						</button>
+					))}
+				</div>
+				{tab === "voids" && (
+					<div className="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Date</th>
+									<th>Receipt</th>
+									<th>Type</th>
+									<th>Payment</th>
+									<th>Reason</th>
+									<th>Authorized by</th>
+									<th>Total</th>
+								</tr>
+							</thead>
+							<tbody id="voids-table">
+								{voidList.map((r) => (
+									<tr key={r.key}>
+										<td>{r.date}</td>
+										<td>{r.receipt}</td>
+										<td>{r.kind}</td>
+										<td>{r.payment}</td>
+										<td>{r.reason || "—"}</td>
+										<td>{r.by}</td>
+										<td>{r.total == null ? "—" : money(r.total)}</td>
+									</tr>
+								))}
+								{!voidList.length && (
+									<tr>
+										<td colSpan="7">No voided or deleted orders match.</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				)}
+				{tab === "refunds" && (
+					<div className="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Date</th>
+									<th>Receipt</th>
+									<th>Payment</th>
+									<th>Authorized by</th>
+									<th>Reason</th>
+									<th>Total</th>
+								</tr>
+							</thead>
+							<tbody id="refunds-table">
+								{refundList.map((r) => (
+									<tr key={r.key}>
+										<td>{r.date}</td>
+										<td>{r.receipt}</td>
+										<td>{r.payment}</td>
+										<td>{r.authorizedBy}</td>
+										<td>{r.reason || "—"}</td>
+										<td>{money(r.total)}</td>
+									</tr>
+								))}
+								{!refundList.length && (
+									<tr>
+										<td colSpan="6">No refunds match.</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				)}
+				{tab === "transactions" && (
 				<div className="table-wrap">
 					<table>
 						<thead>
@@ -176,6 +266,7 @@ export function Sales() {
 						</tbody>
 					</table>
 				</div>
+				)}
 			</Panel>
 			<SaleActionModal target={action} onClose={() => setAction(null)} />
 		</section>
