@@ -4,14 +4,16 @@ CeylonryLabs.io CashFlow system for Solo, Studio, and Business plans.
 
 ## Files
 
+The CashFlow app pages are in the `cashflow/` folder (served at `/cashflow/...`); the landing page stays in the root.
+
 - `index.html` - landing page
-- `signin.html` - Appwrite sign in
-- `onboarding.html` - account setup flow
-- `solo.html` - Solo dashboard
-- `starter.html` - Studio dashboard
-- `growth.html` - Business dashboard
-- `premium.html` - legacy premium prototype page, no longer linked in the active plan flow
-- `accept-invite.html` - invite acceptance page
+- `/cashflow/signin.html` - Appwrite sign in
+- `/cashflow/onboarding.html` - account setup flow
+- `/cashflow/solo.html` - Solo dashboard
+- `/cashflow/starter.html` - Studio dashboard
+- `/cashflow/growth.html` - Business dashboard
+- `/cashflow/premium.html` - legacy premium prototype page, no longer linked in the active plan flow
+- `/cashflow/accept-invite.html` - invite acceptance page
 - `netlify/functions/send-invoice.js` - built-in SMTP invoice email fallback
 - `netlify/functions/send-invite.js` - team invite email function
 - `netlify/functions/send-welcome.js` - welcome email function
@@ -74,7 +76,7 @@ Customers prepay each month by bank transfer and upload a PDF or image payment s
 
 ## Team Invites
 
-`team.html` (Team Access, replaces the retired `access-admin.html`) creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `accept-invite.html`, where the invited person creates a password or continues with Google.
+`/cashflow/team.html` (Team Access, replaces the retired `access-admin.html`) creates invites under `users/{ownerUid}/team/{inviteId}` and calls `/.netlify/functions/send-invite` to email the person automatically. The invite link opens `/cashflow/accept-invite.html`, where the invited person creates a password or continues with Google.
 
 If invite creation shows `Not allowed`, confirm the user is signed in and the invite is being written under `users/{ownerUid}/team` in the Appwrite `app_documents` collection.
 

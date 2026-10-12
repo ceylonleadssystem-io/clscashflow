@@ -304,7 +304,7 @@ function appwriteAdmin(){
         })};
       },
       generatePasswordResetLink:async function(email,opts){
-        var url=(opts&&opts.url)||clean(process.env.PUBLIC_SITE_URL||'https://ceylonrylabs.io',500).replace(/\/$/,'')+'/reset-password.html';
+        var url=(opts&&opts.url)||clean(process.env.PUBLIC_SITE_URL||'https://ceylonrylabs.io',500).replace(/\/$/,'')+'/cashflow/reset-password.html';
         var response=await fetch(APPWRITE_ENDPOINT+'/account/recovery',{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':APPWRITE_PROJECT_ID},body:JSON.stringify({email:email,url:url})});
         if(!response.ok){var detail=await response.text();throw new Error(detail||'Could not send password recovery email.');}
         return url;

@@ -47,7 +47,7 @@ exports.handler = async function handler(event) {
   const planPrices = { solo: '3,500', studio: '5,500', business: '8,500' };
   const planLabel  = planLabels[plan] || 'Solo';
   const planPrice  = planPrices[plan] || '3,500';
-  const loginUrl   = 'https://ceylonrylabscashflow.netlify.app/signin.html';
+  const loginUrl   = 'https://ceylonrylabscashflow.netlify.app/cashflow/signin.html';
 
   const trialEndFmt = trialEnd
     ? new Date(trialEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })

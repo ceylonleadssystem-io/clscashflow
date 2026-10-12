@@ -3,8 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { pagePath } = require('./support/pages.cjs');
 const root = path.join(__dirname, '..');
-const admin = fs.readFileSync(path.join(root, 'ceylonry-admin.html'), 'utf8');
+const admin = fs.readFileSync(path.join(root, pagePath('ceylonry-admin.html')), 'utf8');
 const endpoint = fs.readFileSync(path.join(root, 'netlify/functions/admin-data.js'), 'utf8');
 const onboardingApi = fs.readFileSync(path.join(root, 'netlify/functions/growth-partner-code.js'), 'utf8');
 

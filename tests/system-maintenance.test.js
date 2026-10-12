@@ -1,8 +1,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { pagePath } = require('./support/pages.cjs');
 
-function read(path) { return fs.readFileSync(path, 'utf8'); }
+function read(path) { return fs.readFileSync(pagePath(path), 'utf8'); }
 
 test('destructive account operations create an Appwrite backup before deleting records', function() {
   const handler = read('netlify/functions/account-danger-zone.js');

@@ -3,8 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { pagePath } = require('./support/pages.cjs');
 const root = path.join(__dirname, '..');
-const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const read = file => fs.readFileSync(path.join(root, pagePath(file)), 'utf8');
 
 test('admin visit reads order newest records before applying the limit', () => {
   const endpoint = read('netlify/functions/admin-data.js');

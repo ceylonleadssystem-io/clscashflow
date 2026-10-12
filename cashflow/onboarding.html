@@ -2184,13 +2184,13 @@
 			}
 		</style>
 		<!-- Appwrite compatibility SDK -->
-		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-compat.js?v=20260925-cashflow-bulk-sync"></script>
+		<script src="/assets/appwrite-sdk.js"></script>
+		<script src="/assets/appwrite-compat.js?v=20261012-cashflow-folder"></script>
 		<script>
 			const backendConfig = {};
 			clsBackend.initializeApp(backendConfig);
 		</script>
-		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
+		<script src="/assets/platform.js?v=20260811-leaflet-map12"></script>
 	</head>
 	<body>
 		<div class="ob-shell">
@@ -2202,7 +2202,7 @@
 						<div class="ob-logo-tag">Account Setup</div>
 					</div>
 					<a
-						href="index.html"
+						href="/index.html"
 						style="
 							display: inline-block;
 							margin-top: 14px;
@@ -2262,7 +2262,7 @@
 			<div class="ob-right">
 				<a
 					class="ob-mobile-home"
-					href="index.html"
+					href="/index.html"
 					aria-label="Return to the Cashflow System home page"
 					><span>CeylonryLabs.io · Account Setup</span
 					><span>← Back Home</span></a
@@ -3668,11 +3668,11 @@
 									/>
 									<span
 										>I have read and agree to the
-										<a href="terms.html" target="_blank" rel="noopener"
+										<a href="/terms.html" target="_blank" rel="noopener"
 											>Ceylonry Labs Terms of Service</a
 										>
 										and
-										<a href="privacy.html" target="_blank" rel="noopener"
+										<a href="/privacy.html" target="_blank" rel="noopener"
 											>Privacy Policy</a
 										>. I understand that my account includes a 15-day free trial
 										and that continued access afterward requires my selected
@@ -6036,7 +6036,7 @@
 				var params = new URLSearchParams(location.search),
 					product = params.get("product");
 				if (product === "pos") {
-					location.replace("pos-onboarding.html");
+					location.replace("/pos-onboarding.html");
 					return;
 				}
 				if (
@@ -6051,7 +6051,7 @@
 				overlay.setAttribute("aria-modal", "true");
 				overlay.setAttribute("aria-labelledby", "product-choice-title");
 				overlay.innerHTML =
-					'<section class="product-choice-card"><h1 id="product-choice-title">What would you like to start?</h1><p>Choose a system and we will show the correct setup steps for your business.</p><div class="product-choice-grid"><button class="product-choice-option" id="choose-cashflow" type="button"><span class="product-choice-icon">↗</span><strong>Cashflow System</strong><span>Set up invoicing, income, expenses, customers and business reporting.</span></button><a class="product-choice-option" id="choose-pos" href="pos-onboarding.html"><span class="product-choice-icon">▣</span><strong>POS System</strong><span>Set up your counter, business category, products, inventory, staff and checkout.</span></a></div></section>';
+					'<section class="product-choice-card"><h1 id="product-choice-title">What would you like to start?</h1><p>Choose a system and we will show the correct setup steps for your business.</p><div class="product-choice-grid"><button class="product-choice-option" id="choose-cashflow" type="button"><span class="product-choice-icon">↗</span><strong>Cashflow System</strong><span>Set up invoicing, income, expenses, customers and business reporting.</span></button><a class="product-choice-option" id="choose-pos" href="/pos-onboarding.html"><span class="product-choice-icon">▣</span><strong>POS System</strong><span>Set up your counter, business category, products, inventory, staff and checkout.</span></a></div></section>';
 				document.body.appendChild(overlay);
 				document.body.style.overflow = "hidden";
 				document.getElementById("choose-cashflow").onclick = function () {

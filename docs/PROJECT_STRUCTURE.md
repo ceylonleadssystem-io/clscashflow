@@ -1,16 +1,17 @@
 # Project structure
 
-Netlify publishes the repository root, so public page URLs map 1:1 to the files in the root.
-Moving a page would change its URL, so the pages stay put and are grouped here instead.
+Netlify publishes the repository root, so public page URLs map 1:1 to the files.
+The CashFlow app (dashboards, sign-in, onboarding, team, payments, invoices and its admin console) lives in `cashflow/` and is served at `/cashflow/...`.
+The landing page, POS entry pages, legal and story pages stay in the root. The old root addresses (for example `/signin.html`) redirect to `/cashflow/` in `netlify.toml`, so bookmarks and e-mailed links keep working.
 
-## Public pages (repo root)
+## Public pages (repo root and `cashflow/`)
 | Area | Files |
 |---|---|
 | Marketing | `index.html`, `pos.html`, `privacy.html`, `terms.html`, `mrs-gamage-story.html`, `story-thank-you.html` |
-| Sign-in and onboarding | `signin.html`, `onboarding.html`, `pos-onboarding.html`, `accept-invite.html`, `reset-password.html`, `upgrade.html`, `success.html`, `payable-return.html` |
-| CashFlow plans | `solo.html`, `starter.html`, `starter_3.html` (legacy), `premium.html`, `growth.html`, `team.html` (team access and invites) |
-| Admin | `ceylonry-admin.html` (CashFlow admin); POS administration is the React app at `/posv2/admin` |
-| Invoices | `invoice-public.html` |
+| Sign-in and onboarding | `/cashflow/signin.html`, `/cashflow/onboarding.html`, `pos-onboarding.html`, `/cashflow/accept-invite.html`, `/cashflow/reset-password.html`, `/cashflow/upgrade.html`, `/cashflow/success.html`, `/cashflow/payable-return.html` |
+| CashFlow plans | `/cashflow/solo.html`, `/cashflow/starter.html`, `/cashflow/starter_3.html` (legacy), `/cashflow/premium.html`, `/cashflow/growth.html`, `/cashflow/team.html` (team access and invites) |
+| Admin | `/cashflow/ceylonry-admin.html` (CashFlow admin); POS administration is the React app at `/posv2/admin` |
+| Invoices | `/cashflow/invoice-public.html` |
 | PWA | `manifest.webmanifest`, `sw.js`, `app/` |
 
 ## Applications

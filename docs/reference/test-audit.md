@@ -177,16 +177,16 @@ Caveat: the tolerant matcher is a heuristic, so a small number of the 140 could 
 
 **tests/qa-responsive-flow.test.js** (41)
 
-- solo.html keeps sign out visible without scrolling the mobile navigation
-- solo.html aligns customer report labels and numeric columns
-- starter.html keeps sign out visible without scrolling the mobile navigation
-- starter.html aligns customer report labels and numeric columns
-- growth.html keeps sign out visible without scrolling the mobile navigation
-- growth.html aligns customer report labels and numeric columns
-- solo.html returns a newly saved customer to the suspended invoice draft
-- solo.html gives quote rows their own mobile labels and wrapping actions
-- starter.html returns a newly saved customer to the suspended invoice draft
-- starter.html gives quote rows their own mobile labels and wrapping actions
+- /cashflow/solo.html keeps sign out visible without scrolling the mobile navigation
+- /cashflow/solo.html aligns customer report labels and numeric columns
+- /cashflow/starter.html keeps sign out visible without scrolling the mobile navigation
+- /cashflow/starter.html aligns customer report labels and numeric columns
+- /cashflow/growth.html keeps sign out visible without scrolling the mobile navigation
+- /cashflow/growth.html aligns customer report labels and numeric columns
+- /cashflow/solo.html returns a newly saved customer to the suspended invoice draft
+- /cashflow/solo.html gives quote rows their own mobile labels and wrapping actions
+- /cashflow/starter.html returns a newly saved customer to the suspended invoice draft
+- /cashflow/starter.html gives quote rows their own mobile labels and wrapping actions
 - Business quote rows use a dedicated mobile card layout
 - Business invoice responsive cards reset desktop percentage column widths
 - WhatsApp, invoice email, quote, and estimate outputs retain the selected new template
@@ -201,13 +201,13 @@ Caveat: the tolerant matcher is a heuristic, so a small number of the 140 could 
 - Studio manual Money Out records synchronize back into Expenses
 - Business report PDF waits for charts and replaces canvases with captured images
 - Business payroll mobile UI provides grid, table, actions, history, and working deletion
-- solo.html applies default payment notes to new invoices and customer messages
-- starter.html applies default payment notes to new invoices and customer messages
-- growth.html applies default payment notes to new invoices and customer messages
+- /cashflow/solo.html applies default payment notes to new invoices and customer messages
+- /cashflow/starter.html applies default payment notes to new invoices and customer messages
+- /cashflow/growth.html applies default payment notes to new invoices and customer messages
 - plan user limits are displayed consistently and enforced by team access
 - onboarding captures optional bank details for invoice defaults
-- solo.html stores optional bank details in invoice settings
-- starter.html stores optional bank details in invoice settings
+- /cashflow/solo.html stores optional bank details in invoice settings
+- /cashflow/starter.html stores optional bank details in invoice settings
 - Business stores optional bank details in invoice settings
 - settings preview and PDF share one renderer and preserve empty notes
 - onboarding uses the current shared A4 invoice template preview
@@ -221,9 +221,9 @@ Caveat: the tolerant matcher is a heuristic, so a small number of the 140 could 
 
 **tests/quote-email-ui.test.js** (3)
 
-- solo.html keeps register actions visible at scaled laptop widths
-- starter.html keeps register actions visible at scaled laptop widths
-- growth.html keeps register actions visible at scaled laptop widths
+- /cashflow/solo.html keeps register actions visible at scaled laptop widths
+- /cashflow/starter.html keeps register actions visible at scaled laptop widths
+- /cashflow/growth.html keeps register actions visible at scaled laptop widths
 
 **tests/system-maintenance.test.js** (3)
 
@@ -274,8 +274,8 @@ These also failed before any reformatting, so they predate the formatting commit
 
 | Test | Finding |
 |---|---|
-| Business suppliers support QA-requested search, filters, sorting, balances, and aligned actions | `growth.html` has no `#supplier-search`, `#supplier-type-filter` or `#supplier-sort` elements. `clearSupplierFilters()` still references them (null-guarded) and `renderSupTable()` only sorts newest-first and ignores search. The QA-requested supplier search/filter/sort UI is not present. Failing since 2026-09-25. |
-| Business supplier payments persist paid and outstanding balances | The 'Outstanding: … · Paid: …' summary string no longer exists in growth.html; an overpayment check ('Payment is higher than the supplier outstanding balance') does. Confirm paid/outstanding balances still display in the supplier table. Failing since 2026-09-25. |
+| Business suppliers support QA-requested search, filters, sorting, balances, and aligned actions | `/cashflow/growth.html` has no `#supplier-search`, `#supplier-type-filter` or `#supplier-sort` elements. `clearSupplierFilters()` still references them (null-guarded) and `renderSupTable()` only sorts newest-first and ignores search. The QA-requested supplier search/filter/sort UI is not present. Failing since 2026-09-25. |
+| Business supplier payments persist paid and outstanding balances | The 'Outstanding: … · Paid: …' summary string no longer exists in /cashflow/growth.html; an overpayment check ('Payment is higher than the supplier outstanding balance') does. Confirm paid/outstanding balances still display in the supplier table. Failing since 2026-09-25. |
 | all plans use monthly bank transfer billing with receipt upload and grace period | No 'grace' logic exists in platform.js or any plan page; billing now computes due dates and a 3-day reminder only. Decide whether a grace period is still a requirement. Failing since 2026-09-25. |
 | benefit slides are not misrepresented as named customer testimonials | The on-page disclaimer ('Other slides describe product benefits and are not presented as customer testimonials') is gone from index.html. Check the proof carousel still labels benefit slides correctly. Failing since 2026-09-25. |
 

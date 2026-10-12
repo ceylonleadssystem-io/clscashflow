@@ -15,8 +15,8 @@
     createUserWithEmailAndPassword:async function(email,password){await account.create(Appwrite.ID.unique(),email,password);await account.createEmailPasswordSession(email,password);currentUser=await loadUser();emit();return{user:currentUser}},
     signInWithToken:async function(userId,secret){await account.createSession(userId,secret);currentUser=await loadUser();emit();return{user:currentUser}},
     signOut:async function(){try{await account.deleteSession('current')}catch(_){}currentUser=null;emit()},
-    sendPasswordResetEmail:async function(email){return account.createRecovery(email,location.origin+'/reset-password.html')},
-    signInWithPopup:async function(provider){account.createOAuth2Session((provider&&provider.provider)||'google',location.origin+'/signin.html',location.origin+'/signin.html');return new Promise(function(){})}
+    sendPasswordResetEmail:async function(email){return account.createRecovery(email,location.origin+'/cashflow/reset-password.html')},
+    signInWithPopup:async function(provider){account.createOAuth2Session((provider&&provider.provider)||'google',location.origin+'/cashflow/signin.html',location.origin+'/cashflow/signin.html');return new Promise(function(){})}
   };
   function GoogleAuthProvider(){this.provider='google'}
   function request(body,publicRead){return init.then(async function(){var h={'Content-Type':'application/json'};if(currentUser&&!publicRead)h.Authorization='Bearer '+await currentUser.getIdToken();var r=await fetch('/.netlify/functions/appwrite-docs',{method:'POST',headers:h,body:JSON.stringify(body)}),j=await r.json();if(!r.ok||j.ok===false)throw new Error(j.error||'Appwrite request failed.');return j})}

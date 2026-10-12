@@ -478,7 +478,7 @@ exports.handler = async function handler(event) {
         if (!email) {
           return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Missing email address.' }) };
         }
-        const continueUrl = String(body.continueUrl || 'https://ceylonrylabs.io/signin.html').trim();
+        const continueUrl = String(body.continueUrl || 'https://ceylonrylabs.io/cashflow/signin.html').trim();
         const resetLink = await admin.auth().generatePasswordResetLink(email, {
           url: continueUrl,
           handleCodeInApp: false

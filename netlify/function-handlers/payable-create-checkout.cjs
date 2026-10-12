@@ -121,9 +121,9 @@ exports.handler = async function handler(event) {
   const sessionId = 'cls-' + plan + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
   const amount = planInfo.price;
   const checkoutUrl = process.env.PAYABLE_CHECKOUT_URL || process.env.PAYABLE_API_URL || '';
-  const returnBase = clean(body.returnUrl, 900) || (baseUrl + '/payable-return.html');
+  const returnBase = clean(body.returnUrl, 900) || (baseUrl + '/cashflow/payable-return.html');
   const returnUrl = appendQuery(returnBase, { plan, session: sessionId });
-  const cancelUrl = clean(body.cancelUrl, 900) || (baseUrl + '/' + (plan === 'business' ? 'growth.html' : plan === 'studio' ? 'starter.html' : 'solo.html'));
+  const cancelUrl = clean(body.cancelUrl, 900) || (baseUrl + (plan === 'business' ? '/cashflow/growth.html' : plan === 'studio' ? '/cashflow/starter.html' : '/cashflow/solo.html'));
   const webhookUrl = payableWebhookUrl(baseUrl);
 
   const db = admin.firestore();

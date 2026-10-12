@@ -3,10 +3,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { pagePath } = require('./support/pages.cjs');
 const root = path.join(__dirname, '..');
 
 function read(file) {
-  return fs.readFileSync(path.join(root, file), 'utf8');
+  return fs.readFileSync(path.join(root, pagePath(file)), 'utf8');
 }
 
 test('shared platform exposes quote and estimate email support', function() {
