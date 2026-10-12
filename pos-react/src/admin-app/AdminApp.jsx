@@ -8,9 +8,11 @@ import { env } from "../config/env";
 import { adminSession } from "./adminSession";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
+import { SubscriptionManagement } from "./SubscriptionManagement";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
-import { STATUSES, SUBSCRIPTIONS, statusOf, subscriptionOf } from "./status";
+import { STATUSES, SUBSCRIPTIONS, lastUsedOf, statusOf, subscriptionOf } from "./status";
+import { adminFeedback, useAdminFeedback } from "./adminFeedback";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("admin");
@@ -27,9 +29,11 @@ export function AdminApp() {
 	const [stats, setStats] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [selected, setSelected] = useState("");
+	const [page, setPage] = useState("accounts"); // "accounts" | "subscriptions"
 	const [q, setQ] = useState("");
 	const [fStatus, setFStatus] = useState("");
 	const [fSub, setFSub] = useState("");
+	const feedback = useAdminFeedback();
 
 	// Restore a still-valid administrator session (kept in sessionStorage for this tab only).
 	useEffect(() => {
@@ -96,6 +100,13 @@ export function AdminApp() {
 
 	return (
 		<div className="admin-app">
+			{feedback.busy > 0 && <div className="admin-progress" role="progressbar" aria-label="Saving changes"><span /></div>}
+			{feedback.message && (
+				<div className="admin-success" role="status" key={feedback.message.id}>
+					<span aria-hidden="true">✓</span> {feedback.message.text}
+					<button type="button" aria-label="Dismiss message" onClick={adminFeedback.dismiss}>×</button>
+				</div>
+			)}
 			{loading && !accounts.length && <div className="gear-overlay"><GearLoader /></div>}
 			<header className="admin-top">
 				<div>
@@ -105,6 +116,9 @@ export function AdminApp() {
 					<div className="muted">Signed in as {user.email}</div>
 				</div>
 				<div className="admin-top-actions">
+					<button className={"btn " + (page === "subscriptions" ? "gold" : "out")} id="admin-nav-subscriptions" aria-pressed={page === "subscriptions"} onClick={() => { setPage(page === "subscriptions" ? "accounts" : "subscriptions"); setSelected(""); }}>
+						Subscription management
+					</button>
 					<button className="btn out" onClick={load} disabled={loading}>
 						{loading ? "Refreshing…" : "Refresh"}
 					</button>
@@ -115,7 +129,9 @@ export function AdminApp() {
 			</header>
 			{error && <div className="print-note" style={{ marginBottom: 12 }}>{error}</div>}
 
-			{current ? (
+			{page === "subscriptions" ? (
+				<SubscriptionManagement />
+			) : current ? (
 				<AccountDetail
 					account={current}
 					onBack={() => {
@@ -157,6 +173,7 @@ export function AdminApp() {
 										<th>Subscription</th>
 										<th>Payment</th>
 										<th>Next due</th>
+										<th>Last used</th>
 										<th>Access</th>
 										<th></th>
 									</tr>
@@ -182,6 +199,7 @@ export function AdminApp() {
 												<span className="badge">{a.payment?.status || "trial"}</span>
 											</td>
 											<td>{fmtDate(a.payment?.paid ? a.payment?.nextPaymentDue : a.payment?.trialEnd)}</td>
+											<td>{fmtDate(lastUsedOf(a))}</td>
 											<td>
 												<span className="badge" style={a.paused ? { background: "#fde9e7", color: "#a5362b" } : { background: "#e7f6ee", color: "#168653" }}>
 													{a.paused ? "Disabled" : "Active"}
@@ -196,7 +214,7 @@ export function AdminApp() {
 									))}
 									{!list.length && (
 										<tr>
-											<td colSpan="8">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
+											<td colSpan="9">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
 										</tr>
 									)}
 								</tbody>

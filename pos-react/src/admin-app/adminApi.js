@@ -5,12 +5,28 @@
 import { env } from "../config/env";
 import { adminSession } from "./adminSession";
 import { localAdminApi } from "./localAdmin";
+import { adminFeedback, READ_ACTIONS, successText } from "./adminFeedback";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("admin");
 
-/** Calls the admin Netlify function with the signed-in administrator's Appwrite JWT. */
+/**
+ * Calls the admin Netlify function with the signed-in administrator's Appwrite JWT. A request that changes something shows the
+ * loading bar while it runs and a success message when it finishes (see adminFeedback).
+ */
 export async function adminApi(body, url) {
+	const changes = !!body && !READ_ACTIONS.has(body.action);
+	if (changes) adminFeedback.begin();
+	try {
+		const result = await sendAdminRequest(body, url);
+		if (changes) adminFeedback.success(successText(body));
+		return result;
+	} finally {
+		if (changes) adminFeedback.end();
+	}
+}
+
+async function sendAdminRequest(body, url) {
 	if (env.authProvider === "local") return localAdminApi(body);
 	const session = adminSession.get();
 	if (!session) throw Object.assign(new Error("Your administrator session has expired. Please sign in again."), { status: 401 });

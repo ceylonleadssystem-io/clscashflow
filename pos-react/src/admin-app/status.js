@@ -10,3 +10,7 @@ export const SUBSCRIPTIONS = [
 ];
 export const statusOf = (a) => STATUSES.find((s) => s.value === a?.status) || STATUSES[0];
 export const subscriptionOf = (a) => SUBSCRIPTIONS.find((s) => s.value === a?.subscriptionType) || SUBSCRIPTIONS[0];
+
+/** When the business was last used: the later of its last sign-in and its last sync ("" when unknown). */
+export const lastUsedOf = (a) => [a?.authLastSignInAt, a?.updatedAt].filter(Boolean).sort().at(-1) || "";
+export const fmtDay = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");

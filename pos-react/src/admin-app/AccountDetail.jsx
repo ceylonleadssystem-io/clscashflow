@@ -1,5 +1,5 @@
 /**
- * Admin portal: detail screen for one business account, with tabs for access (enable/disable and
+ * Admin portal: detail screen for one business account, with tabs for access, subscription (plan limits), delete account, (enable/disable and
  * fixed-amount pricing), per-business and per-location feature switches, the first-login welcome message, invoices and the menu export.
  */
 import { GearLoader } from "../components/ui/GearLoader";
@@ -10,16 +10,20 @@ import { WelcomeTab } from "./WelcomeTab";
 import { InvoicesTab } from "./InvoicesTab";
 import { DiagnosticsTab } from "./DiagnosticsTab";
 import { MenuTab } from "./MenuTab";
+import { SubscriptionTab } from "./SubscriptionTab";
+import { DeleteAccountTab } from "./DeleteAccountTab";
 import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
 
 const TABS = [
 	["access", "Access"],
+	["subscription", "Subscription"],
 	["features", "Features"],
 	["welcome", "Welcome message"],
 	["invoices", "Invoices"],
 	["menu", "Menu"],
 	["diagnostics", "Diagnostics"],
+	["delete", "Delete account"],
 ];
 
 export function AccountDetail({ account, onBack, onChanged }) {
@@ -74,9 +78,11 @@ export function AccountDetail({ account, onBack, onChanged }) {
 				))}
 			</div>
 			{tab === "access" && <AccessTab account={account} profile={profile} settings={settings} save={save} saving={saving} onChanged={() => { onChanged(); reload(); }} ui={ui} />}
+			{tab === "subscription" && <SubscriptionTab settings={settings} workspace={data.workspace} save={save} saving={saving} />}
 			{tab === "features" && <FeaturesTab settings={settings} locations={locations} save={save} saving={saving} ui={ui} />}
 			{tab === "welcome" && <WelcomeTab settings={settings} save={save} saving={saving} />}
 			{tab === "menu" && <MenuTab account={account} workspace={data.workspace} ui={ui} />}
+			{tab === "delete" && <DeleteAccountTab account={account} ui={ui} onDeleted={onBack} />}
 			{tab === "diagnostics" && <DiagnosticsTab account={account} ui={ui} />}
 			{tab === "invoices" && <InvoicesTab account={account} profile={profile} settings={settings} save={save} saving={saving} invoices={invoices} reload={reload} ui={ui} />}
 		</div>

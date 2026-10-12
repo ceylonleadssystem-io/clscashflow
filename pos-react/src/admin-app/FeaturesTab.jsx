@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { FEATURES, FEATURE_GROUPS, FEATURE_MAP, defaultFeatureFlags, dependentsOf, resolveFeatures } from "../config/features";
 import { Switch } from "../components/ui";
 import { FEATURE_PRESETS, FEATURE_PRESET_MAP, presetFlags } from "../config/featurePresets";
+import { flagsWithPlan, subscriptionOf } from "../config/subscription";
 
 export function FeaturesTab({ settings, locations, save, saving, ui }) {
 	const [scope, setScope] = useState("business");
@@ -13,7 +14,10 @@ export function FeaturesTab({ settings, locations, save, saving, ui }) {
 	const [peek, setPeek] = useState("");
 	const isBusiness = scope === "business";
 	const override = isBusiness ? {} : byLoc[scope] || {};
-	const effective = useMemo(() => resolveFeatures({ ...base, ...override }), [base, override]);
+	// features the assigned plan does not include: shown off and locked, whatever the switches below say (they return when the plan changes)
+	const sub = subscriptionOf(settings);
+	const locked = useMemo(() => new Set(sub?.featuresOff || []), [sub]);
+	const effective = useMemo(() => resolveFeatures(flagsWithPlan({ ...base, ...override }, sub)), [base, override, sub]);
 	const setBaseFlag = async (f, on) => {
 		if (f.core) return;
 		if (!on) {
@@ -116,6 +120,11 @@ export function FeaturesTab({ settings, locations, save, saving, ui }) {
 					</div>
 				)}
 			</section>
+			{sub && (
+				<div className="print-note" id="plan-lock-note" style={{ marginBottom: 12 }}>
+					<strong>{sub.name || "The assigned plan"}</strong> does not include {locked.size} feature{locked.size === 1 ? "" : "s"}. They are switched off and locked here. Change the plan on the Subscription tab to unlock them.
+				</div>
+			)}
 			{!isBusiness && (
 				<div className="print-note" style={{ marginBottom: 12 }}>
 					Overrides for <strong>{locName}</strong> only. “Inherit” follows the business default; On/Off forces the feature for this location.
@@ -133,6 +142,7 @@ export function FeaturesTab({ settings, locations, save, saving, ui }) {
 							.filter((f) => f.group === g.id)
 							.map((f) => {
 								const on = effective.enabled[f.id];
+								const notInPlan = locked.has(f.id);
 								const blocked = effective.blockedBy[f.id];
 								const ov = override[f.id];
 								return (
@@ -141,6 +151,7 @@ export function FeaturesTab({ settings, locations, save, saving, ui }) {
 											<strong>
 												{f.label}
 												{f.core && <span className="badge">Required</span>}
+												{notInPlan && <span className="badge admin-dirty">Not in plan</span>}
 												{!isBusiness && ov !== undefined && <span className="badge admin-dirty">Override</span>}
 											</strong>
 											<span>{f.description}</span>
@@ -148,11 +159,11 @@ export function FeaturesTab({ settings, locations, save, saving, ui }) {
 											<code>{f.id}</code>
 										</div>
 										{isBusiness ? (
-											<Switch checked={!!base[f.id]} onChange={(v) => setBaseFlag(f, v)} disabled={f.core} label={f.label} />
+											<Switch checked={!notInPlan && !!base[f.id]} onChange={(v) => setBaseFlag(f, v)} disabled={f.core || notInPlan} label={f.label} />
 										) : (
 											<div className="tri" role="group" aria-label={f.label}>
 												{["inherit", "on", "off"].map((v) => (
-													<button key={v} type="button" disabled={f.core} className={(ov === undefined ? "inherit" : ov ? "on" : "off") === v ? "sel " + v : ""} onClick={() => setLocFlag(f.id, v)}>
+													<button key={v} type="button" disabled={f.core || notInPlan} className={(ov === undefined ? "inherit" : ov ? "on" : "off") === v ? "sel " + v : ""} onClick={() => setLocFlag(f.id, v)}>
 														{v === "inherit" ? "Inherit" : v === "on" ? "On" : "Off"}
 													</button>
 												))}

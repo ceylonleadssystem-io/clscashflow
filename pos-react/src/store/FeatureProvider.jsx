@@ -4,6 +4,7 @@
  */
 import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import { resolveFeatures } from "../config/features";
+import { flagsWithPlan, subscriptionOf } from "../config/subscription";
 import { useData } from "./DataProvider";
 import { locationStore } from "./locationStore";
 
@@ -16,8 +17,9 @@ export function FeatureProvider({ children }) {
 	// business-wide switches, overridden per location by the administrator
 	const value = useMemo(() => {
 		const override = locationId && locationId !== "all" ? settings.locationFeatures?.[locationId] : null;
-		return resolveFeatures({ ...(settings.features || {}), ...(override || {}) });
-	}, [settings.features, settings.locationFeatures, locationId]);
+		// the plan assigned in the admin portal wins over the switches: its excluded features stay off
+		return resolveFeatures(flagsWithPlan({ ...(settings.features || {}), ...(override || {}) }, subscriptionOf(settings)));
+	}, [settings.features, settings.locationFeatures, settings.subscription, locationId]);
 	return <FeatureContext.Provider value={value}>{children}</FeatureContext.Provider>;
 }
 
