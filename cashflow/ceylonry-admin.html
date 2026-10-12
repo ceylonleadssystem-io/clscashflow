@@ -9,9 +9,9 @@
 			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap"
 			rel="stylesheet"
 		/>
-		<script src="assets/appwrite-sdk.js"></script>
-		<script src="assets/appwrite-compat.js?v=20260908-auth-recovery"></script>
-		<script src="assets/platform.js?v=20260811-leaflet-map12"></script>
+		<script src="/assets/appwrite-sdk.js"></script>
+		<script src="/assets/appwrite-compat.js?v=20261012-cashflow-folder"></script>
+		<script src="/assets/platform.js?v=20260811-leaflet-map12"></script>
 		<style>
 			* {
 				box-sizing: border-box;
@@ -1080,7 +1080,7 @@
 				<div class="sub">Cashflow System control room</div>
 			</div>
 			<div class="actions">
-				<a class="btn" href="index.html">Home</a>
+				<a class="btn" href="/index.html">Home</a>
 				<button class="btn dark hidden" id="refresh-btn" type="button">
 					Refresh
 				</button>
@@ -4530,7 +4530,7 @@
 			async function sendLoginReset(email) {
 				if (!email) throw new Error("This user does not have an email saved.");
 				var actionSettings = {
-					url: location.origin + "/signin.html",
+					url: location.origin + "/cashflow/signin.html",
 					handleCodeInApp: false,
 				};
 				var backupLink = "";

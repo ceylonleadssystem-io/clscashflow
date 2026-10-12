@@ -3,8 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { pagePath } = require('./support/pages.cjs');
 const root = path.join(__dirname, '..');
-const onboarding = fs.readFileSync(path.join(root, 'onboarding.html'), 'utf8');
+const onboarding = fs.readFileSync(path.join(root, pagePath('onboarding.html')), 'utf8');
 const welcome = fs.readFileSync(path.join(root, 'netlify/functions/send-welcome.js'), 'utf8');
 
 test('final onboarding requires a named terms and privacy acceptance', () => {

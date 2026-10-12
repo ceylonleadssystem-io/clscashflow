@@ -60,7 +60,7 @@ exports.handler = async function handler(event) {
   const planLabel  = planLabels[plan] || planLabels.solo;
   const monthlyPrice = monthlyPrices[plan] || monthlyPrices.solo;
   const siteUrl = String(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io').replace(/\/$/, '');
-  const loginUrl = siteUrl + '/signin.html';
+  const loginUrl = siteUrl + '/cashflow/signin.html';
 
   const trialEndFmt = trialEnd
     ? new Date(trialEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })

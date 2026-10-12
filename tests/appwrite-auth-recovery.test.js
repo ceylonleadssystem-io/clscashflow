@@ -15,6 +15,6 @@ test('Appwrite document requests use a short-lived authenticated JWT', () => {
 });
 
 test('Appwrite password recovery uses the configured application URL', () => {
-  assert.match(compat, /account\.createRecovery\(email,location\.origin\+'\/reset-password\.html'\)/);
+  assert.match(compat, /account\.createRecovery\(email,location\.origin\+'\/cashflow\/reset-password\.html'\)/);
 });
 

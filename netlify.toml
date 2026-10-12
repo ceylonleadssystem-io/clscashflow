@@ -15,12 +15,12 @@
 
 [[redirects]]
   from = "/i/:token"
-  to = "/invoice-public.html?token=:token"
+  to = "/cashflow/invoice-public.html?token=:token"
   status = 200
 
 [[redirects]]
   from = "/invoice/:token/:version"
-  to = "/invoice-public.html?token=:token&v=:version"
+  to = "/cashflow/invoice-public.html?token=:token&v=:version"
   status = 200
 
 [[redirects]]
@@ -32,6 +32,109 @@
   from = "/install"
   to = "/app/index.html"
   status = 200
+
+# The CashFlow app lives in /cashflow/. Addresses used before the move (bookmarks, e-mails already sent, invite and
+# payment return links) keep working: they redirect to the new place and keep their query string.
+[[redirects]]
+  from = "/solo.html"
+  to = "/cashflow/solo.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/starter.html"
+  to = "/cashflow/starter.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/starter_3.html"
+  to = "/cashflow/starter_3.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/growth.html"
+  to = "/cashflow/growth.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/premium.html"
+  to = "/cashflow/premium.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/team.html"
+  to = "/cashflow/team.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/accept-invite.html"
+  to = "/cashflow/accept-invite.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/signin.html"
+  to = "/cashflow/signin.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/onboarding.html"
+  to = "/cashflow/onboarding.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/upgrade.html"
+  to = "/cashflow/upgrade.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/success.html"
+  to = "/cashflow/success.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/payable-return.html"
+  to = "/cashflow/payable-return.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/reset-password.html"
+  to = "/cashflow/reset-password.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/invoice-public.html"
+  to = "/cashflow/invoice-public.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/ceylonry-admin.html"
+  to = "/cashflow/ceylonry-admin.html"
+  status = 301
+  force = true
+
+# /cashflow on its own has no page: send people to the landing page.
+[[redirects]]
+  from = "/cashflow"
+  to = "/"
+  status = 302
+
+[[redirects]]
+  from = "/cashflow/"
+  to = "/"
+  status = 302
 
 # The legacy single-file POS is retired (archived as posv1): old links, bookmarks and installed
 # shortcuts open the React POS.
@@ -115,7 +218,7 @@
     Netlify-CDN-Cache-Control = "no-store"
 
 [[headers]]
-  for = "/invoice-public.html"
+  for = "/cashflow/invoice-public.html"
   [headers.values]
     Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
     Netlify-CDN-Cache-Control = "no-store"
@@ -162,7 +265,7 @@
 
 # Admin consoles are never framed and never cached.
 [[headers]]
-  for = "/ceylonry-admin.html"
+  for = "/cashflow/ceylonry-admin.html"
   [headers.values]
     X-Frame-Options = "DENY"
     Cache-Control = "no-store"
@@ -236,7 +339,7 @@
 
 # Team access (CashFlow invites): an authenticated page, never framed, cached or indexed.
 [[headers]]
-  for = "/team.html"
+  for = "/cashflow/team.html"
   [headers.values]
     X-Frame-Options = "DENY"
     Cache-Control = "no-store"

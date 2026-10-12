@@ -14,7 +14,7 @@
     return window.clsCurrencySymbol(code) + (code === 'AED' ? ' ' : '') + number;
   };
   var VALID_PLANS = { solo: true, studio: true, business: true, pos: true };
-  var PLAN_FILES = { solo: 'solo.html', studio: 'starter.html', business: 'growth.html', pos: '/posv2/' };
+  var PLAN_FILES = { solo: '/cashflow/solo.html', studio: '/cashflow/starter.html', business: '/cashflow/growth.html', pos: '/posv2/' };
   var PLAN_ALIASES = { starter: 'studio', growth: 'business', premium: 'business' };
   var PLAN_DETAILS = {
     solo: {
@@ -23,7 +23,7 @@
       userLabel: '1 user only',
       monthlyPrice: 3500,
       price: 36000,
-      file: 'solo.html',
+      file: '/cashflow/solo.html',
       monthlyPayLink: '', annualPayLink: ''
     },
     studio: {
@@ -32,7 +32,7 @@
       userLabel: 'Up to 5 users',
       monthlyPrice: 5500,
       price: 60000,
-      file: 'starter.html',
+      file: '/cashflow/starter.html',
       monthlyPayLink: '', annualPayLink: ''
     },
     business: {
@@ -41,7 +41,7 @@
       userLabel: 'Unlimited users',
       monthlyPrice: 8500,
       price: 94800,
-      file: 'growth.html',
+      file: '/cashflow/growth.html',
       monthlyPayLink: '', annualPayLink: ''
     },
   };
@@ -252,7 +252,7 @@
           } catch (e) {}
         }
         pendingSigninRedirect = null;
-        if (!user) window.location.href = 'signin.html';
+        if (!user) window.location.href = '/cashflow/signin.html';
         resolve(user || null);
       }, delayMs || 250);
     });
@@ -2932,7 +2932,7 @@
             try {
               if (window.clsBackend && clsBackend.auth) await clsBackend.auth().signOut();
             } catch (e) {}
-            setTimeout(function() { location.href = 'signin.html?account=deleted'; }, 700);
+            setTimeout(function() { location.href = '/cashflow/signin.html?account=deleted'; }, 700);
           }
         } catch (err) {
           btn.disabled = false;

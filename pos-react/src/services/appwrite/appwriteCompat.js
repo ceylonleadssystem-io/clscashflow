@@ -120,9 +120,9 @@ export function getAppwriteCompat() {
 			currentUser = null;
 			emit();
 		},
-		sendPasswordResetEmail: (email) => account.createRecovery(email, location.origin + "/reset-password.html"),
+		sendPasswordResetEmail: (email) => account.createRecovery(email, location.origin + "/cashflow/reset-password.html"),
 		signInWithPopup(provider) {
-			account.createOAuth2Session((provider && provider.provider) || "google", location.origin + "/signin.html", location.origin + "/signin.html");
+			account.createOAuth2Session((provider && provider.provider) || "google", location.origin + "/cashflow/signin.html", location.origin + "/cashflow/signin.html");
 			return new Promise(() => {});
 		},
 	};

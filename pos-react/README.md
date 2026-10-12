@@ -112,7 +112,7 @@ secrets here** (the Appwrite API key and SMTP passwords stay in Netlify).
 | **Azure Swim catalogue photos** | `assets/azure-swim-products.js` (15 MB, **not copied**) | Optional: host it and set `VITE_CATALOGUE_IMAGES_URL`; empty product images are filled for businesses named "Azure Swim". |
 | **Developer/support portal** | `/posv2/admin` (`src/admin-app`) | Separate administration app, linked from Settings. Read-only support sessions (`?support=1`) are honoured by the React app (audit + write-lock). |
 | **Hardware** | Chrome/Android: WebUSB (ESC/POS receipt printer, TSPL label printer), WebHID/keyboard-wedge barcode scanner | `services/printing/*`. Requires HTTPS and a user gesture the first time. |
-| **Landing/onboarding pages** | `index.html`, `pos-onboarding.html`, `reset-password.html` of the main site | Linked from the gates; password-reset e-mails point to `/reset-password.html`. |
+| **Landing/onboarding pages** | `index.html`, `pos-onboarding.html`, `/cashflow/reset-password.html` of the main site | Linked from the gates; password-reset e-mails point to `/cashflow/reset-password.html`. |
 
 Deployment: the site serves `dist/` at `/posv2/` through the Netlify rewrite in `netlify.toml`. `public/sw.js` is the React shell's own service worker (the root `sw.js` belongs to the main site).
 
