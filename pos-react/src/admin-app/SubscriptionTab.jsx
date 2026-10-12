@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PLANS } from "../config/plans";
 import { normalizeSubscription, standardSubscription, subscriptionOf, usageOf } from "../config/subscription";
 import { adminApi } from "./adminApi";
-import { offLabels } from "./FeatureChecklist";
+import { FeatureChecklist } from "./FeatureChecklist";
 
 const limit = (n, noun) => (n == null ? "unlimited" : n + " " + noun + (n === 1 ? "" : "s"));
 
@@ -40,7 +40,7 @@ export function SubscriptionTab({ settings, workspace, save, saving }) {
 			candidate ? "Subscription: " + candidate.name : "Subscription limits removed",
 		);
 	};
-	const off = candidate ? offLabels(candidate.featuresOff) : [];
+	const off = candidate ? candidate.featuresOff : [];
 	return (
 		<div className="panel" id="account-subscription">
 			<div className="panel-head">
@@ -70,13 +70,18 @@ export function SubscriptionTab({ settings, workspace, save, saving }) {
 					<dl className="admin-dl" style={{ marginTop: 14 }}>
 						<dt>Users</dt><dd>{usage.users} active of {limit(candidate.maxUsers, "user")}</dd>
 						<dt>Locations</dt><dd>{usage.locations} active of {limit(candidate.maxLocations, "location")}</dd>
-						<dt>Switched off</dt><dd>{off.length ? off.join(", ") : "Nothing"}</dd>
 						{candidate.custom.map((c) => (
 							<span key={c.label} style={{ display: "contents" }}><dt>{c.label}</dt><dd>{c.value}</dd></span>
 						))}
 					</dl>
 				) : (
 					<p className="muted" style={{ marginTop: 14 }}>No limits: any number of users and locations, and the feature switches on the Features tab apply as they are.</p>
+				)}
+				{candidate && (
+					<>
+						<h4 style={{ margin: "16px 0 6px" }}>Every feature <span className="muted">({off.length} not included)</span></h4>
+						<FeatureChecklist off={candidate.featuresOff} onChange={() => {}} readOnly />
+					</>
 				)}
 				{over.length > 0 && <div className="print-note" style={{ marginTop: 10 }}>Over the limit: {over.join("; ")}. Existing users and locations stay, but no more can be added or re-activated until the business is back under the limit.</div>}
 				<div style={{ marginTop: 14 }}>

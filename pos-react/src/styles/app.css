@@ -514,3 +514,13 @@ html body.full #view-dashboard .dashboard-two>.panel{overflow:visible}
 .plan-feature{display:flex;align-items:center;gap:8px;min-height:34px;font-size:calc(13px * var(--ui-fs, 1))}
 .plan-feature.is-off{color:#a5362b}
 @media (max-width:640px){.admin-top-actions{flex-wrap:wrap}}
+
+/* Admin portal: loading bar while a change is saved, and the success message (top left) */
+.admin-progress{position:fixed;top:0;left:0;right:0;height:4px;z-index:1200;background:rgba(255,77,10,.15);overflow:hidden}
+.admin-progress span{display:block;height:100%;width:40%;background:var(--ui-accent,#ff4d0a);animation:admin-progress 1.1s ease-in-out infinite}
+@keyframes admin-progress{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.admin-success{position:fixed;top:14px;left:14px;z-index:1190;max-width:min(92vw,420px);display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:1px solid #168653;border-left:4px solid #168653;background:#e7f6ee;color:#0f5a37;font-weight:600;box-shadow:0 10px 28px rgba(0,0,0,.16);animation:admin-pop .18s ease-out}
+.admin-success button{margin-left:auto;border:0;background:transparent;color:inherit;font-size:20px;line-height:1;min-width:32px;min-height:32px;cursor:pointer}
+@keyframes admin-pop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.admin-progress span{animation-duration:3s}.admin-success{animation:none}}
+html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}

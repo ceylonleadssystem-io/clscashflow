@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { adminApi } from "./adminApi";
+import { fmtDay, lastUsedOf } from "./status";
 
 const COUNT_LABELS = [["staffUsers", "POS users"], ["locations", "Locations"], ["products", "Products"], ["customers", "Customers"], ["sales", "Sales"], ["invoices", "Invoices"], ["paymentRecords", "Payment records"], ["images", "Image files"], ["databaseRows", "Database documents (all pieces)"]];
 
@@ -70,6 +71,11 @@ export function DeleteAccountTab({ account, ui, onDeleted }) {
 				</div>
 			</div>
 			<div className="modal-body">
+				<dl className="admin-dl" id="delete-last-used" style={{ marginBottom: 12 }}>
+					<dt>Last used</dt><dd>{fmtDay(lastUsedOf(account))}</dd>
+					<dt>Last signed in</dt><dd>{fmtDay(account.authLastSignInAt)}</dd>
+					<dt>Last synced</dt><dd>{fmtDay(account.updatedAt)}</dd>
+				</dl>
 				<div className="print-note">This cannot be undone from the POS. The only way back is a database backup, and only until it expires. Run the checks first.</div>
 				<label style={{ display: "flex", gap: 8, alignItems: "center", margin: "12px 0" }}>
 					<input type="checkbox" checked={keepPayments} onChange={(e) => { setKeepPayments(e.target.checked); setCheck(null); setReviewed(false); }} /> Keep payment records (receipts) for accounting

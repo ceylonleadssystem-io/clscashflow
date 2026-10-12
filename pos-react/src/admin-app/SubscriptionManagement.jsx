@@ -33,12 +33,10 @@ function StandardPlans() {
 								<dt>Locations</dt><dd>{limitText(STANDARD_LIMITS[p.id].locations, "location")}</dd>
 							</dl>
 							<ul className="plan-bullets">{p.features.map((f) => <li key={f}>✓ {f}</li>)}</ul>
-							{off.length > 0 && (
-								<details>
-									<summary className="muted">Switched off by this plan ({off.length})</summary>
-									<ul className="plan-bullets">{off.map((l) => <li key={l}>✕ {l}</li>)}</ul>
-								</details>
-							)}
+							<details>
+								<summary className="muted">Every feature ({off.length} not included)</summary>
+								<FeatureChecklist off={sub.featuresOff} onChange={() => {}} readOnly />
+							</details>
 						</div>
 					</article>
 				);

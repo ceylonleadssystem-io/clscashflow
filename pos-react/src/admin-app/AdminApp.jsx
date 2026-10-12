@@ -11,7 +11,8 @@ import { AccountDetail } from "./AccountDetail";
 import { SubscriptionManagement } from "./SubscriptionManagement";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
-import { STATUSES, SUBSCRIPTIONS, statusOf, subscriptionOf } from "./status";
+import { STATUSES, SUBSCRIPTIONS, lastUsedOf, statusOf, subscriptionOf } from "./status";
+import { adminFeedback, useAdminFeedback } from "./adminFeedback";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("admin");
@@ -32,6 +33,7 @@ export function AdminApp() {
 	const [q, setQ] = useState("");
 	const [fStatus, setFStatus] = useState("");
 	const [fSub, setFSub] = useState("");
+	const feedback = useAdminFeedback();
 
 	// Restore a still-valid administrator session (kept in sessionStorage for this tab only).
 	useEffect(() => {
@@ -98,6 +100,13 @@ export function AdminApp() {
 
 	return (
 		<div className="admin-app">
+			{feedback.busy > 0 && <div className="admin-progress" role="progressbar" aria-label="Saving changes"><span /></div>}
+			{feedback.message && (
+				<div className="admin-success" role="status" key={feedback.message.id}>
+					<span aria-hidden="true">✓</span> {feedback.message.text}
+					<button type="button" aria-label="Dismiss message" onClick={adminFeedback.dismiss}>×</button>
+				</div>
+			)}
 			{loading && !accounts.length && <div className="gear-overlay"><GearLoader /></div>}
 			<header className="admin-top">
 				<div>
@@ -164,6 +173,7 @@ export function AdminApp() {
 										<th>Subscription</th>
 										<th>Payment</th>
 										<th>Next due</th>
+										<th>Last used</th>
 										<th>Access</th>
 										<th></th>
 									</tr>
@@ -189,6 +199,7 @@ export function AdminApp() {
 												<span className="badge">{a.payment?.status || "trial"}</span>
 											</td>
 											<td>{fmtDate(a.payment?.paid ? a.payment?.nextPaymentDue : a.payment?.trialEnd)}</td>
+											<td>{fmtDate(lastUsedOf(a))}</td>
 											<td>
 												<span className="badge" style={a.paused ? { background: "#fde9e7", color: "#a5362b" } : { background: "#e7f6ee", color: "#168653" }}>
 													{a.paused ? "Disabled" : "Active"}
@@ -203,7 +214,7 @@ export function AdminApp() {
 									))}
 									{!list.length && (
 										<tr>
-											<td colSpan="8">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
+											<td colSpan="9">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
 										</tr>
 									)}
 								</tbody>
