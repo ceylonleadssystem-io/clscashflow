@@ -5,6 +5,7 @@
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { activeTimeEntry, currentCashShift, expectedCash } from "../../domain/sales";
+import { subscriptionOf, userLimitError } from "../../config/subscription";
 import { createLogger } from "../../utils/logger";
 import { markDeleted, newId, stamp } from "./common";
 
@@ -110,6 +111,11 @@ export async function saveUser(ctx, form) {
 	if (ctx.features()["business.locations"] && access === "selected" && !ids.length && role !== "owner")
 		return void (await ctx.ui.alert("Choose at least one location for this user."));
 	const existing = d.users.find((u) => u.id === id);
+	// the plan assigned in the admin portal limits how many users can be active
+	if (active !== false && (!existing || existing.active === false)) {
+		const limit = userLimitError(subscriptionOf(d.settings), d.users, id);
+		if (limit) return void (await ctx.ui.alert(limit));
+	}
 	const user = {
 		...(existing || { id: newId("u"), createdAt: nowIso() }),
 		name: name.trim(),

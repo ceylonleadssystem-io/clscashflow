@@ -3,6 +3,8 @@ const { appwriteAdmin } = require('../lib/appwrite');
 const { isAdminEmail, verifyToken } = require('../lib/admin-auth');
 const { getAdmin, audit } = require('../lib/admin-store');
 const log = require('../lib/log').createLogger('pos-admin-data');
+const lib = require('../lib/appwrite');
+const { createPurger, realDeps } = require('../lib/account-purge');
 
 
 function headers() {
@@ -99,6 +101,29 @@ function clampNum(v, min, max) {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min;
 }
 
+function limitOrNull(v) { return v === null || v === '' || v === undefined ? null : Math.max(1, Math.floor(Number(v)) || 1); }
+function cleanSubscription(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return;
+  return {
+    enforced: v.enforced !== false,
+    planId: clean(v.planId, 60),
+    name: clean(v.name, 80),
+    maxUsers: limitOrNull(v.maxUsers),
+    maxLocations: limitOrNull(v.maxLocations),
+    featuresOff: Array.from(new Set((Array.isArray(v.featuresOff) ? v.featuresOff : []).map(String).filter(function(id) { return /^[A-Za-z0-9._-]{1,80}$/.test(id); }))).slice(0, 300),
+    custom: (Array.isArray(v.custom) ? v.custom : []).map(function(c) { return { label: clean(c && c.label, 80), value: clean(c && c.value, 160) }; }).filter(function(c) { return c.label; }).slice(0, 30),
+    assignedAt: new Date().toISOString()
+  };
+}
+
+// Founders plan templates: constraint sets an administrator defines for founding customers (kept server-side, never in a client workspace).
+function cleanFounders(list) {
+  return (Array.isArray(list) ? list : []).slice(0, 50).map(function(t) {
+    const c = cleanSubscription(Object.assign({}, t, { enforced: true })) || {};
+    return { id: clean(t && t.id, 60) || 'founders-' + Math.random().toString(36).slice(2, 8), name: clean(t && t.name, 80) || 'Founders', price: Math.max(0, Number(t && t.price) || 0), notes: clean(t && t.notes, 400), maxUsers: c.maxUsers, maxLocations: c.maxLocations, featuresOff: c.featuresOff || [], custom: c.custom || [] };
+  });
+}
+
 // Validators for the newer saveSettings keys; return undefined to skip an invalid value.
 const SETTING_SANITIZERS = {
   invoiceExtras: function(v) {
@@ -109,7 +134,9 @@ const SETTING_SANITIZERS = {
     if (!v || typeof v !== 'object' || Array.isArray(v)) return;
     return { enabled: v.enabled === true, rate: clampNum(v.rate, 0, 100) };
   },
-  businessCategory: function(v) { return typeof v === 'string' ? clean(v, 40) : undefined; }
+  businessCategory: function(v) { return typeof v === 'string' ? clean(v, 40) : undefined; },
+  // The plan assigned to this business: how many users and locations it may have and which features are forced off. null removes it.
+  subscription: function(v) { return v === null ? { enforced: false } : cleanSubscription(v); }
 };
 
 function addBillingPeriod(start, cycle) {
@@ -178,7 +205,7 @@ async function handle(event) {
     const params = event.queryStringParameters || {};
     const action = clean(body.action || params.action || 'list');
     // Everything that can change data is recorded in the admin audit log (read-only actions are not).
-    if (!['list', 'get', 'listInvoices'].includes(action)) await audit({ adminEmail: ADMIN_EMAIL, action, target: clean(body.userId || body.uid, 120) });
+    if (!['list', 'get', 'listInvoices', 'getFounders', 'previewDeleteAccount'].includes(action)) await audit({ adminEmail: ADMIN_EMAIL, action, target: clean(body.userId || body.uid, 120) });
 
     if (action === 'list') {
       const baseReads = await Promise.all([
@@ -220,6 +247,17 @@ async function handle(event) {
       const revenueThisMonth = confirmed.reduce(function(total,row){ const data=row.data||{}; return total+(Number(data.amountLkr)||((data.billingCycle==='annual')?62000:5500)); },0);
       const receipts = paymentRows.map(function(row){ const data=row.data||{}; return {id:row.id,uid:data.uid||'',email:data.email||'',businessName:data.businessName||'',billingCycle:data.billingCycle||'monthly',amountLkr:Number(data.amountLkr)||0,period:data.period||'',status:data.status||'receipt-submitted',receiptName:data.receiptName||'',receiptAvailable:!!data.receiptData,receivedAtUtc:data.receivedAtUtc||'',verifiedAtUtc:data.verifiedAtUtc||''}; });
       return response(200, { ok: true, users, receipts, stats: { realCustomers: realIds.size, testAccounts: rows.length-realIds.size, trialAccounts: users.filter(function(u){ return u.status === 'trial'; }).length, liveAccounts: users.filter(function(u){ return u.status === 'live'; }).length, revenueThisMonth, confirmedPaymentsThisMonth: confirmed.length, authAvailable, missingAuthAccounts: users.filter(function(user){ return user.authStatus === 'missing'; }).length, disabledAuthAccounts: users.filter(function(user){ return user.authStatus === 'disabled'; }).length } });
+    }
+
+    if (action === 'getFounders' || action === 'saveFounders') {
+      const ref = db.collection('adminConfig').doc('subscriptionPlans');
+      if (action === 'saveFounders') {
+        const founders = cleanFounders(body.founders);
+        await ref.set({ ownerUid: 'platform-admin', founders, updatedAtUtc: new Date().toISOString(), updatedBy: ADMIN_EMAIL }, { merge: true });
+        return response(200, { ok: true, founders });
+      }
+      const snap = await ref.get();
+      return response(200, { ok: true, founders: snap.exists ? cleanFounders((snap.data() || {}).founders) : [] });
     }
 
     const uid = clean(body.userId || params.userId, 100);
@@ -282,15 +320,21 @@ async function handle(event) {
       return response(200,{ok:true,channel,at:now});
     }
 
-    if (action === 'deleteAccount') {
-      if(body.confirmBusiness!==clean(profile.posBusinessName||profile.bizName||'',160))return response(400,{ok:false,error:'Business confirmation does not match.'});
-      const now=new Date().toISOString(),backupId='pos-account-'+uid+'-'+Date.now();
-      await db.collection('accountDeletionBackups').doc(backupId).set({uid,deletedAtUtc:now,deletedBy:ADMIN_EMAIL,profile,workspace:workspace.payload,source:'pos-admin'});
-      await workspace.ref.delete();await db.collection('users').doc(uid).delete();
-      // The profile/workspace are already gone and backed up; an auth failure must not fail the request, but needs manual follow-up.
-      try{await admin.auth().deleteUser(uid)}catch(error){console.error('POS auth deletion requires follow-up:',error);log.error('auth user deletion needs follow-up',error,{uid,backupId})}
-      log.info('pos account deleted',{uid,backupId});
-      return response(200,{ok:true,backupId});
+    if (action === 'previewDeleteAccount' || action === 'deleteAccount') {
+      // Platform administrator accounts are never deleted from here.
+      if (clean(profile.email, 254).toLowerCase() === lib.ADMIN_EMAIL.toLowerCase() || profile.adminAccess === true || profile.role === 'platform_admin') return response(400, { ok: false, error: 'This is a platform administrator account and cannot be deleted here.' });
+      const purger = createPurger(realDeps(lib));
+      const keepPayments = body.keepPayments === true;
+      if (action === 'previewDeleteAccount') {
+        const found = await purger.inventory(uid, { keepPayments });
+        return response(200, { ok: true, check: { business: found.business, stores: found.stores, counts: found.counts, warnings: found.warnings, keepPayments } });
+      }
+      // Two separate confirmations (review, then final) plus the business name; the server checks all three.
+      if (body.confirmedReview !== true || body.confirmedFinal !== true) return response(400, { ok: false, error: 'Both confirmations are required.' });
+      if (body.confirmBusiness !== clean(profile.posBusinessName || profile.bizName || '', 160)) return response(400, { ok: false, error: 'Business confirmation does not match.' });
+      const result = await purger.purge(uid, { keepPayments });
+      log.info('pos account deleted', { uid, clean: result.clean, remaining: result.remaining, done: result.done });
+      return response(200, { ok: true, result });
     }
 
     if (action === 'getReceipt') {
@@ -438,6 +482,8 @@ async function handle(event) {
 
 // Single place that records every request outcome (action, status, duration). Only the action
 // name is read from the body/query here; payloads are never logged.
+exports._cleanSubscription = cleanSubscription;
+exports._cleanFounders = cleanFounders;
 exports.handler = async function(event) {
   const started = Date.now();
   let action = '';

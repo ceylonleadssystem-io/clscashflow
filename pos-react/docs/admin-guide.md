@@ -73,3 +73,11 @@ Server actions in `pos-admin-data`: `list`, `get`, `setAccess`, `saveSettings`, 
 ## Known gaps
 The Appwrite-mode admin flows (disable, invoice e-mail, welcome sync) have not been verified end-to-end against
 the production backend; test with a non-customer account first.
+
+## Subscription management and deleting an account
+
+**Subscription management** (button in the admin header) lists the constraints of every plan: Starter (2 users, 1 location), Business (10 users, 3 locations), Pro and Enterprise (unlimited), and which features each plan switches off. Under **Founders** you define your own constraint sets: user and location limits, the features included, and any other constraint as a label and value.
+
+Assign a plan to a business on its **Subscription** tab. The POS then follows it: a user or location beyond the limit is refused (existing ones stay, none can be added or re-activated until the business is under the limit), the plan's excluded features are switched off whatever the Features tab says, and Settings > Plan shows the limits. A business with no plan assigned has no limits, so existing accounts are not affected until you assign one. Assigning a standard plan also sets the invoice tier.
+
+**Delete account** (account tab): removes the business's users, database documents (including the split pieces and monthly sales documents), image files, payment records (unless you tick "Keep payment records"), profile and sign-in. It works in three steps: 1) run the pre-delete checks, which change nothing and list what will be deleted with warnings (paid subscription, account still active, recent sync, unpaid invoices, payment records, linked team sign-ins); 2) confirm you reviewed them; 3) type the business name and delete. The server checks both confirmations and the name again, then counts what is left and reports it. If anything remains, run the delete again. The only way back afterwards is a database backup, and only until it expires.

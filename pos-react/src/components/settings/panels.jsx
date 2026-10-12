@@ -19,6 +19,7 @@ import { openBankTransfer } from "../../services/platform.service";
 import { LocationEditorModal } from "../../modals/LocationEditorModal";
 import { FONT_SIZES, FONT_WEIGHTS, useDisplayPrefs } from "../../hooks/useDisplayPrefs";
 import { applyDark, resolveDark, storedDark } from "../../utils/theme";
+import { subscriptionOf, usageOf } from "../../config/subscription";
 import { ALWAYS_LIVE_KEY } from "../../services/cloud.service";
 import { HardwarePanel } from "./HardwarePanel";
 
@@ -504,6 +505,8 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 	const s = data.settings;
 	const [enabled, setEnabled] = [form.supportEnabled, (v) => set("supportEnabled")({ target: { type: "checkbox", checked: v } })];
 	const plan = planForSettings(s);
+	const sub = subscriptionOf(s);
+	const usage = usageOf(sub, data.users, data.locations);
 	const expires = s.supportCodeExpiresAt;
 	return (
 		<Panel title="Plan & Support">
@@ -526,6 +529,18 @@ export function PlanSupportPanel({ form, set, onRegenerate }) {
 						View plans & pricing
 					</button>
 				</div>
+				{sub && (
+					<div className="plan-settings" id="plan-constraints" style={{ marginTop: 12 }}>
+						<div className="label">Your plan limits{sub.name ? " · " + sub.name : ""}</div>
+						<ul className="muted" style={{ margin: "8px 0 0", paddingLeft: 18 }}>
+							<li>Users: {usage.users} of {sub.maxUsers == null ? "unlimited" : sub.maxUsers} active</li>
+							<li>Locations: {usage.locations} of {sub.maxLocations == null ? "unlimited" : sub.maxLocations} active</li>
+							{(sub.custom || []).map((c) => (
+								<li key={c.label}>{c.label}: {c.value}</li>
+							))}
+						</ul>
+					</div>
+				)}
 			</div>
 		</Panel>
 	);

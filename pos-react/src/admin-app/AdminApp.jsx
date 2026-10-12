@@ -8,6 +8,7 @@ import { env } from "../config/env";
 import { adminSession } from "./adminSession";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
+import { SubscriptionManagement } from "./SubscriptionManagement";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
 import { STATUSES, SUBSCRIPTIONS, statusOf, subscriptionOf } from "./status";
@@ -27,6 +28,7 @@ export function AdminApp() {
 	const [stats, setStats] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [selected, setSelected] = useState("");
+	const [page, setPage] = useState("accounts"); // "accounts" | "subscriptions"
 	const [q, setQ] = useState("");
 	const [fStatus, setFStatus] = useState("");
 	const [fSub, setFSub] = useState("");
@@ -105,6 +107,9 @@ export function AdminApp() {
 					<div className="muted">Signed in as {user.email}</div>
 				</div>
 				<div className="admin-top-actions">
+					<button className={"btn " + (page === "subscriptions" ? "gold" : "out")} id="admin-nav-subscriptions" aria-pressed={page === "subscriptions"} onClick={() => { setPage(page === "subscriptions" ? "accounts" : "subscriptions"); setSelected(""); }}>
+						Subscription management
+					</button>
 					<button className="btn out" onClick={load} disabled={loading}>
 						{loading ? "Refreshing…" : "Refresh"}
 					</button>
@@ -115,7 +120,9 @@ export function AdminApp() {
 			</header>
 			{error && <div className="print-note" style={{ marginBottom: 12 }}>{error}</div>}
 
-			{current ? (
+			{page === "subscriptions" ? (
+				<SubscriptionManagement />
+			) : current ? (
 				<AccountDetail
 					account={current}
 					onBack={() => {

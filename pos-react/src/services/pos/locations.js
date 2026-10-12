@@ -4,6 +4,7 @@
  */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
+import { locationLimitError, subscriptionOf } from "../../config/subscription";
 import { createLogger } from "../../utils/logger";
 import { audit } from "./common";
 
@@ -39,6 +40,11 @@ export async function saveLocation(ctx, form) {
 		return void (await ctx.ui.alert("That location code is already in use."));
 	const existing = d.locations.find((l) => l.id === form.id);
 	const isNew = !existing;
+	// the plan assigned in the admin portal limits how many locations can be active
+	if (form.active !== false && (isNew || existing.active === false)) {
+		const limit = locationLimitError(subscriptionOf(d.settings), d.locations, form.id);
+		if (limit) return void (await ctx.ui.alert(limit));
+	}
 	const location = {
 		...(existing || { id: "loc-" + Date.now().toString(36), createdAt: nowIso() }),
 		name,
