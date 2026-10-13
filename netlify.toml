@@ -434,3 +434,28 @@
     X-Frame-Options = "DENY"
     Cache-Control = "no-cache"
     X-Robots-Tag = "noindex, nofollow"
+
+# The public addresses of Guest Manager and the Kitchen Display (the rule above only matches the file paths): never framed or indexed.
+[[headers]]
+  for = "/GM"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/GM/"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/KDS"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/KDS/"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Robots-Tag = "noindex, nofollow"
