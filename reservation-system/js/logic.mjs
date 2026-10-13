@@ -146,6 +146,21 @@ export function guestStats(guest, reservations, settings, spend = 0) {
 	return { visits, noShows, cancels, last, spend, points, tier, risky: noShows >= settings.noShowLimit };
 }
 
+/**
+ * Who is seated at which table, for the POS: { [tableId]: { name (first name), party, resId, at, customerId?, phone? } }.
+ * customerId is the guest's POS customer (or the id GM will give them), with fullName, phone and email, so the POS can put that
+ * customer on the table's check and add them to its customer list if they are not there yet. Guests without a usable phone number have none.
+ */
+export function seatingMap(reservations, guests) {
+	const out = {};
+	for (const r of reservations.filter((x) => x.status === "seated")) {
+		const g = guests.find((x) => x.id === r.guestId);
+		const entry = { name: String(r.name || "").trim().split(/\s+/)[0] || "Guest", party: +r.party || 0, resId: r.id, at: r.seatedAt || r.updatedAt || "", ...(g && phoneKey(g.phone).length >= 7 ? { customerId: g.posCustomerId || "c-gm-" + g.id, fullName: g.name, phone: g.phone, email: g.email || "" } : {}) };
+		for (const id of r.tableIds || []) out[id] = entry;
+	}
+	return out;
+}
+
 export function mergeRows(remote, local) {
 	const rows = new Map((remote || []).map((r) => [r.id, r]));
 	for (const r of local || []) {

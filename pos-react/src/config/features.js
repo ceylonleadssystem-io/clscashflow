@@ -49,6 +49,7 @@ export const FEATURES = [
 	f("view.checkout", "navigation", "Checkout", "The sales register screen.", { core: true }),
 	f("view.orders", "navigation", "Order Queue", "Open checks, table orders and kitchen sending (Restaurant / Café presets).", { requires: ["checkout.openOrders"] }),
 	f("view.tables", "navigation", "Tables", "Restaurant floor plan: seat guests, open table checks; owners edit the layout.", { requires: ["checkout.openOrders", "checkout.orderReference"] }),
+	f("view.guestManager", "navigation", "Guest Manager (GM)", "Reservations, walk-ins, waitlist, guest profiles, loyalty and booking reports at /GM, using this business's table layout and customers. OFF by default: switch it on for restaurants and hotels.", { default: false }),
 	f("view.products", "navigation", "Products & Services", "Catalogue management: items, prices, categories."),
 	f("view.modifiers", "navigation", "Modifiers", "Modifier groups (sizes, flavours, add-ons)."),
 	f("view.customers", "navigation", "Customers", "Customer directory and purchase history."),

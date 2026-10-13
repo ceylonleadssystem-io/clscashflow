@@ -26,6 +26,14 @@ export async function readPos(ws, months) {
 	return { found: true, business: p.settings?.business || "", locations: (p.locations || []).filter((l) => l.active !== false), settings: p.settings || {}, customers: p.customers || [], openOrders: p.openOrders || [], sales, users: (p.users || []).filter((u) => u.active !== false) };
 }
 
+/** Guest Manager is a feature switch in the POS admin portal (view.guestManager): off unless the business switch (or the location's) is on and the plan does not exclude it. */
+export function gmAllowed(p, locationId) {
+	const s = p.settings || {}, id = "view.guestManager";
+	const flags = { ...(s.features || {}), ...((locationId && s.locationFeatures?.[locationId]) || {}) };
+	const off = s.subscription?.enforced ? s.subscription.featuresOff || [] : [];
+	return p.found && flags[id] === true && !off.includes(id);
+}
+
 /** Tables of one POS location (its own layout, else the shared one), or GM's own tables. */
 export function tablesFor(pos, cfg) {
 	if (cfg.layoutFrom === "own" || !pos.found) return gridTables(cfg.ownTables);
@@ -67,6 +75,11 @@ export function toPosCustomer(guest, existing, tier) {
 export async function pushCustomers(ws, customers) {
 	if (!customers.length) return;
 	await call("set", `users/${ws}/pos`, "main", { data: { payload: { customers } } });
+}
+
+/** Writes who is seated where to the POS (settings.gmSeating, merged per setting by its timestamp) so its Tables screen shows it. */
+export async function pushSeating(ws, map) {
+	await call("set", `users/${ws}/pos`, "main", { data: { payload: { settings: { gmSeating: map }, syncMeta: { settings: { gmSeating: new Date().toISOString() } } } } });
 }
 
 /** Floor status of a table at a given minute of the selected day, from GM bookings and POS open checks. */

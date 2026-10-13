@@ -3,11 +3,11 @@
  * Plain DOM + template strings; every view is a function that returns HTML, re-rendered when the data changes.
  */
 import {
-	ACTIVE, SOURCES, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
+	ACTIVE, SOURCES, seatingMap, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
 	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf,
 } from "./logic.mjs";
 import * as S from "./store.mjs";
-import { openCheck, pushCustomers, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
+import { gmAllowed, openCheck, pushCustomers, pushSeating, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -20,6 +20,7 @@ const OCCASIONS = ["", "Birthday", "Anniversary", "Business", "Date night", "Cel
 const ui = { view: "bookings", date: dateStr(), floorTime: fromMin(nowMin()), q: "", from: addDays(dateStr(), -29), to: dateStr(), tab: "all", gq: "" };
 let pos = { found: false, business: "", locations: [], settings: {}, customers: [], openOrders: [], sales: [], users: [] };
 let posStamp = "";
+let allowed = null; // null = the POS switches have not been read yet
 
 // ---------------------------------------------------------------- data helpers
 const cfg = () => S.settings();
@@ -54,16 +55,16 @@ function toast(msg) {
 }
 
 async function refreshPos(force) {
-	if (S.store.mode !== "cloud" || !cfg().posSync) {
-		if (pos.found) pos = { ...pos, found: false, customers: [], openOrders: [], sales: [] };
-		return;
-	}
+	if (S.store.mode !== "cloud") return;
 	try {
 		const { stamp } = await S.call("stamp", `users/${S.store.ws}/pos`, "main");
 		if (!force && stamp === posStamp && pos.found) return;
 		posStamp = stamp;
 		const now = dateStr();
 		pos = await readPos(S.store.ws, [monthOf(now), monthOf(addDays(now, -30)), ...(ui.view === "reports" ? S.monthsAround(ui.from, 0, 2) : [])]);
+		allowed = gmAllowed(pos, cfg().locationId);
+		// with "sync with the POS" switched off GM still reads the POS for its feature switch, but uses none of its data
+		if (!cfg().posSync) pos = { ...pos, found: false, customers: [], openOrders: [], sales: [] };
 		render();
 	} catch (e) {
 		console.warn("POS read failed", e);
@@ -98,6 +99,26 @@ async function syncGuests() {
 	updated.forEach((g) => S.put("guest", g));
 	await refreshPos(true);
 	return out.length;
+}
+let lastSeating = null; // JSON of the seating last written to (or read from) the POS
+let seatTimer = 0;
+/** Keeps the POS floor plan in step with GM: whenever the seated guests change, the new picture is written to the POS. */
+function queueSeating() {
+	clearTimeout(seatTimer);
+	seatTimer = setTimeout(async () => {
+		if (S.store.mode !== "cloud" || allowed !== true || !cfg().posSync || !pos.found) return;
+		await syncGuests().catch(() => 0); // the seated guest must be a POS customer before the table can point at them
+		const map = seatingMap(S.reservations(), S.guests());
+		const json = JSON.stringify(map);
+		if (lastSeating === null) lastSeating = JSON.stringify(pos.settings.gmSeating || {});
+		if (json === lastSeating) return;
+		try {
+			await pushSeating(S.store.ws, map);
+			lastSeating = json;
+		} catch (e) {
+			console.warn("Could not update the POS floor plan", e); // retried on the next change and every 30 seconds
+		}
+	}, 800);
 }
 const syncSoon = () => syncGuests().catch((e) => console.warn("Guest sync failed", e));
 
@@ -534,6 +555,10 @@ function signInView() {
 	return `<form id="signin" class="card signin"><h1>Guest Manager</h1><p class="mute">POS business sign in. Use the same email and password as the POS; if this browser is already signed in to the POS you will not see this page.</p><label>Business email<input name="email" type="email" required autocomplete="username"></label><label>Password<input name="password" type="password" required autocomplete="current-password"></label><div class="err" id="serr" role="alert"></div><button class="pri">Sign in</button><button type="button" data-act="forgot">Forgot password?</button><button type="button" data-act="local">Use on this device only (no sync)</button></form>`;
 }
 
+function lockedView() {
+	return `<div class="card signin"><h1>Guest Manager</h1>${allowed === false ? "<p>Guest Manager is not switched on for this account. Ask Ceylonry to enable it (admin portal → Features), or check that your plan includes it.</p>" : '<p class="err">Could not check this account\'s features. Check the connection and try again.</p>'}<button class="pri" data-act="recheck">Check again</button><a href="/posv2/">Back to the POS</a></div>`;
+}
+
 function render() {
 	cancelAnimationFrame(render.f);
 	render.f = requestAnimationFrame(() => {
@@ -541,6 +566,7 @@ function render() {
 		const root = $("#app");
 		if (!S.store.mode) return;
 		const focus = document.activeElement?.id, caret = document.activeElement?.selectionStart;
+		if (S.store.mode === "cloud" && allowed !== true) return void (root.innerHTML = lockedView());
 		const body = { bookings: viewBookings, calendar: viewCalendar, floor: viewFloor, waitlist: viewWaitlist, guests: viewGuests, messages: viewMessages, reports: viewReports, handover: viewHandover, settings: viewSettings }[ui.view]();
 		const st = S.store.status;
 		root.innerHTML = `<header class="top"><div><h1>Guest Manager <small class="sub">${esc(business())}</small></h1></div><div class="chips"><span class="pill ${S.store.mode === "cloud" ? "ok" : "warn"}">${S.store.mode === "cloud" ? "Synced" : "This device only"}</span><span class="pill ${pos.found ? "ok" : ""}">POS ${pos.found ? "linked" : "not linked"}</span>${st !== "ok" ? `<span class="pill ${st === "offline" ? "bad" : "info"}">${st === "offline" ? "Offline: will retry" : "Saving…"}</span>` : ""}${S.store.mode === "cloud" ? `<a href="/posv2/">POS</a>` : ""}</div></header>
@@ -602,6 +628,7 @@ const ACTIONS = {
 		a.click();
 		setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 	},
+	recheck: () => refreshPos(true),
 	forgot: async () => {
 		const email = $("#signin")?.email.value.trim();
 		if (!email) return void ($("#serr").textContent = "Enter your business email first.");
@@ -662,7 +689,7 @@ async function start() {
 	try {
 		await S.startCloud(user);
 		await refreshPos(true);
-		setInterval(() => refreshPos(false), 30000);
+		setInterval(() => (refreshPos(false), queueSeating()), 30000);
 		render();
 		if (pos.found) syncSoon();
 	} catch (err) {
@@ -671,6 +698,7 @@ async function start() {
 }
 
 S.store.onChange(render);
+S.store.onChange(queueSeating);
 (async () => {
 	const auth = window.clsBackend?.auth();
 	if (!auth) return void ($("#app").innerHTML = signInView());

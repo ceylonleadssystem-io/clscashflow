@@ -44,6 +44,26 @@ export async function saveCustomer(ctx, form) {
 	return customer;
 }
 
+/**
+ * The customer for a guest Guest Manager (/GM) seated at a table: the existing one (same id, else same phone number), or a new
+ * customer added with the id GM uses, so the check can carry them even before GM's own sync has reached this device.
+ * Returns null when there is no usable phone number (a customer needs one).
+ */
+export async function ensureCustomer(ctx, c) {
+	const d = ctx.data();
+	const key = phoneKey(c.phone);
+	const found = d.customers.find((x) => x.id === c.id) || (key.length >= 7 && d.customers.find((x) => phoneKey(x.phone) === key));
+	if (found) return found;
+	const name = String(c.name || "").trim();
+	if (!name || key.length < 7) return null;
+	const customer = {
+		id: c.id || newId("c"), createdAt: nowIso(), name, phone: String(c.phone).trim(), email: isEmail(c.email || "") ? c.email : "", birthday: "", company: "", address: "",
+		tags: "GM", notes: "", type: "regular", discountEligible: false, discountType: "percent", discountValue: 0, discountExpiry: "", discountNote: "",
+	};
+	await ctx.store.write((tx) => tx.put(T.customers, customer));
+	return customer;
+}
+
 /** Opens the e-mail client with a feedback request and records it. */
 export async function requestFeedback(ctx, id) {
 	const d = ctx.data();

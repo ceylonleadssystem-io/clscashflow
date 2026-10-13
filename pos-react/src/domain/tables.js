@@ -68,6 +68,15 @@ export function tableNumberError(tables, table) {
 	return tables.some((t) => t.id !== table.id && t.number === table.number) ? "Table " + table.number + " already exists." : "";
 }
 
+/**
+ * The guest Guest Manager (/GM) has seated at a table, as written to settings.gmSeating: { name (first name), fullName, customerId (POS customer id), phone, email, at },
+ * or null. A record older than 12 hours is ignored, so a seating that was never closed in GM cannot linger on the floor.
+ */
+export function gmSeating(settings, tableId, now = Date.now()) {
+	const g = (settings || {}).gmSeating?.[tableId];
+	return g && now - Date.parse(g.at || 0) < 12 * 3600000 ? g : null;
+}
+
 /** { open: open order | null, free } for an active table. */
 export function tableStatus(table, openOrders) {
 	const open = openOrders.find((o) => o.status === "open" && o.orderReference === tableReference(table)) || null;

@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
-import { GRID, TABLE_SHAPES, findFreeSpot, layoutFor, layoutKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, TABLE_SHAPES, findFreeSpot, layoutFor, layoutKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus, gmSeating } from "../domain/tables";
 import { OWNER_ROLES } from "../config/roles";
 import { newId } from "../services/pos/common";
 import { useData } from "../store/DataProvider";
@@ -23,7 +23,7 @@ export function Tables() {
 	const data = useData();
 	const ui = useUi();
 	const { currentUser, svc, locationId } = usePos();
-	const { loadOpenOrder, splitOpenOrder, newOpenOrder, setOrderReference, setOrderChannel } = useCheckout();
+	const { loadOpenOrder, splitOpenOrder, newOpenOrder, setOrderReference, setOrderChannel, selectCustomer, setPhoneSearch } = useCheckout();
 	const canSplit = useFeature("checkout.splitBill");
 	const [action, setAction] = useState(null); // busy table tapped: its open order
 	const [moving, setMoving] = useState(null); // open order being moved / merged
@@ -133,12 +133,24 @@ export function Tables() {
 		window.addEventListener("pointerup", up);
 	};
 
+	// the customer GM seated at this table goes on the check, unless the check already has one
+	// (a guest GM has not yet delivered to the customer list is added here first)
+	const attachGuest = async (t, order) => {
+		const g = gmSeating(data.settings, t.id);
+		if (!g?.customerId || order?.customerId) return;
+		const customer = await svc.customers.ensureCustomer({ id: g.customerId, name: g.fullName || g.name, phone: g.phone, email: g.email });
+		if (!customer) return;
+		selectCustomer(customer.id);
+		setPhoneSearch(customer.phone || "");
+	};
+
 	const openTable = (t) => {
 		const { open } = tableStatus(t, openOrders);
 		if (open) return setAction({ table: t, order: open });
 		newOpenOrder();
 		setOrderReference(tableReference(t));
 		setOrderChannel("Dine-in");
+		attachGuest(t, null);
 	};
 
 	if (!hasLocation)
@@ -207,7 +219,8 @@ export function Tables() {
 					>
 						{tables.map((t) => {
 							const { open } = tableStatus(t, openOrders);
-							const cls = ["floor-table", t.shape, !t.active && "inactive", open && "busy", t.id === selectedId && "selected"];
+							const guest = !editing && t.active ? gmSeating(data.settings, t.id) : null;
+							const cls = ["floor-table", t.shape, !t.active && "inactive", open && "busy", guest && !open && "gm-seated", t.id === selectedId && "selected"];
 							return (
 								<div
 									key={t.id}
@@ -218,6 +231,7 @@ export function Tables() {
 									onClick={() => (editing ? setSelectedId(t.id) : t.active && openTable(t))}
 								>
 									<strong>{t.number}</strong>
+									{guest && <span className="floor-guest">{guest.name}</span>}
 									<span>{t.active ? t.seats + " seats" : "Not for seating"}</span>
 									{!editing && open && <span className="floor-total">{money(orderTotal(open))}</span>}
 									{editing && <i className="floor-resize" onPointerDown={(e) => startDrag(e, t, "size")} title="Resize" />}
@@ -231,7 +245,7 @@ export function Tables() {
 					<Modal id="table-action-modal" open title={"Table " + action.table.number} subtitle={"Check total " + money(orderTotal(action.order))} onClose={() => setAction(null)}>
 						<ModalBody>
 							<div style={{ display: "grid", gap: 8 }}>
-								<button className="btn gold" onClick={() => { loadOpenOrder(action.order.id); setAction(null); }}>Open / Pay</button>
+								<button className="btn gold" onClick={async () => { await loadOpenOrder(action.order.id); setAction(null); attachGuest(action.table, action.order); }}>Open / Pay</button>
 								{canSplit && <button className="btn out" onClick={() => { splitOpenOrder(action.order.id); setAction(null); }}>Split bill</button>}
 								<button className="btn out" onClick={() => { setMoving(action.order); setAction(null); }}>Move or merge check</button>
 							</div>
