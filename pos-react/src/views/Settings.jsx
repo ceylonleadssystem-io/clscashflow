@@ -11,6 +11,7 @@ import { useUi } from "../store/UiProvider";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
+import { KdsPairing } from "../KDS/KdsPairing";
 import {
 	AppearancePanel,
 	BillingPanel,
@@ -25,11 +26,12 @@ import {
 	ServiceChargePanel,
 } from "../components/settings/panels";
 
-const TABS = [
+const ALL_TABS = [
 	{ id: "business", label: "Business Profile" },
 	{ id: "pos", label: "POS Setup" },
 	{ id: "operations", label: "Operations" },
 	{ id: "printing", label: "Receipt Printing" },
+	{ id: "kds", label: "KDS" },
 	{ id: "plan", label: "Plan & Support" },
 ];
 
@@ -61,6 +63,7 @@ export function Settings() {
 	const locationsOn = useFeature("business.locations");
 	const themes = useFeature("settings.themes");
 	const serviceCharge = useFeature("checkout.serviceCharge");
+	const kdsOn = useFeature("checkout.kds");
 	const billing = useFeature("settings.billing");
 	const ui = useUi();
 	const [tab, setTab] = useState("business");
@@ -80,7 +83,8 @@ export function Settings() {
 		return svc.settings.saveSettings(form);
 	};
 	const kitchen = KITCHEN_TYPES.includes(form.businessType);
-	void kitchen;
+	// the KDS tab exists only for kitchen businesses whose account has the Kitchen Display switched on
+	const TABS = ALL_TABS.filter((t) => t.id !== "kds" || (kitchen && kdsOn));
 
 	const sections = {
 		business: full && (
@@ -104,6 +108,7 @@ export function Settings() {
 			</>
 		),
 		printing: <PrintingPanel form={form} set={set} setForm={setForm} />,
+		kds: <KdsPairing />,
 		plan: full && (
 			<>
 				{billing && <BillingPanel />}
