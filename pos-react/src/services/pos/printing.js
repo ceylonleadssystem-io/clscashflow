@@ -9,6 +9,8 @@ import { kotHtml, receiptHtml, receiptMessage } from "../printing/documents";
 import { printHtmlInFrame, printHtmlInWindow } from "../printing/printDocument";
 import { receiptPrinter } from "../printing/receiptPrinter";
 import { createLogger } from "../../utils/logger";
+import { KDS_DESTINATION } from "../../KDS/kds";
+import { kdsLink } from "../../KDS/link";
 import { kitchenMode, newId, stamp } from "./common";
 
 const log = createLogger("printing");
@@ -83,13 +85,14 @@ export async function shareReceiptWhatsApp(ctx, sale, targetWindow) {
 }
 
 // ----------------------------------------------------------- kitchen tickets
-export const kitchenDestination = (settings) => String(settings.kotPrinter || "").trim() || "Kitchen POS";
+export const kitchenDestination = (settings, features = {}) => (features["checkout.kds"] ? KDS_DESTINATION : String(settings.kotPrinter || "").trim() || "Kitchen POS");
 
 /** Queues a kitchen ticket (and hands it to a printer hook when one is configured). */
 export async function queueKitchenTicket(ctx, order) {
 	const d = ctx.data();
-	const destination = kitchenDestination(d.settings);
-	let status = destination === "Kitchen POS" ? "sent-to-kitchen-pos" : "sent-to-printer";
+	const destination = kitchenDestination(d.settings, ctx.features());
+	const toKds = destination === KDS_DESTINATION;
+	let status = toKds ? "new" : destination === "Kitchen POS" ? "sent-to-kitchen-pos" : "sent-to-printer";
 	const ticket = stamp(
 		{
 			id: newId("kot-"),
@@ -104,7 +107,7 @@ export async function queueKitchenTicket(ctx, order) {
 		ctx.session(),
 	);
 	const hook = kitchenPrinterHook();
-	if (destination !== "Kitchen POS") {
+	if (destination !== "Kitchen POS" && !toKds) {
 		if (hook) {
 			try {
 				await Promise.resolve(hook(ticket));
@@ -116,6 +119,7 @@ export async function queueKitchenTicket(ctx, order) {
 		} else ticket.status = "queued-for-" + destination;
 	}
 	await ctx.store.write((tx) => tx.put(T.kitchenTickets, ticket));
+	if (toKds) kdsLink.send(ticket); // local Wi-Fi only; kept in the outbox until the KDS acknowledges it
 	log.info("kitchen ticket queued", { order: ticket.orderNumber, destination, status: ticket.status, items: ticket.lines.length });
 	return destination;
 }
@@ -125,7 +129,13 @@ export async function sendToKitchen(ctx, order) {
 	ctx.ui.notice(
 		destination === "Kitchen POS"
 			? "No kitchen printer is configured. Ticket sent to the Kitchen POS."
-			: "Kitchen ticket sent to " + destination + ".",
+			: destination === KDS_DESTINATION
+				? kdsLink.state().connected
+					? "Ticket sent to the Kitchen Display."
+					: kdsLink.state().paired
+						? "Kitchen Display is not connected. The ticket is saved and will be sent when it reconnects."
+						: "No Kitchen Display is paired yet. Pair one in Settings, Printing."
+				: "Kitchen ticket sent to " + destination + ".",
 	);
 }
 

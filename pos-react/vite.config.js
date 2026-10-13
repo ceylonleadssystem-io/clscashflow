@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 
 const adminRoute = (req, _res, next) => {
 	if (/^\/posv2\/admin\/?(\?.*)?$/.test(req.url || "")) req.url = "/admin.html";
+	if (/^\/(posv2\/)?kds\/?(\?.*)?$/i.test(req.url || "")) req.url = "/kds.html";
 	next();
 };
 
@@ -38,7 +39,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		build: {
-			rollupOptions: { input: { main: "index.html", admin: "admin.html" } },
+			rollupOptions: { input: { main: "index.html", admin: "admin.html", kds: "kds.html" } },
 			sourcemap: true,
 			chunkSizeWarningLimit: 1200,
 		},

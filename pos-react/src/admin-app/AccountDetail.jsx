@@ -1,6 +1,6 @@
 /**
- * Admin portal: detail screen for one business account, with tabs for access, subscription (plan limits), delete account, (enable/disable and
- * fixed-amount pricing), per-business and per-location feature switches, the first-login welcome message, invoices and the menu export.
+ * Admin portal: detail screen for one business account, with tabs for access (enable/disable and fixed-amount pricing), subscription (plan limits),
+ * per-business and per-location feature switches, the first-login welcome message, invoices, the menu export, diagnostics and delete account.
  */
 import { GearLoader } from "../components/ui/GearLoader";
 import { useCallback, useEffect, useState } from "react";

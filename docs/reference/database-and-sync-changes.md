@@ -42,9 +42,8 @@ Covers the Appwrite database, storage and cloud-sync work merged to `main` (late
 - The POS falls back to inline images when offline, in local mode, or on upload errors.
 - Settings has a one-time "Move saved images to cloud storage" button for existing images.
 
-### 2.5 Sales history split (built, switched OFF)
+### 2.5 Sales history split (switched ON in production)
 - `VITE_SALES_SPLIT=on` stores sales one cloud document per month; only changed months upload.
-- Keep it off until sync has been stable for a week or more.
 
 ### 2.6 Settings data
 - Table layouts are saved per location (`tableLayout_{locationId}`). The old shared `tableLayout` is shown until a branch saves its own.
@@ -94,9 +93,9 @@ To turn these into money, multiply the "after" and "before" counts by your Appwr
 ## 6. Still to do
 1. Confirm the affected business has recovered (section 4).
 2. Set `APPWRITE_POS_FALLBACK=off` on Netlify after a few more days, then delete the 61 old POS rows in `ceylonry` once a `ceylonry` backup exists (needs approval).
-3. Turn on `VITE_SALES_SPLIT=on` when sync has been stable.
+3. Sales split is on (done).
 4. Optional next steps: archive or cap the audit logs, per-table delta sync, Appwrite Realtime to replace polling.
-5. Account reset and deletion does not yet cover POS documents (existing gap).
+5. Account deletion (admin portal > Delete account) now removes POS documents, pieces, monthly sales, images, payments, profile and sign-in, and keeps a restorable copy in `accountDeletionBackups`. Account reset is unchanged.
 
 ## 7. Other changes in the same period (non-database)
 Sync status icon (PR 72), idle slowdown and Always live screen (PR 73), table layout per branch, PDF report export, admin menu export, location selection after PIN, navigation rail on all screen sizes, PWA and iOS install guide.

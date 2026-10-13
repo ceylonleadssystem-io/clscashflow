@@ -290,5 +290,5 @@ These also failed before any reformatting, so they predate the formatting commit
 
 - **Formatting-only (152):** fixed with `tests/support/tolerant-match.cjs`, preloaded by `npm test`. `assert.match` falls back to a comparison that ignores whitespace, quote style, `0.5`/`.5`, arrow parentheses and trailing commas/semicolons. `doesNotMatch` stays strict. Four tests were corrected by hand instead (payroll expenses, catalogue recovery, retail checkout, and the upload-finishing test, whose harness now extracts functions by brace matching).
 - **Stale (13):** expectations updated to the current system. Notable: hardware count is 7 and uses the new `hw-*.jpg` images; the receipt endpoint returns 401 when unauthenticated; the contact test now sends `mobile`; the USB receipt test now asserts the deliberate behaviour that a failed print never falls back to Save as PDF (the Android System Print fallback message was removed from the code); the Supabase assertion was dropped.
-- **Gaps (4):** parked in `tests-pending/`, not run.
+- **Gaps (4):** were parked in `tests-pending/` (removed; see git history).
 - **Result:** `npm test` runs 251 tests, 251 pass.

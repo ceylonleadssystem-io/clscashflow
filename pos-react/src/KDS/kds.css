@@ -1,0 +1,21 @@
+.kds-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.kds-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.kds-col h3{margin:0 0 8px;font-size:15px;display:flex;justify-content:space-between}
+.kds-list{display:grid;gap:10px}
+.kds-card{border:2px solid var(--ui-line,#ddd);border-radius:12px;background:var(--ui-surface,#fff);padding:12px;display:grid;gap:8px}
+.kds-card.warn{border-color:#e0a21a}
+.kds-card.late{border-color:#d33;box-shadow:0 0 0 3px rgba(221,51,51,.18)}
+.kds-head{display:flex;justify-content:space-between;gap:8px;font-weight:800;font-size:17px}
+.kds-ref{font-size:13px;opacity:.75}
+.kds-item{font-size:18px;font-weight:700;padding:6px 0;border-top:1px dashed var(--ui-line,#ddd)}
+.kds-item span{display:block;font-size:14px;font-weight:500;margin:2px 0 0 12px}
+.kds-actions{display:flex;gap:8px}
+.kds-actions .btn{flex:1;min-height:48px}
+.kds-empty{opacity:.6;padding:18px;text-align:center;border:1px dashed var(--ui-line,#ddd);border-radius:12px}
+@media (max-width:900px){.kds-board{grid-template-columns:1fr}}
+.kds-page,.kds-pair{min-height:100vh;padding:14px;box-sizing:border-box;background:var(--ui-bg,#f6f6f4);color:var(--ui-text,#111)}
+.kds-pair{display:grid;place-content:center;text-align:center;gap:14px}
+.kds-code{font-size:clamp(48px,14vw,120px);font-weight:900;letter-spacing:.08em}
+.kds-conn{font-weight:700;font-size:14px;align-self:center}
+.kds-conn.on{color:#168653}.kds-conn.off{color:#c0392b}
+.kds-actions{flex-wrap:wrap}

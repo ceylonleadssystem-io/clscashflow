@@ -11,7 +11,7 @@ export const FEATURE_PRESETS = [
 	{
 		id: "food", icon: "🍔", label: "Food & Beverage", posType: "restaurant",
 		types: ["Restaurants", "Cafés / coffee shops", "Fast-food outlets", "Bakeries", "Pizzerias", "Food courts", "Bars & pubs", "Juice / smoothie shops", "Ice-cream shops", "Food trucks", "Cloud kitchens", "Takeaway shops"],
-		off: [...TOOLS, "catalogue.barcodeLabels", "hardware.labelPrinter", "sales.permanentDelete"],
+		off: [...TOOLS, "checkout.kds", "catalogue.barcodeLabels", "hardware.labelPrinter", "sales.permanentDelete"],
 	},
 	{
 		id: "retail", icon: "🛍️", label: "Retail", posType: "retail",
@@ -26,7 +26,7 @@ export const FEATURE_PRESETS = [
 	{
 		id: "hospitality", icon: "🏨", label: "Hospitality", posType: "restaurant",
 		types: ["Hotels", "Resorts", "Guesthouses", "Hostels", "Motels", "Restaurants inside hotels", "Hotel bars", "Room-service operations"],
-		off: [...TOOLS, "catalogue.barcodeLabels", "hardware.labelPrinter", "hardware.barcodeScanner"],
+		off: [...TOOLS, "checkout.kds", "catalogue.barcodeLabels", "hardware.labelPrinter", "hardware.barcodeScanner"],
 	},
 	{
 		id: "health", icon: "🏥", label: "Health & Wellness", posType: "pharmacy",

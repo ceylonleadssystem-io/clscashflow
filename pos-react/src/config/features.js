@@ -70,6 +70,7 @@ export const FEATURES = [
 	f("checkout.orderChannels", "checkout", "Order channels", "Dine-in / Takeaway / PickMe / Uber Eats selector (Restaurant, Café).", { requires: ["checkout.orderReference"] }),
 	f("checkout.openOrders", "checkout", "Save open orders", "Save an order and recall it later to take payment."),
 	f("checkout.kitchenTickets", "checkout", "Kitchen tickets (KOT)", "Send orders to the kitchen and print kitchen order tickets.", { requires: ["checkout.openOrders"] }),
+	f("checkout.kds", "checkout", "Kitchen Display (KDS)", "Send prep tickets to a paired Kitchen Display (open /KDS on a kitchen screen). Tickets travel over the local Wi-Fi only.", { default: false, requires: ["checkout.kitchenTickets"] }),
 	f("checkout.emailReceipt", "checkout", "E-mail receipt", "Send the receipt to the customer by e-mail (EmailJS)."),
 	f("checkout.whatsappReceipt", "checkout", "WhatsApp receipt", "Prepare the receipt as a WhatsApp message."),
 	f("checkout.printReceipt", "checkout", "Print receipt after checkout", "Automatic / optional receipt printing."),
