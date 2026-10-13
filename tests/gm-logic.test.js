@@ -87,3 +87,15 @@ test('POS bridge: layout per location with shared fallback, and idempotent custo
   assert.equal(twice.notes, once.notes);
   assert.equal(P.toPosCustomer(g, null, 'Bronze').id, 'c-gm-g1');
 });
+
+test('Guest Manager feature switch: off unless switched on, per-location override and plan exclusion win', async () => {
+  const P = await import('../reservation-system/js/pos.mjs');
+  const id = 'view.guestManager', on = { found: true, settings: { features: { [id]: true } } };
+  assert.equal(P.gmAllowed(on, ''), true);
+  assert.equal(P.gmAllowed({ found: true, settings: {} }, ''), false); // never switched on
+  assert.equal(P.gmAllowed({ found: false, settings: { features: { [id]: true } } }, ''), false);
+  assert.equal(P.gmAllowed({ found: true, settings: { features: { [id]: true }, locationFeatures: { L1: { [id]: false } } } }, 'L1'), false);
+  assert.equal(P.gmAllowed({ found: true, settings: { features: { [id]: true }, locationFeatures: { L1: { [id]: false } } } }, ''), true);
+  assert.equal(P.gmAllowed({ found: true, settings: { features: { [id]: true }, subscription: { enforced: true, featuresOff: [id] } } }, ''), false);
+  assert.equal(P.gmAllowed({ found: true, settings: { features: { [id]: true }, subscription: { enforced: false, featuresOff: [id] } } }, ''), true);
+});

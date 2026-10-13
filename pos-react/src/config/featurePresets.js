@@ -6,6 +6,7 @@
 const KITCHEN = ["view.orders", "view.tables", "checkout.openOrders", "checkout.kitchenTickets", "checkout.orderReference", "checkout.orderChannels", "inventory.recipes", "view.modifiers", "modifiers.commonPresets"];
 const SHOP = ["catalogue.barcodeLabels", "hardware.labelPrinter", "hardware.barcodeScanner", "checkout.stockGuard", "inventory.productStock", "inventory.stockTools"];
 const TOOLS = ["industry.tools"];
+const GM = ["view.guestManager"]; // Guest Manager (/GM): on for Food & Beverage and Hospitality only
 
 export const FEATURE_PRESETS = [
 	{
@@ -16,12 +17,12 @@ export const FEATURE_PRESETS = [
 	{
 		id: "retail", icon: "🛍️", label: "Retail", posType: "retail",
 		types: ["Supermarkets", "Grocery stores", "Convenience stores", "Clothing / fashion stores", "Shoe stores", "Electronics stores", "Mobile phone shops", "Computer shops", "Cosmetics & beauty stores", "Jewelry stores", "Gift shops", "Bookstores / stationery", "Hardware stores", "Furniture stores", "Pet stores", "Sports equipment stores"],
-		off: [...KITCHEN, ...TOOLS, "checkout.serviceCharge"],
+		off: [...GM, ...KITCHEN, ...TOOLS, "checkout.serviceCharge"],
 	},
 	{
 		id: "beauty", icon: "💇", label: "Personal & Beauty Services", posType: "salon",
 		types: ["Salons", "Barbershops", "Spas", "Nail salons", "Beauty clinics", "Massage centers", "Tattoo studios"],
-		off: [...KITCHEN, ...SHOP.filter((x) => x !== "inventory.productStock"), "inventory.recipes"],
+		off: [...GM, ...KITCHEN, ...SHOP.filter((x) => x !== "inventory.productStock"), "inventory.recipes"],
 	},
 	{
 		id: "hospitality", icon: "🏨", label: "Hospitality", posType: "restaurant",
@@ -31,27 +32,27 @@ export const FEATURE_PRESETS = [
 	{
 		id: "health", icon: "🏥", label: "Health & Wellness", posType: "pharmacy",
 		types: ["Pharmacies", "Medical supply stores", "Optical shops", "Dental clinics", "Fitness centers", "Gyms", "Supplement stores"],
-		off: [...KITCHEN, "checkout.serviceCharge"],
+		off: [...GM, ...KITCHEN, "checkout.serviceCharge"],
 	},
 	{
 		id: "automotive", icon: "🚗", label: "Automotive", posType: "hardware",
 		types: ["Auto parts stores", "Tire shops", "Car dealerships", "Vehicle service centers", "Car washes", "Detailing centers", "Motorcycle dealerships", "Motorcycle service shops"],
-		off: [...KITCHEN, ...TOOLS, "checkout.serviceCharge"],
+		off: [...GM, ...KITCHEN, ...TOOLS, "checkout.serviceCharge"],
 	},
 	{
 		id: "entertainment", icon: "🎮", label: "Entertainment & Recreation", posType: "services",
 		types: ["Cinemas", "Bowling alleys", "Gaming centers", "Amusement parks", "Arcades", "Escape rooms", "Karaoke lounges", "Tourist attractions"],
-		off: [...SHOP, ...TOOLS, "inventory.recipes", "view.modifiers", "modifiers.commonPresets", "checkout.orderChannels", "business.branchStock"],
+		off: [...GM, ...SHOP, ...TOOLS, "inventory.recipes", "view.modifiers", "modifiers.commonPresets", "checkout.orderChannels", "business.branchStock"],
 	},
 	{
 		id: "education", icon: "🏫", label: "Education", posType: "services",
 		types: ["Private institutes", "Tuition centers", "Bookstores attached to schools", "University cafeterias", "School canteens", "Training centers"],
-		off: [...KITCHEN, ...TOOLS, ...SHOP, "checkout.serviceCharge", "business.branchStock"],
+		off: [...GM, ...KITCHEN, ...TOOLS, ...SHOP, "checkout.serviceCharge", "business.branchStock"],
 	},
 	{
 		id: "other", icon: "🛒", label: "Other Businesses", posType: "other",
 		types: ["Florists", "Bakeries", "Butcher shops", "Fish/meat markets", "Liquor stores", "Vape/tobacco shops", "Farmers' markets", "Wholesale stores", "Printing shops", "Photography studios"],
-		off: [...KITCHEN, ...TOOLS, "checkout.serviceCharge"],
+		off: [...GM, ...KITCHEN, ...TOOLS, "checkout.serviceCharge"],
 	},
 ];
 

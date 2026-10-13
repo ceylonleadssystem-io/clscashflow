@@ -104,6 +104,7 @@ export const PLAN_CONDITIONS =
  */
 export const PLAN_FEATURE_OFF = {
 	starter: [
+		"view.guestManager",
 		"catalogue.barcodeLabels",
 		"hardware.labelPrinter",
 		"view.crm",
