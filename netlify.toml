@@ -170,18 +170,6 @@
   status = 200
   force = true
 
-[[redirects]]
-  from = "/kds"
-  to = "/pos-react/dist/kds.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/kds/"
-  to = "/pos-react/dist/kds.html"
-  status = 200
-  force = true
-
 # Guest Manager (GM), reservations and guests that work alongside the POS (static page in /reservation-system).
 [[redirects]]
   from = "/GM"
@@ -191,18 +179,6 @@
 
 [[redirects]]
   from = "/GM/"
-  to = "/reservation-system/index.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/gm"
-  to = "/reservation-system/index.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/gm/"
   to = "/reservation-system/index.html"
   status = 200
   force = true
