@@ -7,7 +7,7 @@ import {
 	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf,
 } from "./logic.mjs";
 import * as S from "./store.mjs";
-import { gmAllowed, openCheck, pushCustomers, pushSeating, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
+import { gmStatus, openCheck, pushCustomers, pushSeating, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -21,6 +21,7 @@ const ui = { view: "bookings", date: dateStr(), floorTime: fromMin(nowMin()), q:
 let pos = { found: false, business: "", locations: [], settings: {}, customers: [], openOrders: [], sales: [], users: [] };
 let posStamp = "";
 let allowed = null; // null = the POS switches have not been read yet
+let gmWhy = ""; // why Guest Manager is blocked for this account (from the POS switches)
 let posError = ""; // why the last read of the POS failed
 
 // ---------------------------------------------------------------- data helpers
@@ -63,7 +64,7 @@ async function refreshPos(force) {
 		posStamp = stamp;
 		const now = dateStr();
 		pos = await readPos(S.store.ws, [monthOf(now), monthOf(addDays(now, -30)), ...(ui.view === "reports" ? S.monthsAround(ui.from, 0, 2) : [])]);
-		allowed = gmAllowed(pos, cfg().locationId);
+		({ allowed, why: gmWhy } = gmStatus(pos, cfg().locationId));
 		posError = "";
 		// with "sync with the POS" switched off GM still reads the POS for its feature switch, but uses none of its data
 		if (!cfg().posSync) pos = { ...pos, found: false, customers: [], openOrders: [], sales: [] };
@@ -561,7 +562,7 @@ function signInView() {
 
 function lockedView() {
 	const msg = allowed === false
-		? "<p>Guest Manager is not switched on for this account. Ask Ceylonry to enable it (admin portal → Features), or check that your plan includes it.</p>"
+		? `<p>Guest Manager is not switched on for this account.</p><p class="mute">${esc(gmWhy)}</p>`
 		: `<p class="err">Could not check this account's features. Check the connection and try again.</p>${posError ? `<p class="mute">Reason: ${esc(posError)}</p>` : ""}`;
 	return `<div class="card signin"><h1>Guest Manager</h1>${msg}<button class="pri" data-act="recheck">Check again</button><a href="/posv2/">Back to the POS</a></div>`;
 }
