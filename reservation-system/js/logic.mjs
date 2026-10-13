@@ -147,15 +147,14 @@ export function guestStats(guest, reservations, settings, spend = 0) {
 }
 
 /**
- * Who is seated at which table, for the POS floor plan: { [tableId]: { name (first name), party, resId, at, tier?, points? } }.
- * `spendOf(guest)` supplies the POS spend used for the loyalty points.
+ * Who is seated at which table, for the POS: { [tableId]: { name (first name), party, resId, at, customerId?, phone? } }.
+ * customerId is the guest's POS customer, so the POS can put that customer on the table's check.
  */
-export function seatingMap(reservations, guests, settings, spendOf = () => 0) {
+export function seatingMap(reservations, guests) {
 	const out = {};
 	for (const r of reservations.filter((x) => x.status === "seated")) {
 		const g = guests.find((x) => x.id === r.guestId);
-		const loyalty = g ? guestStats(g, reservations, settings, spendOf(g)) : null;
-		const entry = { name: String(r.name || "").trim().split(/\s+/)[0] || "Guest", party: +r.party || 0, resId: r.id, at: r.seatedAt || r.updatedAt || "", ...(loyalty ? { tier: loyalty.tier, points: loyalty.points } : {}) };
+		const entry = { name: String(r.name || "").trim().split(/\s+/)[0] || "Guest", party: +r.party || 0, resId: r.id, at: r.seatedAt || r.updatedAt || "", ...(g?.posCustomerId ? { customerId: g.posCustomerId, phone: g.phone || "" } : {}) };
 		for (const id of r.tableIds || []) out[id] = entry;
 	}
 	return out;

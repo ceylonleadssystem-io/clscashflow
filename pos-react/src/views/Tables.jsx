@@ -23,7 +23,7 @@ export function Tables() {
 	const data = useData();
 	const ui = useUi();
 	const { currentUser, svc, locationId } = usePos();
-	const { loadOpenOrder, splitOpenOrder, newOpenOrder, setOrderReference, setOrderChannel } = useCheckout();
+	const { loadOpenOrder, splitOpenOrder, newOpenOrder, setOrderReference, setOrderChannel, selectCustomer, setPhoneSearch } = useCheckout();
 	const canSplit = useFeature("checkout.splitBill");
 	const [action, setAction] = useState(null); // busy table tapped: its open order
 	const [moving, setMoving] = useState(null); // open order being moved / merged
@@ -133,12 +133,22 @@ export function Tables() {
 		window.addEventListener("pointerup", up);
 	};
 
+	// the customer GM seated at this table goes on the check, unless the check already has one
+	const attachGuest = (t, order) => {
+		const g = gmSeating(data.settings, t.id);
+		const customer = !order?.customerId && g?.customerId ? data.customers.find((c) => c.id === g.customerId) : null;
+		if (!customer) return;
+		selectCustomer(customer.id);
+		setPhoneSearch(customer.phone || "");
+	};
+
 	const openTable = (t) => {
 		const { open } = tableStatus(t, openOrders);
 		if (open) return setAction({ table: t, order: open });
 		newOpenOrder();
 		setOrderReference(tableReference(t));
 		setOrderChannel("Dine-in");
+		attachGuest(t, null);
 	};
 
 	if (!hasLocation)
@@ -221,7 +231,6 @@ export function Tables() {
 									<strong>{t.number}</strong>
 									{guest && <span className="floor-guest">{guest.name}</span>}
 									<span>{t.active ? t.seats + " seats" : "Not for seating"}</span>
-									{guest?.tier && <span className="floor-loyalty">{guest.tier} · {guest.points} pts</span>}
 									{!editing && open && <span className="floor-total">{money(orderTotal(open))}</span>}
 									{editing && <i className="floor-resize" onPointerDown={(e) => startDrag(e, t, "size")} title="Resize" />}
 								</div>
@@ -234,7 +243,7 @@ export function Tables() {
 					<Modal id="table-action-modal" open title={"Table " + action.table.number} subtitle={"Check total " + money(orderTotal(action.order))} onClose={() => setAction(null)}>
 						<ModalBody>
 							<div style={{ display: "grid", gap: 8 }}>
-								<button className="btn gold" onClick={() => { loadOpenOrder(action.order.id); setAction(null); }}>Open / Pay</button>
+								<button className="btn gold" onClick={async () => { await loadOpenOrder(action.order.id); attachGuest(action.table, action.order); setAction(null); }}>Open / Pay</button>
 								{canSplit && <button className="btn out" onClick={() => { splitOpenOrder(action.order.id); setAction(null); }}>Split bill</button>}
 								<button className="btn out" onClick={() => { setMoving(action.order); setAction(null); }}>Move or merge check</button>
 							</div>

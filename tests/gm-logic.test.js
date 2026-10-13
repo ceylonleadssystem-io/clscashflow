@@ -100,17 +100,17 @@ test('Guest Manager feature switch: off unless switched on, per-location overrid
   assert.equal(P.gmAllowed({ found: true, settings: { features: { [id]: true }, subscription: { enforced: false, featuresOff: [id] } } }, ''), true);
 });
 
-test('seatingMap: first name, loyalty and every table of a seated party; others are left out', async () => {
+test('seatingMap: first name, POS customer and every table of a seated party; others are left out', async () => {
   const L = await load();
-  const s = Object.assign({}, L.DEFAULT_SETTINGS, { silverVisits: 1 });
   const rs = [
     res({ id: 'a', guestId: 'g', name: 'Nimal Perera', status: 'seated', tableIds: ['t1', 't2'], seatedAt: '2026-10-13T12:00:00Z' }),
     res({ id: 'b', guestId: 'g', status: 'completed' }),
     res({ id: 'c', name: 'Walk-in', status: 'seated', tableIds: ['t3'], seatedAt: '2026-10-13T12:05:00Z' }),
     res({ id: 'd', status: 'booked', tableIds: ['t9'] }),
   ];
-  const m = L.seatingMap(rs, [{ id: 'g' }], s, () => 250);
+  const m = L.seatingMap(rs, [{ id: 'g', phone: '0771234567', posCustomerId: 'c1' }]);
   assert.deepEqual(Object.keys(m).sort(), ['t1', 't2', 't3']);
-  assert.deepEqual([m.t1.name, m.t1.tier, m.t1.points, m.t2.resId], ['Nimal', 'Silver', 12, 'a']);
-  assert.equal(m.t3.tier, undefined);
+  assert.deepEqual([m.t1.name, m.t1.customerId, m.t1.phone, m.t2.resId], ['Nimal', 'c1', '0771234567', 'a']);
+  assert.equal(m.t3.customerId, undefined);
+  assert.equal(m.t1.tier, undefined);
 });

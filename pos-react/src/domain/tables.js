@@ -69,7 +69,7 @@ export function tableNumberError(tables, table) {
 }
 
 /**
- * The guest Guest Manager (/GM) has seated at a table, as written to settings.gmSeating: { name (first name), tier, points, at },
+ * The guest Guest Manager (/GM) has seated at a table, as written to settings.gmSeating: { name (first name), customerId (POS customer), phone, at },
  * or null. A record older than 12 hours is ignored, so a seating that was never closed in GM cannot linger on the floor.
  */
 export function gmSeating(settings, tableId, now = Date.now()) {

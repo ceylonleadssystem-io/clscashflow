@@ -414,7 +414,6 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 .floor-table.busy{background:#fde3dc;color:#8a2a14}
 .floor-table.gm-seated{background:#fff1c9;color:#6b4b00}
 .floor-guest{font-weight:700;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.floor-loyalty{font-size:.72rem;font-weight:600;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .floor-table.inactive{background:repeating-linear-gradient(45deg,#e4e1d9,#e4e1d9 8px,#f3f1ec 8px,#f3f1ec 16px);color:#6d6a60;cursor:default}
 .floor.editing .floor-table{cursor:move}
 .floor-table.selected{outline:3px solid var(--gold,#c8a24a)}

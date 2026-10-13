@@ -107,14 +107,14 @@ function queueSeating() {
 	clearTimeout(seatTimer);
 	seatTimer = setTimeout(async () => {
 		if (S.store.mode !== "cloud" || allowed !== true || !cfg().posSync || !pos.found) return;
-		const map = seatingMap(S.reservations(), S.guests(), cfg(), guestSpend);
+		await syncGuests().catch(() => 0); // the seated guest must be a POS customer before the table can point at them
+		const map = seatingMap(S.reservations(), S.guests());
 		const json = JSON.stringify(map);
 		if (lastSeating === null) lastSeating = JSON.stringify(pos.settings.gmSeating || {});
 		if (json === lastSeating) return;
 		try {
 			await pushSeating(S.store.ws, map);
 			lastSeating = json;
-			syncSoon(); // the seated guest's loyalty details go to the POS customer too
 		} catch (e) {
 			console.warn("Could not update the POS floor plan", e); // retried on the next change and every 30 seconds
 		}
