@@ -115,3 +115,14 @@ test('seatingMap: first name, POS customer and every table of a seated party; ot
   assert.equal(m.t3.customerId, undefined);
   assert.equal(m.t1.tier, undefined);
 });
+
+test('gmStatus says why Guest Manager is blocked', async () => {
+  const P = await import('../reservation-system/js/pos.mjs');
+  const id = 'view.guestManager', why = (p, loc = '') => P.gmStatus(p, loc).why;
+  assert.match(why({ found: false }), /No POS data/);
+  assert.match(why({ found: true, settings: { features: { other: true } } }), /not been saved/);
+  assert.match(why({ found: true, settings: { features: { [id]: false } } }), /switch is off/);
+  assert.match(why({ found: true, settings: { features: { [id]: true }, locationFeatures: { L1: { [id]: false } } } }, 'L1'), /location/);
+  assert.match(why({ found: true, settings: { features: { [id]: true }, subscription: { enforced: true, name: 'POS Starter', featuresOff: [id] } } }), /POS Starter/);
+  assert.equal(P.gmStatus({ found: true, settings: { features: { [id]: true } } }).why, '');
+});

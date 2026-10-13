@@ -26,13 +26,21 @@ export async function readPos(ws, months) {
 	return { found: true, business: p.settings?.business || "", locations: (p.locations || []).filter((l) => l.active !== false), settings: p.settings || {}, customers: p.customers || [], openOrders: p.openOrders || [], sales, users: (p.users || []).filter((u) => u.active !== false) };
 }
 
-/** Guest Manager is a feature switch in the POS admin portal (view.guestManager): off unless the business switch (or the location's) is on and the plan does not exclude it. */
-export function gmAllowed(p, locationId) {
+/**
+ * Guest Manager is a feature switch in the POS admin portal (view.guestManager): off unless the business switch (or the location's)
+ * is on and the plan does not exclude it. Returns { allowed, why } where `why` says in plain words what blocks it.
+ */
+export function gmStatus(p, locationId) {
 	const s = p.settings || {}, id = "view.guestManager";
-	const flags = { ...(s.features || {}), ...((locationId && s.locationFeatures?.[locationId]) || {}) };
+	if (!p.found) return { allowed: false, why: "No POS data was found for this account." };
 	const off = s.subscription?.enforced ? s.subscription.featuresOff || [] : [];
-	return p.found && flags[id] === true && !off.includes(id);
+	if (off.includes(id)) return { allowed: false, why: `The assigned plan (${s.subscription.name || "plan"}) does not include Guest Manager. Change the plan on the Subscription tab in the admin portal.` };
+	const override = locationId ? s.locationFeatures?.[locationId]?.[id] : undefined;
+	if (override === false) return { allowed: false, why: "It is switched off for this location (a location override in the admin portal Features tab)." };
+	if (override === true || s.features?.[id] === true) return { allowed: true, why: "" };
+	return { allowed: false, why: s.features && id in s.features ? "The Guest Manager switch is off in the admin portal (Features tab)." : "The Guest Manager switch has not been saved for this account yet. In the admin portal open the account, Features tab, switch on Guest Manager and press Save features." };
 }
+export const gmAllowed = (p, locationId) => gmStatus(p, locationId).allowed;
 
 /** Tables of one POS location (its own layout, else the shared one), or GM's own tables. */
 export function tablesFor(pos, cfg) {
