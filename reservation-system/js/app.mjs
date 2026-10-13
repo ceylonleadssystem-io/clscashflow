@@ -3,11 +3,11 @@
  * Plain DOM + template strings; every view is a function that returns HTML, re-rendered when the data changes.
  */
 import {
-	ACTIVE, SOURCES, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
+	ACTIVE, SOURCES, seatingMap, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
 	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf,
 } from "./logic.mjs";
 import * as S from "./store.mjs";
-import { gmAllowed, openCheck, pushCustomers, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
+import { gmAllowed, openCheck, pushCustomers, pushSeating, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -99,6 +99,26 @@ async function syncGuests() {
 	updated.forEach((g) => S.put("guest", g));
 	await refreshPos(true);
 	return out.length;
+}
+let lastSeating = null; // JSON of the seating last written to (or read from) the POS
+let seatTimer = 0;
+/** Keeps the POS floor plan in step with GM: whenever the seated guests change, the new picture is written to the POS. */
+function queueSeating() {
+	clearTimeout(seatTimer);
+	seatTimer = setTimeout(async () => {
+		if (S.store.mode !== "cloud" || allowed !== true || !cfg().posSync || !pos.found) return;
+		const map = seatingMap(S.reservations(), S.guests(), cfg(), guestSpend);
+		const json = JSON.stringify(map);
+		if (lastSeating === null) lastSeating = JSON.stringify(pos.settings.gmSeating || {});
+		if (json === lastSeating) return;
+		try {
+			await pushSeating(S.store.ws, map);
+			lastSeating = json;
+			syncSoon(); // the seated guest's loyalty details go to the POS customer too
+		} catch (e) {
+			console.warn("Could not update the POS floor plan", e); // retried on the next change and every 30 seconds
+		}
+	}, 800);
 }
 const syncSoon = () => syncGuests().catch((e) => console.warn("Guest sync failed", e));
 
@@ -669,7 +689,7 @@ async function start() {
 	try {
 		await S.startCloud(user);
 		await refreshPos(true);
-		setInterval(() => refreshPos(false), 30000);
+		setInterval(() => (refreshPos(false), queueSeating()), 30000);
 		render();
 		if (pos.found) syncSoon();
 	} catch (err) {
@@ -678,6 +698,7 @@ async function start() {
 }
 
 S.store.onChange(render);
+S.store.onChange(queueSeating);
 (async () => {
 	const auth = window.clsBackend?.auth();
 	if (!auth) return void ($("#app").innerHTML = signInView());

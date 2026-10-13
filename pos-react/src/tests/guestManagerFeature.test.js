@@ -24,3 +24,14 @@ describe("Guest Manager feature switch", () => {
 		expect(PLAN_FEATURE_OFF.business).not.toContain(ID);
 	});
 });
+
+describe("Guest Manager seating on the floor", () => {
+	const settings = { gmSeating: { t1: { name: "Nimal", tier: "Gold", points: 120, at: new Date().toISOString() }, t2: { name: "Old", at: "2020-01-01T00:00:00Z" } } };
+	it("returns the seated guest of a table and ignores old or missing records", async () => {
+		const { gmSeating } = await import("../domain/tables");
+		expect(gmSeating(settings, "t1")).toMatchObject({ name: "Nimal", tier: "Gold" });
+		expect(gmSeating(settings, "t2")).toBeNull();
+		expect(gmSeating(settings, "t3")).toBeNull();
+		expect(gmSeating({}, "t1")).toBeNull();
+	});
+});

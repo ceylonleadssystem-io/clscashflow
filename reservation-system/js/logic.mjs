@@ -146,6 +146,21 @@ export function guestStats(guest, reservations, settings, spend = 0) {
 	return { visits, noShows, cancels, last, spend, points, tier, risky: noShows >= settings.noShowLimit };
 }
 
+/**
+ * Who is seated at which table, for the POS floor plan: { [tableId]: { name (first name), party, resId, at, tier?, points? } }.
+ * `spendOf(guest)` supplies the POS spend used for the loyalty points.
+ */
+export function seatingMap(reservations, guests, settings, spendOf = () => 0) {
+	const out = {};
+	for (const r of reservations.filter((x) => x.status === "seated")) {
+		const g = guests.find((x) => x.id === r.guestId);
+		const loyalty = g ? guestStats(g, reservations, settings, spendOf(g)) : null;
+		const entry = { name: String(r.name || "").trim().split(/\s+/)[0] || "Guest", party: +r.party || 0, resId: r.id, at: r.seatedAt || r.updatedAt || "", ...(loyalty ? { tier: loyalty.tier, points: loyalty.points } : {}) };
+		for (const id of r.tableIds || []) out[id] = entry;
+	}
+	return out;
+}
+
 export function mergeRows(remote, local) {
 	const rows = new Map((remote || []).map((r) => [r.id, r]));
 	for (const r of local || []) {

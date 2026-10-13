@@ -77,5 +77,10 @@ export async function pushCustomers(ws, customers) {
 	await call("set", `users/${ws}/pos`, "main", { data: { payload: { customers } } });
 }
 
+/** Writes who is seated where to the POS (settings.gmSeating, merged per setting by its timestamp) so its Tables screen shows it. */
+export async function pushSeating(ws, map) {
+	await call("set", `users/${ws}/pos`, "main", { data: { payload: { settings: { gmSeating: map }, syncMeta: { settings: { gmSeating: new Date().toISOString() } } } } });
+}
+
 /** Floor status of a table at a given minute of the selected day, from GM bookings and POS open checks. */
 export const openCheck = (pos, table) => pos.openOrders.find((o) => o.status === "open" && o.orderReference === "Table " + table.number) || null;

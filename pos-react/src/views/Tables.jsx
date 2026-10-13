@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
-import { GRID, TABLE_SHAPES, findFreeSpot, layoutFor, layoutKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, TABLE_SHAPES, findFreeSpot, layoutFor, layoutKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus, gmSeating } from "../domain/tables";
 import { OWNER_ROLES } from "../config/roles";
 import { newId } from "../services/pos/common";
 import { useData } from "../store/DataProvider";
@@ -207,7 +207,8 @@ export function Tables() {
 					>
 						{tables.map((t) => {
 							const { open } = tableStatus(t, openOrders);
-							const cls = ["floor-table", t.shape, !t.active && "inactive", open && "busy", t.id === selectedId && "selected"];
+							const guest = !editing && t.active ? gmSeating(data.settings, t.id) : null;
+							const cls = ["floor-table", t.shape, !t.active && "inactive", open && "busy", guest && !open && "gm-seated", t.id === selectedId && "selected"];
 							return (
 								<div
 									key={t.id}
@@ -218,7 +219,9 @@ export function Tables() {
 									onClick={() => (editing ? setSelectedId(t.id) : t.active && openTable(t))}
 								>
 									<strong>{t.number}</strong>
+									{guest && <span className="floor-guest">{guest.name}</span>}
 									<span>{t.active ? t.seats + " seats" : "Not for seating"}</span>
+									{guest?.tier && <span className="floor-loyalty">{guest.tier} · {guest.points} pts</span>}
 									{!editing && open && <span className="floor-total">{money(orderTotal(open))}</span>}
 									{editing && <i className="floor-resize" onPointerDown={(e) => startDrag(e, t, "size")} title="Resize" />}
 								</div>
