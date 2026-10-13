@@ -5,12 +5,15 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { KdsApp } from "./KdsApp";
+import { KdsGate } from "./KdsGate";
 import "../styles/index.css";
 
 createRoot(document.getElementById("root")).render(
 	<StrictMode>
 		<ErrorBoundary>
-			<KdsApp />
+			<KdsGate>
+				<KdsApp />
+			</KdsGate>
 		</ErrorBoundary>
 	</StrictMode>,
 );

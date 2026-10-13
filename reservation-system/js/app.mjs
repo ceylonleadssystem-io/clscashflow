@@ -531,7 +531,7 @@ function saveSettings(form) {
 
 // ---------------------------------------------------------------- shell + events
 function signInView() {
-	return `<form id="signin" class="card signin"><h1>Guest Manager</h1><p class="mute">Sign in with your POS business account.</p><label>Email<input name="email" type="email" required autocomplete="username"></label><label>Password<input name="password" type="password" required autocomplete="current-password"></label><div class="err" id="serr" role="alert"></div><button class="pri">Sign in</button><button type="button" data-act="local">Use on this device only (no sync)</button></form>`;
+	return `<form id="signin" class="card signin"><h1>Guest Manager</h1><p class="mute">POS business sign in. Use the same email and password as the POS; if this browser is already signed in to the POS you will not see this page.</p><label>Business email<input name="email" type="email" required autocomplete="username"></label><label>Password<input name="password" type="password" required autocomplete="current-password"></label><div class="err" id="serr" role="alert"></div><button class="pri">Sign in</button><button type="button" data-act="forgot">Forgot password?</button><button type="button" data-act="local">Use on this device only (no sync)</button></form>`;
 }
 
 function render() {
@@ -601,6 +601,16 @@ const ACTIONS = {
 		const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `gm-bookings-${ui.from}-${ui.to}.csv` });
 		a.click();
 		setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+	},
+	forgot: async () => {
+		const email = $("#signin")?.email.value.trim();
+		if (!email) return void ($("#serr").textContent = "Enter your business email first.");
+		try {
+			await window.clsBackend.auth().sendPasswordResetEmail(email);
+			$("#serr").textContent = "If that account exists, a reset link is on its way.";
+		} catch (e) {
+			$("#serr").textContent = e.message;
+		}
 	},
 	local: async () => { await S.startLocal(); render(); },
 };
