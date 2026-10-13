@@ -108,9 +108,10 @@ test('seatingMap: first name, POS customer and every table of a seated party; ot
     res({ id: 'c', name: 'Walk-in', status: 'seated', tableIds: ['t3'], seatedAt: '2026-10-13T12:05:00Z' }),
     res({ id: 'd', status: 'booked', tableIds: ['t9'] }),
   ];
-  const m = L.seatingMap(rs, [{ id: 'g', phone: '0771234567', posCustomerId: 'c1' }]);
+  const m = L.seatingMap(rs, [{ id: 'g', name: 'Nimal Perera', phone: '0771234567', email: 'n@x.lk' }]);
   assert.deepEqual(Object.keys(m).sort(), ['t1', 't2', 't3']);
-  assert.deepEqual([m.t1.name, m.t1.customerId, m.t1.phone, m.t2.resId], ['Nimal', 'c1', '0771234567', 'a']);
+  assert.deepEqual([m.t1.name, m.t1.customerId, m.t1.phone, m.t2.resId], ['Nimal', 'c-gm-g', '0771234567', 'a']);
+  assert.equal(m.t1.fullName, 'Nimal Perera');
   assert.equal(m.t3.customerId, undefined);
   assert.equal(m.t1.tier, undefined);
 });

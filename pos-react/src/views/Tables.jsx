@@ -134,9 +134,11 @@ export function Tables() {
 	};
 
 	// the customer GM seated at this table goes on the check, unless the check already has one
-	const attachGuest = (t, order) => {
+	// (a guest GM has not yet delivered to the customer list is added here first)
+	const attachGuest = async (t, order) => {
 		const g = gmSeating(data.settings, t.id);
-		const customer = !order?.customerId && g?.customerId ? data.customers.find((c) => c.id === g.customerId) : null;
+		if (!g?.customerId || order?.customerId) return;
+		const customer = await svc.customers.ensureCustomer({ id: g.customerId, name: g.fullName || g.name, phone: g.phone, email: g.email });
 		if (!customer) return;
 		selectCustomer(customer.id);
 		setPhoneSearch(customer.phone || "");
@@ -243,7 +245,7 @@ export function Tables() {
 					<Modal id="table-action-modal" open title={"Table " + action.table.number} subtitle={"Check total " + money(orderTotal(action.order))} onClose={() => setAction(null)}>
 						<ModalBody>
 							<div style={{ display: "grid", gap: 8 }}>
-								<button className="btn gold" onClick={async () => { await loadOpenOrder(action.order.id); attachGuest(action.table, action.order); setAction(null); }}>Open / Pay</button>
+								<button className="btn gold" onClick={async () => { await loadOpenOrder(action.order.id); setAction(null); attachGuest(action.table, action.order); }}>Open / Pay</button>
 								{canSplit && <button className="btn out" onClick={() => { splitOpenOrder(action.order.id); setAction(null); }}>Split bill</button>}
 								<button className="btn out" onClick={() => { setMoving(action.order); setAction(null); }}>Move or merge check</button>
 							</div>

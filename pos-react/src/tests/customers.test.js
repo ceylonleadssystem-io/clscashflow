@@ -69,4 +69,14 @@ describe("customers & loyalty", () => {
 		await h.svc.customers.requestFeedback(c.id);
 		expect(h.lastAlert()).toMatch(/Add an email/);
 	});
+
+	it("ensureCustomer returns the existing customer (by id or phone) or adds the GM guest with GM's id", async () => {
+		const c = await h.svc.customers.saveCustomer(form());
+		expect((await h.svc.customers.ensureCustomer({ id: c.id, name: "x", phone: "1" })).id).toBe(c.id);
+		expect((await h.svc.customers.ensureCustomer({ id: "c-gm-g1", name: "Same phone", phone: "077 123 4567" })).id).toBe(c.id);
+		const added = await h.svc.customers.ensureCustomer({ id: "c-gm-g2", name: "Kamal Silva", phone: "0712223344", email: "bad" });
+		expect(added).toMatchObject({ id: "c-gm-g2", name: "Kamal Silva", email: "" });
+		expect(h.data().customers.some((x) => x.id === "c-gm-g2")).toBe(true);
+		expect(await h.svc.customers.ensureCustomer({ id: "c-gm-g3", name: "No phone", phone: "" })).toBeNull();
+	});
 });
