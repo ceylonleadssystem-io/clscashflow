@@ -1,7 +1,8 @@
 /**
  * GM data layer. Documents (users/{workspace}/gm/{name}) hold rows merged by id + updatedAt, saved through the same
  * appwrite-docs function the POS uses, with the same sign-in session. "Local" mode keeps the same documents in this browser only.
- *   guests, waitlist, handovers, settings, res-YYYY-MM (one document per month of reservations)
+ *   settings; res-YYYY-MM (reservations), wl-YYYY-MM (waitlist), ho-YYYY-MM (handovers): one document per month;
+ *   gu-0..gu-f (guests): 16 buckets chosen from the guest id. Each save or sync only touches one small document.
  */
 import { DEFAULT_SETTINGS, addDays, dateStr, mergeRows, monthOf } from "./logic.mjs";
 
@@ -118,9 +119,39 @@ export const monthsAround = (date = dateStr(), back = 1, fwd = 2) => {
 	return [...new Set(out)];
 };
 
+const BUCKETS = [..."0123456789abcdef"];
+const bucketOf = (id) => ([...String(id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 16).toString(16);
+
+/** Moves guests, waitlist and handovers from the first layout (one document each) into the split documents, once. */
+async function migrate() {
+	if (settings().split === 2) return;
+	const legacy = [["guests", "guest"], ["waitlist", "waitlist"], ["handovers", "handover"]];
+	const old = [];
+	for (const [name, kind] of legacy) {
+		const rows = await loadDoc(name);
+		if (!rows.length) continue;
+		old.push(name);
+		for (const r of rows) {
+			const to = docFor(kind, r);
+			mem[to] = mergeRows(mem[to], [r]);
+			dirty.add(to);
+		}
+	}
+	await saveDirty();
+	if (store.status === "offline") return; // the old documents stay untouched; the move is retried on the next load
+	for (const name of old) {
+		if (store.mode === "local") localStorage.removeItem("gm.local." + name);
+		else await call("set", base(), name, { data: { rows: [] } });
+	}
+	put("settings", { ...settings(), split: 2 });
+}
+
 async function boot() {
-	await Promise.all(["guests", "waitlist", "handovers", "settings"].map(async (n) => (mem[n] = await loadDoc(n))));
+	const m = monthOf(dateStr()), back = (n) => monthOf(addDays(dateStr(), -n));
+	const names = ["settings", ...BUCKETS.map((b) => "gu-" + b), "wl-" + m, "wl-" + back(30), "ho-" + m, "ho-" + back(30), "ho-" + back(60)];
+	await Promise.all(names.map(async (n) => (mem[n] = await loadDoc(n))));
 	await ensureMonths(monthsAround());
+	await migrate();
 	clearInterval(timer);
 	timer = setInterval(poll, POLL_MS);
 	window.addEventListener("storage", async (e) => {
@@ -147,9 +178,10 @@ export async function startLocal() {
 }
 
 // ---------------------------------------------------------------- reads / writes
-export const guests = () => (mem.guests || []).filter((g) => !g.deleted);
-export const waitlist = () => mem.waitlist || [];
-export const handovers = () => (mem.handovers || []).slice().sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+const rowsOf = (prefix) => Object.keys(mem).filter((n) => n.startsWith(prefix)).flatMap((n) => mem[n]);
+export const guests = () => rowsOf("gu-").filter((g) => !g.deleted);
+export const waitlist = () => rowsOf("wl-");
+export const handovers = () => rowsOf("ho-").sort((a, b) => (b.at || "").localeCompare(a.at || ""));
 export const settings = () => {
 	const s = (mem.settings || [])[0] || {};
 	return { ...DEFAULT_SETTINGS, ...s, templates: { ...DEFAULT_SETTINGS.templates, ...(s.templates || {}) } };
@@ -166,7 +198,8 @@ export const reservations = () => {
 	return [...by.values()];
 };
 
-const docFor = (kind, row) => (kind === "reservation" ? "res-" + monthOf(row.date) : kind === "settings" || kind === "waitlist" ? kind : kind + "s");
+const docFor = (kind, row) =>
+	({ reservation: () => "res-" + monthOf(row.date), waitlist: () => "wl-" + monthOf(row.addedAt || dateStr()), handover: () => "ho-" + monthOf(row.at || dateStr()), guest: () => "gu-" + bucketOf(row.id), settings: () => "settings" })[kind]();
 /** Inserts or replaces a row (matched by id) and saves it. kind: reservation | guest | waitlist | handover | settings */
 export function put(kind, row) {
 	const name = docFor(kind, row);

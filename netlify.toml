@@ -157,6 +157,62 @@
   status = 200
   force = true
 
+# Canonical addresses: /GM (Guest Manager) and /KDS (Kitchen Display). Other spellings and the file paths redirect to them.
+# (Netlify paths are case-sensitive, so each spelling needs its own rule.)
+[[redirects]]
+  from = "/gm"
+  to = "/GM"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/gm/"
+  to = "/GM"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/reservation-system"
+  to = "/GM"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/reservation-system/"
+  to = "/GM"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/reservation-system/index.html"
+  to = "/GM"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/kds"
+  to = "/KDS"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/kds/"
+  to = "/KDS"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/pos-react/dist/kds.html"
+  to = "/KDS"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/posv2/kds"
+  to = "/KDS"
+  status = 301
+  force = true
+
 # Kitchen Display (KDS), a separate page that pairs with the POS over the local Wi-Fi.
 [[redirects]]
   from = "/KDS"
@@ -180,12 +236,6 @@
 [[redirects]]
   from = "/GM/"
   to = "/reservation-system/index.html"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/posv2/kds"
-  to = "/pos-react/dist/kds.html"
   status = 200
   force = true
 
