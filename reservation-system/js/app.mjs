@@ -21,6 +21,7 @@ const ui = { view: "bookings", date: dateStr(), floorTime: fromMin(nowMin()), q:
 let pos = { found: false, business: "", locations: [], settings: {}, customers: [], openOrders: [], sales: [], users: [] };
 let posStamp = "";
 let allowed = null; // null = the POS switches have not been read yet
+let posError = ""; // why the last read of the POS failed
 
 // ---------------------------------------------------------------- data helpers
 const cfg = () => S.settings();
@@ -63,11 +64,14 @@ async function refreshPos(force) {
 		const now = dateStr();
 		pos = await readPos(S.store.ws, [monthOf(now), monthOf(addDays(now, -30)), ...(ui.view === "reports" ? S.monthsAround(ui.from, 0, 2) : [])]);
 		allowed = gmAllowed(pos, cfg().locationId);
+		posError = "";
 		// with "sync with the POS" switched off GM still reads the POS for its feature switch, but uses none of its data
 		if (!cfg().posSync) pos = { ...pos, found: false, customers: [], openOrders: [], sales: [] };
 		render();
 	} catch (e) {
 		console.warn("POS read failed", e);
+		posError = String(e?.message || e);
+		render();
 	}
 }
 
@@ -556,7 +560,10 @@ function signInView() {
 }
 
 function lockedView() {
-	return `<div class="card signin"><h1>Guest Manager</h1>${allowed === false ? "<p>Guest Manager is not switched on for this account. Ask Ceylonry to enable it (admin portal → Features), or check that your plan includes it.</p>" : '<p class="err">Could not check this account\'s features. Check the connection and try again.</p>'}<button class="pri" data-act="recheck">Check again</button><a href="/posv2/">Back to the POS</a></div>`;
+	const msg = allowed === false
+		? "<p>Guest Manager is not switched on for this account. Ask Ceylonry to enable it (admin portal → Features), or check that your plan includes it.</p>"
+		: `<p class="err">Could not check this account's features. Check the connection and try again.</p>${posError ? `<p class="mute">Reason: ${esc(posError)}</p>` : ""}`;
+	return `<div class="card signin"><h1>Guest Manager</h1>${msg}<button class="pri" data-act="recheck">Check again</button><a href="/posv2/">Back to the POS</a></div>`;
 }
 
 function render() {
