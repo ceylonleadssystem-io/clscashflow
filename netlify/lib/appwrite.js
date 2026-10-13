@@ -14,12 +14,26 @@ const COLLECTION_ID = process.env.APPWRITE_COLLECTION_ID || 'app_documents';
 // that have not been copied yet from the main database (turn it off once the migration is verified).
 const POS_DATABASE_ID = process.env.APPWRITE_POS_DATABASE_ID || 'pos';
 const POS_COLLECTION_ID = process.env.APPWRITE_POS_COLLECTION_ID || 'pos_documents';
+// Guest Manager (GM) data (users/{uid}/gm and its split pieces) can live in its own database too. Routing is OFF until
+// APPWRITE_GM_ROUTING=on, so nothing changes until the database exists and scripts/migrate-gm-to-own-database.js has copied the rows.
+// While it is on, GM rows still in the main database are read as a fallback (APPWRITE_GM_FALLBACK=off stops that after the migration).
+const GM_DATABASE_ID = process.env.APPWRITE_GM_DATABASE_ID || 'gm';
+const GM_COLLECTION_ID = process.env.APPWRITE_GM_COLLECTION_ID || 'gm_documents';
 const MAIN_STORE = { db: DATABASE_ID, col: COLLECTION_ID };
 const POS_STORE = { db: POS_DATABASE_ID, col: POS_COLLECTION_ID };
+const GM_STORE = { db: GM_DATABASE_ID, col: GM_COLLECTION_ID };
 const isPosPath = function(path) { return /^users\/[^/]+\/(pos|posCatalogBackups)(\/|$)/.test(String(path || '')); };
-function storeFor(path) { return process.env.APPWRITE_POS_ROUTING !== 'off' && isPosPath(path) ? POS_STORE : MAIN_STORE; }
+const isGmPath = function(path) { return /^users\/[^/]+\/gm(\/|$)/.test(String(path || '')); };
+function storeFor(path) {
+  if (process.env.APPWRITE_GM_ROUTING === 'on' && isGmPath(path)) return GM_STORE;
+  return process.env.APPWRITE_POS_ROUTING !== 'off' && isPosPath(path) ? POS_STORE : MAIN_STORE;
+}
 // where a routed (POS) row may still be waiting from before the move; null when the path was never moved
-function legacyStoreFor(path) { return process.env.APPWRITE_POS_FALLBACK !== 'off' && storeFor(path) === POS_STORE ? MAIN_STORE : null; }
+function legacyStoreFor(path) {
+  const store = storeFor(path);
+  if (store === GM_STORE) return process.env.APPWRITE_GM_FALLBACK !== 'off' ? MAIN_STORE : null;
+  return process.env.APPWRITE_POS_FALLBACK !== 'off' && store === POS_STORE ? MAIN_STORE : null;
+}
 const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 
 function clean(value, max) {
@@ -313,4 +327,4 @@ function appwriteAdmin(){
   };
 }
 
-module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,isPosPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,getDocumentStamp,listStamps,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};
+module.exports={ADMIN_EMAIL,APPWRITE_ENDPOINT,APPWRITE_PROJECT_ID,DATABASE_ID,COLLECTION_ID,POS_DATABASE_ID,POS_COLLECTION_ID,GM_DATABASE_ID,GM_COLLECTION_ID,isPosPath,isGmPath,storeFor,clean,headers,serverClient,databases,users,getUserFromEvent,getDocument,getDocumentStamp,listStamps,queryDocuments,upsertDocument,deleteDocument,newId,isAdmin,canRead,canWrite,sanitizeProfileWrite,appwriteAdmin};

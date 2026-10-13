@@ -1,6 +1,6 @@
 'use strict';
 
-const { getUserFromEvent, databases, DATABASE_ID, COLLECTION_ID, POS_DATABASE_ID, POS_COLLECTION_ID } = require('../lib/appwrite');
+const { getUserFromEvent, databases, DATABASE_ID, COLLECTION_ID, POS_DATABASE_ID, POS_COLLECTION_ID, GM_DATABASE_ID, GM_COLLECTION_ID } = require('../lib/appwrite');
 
 function response(statusCode, body) {
   return { statusCode, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) };
@@ -31,6 +31,14 @@ exports.handler = async function handler(event) {
   } catch (error) {
     checks.posDatabase = false;
   }
-  const ok = checks.appwriteEndpoint && checks.apiKey && checks.database && checks.posDatabase;
+  if (process.env.APPWRITE_GM_ROUTING === 'on') {
+    try {
+      await databases().listDocuments(GM_DATABASE_ID, GM_COLLECTION_ID, []);
+      checks.gmDatabase = true;
+    } catch (error) {
+      checks.gmDatabase = false;
+    }
+  }
+  const ok = checks.appwriteEndpoint && checks.apiKey && checks.database && checks.posDatabase && checks.gmDatabase !== false;
   return response(ok ? 200 : 503, { ok, checks, time: new Date().toISOString() });
 };

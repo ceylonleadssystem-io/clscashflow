@@ -117,6 +117,8 @@ function realDeps(lib, env) {
   const BUCKET = (env && env.APPWRITE_IMAGES_BUCKET_ID) || process.env.APPWRITE_IMAGES_BUCKET_ID || 'pos-images';
   const stores = [{ name: 'pos', db: lib.POS_DATABASE_ID, col: lib.POS_COLLECTION_ID }];
   if (lib.DATABASE_ID !== lib.POS_DATABASE_ID || lib.COLLECTION_ID !== lib.POS_COLLECTION_ID) stores.push({ name: 'main', db: lib.DATABASE_ID, col: lib.COLLECTION_ID });
+  // the GM store exists only once routing is switched on (otherwise its database may not exist yet)
+  if (process.env.APPWRITE_GM_ROUTING === 'on') stores.push({ name: 'gm', db: lib.GM_DATABASE_ID, col: lib.GM_COLLECTION_ID });
   const store = function(name) { return stores.find(function(s) { return s.name === name; }); };
   const bounded = function(row, uid) { return row.path === 'users/' + uid || String(row.path || '').startsWith('users/' + uid + '/'); };
   return {
