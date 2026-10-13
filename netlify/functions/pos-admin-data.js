@@ -101,7 +101,7 @@ function clampNum(v, min, max) {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min;
 }
 
-function limitOrNull(v) { return v === null || v === '' || v === undefined ? null : Math.max(1, Math.floor(Number(v)) || 1); }
+function limitOrNull(v) { const n = v === null || v === '' || v === undefined ? NaN : Math.floor(Number(v)); return Number.isFinite(n) ? Math.max(1, n) : null; }
 function cleanSubscription(v) {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return;
   return {
@@ -332,9 +332,12 @@ async function handle(event) {
       // Two separate confirmations (review, then final) plus the business name; the server checks all three.
       if (body.confirmedReview !== true || body.confirmedFinal !== true) return response(400, { ok: false, error: 'Both confirmations are required.' });
       if (body.confirmBusiness !== clean(profile.posBusinessName || profile.bizName || '', 160)) return response(400, { ok: false, error: 'Business confirmation does not match.' });
+      // restorable copy of the profile and workspace, kept before anything is deleted
+      const backupId = 'pos-account-' + uid + '-' + Date.now();
+      await db.collection('accountDeletionBackups').doc(backupId).set({ uid, deletedAtUtc: new Date().toISOString(), deletedBy: ADMIN_EMAIL, profile, workspace: workspace.payload, source: 'pos-admin' });
       const result = await purger.purge(uid, { keepPayments });
-      log.info('pos account deleted', { uid, clean: result.clean, remaining: result.remaining, done: result.done });
-      return response(200, { ok: true, result });
+      log.info('pos account deleted', { uid, backupId, clean: result.clean, remaining: result.remaining, done: result.done });
+      return response(200, { ok: true, result, backupId });
     }
 
     if (action === 'getReceipt') {

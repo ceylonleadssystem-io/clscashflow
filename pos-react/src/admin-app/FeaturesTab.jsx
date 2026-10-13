@@ -4,6 +4,8 @@ import { Switch } from "../components/ui";
 import { FEATURE_PRESETS, FEATURE_PRESET_MAP, presetFlags } from "../config/featurePresets";
 import { flagsWithPlan, subscriptionOf } from "../config/subscription";
 
+const NO_OVERRIDE = {};
+
 export function FeaturesTab({ settings, locations, save, saving, ui }) {
 	const [scope, setScope] = useState("business");
 	const [base, setBase] = useState({ ...defaultFeatureFlags(), ...(settings.features || {}) });
@@ -13,7 +15,7 @@ export function FeaturesTab({ settings, locations, save, saving, ui }) {
 	const [category, setCategory] = useState(settings.businessCategory || "");
 	const [peek, setPeek] = useState("");
 	const isBusiness = scope === "business";
-	const override = isBusiness ? {} : byLoc[scope] || {};
+	const override = isBusiness ? NO_OVERRIDE : byLoc[scope] || {};
 	// features the assigned plan does not include: shown off and locked, whatever the switches below say (they return when the plan changes)
 	const sub = subscriptionOf(settings);
 	const locked = useMemo(() => new Set(sub?.featuresOff || []), [sub]);

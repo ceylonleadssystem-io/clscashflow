@@ -23,7 +23,10 @@ export function standardSubscription(planId) {
 	return { enforced: true, planId, name: plan.name, maxUsers: limits.users, maxLocations: limits.locations, featuresOff: [...(PLAN_FEATURE_OFF[planId] || [])], custom: [] };
 }
 
-const limitOrNull = (v) => (v === null || v === "" || v === undefined ? null : Math.max(1, Math.floor(Number(v)) || 1));
+const limitOrNull = (v) => {
+	const n = v === null || v === "" || v === undefined ? NaN : Math.floor(Number(v));
+	return Number.isFinite(n) ? Math.max(1, n) : null; // not a number: no limit, never a silent 1
+};
 
 /** Clean constraint set for an account or founders template (what the admin portal saves). */
 export function normalizeSubscription(raw) {

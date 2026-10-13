@@ -38,11 +38,13 @@ function createPurger(deps) {
     for (const name of deps.stores) {
       const rows = (await deps.listRows(name, uid)).filter(function(r) { return r.path === 'users/' + uid || r.path.startsWith('users/' + uid + '/'); });
       const byKind = {};
+      // the main document goes last: while it exists the account is still listed and a repeated run finds the rest
+      rows.sort(function(a, b) { return (kindOf(a.path, uid) === 'main') - (kindOf(b.path, uid) === 'main'); });
       rows.forEach(function(r) { const k = kindOf(r.path, uid); byKind[k] = (byKind[k] || 0) + 1; });
       stores.push({ name, rows: rows.length, byKind, ids: rows.map(function(r) { return r.id; }) });
     }
     const payload = await deps.readPayload(uid);
-    const payments = await deps.listPayments(uid);
+    const payments = options.skipPayments ? [] : await deps.listPayments(uid);
     const invoices = await deps.listInvoices(uid);
     const named = await deps.listImages(uid);
     const imageIds = [...new Set(imageIdsOf(payload).concat(named.map(function(f) { return f.id; })))];
@@ -93,15 +95,14 @@ function createPurger(deps) {
     if (found.imageIds.length) { await deps.deleteImages(found.imageIds); done.images = found.imageIds.length; }
     if (!options.keepPayments) { for (const id of found.payments) { await deps.deletePayment(id); done.payments++; } }
     for (const store of found.rowIds) {
-      // the main document goes last: while it exists the account is still listed and the run can be repeated
-      const pending = store.ids.slice();
-      await deps.deleteRows(store.name, pending);
-      done.rows += pending.length;
+      await deps.deleteRows(store.name, store.ids);
+      done.rows += store.ids.length;
     }
-    if (found.counts.profile) { await deps.deleteProfile(uid); done.profile = true; }
+    // the sign-in goes before the profile: if it fails the profile stays, the account is still listed and the delete can be repeated
     try { await deps.deleteAuthUser(uid); done.authUser = true; }
     catch (error) { if (!error || error.code !== 404) done.authError = String((error && error.message) || error); else done.authUser = true; }
-    const left = await inventory(uid, { keepPayments: true });
+    if (!done.authError && found.counts.profile) { await deps.deleteProfile(uid); done.profile = true; }
+    const left = await inventory(uid, { keepPayments: true, skipPayments: !!options.keepPayments });
     const remaining = { databaseRows: left.counts.databaseRows, profile: left.counts.profile, images: left.imageIds.length, paymentRecords: options.keepPayments ? 0 : left.counts.paymentRecords };
     const clean = !remaining.databaseRows && !remaining.profile && !remaining.images && !remaining.paymentRecords && !done.authError;
     return { done, remaining, clean, found: { databaseRows: found.counts.databaseRows, images: found.counts.images, paymentRecords: found.counts.paymentRecords } };
