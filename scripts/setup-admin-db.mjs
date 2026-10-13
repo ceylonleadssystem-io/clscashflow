@@ -77,4 +77,11 @@ await once("diag_signals.requestId", () => db.createStringAttribute(DB, "diag_si
 await once("diag_signals.offer", () => db.createStringAttribute(DB, "diag_signals", "offer", 20000, true));
 await once("diag_signals.answer", () => db.createStringAttribute(DB, "diag_signals", "answer", 20000, false));
 await once("diag_signals.createdAt", () => db.createStringAttribute(DB, "diag_signals", "createdAt", 40, true));
+// kds_pairs: short-lived (<= 10 min) WebRTC handshake between a POS and a Kitchen Display. Never holds orders.
+await once("collection kds_pairs", () => db.createCollection(DB, "kds_pairs", "KDS pairing signals", [], false));
+await once("kds_pairs.key", () => db.createStringAttribute(DB, "kds_pairs", "key", 40, true));
+await once("kds_pairs.offer", () => db.createStringAttribute(DB, "kds_pairs", "offer", 20000, true));
+await once("kds_pairs.answer", () => db.createStringAttribute(DB, "kds_pairs", "answer", 20000, false));
+await once("kds_pairs.pairId", () => db.createStringAttribute(DB, "kds_pairs", "pairId", 40, false));
+await once("kds_pairs.createdAt", () => db.createStringAttribute(DB, "kds_pairs", "createdAt", 40, true));
 console.log("\nDone. Now add the first record to `admins` and set POS_ADMIN_TOKEN_SECRET in Netlify.");

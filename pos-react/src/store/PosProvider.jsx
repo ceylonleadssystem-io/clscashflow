@@ -14,6 +14,7 @@ import { migrateOrderNumbers } from "../domain/orders";
 import { ensureProductInventory } from "../domain/inventory";
 import { makeCtx, markDeleted } from "../services/pos/common";
 import { bindServices } from "../services/pos";
+import { kdsLink } from "../KDS/link";
 import { userLocationIds, activeLocations } from "../services/pos/locations";
 import { mainLocation } from "../services/sync/account";
 import { SUPPORT_USER, supportModeActive } from "../services/support";
@@ -152,6 +153,20 @@ export function PosProvider({ children }) {
 		[guardedStore, dataRef, ui, repos],
 	);
 	const svc = useMemo(() => bindServices(ctx), [ctx]);
+
+	// keeps the local-Wi-Fi link to a paired Kitchen Display alive and saves the progress it reports on each ticket
+	const kdsOn = !!enabled["checkout.kds"];
+	useEffect(() => {
+		if (!kdsOn) return undefined;
+		kdsLink.start({
+			getHello: () => ({ business: dataRef.current.settings?.business || "" }),
+			onStatus: (id, status) => {
+				const t = (dataRef.current.kitchenTickets || []).find((x) => x.id === id);
+				if (t && t.status !== status) store.write((tx) => tx.put(T.kitchenTickets, { ...t, status })).catch(() => {});
+			},
+		});
+		return () => kdsLink.stop();
+	}, [kdsOn, store, dataRef]);
 
 	// --------------------------------------------------------- navigation ---
 	const go = useCallback(

@@ -22,6 +22,7 @@ import { applyDark, resolveDark, storedDark } from "../../utils/theme";
 import { subscriptionOf, usageOf } from "../../config/subscription";
 import { ALWAYS_LIVE_KEY } from "../../services/cloud.service";
 import { HardwarePanel } from "./HardwarePanel";
+import { KdsPairing } from "../../KDS/KdsPairing";
 
 /** Individual Settings panels. Each takes the shared `form` state from Settings.jsx. */
 
@@ -329,6 +330,7 @@ export function PrintingPanel({ form, set, setForm }) {
 	const socialsOn = useFeature("settings.receiptSocials");
 	const channelsOn = useFeature("checkout.orderChannels");
 	const tickets = useFeature("checkout.kitchenTickets");
+	const kds = useFeature("checkout.kds");
 	const fullSettings = ["owner", "manager", "admin"].includes(currentUser?.role);
 	const foodService = KITCHEN_TYPES.includes(form.businessType);
 	const qr = data.settings.receiptSocialQr;
@@ -362,6 +364,7 @@ export function PrintingPanel({ form, set, setForm }) {
 						<input className="input" id="set-receipt-footer" placeholder="Thank you for your purchase" value={form.receiptFooter} onChange={set("receiptFooter")} />
 					</Field>
 				</div>
+				{kitchen && kds && <KdsPairing />}
 				<div className="channel-setting-grid print-toggles">
 					<label>
 						<input type="checkbox" id="set-auto-print" checked={form.autoPrint} onChange={set("autoPrint")} /> Print customer receipt after sale
