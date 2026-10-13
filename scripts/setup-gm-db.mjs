@@ -6,8 +6,8 @@
 // with the same fields the document store writes (netlify/lib/appwrite.js). No client permissions: only the server API key
 // can read or write it. The API key needs the databases scope and can be removed afterwards.
 //
-// Then: node scripts/migrate-gm-to-own-database.js (dry run), add --apply, then --verify, and finally set
-// APPWRITE_GM_ROUTING=on in Netlify. Add a daily backup policy for the `gm` database in the Appwrite console.
+// Run it before the site that uses it is deployed: the document store, /ready and the account delete all expect the database
+// to exist. Add a daily backup policy for the `gm` database in the Appwrite console.
 
 import { Client, Databases } from "node-appwrite";
 

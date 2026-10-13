@@ -31,7 +31,7 @@ exports.handler = async function handler(event) {
   } catch (error) {
     checks.posDatabase = false;
   }
-  if (process.env.APPWRITE_GM_ROUTING === 'on') {
+  if (process.env.APPWRITE_GM_ROUTING !== 'off') {
     try {
       await databases().listDocuments(GM_DATABASE_ID, GM_COLLECTION_ID, []);
       checks.gmDatabase = true;

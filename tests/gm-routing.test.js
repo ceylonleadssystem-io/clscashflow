@@ -19,14 +19,12 @@ test('GM paths are recognised and others are not', () => {
   assert.equal(lib.isGmPath('users/u1/pos'), false);
 });
 
-test('GM routing is off until APPWRITE_GM_ROUTING=on, then GM rows go to gm / gm_documents', () => {
+test('GM rows go to gm / gm_documents; APPWRITE_GM_ROUTING=off sends them to the main database', () => {
   delete process.env.APPWRITE_GM_ROUTING;
-  assert.equal(lib.storeFor(gm).db, lib.DATABASE_ID);
-  process.env.APPWRITE_GM_ROUTING = 'on';
-  try {
-    assert.deepEqual(lib.storeFor(gm), { db: 'gm', col: 'gm_documents' });
-    assert.deepEqual(lib.storeFor(piece), { db: 'gm', col: 'gm_documents' });
-    assert.equal(lib.storeFor('users/u1/pos').db, lib.POS_DATABASE_ID);
-    assert.equal(lib.storeFor('users/u1/team').db, lib.DATABASE_ID);
-  } finally { delete process.env.APPWRITE_GM_ROUTING; }
+  assert.deepEqual(lib.storeFor(gm), { db: 'gm', col: 'gm_documents' });
+  assert.deepEqual(lib.storeFor(piece), { db: 'gm', col: 'gm_documents' });
+  assert.equal(lib.storeFor('users/u1/pos').db, lib.POS_DATABASE_ID);
+  assert.equal(lib.storeFor('users/u1/team').db, lib.DATABASE_ID);
+  process.env.APPWRITE_GM_ROUTING = 'off';
+  try { assert.equal(lib.storeFor(gm).db, lib.DATABASE_ID); } finally { delete process.env.APPWRITE_GM_ROUTING; }
 });

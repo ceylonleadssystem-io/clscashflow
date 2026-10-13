@@ -45,19 +45,10 @@ Covers the Appwrite database, storage and cloud-sync work merged to `main` (late
 ### 2.5 Sales history split (switched ON in production)
 - `VITE_SALES_SPLIT=on` stores sales one cloud document per month; only changed months upload.
 
-### 2.6 Settings data
-- Table layouts are saved per location (`tableLayout_{locationId}`). The old shared `tableLayout` is shown until a branch saves its own.
-
-
 ### 2.6 Guest Manager database (`gm` / `gm_documents`)
-- Guest Manager (`/GM`) data lives under `users/{uid}/gm/…` (settings, reservations per month, waitlist and handovers per month, guests in 16 buckets).
-- It can have its own database, like the POS: `gm` / `gm_documents`. Routing is **off by default** (`APPWRITE_GM_ROUTING=on` switches it on), so nothing changes until the database exists and the rows are copied.
-- Setup, in order:
-  1. `APPWRITE_API_KEY=... node scripts/setup-gm-db.mjs` creates the database, collection, fields and indexes (safe to repeat).
-  2. `node scripts/migrate-gm-to-own-database.js` (dry run), then `--apply`, then `--verify`. It only copies; nothing is deleted and rows already in `gm` are never overwritten.
-  3. Set `APPWRITE_GM_ROUTING=on` in Netlify. While it is on, GM rows still in the main database are read as a fallback; `APPWRITE_GM_FALLBACK=off` stops that once the copy is verified.
-  4. Add a daily backup policy for the `gm` database in the Appwrite console.
-- With routing on, `/.netlify/functions/ready` also checks the GM database and the account delete (`account-purge`) also clears the GM rows. Overrides: `APPWRITE_GM_DATABASE_ID`, `APPWRITE_GM_COLLECTION_ID`.
+- Guest Manager (`/GM`) data lives under `users/{uid}/gm/…` (settings, reservations per month, waitlist and handovers per month, guests in 16 buckets) in its own database `gm`, collection `gm_documents`. It was never stored in the main database, so there is no copy step and no fallback.
+- Create it once, **before the site that uses it is deployed**: `APPWRITE_API_KEY=... node scripts/setup-gm-db.mjs` (safe to repeat), then add a daily backup policy for the `gm` database in the Appwrite console.
+- `/.netlify/functions/ready` also checks the GM database, and the account delete (`account-purge`) also clears the GM rows. Overrides: `APPWRITE_GM_DATABASE_ID`, `APPWRITE_GM_COLLECTION_ID`; `APPWRITE_GM_ROUTING=off` sends GM data to the main database instead.
 
 ## 3. Sync behaviour
 
