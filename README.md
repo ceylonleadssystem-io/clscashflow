@@ -15,10 +15,10 @@ Live site: <https://ceylonrylabs.io>
 | Product | What it is | Address | Code |
 |---|---|---|---|
 | **CashFlow** | Invoicing, expenses and cash flow dashboards for freelancers, studios and businesses (Solo, Studio and Business plans), with team access and online payments | `/` (landing), `/cashflow/…` | `index.html`, `cashflow/`, `assets/` |
-| **POS** | Full point of sale: checkout, tables, orders, inventory, customers, staff and cash shifts, reports, receipts and barcode printing. Works offline and syncs to the cloud | `/posv2/` | `pos-react/` |
-| **POS Admin portal** | For Ceylonry staff only: every account, its plan and subscription, feature switches, invoices, diagnostics, account deletion. Lists which products each account uses | `/posv2/admin` | `pos-react/src/admin-app/`, `netlify/functions/pos-admin-*.js` |
-| **KDS** (Kitchen Display) | A kitchen screen that receives prep tickets from the POS over the local Wi-Fi (WebRTC) and tracks new / preparing / ready | `/KDS` | `pos-react/src/KDS/`, `netlify/functions/kds-pair.js` |
-| **GM** (Guest Manager) | Table reservations, walk-ins, waitlist, guest profiles and loyalty, WhatsApp/email messages, floor plan, calendar, shift handover and reports. Uses the POS table layout and customers | `/GM` | `reservation-system/` |
+| **POS** | Full point of sale: checkout, tables, orders, inventory, customers, staff and cash shifts, reports, receipts and barcode printing. Works offline and syncs to the cloud | [ceylonrylabs.io/posv2/](ceylonrylabs.io/posv2/) | `pos-react/` |
+| **POS Admin portal** | For Ceylonry staff only: every account, its plan and subscription, feature switches, invoices, diagnostics, account deletion. Lists which products each account uses | [admin](ceylonrylabs.io/posv2/admin) | `pos-react/src/admin-app/`, `netlify/functions/pos-admin-*.js` |
+| **KDS** (Kitchen Display) | A kitchen screen that receives prep tickets from the POS over the local Wi-Fi (WebRTC) and tracks new / preparing / ready | [KDS](ceylonrylabs.io/KDS) | `pos-react/src/KDS/`, `netlify/functions/kds-pair.js` |
+| **GM** (Guest Manager) | Table reservations, walk-ins, waitlist, guest profiles and loyalty, WhatsApp/email messages, floor plan, calendar, shift handover and reports. Uses the POS table layout and customers | [GM](ceylonrylabs.io/GM) | `reservation-system/` |
 
 How they fit together:
 
@@ -56,10 +56,24 @@ flowchart LR
 
 ## 2. Product videos
 
-> No product videos have been published yet. This section is ready for them: record each one, upload it (YouTube *unlisted* or Vimeo works well), and replace the *"Link to be added"* cells. Do not commit large video files to the repository; link them.
+Short animated walkthroughs, recorded from the running apps with fictional demo data (no real customers). They live in [`assets/GIT/`](assets/GIT/) and are shown here as animated GIFs.
 
-| Product | Video | Suggested content (3–5 min) | Link |
-|---|---|---|---|
+| Product | Walkthrough | File |
+|---|---|---|
+| **POS** · set up, checkout, pay, order queue, tables, dashboard | <img src="assets/GIT/pos-demo.gif" alt="Ceylonry POS walkthrough" width="260"> | [`pos-demo.gif`](assets/GIT/pos-demo.gif) |
+| **Kitchen Display (KDS)** · sign in, pair, new → preparing → ready | <img src="assets/GIT/kitchen-display-demo.gif" alt="Kitchen Display walkthrough" width="260"> | [`kitchen-display-demo.gif`](assets/GIT/kitchen-display-demo.gif) |
+| **Guest Manager (GM)** · bookings, availability, floor plan, calendar, waitlist, guests, reports, handover | <img src="assets/GIT/guest-manager-demo.gif" alt="Guest Manager walkthrough" width="260"> | [`guest-manager-demo.gif`](assets/GIT/guest-manager-demo.gif) |
+| **Admin portal** · accounts with the products they use, per-feature switches | <img src="assets/GIT/admin-portal-demo.gif" alt="Admin portal walkthrough" width="260"> | [`admin-portal-demo.gif`](assets/GIT/admin-portal-demo.gif) |
+
+Not yet recorded: **CashFlow** (invoicing and cash flow). Full narrated videos can be linked from here when they exist (upload to YouTube *unlisted* or Vimeo rather than committing large video files):
+
+```md
+[![Getting started with Ceylonry POS](assets/GIT/pos-demo.gif)](https://youtu.be/VIDEO_ID)
+```
+
+How the GIFs were made, and how to re-record them, is described in [`assets/GIT/README.md`](assets/GIT/README.md). Customer story (text and photos): `/mrs-gamage-story`.
+
+---|---|---|---|
 | POS overview | Getting started with Ceylonry POS | Sign in, add products, ring up a sale, print a receipt, open reports | _Link to be added_ |
 | POS for restaurants | Tables, open orders and split bills | Floor plan, seat a table, kitchen tickets, split bill | _Link to be added_ |
 | Kitchen Display (KDS) | Pairing and using the kitchen screen | Open `/KDS`, enter the code in POS Settings, new → preparing → ready | _Link to be added_ |
