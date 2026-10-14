@@ -5,6 +5,7 @@
 import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
 import { snapshotToPayload } from "../services/sync/payload";
+import { resolveFeatures } from "../config/features";
 
 /**
  * Local development back end for the admin portal (VITE_AUTH_PROVIDER=local).
@@ -40,6 +41,8 @@ export async function localAdminApi(body) {
 	const cycle = snap.settings.devBillingCycle || "monthly";
 	const payment = { paid: false, status: profile.posAccountPaused ? "paused" : "trial", billingCycle: cycle, trialEnd: "", nextPaymentDue: "" };
 	const account = { id: "local", name: profile.name, email: profile.email || "owner@local", business: snap.settings.business || "My Business", setupStatus: "local", payment, paused: profile.posAccountPaused, status, subscriptionType: cycle, isTestAccount: status === "test" };
+	const enabled = resolveFeatures(snap.settings.features).enabled;
+	account.apps = ["POS", ...(enabled["view.guestManager"] ? ["GM"] : []), ...(enabled["checkout.kds"] ? ["KDS"] : [])];
 	const action = body?.action || "list";
 	if (action === "list") return { ok: true, users: [account], stats: { realCustomers: status === "test" ? 0 : 1, testAccounts: status === "test" ? 1 : 0, trialAccounts: status === "trial" ? 1 : 0, liveAccounts: status === "live" ? 1 : 0, revenueThisMonth: 0 } };
 	if (action === "get") return { ok: true, user: { id: "local", profile, payment }, workspace: snapshotToPayload(snap) };
