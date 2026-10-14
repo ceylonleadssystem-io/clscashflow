@@ -3,7 +3,7 @@
  * customers. Only the `customers` rows are sent back: the server merges them by id into the POS document.
  */
 import { call } from "./store.mjs";
-import { gridTables } from "./logic.mjs";
+import { MAIN_FLOOR, ownLayout } from "./logic.mjs";
 
 const emptyPos = { found: false, business: "", locations: [], settings: {}, customers: [], openOrders: [], sales: [], users: [] };
 
@@ -42,12 +42,45 @@ export function gmStatus(p, locationId) {
 }
 export const gmAllowed = (p, locationId) => gmStatus(p, locationId).allowed;
 
-/** Tables of one POS location (its own layout, else the shared one), or GM's own tables. */
+// Floors and layouts use the same settings keys as the POS (pos-react/src/domain/tables.js): the main floor keeps tableLayout_<location>,
+// the others tableLayout_<location>__<floor id>, and the floor list is tableFloors_<location>.
+const layoutKey = (loc) => "tableLayout_" + loc;
+const floorsKey = (loc) => "tableFloors_" + loc;
+const floorKey = (loc, floorId) => (floorId === MAIN_FLOOR ? layoutKey(loc) : layoutKey(loc) + "__" + floorId);
+
+/** The POS location GM works with: the one chosen in Settings, else the POS's first location (the one its Tables screen opens on). */
+export const effectiveLocation = (pos, cfg) => cfg.locationId || (pos.locations || [])[0]?.id || "";
+
+const fromPos = (cfg) => cfg.layoutFrom !== "own";
+
+/** The floors in use: [{ id, name }], main first. */
+export function floorsOf(pos, cfg) {
+	if (!fromPos(cfg) || !pos.found) {
+		const list = (cfg.ownFloors || []).filter((f) => f && f.id && f.name);
+		return list.some((f) => f.id === MAIN_FLOOR) ? list : [{ id: MAIN_FLOOR, name: "Main floor" }, ...list];
+	}
+	const loc = effectiveLocation(pos, cfg), saved = loc ? pos.settings[floorsKey(loc)] : null;
+	const list = (Array.isArray(saved) ? saved : []).filter((f) => f && f.id && String(f.name || "").trim());
+	return [list.find((f) => f.id === MAIN_FLOOR) || { id: MAIN_FLOOR, name: "Main floor" }, ...list.filter((f) => f.id !== MAIN_FLOOR)];
+}
+
+/** Tables of every floor of the venue (the POS location's floors, or GM's own), each with its floor id. Inactive ones (bar, podium) are included with active: false. */
 export function tablesFor(pos, cfg) {
-	if (cfg.layoutFrom === "own" || !pos.found) return gridTables(cfg.ownTables);
-	const own = cfg.locationId ? pos.settings["tableLayout_" + cfg.locationId] : null;
-	const list = Array.isArray(own) ? own : pos.settings.tableLayout || [];
-	return list.filter((t) => t.active !== false).map((t) => ({ ...t, seats: +t.seats || 2 }));
+	if (!fromPos(cfg) || !pos.found) return ownLayout(cfg.ownTables || []);
+	const loc = effectiveLocation(pos, cfg);
+	return floorsOf(pos, cfg).flatMap((f) => {
+		const own = loc ? pos.settings[floorKey(loc, f.id)] : null;
+		const list = Array.isArray(own) ? own : f.id === MAIN_FLOOR ? pos.settings.tableLayout || [] : [];
+		return list.map((t) => ({ ...t, seats: +t.seats || 2, active: t.active !== false, floor: f.id }));
+	});
+}
+
+/** Writes floors and their layouts to the POS settings (each key merged by its own timestamp). Floors that were removed are emptied. */
+export async function pushLayout(ws, loc, floors, byFloor, removedIds = []) {
+	const at = new Date().toISOString(), settings = { [floorsKey(loc)]: floors }, times = { [floorsKey(loc)]: at };
+	for (const f of floors) (settings[floorKey(loc, f.id)] = (byFloor[f.id] || []).map(({ floor, ...t }) => t)), (times[floorKey(loc, f.id)] = at);
+	for (const id of removedIds) (settings[floorKey(loc, id)] = []), (times[floorKey(loc, id)] = at);
+	await call("set", `users/${ws}/pos`, "main", { data: { payload: { settings, syncMeta: { settings: times } } } });
 }
 
 const GM_BLOCK = /\n?\[GM\][\s\S]*?\[\/GM\]/;

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mergeOrders } from "../domain/orders";
 import { splitByItems } from "../domain/cart";
 import { NAV_ITEMS, ROLE_VIEWS } from "../config/roles";
-import { GRID, findFreeSpot, layoutFor, layoutKey, locationOrders, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, MAIN_FLOOR, allFloorTables, findFreeSpot, floorLayout, floorLayoutKey, floorsFor, floorsKey, layoutFor, layoutKey, locationOrders, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus } from "../domain/tables";
 
 describe("table layout", () => {
 	it("snaps and keeps tables inside the floor", () => {
@@ -52,6 +52,35 @@ describe("table layout", () => {
 		expect(tableReference(t)).toBe("Table 4");
 		expect(tableStatus(t, orders).open.id).toBe("o1");
 		expect(tableStatus({ number: "5" }, orders).free).toBe(true);
+	});
+});
+
+describe("floors", () => {
+	const settings = {
+		[layoutKey("L1")]: [{ id: "m1", number: "1" }],
+		[floorsKey("L1")]: [{ id: MAIN_FLOOR, name: "Ground" }, { id: "fl-a", name: "Terrace" }],
+		[floorLayoutKey("L1", "fl-a")]: [{ id: "t1", number: "11" }, { id: "t2", number: "12" }],
+	};
+	it("lists the floors with the main one first, and just the main floor when none were added", () => {
+		expect(floorsFor(settings, "L1").map((f) => f.name)).toEqual(["Ground", "Terrace"]);
+		expect(floorsFor({}, "L1")).toEqual([{ id: MAIN_FLOOR, name: "Main floor" }]);
+		expect(floorsFor({ [floorsKey("L1")]: [{ id: "fl-a", name: "Roof" }] }, "L1").map((f) => f.id)).toEqual([MAIN_FLOOR, "fl-a"]);
+	});
+	it("keeps the main floor under the original layout key, so layouts saved before floors still show", () => {
+		expect(floorLayoutKey("L1", MAIN_FLOOR)).toBe(layoutKey("L1"));
+		expect(floorLayoutKey("L1", "fl-a")).toBe(layoutKey("L1") + "__fl-a");
+		expect(floorLayout(settings, "L1", MAIN_FLOOR).map((t) => t.number)).toEqual(["1"]);
+		expect(floorLayout({ tableLayout: [{ id: "s", number: "9" }] }, "L2", MAIN_FLOOR).map((t) => t.number)).toEqual(["9"]); // old shared layout
+	});
+	it("gives each floor its own tables and all of them together with their floor", () => {
+		expect(floorLayout(settings, "L1", "fl-a").map((t) => t.number)).toEqual(["11", "12"]);
+		expect(floorLayout(settings, "L1", "gone")).toEqual([]);
+		expect(allFloorTables(settings, "L1").map((t) => t.number + "@" + t.floor)).toEqual(["1@main", "11@fl-a", "12@fl-a"]);
+	});
+	it("numbers new tables and rejects duplicates across floors", () => {
+		const all = allFloorTables(settings, "L1");
+		expect(nextTableNumber(all)).toBe("2");
+		expect(tableNumberError(all, { id: "new", number: "11" })).toMatch(/already exists/);
 	});
 });
 

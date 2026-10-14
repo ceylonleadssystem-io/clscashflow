@@ -23,6 +23,7 @@ export const DEFAULT_SETTINGS = {
 	posSync: true,
 	layoutFrom: "pos",
 	locationId: "",
+	ownFloors: [{ id: "main", name: "Main floor" }],
 	ownTables: [],
 	templates: {
 		confirm: "Hi {name}, your table for {party} at {business} is booked for {date} at {time}. Reply to change or cancel.",
@@ -72,6 +73,7 @@ export function suggestTables(tables, reservations, { date, time, party, duratio
 	let best = null;
 	for (let i = 0; i < free.length; i++)
 		for (let j = i + 1; j < free.length; j++) {
+			if ((free[i].floor || "main") !== (free[j].floor || "main")) continue; // tables are only joined on the same floor
 			const seats = free[i].seats + free[j].seats;
 			if (seats >= party && (!best || seats < best.seats)) best = { seats, ids: [free[i].id, free[j].id] };
 		}
@@ -220,11 +222,75 @@ export function buildReport(reservations, tables, settings, { from, to, revenue 
 export const fill = (tpl, v) => String(tpl || "").replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
 export const csv = (rows) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
 
-/** Lays own tables out on a grid like the POS floor (900 x 560) when the venue has no POS layout: five to a row, round for two-seaters. */
-export function gridTables(list) {
-	const cols = 5, rows = Math.max(1, Math.ceil(list.length / cols)), cw = 170, ch = Math.min(160, Math.floor(540 / rows));
-	return list.map((t, i) => {
-		const size = Math.min(110, ch - 30);
-		return { id: t.id, number: t.number, seats: +t.seats || 2, shape: (+t.seats || 2) <= 2 ? "round" : "square", active: true, w: size, h: size, x: 25 + (i % cols) * cw + Math.floor((cw - size) / 2) - 10, y: 15 + Math.floor(i / cols) * ch };
+// ---------------------------------------------------------------- floors and table layout
+// Same rules as the POS floor plan (pos-react/src/domain/tables.js): a 900 x 560 floor on a 10 unit grid; keep the two in step.
+export const GRID = { w: 900, h: 560, min: 50, max: 300, step: 10 };
+export const TABLE_SHAPES = ["square", "round", "rect"];
+export const MAIN_FLOOR = "main";
+const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Number.isFinite(+n) ? +n : lo));
+const snap = (n) => Math.round(n / GRID.step) * GRID.step;
+
+/** Safe table from user input or saved data: snapped size and position kept inside the floor. */
+export function normalizeTable(t) {
+	const w = clamp(snap(t.w || 100), GRID.min, GRID.max);
+	const h = t.shape === "rect" ? clamp(snap(t.h || 70), GRID.min, GRID.max) : w;
+	return {
+		id: t.id,
+		number: String(t.number ?? "").trim().slice(0, 12),
+		seats: clamp(Math.round(t.seats || 2), 1, 40),
+		shape: TABLE_SHAPES.includes(t.shape) ? t.shape : "square",
+		active: t.active !== false,
+		w,
+		h,
+		x: clamp(snap(t.x || 0), 0, GRID.w - w),
+		y: clamp(snap(t.y || 0), 0, GRID.h - h),
+	};
+}
+export const overlapsOthers = (tables, t) => tables.some((o) => o.id !== t.id && t.x < o.x + o.w && t.x + t.w > o.x && t.y < o.y + o.h && t.y + t.h > o.y);
+export function findFreeSpot(tables, w = 100, h = w) {
+	for (let y = 0; y <= GRID.h - h; y += GRID.step)
+		for (let x = 0; x <= GRID.w - w; x += GRID.step) if (!overlapsOthers(tables, { id: "", x, y, w, h })) return { x, y };
+	return null;
+}
+export function nextTableNumber(tables) {
+	const used = new Set(tables.map((t) => String(t.number)));
+	let n = 1;
+	while (used.has(String(n))) n++;
+	return String(n);
+}
+/** First problem with a layout (floors: [{id,name}], byFloor: { floorId: tables }), or "". Numbers are unique across all floors. */
+export function layoutError(floors, byFloor) {
+	if (!floors.length) return "Keep at least one floor.";
+	const names = new Set();
+	for (const f of floors) {
+		const n = String(f.name || "").trim().toLowerCase();
+		if (!n) return "Every floor needs a name.";
+		if (names.has(n)) return "Two floors are called " + f.name + ".";
+		names.add(n);
+	}
+	const seen = new Set();
+	for (const f of floors)
+		for (const t of byFloor[f.id] || []) {
+			if (!t.number) return "Every table needs a number.";
+			if (seen.has(t.number)) return "Table " + t.number + " appears twice. Table numbers must be different on every floor.";
+			seen.add(t.number);
+		}
+	return "";
+}
+
+/**
+ * The venue's own tables (used when the layout does not come from the POS), each with its floor. Tables that have no position yet
+ * (made before the editor existed) are laid out on a grid on their floor: five to a row, round for two-seaters.
+ */
+export function ownLayout(list) {
+	const placed = new Map();
+	return list.map((t) => {
+		const floor = t.floor || MAIN_FLOOR;
+		if (t.x != null && t.y != null) return { ...normalizeTable(t), floor };
+		const i = placed.get(floor) || 0;
+		placed.set(floor, i + 1);
+		const peers = list.filter((x) => (x.floor || MAIN_FLOOR) === floor).length;
+		const cols = 5, rows = Math.max(1, Math.ceil(peers / cols)), cw = 170, ch = Math.min(160, Math.floor(540 / rows)), size = Math.min(110, ch - 30), seats = +t.seats || 2;
+		return { ...normalizeTable({ id: t.id, number: t.number, seats, shape: seats <= 2 ? "round" : "square", w: size, h: size, x: 25 + (i % cols) * cw + Math.floor((cw - size) / 2) - 10, y: 15 + Math.floor(i / cols) * ch }), floor };
 	});
 }

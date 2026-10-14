@@ -55,3 +55,5 @@ dialog .body{padding:14px 16px;overflow-y:auto;display:grid;gap:10px}dialog foot
 #toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;z-index:9}#toast.on{opacity:1}
 .signin{max-width:380px;margin:12vh auto;padding:16px;display:grid;gap:10px}
 .bar-chart{display:grid;grid-template-columns:90px 1fr 48px;gap:6px;align-items:center;font-size:.85rem;margin:3px 0}.bar-chart i{display:block;height:10px;border-radius:5px;background:var(--pri)}
+.tb.sel{box-shadow:0 0 0 3px var(--info)}.tb.inactive{border-style:dashed;opacity:.7}
+.ed-canvas .tb{cursor:grab;touch-action:none}.ed-form{margin:10px 0}.ed-floors{margin-bottom:10px}

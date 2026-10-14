@@ -4,10 +4,11 @@
  */
 import {
 	ACTIVE, SOURCES, seatingMap, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
-	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf,
+	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf, MAIN_FLOOR, layoutError, normalizeTable,
 } from "./logic.mjs";
 import * as S from "./store.mjs";
-import { gmStatus, openCheck, pushCustomers, pushSeating, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
+import { effectiveLocation, floorsOf, gmStatus, openCheck, pushCustomers, pushLayout, pushSeating, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
+import { mountEditor } from "./editor.mjs";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -17,7 +18,7 @@ const VIEWS = [["bookings", "Bookings"], ["calendar", "Calendar"], ["floor", "Fl
 const REASONS = ["Guest cancelled", "Change of plans", "Weather", "Duplicate booking", "Venue closed", "Other"];
 const OCCASIONS = ["", "Birthday", "Anniversary", "Business", "Date night", "Celebration"];
 
-const ui = { view: "bookings", date: dateStr(), floorTime: fromMin(nowMin()), q: "", from: addDays(dateStr(), -29), to: dateStr(), tab: "all", gq: "" };
+const ui = { view: "bookings", date: dateStr(), floorTime: fromMin(nowMin()), q: "", from: addDays(dateStr(), -29), to: dateStr(), tab: "all", gq: "", floor: MAIN_FLOOR };
 let pos = { found: false, business: "", locations: [], settings: {}, customers: [], openOrders: [], sales: [], users: [] };
 let posStamp = "";
 let allowed = null; // null = the POS switches have not been read yet
@@ -26,7 +27,9 @@ let posError = ""; // why the last read of the POS failed
 
 // ---------------------------------------------------------------- data helpers
 const cfg = () => S.settings();
-const tables = () => tablesFor(pos, cfg());
+const floors = () => floorsOf(pos, cfg());
+const floorName = (id) => floors().find((f) => f.id === id)?.name || "";
+const tables = () => tablesFor(pos, cfg()).filter((t) => t.active !== false);
 const tableById = () => Object.fromEntries(tables().map((t) => [t.id, t]));
 const nums = () => Object.fromEntries(tables().map((t) => [t.id, t.number]));
 const business = () => pos.business || cfg().business || "our restaurant";
@@ -191,7 +194,7 @@ function bindTables(form, chosen, exclude = "") {
 		if (!tables().length) return void (box.innerHTML = `<p class="mute">No tables yet. Add tables in the POS Tables screen, or under Settings → Own tables.</p>`);
 		box.innerHTML = `<div class="chips">${tables().map((t) => {
 			const c = conflicts(t.id, p.date, p.time, p.duration, all, { exclude, buffer: p.buffer });
-			return `<label class="${c.length ? "busy" : ""}"><input type="checkbox" name="tbl" value="${esc(t.id)}" ${chosen.has(t.id) ? "checked" : ""}> T${esc(t.number)} · ${t.seats} seats${c.length ? ` · taken ${esc(c[0].time)}` : ""}</label>`;
+			return `<label class="${c.length ? "busy" : ""}"><input type="checkbox" name="tbl" value="${esc(t.id)}" ${chosen.has(t.id) ? "checked" : ""}> T${esc(t.number)} · ${t.seats} seats${floors().length > 1 ? ` · ${esc(floorName(t.floor))}` : ""}${c.length ? ` · taken ${esc(c[0].time)}` : ""}</label>`;
 		}).join("")}</div>`;
 		const seats = [...chosen].reduce((a, id) => a + (tableById()[id]?.seats || 0), 0);
 		if (chosen.size && seats < p.party) box.insertAdjacentHTML("beforeend", `<p class="err">Selected tables seat ${seats}, party is ${p.party}.</p>`);
@@ -349,6 +352,33 @@ function setStatus(r, status) {
 	if (status === "completed" || status === "no_show") setTimeout(syncSoon, 800);
 }
 
+/** Floors and tables editor. Saves to the POS floor plan when the layout comes from the POS, else to Guest Manager's own tables. */
+function layoutDialog() {
+	const toPos = S.store.mode === "cloud" && cfg().layoutFrom !== "own" && pos.found && !!effectiveLocation(pos, cfg());
+	const fl = floors().map((f) => ({ ...f })), all = tablesFor(pos, cfg());
+	const before = fl.map((f) => f.id);
+	const state = { floors: fl, byFloor: Object.fromEntries(fl.map((f) => [f.id, all.filter((t) => (t.floor || MAIN_FLOOR) === f.id).map(({ floor, ...t }) => normalizeTable(t))])), cur: fl[0].id, sel: "" };
+	const form = dialog("Edit tables and floors", `<p class="mute">${toPos ? "These tables are the POS floor plan: changes appear on the POS Tables screen." : "These are Guest Manager's own tables."} Each floor has its own layout; table numbers must be different on every floor.</p><div id="ed"></div>`, {
+		wide: true,
+		submit: "Save layout",
+		onSubmit: async () => {
+			const bad = layoutError(state.floors, state.byFloor);
+			if (bad) return bad;
+			try {
+				if (toPos) {
+					await pushLayout(S.store.ws, effectiveLocation(pos, cfg()), state.floors, state.byFloor, before.filter((id) => !state.floors.some((f) => f.id === id)));
+					await refreshPos(true);
+				} else S.put("settings", { ...cfg(), id: "settings", ownFloors: state.floors, ownTables: state.floors.flatMap((f) => state.byFloor[f.id].map((t) => ({ ...t, floor: f.id }))) });
+			} catch (e) {
+				return "Could not save the layout: " + e.message;
+			}
+			if (!state.floors.some((f) => f.id === ui.floor)) ui.floor = MAIN_FLOOR;
+			toast("Layout saved.");
+		},
+	});
+	mountEditor($("#ed", form), state);
+}
+
 function guestDialog(g) {
 	const edit = !!g.id;
 	const st = edit ? statsOf(g) : null;
@@ -446,13 +476,13 @@ function viewCalendar() {
 	const week = Array.from({ length: 7 }, (_, i) => addDays(ui.date, i - 3));
 	return `${dateBar()}<div class="bar">${week.map((d) => `<button class="sm ${d === ui.date ? "pri" : ""}" data-act="goto:${d}">${prettyDate(d)}<br><small>${S.reservations().filter((r) => r.date === d && ACTIVE.includes(r.status)).length} bookings</small></button>`).join("")}</div>
 	${t.length ? `<div class="scroll"><div class="tl" style="--h:${hrs}"><div class="hd"><span></span><div>${Array.from({ length: hrs }, (_, i) => `<span>${fromMin(start + i * 60)}</span>`).join("")}</div></div>
-	${t.map((x) => `<div class="l"><b>T${esc(x.number)} <small class="mute">${x.seats}</small></b><div class="lane">${day.filter((r) => (r.tableIds || []).includes(x.id)).map((r) => `<button class="blk ${r.status}" style="left:${((toMin(r.time) - start) / span) * 100}%;width:${((+r.duration || 90) / span) * 100}%" data-act="detail" data-id="${r.id}" title="${esc(r.name)}">${esc(r.name)} · ${r.party}</button>`).join("")}</div></div>`).join("")}
+	${t.map((x) => `<div class="l"><b>T${esc(x.number)} <small class="mute">${x.seats}</small>${floors().length > 1 ? `<br><small class="mute">${esc(floorName(x.floor))}</small>` : ""}</b><div class="lane">${day.filter((r) => (r.tableIds || []).includes(x.id)).map((r) => `<button class="blk ${r.status}" style="left:${((toMin(r.time) - start) / span) * 100}%;width:${((+r.duration || 90) / span) * 100}%" data-act="detail" data-id="${r.id}" title="${esc(r.name)}">${esc(r.name)} · ${r.party}</button>`).join("")}</div></div>`).join("")}
 	<div class="l"><b>No table</b><div class="lane">${day.filter((r) => !(r.tableIds || []).length).map((r) => `<button class="blk" style="left:${((toMin(r.time) - start) / span) * 100}%;width:${((+r.duration || 90) / span) * 100}%" data-act="detail" data-id="${r.id}">${esc(r.name)} · ${r.party}</button>`).join("")}</div></div></div></div>` : noTables()}`;
 }
-const noTables = () => `<p class="empty">No tables yet. ${cfg().layoutFrom === "pos" ? "Draw your floor in the POS Tables screen, or switch to own tables in Settings." : "Add tables in Settings → Own tables."}</p>`;
+const noTables = () => `<p class="empty">No tables yet. ${cfg().layoutFrom === "pos" ? "Draw your floor in the POS Tables screen, or add tables here with Edit tables." : "Add tables with Edit tables."} <button class="sm pri" data-act="edit-layout">Edit tables</button></p>`;
 
 function viewFloor() {
-	const t = tables(), all = S.reservations(), at = ui.floorTime, p = (x) => `${x}%`;
+	const fl = floors(), cur = fl.find((f) => f.id === ui.floor) || fl[0], t = tables().filter((x) => (x.floor || MAIN_FLOOR) === cur.id), all = S.reservations(), at = ui.floorTime, p = (x) => `${x}%`;
 	const state = (tb) => {
 		const now = conflicts(tb.id, ui.date, at, 1, all);
 		const cur = now.find((r) => r.status === "seated") || now.find((r) => r.status === "arrived") || now[0];
@@ -461,7 +491,8 @@ function viewFloor() {
 		return soon ? { cls: "reserved", r: soon } : { cls: "", r: null };
 	};
 	const unseated = resOn(ui.date).filter((r) => r.status === "arrived");
-	return `${dateBar(`<label>At <input type="time" id="ftime" value="${at}" style="width:auto"></label><button data-act="fnow">Now</button>`)}
+	return `${dateBar(`<label>At <input type="time" id="ftime" value="${at}" style="width:auto"></label><button data-act="fnow">Now</button><button data-act="edit-layout">Edit tables</button>`)}
+	${fl.length > 1 ? `<div class="chips" role="tablist" aria-label="Floors" style="margin-bottom:8px">${fl.map((f) => `<button role="tab" aria-selected="${f.id === cur.id}" class="sm ${f.id === cur.id ? "pri" : ""}" data-act="floor:${esc(f.id)}">${esc(f.name)}</button>`).join("")}</div>` : ""}
 	<div class="legend"><span>🟩 Free</span><span>🟦 Reserved</span><span>🟨 Arrived</span><span>🟥 Seated</span><span>POS layout: ${pos.found && cfg().layoutFrom === "pos" ? "synced from the POS" : "GM's own tables"}</span></div>
 	${t.length ? `<div class="floor">${t.map((tb) => { const s = state(tb), oc = openCheck(pos, tb); return `<button class="tb ${tb.shape} ${s.cls}" style="left:${p((tb.x / 900) * 100)};top:${p((tb.y / 560) * 100)};width:${p((tb.w / 900) * 100)};height:${p((tb.h / 560) * 100)}" data-act="table" data-id="${esc(tb.id)}" aria-label="Table ${esc(tb.number)}"><b>${esc(tb.number)}</b><small>${tb.seats} seats</small>${s.r ? `<span>${esc(s.r.name.slice(0, 12))}</span>` : ""}${oc ? '<span class="chk">check open</span>' : ""}</button>`; }).join("")}</div>` : noTables()}
 	${unseated.length ? `<h3 style="margin-top:14px">Arrived, waiting for a table</h3>${unseated.map(resRow).join("")}` : ""}`;
@@ -538,7 +569,7 @@ function viewSettings() {
 	<label>Slot step (minutes)<input name="slotStep" type="number" min="5" step="5" value="${c.slotStep}"></label><label>Turnaround between parties (minutes)<input name="buffer" type="number" min="0" step="5" value="${c.buffer}"></label>
 	<label>Flag guests after this many no-shows<input name="noShowLimit" type="number" min="1" value="${c.noShowLimit}"></label><label>Phone country code (for WhatsApp)<input name="countryCode" value="${esc(c.countryCode)}"></label>
 	<label>Spend per loyalty point<input name="spendPerPoint" type="number" min="1" value="${c.spendPerPoint}"></label><label>Silver after visits / Gold after visits<span class="chips" style="margin-top:3px"><input name="silverVisits" type="number" min="1" value="${c.silverVisits}" style="width:48%"><input name="goldVisits" type="number" min="1" value="${c.goldVisits}" style="width:48%"></span></label>
-	<label style="grid-column:1/-1">Own tables (one per line: number, seats) — used when the layout is not from the POS<textarea name="ownTables" rows="4">${c.ownTables.map((x) => x.number + ", " + x.seats).join("\n")}</textarea></label>
+	<div class="card" style="grid-column:1/-1"><h2>Tables and floors</h2><p class="mute">${c.layoutFrom === "own" || !pos.found ? "GM's own tables" : "The POS floor plan"}: ${tables().length} table${tables().length === 1 ? "" : "s"} on ${floors().length} floor${floors().length === 1 ? "" : "s"}. Changes made here are saved to the ${c.layoutFrom === "own" || !pos.found ? "Guest Manager" : "POS"} layout.</p><button type="button" class="pri" data-act="edit-layout">Edit tables and floors</button></div>
 	${Object.keys(t).map((k) => `<label style="grid-column:1/-1">Message: ${k}<textarea name="t_${k}" rows="2">${esc(t[k])}</textarea></label>`).join("")}
 	<p class="mute" style="grid-column:1/-1">Placeholders: {name} {party} {date} {time} {table} {business}</p><div class="err" id="serr" style="grid-column:1/-1"></div><button class="pri">Save settings</button></form>`;
 }
@@ -547,8 +578,7 @@ function saveSettings(form) {
 	const fd = new FormData(form), err = (m) => (($("#serr").textContent = m), false);
 	const services = fd.get("services").split("\n").map((l) => l.split(",").map((x) => x.trim())).filter((p) => p[0]).map(([name, start, end, d]) => ({ name, start, end, duration: +d || 90 }));
 	if (!services.length || services.some((s) => !/^\d{1,2}:\d{2}$/.test(s.start) || !/^\d{1,2}:\d{2}$/.test(s.end))) return err("Services need a name, a start and an end time like 18:00.");
-	const old = cfg(), own = fd.get("ownTables").split("\n").map((l) => l.split(",").map((x) => x.trim())).filter((p) => p[0]);
-	const ownTables = own.map(([number, seats]) => ({ id: old.ownTables.find((t) => t.number === number)?.id || "gt-" + number, number, seats: +seats || 2 }));
+	const old = cfg(), ownTables = old.ownTables;
 	S.put("settings", { ...old, id: "settings", services, ownTables, posSync: !!fd.get("posSync") && S.store.mode === "cloud", layoutFrom: fd.get("layoutFrom"), locationId: fd.get("locationId"), slotStep: +fd.get("slotStep") || 30, buffer: +fd.get("buffer") || 0, noShowLimit: +fd.get("noShowLimit") || 3, countryCode: fd.get("countryCode").replace(/\D/g, "") || "94", spendPerPoint: +fd.get("spendPerPoint") || 100, silverVisits: +fd.get("silverVisits") || 5, goldVisits: +fd.get("goldVisits") || 15, templates: Object.fromEntries(Object.keys(old.templates).map((k) => [k, fd.get("t_" + k)])) });
 	toast("Settings saved.");
 	refreshPos(true);
@@ -610,6 +640,8 @@ const ACTIONS = {
 	"new-booking-for": (_, id) => { const g = S.guests().find((x) => x.id === id); dlg().close(); bookingDialog(null, { name: g.name, phone: g.phone, email: g.email }); },
 	table: (_, id) => tableDialog(tableById()[id]),
 	fnow: () => go({ floorTime: fromMin(nowMin()), date: dateStr() }),
+	floor: (id) => go({ floor: id }),
+	"edit-layout": () => layoutDialog(),
 	"wait-new": () => waitDialog(),
 	"w-seat": (_, id) => {
 		const w = S.waitlist().find((x) => x.id === id);

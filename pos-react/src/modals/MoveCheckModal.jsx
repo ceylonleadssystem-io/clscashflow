@@ -4,7 +4,7 @@
  */
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
-import { layoutFor, locationOrders, moveTargets, normalizeTable, tableReference } from "../domain/tables";
+import { allFloorTables, locationOrders, moveTargets, normalizeTable, tableReference } from "../domain/tables";
 import { Modal, ModalBody } from "../components/ui";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
@@ -16,7 +16,7 @@ export function MoveCheckModal({ order, onClose }) {
 	const ui = useUi();
 	const { svc, locationId } = usePos();
 	if (!order) return null;
-	const tables = layoutFor(data.settings, locationId).map(normalizeTable);
+	const tables = allFloorTables(data.settings, locationId).map(normalizeTable);
 	const targets = moveTargets(order, tables, locationOrders(data.openOrders, locationId));
 	const label = (o) => o.orderReference || o.orderNumber;
 

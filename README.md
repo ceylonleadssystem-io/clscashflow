@@ -266,6 +266,7 @@ Related guides: [`docs/setup/pos-admin-portal.md`](docs/setup/pos-admin-portal.m
 **POS ⇄ GM.**
 * GM reads the POS table layout, customers, open checks and sales, and writes guests back as POS customers (tagged `GM:`).
 * Seating a guest in GM writes `settings.gmSeating`; the POS Tables screen then shows the guest's first name under the table number, and tapping the table starts the check with that customer already selected (the POS adds the customer to its list if it is missing).
+* **Floors.** A POS location can have several floors, each with its own table layout (POS Tables screen: floor tabs, `+ Floor`, Rename, Delete floor). The main floor keeps the original layout setting (`tableLayout_<location>`); other floors use `tableLayout_<location>__<floor id>` and the list is `tableFloors_<location>`. Table numbers are unique across the floors of a location (a check's reference is `Table <number>`). GM shows the same floors and its **Edit tables** editor (Floor tab and Settings) saves back to the POS layout, or to GM's own tables when the layout is not taken from the POS.
 * Bills are matched to a booking by table and time, so GM reports show payments, discounts, refunds and revenue by booking source.
 
 **KDS.** `/KDS` shows a six-digit pairing code. Enter it in POS Settings → Printing → Kitchen Display. Tickets travel browser-to-browser over the local network; only the handshake goes through `kds-pair`. Both devices must be on the same Wi-Fi.
