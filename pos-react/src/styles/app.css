@@ -408,6 +408,13 @@ html body:not(.mobile-checkout) #view-checkout .cart-list{overflow-y:auto}
 /* the whole floor always fits the screen: as wide as the page allows, never taller than the space under the header */
 .floor{position:relative;width:min(100%,calc((100dvh - 230px) * 900 / 560));min-width:0;margin:0 auto;background:var(--surface-2,#f6f3ec);border:1px solid var(--line,#e2dccd);border-radius:12px;overflow:hidden}
 .floor.editing{touch-action:none;background-image:radial-gradient(circle,rgba(0,0,0,.14) 1px,transparent 1px);background-size:1.11% 1.79%}
+.floor-tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 0 10px}
+.floor-tab{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line,#cbbf9f);background:#fff;font:inherit;font-weight:600;cursor:pointer}
+.floor-tab.active{background:var(--accent,#ef5b2d);border-color:var(--accent,#ef5b2d);color:#fff}
+.floor-tab:disabled{opacity:.5;cursor:not-allowed}
+.floor-tab-count{margin-left:8px;background:#fde3dc;color:#8a2a14;border-radius:999px;padding:1px 8px;font-size:.78rem}
+.floor-tab-tools .btn.sm{min-height:36px;padding:0 12px;font-size:.85rem}
+.floor-tab-tools{display:flex;gap:6px;margin-left:auto}
 .floor-table{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box;border:2px solid var(--line,#cbbf9f);background:#e7f4e4;color:#1f4d1a;cursor:pointer;user-select:none;font-size:.8rem;text-align:center;overflow:hidden}
 .floor-table strong{font-size:1.1rem}
 .floor-table.round{border-radius:50%}

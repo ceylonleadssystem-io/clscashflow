@@ -75,7 +75,8 @@ test('POS bridge: layout per location with shared fallback, and idempotent custo
   const P = await import('../reservation-system/js/pos.mjs');
   const pos = { found: true, settings: { tableLayout: [{ id: 'a', number: '1', seats: 2 }], tableLayout_L2: [{ id: 'b', number: '9', seats: 4, active: false }, { id: 'c', number: '8', seats: 6 }] } };
   assert.deepEqual(P.tablesFor(pos, { layoutFrom: 'pos', locationId: '' }).map((t) => t.id), ['a']);
-  assert.deepEqual(P.tablesFor(pos, { layoutFrom: 'pos', locationId: 'L2' }).map((t) => t.id), ['c']);
+  assert.deepEqual(P.tablesFor(pos, { layoutFrom: 'pos', locationId: 'L2' }).filter((t) => t.active).map((t) => t.id), ['c']);
+  assert.deepEqual(P.tablesFor(pos, { layoutFrom: 'pos', locationId: 'L2' }).map((t) => t.id), ['b', 'c']); // inactive tables are kept so the editor never drops them
   assert.equal(P.tablesFor(pos, { layoutFrom: 'own', ownTables: [{ id: 'g1', number: '1', seats: 2 }] })[0].id, 'g1');
   const existing = { id: 'c1', name: 'Old', phone: '0771234567', tags: 'vip, GM:Bronze', notes: 'Likes tea', discountEligible: true, discountValue: 10, createdAt: 'x' };
   const g = { id: 'g1', name: 'Nimal', phone: '0771234567', email: 'n@x.lk', allergies: 'nuts', preferences: '' };
@@ -125,4 +126,30 @@ test('gmStatus says why Guest Manager is blocked', async () => {
   assert.match(why({ found: true, settings: { features: { [id]: true }, locationFeatures: { L1: { [id]: false } } } }, 'L1'), /location/);
   assert.match(why({ found: true, settings: { features: { [id]: true }, subscription: { enforced: true, name: 'POS Starter', featuresOff: [id] } } }), /POS Starter/);
   assert.equal(P.gmStatus({ found: true, settings: { features: { [id]: true } } }).why, '');
+});
+
+test('floors: pairs are only joined on one floor, numbers must be unique across floors, own tables get a grid per floor', async () => {
+  const L = await load();
+  const two = [{ id: 'a', number: '1', seats: 2, floor: 'main' }, { id: 'b', number: '2', seats: 2, floor: 'roof' }, { id: 'c', number: '3', seats: 2, floor: 'main' }];
+  const q = { date: '2026-10-13', time: '19:00', party: 4, duration: 90 };
+  assert.deepEqual(L.suggestTables(two, [], q).sort(), ['a', 'c']);
+  assert.deepEqual(L.suggestTables(two.slice(0, 2), [], q), []); // 2 + 2 seats exist, but on different floors
+  assert.equal(L.layoutError([{ id: 'main', name: 'Ground' }, { id: 'f', name: 'Roof' }], { main: [{ number: '1' }], f: [{ number: '1' }] }), 'Table 1 appears twice. Table numbers must be different on every floor.');
+  assert.match(L.layoutError([{ id: 'main', name: 'A' }, { id: 'f', name: 'a' }], {}), /Two floors/);
+  assert.equal(L.layoutError([{ id: 'main', name: 'A' }, { id: 'f', name: 'B' }], { main: [{ number: '1' }], f: [{ number: '2' }] }), '');
+  const own = L.ownLayout([{ id: 'x', number: '1', seats: 2 }, { id: 'y', number: '2', seats: 4, floor: 'roof' }, { id: 'z', number: '3', seats: 4, floor: 'roof', x: 300, y: 200, w: 120, shape: 'round' }]);
+  assert.deepEqual(own.map((t) => [t.floor, t.shape]), [['main', 'round'], ['roof', 'square'], ['roof', 'round']]);
+  assert.deepEqual([own[2].x, own[2].y, own[2].w], [300, 200, 120]);
+  assert.equal(L.overlapsOthers([{ id: 'a', x: 0, y: 0, w: 100, h: 100 }], { id: 'b', x: 50, y: 50, w: 100, h: 100 }), true);
+  assert.equal(L.nextTableNumber([{ number: '1' }, { number: '3' }]), '2');
+});
+
+test('floors from the POS: main floor keeps the old layout key, others have their own, location defaults to the first', async () => {
+  const P = await import('../reservation-system/js/pos.mjs');
+  const pos = { found: true, locations: [{ id: 'L1' }], settings: { tableLayout_L1: [{ id: 'm', number: '1', seats: 2 }], tableFloors_L1: [{ id: 'main', name: 'Ground' }, { id: 'fl-a', name: 'Terrace' }], tableLayout_L1__fl_a: [], 'tableLayout_L1__fl-a': [{ id: 't', number: '11', seats: 4 }] } };
+  const cfg = { layoutFrom: 'pos', locationId: '' };
+  assert.equal(P.effectiveLocation(pos, cfg), 'L1');
+  assert.deepEqual(P.floorsOf(pos, cfg).map((f) => f.name), ['Ground', 'Terrace']);
+  assert.deepEqual(P.tablesFor(pos, cfg).map((t) => t.number + '@' + t.floor), ['1@main', '11@fl-a']);
+  assert.deepEqual(P.floorsOf({ found: false, settings: {} }, { layoutFrom: 'own', ownFloors: [{ id: 'f', name: 'Roof' }] }).map((f) => f.id), ['main', 'f']);
 });

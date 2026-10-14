@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
-import { GRID, TABLE_SHAPES, findFreeSpot, layoutFor, layoutKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus, gmSeating } from "../domain/tables";
+import { GRID, MAIN_FLOOR, TABLE_SHAPES, findFreeSpot, floorLayout, floorLayoutKey, floorsFor, floorsKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus, gmSeating } from "../domain/tables";
 import { OWNER_ROLES } from "../config/roles";
 import { newId } from "../services/pos/common";
 import { useData } from "../store/DataProvider";
@@ -30,7 +30,12 @@ export function Tables() {
 	// "All Locations" has no floor of its own: pick a branch to see or edit its tables
 	const hasLocation = !!locationId && locationId !== "all";
 	const location = data.locations.find((l) => l.id === locationId);
-	const saved = useMemo(() => layoutFor(data.settings, hasLocation ? locationId : "").map(normalizeTable), [data.settings, locationId, hasLocation]);
+	const [floorId, setFloorId] = useState(MAIN_FLOOR);
+	const floors = useMemo(() => floorsFor(data.settings, hasLocation ? locationId : ""), [data.settings, locationId, hasLocation]);
+	const floor = floors.find((f) => f.id === floorId) || floors[0];
+	const saved = useMemo(() => floorLayout(data.settings, hasLocation ? locationId : "", floor.id).map(normalizeTable), [data.settings, locationId, hasLocation, floor.id]);
+	// tables of the other floors: numbers must stay unique across the whole location
+	const others = useMemo(() => floors.filter((f) => f.id !== floor.id).flatMap((f) => floorLayout(data.settings, locationId, f.id)), [floors, floor.id, data.settings, locationId]);
 	const openOrders = useMemo(() => locationOrders(data.openOrders, locationId), [data.openOrders, locationId]);
 	const [draft, setDraft] = useState(null); // null = not editing
 	const [selectedId, setSelectedId] = useState("");
@@ -55,6 +60,7 @@ export function Tables() {
 		commit(null);
 		setSelectedId("");
 		setError("");
+		setFloorId(MAIN_FLOOR);
 	}, [locationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// a move, resize or reshape that would land on another table is ignored: the table stays where it last fitted
@@ -70,7 +76,7 @@ export function Tables() {
 	const addTable = () => {
 		const spot = findFreeSpot(draft, 100, 100);
 		if (!spot) return void setError("No room for another table. Make a table smaller or remove one first.");
-		const t = normalizeTable({ id: newId("tbl"), number: nextTableNumber(draft), seats: 4, shape: "square", w: 100, ...spot });
+		const t = normalizeTable({ id: newId("tbl"), number: nextTableNumber([...draft, ...others]), seats: 4, shape: "square", w: 100, ...spot });
 		setError("");
 		commit([...draft, t]);
 		setSelectedId(t.id);
@@ -78,13 +84,13 @@ export function Tables() {
 
 	/** Validates and stores the layout; true when saved. */
 	const save = async () => {
-		const bad = draft.map((t) => tableNumberError(draft, t)).find(Boolean);
+		const bad = draft.map((t) => tableNumberError([...draft, ...others], t)).find(Boolean);
 		if (bad) {
 			setError(bad);
 			return false;
 		}
 		setError("");
-		await svc.settings.patchSettings({ [layoutKey(locationId)]: draft });
+		await svc.settings.patchSettings({ [floorLayoutKey(locationId, floor.id)]: draft });
 		ui.notice("Table layout saved.");
 		return true;
 	};
@@ -144,6 +150,32 @@ export function Tables() {
 		setPhoneSearch(customer.phone || "");
 	};
 
+	const openChecks = (f) => {
+		const nums = new Set(floorLayout(data.settings, locationId, f.id).map((t) => tableReference(t)));
+		return openOrders.filter((o) => o.status === "open" && nums.has(o.orderReference)).length;
+	};
+	const addFloor = async () => {
+		const name = String((await ui.prompt("Name of the new floor (for example Terrace or Upstairs)", "")) || "").trim().slice(0, 40);
+		if (!name) return;
+		if (floors.some((f) => f.name.toLowerCase() === name.toLowerCase())) return void (await ui.alert("There is already a floor called " + name + "."));
+		const id = newId("fl");
+		await svc.settings.patchSettings({ [floorsKey(locationId)]: [...floors, { id, name }] });
+		setFloorId(id);
+	};
+	const renameFloor = async () => {
+		const name = String((await ui.prompt("New name for this floor", floor.name)) || "").trim().slice(0, 40);
+		if (!name || name === floor.name) return;
+		if (floors.some((f) => f.id !== floor.id && f.name.toLowerCase() === name.toLowerCase())) return void (await ui.alert("There is already a floor called " + name + "."));
+		await svc.settings.patchSettings({ [floorsKey(locationId)]: floors.map((f) => (f.id === floor.id ? { ...f, name } : f)) });
+	};
+	const deleteFloor = async () => {
+		if (floor.id === MAIN_FLOOR) return;
+		if (openChecks(floor)) return void (await ui.alert("This floor still has open checks. Pay, move or void them first."));
+		if (!(await ui.confirm("Delete the floor " + floor.name + " and its " + saved.length + " table" + (saved.length === 1 ? "" : "s") + "?"))) return;
+		await svc.settings.patchSettings({ [floorsKey(locationId)]: floors.filter((f) => f.id !== floor.id), [floorLayoutKey(locationId, floor.id)]: [] });
+		setFloorId(MAIN_FLOOR);
+	};
+
 	const openTable = (t) => {
 		const { open } = tableStatus(t, openOrders);
 		if (open) return setAction({ table: t, order: open });
@@ -167,7 +199,7 @@ export function Tables() {
 	return (
 		<section className="view active" id="view-tables">
 			<Panel
-				title={"Table Layout" + (location && data.locations.length > 1 ? " · " + location.name : "")}
+				title={"Table Layout" + (location && data.locations.length > 1 ? " · " + location.name : "") + (floors.length > 1 ? " · " + floor.name : "")}
 				subtitle={editing ? "Drag to move, use the corner arrow to resize, click a table to edit it" : "Tap a free table to start its check, or a busy table to open, split, move or merge it"}
 				actions={
 					editing ? (
@@ -183,6 +215,26 @@ export function Tables() {
 					)
 				}
 			>
+				{(floors.length > 1 || canEdit) && (
+					<div className="floor-tabs" role="tablist" aria-label="Floors">
+						{floors.map((f) => {
+							const n = openChecks(f);
+							return (
+								<button key={f.id} role="tab" aria-selected={f.id === floor.id} className={"floor-tab" + (f.id === floor.id ? " active" : "")} disabled={editing && f.id !== floor.id} title={editing && f.id !== floor.id ? "Finish editing this floor first" : ""} onClick={() => setFloorId(f.id)}>
+									{f.name}
+									{n > 0 && <span className="floor-tab-count">{n}</span>}
+								</button>
+							);
+						})}
+						{canEdit && !editing && (
+							<span className="floor-tab-tools">
+								<button className="btn out sm" id="floor-add" onClick={addFloor}>+ Floor</button>
+								<button className="btn out sm" id="floor-rename" onClick={renameFloor}>Rename</button>
+								{floor.id !== MAIN_FLOOR && <button className="btn out sm" id="floor-delete" onClick={deleteFloor}>Delete floor</button>}
+							</span>
+						)}
+					</div>
+				)}
 				{error && <div className="login-error">{error}</div>}
 				{editing && selected && (
 					<div className="floor-form" id="table-form">

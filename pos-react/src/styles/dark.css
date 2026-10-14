@@ -229,3 +229,6 @@ html[data-theme="dark"] .floor-table{background:#1f3a22;color:#bfe8b8}
 html[data-theme="dark"] .floor-table.busy{background:#4a2218;color:#ffc9b8}
 html[data-theme="dark"] .floor-table.gm-seated{background:#4a3a12;color:#ffe3a0}
 html[data-theme="dark"] .floor-table.inactive{background:repeating-linear-gradient(45deg,#2a3038,#2a3038 8px,#222830 8px,#222830 16px);color:#9aa3ad}
+
+html[data-theme="dark"] .floor-tab{background:#23201b;border-color:#3a352d;color:#e7e2d8}
+html[data-theme="dark"] .floor-tab.active{background:var(--accent,#ef5b2d);color:#fff}
