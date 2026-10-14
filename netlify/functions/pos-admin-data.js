@@ -5,6 +5,7 @@ const { getAdmin, audit } = require('../lib/admin-store');
 const log = require('../lib/log').createLogger('pos-admin-data');
 const lib = require('../lib/appwrite');
 const { createPurger, realDeps } = require('../lib/account-purge');
+const { appsUsed } = require('../lib/apps-used');
 
 
 function headers() {
@@ -235,7 +236,7 @@ async function handle(event) {
           name: row.data.name || row.data.displayName || '', email: row.data.email || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
-          products: (payload.products || []).length, categories: (payload.categories || []).length,
+          apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
           updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: accountStatus(row.data) === 'test', status: accountStatus(row.data), subscriptionType: clean(row.data.posBillingCycle) === 'annual' ? 'annual' : 'monthly', paused: row.data.posAccountPaused === true,
           authStatus: !authAvailable ? 'unavailable' : !authUser ? 'missing' : authUser.disabled ? 'disabled' : 'ready',
           authLastSignInAt: authUser && authUser.metadata && authUser.metadata.lastSignInTime || ''

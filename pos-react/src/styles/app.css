@@ -31,6 +31,7 @@
 .admin-group-actions{display:flex;gap:12px}
 .link-btn{background:none;border:0;color:var(--accent,#ff4d0a);font-weight:calc(700 + var(--ui-fw, 0));cursor:pointer;padding:4px}
 .admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.admin-apps{display:flex;flex-wrap:wrap;gap:4px}
 .admin-feature{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;background:#fff;border:1px solid #e5e1d9;border-radius:14px;padding:14px 16px;transition:border-color .15s,box-shadow .15s}
 .admin-feature.is-on{border-color:rgba(255,77,10,.35)}
 .admin-feature.is-dirty{box-shadow:0 0 0 2px rgba(185,121,19,.35)}

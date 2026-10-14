@@ -11,7 +11,7 @@ import { AccountDetail } from "./AccountDetail";
 import { SubscriptionManagement } from "./SubscriptionManagement";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
-import { STATUSES, SUBSCRIPTIONS, lastUsedOf, statusOf, subscriptionOf } from "./status";
+import { STATUSES, SUBSCRIPTIONS, appsOf, lastUsedOf, statusOf, subscriptionOf } from "./status";
 import { adminFeedback, useAdminFeedback } from "./adminFeedback";
 import { createLogger } from "../utils/logger";
 
@@ -171,6 +171,7 @@ export function AdminApp() {
 										<th>Contact</th>
 										<th>Status</th>
 										<th>Subscription</th>
+										<th>Products</th>
 										<th>Payment</th>
 										<th>Next due</th>
 										<th>Last used</th>
@@ -196,6 +197,13 @@ export function AdminApp() {
 												<span className="badge">{subscriptionOf(a).label}</span>
 											</td>
 											<td>
+												<div className="admin-apps">
+													{appsOf(a).map((app) => (
+														<span className="badge" key={app}>{app}</span>
+													))}
+												</div>
+											</td>
+											<td>
 												<span className="badge">{a.payment?.status || "trial"}</span>
 											</td>
 											<td>{fmtDate(a.payment?.paid ? a.payment?.nextPaymentDue : a.payment?.trialEnd)}</td>
@@ -214,7 +222,7 @@ export function AdminApp() {
 									))}
 									{!list.length && (
 										<tr>
-											<td colSpan="9">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
+											<td colSpan="10">{loading ? "Loading accounts…" : "No POS accounts found."}</td>
 										</tr>
 									)}
 								</tbody>
