@@ -220,7 +220,11 @@ export function buildReport(reservations, tables, settings, { from, to, revenue 
 export const fill = (tpl, v) => String(tpl || "").replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
 export const csv = (rows) => rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
 
-/** Lays own tables out on a grid like the POS floor (900 x 560) when the venue has no POS layout. */
+/** Lays own tables out on a grid like the POS floor (900 x 560) when the venue has no POS layout: five to a row, round for two-seaters. */
 export function gridTables(list) {
-	return list.map((t, i) => ({ id: t.id, number: t.number, seats: +t.seats || 2, shape: "square", active: true, w: 80, h: 80, x: 20 + (i % 9) * 95, y: 20 + Math.floor(i / 9) * 95 }));
+	const cols = 5, rows = Math.max(1, Math.ceil(list.length / cols)), cw = 170, ch = Math.min(160, Math.floor(540 / rows));
+	return list.map((t, i) => {
+		const size = Math.min(110, ch - 30);
+		return { id: t.id, number: t.number, seats: +t.seats || 2, shape: (+t.seats || 2) <= 2 ? "round" : "square", active: true, w: size, h: size, x: 25 + (i % cols) * cw + Math.floor((cw - size) / 2) - 10, y: 15 + Math.floor(i / cols) * ch };
+	});
 }
