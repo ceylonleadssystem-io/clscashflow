@@ -30,6 +30,6 @@ test('Solo does not render or route to Team Access or Edit Backlog', () => {
 });
 
 test('plan comparisons no longer advertise Edit Backlog as a Solo feature', () => {
-  assert.match(read('index.html'), /Edit Backlog[\s\S]*?plan-not-included[\s\S]*?plan-included studio/);
+  assert.match(read('cashflow-home.html'), /Edit Backlog[\s\S]*?plan-not-included[\s\S]*?plan-included studio/);
   assert.match(read('onboarding.html'), /<tr><td>Edit Backlog<\/td><td><span class="ob-plan-dash" aria-label="Not included">—<\/span>/);
 });

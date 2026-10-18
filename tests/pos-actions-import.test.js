@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 test('POS landing page offers a hardware cart and emailed order form', () => {
-  const landing = fs.readFileSync(path.join(__dirname, '..', 'pos.html'), 'utf8');
+  const landing = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const orderApi = fs.readFileSync(path.join(__dirname, '..', 'netlify', 'functions', 'hardware-order.js'), 'utf8');
   for (const model of ['Ceylonry POS Lite', 'Ceylonry POS Lite · Black', 'Ceylonry POS Pro · White', 'Ceylonry POS Pro · Black']) {
     assert.match(landing, new RegExp(model.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));

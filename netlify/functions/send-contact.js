@@ -13,6 +13,7 @@ const ALLOWED_TOPICS = new Set([
   'Product question',
   'Plans and pricing',
   'Technical support',
+  'Start a project',
   'Partnership',
   'Other'
 ]);
