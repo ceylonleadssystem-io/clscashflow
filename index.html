@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>document.documentElement.className+=" js"</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ceylonry POS — We build around your business</title>
@@ -1270,12 +1271,15 @@ button{font-family:inherit}
   .x-nav .x-btn{margin-top:12px;width:100%}
 }
 
-/* panels: one screen at a time, switched with animation instead of a long scroll */
-.panel{display:none;min-height:calc(100vh - 70px)}
-.panel.active{display:block}
-.panel.active.in{animation:curtain .75s var(--ease) both}
-.panel.out{display:block;animation:fadeOut .22s ease-in both;pointer-events:none}
-.panel.in [data-rv]{animation:rise .7s var(--ease) backwards;animation-delay:calc(var(--i,0)*70ms + 180ms)}
+/* one long page: every section is scroll-driven (reveals, parallax, pinned hero, progress, rail) */
+html{scroll-behavior:smooth;scroll-padding-top:68px}
+.panel{display:block;scroll-margin-top:66px}
+.js [data-rv]:not(.in){opacity:0}
+.js [data-rv].in{animation:rise .85s var(--ease) backwards;animation-delay:var(--d,0ms)}
+.js [data-rv=l].in{animation-name:riseL}.js [data-rv=r].in{animation-name:riseR}.js [data-rv=s].in{animation-name:pop}
+@keyframes riseL{from{opacity:0;transform:translateX(-56px)}to{opacity:1;transform:none}}
+@keyframes riseR{from{opacity:0;transform:translateX(56px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(34px) scale(.92)}to{opacity:1;transform:none}}
 @keyframes curtain{from{clip-path:inset(0 0 100% 0);transform:translateY(32px)}to{clip-path:inset(0 0 0 0);transform:none}}
 @keyframes fadeOut{to{opacity:0;transform:translateY(-12px)}}
 @keyframes rise{from{opacity:0;transform:translateY(28px) scale(.98)}to{opacity:1;transform:none}}
@@ -1285,16 +1289,25 @@ button{font-family:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(21,136,90,.5)}50%{box-shadow:0 0 0 8px rgba(21,136,90,0)}}
 
-/* pager */
-.x-pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:24px clamp(20px,4vw,56px);border-top:2px solid var(--ink);background:var(--cream2)}
-.x-pager a{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:10px 18px;border:2px solid var(--ink);color:var(--ink);font-weight:800;font-size:14px;background:var(--cream);transition:background .2s,color .2s,transform .2s var(--ease)}
-.x-pager a:hover{background:var(--ink);color:var(--cream);transform:translateY(-2px)}
-.x-pager a.nx{background:var(--o);color:#fff;margin-left:auto}
-.x-pager small{font-weight:600;opacity:.75}
-.x-dots{display:flex;gap:8px}.x-dots a{min-height:0;width:12px;height:12px;padding:0;border-radius:50%;box-shadow:none;background:transparent}
-.x-dots a.on{background:var(--o);border-color:var(--o);transform:scale(1.25)}
-@media(max-width:620px){.x-dots{order:3;width:100%;justify-content:center}}
-
+/* progress rail */
+.x-rail{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:25;display:none;flex-direction:column;gap:12px}
+.x-rail a{display:block;width:12px;height:12px;border:2px solid var(--ink);border-radius:50%;background:var(--cream);position:relative;transition:transform .25s var(--ease),background .25s}
+.x-rail a.on{background:var(--o);border-color:var(--o);transform:scale(1.35)}
+.x-rail a span{position:absolute;right:22px;top:50%;transform:translateY(-50%);white-space:nowrap;background:var(--ink);color:var(--cream);font-size:12px;font-weight:600;padding:5px 10px;opacity:0;pointer-events:none;transition:opacity .2s}
+.x-rail a:hover span,.x-rail a:focus-visible span{opacity:1}
+@media(min-width:1100px){.x-rail{display:flex}}
+/* pinned hero: scrolling drives the artwork */
+.x-pin{--p:0}
+.x-art>i,.x-logocard,.x-screen{will-change:translate}
+.x-a1{translate:0 calc(var(--p)*-140px)}.x-a2{translate:0 calc(var(--p)*110px)}.x-a3{translate:calc(var(--p)*60px) calc(var(--p)*-80px)}
+.x-a4{translate:0 calc(var(--p)*-60px);rotate:calc(var(--p)*70deg)}
+.x-logocard{translate:0 calc(var(--p)*-70px);scale:calc(1 - var(--p)*.16)}
+.x-screen{translate:0 calc(var(--p)*-110px);rotate:calc(var(--p)*-4deg)}
+@media(min-width:1000px) and (min-height:700px){
+  .x-pin{height:155vh}
+  .x-pin .x-hero{position:sticky;top:66px;min-height:calc(100vh - 66px)}
+  .x-pin .x-hero>div:first-child{opacity:max(.3,calc(1 - var(--p)*1.3))}
+}
 /* home */
 .x-hero{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center;padding:clamp(36px,5vw,84px) clamp(20px,4vw,56px) clamp(48px,6vw,96px)}
 .x-hero{overflow:hidden}
@@ -1498,9 +1511,10 @@ button{font-family:inherit}
   <div class="x-bar" aria-hidden="true"><i id="bar"></i></div>
 </header>
 
+<main>
 <!-- 1 · HOME -->
-<main class="panel" data-p="home" data-label="Home" id="top">
-  <section class="x-hero">
+<div class="panel" data-p="home" data-label="Home" id="top">
+  <div class="x-pin" id="pin"><section class="x-hero">
     <div>
       <p class="x-kick" data-rv>Complete point of sale system · Merchant guide</p>
       <h1 data-rv>We build around <em>your business.</em></h1>
@@ -1528,17 +1542,17 @@ button{font-family:inherit}
         <div class="ord"><span>Current Order</span><span>1 × Chicken Sandwich</span><span>1 × Milk Tea</span><span>Cash received: LKR 2,000</span><b>Total LKR 1,100</b></div>
       </div>
     </div>
-  </section>
+  </section></div>
   <div class="x-ticker" aria-hidden="true"><div><span>We build around your business<i></i></span><span>Sales<i></i></span><span>Inventory<i></i></span><span>Customers<i></i></span><span>Staff<i></i></span><span>Locations<i></i></span><span>Reporting<i></i></span><span>CRM<i></i></span><span>We build around your business<i></i></span><span>Sales<i></i></span><span>Inventory<i></i></span><span>Customers<i></i></span><span>Staff<i></i></span><span>Locations<i></i></span><span>Reporting<i></i></span><span>CRM<i></i></span></div></div>
   <section class="x-sec">
     <p class="x-kick" data-rv>What do you want to know?</p>
     <h2 class="x-h2" data-rv>Pick what matters to you. Skip the rest.</h2>
     <div class="x-tiles"><a class="x-tile x-t0" href="#features"><b>What it does</b><span>Sales, stock, CRM, staff, reporting</span></a><a class="x-tile x-t1" href="#pricing"><b>What it costs</b><span>Starter, Business, Pro and Custom plans</span></a><a class="x-tile x-t2" href="#setup"><b>How setup works</b><span>Hardware, menu upload, support SLA</span></a><a class="x-tile x-t3" href="#start"><b>How to switch</b><span>Four steps, switching from another POS</span></a><a class="x-tile x-t4" href="#story"><b>Who builds it</b><span>The founders behind Ceylonry POS</span></a></div>
   </section>
-</main>
+</div>
 
 <!-- 2 · TRY IT -->
-<main class="panel" data-p="demo" data-label="Try it" id="demo">
+<div class="panel" data-p="demo" data-label="Try it" id="demo">
   <section class="x-sec x-dark">
     <span class="x-kick" data-rv style="display:inline-block;background:var(--g);color:var(--ink);padding:7px 12px">Interactive preview</span>
     <h2 class="x-h2" data-rv>Ring up a sale. Right here.</h2>
@@ -1557,10 +1571,10 @@ button{font-family:inherit}
       </div>
     </div>
   </section>
-</main>
+</div>
 
 <!-- 3 · FEATURES -->
-<main class="panel" data-p="features" data-label="Features">
+<div class="panel" data-p="features" data-label="Features">
   <section class="section white" id="features">
 				<div class="wrap">
 					<div class="head">
@@ -1639,10 +1653,10 @@ button{font-family:inherit}
     <h2 class="x-h2" data-rv>Everything you need to run your business.</h2>
     <div class="x-pfs" style="margin-top:36px"><div class="x-pf x-ko"><h3>SALES &amp; CHECKOUT</h3><ul><li>Fast POS checkout</li><li>Multiple payment methods</li><li>Split payments</li><li>Discounts &amp; promotions</li><li>Printed and digital receipts</li><li>Dine-in &amp; takeaway workflows</li><li>Fast product search</li></ul></div><div class="x-pf x-kg"><h3>INVENTORY</h3><ul><li>Real-time inventory</li><li>Product &amp; category management</li><li>Low-stock alerts</li><li>Stock visibility</li><li>Barcode-supported workflows</li><li>Inventory reporting</li></ul></div><div class="x-pf x-kb"><h3>CUSTOMERS &amp; CRM</h3><ul><li>Customer profiles</li><li>Purchase history</li><li>Built-in CRM</li><li>Customer insights</li><li>Loyalty capabilities on supported packages</li></ul></div><div class="x-pf x-ko"><h3>STAFF &amp; OPERATIONS</h3><ul><li>Multiple users</li><li>User permissions</li><li>Staff access controls</li><li>Multi-user workflows</li><li>Operational visibility</li></ul></div><div class="x-pf x-kg"><h3>REPORTING</h3><ul><li>Sales reports</li><li>Profit &amp; performance insights</li><li>Product performance</li><li>Business reporting</li><li>Operational insights</li></ul></div><div class="x-pf x-kb"><h3>MULTI-LOCATION</h3><ul><li>Manage multiple locations through one connected environment with supported packages.</li></ul></div></div>
   </section>
-</main>
+</div>
 
 <!-- 4 · BUSINESS TYPES -->
-<main class="panel" data-p="businesses" data-label="Business types">
+<div class="panel" data-p="businesses" data-label="Business types">
   <section class="section" id="businesses">
 				<div class="wrap">
 					<div class="head">
@@ -1691,10 +1705,10 @@ button{font-family:inherit}
     <p class="x-lead" data-rv>A POS should no longer be just a billing machine. Ceylonry POS brings modern business-management capabilities to Sri Lankan businesses at accessible local pricing.</p>
     <div class="x-grid x-whys"><div class="x-why x-c0"><span>01</span><b>No forced hardware</b><p>Use compatible equipment you already own.</p></div><div class="x-why x-c1"><span>02</span><b>Free remote setup</b><p>Standard remote onboarding assistance is included.</p></div><div class="x-why x-c2"><span>03</span><b>Done-for-you menu support</b><p>Send us your CSV, spreadsheet or even images.</p></div><div class="x-why x-c3"><span>04</span><b>3–4 hour data setup</b><p>Standard menu/product data can typically be prepared quickly once complete information is supplied.</p></div><div class="x-why x-c4"><span>05</span><b>1–3 day standard onboarding</b><p>Get from confirmation to a configured system without dragging implementation out for weeks.</p></div><div class="x-why x-c5"><span>06</span><b>2 eligible custom features free</b><p>Have something specific you need? Talk to us.</p></div><div class="x-why x-c6"><span>07</span><b>Local support</b><p>Work with a team that understands the local business environment.</p></div><div class="x-why x-c7"><span>08</span><b>Modern technology</b><p>Access contemporary POS and business-management capabilities at local pricing.</p></div><div class="x-why x-c8"><span>09</span><b>Built to grow</b><p>Start with what you need today and expand as your operation changes.</p></div></div>
   </section>
-</main>
+</div>
 
 <!-- 5 · HARDWARE -->
-<main class="panel" data-p="hardware" data-label="Hardware">
+<div class="panel" data-p="hardware" data-label="Hardware">
   <section class="section hardware" id="hardware">
 				<div class="wrap">
 					<div class="head">
@@ -1859,10 +1873,10 @@ button{font-family:inherit}
 					</div>
 				</div>
 			</section>
-</main>
+</div>
 
 <!-- 6 · PRICING -->
-<main class="panel" data-p="pricing" data-label="Pricing">
+<div class="panel" data-p="pricing" data-label="Pricing">
   <section class="section" id="pricing">
 				<div class="wrap">
 					<div class="head">
@@ -1967,10 +1981,10 @@ button{font-family:inherit}
     </div>
     <p style="font-size:12px;line-height:1.6;margin:16px 0 0;max-width:760px">*Timing depends on quantity, complexity and completeness of information supplied. Support SLA is subject to the incident classification and SLA terms in your Service Agreement. Feature requests are subject to technical feasibility, security, platform compatibility, complexity and agreed scope. Major modules, integrations or substantial bespoke development may require separate pricing.</p>
   </section>
-</main>
+</div>
 
 <!-- 7 · SETUP & SUPPORT -->
-<main class="panel" data-p="setup" data-label="Setup &amp; support">
+<div class="panel" data-p="setup" data-label="Setup &amp; support">
   <section class="x-sec" id="setup">
     <div class="x-two">
       <div>
@@ -2030,10 +2044,10 @@ button{font-family:inherit}
       </div>
     </div>
   </section>
-</main>
+</div>
 
 <!-- 8 · GET STARTED -->
-<main class="panel" data-p="start" data-label="Get started">
+<div class="panel" data-p="start" data-label="Get started">
   <section class="x-sec x-dark" id="how-it-works">
     <p class="x-kick" data-rv>Ready to switch?</p>
     <h2 class="x-h2" data-rv style="margin-bottom:12px">We've made onboarding simple.</h2>
@@ -2104,10 +2118,10 @@ button{font-family:inherit}
 					</div>
 				</div>
 			</section>
-</main>
+</div>
 
 <!-- 9 · OUR STORY -->
-<main class="panel" data-p="story" data-label="Our story">
+<div class="panel" data-p="story" data-label="Our story">
   <section class="section" id="Our-story">
 	<div class="wrap">
 
@@ -2195,10 +2209,10 @@ button{font-family:inherit}
       <a class="x-btn" href="#contact" data-topic="Start a project" data-rv style="background:var(--navy)">Start a project →</a>
     </div>
   </section>
-</main>
+</div>
 
 <!-- 10 · CONTACT -->
-<main class="panel" data-p="contact" data-label="Contact" id="contact">
+<div class="panel" data-p="contact" data-label="Contact" id="contact">
   <section class="x-sec x-contact">
     <div class="x-two">
       <div>
@@ -2228,6 +2242,8 @@ button{font-family:inherit}
       </form>
     </div>
   </section>
+</div>
+
 </main>
 
 <div class="order-modal" id="hardware-detail-modal" role="dialog" aria-modal="true" aria-labelledby="hw-detail-title">
@@ -2358,81 +2374,76 @@ button{font-family:inherit}
 
 <script>
 (function () {
+  var de = document.documentElement;
   var panels = [].slice.call(document.querySelectorAll('.panel'));
-  var names = panels.map(function (p) { return p.dataset.p; });
-  var cur = -1, busy = null;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var RV = '.head>*,.feature,.step,.businesses span,.hardware-card,.hardware-group,.hardware-showcase,.hardware-note,.plan-card,.plan-extras,.plan-highlights,.faq details,.founder,.statement,.tagline,.x-fit,.x-why,.x-pf,.x-step,.x-dont,.x-tile,.x-grid>div,.x-sw>*,.x-two>*,.x-onb,.x-stats>div,.x-sends>div';
   var nav = document.getElementById('nav'), burger = document.getElementById('burger');
+  var bar = document.getElementById('bar'), pin = document.getElementById('pin');
+  var RV = '.head>*,.feature,.step,.businesses span,.hardware-card,.hardware-group,.hardware-showcase,.hardware-note,.plan-card,.plan-extras,.plan-highlights,.faq details,.founder,.statement,.tagline,.x-fit,.x-why,.x-pf,.x-step,.x-dont,.x-tile,.x-two>*,.x-sw>*,.x-onb,.x-stats>div,.x-sends>div,.x-kick,.x-h2,.x-lead,.x-inc,.x-tw,.x-labs>*,.cta>*';
 
+  // scroll reveals: each element animates in as it enters the viewport (direction by role), staggered per batch
   panels.forEach(function (p) {
     p.querySelectorAll(RV).forEach(function (el) { if (!el.hasAttribute('data-rv')) el.setAttribute('data-rv', ''); });
-    p.querySelectorAll('[data-rv]').forEach(function (el, i) { el.style.setProperty('--i', Math.min(i, 14)); });
   });
-
-  // pager at the end of every panel: previous / dots / next
-  panels.forEach(function (p, i) {
-    var d = document.createElement('nav');
-    d.className = 'x-pager'; d.setAttribute('aria-label', 'Page navigation');
-    var prev = panels[i - 1], next = panels[i + 1];
-    d.innerHTML = (prev ? '<a class="pv" href="#' + prev.dataset.p + '">← <span><small>Previous</small><br>' + prev.dataset.label + '</span></a>' : '<span></span>') +
-      '<div class="x-dots">' + panels.map(function (q, j) { return '<a href="#' + q.dataset.p + '" aria-label="' + q.dataset.label + '"' + (j === i ? ' class="on" aria-current="page"' : '') + '></a>'; }).join('') + '</div>' +
-      (next ? '<a class="nx" href="#' + next.dataset.p + '"><span><small>Next</small><br>' + next.dataset.label + '</span> →</a>' : '<a class="nx" href="#home">Back to start ↑</a>');
-    p.appendChild(d);
-  });
-
-  function show(i, hold) {
-    if (i === cur) return;
-    var from = panels[cur], to = panels[i];
-    var swap = function () {
-      if (from) from.classList.remove('active', 'out', 'in');
-      to.classList.add('active', 'in');
-      cur = i; busy = null;
-      window.scrollTo(0, 0);
-      document.getElementById('bar').style.width = ((i + 1) / panels.length * 100) + '%';
-      document.querySelectorAll('.x-nav a.x-l').forEach(function (a) {
-        var on = a.getAttribute('href') === '#' + to.dataset.p;
-        if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  document.querySelectorAll('.x-two>*:first-child,.x-sw>*:first-child,.founder:first-child').forEach(function (el) { el.setAttribute('data-rv', 'l'); });
+  document.querySelectorAll('.x-two>*:last-child,.x-sw>*:last-child,.founder:last-child').forEach(function (el) { el.setAttribute('data-rv', 'r'); });
+  document.querySelectorAll('.x-fit,.x-why,.x-pf,.x-dont,.x-tile,.feature,.hardware-card,.plan-card,.x-step,.step').forEach(function (el) { el.setAttribute('data-rv', 's'); });
+  var all = document.querySelectorAll('[data-rv]');
+  if (reduce || !('IntersectionObserver' in window)) {
+    all.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (es) {
+      var n = 0;
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.style.setProperty('--d', Math.min(n++, 7) * 80 + 'ms');
+        e.target.classList.add('in'); io.unobserve(e.target);
       });
-      var t = to.dataset.label + ' · Ceylonry POS';
-      if (to.dataset.p === 'home') t = 'Ceylonry POS — We build around your business';
-      document.title = t;
-      if (hold) hold();
-    };
-    if (busy) { clearTimeout(busy); if (from) from.classList.remove('out'); }
-    if (from && !reduce) { from.classList.add('out'); busy = setTimeout(swap, 220); } else swap();
+    }, { threshold: 0.1, rootMargin: '0px 0px -5% 0px' });
+    all.forEach(function (el) { io.observe(el); });
   }
 
-  // #name opens a panel; #some-section inside a panel opens that panel and scrolls to it
-  function route() {
-    var id = decodeURIComponent(location.hash.slice(1)) || 'home';
-    var alias = { 'how-it-works': 'how-it-works' };
-    var i = names.indexOf(id), anchor = null;
-    if (i < 0) {
-      var el = document.getElementById(alias[id] || id), host = el && el.closest('.panel');
-      if (host) { i = panels.indexOf(host); anchor = el; }
+  // progress bar, section rail, nav highlight and hero parallax all follow the scroll position
+  var rail = document.createElement('nav');
+  rail.className = 'x-rail'; rail.setAttribute('aria-label', 'Sections');
+  rail.innerHTML = panels.map(function (p) { return '<a href="#' + p.dataset.p + '" aria-label="' + p.dataset.label + '"><span>' + p.dataset.label + '</span></a>'; }).join('');
+  document.body.appendChild(rail);
+  var dots = [].slice.call(rail.children), links = [].slice.call(document.querySelectorAll('.x-nav a.x-l')), last = -1, ticking = false;
+  function frame() {
+    ticking = false;
+    var y = window.scrollY || 0, max = de.scrollHeight - innerHeight;
+    bar.style.width = (max > 0 ? y / max * 100 : 0) + '%';
+    if (pin && y < innerHeight * 2) pin.style.setProperty('--p', Math.min(1, y / innerHeight).toFixed(3));
+    var cur = 0;
+    panels.forEach(function (p, i) { if (p.getBoundingClientRect().top <= innerHeight * 0.4) cur = i; });
+    if (cur !== last) {
+      last = cur;
+      dots.forEach(function (d, i) { d.classList.toggle('on', i === cur); });
+      links.forEach(function (a) { if (a.getAttribute('href') === '#' + panels[cur].dataset.p) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     }
-    if (i < 0) i = 0;
-    if (i === cur) { if (anchor) anchor.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); return; }
-    show(i, anchor && function () { anchor.scrollIntoView({ block: 'start' }); });
-    nav.classList.remove('open'); burger.setAttribute('aria-expanded', 'false');
   }
-  window.go = function (name) { if (location.hash.slice(1) !== name) location.hash = name; else route(); };
-  window.addEventListener('hashchange', route);
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  frame();
 
+  // #name scrolls to that section (works for section names and for older anchors such as #pricing, #faq, #Our-story)
+  function find(id) { return document.querySelector('.panel[data-p="' + id + '"]') || document.getElementById(id); }
+  window.go = function (name) { var el = find(name); if (el) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); };
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = decodeURIComponent(a.getAttribute('href').slice(1)) || 'home', el = find(id);
+    if (!el) return;
+    e.preventDefault();
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    history.replaceState(null, '', '#' + id);
+    nav.classList.remove('open'); burger.setAttribute('aria-expanded', 'false');
+  });
+  var first = location.hash && find(decodeURIComponent(location.hash.slice(1)));
+  if (first) window.addEventListener('load', function () { first.scrollIntoView(); });
   burger.addEventListener('click', function () {
     var o = nav.classList.toggle('open'); burger.setAttribute('aria-expanded', o);
-  });
-  nav.addEventListener('click', function (e) { if (e.target.closest('a')) { nav.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); } });
-
-  // left / right arrow keys move between panels (not while typing or with a dialog open)
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    var t = e.target.tagName;
-    if (/INPUT|TEXTAREA|SELECT/.test(t) || e.target.isContentEditable || document.querySelector('.order-modal.open')) return;
-    var n = cur + (e.key === 'ArrowRight' ? 1 : -1);
-    if (n >= 0 && n < panels.length) location.hash = names[n];
   });
 
   /* ---- live POS demo ---- */
@@ -2481,7 +2492,6 @@ button{font-family:inherit}
       .then(function () { btn.disabled = false; btn.textContent = 'Send message'; });
   });
 
-  route();
 })();
 </script>
 <script>
