@@ -328,7 +328,7 @@ for (const file of ['solo.html', 'starter.html', 'growth.html']) {
 
 test('plan user limits are displayed consistently and enforced by team access', function() {
   const platform = read('assets/platform.js');
-  const landing = read('index.html');
+  const landing = read('cashflow-home.html');
   const onboarding = read('onboarding.html');
   const access = read('team.html');
 
@@ -479,7 +479,7 @@ test('all application pages load the current invoice renderer without stale cach
   const version = '20260811-leaflet-map12';
   const pages = [
     'solo.html', 'starter.html', 'growth.html', 'onboarding.html',
-    'index.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
+    'cashflow-home.html', 'premium.html', 'starter_3.html', 'invoice-public.html',
     'team.html', 'ceylonry-admin.html', 'mrs-gamage-story.html',
     'privacy.html', 'terms.html'
   ];
@@ -609,7 +609,7 @@ test('admin dashboard loads quickly without presenting failed requests as zero d
 });
 
 test('public demos use fictional data and expose only Business from the landing page', function() {
-  const landing = read('index.html');
+  const landing = read('cashflow-home.html');
   const story = read('mrs-gamage-story.html');
   const solo = read('solo.html');
   const studio = read('starter.html');

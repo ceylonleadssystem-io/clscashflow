@@ -125,6 +125,19 @@
   status = 301
   force = true
 
+# The POS page is now the main landing page (index.html); the old address keeps working.
+[[redirects]]
+  from = "/pos.html"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/pos"
+  to = "/"
+  status = 301
+  force = true
+
 # /cashflow on its own has no page: send people to the landing page.
 [[redirects]]
   from = "/cashflow"

@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.join(__dirname, '..');
-const page = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const page = fs.readFileSync(path.join(root, 'cashflow-home.html'), 'utf8');
 
 test('Poddo success story uses its supplied brand logo in a compact proof carousel', () => {
   assert.match(page, /src="assets\/poddo-kids-club-logo\.png" alt="Poddo Kids Club logo"/);

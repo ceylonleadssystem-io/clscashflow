@@ -68,7 +68,7 @@ test('catalog switches to mobile cards instead of forcing a horizontal page scro
 });
 
 test('landing page presents one unlimited catalog across all plans', () => {
-  const landing = read('index.html');
+  const landing = read('cashflow-home.html');
   assert.match(landing, /<tr><td>Products &amp; Services Catalog<\/td><td><strong>Unlimited items<\/strong><\/td><td><strong>Unlimited items<\/strong><\/td><td><strong>Unlimited items<\/strong><\/td><\/tr>/);
   assert.doesNotMatch(landing, /Catalog CSV, Performance &amp; Audit/);
   assert.doesNotMatch(landing, /up to 30 active items/);

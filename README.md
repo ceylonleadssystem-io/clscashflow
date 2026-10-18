@@ -14,7 +14,7 @@ Live site: <https://ceylonrylabs.io>
 
 | Product | What it is | Address | Code |
 |---|---|---|---|
-| **CashFlow** | Invoicing, expenses and cash flow dashboards for freelancers, studios and businesses (Solo, Studio and Business plans), with team access and online payments | `/` (landing), `/cashflow/…` | `index.html`, `cashflow/`, `assets/` |
+| **CashFlow** | Invoicing, expenses and cash flow dashboards for freelancers, studios and businesses (Solo, Studio and Business plans), with team access and online payments | `/cashflow/…` (internal use; the CashFlow homepage is `cashflow-home.html`, not linked publicly) | `cashflow-home.html`, `cashflow/`, `assets/` |
 | **POS** | Full point of sale: checkout, tables, orders, inventory, customers, staff and cash shifts, reports, receipts and barcode printing. Works offline and syncs to the cloud | [ceylonrylabs.io/posv2/](ceylonrylabs.io/posv2/) | `pos-react/` |
 | **POS Admin portal** | For Ceylonry staff only: every account, its plan and subscription, feature switches, invoices, diagnostics, account deletion. Lists which products each account uses | [admin](ceylonrylabs.io/posv2/admin) | `pos-react/src/admin-app/`, `netlify/functions/pos-admin-*.js` |
 | **KDS** (Kitchen Display) | A kitchen screen that receives prep tickets from the POS over the local Wi-Fi (WebRTC) and tracks new / preparing / ready | [KDS](ceylonrylabs.io/KDS) | `pos-react/src/KDS/`, `netlify/functions/kds-pair.js` |
@@ -97,7 +97,8 @@ Netlify publishes the repository **root** (`publish = "."`), so a file's path is
 
 ```
 .
-├─ index.html · pos.html · pos-onboarding.html     Landing and POS marketing/onboarding pages
+├─ index.html · pos-onboarding.html                 Main landing page (Ceylonry POS) and onboarding page
+├─ cashflow-home.html                               Internal CashFlow homepage (noindex, not linked)
 ├─ privacy.html · terms.html · mrs-gamage-story.html · story-thank-you.html
 ├─ manifest.webmanifest · sw.js · app/             PWA shell and service worker
 ├─ cashflow/                                       CashFlow app: sign-in, onboarding, dashboards
