@@ -18810,7 +18810,7 @@
 
 			window.clsSignOut = function clsSignOut() {
 				if (BUSINESS_DEMO_MODE) {
-					window.location.href = "/index.html";
+					window.location.href = "/cashflow-home.html";
 					return;
 				}
 				if (!confirm("Sign out of Cashflow Business?")) return;
@@ -19170,7 +19170,7 @@
 				banner.style.cssText =
 					"position:fixed;left:0;right:0;bottom:0;z-index:900;background:#1a1714;color:#fff;padding:.65rem 1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;font-size:.75rem";
 				banner.innerHTML =
-					'<div><strong>Business demo</strong> · fictional sample data <a href="starter.html?demo=1" style="color:#fff;margin-left:1rem">Studio demo</a> <a href="/index.html" style="color:#fff;margin-left:1rem">Home</a></div><button class="btn bo" onclick="window.startBusinessTour()">Show me around</button>';
+					'<div><strong>Business demo</strong> · fictional sample data <a href="starter.html?demo=1" style="color:#fff;margin-left:1rem">Studio demo</a> <a href="/cashflow-home.html" style="color:#fff;margin-left:1rem">Home</a></div><button class="btn bo" onclick="window.startBusinessTour()">Show me around</button>';
 				document.body.appendChild(banner);
 				setTimeout(function () {
 					window.startBusinessTour();
