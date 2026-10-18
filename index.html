@@ -2392,14 +2392,17 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
   if (reduce || !('IntersectionObserver' in window)) {
     all.forEach(function (el) { el.classList.add('in'); });
   } else {
+    // replays every time: an element resets once it is fully off screen and animates again when it comes back
     var io = new IntersectionObserver(function (es) {
       var n = 0;
       es.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        e.target.style.setProperty('--d', Math.min(n++, 7) * 80 + 'ms');
-        e.target.classList.add('in'); io.unobserve(e.target);
+        if (e.isIntersecting && e.intersectionRatio >= 0.1) {
+          if (e.target.classList.contains('in')) return;
+          e.target.style.setProperty('--d', Math.min(n++, 7) * 80 + 'ms');
+          e.target.classList.add('in');
+        } else if (!e.isIntersecting) e.target.classList.remove('in');
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -5% 0px' });
+    }, { threshold: [0, 0.1], rootMargin: '0px 0px -5% 0px' });
     all.forEach(function (el) { io.observe(el); });
   }
 
