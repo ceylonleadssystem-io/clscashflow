@@ -798,7 +798,7 @@
       "file_type": "code",
       "norm_label": "ceylobutton()",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L80"
+      "source_location": "L89"
     },
     {
       "id": "pos_react_src_components_ceylo_ceylo_ceylomascot",
@@ -810,7 +810,7 @@
       "file_type": "code",
       "norm_label": "ceylomascot()",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L39"
+      "source_location": "L41"
     },
     {
       "id": "pos_react_src_components_ceylo_ceylo_ceylopanel",
@@ -822,7 +822,7 @@
       "file_type": "code",
       "norm_label": "ceylopanel()",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L119"
+      "source_location": "L128"
     },
     {
       "id": "pos_react_src_components_ceylo_ceylo_item",
@@ -834,7 +834,7 @@
       "file_type": "code",
       "norm_label": "item()",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L101"
+      "source_location": "L110"
     },
     {
       "id": "pos_react_src_components_ceylo_ceylo_usesetupchecks",
@@ -846,7 +846,7 @@
       "file_type": "code",
       "norm_label": "usesetupchecks()",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L55"
+      "source_location": "L57"
     },
     {
       "id": "pos_react_src_components_layout_iosinstallguide_iosinstallguide",
@@ -906,7 +906,7 @@
       "file_type": "code",
       "norm_label": "summarize()",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L137"
+      "source_location": "L156"
     },
     {
       "id": "pos_react_src_gates_businessgate_businessgate",
@@ -11406,7 +11406,7 @@
       "file_type": "code",
       "norm_label": "byid()",
       "source_file": "pos-react/src/tests/ceylo.test.js",
-      "source_location": "L17"
+      "source_location": "L18"
     },
     {
       "id": "pos_react_src_tests_ceylo_test_good",
@@ -13590,7 +13590,7 @@
       "file_type": "code",
       "norm_label": "isembedded()",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L14"
+      "source_location": "L15"
     },
     {
       "id": "pos_react_src_domain_ceylo_plural",
@@ -13602,7 +13602,7 @@
       "file_type": "code",
       "norm_label": "plural()",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L13"
+      "source_location": "L14"
     },
     {
       "id": "pos_react_src_domain_ceylo_runsetupchecks",
@@ -13614,7 +13614,7 @@
       "file_type": "code",
       "norm_label": "runsetupchecks()",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L20"
+      "source_location": "L22"
     },
     {
       "id": "pos_react_src_services_billing_accessallowed",
@@ -24578,7 +24578,7 @@
       "file_type": "code",
       "norm_label": "dot",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L99"
+      "source_location": "L108"
     },
     {
       "id": "pos_react_src_components_ceylo_ceylo_eyes",
@@ -24589,7 +24589,7 @@
       "file_type": "code",
       "norm_label": "eyes",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L17"
+      "source_location": "L19"
     },
     {
       "id": "pos_react_src_components_layout_iosinstallguide",
@@ -32677,7 +32677,7 @@
       "file_type": "code",
       "norm_label": "weak_pins",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L12"
+      "source_location": "L13"
     },
     {
       "id": "pos_react_src_domain_saleslog_approver_roles",
@@ -56494,42 +56494,6 @@
     },
     {
       "source": "pos_react_src_components_ceylo_ceylo_ceylobutton",
-      "target": "pos_react_src_store_posprovider_usepos",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L81",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_components_ceylo_ceylo_ceylobutton",
-      "target": "pos_react_src_components_ceylo_ceylo_usesetupchecks",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L82",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_components_ceylo_ceylo_ceylobutton",
-      "target": "pos_react_src_domain_ceylo_summarize",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L82",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_components_ceylo_ceylo_ceylobutton",
       "target": "pos_react_src_components_ceylo_ceylo_ceylomascot",
       "relation": "calls",
       "_origin": "ast",
@@ -56537,7 +56501,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L92",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo_ceylobutton",
+      "target": "pos_react_src_store_posprovider_usepos",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo_ceylobutton",
+      "target": "pos_react_src_components_ceylo_ceylo_usesetupchecks",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo_ceylobutton",
+      "target": "pos_react_src_domain_ceylo_summarize",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -56549,7 +56549,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L120",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -56561,7 +56561,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L121",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -56573,7 +56573,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L137",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -56585,7 +56585,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L142",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -56597,7 +56597,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L150",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -56609,7 +56609,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L177",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -56621,7 +56621,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -56633,7 +56633,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -56645,7 +56645,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L58",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -56657,7 +56657,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L63",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -56669,7 +56669,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L69",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -59914,6 +59914,18 @@
     },
     {
       "source": "pos_react_src_domain_ceylo_runsetupchecks",
+      "target": "pos_react_src_config_subscription_usageof",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/domain/ceylo.js",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_domain_ceylo_runsetupchecks",
       "target": "pos_react_src_services_billing_accessallowed",
       "relation": "calls",
       "_origin": "ast",
@@ -59921,7 +59933,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L113",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -59933,7 +59945,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L115",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -59945,7 +59957,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L130",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -59957,19 +59969,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L53",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_domain_ceylo_runsetupchecks",
-      "target": "pos_react_src_config_subscription_usageof",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L98",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -80081,7 +80081,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/tests/ceylo.test.js",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -85089,7 +85089,7 @@
     },
     {
       "source": "pos_react_src_components_ceylo_ceylo",
-      "target": "pos_react_src_store_settingstab_opensettingstab",
+      "target": "pos_react_src_services_printing_receiptprinter_receiptprinter",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -85097,6 +85097,30 @@
       "context": "import",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
       "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo",
+      "target": "pos_react_src_services_printing_labelprinter_labelprinter",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo",
+      "target": "pos_react_src_store_settingstab_opensettingstab",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -87309,7 +87333,7 @@
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_config_subscription_usageof",
+      "target": "pos_react_src_services_billing_accessallowed",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -87321,19 +87345,31 @@
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_config_presets_kitchen_types",
+      "target": "pos_react_src_services_billing_billingwarning",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L7",
+      "source_location": "L10",
       "weight": 1.0
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_domain_saleslog_approver_roles",
+      "target": "pos_react_src_config_subscription_usageof",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pos-react/src/domain/ceylo.js",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_domain_ceylo",
+      "target": "pos_react_src_config_presets_kitchen_types",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -87345,19 +87381,7 @@
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_services_billing_accessallowed",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L9",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_services_billing_billingwarning",
+      "target": "pos_react_src_domain_saleslog_approver_roles",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -103173,7 +103197,7 @@
     },
     {
       "source": "pos_react_src_components_ceylo_ceylo",
-      "target": "pos_react_src_store_settingstab",
+      "target": "pos_react_src_services_printing_receiptprinter",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -103181,6 +103205,30 @@
       "context": "import",
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
       "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo",
+      "target": "pos_react_src_services_printing_labelprinter",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo",
+      "target": "pos_react_src_store_settingstab",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -105129,7 +105177,7 @@
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_config_subscription",
+      "target": "pos_react_src_services_billing",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -105141,19 +105189,19 @@
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_config_presets",
+      "target": "pos_react_src_config_subscription",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L7",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_domain_saleslog",
+      "target": "pos_react_src_config_presets",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -105165,7 +105213,7 @@
     },
     {
       "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_services_billing",
+      "target": "pos_react_src_domain_saleslog",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -125429,13 +125477,24 @@
     },
     {
       "source": "pos_react_src_components_ceylo_ceylo",
+      "target": "pos_react_src_components_ceylo_ceylo_dot",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_components_ceylo_ceylo",
       "target": "pos_react_src_components_ceylo_ceylo_item",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L101",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -125446,7 +125505,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L119",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -125457,7 +125516,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L17",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -125468,7 +125527,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L39",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -125479,7 +125538,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L55",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -125490,18 +125549,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L80",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_components_ceylo_ceylo",
-      "target": "pos_react_src_components_ceylo_ceylo_dot",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "pos-react/src/components/ceylo/Ceylo.jsx",
-      "source_location": "L99",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -128394,7 +128442,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -128405,18 +128453,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L13",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_domain_ceylo",
-      "target": "pos_react_src_domain_ceylo_summarize",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L137",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -128427,7 +128464,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L14",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_domain_ceylo",
+      "target": "pos_react_src_domain_ceylo_summarize",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pos-react/src/domain/ceylo.js",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -128438,7 +128486,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/ceylo.js",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -146305,5 +146353,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "d94829800545059a6fc65870917a4de9e80f5138"
+  "built_at_commit": "7bf11ed282007b900e3acd66959c6014498dce5a"
 }

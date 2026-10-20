@@ -37,6 +37,7 @@ Switches grouped by area; each screen's own switch (marked **Screen**) sits at t
 - Core features (checkout) cannot be switched off.
 - A feature that requires another is off whenever the required one is off (e.g. CRM needs Customers).
 - **Ceylo setup checker** (*Settings & platform*, on by default) shows the Ceylo button in the POS top bar and "Check my setup" under Settings > Plan & Support. Ceylo only reads the settings and links each problem to the screen that fixes it.
+- **Ceylo AI answers** (*Settings & platform*, off by default, needs the Ceylo switch) adds "Ask Ceylo" to the panel: staff type a question and Claude (`claude-opus-5-5`, via the `ceylo-ask` Netlify function) answers from Ceylo's check results. Set `ANTHROPIC_API_KEY` in the Netlify environment (server only, never in the POS). Each question is a paid AI request; the function allows 20 questions a minute per device and refuses when the switch is off for that business. Only check titles, the business name and type, the role and the switched-off features are sent, never PINs, keys or customer data.
 - Stored in `settings.features` and `settings.locationFeatures`; synced to every device.
 
 ## Tiers

@@ -15,6 +15,8 @@ import { kdsLink } from "../../KDS/link";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { labelPrinter } from "../../services/printing/labelPrinter";
 import { openSettingsTab } from "../../store/settingsTab";
+import { askCeylo, checksForAi } from "../../services/ceyloAi";
+import { useFeature } from "../../store/FeatureProvider";
 
 const EYES = {
 	ready: (
@@ -29,6 +31,12 @@ const EYES = {
 			<path d="M67 64 Q74 54 81 64" />
 		</g>
 	),
+	think: (
+		<g fill="var(--ui-accent)">
+			<rect x="40" y="58" width="12" height="7" rx="3.5" />
+			<rect x="68" y="54" width="12" height="13" rx="6" />
+		</g>
+	),
 	alert: (
 		<g fill="var(--ui-warning, #e99a18)">
 			<rect x="40" y="51" width="12" height="19" rx="6" />
@@ -37,18 +45,20 @@ const EYES = {
 	),
 };
 
-/** Ceylo's face: dark head, visor eyes (the mood), tea-leaf antenna. */
+/** Ceylo's face: dark head, visor eyes (the mood), tea-leaf antenna. Subtle CSS motion: the leaf sways, the eyes blink, the head bobs while thinking. */
 export function CeyloMascot({ mood = "ready", size = 32 }) {
 	return (
-		<svg className="ceylo-mascot" viewBox="0 0 120 120" width={size} height={size} aria-hidden="true">
-			<path d="M60 22 C60 14 64 8 72 6 C72 14 68 20 60 22Z" fill="#2f9b5a" />
-			<path d="M60 22 L60 30" stroke="#2f9b5a" strokeWidth="3" strokeLinecap="round" />
+		<svg className={"ceylo-mascot is-" + mood} viewBox="0 0 120 120" width={size} height={size} aria-hidden="true">
+			<g className="ceylo-leaf">
+				<path d="M60 22 C60 14 64 8 72 6 C72 14 68 20 60 22Z" fill="#2f9b5a" />
+				<path d="M60 22 L60 30" stroke="#2f9b5a" strokeWidth="3" strokeLinecap="round" />
+			</g>
 			<rect x="18" y="30" width="84" height="72" rx="26" fill="#111920" />
 			<rect x="28" y="44" width="64" height="34" rx="15" fill="#1b252d" />
 			<circle cx="12" cy="66" r="7" fill="#111920" />
 			<circle cx="108" cy="66" r="7" fill="#111920" />
 			<path d="M50 90 Q60 95 70 90" stroke="#c6ced4" strokeWidth="3" fill="none" strokeLinecap="round" />
-			{EYES[mood] || EYES.ready}
+			<g className="ceylo-eyes">{EYES[mood] || EYES.ready}</g>
 		</svg>
 	);
 }
@@ -124,9 +134,94 @@ function Item({ r, onFix, canFix }) {
 	);
 }
 
+const SUGGESTIONS = ["How do I fix the first problem?", "What should I set up first?", "Why didn't the receipt print?"];
+
+/** Ask Ceylo: a short chat answered by Claude from the check results. The thread lives only in this panel. */
+function AskCeylo({ results, role, view, onThinking }) {
+	const [thread, setThread] = useState([]); // [{ role: "user" | "assistant", text }]
+	const [q, setQ] = useState("");
+	const [busy, setBusy] = useState(false);
+	const [error, setError] = useState("");
+	const endRef = useRef(null);
+	useEffect(() => {
+		endRef.current?.scrollIntoView?.({ block: "nearest" });
+	}, [thread, busy]);
+	const ask = async (question) => {
+		const text = question.trim();
+		if (!text || busy) return;
+		setError("");
+		setQ("");
+		const history = thread.slice(-6);
+		setThread((t) => [...t, { role: "user", text }]);
+		setBusy(true);
+		onThinking(true);
+		try {
+			const answer = await askCeylo({ question: text, history, checks: checksForAi(results), role, view });
+			setThread((t) => [...t, { role: "assistant", text: answer }]);
+		} catch (e) {
+			setError(e.message);
+		} finally {
+			setBusy(false);
+			onThinking(false);
+		}
+	};
+	return (
+		<section className="ceylo-ask" aria-label="Ask Ceylo">
+			<h3>Ask Ceylo</h3>
+			{!thread.length && (
+				<div className="ceylo-suggest">
+					{SUGGESTIONS.map((s) => (
+						<button key={s} type="button" className="chip" onClick={() => ask(s)} disabled={busy}>
+							{s}
+						</button>
+					))}
+				</div>
+			)}
+			<div className="ceylo-thread" aria-live="polite">
+				{thread.map((m, i) => (
+					<p key={i} className={"ceylo-bubble is-" + m.role}>
+						{m.text}
+					</p>
+				))}
+				{busy && (
+					<p className="ceylo-bubble is-assistant ceylo-typing" aria-label="Ceylo is thinking">
+						<i />
+						<i />
+						<i />
+					</p>
+				)}
+				{error && (
+					<p className="ceylo-error" role="alert">
+						{error}
+					</p>
+				)}
+				<span ref={endRef} />
+			</div>
+			<form
+				className="ceylo-ask-form"
+				onSubmit={(e) => {
+					e.preventDefault();
+					ask(q);
+				}}
+			>
+				<label htmlFor="ceylo-question" className="sr-only">
+					Ask Ceylo a question
+				</label>
+				<input id="ceylo-question" className="input" maxLength={600} placeholder="Ask about your setup…" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
+				<button type="submit" className="btn gold" disabled={busy || !q.trim()}>
+					Ask
+				</button>
+			</form>
+			<small className="ceylo-ai-note">Answers are written by AI from your setup checks and can be wrong. Never type PINs or passwords.</small>
+		</section>
+	);
+}
+
 /** The report panel: side panel on wide screens, full screen on phones. Cashiers see a short summary without fix buttons. */
 export function CeyloPanel() {
-	const { layout, setLayout, go, currentUser } = usePos();
+	const { layout, setLayout, go, currentUser, view } = usePos();
+	const aiOn = useFeature("settings.ceyloAi");
+	const [thinking, setThinking] = useState(false);
 	const results = useSetupChecks();
 	const [showPassed, setShowPassed] = useState(false);
 	const [checkedAt, setCheckedAt] = useState(() => new Date());
@@ -156,7 +251,7 @@ export function CeyloPanel() {
 		<div className="ceylo-layer" onClick={(e) => e.target === e.currentTarget && close()}>
 			<aside className="ceylo-panel" id="ceylo-panel" role="dialog" aria-modal="true" aria-labelledby="ceylo-title">
 				<header className="ceylo-head">
-					<CeyloMascot mood={attention ? "alert" : "glad"} size={44} />
+					<CeyloMascot mood={thinking ? "think" : attention ? "alert" : "glad"} size={44} />
 					<div>
 						<b id="ceylo-title">{headline}</b>
 						<small>
@@ -200,6 +295,7 @@ export function CeyloPanel() {
 							</section>
 						</>
 					)}
+					{aiOn && <AskCeylo results={results} role={currentUser?.role || ""} view={view} onThinking={setThinking} />}
 				</div>
 				<footer className="ceylo-foot">
 					<button type="button" className="btn out" onClick={close}>
