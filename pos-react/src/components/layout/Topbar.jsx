@@ -13,6 +13,7 @@ import { useFullscreen } from "../../hooks/useFullscreen";
 import { useInstall } from "../../hooks/useInstall";
 import { IosInstallGuide } from "./IosInstallGuide";
 import { SyncIndicator } from "./SyncIndicator";
+import { CeyloButton, CeyloPanel } from "../ceylo/Ceylo";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { useUi } from "../../store/UiProvider";
 import { locationLabel } from "../../services/pos/locations";
@@ -31,6 +32,7 @@ export function Topbar({ onOpenLocations }) {
 	const locations = useFeature("business.locations");
 	const modeChooser = useFeature("checkout.modeChooser");
 	const headerPrinter = useFeature("hardware.headerPrinterButton");
+	const ceylo = useFeature("settings.ceylo") && !!currentUser;
 	const [printer, setPrinter] = useState(receiptPrinter.status);
 	const [menuOpen, setMenuOpen] = useState(false);
 	useEffect(() => receiptPrinter.subscribe(setPrinter), []);
@@ -77,6 +79,7 @@ export function Topbar({ onOpenLocations }) {
 							<b>⌄</b>
 						</button>
 					)}
+					{ceylo && <CeyloButton />}
 					<SyncIndicator variant="compact" />
 					<button
 						id="top-more"
@@ -143,6 +146,7 @@ export function Topbar({ onOpenLocations }) {
 				</div>
 			</header>
 			<IosInstallGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
+			{ceylo && <CeyloPanel />}
 			{view === "checkout" && (
 				<button id="mobile-cart-toggle" className="btn gold" type="button" onClick={() => setLayout((l) => ({ ...l, mobileCartOpen: !l.mobileCartOpen }))}>
 					{layout.mobileCartOpen ? (

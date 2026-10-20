@@ -32,10 +32,13 @@ Use **Disable account** / **Enable account**. Devices already signed in re-check
 payment screen; enabling restores access. Payment status (trial / active / paused) is shown on the card.
 
 ## Features and locations
-69 switches grouped by area. Each switch applies to the whole business; a **per-location** table lets you set
+Switches grouped by area; each screen's own switch (marked **Screen**) sits at the top of the area it belongs to, followed by that screen's features (for example Sales History with Refunds and Voids; Order Queue, Tables, Guest Manager, KOT and KDS under *Restaurant & kitchen*). Each switch applies to the whole business; a **per-location** table lets you set
 *Inherit / On / Off* for each location. Rules:
 - Core features (checkout) cannot be switched off.
 - A feature that requires another is off whenever the required one is off (e.g. CRM needs Customers).
+- **Ceylo setup checker** (*Settings & platform*, on by default) shows the Ceylo button in the POS top bar and "Check my setup" under Settings > Plan & Support. Ceylo only reads the settings and links each problem to the screen that fixes it.
+- **Ceylo AI answers** (*Settings & platform*, off by default, needs the Ceylo switch) adds "Ask Ceylo" to the panel: staff type a question and Claude (`claude-opus-5-5`, via the `ceylo-ask` Netlify function) answers from Ceylo's check results. Set `ANTHROPIC_API_KEY` in the Netlify environment (server only, never in the POS). Each question is a paid AI request; the function allows 20 questions a minute per device and refuses when the switch is off for that business. Only check titles, the business name and type, the role and the switched-off features are sent, never PINs, keys or customer data.
+- **Own AI key per location**: when Ceylo AI answers is on, owners and managers see **Settings > Plan & Support > Ceylo AI key**. For each location they choose Claude (Anthropic), ChatGPT (OpenAI) or Gemini (Google), paste the API key and model, and press *Save & test key*; each location can use a different account. Devices signed in to a location answer with that location's key. The key is tested with one tiny request, stored encrypted (AES-256-GCM with `CEYLO_KEY_SECRET`, at least 32 characters, set in Netlify) in a server-only row, and never shown again (only its last 4 characters). Ceylo then answers with that account, billed by that AI provider; a location without a key falls back to Ceylonry's `ANTHROPIC_API_KEY`.
 - Stored in `settings.features` and `settings.locationFeatures`; synced to every device.
 
 ## Tiers

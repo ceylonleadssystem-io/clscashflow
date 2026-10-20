@@ -153,6 +153,7 @@ export function FeaturesTab({ settings, locations, save, saving, ui }) {
 											<strong>
 												{f.label}
 												{f.core && <span className="badge">Required</span>}
+												{f.id.startsWith("view.") && <span className="badge">Screen</span>}
 												{notInPlan && <span className="badge admin-dirty">Not in plan</span>}
 												{!isBusiness && ov !== undefined && <span className="badge admin-dirty">Override</span>}
 											</strong>

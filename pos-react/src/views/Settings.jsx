@@ -12,6 +12,9 @@ import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
 import { KdsPairing } from "../KDS/KdsPairing";
+import { onSettingsTab, requestedSettingsTab } from "../store/settingsTab";
+import { CeyloMascot } from "../components/ceylo/Ceylo";
+import { CeyloAiKeyPanel } from "../components/ceylo/CeyloAiKey";
 import {
 	AppearancePanel,
 	BillingPanel,
@@ -59,14 +62,18 @@ const formFrom = (s) => ({
 /** Settings: business, POS setup, operations, receipt printing and plan & support (tabbed). */
 export function Settings() {
 	const { settings } = useData();
-	const { currentUser, svc, setSetupOpen } = usePos();
+	const { currentUser, svc, setSetupOpen, setLayout } = usePos();
 	const locationsOn = useFeature("business.locations");
 	const themes = useFeature("settings.themes");
 	const serviceCharge = useFeature("checkout.serviceCharge");
 	const kdsOn = useFeature("checkout.kds");
 	const billing = useFeature("settings.billing");
+	const ceylo = useFeature("settings.ceylo");
+	const ceyloAi = useFeature("settings.ceyloAi");
 	const ui = useUi();
-	const [tab, setTab] = useState("business");
+	const [tab, setTab] = useState(() => requestedSettingsTab() || "business");
+	// Ceylo's fix buttons can ask for a tab while Settings is already open
+	useEffect(() => onSettingsTab((t) => setTab(t)), []);
 	const [form, setForm] = useState(() => formFrom(settings));
 	useEffect(() => {
 		// reload when a preset/setup is applied elsewhere
@@ -111,6 +118,21 @@ export function Settings() {
 		kds: <KdsPairing />,
 		plan: full && (
 			<>
+				{ceylo && (
+					<div className="panel" id="ceylo-settings">
+						<div className="panel-head" style={{ gap: 12, justifyContent: "flex-start" }}>
+							<CeyloMascot size={40} />
+							<div style={{ flex: 1, minWidth: 0 }}>
+								<div className="panel-title">Check my setup</div>
+								<div className="muted">Ceylo checks your profile, menu, printing, users, stock and sync, and shows what needs attention.</div>
+							</div>
+							<button className="btn gold" type="button" id="ceylo-check-setup" onClick={() => setLayout((l) => ({ ...l, ceyloOpen: true }))}>
+								Check my setup
+							</button>
+						</div>
+					</div>
+				)}
+				{ceyloAi && <CeyloAiKeyPanel />}
 				{billing && <BillingPanel />}
 				<PlanSupportPanel form={form} set={set} onRegenerate={() => svc.settings.regenerateSupportCode()} />
 			</>
