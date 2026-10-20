@@ -131,7 +131,7 @@ export const FEATURES = [
 	f("settings.receiptSocials", "settings", "Socials & QR on receipt", "Social handles and QR artwork printed on receipts."),
 	f("settings.supportAccess", "settings", "Support access code", "Owner-controlled diagnostic access with 24-hour codes."),
 	f("settings.billing", "settings", "Billing & subscription widget", "Shared platform billing widget, trial countdown and paywall."),
-	f("settings.ceylo", "settings", "Ceylo setup checker", "Ceylo checks this business's settings (profile, payments, menu, printing, KDS, users, plan and sync) and links each problem to the screen that fixes it. Read-only.", { requires: ["view.settings"] }),
+	f("settings.ceylo", "settings", "Ceylo setup checker", "Ceylo checks this business's settings (profile, menu, printing, KDS, users, stock and sync) and links each problem to the screen that fixes it. Read-only.", { requires: ["view.settings"] }),
 	f("settings.ceyloAi", "settings", "Ceylo AI answers", "Staff can type questions to Ceylo (\"why didn't the receipt print?\") and get answers written by Claude from this business's setup checks. Needs the cloud and ANTHROPIC_API_KEY on Netlify; each question is a paid AI request, so it is OFF by default.", { default: false, requires: ["settings.ceylo"] }),
 	f("settings.cloudBanner", "settings", "Cloud sync status banner", "Shows online/offline/synced status."),
 

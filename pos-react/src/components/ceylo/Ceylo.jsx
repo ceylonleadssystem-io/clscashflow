@@ -5,7 +5,6 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { runSetupChecks, summarize } from "../../domain/ceylo";
-import { subscriptionOf } from "../../config/subscription";
 import { FULL_SETTINGS_ROLES } from "../../config/roles";
 import { useData } from "../../store/DataProvider";
 import { useFeatures } from "../../store/FeatureProvider";
@@ -82,7 +81,7 @@ export function CeyloMascot({ mood = "ready", size = 32 }) {
 function useSetupChecks() {
 	const data = useData();
 	const { enabled } = useFeatures();
-	const { cloudStatus, billing, authKind } = useSession();
+	const { cloudStatus, authKind } = useSession();
 	const { locationId } = usePos();
 	const [kds, setKds] = useState(kdsLink.state());
 	useEffect(() => kdsLink.subscribe(setKds), []);
@@ -100,8 +99,6 @@ function useSetupChecks() {
 				locations: data.locations,
 				products: data.products,
 				features: enabled,
-				subscription: subscriptionOf(data.settings),
-				billingProfile: billing?.profile || null,
 				cloud: authKind === "appwrite",
 				cloudState: cloudStatus?.state || "",
 				kds,
@@ -115,7 +112,7 @@ function useSetupChecks() {
 				locationId,
 			}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[data.settings, data.users, data.locations, data.products, data.customers, data.inventory, data.modifiers, data.openOrders, data.timeEntries, data.cashShifts, locationId, enabled, billing, authKind, cloudStatus?.state, kds, receipt, label],
+		[data.settings, data.users, data.locations, data.products, data.customers, data.inventory, data.modifiers, data.openOrders, data.timeEntries, data.cashShifts, locationId, enabled, authKind, cloudStatus?.state, kds, receipt, label],
 	);
 }
 

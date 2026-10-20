@@ -768,9 +768,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/config/features.js": {
-    "mtime": 1792500553.3750608,
-    "seen": 1792500728.263247,
-    "ast_hash": "3fc252561583e64fb7610b68a1cecc76",
+    "mtime": 1792502266.4806151,
+    "seen": 1792502297.0664802,
+    "ast_hash": "20742a01b33c20b831be0b86f70b2702",
     "semantic_hash": ""
   },
   "pos-react/src/config/plans.js": {
@@ -1716,9 +1716,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/Settings.jsx": {
-    "mtime": 1792501004.7523046,
-    "seen": 1792501074.0837,
-    "ast_hash": "4e36917c2736a63f0e8a2e061f41f2a2",
+    "mtime": 1792502266.4781454,
+    "seen": 1792502297.066592,
+    "ast_hash": "bc26abd7e2a85884b0b701cb244614a5",
     "semantic_hash": ""
   },
   "pos-react/src/views/Staff.jsx": {
@@ -2616,15 +2616,15 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/ceylo/Ceylo.jsx": {
-    "mtime": 1792502080.0229452,
-    "seen": 1792502130.936453,
-    "ast_hash": "ddb90b41ff5ce21c0e7c5c26dc4b1829",
+    "mtime": 1792502252.1107743,
+    "seen": 1792502297.066463,
+    "ast_hash": "48fe3b5819c3e32fd3c40f8560f8de7f",
     "semantic_hash": ""
   },
   "pos-react/src/domain/ceylo.js": {
-    "mtime": 1792502118.9707222,
-    "seen": 1792502130.936507,
-    "ast_hash": "fc1c36cce2d198c208b368a50d19c80b",
+    "mtime": 1792502252.1105583,
+    "seen": 1792502297.066498,
+    "ast_hash": "08cbb173d12ed0e50f813f45501107d5",
     "semantic_hash": ""
   },
   "pos-react/src/store/settingsTab.js": {
@@ -2634,9 +2634,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/ceylo.test.js": {
-    "mtime": 1792502094.824188,
-    "seen": 1792502130.936648,
-    "ast_hash": "13938d1de2ba33994c796b2e623b5b6e",
+    "mtime": 1792502252.1109746,
+    "seen": 1792502297.066561,
+    "ast_hash": "f14796c0aa2e2db7d0b8768b0c83a19c",
     "semantic_hash": ""
   },
   "docs/VPS_MIGRATION_PLAN.md": {

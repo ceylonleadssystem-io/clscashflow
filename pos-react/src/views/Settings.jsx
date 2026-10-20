@@ -124,7 +124,7 @@ export function Settings() {
 							<CeyloMascot size={40} />
 							<div style={{ flex: 1, minWidth: 0 }}>
 								<div className="panel-title">Check my setup</div>
-								<div className="muted">Ceylo checks your profile, menu, printing, users, plan and sync, and shows what needs attention.</div>
+								<div className="muted">Ceylo checks your profile, menu, printing, users, stock and sync, and shows what needs attention.</div>
 							</div>
 							<button className="btn gold" type="button" id="ceylo-check-setup" onClick={() => setLayout((l) => ({ ...l, ceyloOpen: true }))}>
 								Check my setup

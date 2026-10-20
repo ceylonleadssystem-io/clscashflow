@@ -8,8 +8,6 @@ const good = () => ({
 	locations: [{ id: "l1", name: "Main", active: true }],
 	products: [{ id: "p1", name: "Tea", price: 300, category: "Drinks" }],
 	features: resolveFeatures({ "checkout.kds": true }).enabled,
-	subscription: { name: "Business", maxUsers: 10, maxLocations: 3 },
-	billingProfile: null,
 	cloud: true,
 	cloudState: "synced",
 	kds: { paired: true, connected: true },
@@ -25,15 +23,21 @@ describe("Ceylo setup checks", () => {
 		expect(sum.mood).toBe("glad");
 	});
 
+	it("does not check plan limits or the subscription", () => {
+		const input = good();
+		input.subscription = { name: "Starter", maxUsers: 1, maxLocations: 1 };
+		input.billingProfile = { paid: false, trialEnd: "2000-01-01" };
+		const ids = runSetupChecks(input).map((r) => r.id);
+		expect(ids.filter((id) => /^plan-|subscription/.test(id))).toEqual([]);
+	});
+
 	it("finds the problems from the mockup and links each fix", () => {
 		const input = good();
 		input.kds = { paired: false };
 		input.settings.kotPrinter = "";
-		input.users = [...input.users, ...Array.from({ length: 7 }, (_, i) => ({ id: "x" + i, role: "cashier", pin: "70" + (10 + i), active: true }))];
 		const r = byId(runSetupChecks(input));
 		expect(r.kds).toMatchObject({ status: "problem", fix: { view: "settings", tab: "kds" } });
 		expect(r["kot-printer"]).toMatchObject({ status: "warn", fix: { tab: "printing" } });
-		expect(r["plan-users"]).toMatchObject({ status: "warn", title: "9 of 10 users on your Business plan" });
 	});
 
 	it("never puts a PIN in the text and flags missing approvers, empty menus and failing sync", () => {
@@ -53,12 +57,10 @@ describe("Ceylo setup checks", () => {
 	it("skips checks that do not apply", () => {
 		const input = good();
 		input.settings.businessType = "retail";
-		input.subscription = null;
 		input.cloud = false;
 		const r = byId(runSetupChecks(input));
 		expect(r.kds).toBeUndefined();
 		expect(r["kot-printer"]).toBeUndefined();
-		expect(r["plan-users"]).toBeUndefined();
 		expect(r.sync).toBeUndefined();
 	});
 });
@@ -107,7 +109,6 @@ describe("Ceylo respects the admin feature switches", () => {
 		input.kds = { paired: false };
 		input.cloudState = "retry";
 		input.printers = { receipt: false, label: false };
-		input.billingProfile = { paid: false, trialEnd: "2000-01-01" };
 		const off = ["checkout.printReceipt", "checkout.kitchenTickets", "checkout.kds", "hardware.labelPrinter", "checkout.serviceCharge", "settings.businessLogo", "view.products", "sales.refunds", "sales.voids", "staff.users", "settings.billing", "settings.cloudBanner"];
 		input.features = resolveFeatures(Object.fromEntries(off.map((id) => [id, false]))).enabled;
 		const ids = runSetupChecks(input).filter((x) => x.status !== "ok").map((x) => x.id);

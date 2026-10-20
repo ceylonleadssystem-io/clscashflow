@@ -7,8 +7,6 @@
  */
 import { KITCHEN_TYPES } from "../config/presets";
 import { APPROVER_ROLES } from "./salesLog";
-import { accessAllowed, billingWarning } from "../services/billing";
-import { usageOf } from "../config/subscription";
 import { emailError } from "./validators";
 import { layoutFor } from "./tables";
 
@@ -26,7 +24,8 @@ const repeats = (values) => {
 };
 
 /**
- * input: { settings, users, locations, products, features (enabled map), subscription (or null), billingProfile (or null),
+ * Plan limits and subscription/payment status are not checked here (the POS shows those itself in Settings > Plan & Support).
+ * input: { settings, users, locations, products, features (enabled map),
  *          cloudState ("synced" | "syncing" | "offline" | "retry" | ""), cloud (bool: signed in to the cloud), kds: { paired, connected },
  *          printers: { receipt: connected?, label: connected? } (USB devices on this device),
  *          customers, inventory, modifiers, openOrders, timeEntries, cashShifts (the business data lists), locationId (this device), now }
@@ -167,32 +166,6 @@ export function runSetupChecks(input) {
 		const reach = (l) => users.some((u) => u.locationAccess !== "selected" || (Array.isArray(u.locationIds) && u.locationIds.includes(l.id)));
 		const lonely = locations.filter((l) => l.active !== false && !reach(l)).length;
 		if (lonely) add("location-staff", "Locations", plural(lonely, "location") + " with no staff who can sign in", "warn", "Give at least one user access to each location.", USERS);
-	}
-
-	// plan limits
-	const sub = input.subscription;
-	if (sub) {
-		const u = usageOf(sub, input.users, locations);
-		const limit = (id, noun, used, max) => {
-			if (max == null) return add(id, "Plan", noun[0].toUpperCase() + noun.slice(1) + "s: no limit on your plan", "ok", "");
-			const label = used + " of " + max + " " + noun + "s on your " + (sub.name ? sub.name + (/plan$/i.test(sub.name) ? "" : " plan") : "plan");
-			if (used > max) add(id, "Plan", label, "problem", "You are over your plan. Deactivate some " + noun + "s or ask Ceylonry to change your plan.", { view: "settings", tab: "plan" });
-			else if (max > 1 && max - used <= 1) add(id, "Plan", label, "warn", used >= max ? "You cannot add another " + noun + "." : "You can add one more " + noun + ".", { view: "settings", tab: "plan" });
-			else add(id, "Plan", label, "ok", "");
-		};
-		limit("plan-users", "user", u.users, u.maxUsers);
-		limit("plan-locations", "location", u.locations, u.maxLocations);
-	}
-
-	// subscription (needs the cloud profile)
-	const p = input.billingProfile;
-	if (p && on("settings.billing")) {
-		if (!accessAllowed(p)) add("subscription", "Subscription", "Subscription has ended", "problem", "Renew under Settings › Plan & Support to keep using the POS.", { view: "settings", tab: "plan" });
-		else {
-			const warning = billingWarning(p);
-			if (warning) add("subscription", "Subscription", "Payment or trial ending soon", "warn", warning, { view: "settings", tab: "plan" });
-			else add("subscription", "Subscription", "Subscription is up to date", "ok", "");
-		}
 	}
 
 	// cloud sync
