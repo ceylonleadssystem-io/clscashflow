@@ -8,7 +8,7 @@ const ID = "view.guestManager";
 
 describe("Guest Manager feature switch", () => {
 	it("exists, is off by default and has no requirements", () => {
-		expect(FEATURE_MAP[ID]).toMatchObject({ group: "navigation", default: false, requires: [] });
+		expect(FEATURE_MAP[ID]).toMatchObject({ group: "restaurant", default: false, requires: [] });
 		expect(resolveFeatures({}).enabled[ID]).toBe(false);
 		expect(resolveFeatures({ [ID]: true }).enabled[ID]).toBe(true);
 	});
