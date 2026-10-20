@@ -26,7 +26,7 @@ async function post(url, body, fallback) {
 	return json;
 }
 
-export const askCeylo = async ({ question, history, checks, role, view }) => (await post(URL, { question, history, checks, role, view }, "Ceylo could not answer right now.")).answer;
+export const askCeylo = async ({ question, history, checks, role, view, locationId }) => (await post(URL, { question, history, checks, role, view, locationId }, "Ceylo could not answer right now.")).answer;
 
-/** The business's own AI key: `status`, `save` ({ provider, key, model }) or `remove`. The key itself is never returned. */
+/** Each location's own AI key: `status` (all locations), `save` ({ locationId, provider, key, model }) or `remove` ({ locationId }). Keys are never returned. */
 export const aiKey = (action, fields = {}) => post("/.netlify/functions/ceylo-ai-key", { action, ...fields }, "Could not update the AI key right now.");

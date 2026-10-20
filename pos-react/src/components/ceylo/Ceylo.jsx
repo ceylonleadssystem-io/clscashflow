@@ -137,7 +137,7 @@ function Item({ r, onFix, canFix }) {
 const SUGGESTIONS = ["How do I fix the first problem?", "What should I set up first?", "Why didn't the receipt print?"];
 
 /** Ask Ceylo: a short chat answered by Claude from the check results. The thread lives only in this panel. */
-function AskCeylo({ results, role, view, onThinking }) {
+function AskCeylo({ results, role, view, locationId, onThinking }) {
 	const [thread, setThread] = useState([]); // [{ role: "user" | "assistant", text }]
 	const [q, setQ] = useState("");
 	const [busy, setBusy] = useState(false);
@@ -156,7 +156,7 @@ function AskCeylo({ results, role, view, onThinking }) {
 		setBusy(true);
 		onThinking(true);
 		try {
-			const answer = await askCeylo({ question: text, history, checks: checksForAi(results), role, view });
+			const answer = await askCeylo({ question: text, history, checks: checksForAi(results), role, view, locationId });
 			setThread((t) => [...t, { role: "assistant", text: answer }]);
 		} catch (e) {
 			setError(e.message);
@@ -219,7 +219,7 @@ function AskCeylo({ results, role, view, onThinking }) {
 
 /** The report panel: side panel on wide screens, full screen on phones. Cashiers see a short summary without fix buttons. */
 export function CeyloPanel() {
-	const { layout, setLayout, go, currentUser, view } = usePos();
+	const { layout, setLayout, go, currentUser, view, locationId } = usePos();
 	const aiOn = useFeature("settings.ceyloAi");
 	const [thinking, setThinking] = useState(false);
 	const results = useSetupChecks();
@@ -295,7 +295,7 @@ export function CeyloPanel() {
 							</section>
 						</>
 					)}
-					{aiOn && <AskCeylo results={results} role={currentUser?.role || ""} view={view} onThinking={setThinking} />}
+					{aiOn && <AskCeylo results={results} role={currentUser?.role || ""} view={view} locationId={locationId} onThinking={setThinking} />}
 				</div>
 				<footer className="ceylo-foot">
 					<button type="button" className="btn out" onClick={close}>

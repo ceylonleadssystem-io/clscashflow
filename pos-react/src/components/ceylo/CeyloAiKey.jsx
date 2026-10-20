@@ -1,11 +1,14 @@
 /**
- * Settings > Plan & Support > Ceylo AI key: the business can use its own AI account (Claude, ChatGPT or Gemini) for Ceylo's
- * answers. The key is sent once to the server, tested, stored encrypted and never shown again (only its last 4 characters).
+ * Settings > Plan & Support > Ceylo AI key: each location can use its own AI account (Claude, ChatGPT or Gemini) for Ceylo's
+ * answers on its devices. A key is sent once to the server, tested, stored encrypted and never shown again (only its last 4
+ * characters).
  */
 import { useEffect, useState } from "react";
 import { aiKey } from "../../services/ceyloAi";
 import { isAppwrite } from "../../config/env";
 import { useUi } from "../../store/UiProvider";
+import { useData } from "../../store/DataProvider";
+import { usePos } from "../../store/PosProvider";
 
 const PROVIDERS = [
 	{ id: "anthropic", label: "Claude (Anthropic)", model: "claude-opus-5-5", hint: "Optional. Leave empty for claude-opus-5-5.", keyHint: "Starts with sk-ant-. Create it at console.anthropic.com." },
@@ -16,14 +19,19 @@ const PROVIDERS = [
 export function CeyloAiKeyPanel() {
 	const ui = useUi();
 	const cloud = isAppwrite();
-	const [status, setStatus] = useState(null);
+	const locations = useData().locations.filter((l) => l.active !== false);
+	const { locationId: current } = usePos();
+	const [locationId, setLocationId] = useState(() => (locations.some((l) => l.id === current) ? current : locations[0]?.id || ""));
+	const [all, setAll] = useState(null); // { [locationId]: status }
+	const status = all === null ? null : all[locationId] || { saved: false };
+	const nameOf = (id) => locations.find((l) => l.id === id)?.name || "Removed location";
 	const [provider, setProvider] = useState("anthropic");
 	const [model, setModel] = useState("");
 	const [key, setKey] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState("");
 	useEffect(() => {
-		if (cloud) aiKey("status").then((r) => setStatus(r.key), (e) => setError(e.message));
+		if (cloud) aiKey("status").then((r) => setAll(r.keys || {}), (e) => setError(e.message));
 	}, [cloud]);
 	const p = PROVIDERS.find((x) => x.id === provider);
 	const save = async (e) => {
@@ -31,10 +39,10 @@ export function CeyloAiKeyPanel() {
 		setBusy(true);
 		setError("");
 		try {
-			const r = await aiKey("save", { provider, key: key.trim(), model: model.trim() });
-			setStatus(r.key);
+			const r = await aiKey("save", { locationId, provider, key: key.trim(), model: model.trim() });
+			setAll(r.keys || {});
 			setKey("");
-			ui.notice("AI key saved and tested. Ceylo now answers with " + r.key.providerLabel + ".");
+			ui.notice(`AI key saved and tested. Ceylo at ${nameOf(locationId)} now answers with ${r.key.providerLabel}.`);
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -42,10 +50,11 @@ export function CeyloAiKeyPanel() {
 		}
 	};
 	const remove = async () => {
-		if (!(await ui.confirm("Remove your AI key? Ceylo will use Ceylonry's AI again (if your plan includes it)."))) return;
+		if (!(await ui.confirm(`Remove the AI key for ${nameOf(locationId)}? Ceylo there will use Ceylonry's AI again (if your plan includes it).`))) return;
 		setBusy(true);
+		setError("");
 		try {
-			setStatus((await aiKey("remove")).key);
+			setAll((await aiKey("remove", { locationId })).keys || {});
 			ui.notice("AI key removed.");
 		} catch (err) {
 			setError(err.message);
@@ -58,16 +67,38 @@ export function CeyloAiKeyPanel() {
 			<div className="panel-head">
 				<div>
 					<div className="panel-title">Ceylo AI key</div>
-					<div className="muted">Use your own AI account for Ceylo's answers. Usage is billed by your AI provider.</div>
+					<div className="muted">Each location can use its own AI account for Ceylo's answers. Usage is billed by that AI provider.</div>
 				</div>
 			</div>
 			<div className="modal-body" style={{ display: "grid", gap: 12 }}>
 				{!cloud ? (
 					<p className="muted">AI keys can be added in the cloud version of the POS.</p>
+				) : !locations.length ? (
+					<p className="muted">Add a location first.</p>
 				) : (
 					<>
+						{all && Object.keys(all).length > 0 && (
+							<ul className="plan-bullets" id="ceylo-ai-key-list" aria-label="Saved keys">
+								{Object.entries(all).map(([id, k]) => (
+									<li key={id}>
+										<b>{nameOf(id)}</b>: {k.providerLabel} ••{k.last4} · {k.model}
+									</li>
+								))}
+							</ul>
+						)}
+						<div className="field" style={{ maxWidth: 360 }}>
+							<label htmlFor="ceylo-ai-location">Location</label>
+							<select className="input" id="ceylo-ai-location" value={locationId} onChange={(e) => (setLocationId(e.target.value), setKey(""), setError(""))}>
+								{locations.map((l) => (
+									<option key={l.id} value={l.id}>
+										{l.name || l.code || l.id}
+										{all?.[l.id] ? " · key saved" : ""}
+									</option>
+								))}
+							</select>
+						</div>
 						<p className="plan-settings-note" id="ceylo-ai-key-status" role="status">
-							{status === null ? "Checking…" : status.saved ? `Using your ${status.providerLabel} key ending ••${status.last4} · model ${status.model} · saved ${new Date(status.savedAt).toLocaleDateString()}` : "No key saved. Ceylo uses Ceylonry's AI when your plan includes it."}
+							{status === null ? "Checking…" : status.saved ? `${nameOf(locationId)} uses a ${status.providerLabel} key ending ••${status.last4} · model ${status.model} · saved ${new Date(status.savedAt).toLocaleDateString()}` : `No key saved for ${nameOf(locationId)}. Ceylo there uses Ceylonry's AI when your plan includes it.`}
 						</p>
 						<form className="form-grid" onSubmit={save} autoComplete="off">
 							<div className="field">

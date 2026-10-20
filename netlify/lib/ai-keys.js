@@ -1,9 +1,9 @@
 'use strict';
 
-// A business's own AI key for Ceylo ("bring your own key"): Claude (Anthropic), ChatGPT (OpenAI) or Gemini (Google).
-// The key is encrypted with CEYLO_KEY_SECRET (AES-256-GCM) and kept in a server-only row (`ceyloAiKeys/key-{ownerUid}`, no owner
-// field, so the browser document API can neither read nor overwrite it). It is never sent back to the POS: only the provider,
-// model, last 4 characters and the save date.
+// Each location's own AI key for Ceylo ("bring your own key"): Claude (Anthropic), ChatGPT (OpenAI) or Gemini (Google).
+// Keys are encrypted with CEYLO_KEY_SECRET (AES-256-GCM) and kept in one server-only row per business (`ceyloAiKeys/key-{ownerUid}`,
+// `{ locations: { [locationId]: { provider, model, last4, box, savedAt, savedBy } } }`, no owner field, so the browser document API
+// can neither read nor overwrite it). A key is never sent back to the POS: only provider, model, last 4 characters and save date.
 const crypto = require('crypto');
 const Anthropic = require('@anthropic-ai/sdk');
 const { getDocument, upsertDocument, deleteDocument } = require('./appwrite');
@@ -33,20 +33,28 @@ function decrypt(box) {
   return Buffer.concat([d.update(data), d.final()]).toString('utf8');
 }
 
-/** What the POS may see about the saved key. */
+/** What the POS may see about one saved key. */
 function publicStatus(row) {
   if (!row) return { saved: false };
   return { saved: true, provider: row.provider, providerLabel: (PROVIDERS[row.provider] || {}).label || row.provider, model: row.model, last4: row.last4, savedAt: row.savedAt };
 }
 
+const safeLocation = (id) => (/^[A-Za-z0-9._-]{1,80}$/.test(String(id || '')) ? String(id) : '');
+
+/** The saved keys of a business: { [locationId]: row }. */
 async function load(ownerUid) {
   const doc = await getDocument(COLLECTION, docId(ownerUid)).catch(function() { return null; });
-  return doc && doc.data && doc.data.box ? doc.data : null;
+  return (doc && doc.data && doc.data.locations) || {};
 }
-/** The decrypted key for a business, or null. */
-async function keyFor(ownerUid) {
-  const row = await load(ownerUid);
-  return row ? { provider: row.provider, model: row.model, key: decrypt(row.box) } : null;
+/** What the POS may see about every location's key. */
+async function statuses(ownerUid) {
+  const all = await load(ownerUid);
+  return Object.fromEntries(Object.keys(all).map(function(id) { return [id, publicStatus(all[id])]; }));
+}
+/** The decrypted key of one location, or null. */
+async function keyFor(ownerUid, locationId) {
+  const row = (await load(ownerUid))[safeLocation(locationId)];
+  return row && row.box ? { provider: row.provider, model: row.model, key: decrypt(row.box) } : null;
 }
 function validate(provider, key, model) {
   const p = PROVIDERS[provider];
@@ -56,12 +64,21 @@ function validate(provider, key, model) {
   if (model && !/^[A-Za-z0-9._:/-]{2,80}$/.test(model)) return 'The model name has characters that are not allowed.';
   return '';
 }
-async function save(ownerUid, provider, key, model, by) {
-  const row = { business: ownerUid, provider, model: model || PROVIDERS[provider].defaultModel, last4: key.slice(-4), box: encrypt(key), savedAt: new Date().toISOString(), savedBy: by };
-  await upsertDocument(COLLECTION, docId(ownerUid), row, false);
-  return publicStatus(row);
+async function write(ownerUid, locations) {
+  if (!Object.keys(locations).length) return deleteDocument(COLLECTION, docId(ownerUid)).catch(function(e) { if (!e || e.code !== 404) throw e; });
+  return upsertDocument(COLLECTION, docId(ownerUid), { business: ownerUid, locations }, false);
 }
-async function remove(ownerUid) { await deleteDocument(COLLECTION, docId(ownerUid)).catch(function(e) { if (!e || e.code !== 404) throw e; }); }
+async function save(ownerUid, locationId, provider, key, model, by) {
+  const all = await load(ownerUid);
+  all[locationId] = { provider, model: model || PROVIDERS[provider].defaultModel, last4: key.slice(-4), box: encrypt(key), savedAt: new Date().toISOString(), savedBy: by };
+  await write(ownerUid, all);
+  return publicStatus(all[locationId]);
+}
+async function remove(ownerUid, locationId) {
+  const all = await load(ownerUid);
+  delete all[locationId];
+  await write(ownerUid, all);
+}
 
 /**
  * One chat request to the chosen provider. `messages` are [{ role: 'user' | 'assistant', content }].
@@ -103,4 +120,4 @@ async function ask({ provider, key, model, system, messages, maxTokens }) {
   return String(read(json) || '').trim();
 }
 
-module.exports = { PROVIDERS, publicStatus, load, keyFor, validate, save, remove, ask, _encrypt: encrypt, _decrypt: decrypt };
+module.exports = { PROVIDERS, publicStatus, safeLocation, load, statuses, keyFor, validate, save, remove, ask, _encrypt: encrypt, _decrypt: decrypt };

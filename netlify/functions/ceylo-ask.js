@@ -1,7 +1,7 @@
 // Ask Ceylo: answers a POS owner's or cashier's question about their setup with Claude.
 // The POS sends the question, the last few chat turns and Ceylo's own check results (titles and plain sentences, never PINs,
 // keys or customer data). The server checks the sign-in and that the administrator switched "Ceylo AI answers" on for
-// this business, then asks the AI: the business's own key when one is saved (Settings > Ceylo AI key: Claude, ChatGPT or
+// this business, then asks the AI: the key saved for the device's location (Settings > Ceylo AI key: Claude, ChatGPT or
 // Gemini), otherwise Ceylonry's Claude key (ANTHROPIC_API_KEY in the Netlify environment, server only).
 const Anthropic = require('@anthropic-ai/sdk');
 const { guard, reply } = require('../lib/security');
@@ -70,10 +70,10 @@ exports.handler = async function handler(event) {
     while (history.length && history[0].role !== 'user') history.shift();
     const messages = history.concat([{ role: 'user', content: contextText(body, settings) + '\n\nQuestion: ' + question }]);
 
-    const own = await keys.keyFor(ownerUid).catch(function(e) { log.warn('saved AI key unreadable', { ownerUid, error: e.message }); return null; });
+    const own = await keys.keyFor(ownerUid, body.locationId).catch(function(e) { log.warn('saved AI key unreadable', { ownerUid, error: e.message }); return null; });
     if (own) {
       const text = await keys.ask({ provider: own.provider, key: own.key, model: own.model, system: SYSTEM, messages });
-      log.info('answered', { ownerUid, by: user.id, provider: own.provider, ownKey: true });
+      log.info('answered', { ownerUid, by: user.id, provider: own.provider, locationId: keys.safeLocation(body.locationId) });
       return reply(event, 200, { ok: true, answer: text || "Sorry, I don't have an answer for that. Please try asking another way." });
     }
     if (!process.env.ANTHROPIC_API_KEY) return reply(event, 503, { ok: false, error: 'Ceylo AI answers are not set up yet. Add your own AI key under Settings > Plan & Support.' });

@@ -1716,9 +1716,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/Settings.jsx": {
-    "mtime": 1792499683.555509,
-    "seen": 1792499803.106448,
-    "ast_hash": "544d342eb0dd4682b418101e1c3a4a80",
+    "mtime": 1792501004.7523046,
+    "seen": 1792501074.0837,
+    "ast_hash": "4e36917c2736a63f0e8a2e061f41f2a2",
     "semantic_hash": ""
   },
   "pos-react/src/views/Staff.jsx": {
@@ -2208,9 +2208,9 @@
     "semantic_hash": ""
   },
   "pos-react/docs/admin-guide.md": {
-    "mtime": 1792500713.6780114,
-    "seen": 1792500728.263424,
-    "ast_hash": "495d1f94798c589ad00ae9ae19f760c2",
+    "mtime": 1792501068.256716,
+    "seen": 1792501074.08376,
+    "ast_hash": "f5aaed91434f9ee09bfd1d3d61ad441a",
     "semantic_hash": ""
   },
   "pos-react/docs/architecture.md": {
@@ -2664,21 +2664,45 @@
     "semantic_hash": ""
   },
   "netlify/functions/ceylo-ask.js": {
-    "mtime": 1792500533.8474553,
-    "seen": 1792500728.263159,
-    "ast_hash": "a1b414c02f157bc2cf900c2770ce505b",
+    "mtime": 1792500968.6953578,
+    "seen": 1792501074.0835168,
+    "ast_hash": "c6b61ba891066b9c057d3bf2e529d4df",
     "semantic_hash": ""
   },
   "pos-react/src/services/ceyloAi.js": {
-    "mtime": 1792500553.349835,
-    "seen": 1792500728.263296,
-    "ast_hash": "a915216a13cfb4231318510c12b595b1",
+    "mtime": 1792501004.73158,
+    "seen": 1792501074.083638,
+    "ast_hash": "75ed80cca171da792947e2e0682f360a",
     "semantic_hash": ""
   },
   "tests/ceylo-ask.test.js": {
     "mtime": 1792500611.7502468,
     "seen": 1792500728.263381,
     "ast_hash": "9338b8d91e6adb97a5b6ca9d13f380d0",
+    "semantic_hash": ""
+  },
+  "netlify/functions/ceylo-ai-key.js": {
+    "mtime": 1792500957.7574215,
+    "seen": 1792501074.083516,
+    "ast_hash": "856ae62a904f2db6c0852b4b3373895e",
+    "semantic_hash": ""
+  },
+  "netlify/lib/ai-keys.js": {
+    "mtime": 1792500939.1480587,
+    "seen": 1792501074.083543,
+    "ast_hash": "670fa0e87d48bbba766f57e15cb2d43d",
+    "semantic_hash": ""
+  },
+  "pos-react/src/components/ceylo/CeyloAiKey.jsx": {
+    "mtime": 1792501004.7360816,
+    "seen": 1792501074.0835772,
+    "ast_hash": "4c813d91a916d15670f257674503b48f",
+    "semantic_hash": ""
+  },
+  "tests/ai-keys.test.js": {
+    "mtime": 1792501021.7448728,
+    "seen": 1792501074.083713,
+    "ast_hash": "cbdfd89437d1cf353743d57ae3cd7526",
     "semantic_hash": ""
   }
 }
