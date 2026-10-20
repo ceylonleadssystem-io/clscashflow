@@ -1263,7 +1263,8 @@ button{font-family:inherit}
 .x-burger{display:none;min-width:48px;min-height:48px;border:2px solid var(--ink);background:transparent;cursor:pointer;font-size:22px;line-height:1;color:var(--ink)}
 .x-bar{height:4px;background:transparent}.x-bar i{display:block;height:100%;width:0;background:var(--o);transition:width .6s var(--ease)}
 @media(max-width:1560px){.x-logo span{display:none}}
-@media(max-width:1360px){
+@media(min-width:1101px) and (max-width:1500px){.x-head-in{gap:10px}.x-nav{gap:4px 11px;font-size:12px}.x-nav .x-btn.small{padding:8px 12px;font-size:12px;min-height:38px}}
+@media(max-width:1100px){
   .x-burger{display:block}
   .x-nav{display:none;position:absolute;left:0;right:0;top:100%;flex-direction:column;align-items:stretch;gap:0;background:var(--cream);border-bottom:2px solid var(--ink);padding:8px clamp(16px,3vw,40px) 18px;max-height:calc(100vh - 70px);overflow:auto}
   .x-nav.open{display:flex;animation:drop .3s var(--ease)}
@@ -1482,6 +1483,18 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
 .order-modal{z-index:80}
 /* tall screens */
 @media(min-width:1700px){.x-sec,.panel .section{padding-left:max(56px,calc((100% - 1500px)/2));padding-right:max(56px,calc((100% - 1500px)/2))}.x-hero{padding-left:max(56px,calc((100% - 1500px)/2));padding-right:max(56px,calc((100% - 1500px)/2))}}
+/* partner success story */
+.x-h2 em{font-style:normal;color:var(--o)}
+.x-fig{margin:0 0 clamp(28px,4vw,48px);border:2px solid var(--ink);box-shadow:12px 12px 0 var(--o);background:var(--cream)}
+.x-fig img{display:block;width:100%;height:auto}
+.x-story{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:clamp(24px,4vw,48px);align-items:center;margin-bottom:clamp(32px,5vw,56px)}
+.x-story .x-lead{margin:0 0 22px}
+.x-locs{background:var(--ink);color:var(--cream);padding:clamp(22px,3vw,36px);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--g)}
+.x-locs b{display:block;font-weight:800;font-size:clamp(22px,2.6vw,32px);letter-spacing:-.03em;line-height:1.05;margin-bottom:18px;text-transform:uppercase}
+.x-locs div{display:flex;gap:10px;flex-wrap:wrap}
+.x-locs span{border:1.5px solid var(--g);padding:9px 16px;font-weight:600}
+.x-locs span::before{content:"● ";color:var(--o)}
+.x-bens{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0ms!important;transition-duration:.001ms!important}
   .x-ticker div{animation:none}
@@ -1708,6 +1721,21 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
 </div>
 
 <!-- 5 · HARDWARE -->
+<!-- 4b · PARTNER SUCCESS STORY -->
+<div class="panel" data-p="partner" data-label="Partner story" id="partner">
+  <section class="x-sec x-band">
+    <p class="x-kick">Partner success story</p>
+    <h2 class="x-h2">Same hardware. <em>Smoother operations.</em></h2>
+    <figure class="x-fig"><img src="assets/azure-swim-story.webp" alt="Ceylonry POS running at Azure Swim: same hardware, smoother operations across three locations" width="2000" height="717" loading="lazy"></figure>
+    <div class="x-story">
+      <p class="x-lead">We didn't push Azure Swim to purchase new hardware. Instead, we worked around their existing setup, configured Ceylonry POS to fit their needs, and now it's working smoothly across all their locations.</p>
+      <div class="x-locs"><b>Three locations. One smooth solution.</b><div><span>Madiha</span><span>Hiriketiya</span><span>Ahangama</span></div></div>
+    </div>
+    <div class="x-grid x-bens"><div class="x-why x-c0"><span>01</span><b>Works with your hardware</b><p>No need to replace your existing setup.</p></div><div class="x-why x-c1"><span>02</span><b>Built for retail & lifestyle brands</b><p>Inventory, billing and sales made simple.</p></div><div class="x-why x-c2"><span>03</span><b>Flexible configuration</b><p>We adapt to your operations.</p></div><div class="x-why x-c3"><span>04</span><b>Multi-location support</b><p>Consistent and centralised management.</p></div><div class="x-why x-c4"><span>05</span><b>Local support</b><p>We're with you every step of the way.</p></div></div>
+    <div class="x-cta" style="margin-top:36px"><a class="x-btn" href="#contact">Learn more →</a></div>
+  </section>
+</div>
+
 <div class="panel" data-p="hardware" data-label="Hardware">
   <section class="section hardware" id="hardware">
 				<div class="wrap">

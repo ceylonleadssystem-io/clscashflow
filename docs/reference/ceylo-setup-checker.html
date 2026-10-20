@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ceylo Setup Assistant</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single reading column (product spec) that widens for mockup plates; mockups sit on a darker "bench" band. */
+:root{
+  --bg:#f6f8fa; --surface:#ffffff; --soft:#eef1f4; --line:#e1e6ea;
+  --ink:#111920; --text:#1a2229; --muted:#5e6973;
+  --accent:#ff4b0b; --accent-ink:#c93500; --accent-soft:#fff0e9;
+  --good:#11a768; --good-soft:#e6f6ee; --warn:#d98a0b; --warn-soft:#fdf3e1; --bad:#e43c2f; --bad-soft:#fdeceb;
+  --leaf:#2f9b5a; --bench:#e9edf1; --frame:#111920; --frame-2:#1b252d; --on-frame:#c6ced4;
+  --display:"Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  --body:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1418; --surface:#151d23; --soft:#1c262d; --line:#283540;
+  --ink:#f1f4f6; --text:#dfe5e9; --muted:#93a0aa;
+  --accent:#ff6a33; --accent-ink:#ff8a5c; --accent-soft:#2a1a12;
+  --good:#2fc584; --good-soft:#0f2a1f; --warn:#f0a93a; --warn-soft:#2b2210; --bad:#ff6156; --bad-soft:#2d1514;
+  --leaf:#46b873; --bench:#0a0f12; --frame:#0b1014; --frame-2:#18222a; --on-frame:#b4bec5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1418; --surface:#151d23; --soft:#1c262d; --line:#283540;
+  --ink:#f1f4f6; --text:#dfe5e9; --muted:#93a0aa;
+  --accent:#ff6a33; --accent-ink:#ff8a5c; --accent-soft:#2a1a12;
+  --good:#2fc584; --good-soft:#0f2a1f; --warn:#f0a93a; --warn-soft:#2b2210; --bad:#ff6156; --bad-soft:#2d1514;
+  --leaf:#46b873; --bench:#0a0f12; --frame:#0b1014; --frame-2:#18222a; --on-frame:#b4bec5; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.read{max-width:68ch}
+h1,h2,h3{font-family:var(--display);color:var(--ink);text-wrap:balance;line-height:1.12;margin:0}
+h1{font-size:clamp(2.3rem,5vw,3.6rem);font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(1.55rem,3vw,2.05rem);font-weight:800;letter-spacing:-.02em}
+h3{font-size:1.12rem;font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink)}
+.lede{font-size:1.15rem;color:var(--muted);max-width:60ch}
+section{padding-block:56px;border-top:1px solid var(--line)}
+section > .wrap{display:grid;gap:22px}
+code,.mono{font-family:var(--mono);font-size:.86em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;color:var(--ink)}
+a{color:var(--accent-ink)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* hero */
+.hero{padding-block:56px 48px}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr);gap:40px;align-items:center}
+.hero-copy{display:grid;gap:18px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.86rem;color:var(--muted)}
+.meta b{color:var(--text);font-weight:500}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);font-weight:700;font-size:.78rem}
+.mascot-stage{background:var(--bench);border-radius:24px;padding:24px;display:grid;place-items:center;min-width:0}
+.mascot-stage svg{width:100%;max-width:320px;height:auto}
+
+/* summary list */
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:4px;min-width:0}
+.fact .k{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.fact .v{font-weight:700;color:var(--ink)}
+.fact p{font-size:.92rem;color:var(--muted)}
+
+/* character sheet */
+.moods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.mood{display:grid;gap:8px;justify-items:center;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 10px}
+.mood svg{width:96px;height:96px}
+.mood b{color:var(--ink)}
+.mood span{font-size:.86rem;color:var(--muted)}
+.voice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.voice > div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:grid;gap:8px}
+.voice ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:.95rem}
+.say{color:var(--good)} .dont{color:var(--bad)}
+
+/* mockup plates */
+.plate{background:var(--bench);border-radius:22px;padding:clamp(14px,3vw,28px);display:grid;gap:12px;min-width:0}
+.plate-cap{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.84rem;color:var(--muted)}
+.plate-cap b{color:var(--ink);font-weight:700}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* fake POS window */
+.pos{min-width:760px;display:grid;grid-template-columns:150px minmax(0,1fr);border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:0 18px 50px rgba(10,18,24,.16);font-size:13px;line-height:1.4}
+.pos-side{background:var(--frame);color:var(--on-frame);padding:12px 10px;display:grid;align-content:start;gap:4px}
+.pos-brand{color:#fff;font-weight:700;padding:6px 8px 12px;font-family:var(--display)}
+.pos-nav{padding:8px 10px;border-radius:8px}
+.pos-nav.on{background:var(--accent);color:#fff}
+.pos-main{display:grid;grid-template-rows:auto 1fr;min-width:0;position:relative}
+.pos-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.pos-top b{font-size:15px;color:var(--ink)}
+.pos-body{padding:14px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;background:var(--soft)}
+.ghost{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;align-content:start}
+.bar{height:9px;border-radius:5px;background:var(--line)}
+.ceylo-fab{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 5px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:700;color:var(--ink)}
+.ceylo-fab svg{width:24px;height:24px}
+
+/* Ceylo panel */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(10,18,24,.12);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;min-width:0}
+.panel-head{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.panel-head svg{width:34px;height:34px;flex:none}
+.panel-head b{display:block;color:var(--ink)}
+.panel-head small{color:var(--muted)}
+.chat{padding:12px 14px;display:grid;gap:9px;align-content:start}
+.msg{background:var(--soft);border-radius:12px 12px 12px 4px;padding:8px 11px;max-width:94%}
+.msg.me{justify-self:end;background:var(--ink);color:var(--bg);border-radius:12px 12px 4px 12px}
+.row{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.row .t{flex:1;min-width:0}
+.row .t small{display:block;color:var(--muted)}
+.dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;color:#fff}
+.ok{background:var(--good)} .wn{background:var(--warn)} .er{background:var(--bad)} .run{background:var(--line);color:var(--muted)}
+.fix{font-weight:700;color:var(--accent-ink);font-size:12px;white-space:nowrap}
+.progress{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.progress span{display:block;height:100%;width:64%;background:var(--accent)}
+.panel-foot{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:6px 12px;border-radius:9px;font-weight:700;font-size:12.5px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.go{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* report */
+.report{min-width:640px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13.5px;box-shadow:0 18px 50px rgba(10,18,24,.14)}
+.report-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+.report-head svg{width:56px;height:56px}
+.score{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px}
+.pill.ok{background:var(--good-soft);color:var(--good)} .pill.wn{background:var(--warn-soft);color:var(--warn)} .pill.er{background:var(--bad-soft);color:var(--bad)}
+.group{border-bottom:1px solid var(--line)}
+.group:last-child{border-bottom:0}
+.group-h{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:var(--soft);font-weight:700;color:var(--ink)}
+.group-h small{font-weight:500;color:var(--muted)}
+.item{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 20px;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item p{color:var(--muted);font-size:12.5px}
+.item b{color:var(--ink)}
+
+/* phone */
+.phones{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+.phone{width:270px;max-width:100%;border-radius:34px;background:var(--frame);padding:10px;box-shadow:0 18px 50px rgba(10,18,24,.2)}
+.phone-screen{border-radius:26px;overflow:hidden;background:var(--surface);display:grid;grid-template-rows:auto 1fr auto;height:520px;font-size:12.5px;line-height:1.4}
+.notch{height:22px;display:grid;place-items:center;background:var(--surface)}
+.notch i{width:70px;height:6px;border-radius:3px;background:var(--line)}
+
+/* table */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:.92rem}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--soft);font-weight:500}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
+.sev{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.76rem;font-weight:700;white-space:nowrap}
+.sev.er{background:var(--bad-soft);color:var(--bad)} .sev.wn{background:var(--warn-soft);color:var(--warn)}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;counter-reset:s}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;align-content:start;min-width:0}
+.step::before{counter-increment:s;content:counter(s);font-family:var(--mono);font-size:.8rem;color:var(--accent-ink)}
+.step b{color:var(--ink)}
+.step p{font-size:.88rem;color:var(--muted)}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rule{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.rule svg{width:24px;height:24px;color:var(--accent)}
+.rule b{color:var(--ink);display:block}
+.rule p{font-size:.92rem;color:var(--muted)}
+ul.plain{margin:0;padding-left:20px;display:grid;gap:6px}
+footer{padding-block:32px 48px;border-top:1px solid var(--line);color:var(--muted);font-size:.86rem}
+
+@media (max-width:860px){
+  .hero .wrap{grid-template-columns:1fr}
+  .mascot-stage{order:-1}
+  .facts,.voice,.rules{grid-template-columns:1fr}
+  .moods{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow{grid-template-columns:1fr 1fr}
+}
+@media (max-width:480px){.flow{grid-template-columns:1fr}}
+@media print{
+  @page{size:A4;margin:12mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-size:13px}
+  .pos,.report,table{min-width:0}
+  .pos{grid-template-columns:110px minmax(0,1fr)}
+  .pos-body{grid-template-columns:minmax(0,1fr) 260px}
+  .scroll-x,.tbl{overflow:visible}
+  section{padding-block:28px}
+  .plate,.phone,.fact,.mood,.rule,.step,.voice>div,tr,.hero .wrap{break-inside:avoid}
+  h2,.eyebrow{break-after:avoid}
+}
+@media (prefers-reduced-motion:no-preference){
+  .blink{animation:blink 5s infinite}
+  @keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+  .spin{animation:spin 1.4s linear infinite;transform-origin:center;transform-box:fill-box}
+  @keyframes spin{to{transform:rotate(360deg)}}
+}
+@media print{
+  .hero .wrap{grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr)}
+  .mascot-stage{order:0}
+  .facts{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .moods{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .voice,.rules{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .phone{width:230px}
+  .phone-screen{height:auto}
+  *{box-shadow:none!important}
+}
+</style>
+
+<!-- Ceylo artwork: one symbol, reused at every size. Head = POS ink, visor eyes = brand orange, tea-leaf antenna = Ceylon tea. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ceylo" viewBox="0 0 120 120">
+      <path d="M60 22 C60 14 64 8 72 6 C72 14 68 20 60 22Z" fill="var(--leaf)"/>
+      <path d="M60 22 L60 30" stroke="var(--leaf)" stroke-width="3" stroke-linecap="round"/>
+      <rect x="18" y="30" width="84" height="72" rx="26" fill="var(--frame)"/>
+      <rect x="28" y="44" width="64" height="34" rx="15" fill="var(--frame-2)"/>
+      <circle cx="12" cy="66" r="7" fill="var(--frame)"/><circle cx="108" cy="66" r="7" fill="var(--frame)"/>
+      <path d="M50 90 Q60 95 70 90" stroke="var(--on-frame)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="eyes-happy" viewBox="0 0 120 120"><g class="blink" style="transform-origin:60px 61px"><rect x="40" y="53" width="12" height="16" rx="6" fill="var(--accent)"/><rect x="68" y="53" width="12" height="16" rx="6" fill="var(--accent)"/></g></symbol>
+    <symbol id="eyes-glad" viewBox="0 0 120 120"><path d="M39 64 Q46 54 53 64" stroke="var(--accent)" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M67 64 Q74 54 81 64" stroke="var(--accent)" stroke-width="5" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="eyes-think" viewBox="0 0 120 120"><rect x="40" y="58" width="12" height="7" rx="3.5" fill="var(--accent)"/><rect x="68" y="54" width="12" height="13" rx="6" fill="var(--accent)"/></symbol>
+    <symbol id="eyes-alert" viewBox="0 0 120 120"><rect x="40" y="51" width="12" height="19" rx="6" fill="var(--warn)"/><rect x="68" y="51" width="12" height="19" rx="6" fill="var(--warn)"/></symbol>
+  </defs>
+</svg>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="eyebrow">Ceylonry POS · Product documentation</span>
+      <h1>Ceylo, the setup checker</h1>
+      <p class="lede">Ceylo is a small assistant inside the POS. It reads the business's configuration, checks it against what the business needs to trade, and says plainly what is in order and what still needs attention.</p>
+      <div class="meta">
+        <span><b>Status</b> <span class="tag">Concept · documentation only</span></span>
+        <span><b>Owner</b> Ceylonry product team</span>
+        <span><b>Version</b> 0.1 · 19 Oct 2026</span>
+      </div>
+    </div>
+    <div class="mascot-stage" role="img" aria-label="Illustration of Ceylo: a rounded dark robot head with orange visor eyes and a green tea-leaf antenna, holding a checklist">
+      <svg viewBox="0 0 320 260">
+        <ellipse cx="150" cy="238" rx="96" ry="10" fill="var(--line)"/>
+        <g transform="translate(40 30) scale(1.75)"><use href="#ceylo"/><use href="#eyes-happy"/></g>
+        <g transform="translate(222 112) rotate(8)">
+          <rect width="78" height="100" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+          <rect x="26" y="-6" width="26" height="12" rx="5" fill="var(--accent)"/>
+          <g font-family="DM Sans, sans-serif" font-size="9" fill="var(--muted)">
+            <circle cx="16" cy="26" r="6" fill="var(--good)"/><path d="M13 26l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none"/><rect x="28" y="22" width="38" height="7" rx="3" fill="var(--line)"/>
+            <circle cx="16" cy="46" r="6" fill="var(--good)"/><path d="M13 46l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none"/><rect x="28" y="42" width="30" height="7" rx="3" fill="var(--line)"/>
+            <circle cx="16" cy="66" r="6" fill="var(--warn)"/><rect x="15" y="62" width="2" height="5" fill="#fff"/><rect x="15" y="68.5" width="2" height="2" fill="#fff"/><rect x="28" y="62" width="40" height="7" rx="3" fill="var(--line)"/>
+            <circle cx="16" cy="86" r="6" fill="var(--good)"/><path d="M13 86l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none"/><rect x="28" y="82" width="24" height="7" rx="3" fill="var(--line)"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Summary</span>
+    <h2>What Ceylo does</h2>
+    <p class="read">Owners and managers set up the POS once and then rarely look at the settings again. Problems show up later, at the counter: a receipt that does not print, a kitchen screen that is not paired, a fifth cashier the plan does not allow. Ceylo runs a short health check on request (and quietly after a settings change), groups the results, and links each problem to the exact screen that fixes it.</p>
+    <div class="facts">
+      <div class="fact"><span class="k">Who uses it</span><span class="v">Owners and managers</span><p>Cashiers see a read-only "ask a manager" summary.</p></div>
+      <div class="fact"><span class="k">What it reads</span><span class="v">This business's settings</span><p>Business profile, POS setup, printers, KDS, locations, users, plan and sync.</p></div>
+      <div class="fact"><span class="k">What it changes</span><span class="v">Nothing on its own</span><p>Every fix opens the right settings screen; the person makes the change.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Character</span>
+    <h2>Meet Ceylo</h2>
+    <p class="read">Ceylo's head uses the POS sidebar colour, its visor eyes use the Ceylonry orange, and its antenna is a tea leaf, a nod to Ceylon. The eyes carry its mood, so the same drawing works at 24 px on a button and at full size in the empty state.</p>
+    <div class="moods">
+      <div class="mood"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-happy"/></svg><b>Ready</b><span>Idle, button and panel header</span></div>
+      <div class="mood"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-think"/></svg><b>Checking</b><span>While the checks run</span></div>
+      <div class="mood"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-glad"/></svg><b>All in order</b><span>Every check passed</span></div>
+      <div class="mood"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-alert"/></svg><b>Needs attention</b><span>Warnings or problems found</span></div>
+    </div>
+    <div class="voice">
+      <div><h3 class="say">How Ceylo talks</h3>
+        <ul>
+          <li>Short, plain sentences: "Your receipt printer is not set."</li>
+          <li>Says what will go wrong at the counter, then how to fix it.</li>
+          <li>Names screens the way the POS does: Settings › Receipt Printing.</li>
+          <li>Celebrates briefly when everything passes, then gets out of the way.</li>
+        </ul></div>
+      <div><h3 class="dont">What Ceylo avoids</h3>
+        <ul>
+          <li>Technical terms such as stamps, documents, payloads or JWT.</li>
+          <li>Blame ("you forgot…") and alarm for small issues.</li>
+          <li>Guessing: if it cannot check something offline, it says so.</li>
+          <li>Showing secrets, keys, PINs or customer details.</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Mockup 1 · Desktop</span>
+    <h2>Where Ceylo lives</h2>
+    <p class="read">A small Ceylo button sits in the top bar next to the sync icon. It opens a side panel over the current screen, so the check can run from anywhere without leaving a sale. The same check is available under Settings › Plan &amp; Support as "Check my setup".</p>
+    <div class="plate">
+      <div class="plate-cap"><b>Checkout with the Ceylo panel open, check in progress</b><span>Mockup, not final UI</span></div>
+      <div class="scroll-x">
+        <div class="pos" role="img" aria-label="Mockup of the POS checkout screen with the Ceylo side panel open and checks running">
+          <div class="pos-side">
+            <div class="pos-brand">Ceylonry</div>
+            <div class="pos-nav">Dashboard</div><div class="pos-nav on">Checkout</div><div class="pos-nav">Sales History</div><div class="pos-nav">Menu</div><div class="pos-nav">Customers</div><div class="pos-nav">Settings</div>
+          </div>
+          <div class="pos-main">
+            <div class="pos-top"><b>Checkout</b><span class="ceylo-fab"><svg viewBox="0 0 120 120"><use href="#ceylo"/><use href="#eyes-think"/></svg>Ceylo</span></div>
+            <div class="pos-body">
+              <div class="ghost"><div class="bar" style="width:40%"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div class="ghost" style="height:70px"></div><div class="ghost" style="height:70px"></div><div class="ghost" style="height:70px"></div><div class="ghost" style="height:70px"></div><div class="ghost" style="height:70px"></div><div class="ghost" style="height:70px"></div></div></div>
+              <div class="panel">
+                <div class="panel-head"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-think"/></svg><div><b>Ceylo</b><small>Checking Lotus Café · Colombo 03</small></div></div>
+                <div class="chat">
+                  <div class="msg">I'm checking your setup. This takes a few seconds and doesn't change anything.</div>
+                  <div class="progress" aria-hidden="true"><span></span></div>
+                  <div class="row"><span class="dot ok">✓</span><span class="t">Business profile</span></div>
+                  <div class="row"><span class="dot ok">✓</span><span class="t">Payments and service charge</span></div>
+                  <div class="row"><span class="dot wn">!</span><span class="t">Receipt printing<small>Kitchen printer not set</small></span></div>
+                  <div class="row"><span class="dot run"><svg class="spin" width="12" height="12" viewBox="0 0 12 12"><path d="M6 1a5 5 0 1 1-5 5" stroke="currentColor" stroke-width="2" fill="none"/></svg></span><span class="t">Kitchen display</span></div>
+                  <div class="row"><span class="dot run">·</span><span class="t">Users, locations and plan</span></div>
+                </div>
+                <div class="panel-foot"><span class="btn">Close</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Mockup 2 · Report</span>
+    <h2>The setup report</h2>
+    <p class="read">When the check finishes, Ceylo shows one report. Problems come first, then warnings, then what passed (collapsed). Each line says what will happen at the counter and has one button that opens the screen that fixes it.</p>
+    <div class="plate">
+      <div class="plate-cap"><b>Report with one problem and two warnings</b><span>Mockup, not final UI</span></div>
+      <div class="scroll-x">
+        <div class="report" role="img" aria-label="Mockup of the Ceylo setup report listing one problem, two warnings and passed checks">
+          <div class="report-head">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-alert"/></svg>
+            <div><b style="font-size:16px;color:var(--ink)">3 things need your attention</b><div style="color:var(--muted)">Checked 22 settings · today 09:41 · Lotus Café, all locations</div></div>
+            <div class="score"><span class="pill er">1 problem</span><span class="pill wn">2 warnings</span><span class="pill ok">19 passed</span></div>
+          </div>
+          <div class="group">
+            <div class="group-h">Problems <small>stop something from working</small></div>
+            <div class="item"><span class="dot er">!</span><div><b>Kitchen display is not paired</b><p>Kitchen orders from Checkout will not reach the kitchen screen. Pair the kitchen device with a code.</p></div><span class="fix">Open KDS ›</span></div>
+          </div>
+          <div class="group">
+            <div class="group-h">Warnings <small>work, but may cause trouble</small></div>
+            <div class="item"><span class="dot wn">!</span><div><b>Kitchen printer name is empty</b><p>KOT tickets will print on the receipt printer instead of the kitchen.</p></div><span class="fix">Receipt Printing ›</span></div>
+            <div class="item"><span class="dot wn">!</span><div><b>9 of 10 users on your Business plan</b><p>You can add one more active user. Deactivate old staff or ask Ceylonry about a larger plan.</p></div><span class="fix">Users ›</span></div>
+          </div>
+          <div class="group">
+            <div class="group-h">Passed <small>19 checks · show</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Mockup 3 · Phone</span>
+    <h2>On a phone or tablet</h2>
+    <p class="read">On narrow screens Ceylo opens full screen. The first view is the answer, not the list: a single line that says whether the business is ready to trade, with the details one tap below.</p>
+    <div class="plate">
+      <div class="plate-cap"><b>Left: everything in order · Right: a cashier asking</b><span>Mockup, not final UI</span></div>
+      <div class="phones">
+        <div class="phone" role="img" aria-label="Phone mockup: Ceylo says everything is in order">
+          <div class="phone-screen">
+            <div class="notch"><i></i></div>
+            <div style="padding:18px 16px;display:grid;gap:12px;align-content:start;justify-items:center;text-align:center">
+              <svg viewBox="0 0 120 120" width="110" height="110" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-glad"/></svg>
+              <b style="font-size:17px;color:var(--ink)">You're ready to trade</b>
+              <span style="color:var(--muted)">All 22 checks passed for Lotus Café. I'll check again after the next settings change.</span>
+              <div style="display:grid;gap:6px;width:100%;text-align:left">
+                <div class="row"><span class="dot ok">✓</span><span class="t">Business profile</span></div>
+                <div class="row"><span class="dot ok">✓</span><span class="t">Printing</span></div>
+                <div class="row"><span class="dot ok">✓</span><span class="t">Kitchen display</span></div>
+                <div class="row"><span class="dot ok">✓</span><span class="t">Users and plan</span></div>
+                <div class="row"><span class="dot ok">✓</span><span class="t">Cloud sync</span></div>
+              </div>
+            </div>
+            <div class="panel-foot"><span class="btn" style="flex:1">Close</span><span class="btn go" style="flex:1">Check again</span></div>
+          </div>
+        </div>
+        <div class="phone" role="img" aria-label="Phone mockup: a cashier asks Ceylo why the receipt did not print">
+          <div class="phone-screen">
+            <div class="notch"><i></i></div>
+            <div class="chat" style="padding:14px">
+              <div style="display:flex;gap:8px;align-items:center"><svg viewBox="0 0 120 120" width="32" height="32" aria-hidden="true"><use href="#ceylo"/><use href="#eyes-happy"/></svg><b style="color:var(--ink)">Ceylo</b></div>
+              <div class="msg me">Why didn't the receipt print?</div>
+              <div class="msg">The receipt printer is set to "Epson TM-m30", but this tablet can't reach it right now.</div>
+              <div class="msg">Check the printer is on and on the same Wi-Fi. A manager can change the printer under Settings › Receipt Printing.</div>
+              <div class="row"><span class="dot wn">!</span><span class="t">Printer not reachable<small>Last printed 18 min ago</small></span></div>
+              <div class="msg">You can still finish the sale and send the receipt on WhatsApp.</div>
+            </div>
+            <div class="panel-foot"><span class="btn" style="flex:1">Try a test print</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Checks</span>
+    <h2>What Ceylo checks</h2>
+    <p class="read">Each check reads settings the POS already stores. A <span class="sev er">Problem</span> stops something from working; a <span class="sev wn">Warning</span> works today but is likely to cause trouble. Checks that do not apply (for example KDS for a retail shop) are skipped and not counted.</p>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Area</th><th>Check</th><th>Result when it fails</th><th>Fix opens</th></tr></thead>
+        <tbody>
+          <tr><td>Business profile</td><td>Business name, address and email are filled in; a logo is set</td><td><span class="sev er">Problem</span> name missing (receipts and invoices show blank)<br><span class="sev wn">Warning</span> address, email or logo missing</td><td>Settings › Business Profile</td></tr>
+          <tr><td>POS setup</td><td>Business / POS type is chosen; service charge is between 0 and 100 %; at least one payment method is on</td><td><span class="sev er">Problem</span> no payment method<br><span class="sev wn">Warning</span> service charge set but 0 %</td><td>Settings › POS Setup</td></tr>
+          <tr><td>Menu</td><td>Products exist, each has a price above zero and a category; images are not oversized</td><td><span class="sev er">Problem</span> no products<br><span class="sev wn">Warning</span> products at LKR 0 or uncategorised</td><td>Menu</td></tr>
+          <tr><td>Receipt printing</td><td>A receipt printer is set (and the Epson address when Epson is used); a kitchen printer name is set for kitchen businesses; a receipt footer exists</td><td><span class="sev wn">Warning</span> no printer, or no kitchen printer for a restaurant</td><td>Settings › Receipt Printing</td></tr>
+          <tr><td>Kitchen display</td><td>Only when the KDS feature is on: at least one kitchen device is paired and seen recently</td><td><span class="sev er">Problem</span> KDS on but nothing paired<br><span class="sev wn">Warning</span> paired device not seen for 24 h</td><td>Settings › KDS</td></tr>
+          <tr><td>Operations</td><td>Kitchen and display devices have "Always live screen" on; feedback link and delay are valid when used</td><td><span class="sev wn">Warning</span> kitchen device on the slower idle refresh</td><td>Settings › Operations</td></tr>
+          <tr><td>Locations</td><td>Every active location has a name and code; each user's locations still exist</td><td><span class="sev wn">Warning</span> user linked to a removed location</td><td>Locations</td></tr>
+          <tr><td>Users and roles</td><td>At least one owner or manager can approve refunds and voids; every user has a PIN</td><td><span class="sev er">Problem</span> no approver (cashiers cannot refund)<br><span class="sev wn">Warning</span> shared or default PIN such as 1234</td><td>Users</td></tr>
+          <tr><td>Plan limits</td><td>Active users and locations are within the plan assigned in the admin portal; no feature in use is outside the plan</td><td><span class="sev er">Problem</span> over the limit<br><span class="sev wn">Warning</span> one away from the limit</td><td>Settings › Plan &amp; Support</td></tr>
+          <tr><td>Subscription</td><td>Trial or paid period has not ended; next payment due date is not within 5 days</td><td><span class="sev er">Problem</span> expired<br><span class="sev wn">Warning</span> due within 5 days</td><td>Settings › Plan &amp; Support</td></tr>
+          <tr><td>Cloud sync</td><td>The device is online, the last sync succeeded, and nothing has waited to upload for more than 10 minutes</td><td><span class="sev er">Problem</span> sync failing<br><span class="sev wn">Warning</span> offline, with changes waiting</td><td>Sync icon (retry)</td></tr>
+          <tr><td>Images</td><td>Saved images have moved to cloud storage (not embedded in the business data)</td><td><span class="sev wn">Warning</span> images still embedded (slower sync)</td><td>Settings › Image storage</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Flow</span>
+    <h2>How a check runs</h2>
+    <div class="flow">
+      <div class="step"><b>Start</b><p>Someone taps Ceylo or "Check my setup", or a settings save triggers a quiet re-check.</p></div>
+      <div class="step"><b>Read</b><p>Ceylo reads the settings already on the device. No extra download, so it works offline.</p></div>
+      <div class="step"><b>Check</b><p>Each check returns pass, warning, problem or skipped, with one sentence of reason.</p></div>
+      <div class="step"><b>Report</b><p>Problems first, then warnings. Passed checks are folded away.</p></div>
+      <div class="step"><b>Fix</b><p>The fix button opens the right screen. Ceylo re-checks that item when the person comes back.</p></div>
+    </div>
+    <p class="read">After a quiet re-check Ceylo only speaks up if a new problem appears: the button gets an orange dot and a one-line notice. It never interrupts a sale in progress.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Rules</span>
+    <h2>Ground rules</h2>
+    <div class="rules">
+      <div class="rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><div><b>Read-only</b><p>Ceylo never changes a setting, sends a message or deletes anything. People make every change themselves.</p></div></div>
+      <div class="rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div><b>Respects roles</b><p>Owners and managers see the full report. Cashiers see whether the till is ready and "ask a manager" for anything else.</p></div></div>
+      <div class="rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg><div><b>No secrets</b><p>PINs, payment details, keys and customer data are never shown. A weak PIN is reported as "a user has a weak PIN", not the PIN itself.</p></div></div>
+      <div class="rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12.5l4 4 10-10"/></svg><div><b>Honest about limits</b><p>If a check needs the internet (sync, subscription) and the device is offline, Ceylo marks it "not checked" instead of guessing.</p></div></div>
+      <div class="rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><b>Light on the device</b><p>Checks run on data already loaded, in well under a second. Quiet re-checks wait until the screen is idle.</p></div></div>
+      <div class="rule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg><div><b>Accessible</b><p>Every status uses an icon and words as well as colour. The panel works with a keyboard and a screen reader, and buttons are at least 44 px on touch screens.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap read">
+    <span class="eyebrow">Scope</span>
+    <h2>Not in the first version</h2>
+    <ul class="plain">
+      <li>Free-text questions answered by AI. The first version answers from the check results only; the cashier "why didn't it print" chat above is scripted from those results.</li>
+      <li>Fixing settings on the person's behalf.</li>
+      <li>A cross-account view in the admin portal. Later, the same checks could feed a "setup health" column on the accounts list.</li>
+      <li>Checks on the CashFlow app or Guest Manager.</li>
+    </ul>
+    <h3 style="margin-top:12px">Open questions</h3>
+    <ul class="plain">
+      <li>Should the quiet re-check also run once a day, or only after settings changes?</li>
+      <li>Is "5 days before payment due" the right warning window?</li>
+      <li>Should owners be able to mute a warning they accept (for example "no logo")?</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Ceylo setup checker · concept documentation for the Ceylonry POS · All screens on this page are mockups with example data (Lotus Café is a sample business).</div>
+</footer>
