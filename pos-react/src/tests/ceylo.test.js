@@ -106,6 +106,60 @@ describe("Ceylo respects the admin feature switches", () => {
 	});
 });
 
+describe("Ceylo housekeeping checks", () => {
+	const NOW = Date.parse("2026-10-20T10:00:00Z");
+	const H = 3600000;
+	const messy = () => {
+		const input = good();
+		input.now = NOW;
+		input.locationId = "l1";
+		input.features = resolveFeatures({ "checkout.kds": true, "business.locations": true }).enabled;
+		Object.assign(input.settings, { email: "hi@lotus", feedbackLink: "google review", receiptSocials: { website: "lotus cafe" }, supportEnabled: true, supportCodeExpiresAt: NOW + 5 * H });
+		input.cashShifts = [{ status: "open", openedAt: new Date(NOW - 30 * H).toISOString() }, { status: "open", openedAt: new Date(NOW - 2 * H).toISOString() }];
+		input.timeEntries = [{ clockIn: new Date(NOW - 20 * H).toISOString() }, { clockIn: new Date(NOW - 20 * H).toISOString(), clockOut: new Date(NOW - 12 * H).toISOString() }];
+		input.openOrders = [{ status: "open", openedAt: new Date(NOW - 13 * H).toISOString() }, { status: "paid", openedAt: new Date(NOW - 40 * H).toISOString() }];
+		input.inventory = [{ name: "Milk", qty: 2, reorder: 5 }, { name: "Tea", qty: 50, reorder: 10 }];
+		input.products = [{ name: "Tea", price: 300, category: "Drinks", barcode: "111" }, { name: "tea ", price: 320, category: "Drinks", barcode: "111" }];
+		input.modifiers = [{ name: "Size", options: [] }, { name: "Milk", options: [{ name: "Oat" }] }];
+		input.customers = [{ phone: "077 123 4567" }, { phone: "+94771234567" }, { phone: "0711111111" }];
+		input.locations = [{ id: "l1", name: "Main", active: true }, { id: "l2", name: "Kandy", active: true }];
+		input.users = [{ id: "u1", role: "owner", pin: "8826", active: true, locationAccess: "selected", locationIds: ["l1"] }];
+		return input;
+	};
+
+	it("finds things left open, low stock, duplicates, broken links, a missing floor plan and open support access", () => {
+		const r = byId(runSetupChecks(messy()));
+		expect(r["register-open"]).toMatchObject({ status: "warn", title: "1 cash register left open for more than a day", fix: { view: "staff" } });
+		expect(r["clocked-in"].title).toBe("1 staff member still clocked in after 16 hours");
+		expect(r["open-orders"]).toMatchObject({ title: "1 open order older than 12 hours", fix: { view: "orders" } });
+		expect(r["low-stock"].title).toBe("1 stock item at or below the reorder level");
+		expect(r["duplicate-codes"].status).toBe("warn");
+		expect(r["duplicate-names"].status).toBe("warn");
+		expect(r["modifiers-empty"].title).toBe("1 modifier group without options");
+		expect(r["customer-phones"].title).toBe("1 phone number shared by more than one customer");
+		expect(r["business-email"].status).toBe("warn");
+		expect(r["feedback-link"].fix).toEqual({ view: "settings", tab: "operations" });
+		expect(r["receipt-website"].status).toBe("warn");
+		expect(r["table-layout"].fix).toEqual({ view: "tables" });
+		expect(r["support-access"].status).toBe("warn");
+		expect(r["location-staff"].title).toBe("1 location with no staff who can sign in");
+	});
+
+	it("says nothing about them when their features are switched off", () => {
+		const input = messy();
+		const off = ["staff.cashRegister", "staff.attendance", "checkout.openOrders", "view.inventory", "view.products", "view.modifiers", "view.customers", "crm.feedback", "settings.receiptSocials", "view.tables", "settings.supportAccess", "business.locations"];
+		input.features = resolveFeatures({ "checkout.kds": true, ...Object.fromEntries(off.map((id) => [id, false])) }).enabled;
+		const ids = runSetupChecks(input).map((x) => x.id);
+		for (const id of ["register-open", "clocked-in", "open-orders", "low-stock", "duplicate-codes", "duplicate-names", "modifiers-empty", "customer-phones", "feedback-link", "receipt-website", "table-layout", "support-access", "location-staff"]) expect(ids).not.toContain(id);
+	});
+
+	it("a floor plan saved for the location, or the old shared one, counts", () => {
+		const input = messy();
+		input.settings.tableLayout_l1 = [{ id: "t1" }];
+		expect(byId(runSetupChecks(input))["table-layout"]).toBeUndefined();
+	});
+});
+
 describe("feature groups in the admin portal", () => {
 	it("every feature belongs to a listed group and each screen switch sits with its own features", () => {
 		const groups = new Set(FEATURE_GROUPS.map((g) => g.id));

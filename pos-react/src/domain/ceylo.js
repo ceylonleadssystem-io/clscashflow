@@ -9,15 +9,27 @@ import { KITCHEN_TYPES } from "../config/presets";
 import { APPROVER_ROLES } from "./salesLog";
 import { accessAllowed, billingWarning } from "../services/billing";
 import { usageOf } from "../config/subscription";
+import { emailError } from "./validators";
+import { layoutFor } from "./tables";
 
 const WEAK_PINS = new Set(["0000", "1111", "1234", "4321", "1212", "9999"]);
 const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
 const isEmbedded = (v) => typeof v === "string" && v.startsWith("data:");
+const HOUR = 3600000;
+const isWebLink = (v) => /^https?:\/\/[^\s.]+\.[^\s]+$/i.test(String(v || "").trim());
+const ago = (iso, now) => now - (Date.parse(iso || "") || now);
+/** How many values appear more than once (ignoring blanks and case). */
+const repeats = (values) => {
+	const seen = new Map();
+	values.map((v) => String(v || "").trim().toLowerCase()).filter(Boolean).forEach((v) => seen.set(v, (seen.get(v) || 0) + 1));
+	return [...seen.values()].filter((n) => n > 1).length;
+};
 
 /**
  * input: { settings, users, locations, products, features (enabled map), subscription (or null), billingProfile (or null),
  *          cloudState ("synced" | "syncing" | "offline" | "retry" | ""), cloud (bool: signed in to the cloud), kds: { paired, connected },
- *          printers: { receipt: connected?, label: connected? } (USB devices on this device) }
+ *          printers: { receipt: connected?, label: connected? } (USB devices on this device),
+ *          customers, inventory, modifiers, openOrders, timeEntries, cashShifts (the business data lists), locationId (this device), now }
  */
 export function runSetupChecks(input) {
 	const s = input.settings || {};
@@ -36,6 +48,7 @@ export function runSetupChecks(input) {
 	const missing = [!String(s.address || "").trim() && "address", !String(s.email || "").trim() && "email", on("settings.businessLogo") && !s.logo && "logo"].filter(Boolean);
 	if (missing.length) add("business-details", "Business profile", "Business " + missing.join(", ") + (missing.length === 1 ? " is" : " are") + " missing", "warn", "Customers see these on receipts and invoices.", BUSINESS);
 	else add("business-details", "Business profile", "Address, email and logo are set", "ok", "");
+	if (String(s.email || "").trim() && emailError(s.email)) add("business-email", "Business profile", "Business email looks wrong", "warn", "Receipts and feedback e-mails may not reach customers. Check the spelling.", BUSINESS);
 
 	// POS setup
 	if (!s.businessType) add("pos-type", "POS setup", "Business type is not chosen", "warn", "The POS uses it to suggest features such as tables and kitchen tickets.", { view: "settings", tab: "pos" });
@@ -109,6 +122,51 @@ export function runSetupChecks(input) {
 		if (unnamed) add("location-names", "Locations", plural(unnamed, "location") + " without a name", "warn", "Staff choose locations by name when they sign in.", BUSINESS);
 		if (orphan) add("location-users", "Locations", plural(orphan, "user") + " linked to a removed location", "warn", "Check which locations they may use.", USERS);
 		if (!unnamed && !orphan) add("locations", "Locations", plural(locations.filter((l) => l.active !== false).length, "active location"), "ok", "");
+	}
+
+	// day-to-day housekeeping: things left open, stock, duplicates
+	const now = input.now || Date.now();
+	const STAFF = { view: "staff" };
+	if (on("staff.cashRegister")) {
+		const stale = (input.cashShifts || []).filter((x) => x.status === "open" && ago(x.openedAt, now) > 24 * HOUR).length;
+		if (stale) add("register-open", "Daily routine", plural(stale, "cash register") + " left open for more than a day", "warn", "Close the register at the end of each day so the cash count matches the sales.", STAFF);
+		else add("register-open", "Daily routine", "No cash register left open overnight", "ok", "");
+	}
+	if (on("staff.attendance")) {
+		const stale = (input.timeEntries || []).filter((x) => x.clockIn && !x.clockOut && ago(x.clockIn, now) > 16 * HOUR).length;
+		if (stale) add("clocked-in", "Daily routine", plural(stale, "staff member") + " still clocked in after 16 hours", "warn", "They probably forgot to clock out, so their hours will be wrong.", STAFF);
+	}
+	if (on("checkout.openOrders")) {
+		const stale = (input.openOrders || []).filter((x) => (x.status || "open") === "open" && ago(x.openedAt || x.createdAt, now) > 12 * HOUR).length;
+		if (stale) add("open-orders", "Daily routine", plural(stale, "open order") + " older than 12 hours", "warn", "Take payment or void them so the order queue and kitchen stay clear.", { view: on("view.orders") ? "orders" : "checkout" });
+	}
+	if (on("view.inventory")) {
+		const low = (input.inventory || []).filter((x) => Number(x.reorder) > 0 && Number(x.qty) <= Number(x.reorder)).length;
+		if (low) add("low-stock", "Stock", plural(low, "stock item") + " at or below the reorder level", "warn", "Order more before they run out at the till.", { view: "inventory" });
+		else if ((input.inventory || []).length) add("low-stock", "Stock", "Stock is above the reorder levels", "ok", "");
+	}
+	if (menuOn && products.length) {
+		const codes = repeats(products.map((x) => x.barcode).concat(products.map((x) => x.code)));
+		const names = repeats(products.map((x) => x.name));
+		if (codes) add("duplicate-codes", "Menu", plural(codes, "barcode or item code") + " used on more than one product", "warn", "Scanning or typing that code may add the wrong item.", MENU);
+		if (names) add("duplicate-names", "Menu", plural(names, "product name") + " used more than once", "warn", "Staff may pick the wrong item at checkout. Rename or remove the copies.", MENU);
+	}
+	if (on("view.modifiers")) {
+		const empty = (input.modifiers || []).filter((g) => !(Array.isArray(g.options) && g.options.some((o) => String(o?.name || "").trim()))).length;
+		if (empty) add("modifiers-empty", "Menu", plural(empty, "modifier group") + " without options", "warn", "They show up at checkout with nothing to choose.", { view: "modifiers" });
+	}
+	if (on("view.customers")) {
+		const dupes = repeats((input.customers || []).map((c) => String(c.phone || "").replace(/\D/g, "").slice(-9)));
+		if (dupes) add("customer-phones", "Customers", plural(dupes, "phone number") + " shared by more than one customer", "warn", "Customer lookup and loyalty may pick the wrong person. Merge the duplicates.", { view: "customers" });
+	}
+	if (on("crm.feedback") && String(s.feedbackLink || "").trim() && !isWebLink(s.feedbackLink)) add("feedback-link", "Customers", "Feedback link is not a web address", "warn", "Feedback e-mails will contain a broken link. It should start with https://.", { view: "settings", tab: "operations" });
+	if (on("settings.receiptSocials") && String(s.receiptSocials?.website || "").trim() && !isWebLink(/^https?:/i.test(s.receiptSocials.website) ? s.receiptSocials.website : "https://" + s.receiptSocials.website)) add("receipt-website", "Printing", "Website on receipts looks wrong", "warn", "Customers cannot open it. Check the spelling.", PRINT);
+	if (kitchen && on("view.tables") && input.locationId && input.locationId !== "all" && !layoutFor(s, input.locationId).length) add("table-layout", "Restaurant", "This location has no table layout", "warn", "Draw your floor plan so staff can seat guests and open table checks.", { view: "tables" });
+	if (on("settings.supportAccess") && s.supportEnabled && Number(s.supportCodeExpiresAt) > now) add("support-access", "Security", "Support access is open", "warn", "Ceylonry support can sign in until " + new Date(Number(s.supportCodeExpiresAt)).toLocaleString() + ". Switch it off when support is done.", { view: "settings", tab: "plan" });
+	if (on("business.locations") && on("staff.users")) {
+		const reach = (l) => users.some((u) => u.locationAccess !== "selected" || (Array.isArray(u.locationIds) && u.locationIds.includes(l.id)));
+		const lonely = locations.filter((l) => l.active !== false && !reach(l)).length;
+		if (lonely) add("location-staff", "Locations", plural(lonely, "location") + " with no staff who can sign in", "warn", "Give at least one user access to each location.", USERS);
 	}
 
 	// plan limits

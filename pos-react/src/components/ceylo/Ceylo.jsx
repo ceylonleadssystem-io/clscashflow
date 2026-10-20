@@ -18,37 +18,49 @@ import { openSettingsTab } from "../../store/settingsTab";
 import { askCeylo, checksForAi } from "../../services/ceyloAi";
 import { useFeature } from "../../store/FeatureProvider";
 
+// each mood is [left eye, right eye] so a single eye can wink
 const EYES = {
-	ready: (
-		<g fill="var(--ui-accent)">
-			<rect x="40" y="53" width="12" height="16" rx="6" />
-			<rect x="68" y="53" width="12" height="16" rx="6" />
-		</g>
-	),
-	glad: (
-		<g stroke="var(--ui-accent)" strokeWidth="5" fill="none" strokeLinecap="round">
-			<path d="M39 64 Q46 54 53 64" />
-			<path d="M67 64 Q74 54 81 64" />
-		</g>
-	),
-	think: (
-		<g fill="var(--ui-accent)">
-			<rect x="40" y="58" width="12" height="7" rx="3.5" />
-			<rect x="68" y="54" width="12" height="13" rx="6" />
-		</g>
-	),
-	alert: (
-		<g fill="var(--ui-warning, #e99a18)">
-			<rect x="40" y="51" width="12" height="19" rx="6" />
-			<rect x="68" y="51" width="12" height="19" rx="6" />
-		</g>
-	),
+	ready: [<rect key="l" x="40" y="53" width="12" height="16" rx="6" fill="var(--ui-accent)" />, <rect key="r" x="68" y="53" width="12" height="16" rx="6" fill="var(--ui-accent)" />],
+	glad: [
+		<path key="l" d="M39 64 Q46 54 53 64" stroke="var(--ui-accent)" strokeWidth="5" fill="none" strokeLinecap="round" />,
+		<path key="r" d="M67 64 Q74 54 81 64" stroke="var(--ui-accent)" strokeWidth="5" fill="none" strokeLinecap="round" />,
+	],
+	think: [<rect key="l" x="40" y="58" width="12" height="7" rx="3.5" fill="var(--ui-accent)" />, <rect key="r" x="68" y="54" width="12" height="13" rx="6" fill="var(--ui-accent)" />],
+	alert: [<rect key="l" x="40" y="51" width="12" height="19" rx="6" fill="var(--ui-warning, #e99a18)" />, <rect key="r" x="68" y="51" width="12" height="19" rx="6" fill="var(--ui-warning, #e99a18)" />],
 };
 
-/** Ceylo's face: dark head, visor eyes (the mood), tea-leaf antenna. Subtle CSS motion: the leaf sways, the eyes blink, the head bobs while thinking. */
+/** Little things Ceylo does now and then while idle. Each is a CSS animation named after it (see app.css, "Ceylo idle moves"). */
+const MOVES = ["wink", "look", "hop", "nod", "wiggle", "blink2"];
+const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+/** Picks a random idle move every 7-15 s (never while thinking, never with reduced motion). */
+function useIdleMove(active) {
+	const [move, setMove] = useState("");
+	useEffect(() => {
+		if (!active || reducedMotion()) return;
+		let timer;
+		const next = () => {
+			timer = setTimeout(() => {
+				setMove(MOVES[Math.floor(Math.random() * MOVES.length)]);
+				timer = setTimeout(() => {
+					setMove("");
+					next();
+				}, 1600);
+			}, 7000 + Math.random() * 8000);
+		};
+		next();
+		return () => clearTimeout(timer);
+	}, [active]);
+	return move;
+}
+
+/** Ceylo's face: dark head, visor eyes (the mood), tea-leaf antenna. Subtle CSS motion: the leaf sways, the eyes blink, the head bobs
+ * while thinking, and every few seconds Ceylo does a small idle move (wink, look around, hop, nod, leaf wiggle, double blink). */
 export function CeyloMascot({ mood = "ready", size = 32 }) {
+	const move = useIdleMove(mood !== "think");
+	const [left, right] = EYES[mood] || EYES.ready;
 	return (
-		<svg className={"ceylo-mascot is-" + mood} viewBox="0 0 120 120" width={size} height={size} aria-hidden="true">
+		<svg className={"ceylo-mascot is-" + mood + (move ? " do-" + move : "")} viewBox="0 0 120 120" width={size} height={size} aria-hidden="true">
 			<g className="ceylo-leaf">
 				<path d="M60 22 C60 14 64 8 72 6 C72 14 68 20 60 22Z" fill="#2f9b5a" />
 				<path d="M60 22 L60 30" stroke="#2f9b5a" strokeWidth="3" strokeLinecap="round" />
@@ -58,7 +70,10 @@ export function CeyloMascot({ mood = "ready", size = 32 }) {
 			<circle cx="12" cy="66" r="7" fill="#111920" />
 			<circle cx="108" cy="66" r="7" fill="#111920" />
 			<path d="M50 90 Q60 95 70 90" stroke="#c6ced4" strokeWidth="3" fill="none" strokeLinecap="round" />
-			<g className="ceylo-eyes">{EYES[mood] || EYES.ready}</g>
+			<g className="ceylo-eyes">
+				<g className="ceylo-eye-l">{left}</g>
+				<g className="ceylo-eye-r">{right}</g>
+			</g>
 		</svg>
 	);
 }
@@ -68,6 +83,7 @@ function useSetupChecks() {
 	const data = useData();
 	const { enabled } = useFeatures();
 	const { cloudStatus, billing, authKind } = useSession();
+	const { locationId } = usePos();
 	const [kds, setKds] = useState(kdsLink.state());
 	useEffect(() => kdsLink.subscribe(setKds), []);
 	const [receipt, setReceipt] = useState(receiptPrinter.status.connected);
@@ -90,8 +106,16 @@ function useSetupChecks() {
 				cloudState: cloudStatus?.state || "",
 				kds,
 				printers: { receipt, label },
+				customers: data.customers,
+				inventory: data.inventory,
+				modifiers: data.modifiers,
+				openOrders: data.openOrders,
+				timeEntries: data.timeEntries,
+				cashShifts: data.cashShifts,
+				locationId,
 			}),
-		[data.settings, data.users, data.locations, data.products, enabled, billing, authKind, cloudStatus?.state, kds, receipt, label],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[data.settings, data.users, data.locations, data.products, data.customers, data.inventory, data.modifiers, data.openOrders, data.timeEntries, data.cashShifts, locationId, enabled, billing, authKind, cloudStatus?.state, kds, receipt, label],
 	);
 }
 
