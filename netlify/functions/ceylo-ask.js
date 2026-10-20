@@ -1,10 +1,12 @@
 // Ask Ceylo: answers a POS owner's or cashier's question about their setup with Claude.
 // The POS sends the question, the last few chat turns and Ceylo's own check results (titles and plain sentences, never PINs,
 // keys or customer data). The server checks the sign-in and that the administrator switched "Ceylo AI answers" on for
-// this business, then asks Claude. Needs ANTHROPIC_API_KEY in the Netlify environment (server only).
+// this business, then asks the AI: the business's own key when one is saved (Settings > Ceylo AI key: Claude, ChatGPT or
+// Gemini), otherwise Ceylonry's Claude key (ANTHROPIC_API_KEY in the Netlify environment, server only).
 const Anthropic = require('@anthropic-ai/sdk');
 const { guard, reply } = require('../lib/security');
 const { getUserFromEvent, getDocument, clean } = require('../lib/appwrite');
+const keys = require('../lib/ai-keys');
 const log = require('../lib/log').createLogger('ceylo-ask');
 
 const MODEL = 'claude-opus-5-5';
@@ -47,7 +49,6 @@ exports.handler = async function handler(event) {
   const blocked = guard(event, { name: 'ceylo-ask', methods: ['POST'], limit: 20, windowMs: 60000, maxBody: 30000 });
   if (blocked) return blocked;
   try {
-    if (!process.env.ANTHROPIC_API_KEY) return reply(event, 503, { ok: false, error: 'Ceylo AI answers are not set up yet.' });
     const user = await getUserFromEvent(event);
     if (!user) return reply(event, 401, { ok: false, error: 'Please sign in again.' });
     let body = {};
@@ -68,6 +69,14 @@ exports.handler = async function handler(event) {
       .map(function(m) { return { role: m.role, content: String(m.text).slice(0, 2000) }; });
     while (history.length && history[0].role !== 'user') history.shift();
     const messages = history.concat([{ role: 'user', content: contextText(body, settings) + '\n\nQuestion: ' + question }]);
+
+    const own = await keys.keyFor(ownerUid).catch(function(e) { log.warn('saved AI key unreadable', { ownerUid, error: e.message }); return null; });
+    if (own) {
+      const text = await keys.ask({ provider: own.provider, key: own.key, model: own.model, system: SYSTEM, messages });
+      log.info('answered', { ownerUid, by: user.id, provider: own.provider, ownKey: true });
+      return reply(event, 200, { ok: true, answer: text || "Sorry, I don't have an answer for that. Please try asking another way." });
+    }
+    if (!process.env.ANTHROPIC_API_KEY) return reply(event, 503, { ok: false, error: 'Ceylo AI answers are not set up yet. Add your own AI key under Settings > Plan & Support.' });
 
     const response = await anthropic().beta.messages.create({
       model: MODEL,

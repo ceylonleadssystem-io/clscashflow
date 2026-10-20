@@ -14,6 +14,7 @@ import { usePos } from "../store/PosProvider";
 import { KdsPairing } from "../KDS/KdsPairing";
 import { onSettingsTab, requestedSettingsTab } from "../store/settingsTab";
 import { CeyloMascot } from "../components/ceylo/Ceylo";
+import { CeyloAiKeyPanel } from "../components/ceylo/CeyloAiKey";
 import {
 	AppearancePanel,
 	BillingPanel,
@@ -68,6 +69,7 @@ export function Settings() {
 	const kdsOn = useFeature("checkout.kds");
 	const billing = useFeature("settings.billing");
 	const ceylo = useFeature("settings.ceylo");
+	const ceyloAi = useFeature("settings.ceyloAi");
 	const ui = useUi();
 	const [tab, setTab] = useState(() => requestedSettingsTab() || "business");
 	// Ceylo's fix buttons can ask for a tab while Settings is already open
@@ -130,6 +132,7 @@ export function Settings() {
 						</div>
 					</div>
 				)}
+				{ceyloAi && <CeyloAiKeyPanel />}
 				{billing && <BillingPanel />}
 				<PlanSupportPanel form={form} set={set} onRegenerate={() => svc.settings.regenerateSupportCode()} />
 			</>
