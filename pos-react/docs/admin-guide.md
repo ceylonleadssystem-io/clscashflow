@@ -32,10 +32,11 @@ Use **Disable account** / **Enable account**. Devices already signed in re-check
 payment screen; enabling restores access. Payment status (trial / active / paused) is shown on the card.
 
 ## Features and locations
-69 switches grouped by area. Each switch applies to the whole business; a **per-location** table lets you set
+Switches grouped by area; each screen's own switch (marked **Screen**) sits at the top of the area it belongs to, followed by that screen's features (for example Sales History with Refunds and Voids; Order Queue, Tables, Guest Manager, KOT and KDS under *Restaurant & kitchen*). Each switch applies to the whole business; a **per-location** table lets you set
 *Inherit / On / Off* for each location. Rules:
 - Core features (checkout) cannot be switched off.
 - A feature that requires another is off whenever the required one is off (e.g. CRM needs Customers).
+- **Ceylo setup checker** (*Settings & platform*, on by default) shows the Ceylo button in the POS top bar and "Check my setup" under Settings > Plan & Support. Ceylo only reads the settings and links each problem to the screen that fixes it.
 - Stored in `settings.features` and `settings.locationFeatures`; synced to every device.
 
 ## Tiers

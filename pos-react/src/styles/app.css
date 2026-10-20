@@ -534,3 +534,39 @@ html body.full #view-dashboard .dashboard-two>.panel{overflow:visible}
 @keyframes admin-pop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.admin-progress span{animation-duration:3s}.admin-success{animation:none}}
 html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
+
+/* Ceylo setup checker: top-bar button and report panel (side panel; full screen on phones) */
+.ceylo-button{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:40px;min-width:40px;padding:0 10px 0 6px}
+.ceylo-button .ceylo-mascot{flex:none}
+.ceylo-dot{position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:var(--ui-accent);box-shadow:0 0 0 2px var(--ui-surface)}
+@media (max-width:760px){.ceylo-button-label{display:none}.ceylo-button{padding:0 8px}}
+.ceylo-layer{position:fixed;inset:0;z-index:80;background:rgba(10,15,19,.35);display:flex;justify-content:flex-end}
+.ceylo-panel{width:min(420px,100%);height:100%;background:var(--ui-surface);color:var(--ui-text);border-left:1px solid var(--ui-line);display:grid;grid-template-rows:auto minmax(0,1fr) auto;box-shadow:-18px 0 50px rgba(10,15,19,.18);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.ceylo-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--ui-line)}
+.ceylo-head > div{flex:1;min-width:0}
+.ceylo-head b{display:block;font-size:16px;line-height:1.25;color:var(--ui-text)}
+.ceylo-head small{color:var(--ui-muted)}
+.ceylo-close{width:44px;height:44px;border:0;border-radius:10px;background:transparent;color:var(--ui-muted);font-size:26px;line-height:1;cursor:pointer}
+.ceylo-close:hover{background:var(--ui-soft);color:var(--ui-text)}
+.ceylo-body{overflow-y:auto;padding:14px 18px;display:grid;gap:14px;align-content:start}
+.ceylo-body h3{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ui-muted)}
+.ceylo-msg{margin:0;padding:10px 12px;border-radius:12px 12px 12px 4px;background:var(--ui-soft);color:var(--ui-text)}
+.ceylo-pills{display:flex;flex-wrap:wrap;gap:6px}
+.ceylo-pill{padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px}
+.ceylo-pill.is-problem{background:color-mix(in srgb,var(--ui-danger) 12%,var(--ui-surface));color:var(--ui-danger)}
+.ceylo-pill.is-warn{background:color-mix(in srgb,var(--ui-warning,#e99a18) 14%,var(--ui-surface));color:color-mix(in srgb,var(--ui-warning,#e99a18) 75%,var(--ui-text))}
+.ceylo-pill.is-ok{background:color-mix(in srgb,var(--ui-good) 12%,var(--ui-surface));color:var(--ui-good)}
+.ceylo-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ceylo-item{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--ui-line);border-radius:12px;background:var(--ui-surface)}
+.ceylo-item b{display:block;color:var(--ui-text)}
+.ceylo-item p{margin:2px 0 0;font-size:13px;color:var(--ui-muted)}
+.ceylo-status{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px}
+.ceylo-item.is-ok .ceylo-status{background:var(--ui-good)}
+.ceylo-item.is-warn .ceylo-status{background:var(--ui-warning,#e99a18)}
+.ceylo-item.is-problem .ceylo-status{background:var(--ui-danger)}
+.ceylo-fix{min-height:36px;padding:6px 12px}
+.ceylo-toggle{border:0;background:none;padding:6px 0;color:var(--ui-accent);font-weight:700;cursor:pointer}
+.ceylo-foot{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--ui-line)}
+.ceylo-foot .btn{flex:1}
+@media (max-width:560px){.ceylo-panel{width:100%;border-left:0}}
+@media (pointer:coarse){.ceylo-fix{min-height:44px}}

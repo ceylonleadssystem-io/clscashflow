@@ -11,15 +11,15 @@
  * every other setting.
  *
  *   id          stable key used in code (`useFeature("checkout.splitBill")`)
- *   group       section in the Admin Dashboard
+ *   group       section in the Admin Dashboard (a screen's own switch sits in the same section as its features)
  *   core        true = the POS cannot work without it (cannot be disabled)
  *   default     value when the admin has never touched the switch
  *   requires    other features that must be enabled for this one to work
  *   legacy      note describing where the original HTML implemented it
  */
 export const FEATURE_GROUPS = [
-	{ id: "navigation", label: "Screens & navigation", icon: "▦" },
 	{ id: "checkout", label: "Checkout & payments", icon: "▣" },
+	{ id: "restaurant", label: "Restaurant & kitchen", icon: "◫" },
 	{ id: "sales", label: "Sales history & returns", icon: "↗" },
 	{ id: "catalogue", label: "Catalogue", icon: "□" },
 	{ id: "customers", label: "Customers & CRM", icon: "♙" },
@@ -45,21 +45,21 @@ const f = (id, group, label, description, extra = {}) => ({
 
 export const FEATURES = [
 	// ------------------------------------------------------------ navigation
-	f("view.dashboard", "navigation", "Dashboard", "KPIs, best sellers, payment mix, cashflow overview and branch status."),
-	f("view.checkout", "navigation", "Checkout", "The sales register screen.", { core: true }),
-	f("view.orders", "navigation", "Order Queue", "Open checks, table orders and kitchen sending (Restaurant / Café presets).", { requires: ["checkout.openOrders"] }),
-	f("view.tables", "navigation", "Tables", "Restaurant floor plan: seat guests, open table checks; owners edit the layout.", { requires: ["checkout.openOrders", "checkout.orderReference"] }),
-	f("view.guestManager", "navigation", "Guest Manager (GM)", "Reservations, walk-ins, waitlist, guest profiles, loyalty and booking reports at /GM, using this business's table layout and customers. OFF by default: switch it on for restaurants and hotels.", { default: false }),
-	f("view.products", "navigation", "Products & Services", "Catalogue management: items, prices, categories."),
-	f("view.modifiers", "navigation", "Modifiers", "Modifier groups (sizes, flavours, add-ons)."),
-	f("view.customers", "navigation", "Customers", "Customer directory and purchase history."),
-	f("view.crm", "navigation", "CRM & Feedback", "Segments, birthdays, WhatsApp and feedback requests.", { requires: ["view.customers"] }),
-	f("view.sales", "navigation", "Sales History", "Receipts, reprints, downloads and sale actions."),
-	f("view.receipts", "navigation", "Receipts & Refunds", "Every staff member can reprint, download, refund or void a receipt; cashiers need a manager PIN to approve a refund or void."),
-	f("view.reports", "navigation", "Reports", "Business reports and exports."),
-	f("view.inventory", "navigation", "Inventory & Stock", "Stock items, movements and adjustments."),
-	f("view.staff", "navigation", "Staff & Shifts", "Attendance, cash register and users."),
-	f("view.settings", "navigation", "Settings", "Business, printing, plan and support settings.", { core: true }),
+	f("view.dashboard", "reports", "Dashboard", "KPIs, best sellers, payment mix, cashflow overview and branch status."),
+	f("view.checkout", "checkout", "Checkout", "The sales register screen.", { core: true }),
+	f("view.orders", "restaurant", "Order Queue", "Open checks, table orders and kitchen sending (Restaurant / Café presets).", { requires: ["checkout.openOrders"] }),
+	f("view.tables", "restaurant", "Tables", "Restaurant floor plan: seat guests, open table checks; owners edit the layout.", { requires: ["checkout.openOrders", "checkout.orderReference"] }),
+	f("view.guestManager", "restaurant", "Guest Manager (GM)", "Reservations, walk-ins, waitlist, guest profiles, loyalty and booking reports at /GM, using this business's table layout and customers. OFF by default: switch it on for restaurants and hotels.", { default: false }),
+	f("view.products", "catalogue", "Products & Services", "Catalogue management: items, prices, categories."),
+	f("view.modifiers", "catalogue", "Modifiers", "Modifier groups (sizes, flavours, add-ons)."),
+	f("view.customers", "customers", "Customers", "Customer directory and purchase history."),
+	f("view.crm", "customers", "CRM & Feedback", "Segments, birthdays, WhatsApp and feedback requests.", { requires: ["view.customers"] }),
+	f("view.sales", "sales", "Sales History", "Receipts, reprints, downloads and sale actions."),
+	f("view.receipts", "sales", "Receipts & Refunds", "Every staff member can reprint, download, refund or void a receipt; cashiers need a manager PIN to approve a refund or void."),
+	f("view.reports", "reports", "Reports", "Business reports and exports."),
+	f("view.inventory", "inventory", "Inventory & Stock", "Stock items, movements and adjustments."),
+	f("view.staff", "staff", "Staff & Shifts", "Attendance, cash register and users."),
+	f("view.settings", "settings", "Settings", "Business, printing, plan and support settings.", { core: true }),
 
 	// -------------------------------------------------------------- checkout
 	f("checkout.customerLookup", "checkout", "Customer lookup", "Find a customer by mobile number or add one during checkout.", { requires: ["view.customers"] }),
@@ -68,10 +68,10 @@ export const FEATURES = [
 	f("checkout.cashTender", "checkout", "Cash received & change", "Cash tender panel with exact-cash button and change calculation."),
 	f("checkout.splitBill", "checkout", "Split bill", "Split a bill equally or by custom amounts across payment methods."),
 	f("checkout.orderReference", "checkout", "Table / order reference", "Optional reference printed on kitchen tickets and saved with the sale."),
-	f("checkout.orderChannels", "checkout", "Order channels", "Dine-in / Takeaway / PickMe / Uber Eats selector (Restaurant, Café).", { requires: ["checkout.orderReference"] }),
+	f("checkout.orderChannels", "restaurant", "Order channels", "Dine-in / Takeaway / PickMe / Uber Eats selector (Restaurant, Café).", { requires: ["checkout.orderReference"] }),
 	f("checkout.openOrders", "checkout", "Save open orders", "Save an order and recall it later to take payment."),
-	f("checkout.kitchenTickets", "checkout", "Kitchen tickets (KOT)", "Send orders to the kitchen and print kitchen order tickets.", { requires: ["checkout.openOrders"] }),
-	f("checkout.kds", "checkout", "Kitchen Display (KDS)", "Send prep tickets to a paired Kitchen Display (open /KDS on a kitchen screen). Tickets travel over the local Wi-Fi only.", { default: false, requires: ["checkout.kitchenTickets"] }),
+	f("checkout.kitchenTickets", "restaurant", "Kitchen tickets (KOT)", "Send orders to the kitchen and print kitchen order tickets.", { requires: ["checkout.openOrders"] }),
+	f("checkout.kds", "restaurant", "Kitchen Display (KDS)", "Send prep tickets to a paired Kitchen Display (open /KDS on a kitchen screen). Tickets travel over the local Wi-Fi only.", { default: false, requires: ["checkout.kitchenTickets"] }),
 	f("checkout.emailReceipt", "checkout", "E-mail receipt", "Send the receipt to the customer by e-mail (EmailJS)."),
 	f("checkout.whatsappReceipt", "checkout", "WhatsApp receipt", "Prepare the receipt as a WhatsApp message."),
 	f("checkout.printReceipt", "checkout", "Print receipt after checkout", "Automatic / optional receipt printing."),
@@ -131,6 +131,7 @@ export const FEATURES = [
 	f("settings.receiptSocials", "settings", "Socials & QR on receipt", "Social handles and QR artwork printed on receipts."),
 	f("settings.supportAccess", "settings", "Support access code", "Owner-controlled diagnostic access with 24-hour codes."),
 	f("settings.billing", "settings", "Billing & subscription widget", "Shared platform billing widget, trial countdown and paywall."),
+	f("settings.ceylo", "settings", "Ceylo setup checker", "Ceylo checks this business's settings (profile, payments, menu, printing, KDS, users, plan and sync) and links each problem to the screen that fixes it. Read-only.", { requires: ["view.settings"] }),
 	f("settings.cloudBanner", "settings", "Cloud sync status banner", "Shows online/offline/synced status."),
 
 	// ----------------------------------------------------------------- shell
