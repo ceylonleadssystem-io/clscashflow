@@ -63,6 +63,22 @@ describe("Ceylo setup checks", () => {
 	});
 });
 
+describe("Ceylo ignored checks", () => {
+	it("ignored problems and warnings leave the counts and are listed on their own", () => {
+		const input = good();
+		input.kds = { paired: false };
+		input.settings.kotPrinter = "";
+		const rs = runSetupChecks(input);
+		const sum = summarize(rs, ["kds", "kot-printer", "business-name"]);
+		expect(sum.problems.map((r) => r.id)).not.toContain("kds");
+		expect(sum.warnings.map((r) => r.id)).not.toContain("kot-printer");
+		expect(sum.ignored.map((r) => r.id).sort()).toEqual(["kds", "kot-printer"]);
+		expect(sum.passed.map((r) => r.id)).toContain("business-name"); // ignoring a passed check changes nothing
+		expect(sum.mood).toBe("glad");
+		expect(sum.checked).toBe(summarize(rs).checked);
+	});
+});
+
 describe("Ceylo printer checks", () => {
 	it("checks the USB receipt printer, the Epson address and a set-up label printer", () => {
 		const input = good();

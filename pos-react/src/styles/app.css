@@ -616,3 +616,9 @@ html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
 @keyframes ceylo-nod{0%,100%{transform:rotate(0)}30%{transform:rotate(-6deg)}60%{transform:rotate(4deg)}}
 @keyframes ceylo-wiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-16deg)}45%{transform:rotate(12deg)}70%{transform:rotate(-6deg)}}
 @keyframes ceylo-blink2{0%,20%,40%,100%{transform:scaleY(1)}10%,30%{transform:scaleY(.1)}}
+/* Ceylo: ignore / restore */
+.ceylo-actions{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.ceylo-ignore{border:0;background:none;padding:6px 4px;min-height:32px;color:var(--ui-muted);font-size:12px;font-weight:600;cursor:pointer}
+.ceylo-ignore:hover{color:var(--ui-text);text-decoration:underline}
+.ceylo-item.is-ignored{opacity:.72}
+@media (pointer:coarse){.ceylo-ignore{min-height:44px}}

@@ -8,7 +8,7 @@ import { isAppwrite } from "../config/env";
 const URL = "/.netlify/functions/ceylo-ask";
 
 /** Only what the answer needs from each check. */
-export const checksForAi = (results) => results.filter((r) => r.status !== "skip").map(({ area, title, status, text }) => ({ area, title, status, text }));
+export const checksForAi = (results, ignored = []) => results.filter((r) => r.status !== "skip").map(({ id, area, title, status, text }) => ({ area, title, status: ignored.includes(id) ? "ignored by the business" : status, text }));
 
 async function post(url, body, fallback) {
 	if (!isAppwrite()) throw new Error("Ceylo AI needs the cloud version of the POS.");

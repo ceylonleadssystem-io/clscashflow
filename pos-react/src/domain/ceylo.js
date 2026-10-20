@@ -210,9 +210,14 @@ export function runSetupChecks(input) {
 	return out;
 }
 
-/** Counts and the order to show results in: problems, then warnings, then passed. */
-export function summarize(results) {
-	const by = (st) => results.filter((r) => r.status === st);
+/**
+ * Counts and the order to show results in: problems, then warnings, then passed. Problems and warnings the business chose to
+ * ignore (settings.ceyloIgnored, by check id) are left out of the counts and listed separately.
+ */
+export function summarize(results, ignoredIds = []) {
+	const skip = new Set(ignoredIds);
+	const by = (st) => results.filter((r) => r.status === st && (st === "ok" || !skip.has(r.id)));
 	const problems = by("problem"), warnings = by("warn"), passed = by("ok");
-	return { problems, warnings, passed, checked: problems.length + warnings.length + passed.length, mood: problems.length || warnings.length ? "alert" : "glad" };
+	const ignored = results.filter((r) => (r.status === "problem" || r.status === "warn") && skip.has(r.id));
+	return { problems, warnings, passed, ignored, checked: problems.length + warnings.length + passed.length + ignored.length, mood: problems.length || warnings.length ? "alert" : "glad" };
 }

@@ -119,10 +119,20 @@ function useSetupChecks() {
 	);
 }
 
-/** Top-bar button. Shows an orange dot when a check finds a problem or warning. */
+/** Check ids the business chose to ignore (kept in the synced settings, so every device agrees) and a toggle to change them. */
+function useIgnored() {
+	const list = useData().settings.ceyloIgnored;
+	const { svc } = usePos();
+	const ignored = Array.isArray(list) ? list : [];
+	const set = (id, on) => svc.settings.patchSettings({ ceyloIgnored: on ? [...new Set([...ignored, id])] : ignored.filter((x) => x !== id) });
+	return [ignored, set];
+}
+
+/** Top-bar button. Shows an orange dot when a check finds a problem or warning that is not ignored. */
 export function CeyloButton() {
 	const { setLayout } = usePos();
-	const sum = summarize(useSetupChecks());
+	const [ignored] = useIgnored();
+	const sum = summarize(useSetupChecks(), ignored);
 	const open = sum.problems.length + sum.warnings.length;
 	return (
 		<button
@@ -141,18 +151,32 @@ export function CeyloButton() {
 
 const DOT = { ok: "✓", warn: "!", problem: "!" };
 
-function Item({ r, onFix, canFix }) {
+function Item({ r, onFix, canFix, onIgnore, onRestore }) {
 	return (
-		<li className={"ceylo-item is-" + r.status}>
+		<li className={"ceylo-item is-" + r.status + (onRestore ? " is-ignored" : "")}>
 			<span className="ceylo-status" aria-hidden="true">{DOT[r.status]}</span>
 			<div className="ceylo-item-copy">
 				<b>{r.title}</b>
 				{r.text && r.status !== "ok" && <p>{r.text}</p>}
 			</div>
-			{canFix && r.fix && r.status !== "ok" && (
-				<button type="button" className="btn out ceylo-fix" onClick={() => onFix(r.fix)}>
-					Fix
-				</button>
+			{(canFix || onIgnore || onRestore) && (
+				<div className="ceylo-actions">
+					{canFix && r.fix && r.status !== "ok" && (
+						<button type="button" className="btn out ceylo-fix" onClick={() => onFix(r.fix)}>
+							Fix
+						</button>
+					)}
+					{onIgnore && (
+						<button type="button" className="ceylo-ignore" onClick={() => onIgnore(r.id)} aria-label={"Ignore: " + r.title}>
+							Ignore
+						</button>
+					)}
+					{onRestore && (
+						<button type="button" className="ceylo-ignore" onClick={() => onRestore(r.id)} aria-label={"Stop ignoring: " + r.title}>
+							Restore
+						</button>
+					)}
+				</div>
 			)}
 		</li>
 	);
@@ -161,7 +185,7 @@ function Item({ r, onFix, canFix }) {
 const SUGGESTIONS = ["How do I fix the first problem?", "What should I set up first?", "Why didn't the receipt print?"];
 
 /** Ask Ceylo: a short chat answered by Claude from the check results. The thread lives only in this panel. */
-function AskCeylo({ results, role, view, locationId, onThinking }) {
+function AskCeylo({ results, ignored, role, view, locationId, onThinking }) {
 	const [thread, setThread] = useState([]); // [{ role: "user" | "assistant", text }]
 	const [q, setQ] = useState("");
 	const [busy, setBusy] = useState(false);
@@ -180,7 +204,7 @@ function AskCeylo({ results, role, view, locationId, onThinking }) {
 		setBusy(true);
 		onThinking(true);
 		try {
-			const answer = await askCeylo({ question: text, history, checks: checksForAi(results), role, view, locationId });
+			const answer = await askCeylo({ question: text, history, checks: checksForAi(results, ignored), role, view, locationId });
 			setThread((t) => [...t, { role: "assistant", text: answer }]);
 		} catch (e) {
 			setError(e.message);
@@ -248,6 +272,8 @@ export function CeyloPanel() {
 	const [thinking, setThinking] = useState(false);
 	const results = useSetupChecks();
 	const [showPassed, setShowPassed] = useState(false);
+	const [showIgnored, setShowIgnored] = useState(false);
+	const [ignored, setIgnored] = useIgnored();
 	const [checkedAt, setCheckedAt] = useState(() => new Date());
 	const closeRef = useRef(null);
 	const open = !!layout.ceyloOpen;
@@ -262,7 +288,9 @@ export function CeyloPanel() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open]);
 	if (!open) return null;
-	const sum = summarize(results);
+	const sum = summarize(results, ignored);
+	const ignore = (id) => setIgnored(id, true);
+	const restore = (id) => setIgnored(id, false);
 	const manager = FULL_SETTINGS_ROLES.includes(currentUser?.role);
 	const attention = sum.problems.length + sum.warnings.length;
 	const fix = (target) => {
@@ -302,13 +330,13 @@ export function CeyloPanel() {
 							{sum.problems.length > 0 && (
 								<section aria-label="Problems">
 									<h3>Problems</h3>
-									<ul className="ceylo-list">{sum.problems.map((r) => <Item key={r.id} r={r} onFix={fix} canFix />)}</ul>
+									<ul className="ceylo-list">{sum.problems.map((r) => <Item key={r.id} r={r} onFix={fix} canFix onIgnore={ignore} />)}</ul>
 								</section>
 							)}
 							{sum.warnings.length > 0 && (
 								<section aria-label="Warnings">
 									<h3>Warnings</h3>
-									<ul className="ceylo-list">{sum.warnings.map((r) => <Item key={r.id} r={r} onFix={fix} canFix />)}</ul>
+									<ul className="ceylo-list">{sum.warnings.map((r) => <Item key={r.id} r={r} onFix={fix} canFix onIgnore={ignore} />)}</ul>
 								</section>
 							)}
 							<section aria-label="Passed">
@@ -317,9 +345,17 @@ export function CeyloPanel() {
 								</button>
 								{showPassed && <ul className="ceylo-list">{sum.passed.map((r) => <Item key={r.id} r={r} />)}</ul>}
 							</section>
+							{sum.ignored.length > 0 && (
+								<section aria-label="Ignored">
+									<button type="button" className="ceylo-toggle" id="ceylo-show-ignored" aria-expanded={showIgnored} onClick={() => setShowIgnored((v) => !v)}>
+										{showIgnored ? "Hide" : "Show"} {sum.ignored.length} ignored check{sum.ignored.length === 1 ? "" : "s"}
+									</button>
+									{showIgnored && <ul className="ceylo-list">{sum.ignored.map((r) => <Item key={r.id} r={r} onFix={fix} canFix onRestore={restore} />)}</ul>}
+								</section>
+							)}
 						</>
 					)}
-					{aiOn && <AskCeylo results={results} role={currentUser?.role || ""} view={view} locationId={locationId} onThinking={setThinking} />}
+					{aiOn && <AskCeylo results={results} ignored={ignored} role={currentUser?.role || ""} view={view} locationId={locationId} onThinking={setThinking} />}
 				</div>
 				<footer className="ceylo-foot">
 					<button type="button" className="btn out" onClick={close}>
