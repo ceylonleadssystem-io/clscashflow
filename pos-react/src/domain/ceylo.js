@@ -10,6 +10,8 @@ import { APPROVER_ROLES } from "./salesLog";
 import { emailError } from "./validators";
 import { layoutFor } from "./tables";
 
+/** Shops that sell barcoded goods: Ceylo also checks the barcode scanner and the label printer for them. */
+export const RETAIL_TYPES = ["retail", "grocery", "hardware", "pharmacy"];
 const WEAK_PINS = new Set(["0000", "1111", "1234", "4321", "1212", "9999"]);
 const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
 const isEmbedded = (v) => typeof v === "string" && v.startsWith("data:");
@@ -28,6 +30,7 @@ const repeats = (values) => {
  * input: { settings, users, locations, products, features (enabled map),
  *          cloudState ("synced" | "syncing" | "offline" | "retry" | ""), cloud (bool: signed in to the cloud), kds: { paired, connected },
  *          printers: { receipt: connected?, label: connected? } (USB devices on this device),
+ *          scanner: { connected (USB scanner), lastScanAt (ms, last scanner-speed scan on this device) },
  *          customers, inventory, modifiers, openOrders, timeEntries, cashShifts (the business data lists), locationId (this device), now }
  */
 export function runSetupChecks(input) {
@@ -79,18 +82,29 @@ export function runSetupChecks(input) {
 			if (!s.usbPrinter || !Object.keys(s.usbPrinter).length) add("receipt-printer", "Printing", "USB receipt printer is chosen but not set up", "problem", "Receipts cannot print until the printer is connected once under Receipt Printing.", PRINT);
 			else if (!printers.receipt) add("receipt-printer", "Printing", "USB receipt printer is not connected", "warn", "Check the cable and power, then tap Connect USB Printer on this device.", PRINT);
 			else add("receipt-printer", "Printing", "USB receipt printer is connected", "ok", "");
-		} else if (type === "usb-direct") add("receipt-printer", "Printing", "Receipts use the system print dialog", "ok", "");
+		} else if (printers.receipt) add("receipt-printer", "Printing", "USB receipt printer is connected", "ok", "");
 		else if (/epson/i.test(type) && !String(s.printerAddress || "").trim()) add("receipt-printer", "Printing", "Epson network printer has no address", "warn", "Receipts cannot reach the printer until its IP address is set.", PRINT);
-		else add("receipt-printer", "Printing", type === "system" ? "Receipts print through the system print dialog" : "Receipt printer is set up", "ok", "");
+		// the browser cannot see system (Bluetooth / driver) or network printers, so say so instead of guessing
+		else add("receipt-printer", "Printing", (/epson/i.test(type) ? "Epson network printer" : "System printer") + " is set (Ceylo cannot see if it is switched on: print a test receipt to check)", "ok", "");
 	}
 	if (kitchen && on("checkout.kitchenTickets")) {
 		if (!String(s.kotPrinter || "").trim()) add("kot-printer", "Printing", "Kitchen printer name is empty", "warn", "Kitchen tickets (KOT) will print on the receipt printer instead of the kitchen.", PRINT);
 		else add("kot-printer", "Printing", "Kitchen printer is set", "ok", "");
 	}
-	// the label printer is only checked once it has been set up, so businesses that never print labels are not nagged
-	if (on("hardware.labelPrinter") && s.barcodePrinter && Object.keys(s.barcodePrinter).length) {
-		if (!printers.label) add("label-printer", "Printing", "Label printer is not connected", "warn", "Barcode labels cannot print on this device until it is reconnected.", PRINT);
-		else add("label-printer", "Printing", "Label printer is connected", "ok", "");
+	// shops always need the label printer; other businesses only once they have set one up, so they are not nagged
+	const retail = RETAIL_TYPES.includes(s.businessType);
+	const labelSetUp = !!(s.barcodePrinter && Object.keys(s.barcodePrinter).length);
+	if (on("hardware.labelPrinter") && (retail || labelSetUp)) {
+		if (printers.label) add("label-printer", "Printing", "Label printer is connected", "ok", "");
+		else if (!labelSetUp) add("label-printer", "Printing", "No label printer set up", "warn", "Connect the USB label printer under Receipt Printing to print barcode and price labels.", PRINT);
+		else add("label-printer", "Printing", "Label printer is not connected", "warn", "Barcode labels cannot print on this device until it is reconnected.", PRINT);
+	}
+	if (retail && on("hardware.barcodeScanner")) {
+		const scan = input.scanner || {};
+		const recent = scan.lastScanAt && (input.now || Date.now()) - scan.lastScanAt < 7 * 24 * 3600000;
+		if (scan.connected) add("barcode-scanner", "Printing", "USB barcode scanner is connected", "ok", "");
+		else if (recent) add("barcode-scanner", "Printing", "Barcode scanner worked on this device in the last 7 days", "ok", "");
+		else add("barcode-scanner", "Printing", "No barcode scanner seen on this device", "warn", "Connect a USB scanner under Receipt Printing, or scan any product on the checkout screen to test a keyboard-style scanner.", PRINT);
 	}
 
 	// kitchen display

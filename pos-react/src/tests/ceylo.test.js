@@ -95,6 +95,44 @@ describe("Ceylo printer checks", () => {
 		expect(byId(runSetupChecks(input))["receipt-printer"].title).toBe("Epson network printer has no address");
 	});
 
+	it("a retail shop is told when the barcode scanner or label printer is missing, and when they work", () => {
+		const input = good();
+		input.settings.businessType = "retail";
+		input.now = Date.parse("2026-10-20T10:00:00Z");
+		input.printers = { receipt: false, label: false };
+		input.scanner = { connected: false, lastScanAt: 0 };
+		let r = byId(runSetupChecks(input));
+		expect(r["label-printer"]).toMatchObject({ status: "warn", title: "No label printer set up", fix: { tab: "printing" } });
+		expect(r["barcode-scanner"]).toMatchObject({ status: "warn", title: "No barcode scanner seen on this device" });
+		input.scanner = { connected: false, lastScanAt: input.now - 2 * 86400000 }; // a keyboard-style scanner scanned 2 days ago
+		input.printers = { receipt: false, label: true };
+		r = byId(runSetupChecks(input));
+		expect(r["barcode-scanner"].status).toBe("ok");
+		expect(r["label-printer"].status).toBe("ok");
+		input.scanner = { connected: true };
+		expect(byId(runSetupChecks(input))["barcode-scanner"].title).toBe("USB barcode scanner is connected");
+	});
+
+	it("the scanner check follows the admin switch and only applies to shops", () => {
+		const input = good();
+		input.settings.businessType = "retail";
+		input.features = resolveFeatures({ "hardware.barcodeScanner": false, "hardware.labelPrinter": false }).enabled;
+		let r = byId(runSetupChecks(input));
+		expect(r["barcode-scanner"]).toBeUndefined();
+		expect(r["label-printer"]).toBeUndefined();
+		input.settings.businessType = "restaurant";
+		input.features = resolveFeatures({}).enabled;
+		expect(byId(runSetupChecks(input))["barcode-scanner"]).toBeUndefined();
+	});
+
+	it("says honestly that a system or network printer cannot be seen", () => {
+		const input = good();
+		input.printers = { receipt: false, label: false };
+		expect(byId(runSetupChecks(input))["receipt-printer"]).toMatchObject({ status: "ok", title: expect.stringContaining("print a test receipt") });
+		input.printers.receipt = true;
+		expect(byId(runSetupChecks(input))["receipt-printer"].title).toBe("USB receipt printer is connected");
+	});
+
 	it("never suggests a label printer that was never set up", () => {
 		expect(byId(runSetupChecks(good()))["label-printer"]).toBeUndefined();
 	});

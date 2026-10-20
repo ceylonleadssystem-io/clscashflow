@@ -13,6 +13,7 @@ import { useSession } from "../../store/SessionProvider";
 import { kdsLink } from "../../KDS/link";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { labelPrinter } from "../../services/printing/labelPrinter";
+import { barcodeScanner } from "../../services/printing/scanner";
 import { openSettingsTab } from "../../store/settingsTab";
 import { askCeylo, checksForAi } from "../../services/ceyloAi";
 import { useFeature } from "../../store/FeatureProvider";
@@ -87,8 +88,13 @@ function useSetupChecks() {
 	useEffect(() => kdsLink.subscribe(setKds), []);
 	const [receipt, setReceipt] = useState(receiptPrinter.status.connected);
 	const [label, setLabel] = useState(labelPrinter.status.connected);
+	const [scanner, setScanner] = useState(() => ({ connected: barcodeScanner.status.connected, lastScanAt: barcodeScanner.lastScanAt }));
 	useEffect(() => {
-		const subs = [receiptPrinter.subscribe((st) => setReceipt(!!st.connected)), labelPrinter.subscribe((st) => setLabel(!!st.connected))];
+		const subs = [
+			receiptPrinter.subscribe((st) => setReceipt(!!st.connected)),
+			labelPrinter.subscribe((st) => setLabel(!!st.connected)),
+			barcodeScanner.subscribe((st) => setScanner({ connected: !!st.connected, lastScanAt: barcodeScanner.lastScanAt })),
+		];
 		return () => subs.forEach((u) => u?.());
 	}, []);
 	return useMemo(
@@ -103,6 +109,7 @@ function useSetupChecks() {
 				cloudState: cloudStatus?.state || "",
 				kds,
 				printers: { receipt, label },
+				scanner,
 				customers: data.customers,
 				inventory: data.inventory,
 				modifiers: data.modifiers,
@@ -112,7 +119,7 @@ function useSetupChecks() {
 				locationId,
 			}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[data.settings, data.users, data.locations, data.products, data.customers, data.inventory, data.modifiers, data.openOrders, data.timeEntries, data.cashShifts, locationId, enabled, authKind, cloudStatus?.state, kds, receipt, label],
+		[data.settings, data.users, data.locations, data.products, data.customers, data.inventory, data.modifiers, data.openOrders, data.timeEntries, data.cashShifts, locationId, enabled, authKind, cloudStatus?.state, kds, receipt, label, scanner],
 	);
 }
 

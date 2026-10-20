@@ -70,6 +70,8 @@ export function findScannedItem(products, modifierGroups, code) {
 	return undefined;
 }
 
+const LAST_SCAN_KEY = "pos.lastScanAt";
+
 class BarcodeScanner {
 	constructor() {
 		this.status = { message: "USB scanner not connected. Keyboard-mode scanning is ready.", connected: false };
@@ -96,6 +98,22 @@ class BarcodeScanner {
 	}
 	_set(message, connected) {
 		this.status = { message, connected: !!connected };
+		this.emitter.emit(this.status);
+	}
+	/** When this device last saw a scanner-speed scan (keyboard or USB), so Ceylo can tell a keyboard-style scanner works. */
+	get lastScanAt() {
+		try {
+			return Number(localStorage.getItem(LAST_SCAN_KEY)) || 0;
+		} catch {
+			return 0;
+		}
+	}
+	_sawScan() {
+		try {
+			localStorage.setItem(LAST_SCAN_KEY, String(Date.now()));
+		} catch {
+			/* storage unavailable: nothing to remember */
+		}
 		this.emitter.emit(this.status);
 	}
 
@@ -130,8 +148,10 @@ class BarcodeScanner {
 		if (event.key === "Enter") {
 			const duration = this.startedAt ? now - this.startedAt : Infinity;
 			const code = this.buffer;
-			const product = code.length >= 3 && duration < Math.max(900, code.length * 90) ? this.resolve?.(code) : null;
+			const scanned = code.length >= 3 && duration < Math.max(900, code.length * 90);
+			const product = scanned ? this.resolve?.(code) : null;
 			this._reset();
+			if (scanned) this._sawScan();
 			// Only complete, scanner-speed bursts are logged; ordinary typing never reaches this point.
 			if (!product) {
 				if (code.length >= 3 && duration < Math.max(900, code.length * 90)) log.warn("barcode scan unresolved", { code, source: "keyboard" });
@@ -168,6 +188,7 @@ class BarcodeScanner {
 				const code = this.hidBuffer.trim();
 				this.hidBuffer = "";
 				if (code) {
+					this._sawScan();
 					const product = this.resolve?.(code);
 					if (product) log.info("barcode scan resolved", { code, source: "hid" });
 					else log.warn("barcode scan unresolved", { code, source: "hid" });
