@@ -1,7 +1,8 @@
 /**
  * Ceylo setup checks (pure). Reads the business's settings and data already on the device and returns one result per check:
  *   { id, area, title, status: "ok" | "warn" | "problem" | "skip", text, fix: { view, tab? } | null }
- * Nothing is changed and nothing secret (PINs, keys, customer data) is put into the text.
+ * Nothing is changed and nothing secret (PINs, keys, customer data) is put into the text. A check whose feature the administrator
+ * switched off is not run at all, so Ceylo never suggests something the business cannot use.
  * See docs/reference/ceylo-setup-checker.html for the product description.
  */
 import { KITCHEN_TYPES } from "../config/presets";
@@ -15,7 +16,8 @@ const isEmbedded = (v) => typeof v === "string" && v.startsWith("data:");
 
 /**
  * input: { settings, users, locations, products, features (enabled map), subscription (or null), billingProfile (or null),
- *          cloudState ("synced" | "syncing" | "offline" | "retry" | ""), cloud (bool: signed in to the cloud), kds: { paired, connected } }
+ *          cloudState ("synced" | "syncing" | "offline" | "retry" | ""), cloud (bool: signed in to the cloud), kds: { paired, connected },
+ *          printers: { receipt: connected?, label: connected? } (USB devices on this device) }
  */
 export function runSetupChecks(input) {
 	const s = input.settings || {};
@@ -46,8 +48,9 @@ export function runSetupChecks(input) {
 
 	// menu
 	const MENU = { view: "products" };
-	if (!products.length) add("menu", "Menu", "There are no products yet", "problem", "Nothing can be sold until the menu has at least one item.", MENU);
-	else {
+	const menuOn = on("view.products");
+	if (menuOn && !products.length) add("menu", "Menu", "There are no products yet", "problem", "Nothing can be sold until the menu has at least one item.", MENU);
+	else if (menuOn) {
 		const free = products.filter((p) => !(Number(p.price) > 0)).length;
 		const loose = products.filter((p) => !String(p.category || "").trim()).length;
 		if (free) add("menu-prices", "Menu", plural(free, "product") + " at LKR 0", "warn", "They will ring up free at the till. Check the price is meant to be zero.", MENU);
@@ -57,11 +60,25 @@ export function runSetupChecks(input) {
 
 	// printing
 	const PRINT = { view: "settings", tab: "printing" };
-	if (/epson/i.test(String(s.printerType || "")) && !String(s.printerAddress || "").trim()) add("printer-address", "Receipt printing", "Network printer has no address", "warn", "Receipts cannot reach the printer until its IP address is set.", PRINT);
-	else add("printer-address", "Receipt printing", "Receipt printer is set up", "ok", "");
+	const printers = input.printers || {};
+	if (on("checkout.printReceipt")) {
+		const type = String(s.printerType || "system");
+		if (type === "usb-direct" && on("hardware.usbPrinter")) {
+			if (!s.usbPrinter || !Object.keys(s.usbPrinter).length) add("receipt-printer", "Printing", "USB receipt printer is chosen but not set up", "problem", "Receipts cannot print until the printer is connected once under Receipt Printing.", PRINT);
+			else if (!printers.receipt) add("receipt-printer", "Printing", "USB receipt printer is not connected", "warn", "Check the cable and power, then tap Connect USB Printer on this device.", PRINT);
+			else add("receipt-printer", "Printing", "USB receipt printer is connected", "ok", "");
+		} else if (type === "usb-direct") add("receipt-printer", "Printing", "Receipts use the system print dialog", "ok", "");
+		else if (/epson/i.test(type) && !String(s.printerAddress || "").trim()) add("receipt-printer", "Printing", "Epson network printer has no address", "warn", "Receipts cannot reach the printer until its IP address is set.", PRINT);
+		else add("receipt-printer", "Printing", type === "system" ? "Receipts print through the system print dialog" : "Receipt printer is set up", "ok", "");
+	}
 	if (kitchen && on("checkout.kitchenTickets")) {
-		if (!String(s.kotPrinter || "").trim()) add("kot-printer", "Receipt printing", "Kitchen printer name is empty", "warn", "Kitchen tickets (KOT) will print on the receipt printer instead of the kitchen.", PRINT);
-		else add("kot-printer", "Receipt printing", "Kitchen printer is set", "ok", "");
+		if (!String(s.kotPrinter || "").trim()) add("kot-printer", "Printing", "Kitchen printer name is empty", "warn", "Kitchen tickets (KOT) will print on the receipt printer instead of the kitchen.", PRINT);
+		else add("kot-printer", "Printing", "Kitchen printer is set", "ok", "");
+	}
+	// the label printer is only checked once it has been set up, so businesses that never print labels are not nagged
+	if (on("hardware.labelPrinter") && s.barcodePrinter && Object.keys(s.barcodePrinter).length) {
+		if (!printers.label) add("label-printer", "Printing", "Label printer is not connected", "warn", "Barcode labels cannot print on this device until it is reconnected.", PRINT);
+		else add("label-printer", "Printing", "Label printer is connected", "ok", "");
 	}
 
 	// kitchen display
@@ -74,19 +91,21 @@ export function runSetupChecks(input) {
 
 	// users and roles
 	const USERS = { view: "staff" };
-	if (!users.some((u) => APPROVER_ROLES.includes(u.role))) add("approver", "Users", "No active owner or manager", "problem", "Nobody can approve refunds or voids.", USERS);
-	else add("approver", "Users", "An owner or manager can approve refunds and voids", "ok", "");
-	const noPin = users.filter((u) => !String(u.pin || "").trim()).length;
-	const weak = users.filter((u) => WEAK_PINS.has(String(u.pin || "").trim())).length;
+	const reversals = on("sales.refunds") || on("sales.voids");
+	if (reversals && !users.some((u) => APPROVER_ROLES.includes(u.role))) add("approver", "Users", "No active owner or manager", "problem", "Nobody can approve refunds or voids.", USERS);
+	else if (reversals) add("approver", "Users", "An owner or manager can approve refunds and voids", "ok", "");
+	const staffOn = on("staff.users");
+	const noPin = !staffOn ? 0 : users.filter((u) => !String(u.pin || "").trim()).length;
+	const weak = !staffOn ? 0 : users.filter((u) => WEAK_PINS.has(String(u.pin || "").trim())).length;
 	if (noPin) add("pins-missing", "Users", plural(noPin, "user") + " without a PIN", "warn", "They cannot sign in to the POS.", USERS);
 	if (weak) add("pins-weak", "Users", plural(weak, "user") + (weak === 1 ? " has" : " have") + " an easy-to-guess PIN", "warn", "Anyone could sign in as them. Ask them to choose a different PIN.", USERS);
-	if (!noPin && !weak) add("pins", "Users", "Every user has their own PIN", "ok", "");
+	if (staffOn && !noPin && !weak) add("pins", "Users", "Every user has their own PIN", "ok", "");
 
 	// locations
 	if (on("business.locations")) {
 		const ids = new Set(locations.map((l) => l.id));
 		const unnamed = locations.filter((l) => l.active !== false && !String(l.name || "").trim()).length;
-		const orphan = users.filter((u) => u.locationAccess === "selected" && (Array.isArray(u.locationIds) ? u.locationIds : []).some((id) => !ids.has(id))).length;
+		const orphan = !on("staff.users") ? 0 : users.filter((u) => u.locationAccess === "selected" && (Array.isArray(u.locationIds) ? u.locationIds : []).some((id) => !ids.has(id))).length;
 		if (unnamed) add("location-names", "Locations", plural(unnamed, "location") + " without a name", "warn", "Staff choose locations by name when they sign in.", BUSINESS);
 		if (orphan) add("location-users", "Locations", plural(orphan, "user") + " linked to a removed location", "warn", "Check which locations they may use.", USERS);
 		if (!unnamed && !orphan) add("locations", "Locations", plural(locations.filter((l) => l.active !== false).length, "active location"), "ok", "");
@@ -109,7 +128,7 @@ export function runSetupChecks(input) {
 
 	// subscription (needs the cloud profile)
 	const p = input.billingProfile;
-	if (p) {
+	if (p && on("settings.billing")) {
 		if (!accessAllowed(p)) add("subscription", "Subscription", "Subscription has ended", "problem", "Renew under Settings › Plan & Support to keep using the POS.", { view: "settings", tab: "plan" });
 		else {
 			const warning = billingWarning(p);
@@ -119,7 +138,7 @@ export function runSetupChecks(input) {
 	}
 
 	// cloud sync
-	if (input.cloud) {
+	if (input.cloud && on("settings.cloudBanner")) {
 		const st = input.cloudState;
 		if (st === "retry") add("sync", "Cloud sync", "Cloud sync is failing", "problem", "Changes on this device are not reaching your other devices. Tap the red sync icon to retry.", null);
 		else if (st === "offline") add("sync", "Cloud sync", "This device is offline", "warn", "Sales are saved here and upload when the connection returns.", null);
@@ -128,7 +147,7 @@ export function runSetupChecks(input) {
 
 	// images kept inside the business data make every sync slower
 	const embedded = products.filter((x) => isEmbedded(x.image)).length + (isEmbedded(s.logo) ? 1 : 0);
-	if (input.cloud && embedded) add("images", "Images", plural(embedded, "image") + " not yet in cloud storage", "warn", "They make every sync slower. Use “Move saved images to cloud storage”.", BUSINESS);
+	if (input.cloud && embedded && (on("view.products") || on("settings.businessLogo"))) add("images", "Images", plural(embedded, "image") + " not yet in cloud storage", "warn", "They make every sync slower. Use “Move saved images to cloud storage”.", BUSINESS);
 
 	return out;
 }

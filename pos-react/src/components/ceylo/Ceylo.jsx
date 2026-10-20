@@ -12,6 +12,8 @@ import { useFeatures } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
 import { useSession } from "../../store/SessionProvider";
 import { kdsLink } from "../../KDS/link";
+import { receiptPrinter } from "../../services/printing/receiptPrinter";
+import { labelPrinter } from "../../services/printing/labelPrinter";
 import { openSettingsTab } from "../../store/settingsTab";
 
 const EYES = {
@@ -58,6 +60,12 @@ function useSetupChecks() {
 	const { cloudStatus, billing, authKind } = useSession();
 	const [kds, setKds] = useState(kdsLink.state());
 	useEffect(() => kdsLink.subscribe(setKds), []);
+	const [receipt, setReceipt] = useState(receiptPrinter.status.connected);
+	const [label, setLabel] = useState(labelPrinter.status.connected);
+	useEffect(() => {
+		const subs = [receiptPrinter.subscribe((st) => setReceipt(!!st.connected)), labelPrinter.subscribe((st) => setLabel(!!st.connected))];
+		return () => subs.forEach((u) => u?.());
+	}, []);
 	return useMemo(
 		() =>
 			runSetupChecks({
@@ -71,8 +79,9 @@ function useSetupChecks() {
 				cloud: authKind === "appwrite",
 				cloudState: cloudStatus?.state || "",
 				kds,
+				printers: { receipt, label },
 			}),
-		[data.settings, data.users, data.locations, data.products, enabled, billing, authKind, cloudStatus?.state, kds],
+		[data.settings, data.users, data.locations, data.products, enabled, billing, authKind, cloudStatus?.state, kds, receipt, label],
 	);
 }
 

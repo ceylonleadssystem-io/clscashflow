@@ -2616,15 +2616,15 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/ceylo/Ceylo.jsx": {
-    "mtime": 1792499558.1931536,
-    "seen": 1792499803.106254,
-    "ast_hash": "f9dabda00ea825d0057fcb280338b761",
+    "mtime": 1792500060.6315787,
+    "seen": 1792500158.387556,
+    "ast_hash": "f994bff4613daefc218d4ba27762dd4a",
     "semantic_hash": ""
   },
   "pos-react/src/domain/ceylo.js": {
-    "mtime": 1792499625.5873344,
-    "seen": 1792499803.106294,
-    "ast_hash": "7ac1bc2d33cfe65356940ce5afdb269b",
+    "mtime": 1792500100.2375193,
+    "seen": 1792500158.38759,
+    "ast_hash": "912e12c948d1cc2158394d8171ca0e03",
     "semantic_hash": ""
   },
   "pos-react/src/store/settingsTab.js": {
@@ -2634,9 +2634,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/ceylo.test.js": {
-    "mtime": 1792499605.0280256,
-    "seen": 1792499803.106409,
-    "ast_hash": "ba259644db88bbd41f4c7cff6aa03f9b",
+    "mtime": 1792500100.2563946,
+    "seen": 1792500158.3876538,
+    "ast_hash": "573a62b3204485dfc4b95135c1480d6c",
     "semantic_hash": ""
   },
   "docs/VPS_MIGRATION_PLAN.md": {

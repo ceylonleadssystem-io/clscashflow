@@ -13,6 +13,7 @@ const good = () => ({
 	cloud: true,
 	cloudState: "synced",
 	kds: { paired: true, connected: true },
+	printers: { receipt: true, label: true },
 });
 const byId = (rs) => Object.fromEntries(rs.map((r) => [r.id, r]));
 
@@ -59,6 +60,49 @@ describe("Ceylo setup checks", () => {
 		expect(r["kot-printer"]).toBeUndefined();
 		expect(r["plan-users"]).toBeUndefined();
 		expect(r.sync).toBeUndefined();
+	});
+});
+
+describe("Ceylo printer checks", () => {
+	it("checks the USB receipt printer, the Epson address and a set-up label printer", () => {
+		const input = good();
+		Object.assign(input.settings, { printerType: "usb-direct", usbPrinter: {}, barcodePrinter: { vendorId: 1 } });
+		input.printers = { receipt: false, label: false };
+		let r = byId(runSetupChecks(input));
+		expect(r["receipt-printer"]).toMatchObject({ status: "problem", fix: { tab: "printing" } });
+		expect(r["label-printer"].status).toBe("warn");
+		input.settings.usbPrinter = { vendorId: 2 };
+		expect(byId(runSetupChecks(input))["receipt-printer"]).toMatchObject({ status: "warn", title: "USB receipt printer is not connected" });
+		Object.assign(input.settings, { printerType: "epson-network", printerAddress: "" });
+		expect(byId(runSetupChecks(input))["receipt-printer"].title).toBe("Epson network printer has no address");
+	});
+
+	it("never suggests a label printer that was never set up", () => {
+		expect(byId(runSetupChecks(good()))["label-printer"]).toBeUndefined();
+	});
+});
+
+describe("Ceylo respects the admin feature switches", () => {
+	it("a feature switched off in the admin portal produces no suggestion", () => {
+		const input = good();
+		Object.assign(input.settings, { printerType: "usb-direct", usbPrinter: {}, kotPrinter: "", barcodePrinter: { vendorId: 1 }, serviceChargeEnabled: true, serviceChargeRate: 0, logo: "" });
+		input.users = [{ id: "u2", role: "cashier", pin: "1234", active: true }];
+		input.products = [];
+		input.kds = { paired: false };
+		input.cloudState = "retry";
+		input.printers = { receipt: false, label: false };
+		input.billingProfile = { paid: false, trialEnd: "2000-01-01" };
+		const off = ["checkout.printReceipt", "checkout.kitchenTickets", "checkout.kds", "hardware.labelPrinter", "checkout.serviceCharge", "settings.businessLogo", "view.products", "sales.refunds", "sales.voids", "staff.users", "settings.billing", "settings.cloudBanner"];
+		input.features = resolveFeatures(Object.fromEntries(off.map((id) => [id, false]))).enabled;
+		const ids = runSetupChecks(input).filter((x) => x.status !== "ok").map((x) => x.id);
+		expect(ids).toEqual([]);
+	});
+
+	it("the USB checks disappear when the USB printer feature is off", () => {
+		const input = good();
+		Object.assign(input.settings, { printerType: "usb-direct", usbPrinter: {} });
+		input.features = resolveFeatures({ "checkout.kds": true, "hardware.usbPrinter": false }).enabled;
+		expect(byId(runSetupChecks(input))["receipt-printer"].status).toBe("ok");
 	});
 });
 
