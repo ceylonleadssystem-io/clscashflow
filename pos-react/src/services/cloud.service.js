@@ -262,14 +262,19 @@ export class CloudSyncService {
 				pending = true;
 			}
 		}
-		if (!profileHasPosAccess(profile) && (hasRemotePos || hasLocalPos)) {
+		// A POS workspace always exists after attach (a brand-new business gets a fresh one below), so the profile is marked as a
+		// POS account from the first sign-in; otherwise the admin portal, which lists POS profiles, misses new businesses (BUG 015).
+		if (!profileHasPosAccess(profile) && (hasRemotePos || hasLocalPos || workspaceUid === ctx.user?.uid)) {
 			log.info("repairing missing POS entitlement on profile");
 			profile.posEnabled = true;
 			profile.posPlan = "pos";
+			// the admin portal shows the account by its email; fill it in when the profile was created without one
+			const email = !profile.email && ctx.user?.email ? { email: String(ctx.user.email).toLowerCase() } : {};
+			Object.assign(profile, email);
 			localStorage.setItem(ctx.profileKey, JSON.stringify(profile));
 			try {
 				await userRef.set(
-					{ posEnabled: true, posPlan: "pos", updatedAt: this.fb.firestore.FieldValue.serverTimestamp() },
+					{ posEnabled: true, posPlan: "pos", ...email, updatedAt: this.fb.firestore.FieldValue.serverTimestamp() },
 					{ merge: true },
 				);
 			} catch (e) {

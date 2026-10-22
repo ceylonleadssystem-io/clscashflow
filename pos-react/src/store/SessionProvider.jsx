@@ -58,6 +58,7 @@ export function SessionProvider({ children }) {
 		cloudRef.current = null;
 		activating.current = "";
 		setWorkspace(null);
+		setBilling({ profile: null, allowed: true, warning: "" }); // the next account starts unblocked until its own check runs
 		setPhase("signed-out");
 		setAuthError(message);
 		sessionStorage.removeItem(STORAGE.businessAuth);
@@ -236,8 +237,19 @@ export function SessionProvider({ children }) {
 			log.warn("Cloud sign-out will finish when the connection returns", e);
 		}
 		log.info("business sign-out");
+		// the payment popups from platform.js sit above the app; take them away with the session
+		["cls-paywall", "cls-bank-payment-modal"].forEach((id) => document.getElementById(id)?.remove());
+		document.body.classList.remove("cls-trial-ended");
 		reset("");
 	}, [auth, reset]);
+
+	// The paywall and bank-transfer popups (assets/platform.js) call window.clsSignOut from their Sign out button (BUG 012).
+	useEffect(() => {
+		window.clsSignOut = signOut;
+		return () => {
+			if (window.clsSignOut === signOut) delete window.clsSignOut;
+		};
+	}, [signOut]);
 
 	const resetPassword = useCallback(
 		async (email) => {

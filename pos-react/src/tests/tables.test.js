@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { mergeOrders } from "../domain/orders";
 import { splitByItems } from "../domain/cart";
 import { NAV_ITEMS, ROLE_VIEWS } from "../config/roles";
-import { GRID, MAIN_FLOOR, allFloorTables, findFreeSpot, floorLayout, floorLayoutKey, floorsFor, floorsKey, layoutFor, layoutKey, locationOrders, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus } from "../domain/tables";
+import { GRID, MAIN_FLOOR, allFloorTables, findFreeSpot, floorLayout, floorLayoutKey, floorsFor, floorsKey, layoutFor, layoutKey, locationOrders, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus, gmBooking } from "../domain/tables";
 
 describe("table layout", () => {
 	it("snaps and keeps tables inside the floor", () => {
@@ -119,5 +119,19 @@ describe("move, merge and split", () => {
 		const nav = NAV_ITEMS.map((n) => n.view);
 		expect(new Set(nav).size).toBe(nav.length);
 		expect([...nav].sort()).toEqual([...ROLE_VIEWS.owner].sort());
+	});
+});
+
+describe("Guest Manager bookings on the floor plan (BUG 011)", () => {
+	const settings = { gmBookings: { t4: [{ name: "Test", party: 8, date: "2026-10-15", time: "19:00", duration: 120, status: "booked" }] } };
+	const at = (hhmm) => new Date("2026-10-15T" + hhmm).getTime();
+	it("a table is reserved only during its booking and the hour before, not all day", () => {
+		expect(gmBooking(settings, "t4", at("11:00"))).toBeNull(); // the morning of a 19:00 booking: free
+		expect(gmBooking(settings, "t4", at("17:59"))).toBeNull();
+		expect(gmBooking(settings, "t4", at("18:00"))?.name).toBe("Test"); // an hour before
+		expect(gmBooking(settings, "t4", at("20:59"))?.name).toBe("Test");
+		expect(gmBooking(settings, "t4", at("21:00"))).toBeNull(); // the booking has ended
+		expect(gmBooking(settings, "t5", at("19:30"))).toBeNull();
+		expect(gmBooking({}, "t4", at("19:30"))).toBeNull();
 	});
 });

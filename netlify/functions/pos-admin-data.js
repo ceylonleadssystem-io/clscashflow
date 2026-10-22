@@ -233,7 +233,8 @@ async function handle(event) {
         const authUser = authById.get(String(row.id)) || authByEmail.get(email) || null;
         return {
           id: row.id,
-          name: row.data.name || row.data.displayName || '', email: row.data.email || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
+          // a profile created without contact details still shows the sign-in's name and email (BUG 015)
+          name: row.data.name || row.data.displayName || (authUser && authUser.displayName) || '', email: row.data.email || (authUser && authUser.email) || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
           apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,

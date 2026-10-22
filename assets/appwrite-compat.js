@@ -5,15 +5,17 @@
   var currentUser=null,listeners=[],ready=false;
   function userShape(user){if(!user)return null;return{uid:user.$id,email:user.email||'',displayName:user.name||'',photoURL:(user.prefs||{}).photoURL||'',emailVerified:!!user.emailVerification,getIdToken:async function(){return(await account.createJWT()).jwt},updateProfile:async function(p){if(p.displayName!=null)await account.updateName(p.displayName);currentUser=await loadUser();return currentUser}}}
   async function loadUser(){try{return userShape(await account.get())}catch(_){return null}}
+  // Appwrite refuses a new session while one is active (BUG 013), so any session left in this browser is ended first.
+  async function endSession(){try{await account.deleteSession('current')}catch(_){}}
   function emit(){listeners.slice().forEach(function(fn){try{fn(currentUser)}catch(e){console.error(e)}})}
   var init=loadUser().then(function(u){currentUser=u;ready=true;emit()});
   function auth(){return authApi}
   var authApi={
     get currentUser(){return currentUser},
     onAuthStateChanged:function(fn){listeners.push(fn);init.then(function(){fn(currentUser)});return function(){listeners=listeners.filter(function(x){return x!==fn})}},
-    signInWithEmailAndPassword:async function(email,password){await account.createEmailPasswordSession(email,password);currentUser=await loadUser();emit();return{user:currentUser}},
-    createUserWithEmailAndPassword:async function(email,password){await account.create(Appwrite.ID.unique(),email,password);await account.createEmailPasswordSession(email,password);currentUser=await loadUser();emit();return{user:currentUser}},
-    signInWithToken:async function(userId,secret){await account.createSession(userId,secret);currentUser=await loadUser();emit();return{user:currentUser}},
+    signInWithEmailAndPassword:async function(email,password){await endSession();await account.createEmailPasswordSession(email,password);currentUser=await loadUser();emit();return{user:currentUser}},
+    createUserWithEmailAndPassword:async function(email,password){await account.create(Appwrite.ID.unique(),email,password);await endSession();await account.createEmailPasswordSession(email,password);currentUser=await loadUser();emit();return{user:currentUser}},
+    signInWithToken:async function(userId,secret){await endSession();await account.createSession(userId,secret);currentUser=await loadUser();emit();return{user:currentUser}},
     signOut:async function(){try{await account.deleteSession('current')}catch(_){}currentUser=null;emit()},
     sendPasswordResetEmail:async function(email){return account.createRecovery(email,location.origin+'/cashflow/reset-password.html')},
     signInWithPopup:async function(provider){account.createOAuth2Session((provider&&provider.provider)||'google',location.origin+'/cashflow/signin.html',location.origin+'/cashflow/signin.html');return new Promise(function(){})}

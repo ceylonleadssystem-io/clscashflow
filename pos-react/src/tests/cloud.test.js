@@ -29,6 +29,22 @@ const user = { uid: "u1", email: "o@x.lk", displayName: "Owner" };
 const ctxFor = (fb) => ({ user, userRef: fb.firestore().collection("users").doc("u1"), profile: { name: "Owner", posBusinessName: "Cafe", posEnabled: true }, profileKey: "profile-u1", workspaceUid: "u1", workspaceUser: user });
 
 describe("CloudSyncService", () => {
+	it("a brand-new business is marked as a POS account (with its email) on its first sign-in, so the admin portal lists it", async () => {
+		const fb = fakeBackend();
+		const sync = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		const ctx = { ...ctxFor(fb), profile: {} }; // signed up elsewhere: no POS fields on the profile yet
+		await sync.attach(new PosStore(createDatabase("cloud-new")), ctx, { dbName: "cloud-new" });
+		expect(fb.docs.get("users/u1")).toMatchObject({ posEnabled: true, posPlan: "pos", email: "o@x.lk" });
+	});
+
+	it("does not overwrite an email the profile already has", async () => {
+		const fb = fakeBackend();
+		await fb.firestore().collection("users").doc("u1").set({ email: "owner@shop.lk" });
+		const sync = new CloudSyncService({ clsBackend: fb, onStatus: () => {} });
+		await sync.attach(new PosStore(createDatabase("cloud-new2")), { ...ctxFor(fb), profile: { email: "owner@shop.lk" } }, { dbName: "cloud-new2" });
+		expect(fb.docs.get("users/u1")).toMatchObject({ posEnabled: true, email: "owner@shop.lk" });
+	});
+
 	it("bootstraps a fresh workspace, pushes edits and lets a second device pull them", async () => {
 		const fb = fakeBackend();
 		const statuses = [];
