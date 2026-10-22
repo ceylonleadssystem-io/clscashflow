@@ -3,7 +3,7 @@
  * Plain DOM + template strings; every view is a function that returns HTML, re-rendered when the data changes.
  */
 import {
-	ACTIVE, SOURCES, seatingMap, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
+	ACTIVE, SOURCES, seatingMap, bookingsMap, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
 	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf, MAIN_FLOOR, layoutError, normalizeTable,
 } from "./logic.mjs";
 import * as S from "./store.mjs";
@@ -110,18 +110,20 @@ async function syncGuests() {
 }
 let lastSeating = null; // JSON of the seating last written to (or read from) the POS
 let seatTimer = 0;
-/** Keeps the POS floor plan in step with GM: whenever the seated guests change, the new picture is written to the POS. */
+/** Keeps the POS floor plan in step with GM: whenever the seated guests or the bookings change, the new picture is written to the POS. */
 function queueSeating() {
 	clearTimeout(seatTimer);
 	seatTimer = setTimeout(async () => {
 		if (S.store.mode !== "cloud" || allowed !== true || !cfg().posSync || !pos.found) return;
 		await syncGuests().catch(() => 0); // the seated guest must be a POS customer before the table can point at them
 		const map = seatingMap(S.reservations(), S.guests());
-		const json = JSON.stringify(map);
-		if (lastSeating === null) lastSeating = JSON.stringify(pos.settings.gmSeating || {});
+		const today = dateStr();
+		const bookings = bookingsMap(S.reservations(), [today, addDays(today, 1)]);
+		const json = JSON.stringify([map, bookings]);
+		if (lastSeating === null) lastSeating = JSON.stringify([pos.settings.gmSeating || {}, pos.settings.gmBookings || {}]);
 		if (json === lastSeating) return;
 		try {
-			await pushSeating(S.store.ws, map);
+			await pushSeating(S.store.ws, map, bookings);
 			lastSeating = json;
 		} catch (e) {
 			console.warn("Could not update the POS floor plan", e); // retried on the next change and every 30 seconds

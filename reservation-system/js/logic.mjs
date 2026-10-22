@@ -163,6 +163,20 @@ export function seatingMap(reservations, guests) {
 	return out;
 }
 
+/**
+ * Bookings the POS shows on its floor plan (settings.gmBookings): per table, the booked, confirmed or arrived reservations on the
+ * given dates (today and tomorrow). Seated guests travel in gmSeating instead. The POS marks a table reserved only during the
+ * booking (and the hour before), the same rule as the GM Floor view.
+ */
+export function bookingsMap(reservations, dates) {
+	const out = {};
+	for (const r of reservations.filter((x) => dates.includes(x.date) && ["booked", "confirmed", "arrived"].includes(x.status))) {
+		const entry = { name: String(r.name || "").trim().split(/\s+/)[0] || "Guest", party: +r.party || 0, date: r.date, time: r.time, duration: +r.duration || 90, status: r.status, resId: r.id };
+		for (const id of r.tableIds || []) (out[id] = out[id] || []).push(entry);
+	}
+	return out;
+}
+
 export function mergeRows(remote, local) {
 	const rows = new Map((remote || []).map((r) => [r.id, r]));
 	for (const r of local || []) {

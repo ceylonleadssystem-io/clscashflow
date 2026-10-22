@@ -14408,7 +14408,7 @@
       "file_type": "code",
       "norm_label": "seedlocalworkspace()",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L283"
+      "source_location": "L295"
     },
     {
       "id": "pos_react_src_store_sessionprovider_sessionprovider",
@@ -22868,7 +22868,7 @@
       "file_type": "code",
       "norm_label": "usesession()",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L280"
+      "source_location": "L292"
     },
     {
       "id": "pos_react_src_store_uiprovider_usenotice",
@@ -39555,6 +39555,7 @@
     {
       "id": "ref_fs",
       "label": "ref_fs",
+      "_origin": "semantic",
       "community": 92,
       "community_name": "appwrite-compat-session.test.js",
       "external": true,
@@ -39566,6 +39567,7 @@
     {
       "id": "ref_path",
       "label": "ref_path",
+      "_origin": "semantic",
       "community": 92,
       "community_name": "appwrite-compat-session.test.js",
       "external": true,
@@ -39577,6 +39579,7 @@
     {
       "id": "ref_vm",
       "label": "ref_vm",
+      "_origin": "semantic",
       "community": 92,
       "community_name": "appwrite-compat-session.test.js",
       "external": true,
@@ -71696,7 +71699,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L286",
+      "source_location": "L298",
       "weight": 1.0
     },
     {
@@ -71708,7 +71711,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L288",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
@@ -71720,7 +71723,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L288",
+      "source_location": "L300",
       "weight": 1.0
     },
     {
@@ -71732,7 +71735,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L291",
+      "source_location": "L303",
       "weight": 1.0
     },
     {
@@ -71744,7 +71747,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L100",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -71756,7 +71759,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L100",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -71768,7 +71771,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L101",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -71780,7 +71783,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L117",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -71792,7 +71795,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -71804,7 +71807,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L129",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -71816,7 +71819,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L166",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -71828,7 +71831,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L210",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -71852,7 +71855,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L79",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -71864,7 +71867,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L83",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -71876,7 +71879,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L84",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -71888,7 +71891,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L84",
+      "source_location": "L85",
       "weight": 1.0
     },
     {
@@ -71900,7 +71903,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -71912,7 +71915,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L89",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -71924,7 +71927,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L92",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -71936,7 +71939,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -71948,7 +71951,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L98",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -137075,7 +137078,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L280",
+      "source_location": "L292",
       "weight": 1.0
     },
     {
@@ -137086,7 +137089,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L283",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -146947,6 +146950,18 @@
     },
     {
       "source": "pos_react_src_store_sessionprovider_sessionprovider",
+      "target": "pos_react_src_services_cloud_service_cloudsyncservice_start",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "context": "call",
+      "source_file": "pos-react/src/store/SessionProvider.jsx",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_store_sessionprovider_sessionprovider",
       "target": "pos_react_src_services_cloud_service_cloudsyncservice_resolveworkspace",
       "relation": "calls",
       "_origin": "ast",
@@ -146954,7 +146969,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -146966,19 +146981,7 @@
       "confidence_score": 0.8,
       "context": "call",
       "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L90",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_store_sessionprovider_sessionprovider",
-      "target": "pos_react_src_services_cloud_service_cloudsyncservice_start",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "context": "call",
-      "source_file": "pos-react/src/store/SessionProvider.jsx",
-      "source_location": "L99",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -149683,5 +149686,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6a46f1e63b696acf69b0f603ba4ab4bf9d6705ed"
+  "built_at_commit": "b9e98f82356983d1c15e6ab52ae2a1b3b01e3b7f"
 }

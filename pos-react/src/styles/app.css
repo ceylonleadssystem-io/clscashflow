@@ -622,3 +622,5 @@ html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
 .ceylo-ignore:hover{color:var(--ui-text);text-decoration:underline}
 .ceylo-item.is-ignored{opacity:.72}
 @media (pointer:coarse){.ceylo-ignore{min-height:44px}}
+/* a Guest Manager booking holds the table (only during the booking and the hour before it) */
+.floor-table.gm-reserved{background:#e3edff;color:#1e4fae;border-color:#9db8ef}

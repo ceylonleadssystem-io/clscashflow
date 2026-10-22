@@ -153,3 +153,16 @@ test('floors from the POS: main floor keeps the old layout key, others have thei
   assert.deepEqual(P.tablesFor(pos, cfg).map((t) => t.number + '@' + t.floor), ['1@main', '11@fl-a']);
   assert.deepEqual(P.floorsOf({ found: false, settings: {} }, { layoutFrom: 'own', ownFloors: [{ id: 'f', name: 'Roof' }] }).map((f) => f.id), ['main', 'f']);
 });
+
+test('BUG 011: GM sends each table its bookings for the given days (not cancelled, not yet seated) for the POS floor plan', async () => {
+  const L = await load();
+  const all = [
+    res({ id: 'a', name: 'Test Customer', time: '19:00', duration: 120, tableIds: ['t4', 't5'], party: 8 }),
+    res({ id: 'b', status: 'cancelled', tableIds: ['t4'] }),
+    res({ id: 'c', status: 'seated', tableIds: ['t1'] }),
+    res({ id: 'd', date: '2026-10-20', tableIds: ['t2'] }),
+  ];
+  const map = L.bookingsMap(all, ['2026-10-13', '2026-10-14']);
+  assert.deepEqual(Object.keys(map).sort(), ['t4', 't5']);
+  assert.deepEqual(map.t4, [{ name: 'Test', party: 8, date: '2026-10-13', time: '19:00', duration: 120, status: 'booked', resId: 'a' }]);
+});

@@ -232,3 +232,4 @@ html[data-theme="dark"] .floor-table.inactive{background:repeating-linear-gradie
 
 html[data-theme="dark"] .floor-tab{background:#23201b;border-color:#3a352d;color:#e7e2d8}
 html[data-theme="dark"] .floor-tab.active{background:var(--accent,#ef5b2d);color:#fff}
+html[data-theme="dark"] .floor-table.gm-reserved{background:#16294d;color:#b9cff7;border-color:#2f4f8c}

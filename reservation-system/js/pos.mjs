@@ -118,9 +118,13 @@ export async function pushCustomers(ws, customers) {
 	await call("set", `users/${ws}/pos`, "main", { data: { payload: { customers } } });
 }
 
-/** Writes who is seated where to the POS (settings.gmSeating, merged per setting by its timestamp) so its Tables screen shows it. */
-export async function pushSeating(ws, map) {
-	await call("set", `users/${ws}/pos`, "main", { data: { payload: { settings: { gmSeating: map }, syncMeta: { settings: { gmSeating: new Date().toISOString() } } } } });
+/**
+ * Writes who is seated where (settings.gmSeating) and the upcoming bookings per table (settings.gmBookings) to the POS, merged
+ * per setting by its timestamp, so its Tables screen shows seated and reserved tables.
+ */
+export async function pushSeating(ws, map, bookings = {}) {
+	const at = new Date().toISOString();
+	await call("set", `users/${ws}/pos`, "main", { data: { payload: { settings: { gmSeating: map, gmBookings: bookings }, syncMeta: { settings: { gmSeating: at, gmBookings: at } } } } });
 }
 
 /** Floor status of a table at a given minute of the selected day, from GM bookings and POS open checks. */

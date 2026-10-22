@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { money } from "../domain/format";
 import { orderTotal } from "../domain/orders";
-import { GRID, MAIN_FLOOR, TABLE_SHAPES, findFreeSpot, floorLayout, floorLayoutKey, floorsFor, floorsKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus, gmSeating } from "../domain/tables";
+import { GRID, MAIN_FLOOR, TABLE_SHAPES, findFreeSpot, floorLayout, floorLayoutKey, floorsFor, floorsKey, locationOrders, normalizeTable, nextTableNumber, overlapsOthers, tableNumberError, tableReference, tableStatus, gmSeating, gmBooking } from "../domain/tables";
 import { OWNER_ROLES } from "../config/roles";
 import { newId } from "../services/pos/common";
 import { useData } from "../store/DataProvider";
@@ -27,6 +27,12 @@ export function Tables() {
 	const canSplit = useFeature("checkout.splitBill");
 	const [action, setAction] = useState(null); // busy table tapped: its open order
 	const [moving, setMoving] = useState(null); // open order being moved / merged
+	// the clock moves bookings into and out of their reserved window, so the floor re-checks every minute
+	const [now, setNow] = useState(() => Date.now());
+	useEffect(() => {
+		const id = setInterval(() => setNow(Date.now()), 60000);
+		return () => clearInterval(id);
+	}, []);
 	// "All Locations" has no floor of its own: pick a branch to see or edit its tables
 	const hasLocation = !!locationId && locationId !== "all";
 	const location = data.locations.find((l) => l.id === locationId);
@@ -272,7 +278,8 @@ export function Tables() {
 						{tables.map((t) => {
 							const { open } = tableStatus(t, openOrders);
 							const guest = !editing && t.active ? gmSeating(data.settings, t.id) : null;
-							const cls = ["floor-table", t.shape, !t.active && "inactive", open && "busy", guest && !open && "gm-seated", t.id === selectedId && "selected"];
+							const booking = !editing && t.active && !open && !guest ? gmBooking(data.settings, t.id, now) : null;
+							const cls = ["floor-table", t.shape, !t.active && "inactive", open && "busy", guest && !open && "gm-seated", booking && "gm-reserved", t.id === selectedId && "selected"];
 							return (
 								<div
 									key={t.id}
@@ -284,6 +291,7 @@ export function Tables() {
 								>
 									<strong>{t.number}</strong>
 									{guest && <span className="floor-guest">{guest.name}</span>}
+									{booking && <span className="floor-guest">Reserved {booking.time} · {booking.name}</span>}
 									<span>{t.active ? t.seats + " seats" : "Not for seating"}</span>
 									{!editing && open && <span className="floor-total">{money(orderTotal(open))}</span>}
 									{editing && <i className="floor-resize" onPointerDown={(e) => startDrag(e, t, "size")} title="Resize" />}

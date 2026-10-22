@@ -106,6 +106,25 @@ export function gmSeating(settings, tableId, now = Date.now()) {
 	return g && now - Date.parse(g.at || 0) < 12 * 3600000 ? g : null;
 }
 
+/** How long before a booking the table already shows as reserved (the same hour as the GM Floor view). */
+export const RESERVED_BEFORE_MIN = 60;
+
+/**
+ * The Guest Manager booking that holds this table at `now`, from settings.gmBookings ({ [tableId]: [{ name, party, date, time,
+ * duration, status }] }), or null. A table is reserved only during the booking and the hour before it, never all day.
+ */
+export function gmBooking(settings, tableId, now = Date.now()) {
+	const list = (settings || {}).gmBookings?.[tableId];
+	if (!Array.isArray(list)) return null;
+	return (
+		list.find((b) => {
+			const start = Date.parse(b.date + "T" + b.time); // local time, like the GM booking
+			const end = start + (+b.duration || 90) * 60000;
+			return start - RESERVED_BEFORE_MIN * 60000 <= now && now < end;
+		}) || null
+	);
+}
+
 /** { open: open order | null, free } for an active table. */
 export function tableStatus(table, openOrders) {
 	const open = openOrders.find((o) => o.status === "open" && o.orderReference === tableReference(table)) || null;
