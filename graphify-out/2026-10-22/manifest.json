@@ -216,9 +216,9 @@
     "semantic_hash": ""
   },
   "netlify/functions/pos-admin-data.js": {
-    "mtime": 1792304262.6472414,
-    "seen": 1792499803.106133,
-    "ast_hash": "281b3fbf50cf69be3e56fc69731ccd3b",
+    "mtime": 1792677789.0614529,
+    "seen": 1792677819.400932,
+    "ast_hash": "19d394b262e577249bd7d846e05d7d88",
     "semantic_hash": ""
   },
   "netlify/functions/pos-admin-diagnostics.js": {
@@ -414,8 +414,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1792500390.0928724,
-    "seen": 1792500728.263202,
+    "mtime": 1792677674.184952,
+    "seen": 1792677819.4009569,
     "ast_hash": "3236ceab0460990fac85f471c1420a17",
     "semantic_hash": ""
   },
@@ -534,8 +534,8 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/FeaturesTab.jsx": {
-    "mtime": 1792499430.7985723,
-    "seen": 1792499803.106239,
+    "mtime": 1792677674.1854692,
+    "seen": 1792677819.4009721,
     "ast_hash": "bbc81696491701dfcb49291c4a6316dd",
     "semantic_hash": ""
   },
@@ -702,8 +702,8 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/layout/Topbar.jsx": {
-    "mtime": 1792499570.5507674,
-    "seen": 1792499803.106265,
+    "mtime": 1792677674.1860528,
+    "seen": 1792677819.400994,
     "ast_hash": "6f6264bde8c1fff558ca1173ed1e9818",
     "semantic_hash": ""
   },
@@ -768,8 +768,8 @@
     "semantic_hash": ""
   },
   "pos-react/src/config/features.js": {
-    "mtime": 1792502266.4806151,
-    "seen": 1792502297.0664802,
+    "mtime": 1792677674.1862864,
+    "seen": 1792677819.401002,
     "ast_hash": "20742a01b33c20b831be0b86f70b2702",
     "semantic_hash": ""
   },
@@ -1176,9 +1176,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/cloud.service.js": {
-    "mtime": 1791904987.8478527,
-    "seen": 1792303007.45445,
-    "ast_hash": "bf631d01fde011cffd1f0622369a1d8a",
+    "mtime": 1792677778.9196258,
+    "seen": 1792677819.401047,
+    "ast_hash": "86b41e053bdcf7e70af33be7e1f2636e",
     "semantic_hash": ""
   },
   "pos-react/src/services/diagnostics.service.js": {
@@ -1332,8 +1332,8 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/printing/scanner.js": {
-    "mtime": 1792502380.7388613,
-    "seen": 1792502420.08544,
+    "mtime": 1792677674.1867096,
+    "seen": 1792677819.4010649,
     "ast_hash": "2f1ca3766dcd56d09d1a06423ca07eee",
     "semantic_hash": ""
   },
@@ -1464,9 +1464,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/cloud.test.js": {
-    "mtime": 1791904987.8562858,
-    "seen": 1792303007.454481,
-    "ast_hash": "69f890aa3c41fbabbb6d1c1bb558624c",
+    "mtime": 1792677770.8052568,
+    "seen": 1792677819.401081,
+    "ast_hash": "1439a5ba7be4db60b8d97f216da26e3a",
     "semantic_hash": ""
   },
   "pos-react/src/tests/customers.test.js": {
@@ -1716,8 +1716,8 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/Settings.jsx": {
-    "mtime": 1792502266.4781454,
-    "seen": 1792502297.066592,
+    "mtime": 1792677674.1875353,
+    "seen": 1792677819.40111,
     "ast_hash": "bc26abd7e2a85884b0b701cb244614a5",
     "semantic_hash": ""
   },
@@ -2208,8 +2208,8 @@
     "semantic_hash": ""
   },
   "pos-react/docs/admin-guide.md": {
-    "mtime": 1792501456.9751368,
-    "seen": 1792501463.161636,
+    "mtime": 1792677674.1853023,
+    "seen": 1792677819.401172,
     "ast_hash": "782c0ebb956cff3265ca454c96769585",
     "semantic_hash": ""
   },
@@ -2532,8 +2532,8 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/guestManagerFeature.test.js": {
-    "mtime": 1792499424.5266821,
-    "seen": 1792499803.106417,
+    "mtime": 1792677674.1873553,
+    "seen": 1792677819.401085,
     "ast_hash": "793b5b32564e372e1dd7b1e1d3cce277",
     "semantic_hash": ""
   },
@@ -2616,26 +2616,26 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/ceylo/Ceylo.jsx": {
-    "mtime": 1792502380.739476,
-    "seen": 1792502420.085289,
+    "mtime": 1792677674.185713,
+    "seen": 1792677819.400984,
     "ast_hash": "ad0b7c3fe97adbe0eb0662dd0fcb88f4",
     "semantic_hash": ""
   },
   "pos-react/src/domain/ceylo.js": {
-    "mtime": 1792502380.739065,
-    "seen": 1792502420.085349,
+    "mtime": 1792677674.1864321,
+    "seen": 1792677819.4010189,
     "ast_hash": "42ae164b5c252f47989451f56952183f",
     "semantic_hash": ""
   },
   "pos-react/src/store/settingsTab.js": {
-    "mtime": 1792499689.439125,
-    "seen": 1792499803.106404,
+    "mtime": 1792677674.1868117,
+    "seen": 1792677819.401076,
     "ast_hash": "8f3e1bd5b014dac66bbafea0c212f9b4",
     "semantic_hash": ""
   },
   "pos-react/src/tests/ceylo.test.js": {
-    "mtime": 1792502391.1503081,
-    "seen": 1792502420.0854678,
+    "mtime": 1792677674.1872048,
+    "seen": 1792677819.4010801,
     "ast_hash": "c888805556eab5f51b95146548565d4c",
     "semantic_hash": ""
   },
@@ -2664,50 +2664,50 @@
     "semantic_hash": ""
   },
   "netlify/functions/ceylo-ask.js": {
-    "mtime": 1792501405.4955313,
-    "seen": 1792501463.1612108,
+    "mtime": 1792677674.184621,
+    "seen": 1792677819.400924,
     "ast_hash": "861e54c890a45b739a000ac8c5cc31d2",
     "semantic_hash": ""
   },
   "pos-react/src/services/ceyloAi.js": {
-    "mtime": 1792502080.0226376,
-    "seen": 1792502130.936542,
+    "mtime": 1792677674.186551,
+    "seen": 1792677819.401047,
     "ast_hash": "6b0315b81ac8fefb00bb2a5d9f5b1ef5",
     "semantic_hash": ""
   },
   "tests/ceylo-ask.test.js": {
-    "mtime": 1792500611.7502468,
-    "seen": 1792500728.263381,
+    "mtime": 1792677674.1878846,
+    "seen": 1792677819.401131,
     "ast_hash": "9338b8d91e6adb97a5b6ca9d13f380d0",
     "semantic_hash": ""
   },
   "netlify/functions/ceylo-ai-key.js": {
-    "mtime": 1792501405.495146,
-    "seen": 1792501463.1612082,
+    "mtime": 1792677674.1844187,
+    "seen": 1792677819.4009228,
     "ast_hash": "bdfab259bd64d4b4b774e1dac448f8be",
     "semantic_hash": ""
   },
   "netlify/lib/ai-keys.js": {
-    "mtime": 1792501405.4948213,
-    "seen": 1792501463.161246,
+    "mtime": 1792677674.1847844,
+    "seen": 1792677819.4009511,
     "ast_hash": "e61df3d1b47ee80c2f6b61d49743ca4b",
     "semantic_hash": ""
   },
   "pos-react/src/components/ceylo/CeyloAiKey.jsx": {
-    "mtime": 1792501426.8092015,
-    "seen": 1792501463.1613162,
+    "mtime": 1792677674.185863,
+    "seen": 1792677819.400985,
     "ast_hash": "b0c8c960af762b6f5996cf06a08f62de",
     "semantic_hash": ""
   },
   "tests/ai-keys.test.js": {
-    "mtime": 1792501021.7448728,
-    "seen": 1792501074.083713,
+    "mtime": 1792677674.187764,
+    "seen": 1792677819.401124,
     "ast_hash": "cbdfd89437d1cf353743d57ae3cd7526",
     "semantic_hash": ""
   },
   "tests/ai-keys-locations.test.js": {
-    "mtime": 1792501443.1308925,
-    "seen": 1792501463.1615539,
+    "mtime": 1792677674.1876478,
+    "seen": 1792677819.401124,
     "ast_hash": "4674ef263644d19401ce8d723c745d8e",
     "semantic_hash": ""
   }

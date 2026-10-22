@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 let jwtCalls = 0;
+let active = true; // a session is already open in this browser
+const calls = [];
 vi.mock("appwrite", () => ({
 	Client: class {
 		setEndpoint() {
@@ -15,6 +17,19 @@ vi.mock("appwrite", () => ({
 		async get() {
 			return { $id: "u1", email: "o@x.lk", name: "Owner", prefs: {}, emailVerification: true };
 		}
+		async create() {
+			calls.push("create");
+		}
+		async deleteSession() {
+			calls.push("deleteSession");
+			active = false;
+		}
+		// like Appwrite: a new session is refused while one is active
+		async createEmailPasswordSession() {
+			if (active) throw new Error("Creation of a session is prohibited when a session is active.");
+			calls.push("createSession");
+			active = true;
+		}
 		async createJWT() {
 			jwtCalls++;
 			return { jwt: "token-" + jwtCalls };
@@ -26,6 +41,18 @@ const { getAppwriteCompat } = await import("../services/appwrite/appwriteCompat"
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Appwrite compat layer", () => {
+	it("signing up or in while another session is open ends that session first instead of failing (BUG 013)", async () => {
+		const fb = getAppwriteCompat();
+		active = true;
+		calls.length = 0;
+		await fb.auth().createUserWithEmailAndPassword("new@shop.lk", "secret123");
+		expect(calls).toEqual(["create", "deleteSession", "createSession"]);
+		active = true;
+		calls.length = 0;
+		await fb.auth().signInWithEmailAndPassword("new@shop.lk", "secret123");
+		expect(calls).toEqual(["deleteSession", "createSession"]);
+	});
+
 	it("reuses one sign-in token for many requests and gets a fresh one if the server refuses it", async () => {
 		const seen = [];
 		let refuseOnce = false;

@@ -62,6 +62,14 @@ export function getAppwriteCompat() {
 			return null;
 		}
 	};
+	// Appwrite refuses a new session while one is active (BUG 013), so any session left in this browser is ended first.
+	const endSession = async () => {
+		try {
+			await account.deleteSession("current");
+		} catch {
+			/* no session to end */
+		}
+	};
 	const emit = () =>
 		listeners.slice().forEach((fn) => {
 			try {
@@ -88,6 +96,7 @@ export function getAppwriteCompat() {
 			};
 		},
 		async signInWithEmailAndPassword(email, password) {
+			await endSession();
 			await account.createEmailPasswordSession(email, password);
 			currentUser = await loadUser();
 			log.info("email session created");
@@ -97,12 +106,14 @@ export function getAppwriteCompat() {
 		async createUserWithEmailAndPassword(email, password) {
 			await account.create(ID.unique(), email, password);
 			log.info("account created");
+			await endSession();
 			await account.createEmailPasswordSession(email, password);
 			currentUser = await loadUser();
 			emit();
 			return { user: currentUser };
 		},
 		async signInWithToken(userId, secret) {
+			await endSession();
 			await account.createSession(userId, secret);
 			currentUser = await loadUser();
 			emit();
