@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "assets/appwrite-compat.js": {
-    "mtime": 1791904987.7921748,
-    "seen": 1792303007.454238,
-    "ast_hash": "f98b1a68e22bbcf8dcd287393279b03c",
+    "mtime": 1792678209.9493377,
+    "seen": 1792678247.688422,
+    "ast_hash": "4eee5499c8d10f4ef740788864c089e0",
     "semantic_hash": ""
   },
   "assets/appwrite-sdk.js": {
@@ -1158,9 +1158,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/appwrite/appwriteCompat.js": {
-    "mtime": 1791904987.8476803,
-    "seen": 1792303007.4544482,
-    "ast_hash": "aa2b664a29278312e474c9a1c41635e8",
+    "mtime": 1792678175.4727886,
+    "seen": 1792678247.688572,
+    "ast_hash": "c5b156f19b826ddd065334a2adc991bb",
     "semantic_hash": ""
   },
   "pos-react/src/services/auth.service.js": {
@@ -1440,9 +1440,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/appwriteCompat.test.js": {
-    "mtime": 1791904987.855667,
-    "seen": 1792303007.4544792,
-    "ast_hash": "09c83280bf39ed6bf456a3556e70e618",
+    "mtime": 1792678185.747265,
+    "seen": 1792678247.688608,
+    "ast_hash": "d08057016ed140712fb4a6978c5b663e",
     "semantic_hash": ""
   },
   "pos-react/src/tests/catalog.test.js": {
@@ -2016,21 +2016,21 @@
     "semantic_hash": ""
   },
   "cashflow/accept-invite.html": {
-    "mtime": 1791904987.7934415,
-    "seen": 1792303007.45455,
-    "ast_hash": "3cd13f74c3b34aefd53b6f83451333dc",
+    "mtime": 1792678220.397528,
+    "seen": 1792678247.6886861,
+    "ast_hash": "df30df5869cca9e40628bf35c6733f63",
     "semantic_hash": ""
   },
   "cashflow/ceylonry-admin.html": {
-    "mtime": 1792304919.4026592,
-    "seen": 1792499803.1064918,
-    "ast_hash": "78f704ab657756f5cee2009ebd633360",
+    "mtime": 1792678220.4029024,
+    "seen": 1792678247.688687,
+    "ast_hash": "c8a628da12d68abd9bd29e8cefc9a0ec",
     "semantic_hash": ""
   },
   "cashflow/growth.html": {
-    "mtime": 1792304919.4036736,
-    "seen": 1792499803.106493,
-    "ast_hash": "1ad885771abd3c073a3b0cde71346a5f",
+    "mtime": 1792678220.4155812,
+    "seen": 1792678247.688687,
+    "ast_hash": "330588caf9e90e159482f1c42c0ce96d",
     "semantic_hash": ""
   },
   "cashflow/invoice-public.html": {
@@ -2040,63 +2040,63 @@
     "semantic_hash": ""
   },
   "cashflow/onboarding.html": {
-    "mtime": 1792304919.4043894,
-    "seen": 1792499803.106495,
-    "ast_hash": "af576b17dba810057aade1ca6250d468",
+    "mtime": 1792678220.4210155,
+    "seen": 1792678247.688689,
+    "ast_hash": "6a882e4a32829c54c6c13e6852fa9575",
     "semantic_hash": ""
   },
   "cashflow/payable-return.html": {
-    "mtime": 1791904987.7973156,
-    "seen": 1792303007.4545531,
-    "ast_hash": "4110e4594aa49621ae09a003c3cc2f3b",
+    "mtime": 1792678220.423452,
+    "seen": 1792678247.688689,
+    "ast_hash": "d95035cc35ac68ccff73ca93c3cbfd3a",
     "semantic_hash": ""
   },
   "cashflow/premium.html": {
-    "mtime": 1791904987.7988312,
-    "seen": 1792303007.4545531,
-    "ast_hash": "588398c90ff4be092a682c7e2f571f33",
+    "mtime": 1792678220.4294226,
+    "seen": 1792678247.68869,
+    "ast_hash": "ec794de0519bdce419c2134ef1bd0634",
     "semantic_hash": ""
   },
   "cashflow/signin.html": {
-    "mtime": 1792304919.4046166,
-    "seen": 1792499803.106497,
-    "ast_hash": "746b24504b1286f438bb13e055779ad5",
+    "mtime": 1792678220.432479,
+    "seen": 1792678247.68869,
+    "ast_hash": "3e31c3b674cdb5ec3b73df6aa23003d6",
     "semantic_hash": ""
   },
   "cashflow/solo.html": {
-    "mtime": 1792304919.4052896,
-    "seen": 1792499803.106498,
-    "ast_hash": "988a27cd4e1cd80babf6e4b81d66c9e2",
+    "mtime": 1792678220.4400818,
+    "seen": 1792678247.688691,
+    "ast_hash": "80f83635b16485520ef2ee06c1d08094",
     "semantic_hash": ""
   },
   "cashflow/starter.html": {
-    "mtime": 1792304919.4061925,
-    "seen": 1792499803.106498,
-    "ast_hash": "0c754bf618896f8ddfcbd6649b4dc046",
+    "mtime": 1792678220.450193,
+    "seen": 1792678247.6886919,
+    "ast_hash": "f66d12d2a2b208c9a35c3f4a2d6cbe51",
     "semantic_hash": ""
   },
   "cashflow/starter_3.html": {
-    "mtime": 1791904987.805628,
-    "seen": 1792303007.454556,
-    "ast_hash": "90ea9a2d64a9066a486e249ec153ddce",
+    "mtime": 1792678220.4564607,
+    "seen": 1792678247.6886919,
+    "ast_hash": "202d71bdd72dd380847d51135d1f831b",
     "semantic_hash": ""
   },
   "cashflow/success.html": {
-    "mtime": 1791904987.8066778,
-    "seen": 1792303007.454556,
-    "ast_hash": "8d20779a03eeeab7e134148088d99c5e",
+    "mtime": 1792678220.459208,
+    "seen": 1792678247.688693,
+    "ast_hash": "4c6d11c212caee295e5c1be245d72ba9",
     "semantic_hash": ""
   },
   "cashflow/team.html": {
-    "mtime": 1791904987.8070834,
-    "seen": 1792303007.454557,
-    "ast_hash": "780e1e1c32d7982fa152fd4f8df76705",
+    "mtime": 1792678220.461755,
+    "seen": 1792678247.688693,
+    "ast_hash": "43acca2c0bb34098943e9035b3587ff7",
     "semantic_hash": ""
   },
   "cashflow/upgrade.html": {
-    "mtime": 1791904987.8076546,
-    "seen": 1792303007.454558,
-    "ast_hash": "981f35f7bd9d241db1e1f79a1d6fa585",
+    "mtime": 1792678220.4640615,
+    "seen": 1792678247.688694,
+    "ast_hash": "8c613fe0dd6ebcad2e6be362b8374fcc",
     "semantic_hash": ""
   },
   "daily-updates/2026-10-13.md": {
@@ -2184,9 +2184,9 @@
     "semantic_hash": ""
   },
   "pos-onboarding.html": {
-    "mtime": 1792304262.772727,
-    "seen": 1792499803.106515,
-    "ast_hash": "dd6bd884bcf3f0a4a91a3d0c4dc532db",
+    "mtime": 1792678220.4666157,
+    "seen": 1792678247.6887062,
+    "ast_hash": "b91969681abf0e17dc3f96731bc7e2d7",
     "semantic_hash": ""
   },
   "pos-react/README.md": {
@@ -2274,9 +2274,9 @@
     "semantic_hash": ""
   },
   "reservation-system/index.html": {
-    "mtime": 1791904987.8610604,
-    "seen": 1792303007.4545789,
-    "ast_hash": "8d99dd07487aa382c1f168412da39b36",
+    "mtime": 1792678216.3666332,
+    "seen": 1792678247.6887171,
+    "ast_hash": "1d5a57a91547c066f2b1f841a0c8241c",
     "semantic_hash": ""
   },
   "story-thank-you.html": {
@@ -2709,6 +2709,12 @@
     "mtime": 1792677674.1876478,
     "seen": 1792677819.401124,
     "ast_hash": "4674ef263644d19401ce8d723c745d8e",
+    "semantic_hash": ""
+  },
+  "tests/appwrite-compat-session.test.js": {
+    "mtime": 1792678200.198323,
+    "seen": 1792678247.68866,
+    "ast_hash": "793a9b8da34deeb57f1d859a1e3fc7ad",
     "semantic_hash": ""
   }
 }

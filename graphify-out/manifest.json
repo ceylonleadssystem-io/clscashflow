@@ -1410,9 +1410,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/store/SessionProvider.jsx": {
-    "mtime": 1791904987.854839,
-    "seen": 1792303007.454476,
-    "ast_hash": "8697b0157ea0053d066d25e2bc7d29ad",
+    "mtime": 1792678500.0562375,
+    "seen": 1792678554.947236,
+    "ast_hash": "ba4537c2b5f352a0f8aa926fee241fc7",
     "semantic_hash": ""
   },
   "pos-react/src/store/UiProvider.jsx": {
