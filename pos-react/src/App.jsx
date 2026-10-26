@@ -14,6 +14,8 @@ import { BusinessGate } from "./gates/BusinessGate";
 import { StaffGate } from "./gates/StaffGate";
 import { CheckoutModeGate } from "./gates/CheckoutModeGate";
 import { StockCount } from "./views/StockCount";
+import { AssistBar, AssistMissing } from "./components/layout/AssistBar";
+import { assistActive, assistRequested } from "./services/assist";
 import { Shell } from "./components/layout/Shell";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GearLoader } from "./components/ui/GearLoader";
@@ -46,7 +48,9 @@ const Loading = ({ children }) => (
 // DataProvider is keyed by dbName so switching business accounts remounts every provider below it
 // instead of leaking the previous workspace's snapshot, staff session and cart.
 function Root() {
-	const { phase, workspace } = useSession();
+	const { phase, workspace, assist, authError } = useSession();
+	if (assistRequested() && !assistActive()) return <AssistMissing />;
+	if (assist && phase === "error") return <AssistMissing message={"Could not open the copy of this POS: " + authError} />;
 	if (phase === "booting") return <Loading />;
 	if (phase === "signed-out") return <BusinessGate />;
 	if (phase === "activating" || !workspace) return <Loading />;
@@ -100,5 +104,10 @@ function Gate() {
 			</>
 		);
 	if (hash === "#/count" && !support) return <StockCount />;
-	return <Shell />;
+	return (
+		<>
+			<Shell />
+			<AssistBar />
+		</>
+	);
 }

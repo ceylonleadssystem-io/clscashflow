@@ -624,3 +624,9 @@ html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
 @media (pointer:coarse){.ceylo-ignore{min-height:44px}}
 /* a Guest Manager booking holds the table (only during the booking and the hour before it) */
 .floor-table.gm-reserved{background:#e3edff;color:#1e4fae;border-color:#9db8ef}
+/* Assist mode bar (admin portal "Open client's POS") */
+.assist-bar{position:fixed;left:92px;bottom:14px;z-index:95;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px);padding:10px 14px;border-radius:14px;background:var(--ui-ink,#111820);color:#fff;box-shadow:0 14px 40px rgba(0,0,0,.35);font-size:13px}
+.assist-bar-text{min-width:0}
+.assist-bar .btn{min-height:38px}
+.assist-bar .btn.out{background:transparent!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}
+@media (max-width:560px){.assist-bar{left:12px;right:12px;transform:none;bottom:calc(10px + env(safe-area-inset-bottom,0px))}}

@@ -22,7 +22,7 @@ The landing page, POS entry pages, legal and story pages stay in the root. The o
 - `assets/` - browser scripts, styles and images shared by the root pages
 
 ## Backend
-- `netlify/functions/` - serverless endpoints; `netlify/lib/` shared helpers (`appwrite.js`, `security.js`)
+- `netlify/functions/` - serverless endpoints; `netlify/lib/` shared helpers (`appwrite.js`, `security.js`, `config-merge.js` for the admin portal's assist changes)
 - `netlify/function-handlers/` - legacy `.cjs` handler copies
 
 ## Tooling and docs (not served)

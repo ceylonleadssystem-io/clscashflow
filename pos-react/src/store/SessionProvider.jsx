@@ -22,6 +22,8 @@ import {
 import { payloadToSnapshot } from "../services/sync/payload";
 import { freshAccountDb, normalizeAccountDb } from "../services/sync/account";
 import { T } from "../db/tables";
+import { assistActive, assistInfo, assistStore, prepareAssist } from "../services/assist";
+import { adminApi } from "../admin-app/adminApi";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("session");
@@ -52,6 +54,8 @@ export function SessionProvider({ children }) {
 	const [restoredNotice, setRestoredNotice] = useState(false);
 	const activating = useRef("");
 	const cloudRef = useRef(null);
+	// Assist mode: the admin portal opened this tab on a copy of a client's configuration (see services/assist.js). No business sign-in, no cloud.
+	const assist = useMemo(() => assistActive(), []);
 
 	const reset = useCallback((message = "") => {
 		cloudRef.current?.stop();
@@ -142,6 +146,26 @@ export function SessionProvider({ children }) {
 	);
 
 	useEffect(() => {
+		if (!assist) return;
+		setPhase("activating");
+		(async () => {
+			try {
+				const info = await prepareAssist(assistInfo(), async () => (await adminApi({ action: "get", userId: assistInfo().accountId })).workspace);
+				const user = { uid: "assist-" + info.accountId, email: "", displayName: "Ceylonry Support" };
+				setWorkspace({ store: assistStore(info.dbName), dbName: info.dbName, ctx: { workspaceUid: user.uid, workspaceUser: user }, cloud: null, workspaceUid: user.uid, user, profile: {} });
+				setBilling({ profile: null, allowed: true, warning: "" });
+				setPhase("ready");
+				log.info("assist workspace ready", { accountId: info.accountId });
+			} catch (e) {
+				log.error("assist copy could not be opened", e);
+				setAuthError(e?.message || "Could not open the copy of this POS.");
+				setPhase("error");
+			}
+		})();
+	}, [assist]);
+
+	useEffect(() => {
+		if (assist) return undefined;
 		const unsub = auth.onChange((user) => {
 			const approved = sessionStorage.getItem(STORAGE.loginUid) || "";
 			if (user && (auth.kind === "local" || approved === user.uid)) {
@@ -159,7 +183,7 @@ export function SessionProvider({ children }) {
 				setAuthError("Your login session expired. Sign in again to resume cloud sync. Changes on this device are preserved.");
 		});
 		return () => unsub?.();
-	}, [auth, activate]);
+	}, [auth, activate, assist]);
 
 	// Support: send the device log straight to the administrator's browser when they request it (cloud accounts, or local dev)
 	useEffect(() => {
@@ -269,7 +293,8 @@ export function SessionProvider({ children }) {
 	const value = useMemo(
 		() => ({
 			phase,
-			authKind: auth.kind,
+			authKind: assist ? "assist" : auth.kind,
+			assist,
 			auth,
 			authError,
 			setAuthError,
@@ -284,7 +309,7 @@ export function SessionProvider({ children }) {
 			retrySync: () => cloudRef.current?.retry(),
 			syncNow: () => cloudRef.current?.syncNow?.(),
 		}),
-		[phase, auth, authError, workspace, cloudStatus, billing, restoredNotice, signIn, register, signOut, resetPassword],
+		[phase, auth, assist, authError, workspace, cloudStatus, billing, restoredNotice, signIn, register, signOut, resetPassword],
 	);
 	return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

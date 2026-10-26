@@ -47,6 +47,10 @@ export function successText(body) {
 			return "Subscription type updated";
 		case "saveInvoice":
 			return "Invoice saved";
+		case "saveCatalog":
+			return "Menu imported";
+		case "saveConfig":
+			return "Changes sent to the client";
 		case "deleteAccount":
 			return "Account deleted";
 		default:

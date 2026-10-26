@@ -49,7 +49,7 @@ export function PosProvider({ children }) {
 	const data = useData();
 	const dataRef = useDataRef();
 	const { enabled } = useFeatures();
-	const { workspace } = useSession();
+	const { workspace, assist } = useSession();
 	const ui = useUi();
 	// tell the owner when a photo could not reach cloud storage (it stays on this device and is retried by the move button)
 	useEffect(() => {
@@ -79,9 +79,9 @@ export function PosProvider({ children }) {
 	const hasOpenOrders = data.openOrders.some((o) => o.status === "open");
 
 	const currentUser = useMemo(() => {
-		if (support) return SUPPORT_USER;
+		if (support || assist) return SUPPORT_USER;
 		return data.users.find((u) => u.id === currentUserId && u.active !== false) || null;
-	}, [support, data.users, currentUserId]);
+	}, [support, assist, data.users, currentUserId]);
 
 	// ------------------------------------------------------------- access ---
 	const canView = useCallback(

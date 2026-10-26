@@ -5,6 +5,7 @@ const { getAdmin, audit } = require('../lib/admin-store');
 const log = require('../lib/log').createLogger('pos-admin-data');
 const lib = require('../lib/appwrite');
 const { createPurger, realDeps } = require('../lib/account-purge');
+const configMerge = require('../lib/config-merge');
 const { appsUsed } = require('../lib/apps-used');
 
 
@@ -180,6 +181,7 @@ function normalizeProduct(raw, index) {
     stock: Number.isFinite(stock) && stock >= 0 ? stock : 0,
     unit: clean(raw.unit || 'item', 50),
     supplier: clean(raw.supplier, 140),
+    subcategory: clean(raw.subcategory, 100), description: clean(raw.description, 2000),
     reorderLevel: Math.max(0, Number(raw.reorderLevel || raw.reorder || 0) || 0),
     image: clean(raw.image, 700000), modifierIds: Array.isArray(raw.modifierIds)?raw.modifierIds:[], recipe: Array.isArray(raw.recipe)?raw.recipe:[], active: raw.active !== false
   };
@@ -386,26 +388,57 @@ async function handle(event) {
     if (action === 'saveCatalog') {
       const incoming = Array.isArray(body.products) ? body.products.map(normalizeProduct) : [];
       if (!incoming.length) return response(400, { ok: false, error: 'The import contains no valid products.' });
-      const mode = body.mode === 'replace' ? 'replace' : 'merge';
+      const mode = ['replace', 'add'].includes(body.mode) ? body.mode : 'merge';
       const beforeProducts = Array.isArray(workspace.payload.products) ? workspace.payload.products : [];
       const beforeCategories = Array.isArray(workspace.payload.categories) ? workspace.payload.categories : [];
       const backupId = 'catalog-' + Date.now();
       log.info('catalog import', { uid, mode, incoming: incoming.length, before: beforeProducts.length, backupId });
       await db.collection('users/' + uid + '/posCatalogBackups').doc(backupId).set({ products: beforeProducts, categories: beforeCategories, createdAtUtc: new Date().toISOString(), createdBy: ADMIN_EMAIL });
-      let products = incoming;
-      if (mode === 'merge') {
+      const stamp = new Date().toISOString();
+      // every imported row is stamped, so the devices' own sync (last writer wins per row) takes the import
+      incoming.forEach(function(item) { item.updatedAt = stamp; item.createdAt = item.createdAt || stamp; });
+      let products = incoming, skipped = 0;
+      if (mode === 'merge' || mode === 'add') {
         const merged = new Map(beforeProducts.map(function(item) { return [productKey(item), item]; }));
-        incoming.forEach(function(item) { merged.set(productKey(item), Object.assign({}, merged.get(productKey(item)) || {}, item)); });
+        incoming.forEach(function(item) {
+          const known = merged.get(productKey(item));
+          if (known && mode === 'add') { skipped++; return; }
+          // an item already in the menu keeps its id (orders, recipes and modifiers point at it)
+          merged.set(productKey(item), Object.assign({}, known || {}, item, known ? { id: known.id, createdAt: known.createdAt || item.createdAt } : {}));
+        });
         products = Array.from(merged.values());
       }
-      const categories = Array.from(new Set((mode === 'merge' ? beforeCategories : []).concat(body.categories || [], products.map(function(item) { return item.category; })).map(function(item) { return clean(item, 100); }).filter(Boolean))).sort();
+      const categories = Array.from(new Set((mode !== 'replace' ? beforeCategories : []).concat(body.categories || [], products.map(function(item) { return item.category; })).map(function(item) { return clean(item, 100); }).filter(Boolean))).sort();
       const now = new Date().toISOString();
-      const payload = Object.assign({}, workspace.payload, { accountUid: uid, products, categories });
+      const subcategories = Array.isArray(workspace.payload.subcategories) ? workspace.payload.subcategories.slice() : [];
+      (Array.isArray(body.subcategories) ? body.subcategories : []).slice(0, 2000).forEach(function(sub, i) {
+        const parent = clean(sub && sub.parent, 100), name = clean(sub && sub.name, 100);
+        if (parent && name && !subcategories.some(function(x) { return x.parent === parent && x.name === name; })) subcategories.push({ id: 'sub-import-' + Date.now().toString(36) + '-' + i, parent: parent, name: name, updatedAt: now });
+      });
+      const payload = Object.assign({}, workspace.payload, { accountUid: uid, products, categories, subcategories });
       payload.supportAudit = Array.isArray(payload.supportAudit) ? payload.supportAudit : [];
-      payload.supportAudit.unshift({ at: now, action: 'developer-catalog-import', details: mode + ' import: ' + incoming.length + ' items', session: 'pos-admin' });
+      payload.supportAudit.unshift({ at: now, action: 'developer-catalog-import', details: mode + ' import: ' + incoming.length + ' items' + (skipped ? ' (' + skipped + ' skipped)' : ''), session: 'pos-admin' });
       await workspace.ref.set({ ownerUid: uid, payload, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedAtUtc: now }, { merge: true });
       await db.collection('users').doc(uid).set({ posSetupStatus: clean(body.setupStatus || 'draft'), posCatalogUpdatedAtUtc: now, posCatalogUpdatedBy: ADMIN_EMAIL }, { merge: true });
-      return response(200, { ok: true, products: products.length, categories: categories.length, imported: incoming.length, backupId });
+      return response(200, { ok: true, products: products.length, categories: categories.length, imported: incoming.length - skipped, skipped: skipped, backupId });
+    }
+
+    if (action === 'saveConfig') {
+      // Menu and shop configuration made in the admin portal's assist copy of this POS (see lib/config-merge.js). Sales, customers,
+      // staff and stock levels are never touched.
+      let cfg;
+      try { cfg = configMerge.cleanConfig(body.config); } catch (error) { return response(400, { ok: false, error: error.message }); }
+      const sum = configMerge.summarize(cfg);
+      if (!sum.rows && !sum.deleted && !sum.categories && !sum.settings) return response(400, { ok: false, error: 'There is nothing to send.' });
+      const now = new Date().toISOString(), before = workspace.payload || {};
+      const backupId = 'config-' + Date.now();
+      await db.collection('users/' + uid + '/posCatalogBackups').doc(backupId).set({ products: before.products || [], modifiers: before.modifiers || [], subcategories: before.subcategories || [], locations: before.locations || [], categories: before.categories || [], settings: before.settings || {}, createdAtUtc: now, createdBy: ADMIN_EMAIL, kind: 'assist-config' });
+      const payload = configMerge.applyConfig(before, cfg, now);
+      payload.supportAudit = (Array.isArray(payload.supportAudit) ? payload.supportAudit : []).slice();
+      payload.supportAudit.unshift({ at: now, action: 'admin-assist-config', details: sum.rows + ' rows, ' + sum.deleted + ' removed, ' + sum.categories + ' categories, ' + sum.settings + ' settings', session: 'pos-admin' });
+      await workspace.ref.set({ ownerUid: uid, payload, updatedAt: admin.firestore.FieldValue.serverTimestamp(), updatedAtUtc: now }, { merge: true });
+      log.info('assist config saved', { uid, backupId, summary: sum });
+      return response(200, { ok: true, backupId, summary: sum });
     }
 
     if (action === 'listInvoices') {

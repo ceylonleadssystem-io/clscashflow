@@ -14,6 +14,7 @@ import { SubscriptionTab } from "./SubscriptionTab";
 import { DeleteAccountTab } from "./DeleteAccountTab";
 import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
+import { beginAssist } from "../services/assist";
 
 const TABS = [
 	["access", "Access"],
@@ -60,6 +61,20 @@ export function AccountDetail({ account, onBack, onChanged }) {
 		}
 	};
 
+	// Opens the POS on a COPY of this business' configuration (not a live view) so the administrator can help set it up; see services/assist.js
+	const [opening, setOpening] = useState(false);
+	const openPos = () => {
+		const tab = window.open("", "_blank"); // opened inside the click so the browser does not block it
+		if (!tab) return ui.alert("Your browser blocked the new tab. Allow pop-ups for this site and try again.");
+		setOpening(true);
+		try {
+			beginAssist({ accountId: account.id, business: settings.business || account.business || account.email });
+			tab.location.href = "/posv2/?assist=1"; // the new tab builds the copy from the server
+		} finally {
+			setTimeout(() => setOpening(false), 800);
+		}
+	};
+
 	if (!data) return <div className="gear-overlay"><GearLoader /></div>;
 	return (
 		<div>
@@ -69,6 +84,9 @@ export function AccountDetail({ account, onBack, onChanged }) {
 				</button>
 				<h2>{account.business || account.email}</h2>
 				<span className="muted">{account.email}</span>
+				<button className="btn gold" type="button" id="open-client-pos" disabled={opening} onClick={openPos} style={{ marginLeft: "auto" }} title="Opens a copy of this business' menu and settings in the POS to help set it up. It is not a live view: nothing reaches the client until you press Send changes.">
+					{opening ? "Opening…" : "Open client's POS"}
+				</button>
 			</div>
 			<div className="settings-tabs" role="tablist" style={{ marginBottom: 14 }}>
 				{TABS.map(([id, label]) => (
@@ -81,7 +99,7 @@ export function AccountDetail({ account, onBack, onChanged }) {
 			{tab === "subscription" && <SubscriptionTab settings={settings} workspace={data.workspace} save={save} saving={saving} />}
 			{tab === "features" && <FeaturesTab settings={settings} locations={locations} save={save} saving={saving} ui={ui} />}
 			{tab === "welcome" && <WelcomeTab settings={settings} save={save} saving={saving} />}
-			{tab === "menu" && <MenuTab account={account} workspace={data.workspace} ui={ui} />}
+			{tab === "menu" && <MenuTab account={account} workspace={data.workspace} ui={ui} reload={reload} />}
 			{tab === "delete" && <DeleteAccountTab account={account} ui={ui} onDeleted={onBack} />}
 			{tab === "diagnostics" && <DiagnosticsTab account={account} ui={ui} />}
 			{tab === "invoices" && <InvoicesTab account={account} profile={profile} settings={settings} save={save} saving={saving} invoices={invoices} reload={reload} ui={ui} />}

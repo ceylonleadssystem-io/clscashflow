@@ -21,7 +21,7 @@ import { money } from "../../domain/format";
 
 export function Topbar({ onOpenLocations }) {
 	const { title, view, go, canView, staffLogout, layout, setLayout, setChooserOpen, locationId, currentUser, svc } = usePos();
-	const { signOut } = useSession();
+	const { signOut, assist } = useSession();
 	const data = useData();
 	const { full, toggle } = useFullscreen();
 	const { canInstall, install } = useInstall();
@@ -100,12 +100,16 @@ export function Topbar({ onOpenLocations }) {
 								</button>
 							))}
 						</div>
-						<button className="btn out session-action" type="button" onClick={staffLogout}>
-							Lock POS
-						</button>
-						<button className="btn out session-action" type="button" onClick={signOut}>
-							Sign Out Business
-						</button>
+						{!assist && (
+							<>
+								<button className="btn out session-action" type="button" onClick={staffLogout}>
+									Lock POS
+								</button>
+								<button className="btn out session-action" type="button" onClick={signOut}>
+									Sign Out Business
+								</button>
+							</>
+						)}
 						{modeChooser && (
 							<button id="switch-checkout-top" type="button" className="btn out" onClick={() => setChooserOpen(true)}>
 								Switch Checkout

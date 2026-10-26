@@ -31,6 +31,12 @@ Search by business, owner or e-mail. Open an account to manage it.
 Use **Disable account** / **Enable account**. Devices already signed in re-check every minute and switch to the
 payment screen; enabling restores access. Payment status (trial / active / paused) is shown on the card.
 
+## Import items and the client's POS
+
+**Menu tab > Import items** works like the POS "Import Items": download the Ceylonry template (or use the client's Square export), choose the Excel/CSV file, review and edit the preview, pick *Add new items and update matching SKU / Code*, *Add new items only* or *Replace the complete product catalogue*, then press Import items. The previous menu is saved as a backup (`posCatalogBackups`), the import is written to the audit log, and the client's POS picks it up on its next sync. Items already in the menu keep their id.
+
+**Open client's POS** (button at the top right of an account) opens the POS in a new tab on a **copy** of the business' configuration, to help set it up (menu, modifiers, locations, settings, table layouts). It is not a live view: the copy is taken when the tab opens and sales, customers, staff PINs and cash records are never copied to your browser. Nothing reaches the client until you press **Send changes to client** in the bar at the bottom: only what you changed is sent (menu items as field patches, removals, categories and business settings), the server merges it into the client's data without touching sales, customers, staff or stock levels, keeps a backup of the previous configuration and writes it to the audit log. Features, subscription, support access and device settings are never sent from the copy (use the account's tabs). Closing the bar's copy removes it from your browser; reloading the tab keeps your unsent work. The tab only works while you are signed in to the admin portal.
+
 ## Features and locations
 Switches grouped by area; each screen's own switch (marked **Screen**) sits at the top of the area it belongs to, followed by that screen's features (for example Sales History with Refunds and Voids; Order Queue, Tables, Guest Manager, KOT and KDS under *Restaurant & kitchen*). Each switch applies to the whole business; a **per-location** table lets you set
 *Inherit / On / Off* for each location. Rules:
