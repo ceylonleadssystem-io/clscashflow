@@ -1345,25 +1345,6 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
 .x-tile span{font-size:13px;line-height:1.45;opacity:.85}
 .x-tile:hover{background:var(--ink);color:var(--cream);transform:translateY(-6px);box-shadow:0 10px 0 var(--o)}
 
-/* demo */
-.x-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;align-items:start;max-width:1100px}
-.x-tab{background:var(--cream);color:var(--ink);border:2px solid var(--cream);padding:20px;box-shadow:12px 12px 0 var(--o)}
-.x-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-.x-tabs button{font-weight:600;padding:10px 16px;min-height:44px;border:1.5px solid var(--ink);cursor:pointer;background:transparent;color:var(--ink)}
-.x-tabs button[aria-pressed=true]{background:var(--ink);color:var(--cream)}
-.x-prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
-.x-prods button{text-align:left;padding:16px 14px;border:1.5px solid var(--ink);background:var(--cream2);cursor:pointer;border-top:6px solid var(--o);color:var(--ink);transition:background .15s,transform .15s}
-.x-prods button:hover{background:var(--g)}.x-prods button:active{transform:translateY(2px)}
-.x-prods b{display:block;font-size:15px;margin-bottom:6px}.x-prods span{font-size:13px;color:var(--muted)}
-.x-cart{background:var(--ink);border:2px solid var(--b);padding:22px;display:flex;flex-direction:column;min-height:340px}
-.x-cart h3{font-size:12px;letter-spacing:.2em;color:var(--g);margin:0 0 14px}
-.x-lines{flex:1;display:grid;gap:10px;align-content:start}
-.x-lines div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #1d3558;padding-bottom:10px;animation:rise .35s var(--ease)}
-.x-lines .empty{color:#9fb4d0;border:0}
-.x-total{display:flex;justify-content:space-between;font-weight:800;font-size:28px;margin:20px 0 16px;letter-spacing:-.02em}
-.x-cart .x-btn{width:100%;box-shadow:none}
-.x-clear{margin-top:10px;background:none;border:0;color:#9fb4d0;cursor:pointer;text-decoration:underline;min-height:44px}
-
 /* generic grids */
 .x-grid{display:grid;gap:0;border:2px solid var(--ink)}
 .x-fits{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
@@ -1508,7 +1489,6 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
     <a class="x-logo" href="#home" aria-label="Ceylonry POS home"><img src="assets/ceylonry-pos-logo-transparent.webp" alt="Ceylonry POS" width="90" height="36"><span>by CeylonryLabs.io</span></a>
     <button class="x-burger" id="burger" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu">☰</button>
     <nav class="x-nav" id="nav" aria-label="Main">
-      <a class="x-l" href="#demo">Try it</a>
       <a class="x-l" href="#features">Features</a>
       <a class="x-l" href="#businesses">Business types</a>
       <a class="x-l" href="#hardware">Hardware</a>
@@ -1537,7 +1517,6 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
       <div class="x-cta" data-rv>
         <a class="x-btn" href="pos-onboarding.html">Start free for 7 days →</a>
         <a class="x-btn ghost" href="https://tally.so/r/LZ8zXl">Start your Discovery</a>
-        <a class="x-btn ghost" href="#demo">Try the live demo</a>
       </div>
       <p class="x-price" data-rv>No credit card required · Plans starting from <b>LKR 5,500</b> / month</p>
     </div>
@@ -1561,28 +1540,6 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
     <p class="x-kick" data-rv>What do you want to know?</p>
     <h2 class="x-h2" data-rv>Pick what matters to you. Skip the rest.</h2>
     <div class="x-tiles"><a class="x-tile x-t0" href="#features"><b>What it does</b><span>Sales, stock, CRM, staff, reporting</span></a><a class="x-tile x-t1" href="#pricing"><b>What it costs</b><span>Starter, Business, Pro and Custom plans</span></a><a class="x-tile x-t2" href="#setup"><b>How setup works</b><span>Hardware, menu upload, support SLA</span></a><a class="x-tile x-t3" href="#start"><b>How to switch</b><span>Four steps, switching from another POS</span></a><a class="x-tile x-t4" href="#story"><b>Who builds it</b><span>The founders behind Ceylonry POS</span></a></div>
-  </section>
-</div>
-
-<!-- 2 · TRY IT -->
-<div class="panel" data-p="demo" data-label="Try it" id="demo">
-  <section class="x-sec x-dark">
-    <span class="x-kick" data-rv style="display:inline-block;background:var(--g);color:var(--ink);padding:7px 12px">Interactive preview</span>
-    <h2 class="x-h2" data-rv>Ring up a sale. Right here.</h2>
-    <p class="x-lead" data-rv>Tap items to build an order. Sample products shown.</p>
-    <div class="x-demo">
-      <div class="x-tab" data-rv>
-        <div class="x-tabs" id="d-tabs"></div>
-        <div class="x-prods" id="d-prods"></div>
-      </div>
-      <div class="x-cart" data-rv>
-        <h3>CURRENT ORDER</h3>
-        <div class="x-lines" id="d-lines" aria-live="polite"></div>
-        <div class="x-total"><span>Total</span><span id="d-total">Rs. 0</span></div>
-        <button class="x-btn" id="d-charge" type="button">Charge Rs. 0</button>
-        <button class="x-clear" id="d-clear" type="button">Clear order</button>
-      </div>
-    </div>
   </section>
 </div>
 
@@ -2476,32 +2433,6 @@ html{scroll-behavior:smooth;scroll-padding-top:68px}
   burger.addEventListener('click', function () {
     var o = nav.classList.toggle('open'); burger.setAttribute('aria-expanded', o);
   });
-
-  /* ---- live POS demo ---- */
-  var sets = [
-    { name: 'Café', items: [['a', 'Cappuccino', 650, '#e8651a'], ['b', 'Iced Latte', 750, '#2f6fb0'], ['c', 'Butter Croissant', 480, '#f0b030'], ['d', 'Chicken Sandwich', 890, '#e8651a'], ['e', 'Chocolate Cake', 720, '#0f2a4a'], ['f', 'King Coconut', 350, '#f0b030']] },
-    { name: 'Retail', items: [['g', 'Tea 400g', 1250, '#f0b030'], ['h', 'Notebook A5', 450, '#2f6fb0'], ['i', 'Cotton Tote', 1600, '#e8651a'], ['j', 'Spice Box', 2400, '#0f2a4a'], ['k', 'Soy Candle', 1900, '#f0b030'], ['l', 'Water Bottle', 2100, '#2f6fb0']] }
-  ];
-  var tab = 0, cart = {}, paid = false;
-  var fmt = function (n) { return n.toLocaleString('en-US'); };
-  var all = {}; sets.forEach(function (s) { s.items.forEach(function (x) { all[x[0]] = x; }); });
-  function demo() {
-    var tabs = document.getElementById('d-tabs'), prods = document.getElementById('d-prods'), lines = document.getElementById('d-lines');
-    tabs.innerHTML = sets.map(function (s, i) { return '<button type="button" data-tab="' + i + '" aria-pressed="' + (i === tab) + '">' + s.name + '</button>'; }).join('');
-    prods.innerHTML = sets[tab].items.map(function (p) { return '<button type="button" data-add="' + p[0] + '" style="border-top-color:' + p[3] + '"><b>' + p[1] + '</b><span>Rs. ' + fmt(p[2]) + '</span></button>'; }).join('');
-    var ids = Object.keys(cart), total = ids.reduce(function (s, id) { return s + all[id][2] * cart[id]; }, 0);
-    lines.innerHTML = ids.length ? ids.map(function (id) { return '<div><span>' + cart[id] + ' × ' + all[id][1] + '</span><b>Rs. ' + fmt(all[id][2] * cart[id]) + '</b></div>'; }).join('') : '<div class="empty">No items yet. Tap a product.</div>';
-    document.getElementById('d-total').textContent = 'Rs. ' + fmt(total);
-    document.getElementById('d-charge').textContent = paid ? 'Paid. Sale complete ✓' : 'Charge Rs. ' + fmt(total);
-  }
-  document.getElementById('demo').addEventListener('click', function (e) {
-    var t = e.target.closest('[data-tab]'), a = e.target.closest('[data-add]');
-    if (t) { tab = +t.dataset.tab; cart = {}; paid = false; demo(); }
-    else if (a) { paid = false; cart[a.dataset.add] = (cart[a.dataset.add] || 0) + 1; demo(); }
-    else if (e.target.closest('#d-charge')) { if (Object.keys(cart).length) { paid = true; cart = {}; demo(); } }
-    else if (e.target.closest('#d-clear')) { cart = {}; paid = false; demo(); }
-  });
-  demo();
 
   /* ---- contact form (sent by email through the existing send-contact function) ---- */
   var form = document.getElementById('contact-form'), topic = document.getElementById('topic'), budget = document.getElementById('budget');
