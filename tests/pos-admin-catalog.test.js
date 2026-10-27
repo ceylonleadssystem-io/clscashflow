@@ -103,7 +103,7 @@ test('openPos issues a short-lived sign-in token for the client, and only to an 
   const r = await call({ action: 'openPos', userId: UID });
   assert.equal(r.status, 200);
   assert.deepEqual([r.json.userId, r.json.secret], [UID, 's3cret']);
-  assert.equal(asked[2], 300);
+  assert.equal(asked[2], 600);
   const denied = await handler({ httpMethod: 'POST', headers: {}, body: JSON.stringify({ action: 'openPos', userId: UID }) });
   assert.equal(denied.statusCode, 401);
 });
