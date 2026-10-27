@@ -273,6 +273,12 @@ async function handle(event) {
 
     if (action === 'get') return response(200, { ok: true, user: { id: uid, profile, payment: paymentState(profile) }, workspace: workspace.payload });
 
+    // Opens the client's POS signed in as the client, no password: a single-use token that expires in 10 minutes (the admin audit log records it).
+    if (action === 'openPos') {
+      const token = await lib.users().createToken(uid, 64, 600);
+      return response(200, { ok: true, userId: uid, secret: token.secret });
+    }
+
     if (action === 'markTest') {
       const test = body.test === true;
       await db.collection('users').doc(uid).set({ posIsTestAccount:test, posAccountStatus:test ? 'test' : (profile.posPaid === true ? 'live' : 'trial'), posTestAccountUpdatedAtUtc:new Date().toISOString(), posTestAccountUpdatedBy:ADMIN_EMAIL }, { merge:true });

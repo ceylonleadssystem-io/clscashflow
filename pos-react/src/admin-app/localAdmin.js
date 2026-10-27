@@ -87,6 +87,7 @@ export async function localAdminApi(body) {
 		await s.replaceAll(payloadToSnapshot({ ...payload, products: [...byKey.values()], subcategories: subs, categories }), { preserveTimestamps: true });
 		return { ok: true, imported: incoming.length - skipped, skipped, backupId: "local-dev" };
 	}
+	if (action === "openPos") return { ok: true, local: true };
 	if (action === "saveConfig") {
 		const cfg = body.config || {};
 		const full = { rows: { products: [], modifiers: [], subcategories: [], locations: [], ...(cfg.rows || {}) }, deleted: { products: [], modifiers: [], subcategories: [], ...(cfg.deleted || {}) }, categories: { add: [], remove: [], ...(cfg.categories || {}) }, settings: cfg.settings || {} };

@@ -57,6 +57,28 @@ export function SessionProvider({ children }) {
 	// Assist mode: the admin portal opened this tab on a copy of a client's configuration (see services/assist.js). No business sign-in, no cloud.
 	const assist = useMemo(() => assistActive(), []);
 
+	// Live access from the admin portal: `#cls-access=<userId>.<secret>` signs this tab in as the client (token made by the admin function).
+	const access = useRef(null);
+	if (access.current === null) {
+		const m = /^#cls-access=([^.&]+)\.([^.&]+)$/.exec(location.hash);
+		access.current = m && auth.kind === "appwrite" ? { userId: decodeURIComponent(m[1]), secret: decodeURIComponent(m[2]) } : false;
+		if (m) history.replaceState(null, "", location.pathname + location.search);
+		if (access.current) sessionStorage.setItem(STORAGE.loginUid, access.current.userId);
+	}
+	useEffect(() => {
+		const a = access.current;
+		if (!a) return;
+		access.current = false;
+		auth.clsBackend().auth().signInWithToken(a.userId, a.secret).then(
+			() => setAuthError(""),
+			(e) => {
+				sessionStorage.removeItem(STORAGE.loginUid);
+				log.warn("live access sign-in failed", e);
+				setAuthError("The link to open this POS has expired. Open it again from the admin portal.");
+			},
+		);
+	}, [auth]);
+
 	const reset = useCallback((message = "") => {
 		cloudRef.current?.stop();
 		cloudRef.current = null;

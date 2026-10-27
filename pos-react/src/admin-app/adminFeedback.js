@@ -30,7 +30,7 @@ const subscribe = (l) => (listeners.add(l), () => listeners.delete(l));
 export const useAdminFeedback = () => useSyncExternalStore(subscribe, () => state);
 
 /** Actions that only read data: no loading bar and no success message. */
-export const READ_ACTIONS = new Set(["list", "get", "listInvoices", "getFounders", "previewDeleteAccount", "getReceipt"]);
+export const READ_ACTIONS = new Set(["list", "get", "listInvoices", "getFounders", "previewDeleteAccount", "getReceipt", "openPos"]);
 
 /** The text of the success message for a finished change. */
 export function successText(body) {
