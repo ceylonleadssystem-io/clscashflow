@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pos",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "VITE_DEV_ADMIN_PASSWORD=Admin#12345",
+        "npx",
+        "vite",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "cwd": "pos-react",
+      "port": 5199
+    }
+  ]
+}

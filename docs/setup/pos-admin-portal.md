@@ -13,7 +13,7 @@ URL: `https://<main domain>/posv2/admin` (also reachable at `/posv2/admin.html`)
 1. Create the database and collections (idempotent; needs an API key with the databases scope, which can be deleted afterwards):
    `APPWRITE_API_KEY=... node scripts/setup-admin-db.mjs`
 2. In Netlify set `POS_ADMIN_TOKEN_SECRET` to a random string of at least 32 characters (for example `openssl rand -base64 48`).
-3. Add an administrator: run `node scripts/hash-admin-password.mjs` (it generates the password and prints it once), and copy the printed `passwordHash`; then in the Appwrite console create a document in `pos_admin` > `admins` with `email` (lowercase @ceylonrylabs.io), `name`, `passwordHash` (printed hash), `active` = true, `failedAttempts` = 0.
+3. Add an administrator: run `node scripts/hash-admin-password.mjs`. It asks for the email (@ceylonrylabs.io), the name, a password (12+ characters typed twice, or leave empty to generate one that is shown once) and the Appwrite API key (databases scope, typed hidden), shows a summary, and after you confirm creates the record in `pos_admin` > `admins` (`active` = true, `failedAttempts` = 0). If the email already exists it updates that administrator instead (new password, active again, lock cleared). The key and password are never stored. For scripts, set `ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD`, `APPWRITE_API_KEY` and `ADMIN_YES=1` to skip the questions.
 
 ## Changing or removing an administrator
 - New password: generate a new hash and paste it into `passwordHash`.
