@@ -1,7 +1,7 @@
 # Graph Report - clscashflow  (2026-10-27)
 
 ## Corpus Check
-- 382 files · ~1,181,701 words
+- 382 files · ~1,182,111 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 22 file(s) not represented in the graph (top: .css 15, (none) 3, .webmanifest 2)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5274c1ec`
+- Built from commit: `21f9b48d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

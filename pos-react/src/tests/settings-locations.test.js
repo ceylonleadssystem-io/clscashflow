@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { createHarness } from "./harness";
+import { visibleProductCategories } from "../domain/catalog";
 import { loginLocationChoices } from "../services/pos/locations";
 
 const loc = (o = {}) => ({ name: "Galle", code: "gal", address: "", phone: "", email: "", openingHours: "", active: true, receiptHeader: "", receiptFooter: "", ...o });
@@ -68,6 +69,12 @@ describe("business settings", () => {
 		expect(h.data().settings).toMatchObject({ businessType: "restaurant", autoPrintKot: true, onboardingComplete: true });
 		expect(h.data().categories.length).toBeGreaterThan(0);
 		expect(h.data().modifiers.length).toBeGreaterThan(0);
+	});
+	it("shows the preset categories in Products & Services even while empty (BUG 016)", async () => {
+		await h.svc.settings.applyPosSetup({ type: "retail", addCategories: true, enableKot: false });
+		const d = h.data();
+		const shown = visibleProductCategories(d.categories, d.products, d.subcategories, d.settings.userCategories || []);
+		expect(shown).toEqual(expect.arrayContaining(["Clothing", "Accessories", "Electronics"]));
 	});
 	it("dismisses the setup reminder only when asked", async () => {
 		await h.svc.settings.dismissPosSetup(false);

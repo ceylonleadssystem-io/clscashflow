@@ -9,7 +9,7 @@ import { nowIso } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
 import { isAppwrite } from "../../config/env";
 import { isDataImage, storeImage } from "../imageStorage";
-import { supportAuditEntry } from "./common";
+import { supportAuditEntry, unmarkDeletedCategory } from "./common";
 import { addCommonModifiers } from "./catalog";
 import { createLogger } from "../../utils/logger";
 
@@ -157,14 +157,20 @@ export async function applyPosSetup(ctx, { type, addCategories, enableKot }) {
 	const d = ctx.data();
 	const preset = POS_TYPE_PRESETS[type] || POS_TYPE_PRESETS.other;
 	log.info("POS setup applied", { type, addCategories: !!addCategories, enableKot: !!enableKot });
-	await ctx.store.write((tx) => {
+	await ctx.store.write(async (tx) => {
 		tx.setSetting("businessType", type);
 		tx.setSetting("autoPrintKot", !!enableKot);
 		tx.setSetting("onboardingComplete", true);
-		if (addCategories)
-			preset.categories.forEach((c) => {
+		if (addCategories) {
+			for (const c of preset.categories) {
 				if (!d.categories.some((x) => x.toLowerCase() === c.toLowerCase())) tx.addCategory(c);
-			});
+				await unmarkDeletedCategory(tx, c); // a category deleted earlier would otherwise be removed again by sync
+			}
+			// remembered like "Add Category" does, otherwise empty preset-named categories stay hidden in Products & Services
+			const mine = d.settings.userCategories || [];
+			const fresh = preset.categories.filter((c) => !mine.some((m) => m.toLowerCase() === c.toLowerCase()));
+			if (fresh.length) tx.setSetting("userCategories", [...mine, ...fresh]);
+		}
 	});
 	if (!d.modifiers.length) await addCommonModifiers(ctx, { silent: true });
 	ctx.ui.notice(preset.label + " setup applied with categories and ready-to-edit modifiers. Existing products were preserved.");
