@@ -6,7 +6,7 @@
 // so administrators never share users, sessions or data with POS clients. There is no
 // self-registration and no password reset: an administrator exists only if someone adds a
 // record to the `admins` collection (the password hash is generated with
-// scripts/hash-admin-password.mjs).
+// scripts/hash-admin-password.mjs, which also saves the record).
 
 const crypto = require('crypto');
 

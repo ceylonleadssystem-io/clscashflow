@@ -10,9 +10,9 @@
 //                 It never holds log data: logs travel browser to browser.
 // The API key needs the databases scope. It can be removed after setup.
 //
-// Add the first administrator by creating a record in `admins` (Appwrite console):
-//   email (lowercase @ceylonrylabs.io), name, passwordHash (from scripts/hash-admin-password.mjs),
-//   active = true, failedAttempts = 0
+// Add the first administrator with `node scripts/hash-admin-password.mjs` (it asks for the details and saves the record), or by
+// creating a record in `admins` yourself (Appwrite console): email (lowercase @ceylonrylabs.io), name, passwordHash, active = true,
+// failedAttempts = 0
 
 import { Client, Databases } from "node-appwrite";
 

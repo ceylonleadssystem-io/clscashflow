@@ -4,7 +4,8 @@
  */
 import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
-import { snapshotToPayload } from "../services/sync/payload";
+import { payloadToSnapshot, snapshotToPayload } from "../services/sync/payload";
+import { applyConfig } from "../domain/assistConfig";
 import { resolveFeatures } from "../config/features";
 import { flagsWithPlan, subscriptionOf } from "../config/subscription";
 
@@ -66,6 +67,31 @@ export async function localAdminApi(body) {
 			for (const k of ["features", "locationFeatures", "welcome", "plan", "invoiceExtras", "invoiceTax", "businessCategory", "subscription"]) if (body.settings && k in body.settings) tx.setSetting(k, body.settings[k]);
 		});
 		return { ok: true };
+	}
+	if (action === "saveCatalog") {
+		const incoming = body.products || [];
+		if (!incoming.length) throw new Error("The import contains no valid products.");
+		const now = new Date().toISOString();
+		const payload = snapshotToPayload(snap);
+		const key = (p) => String(p.code || p.name || "").toLowerCase();
+		const byKey = new Map((body.mode === "replace" ? [] : payload.products).map((p) => [key(p), p]));
+		let skipped = 0;
+		incoming.forEach((p, i) => {
+			const known = byKey.get(key(p));
+			if (known && body.mode === "add") return void skipped++;
+			byKey.set(key(p), { id: "p-import-" + Date.now() + "-" + i, modifierIds: [], image: "", ...(known || {}), ...p, createdAt: known?.createdAt || now, updatedAt: now });
+		});
+		const subs = [...(payload.subcategories || [])];
+		(body.subcategories || []).forEach((x, i) => !subs.some((y) => y.parent === x.parent && y.name === x.name) && subs.push({ id: "sub-import-" + Date.now() + "-" + i, parent: x.parent, name: x.name, updatedAt: now }));
+		const categories = [...new Set([...(body.mode === "replace" ? [] : payload.categories), ...(body.categories || [])])].sort();
+		await s.replaceAll(payloadToSnapshot({ ...payload, products: [...byKey.values()], subcategories: subs, categories }), { preserveTimestamps: true });
+		return { ok: true, imported: incoming.length - skipped, skipped, backupId: "local-dev" };
+	}
+	if (action === "saveConfig") {
+		const cfg = body.config || {};
+		const full = { rows: { products: [], modifiers: [], subcategories: [], locations: [], ...(cfg.rows || {}) }, deleted: { products: [], modifiers: [], subcategories: [], ...(cfg.deleted || {}) }, categories: { add: [], remove: [], ...(cfg.categories || {}) }, settings: cfg.settings || {} };
+		await s.replaceAll(payloadToSnapshot(applyConfig(snapshotToPayload(snap), full, new Date().toISOString())), { preserveTimestamps: true });
+		return { ok: true, backupId: "local-dev", summary: {} };
 	}
 	const FOUNDERS = "ceylonry-dev-founders";
 	if (action === "getFounders") return { ok: true, founders: JSON.parse(localStorage.getItem(FOUNDERS) || "[]") };

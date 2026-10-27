@@ -247,7 +247,7 @@ Run these once per environment, with an API key that has the databases scope (th
 ```bash
 APPWRITE_API_KEY=… node scripts/setup-admin-db.mjs     # admin database, admins, audit log, diagnostics and KDS pairing collections
 APPWRITE_API_KEY=… node scripts/setup-gm-db.mjs        # Guest Manager database gm / gm_documents  (BEFORE deploying GM)
-node scripts/hash-admin-password.mjs                   # create an administrator password hash (see docs/setup/pos-admin-portal.md)
+node scripts/hash-admin-password.mjs                   # add or update a POS administrator (asks for the details, then saves; see docs/setup/pos-admin-portal.md)
 ```
 
 Also in the Appwrite console add a **daily backup policy** for each database (`ceylonry`, `pos`, `gm`).

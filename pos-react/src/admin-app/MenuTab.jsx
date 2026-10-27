@@ -7,10 +7,11 @@ import { catalogueExportMatrix, menuFileName } from "../domain/catalogExport";
 import { downloadBlob, downloadCsv } from "../domain/format";
 import { loadXlsx } from "../services/xlsx";
 import { createLogger } from "../utils/logger";
+import { MenuImport } from "./MenuImport";
 
 const log = createLogger("admin");
 
-export function MenuTab({ account, workspace, ui }) {
+export function MenuTab({ account, workspace, ui, reload }) {
 	const products = workspace?.products || [];
 	const inventory = workspace?.inventory || [];
 	const business = workspace?.settings?.business || account.business || account.email;
@@ -39,29 +40,32 @@ export function MenuTab({ account, workspace, ui }) {
 	};
 
 	return (
-		<div className="panel">
-			<div className="panel-head">
-				<div>
-					<div className="panel-title">Export menu</div>
-					<div className="muted">Download this business' products and services in the same format as the catalogue template.</div>
+		<div>
+			<div className="panel">
+				<div className="panel-head">
+					<div>
+						<div className="panel-title">Export menu</div>
+						<div className="muted">Download this business' products and services in the same format as the catalogue template.</div>
+					</div>
+				</div>
+				<div className="modal-body">
+					<p style={{ marginTop: 0 }}>
+						<strong>{products.length}</strong> item{products.length === 1 ? "" : "s"} in <strong>{categories}</strong> categor{categories === 1 ? "y" : "ies"}.
+					</p>
+					<div className="tools">
+						<button className="btn gold" id="menu-export-xlsx" disabled={!products.length || busy} onClick={exportExcel}>
+							Download Excel (.xlsx)
+						</button>
+						<button className="btn out" id="menu-export-csv" disabled={!products.length} onClick={exportCsv}>
+							Download CSV
+						</button>
+					</div>
+					<div className="print-note" style={{ marginTop: 12 }}>
+						The file can be uploaded again in the POS under Products &amp; Services &gt; Import Catalogue. It carries name, type, code, categories, description, prices, stock, unit and supplier. Photos, modifiers (sizes, add-ons) and recipes are not part of that format, so they are not exported.
+					</div>
 				</div>
 			</div>
-			<div className="modal-body">
-				<p style={{ marginTop: 0 }}>
-					<strong>{products.length}</strong> item{products.length === 1 ? "" : "s"} in <strong>{categories}</strong> categor{categories === 1 ? "y" : "ies"}.
-				</p>
-				<div className="tools">
-					<button className="btn gold" id="menu-export-xlsx" disabled={!products.length || busy} onClick={exportExcel}>
-						Download Excel (.xlsx)
-					</button>
-					<button className="btn out" id="menu-export-csv" disabled={!products.length} onClick={exportCsv}>
-						Download CSV
-					</button>
-				</div>
-				<div className="print-note" style={{ marginTop: 12 }}>
-					The file can be uploaded again in the POS under Products &amp; Services &gt; Import Catalogue. It carries name, type, code, categories, description, prices, stock, unit and supplier. Photos, modifiers (sizes, add-ons) and recipes are not part of that format, so they are not exported.
-				</div>
-			</div>
+			<MenuImport account={account} ui={ui} reload={reload} />
 		</div>
 	);
 }
