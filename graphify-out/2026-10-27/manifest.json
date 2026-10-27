@@ -216,9 +216,9 @@
     "semantic_hash": ""
   },
   "netlify/functions/pos-admin-data.js": {
-    "mtime": 1793041998.995667,
-    "seen": 1793042198.344037,
-    "ast_hash": "996acbd1d91e6ed11d475c7afed25437",
+    "mtime": 1793068670.5063164,
+    "seen": 1793068708.81345,
+    "ast_hash": "e67e9fd3f4a2fc2eb89084143d43e8c3",
     "semantic_hash": ""
   },
   "netlify/functions/pos-admin-diagnostics.js": {
@@ -498,9 +498,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/AccountDetail.jsx": {
-    "mtime": 1793041934.4779546,
-    "seen": 1793042198.344074,
-    "ast_hash": "bd1f6584bb80caecb47ee9208797aebf",
+    "mtime": 1793068670.5071707,
+    "seen": 1793068708.813487,
+    "ast_hash": "731003b9fd11b43709217e19b042175c",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/AdminApp.jsx": {
@@ -576,9 +576,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/adminFeedback.js": {
-    "mtime": 1793042044.094679,
-    "seen": 1793042198.344084,
-    "ast_hash": "415ccd4616a1400a39c70dccc57216ab",
+    "mtime": 1793068670.5066671,
+    "seen": 1793068708.813497,
+    "ast_hash": "d2936156fa83f2bd1774374eee426801",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/adminSession.js": {
@@ -606,9 +606,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/localAdmin.js": {
-    "mtime": 1793041875.4974632,
-    "seen": 1793042198.3440871,
-    "ast_hash": "f8cc88e8db8c5e4cd5bb7823f868c940",
+    "mtime": 1793068670.5069864,
+    "seen": 1793068708.8135,
+    "ast_hash": "7aa48591628ed1f91830efd5e6f88dcc",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/main.jsx": {
@@ -1410,9 +1410,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/store/SessionProvider.jsx": {
-    "mtime": 1793041934.4776106,
-    "seen": 1793042198.3441842,
-    "ast_hash": "0ebbeffe51df34fbf98a6a21225debf3",
+    "mtime": 1793068670.5077505,
+    "seen": 1793068708.813594,
+    "ast_hash": "03899f532b6c4c00fc88a1eaae531aa5",
     "semantic_hash": ""
   },
   "pos-react/src/store/UiProvider.jsx": {
@@ -2760,9 +2760,9 @@
     "semantic_hash": ""
   },
   "tests/pos-admin-catalog.test.js": {
-    "mtime": 1793041992.5892644,
-    "seen": 1793042198.344251,
-    "ast_hash": "e8cfe49fa66d129c2232fcdf3fee58f1",
+    "mtime": 1793068685.64145,
+    "seen": 1793068708.813659,
+    "ast_hash": "7c897e84a474f40617d5563965f6e90e",
     "semantic_hash": ""
   }
 }
