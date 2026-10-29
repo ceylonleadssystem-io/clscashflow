@@ -19952,7 +19952,7 @@
       "file_type": "code",
       "norm_label": "firstsub()",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L143"
+      "source_location": "L144"
     },
     {
       "id": "pos_react_src_domain_reportscatalog_groupof",
@@ -19964,7 +19964,7 @@
       "file_type": "code",
       "norm_label": "groupof()",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L119"
+      "source_location": "L120"
     },
     {
       "id": "pos_react_src_domain_reportscatalog_subof",
@@ -19976,7 +19976,7 @@
       "file_type": "code",
       "norm_label": "subof()",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L120"
+      "source_location": "L121"
     },
     {
       "id": "pos_react_src_domain_reportscatalog_visiblegroups",
@@ -19988,7 +19988,7 @@
       "file_type": "code",
       "norm_label": "visiblegroups()",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L131"
+      "source_location": "L132"
     },
     {
       "id": "pos_react_src_hooks_usereportgroups_usereportgroups",
@@ -20036,7 +20036,7 @@
       "file_type": "code",
       "norm_label": "reports()",
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L12"
+      "source_location": "L13"
     },
     {
       "id": "pos_react_src_views_reports_reportshub_reportshub",
@@ -32110,7 +32110,7 @@
       "file_type": "code",
       "norm_label": "full_settings_roles",
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L104"
+      "source_location": "L103"
     },
     {
       "id": "pos_react_src_config_roles_manager_roles",
@@ -32121,7 +32121,7 @@
       "file_type": "code",
       "norm_label": "manager_roles",
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L105"
+      "source_location": "L104"
     },
     {
       "id": "pos_react_src_config_roles_nav_items",
@@ -32143,7 +32143,7 @@
       "file_type": "code",
       "norm_label": "owner_roles",
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L107"
+      "source_location": "L106"
     },
     {
       "id": "pos_react_src_config_roles_reporting_roles",
@@ -32154,7 +32154,7 @@
       "file_type": "code",
       "norm_label": "reporting_roles",
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L106"
+      "source_location": "L105"
     },
     {
       "id": "pos_react_src_config_roles_role_views",
@@ -38146,7 +38146,7 @@
       "file_type": "code",
       "norm_label": "manager_only",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L123"
+      "source_location": "L124"
     },
     {
       "id": "pos_react_src_domain_reportscatalog_payroll_roles",
@@ -38157,7 +38157,7 @@
       "file_type": "code",
       "norm_label": "payroll_roles",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L124"
+      "source_location": "L125"
     },
     {
       "id": "pos_react_src_domain_reportscatalog_report_groups",
@@ -66234,7 +66234,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L143",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -66246,7 +66246,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -79938,7 +79938,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -79950,7 +79950,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -79962,7 +79962,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -79974,7 +79974,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L15",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_reports_reports",
+      "target": "pos_react_src_views_dashboard_dashboard",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/views/Reports.jsx",
+      "source_location": "L17",
       "weight": 1.0
     },
     {
@@ -79986,7 +79998,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -79998,7 +80010,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L17",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -108272,7 +108284,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_store_posprovider_usepos",
+      "target": "pos_react_src_hooks_usereportgroups_usereportgroups",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -108284,7 +108296,19 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_views_reports_endofday_endofday",
+      "target": "pos_react_src_store_posprovider_usepos",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pos-react/src/views/Reports.jsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_reports",
+      "target": "pos_react_src_views_dashboard_dashboard",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -108296,7 +108320,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_views_reports_reportpage_reportpage",
+      "target": "pos_react_src_views_reports_endofday_endofday",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -108308,7 +108332,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_views_reports_reportshub_reportshub",
+      "target": "pos_react_src_views_reports_reportpage_reportpage",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -108320,7 +108344,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_domain_reportscatalog_groupof",
+      "target": "pos_react_src_views_reports_reportshub_reportshub",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -108332,7 +108356,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_hooks_usereportgroups_usereportgroups",
+      "target": "pos_react_src_domain_reportscatalog_groupof",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -125072,7 +125096,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_store_posprovider",
+      "target": "pos_react_src_hooks_usereportgroups",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -125084,7 +125108,19 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_views_reports_endofday",
+      "target": "pos_react_src_store_posprovider",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "pos-react/src/views/Reports.jsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_reports",
+      "target": "pos_react_src_views_dashboard",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -125096,7 +125132,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_views_reports_reportpage",
+      "target": "pos_react_src_views_reports_endofday",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -125108,7 +125144,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_views_reports_reportshub",
+      "target": "pos_react_src_views_reports_reportpage",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -125120,7 +125156,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_domain_reportscatalog",
+      "target": "pos_react_src_views_reports_reportshub",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -125132,7 +125168,7 @@
     },
     {
       "source": "pos_react_src_views_reports",
-      "target": "pos_react_src_hooks_usereportgroups",
+      "target": "pos_react_src_domain_reportscatalog",
       "relation": "imports_from",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -140684,7 +140720,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L104",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -140695,7 +140731,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L105",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -140706,7 +140742,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L106",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -140717,7 +140753,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/config/roles.js",
-      "source_location": "L107",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -143852,7 +143888,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L119",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -143863,7 +143899,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -143874,7 +143910,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -143885,7 +143921,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -143896,7 +143932,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L131",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -143907,7 +143943,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/reportsCatalog.js",
-      "source_location": "L143",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -150892,7 +150928,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/views/Reports.jsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -163025,5 +163061,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4dac36f7c1c3c648fbcb89f6549767f0c1a8afb1"
+  "built_at_commit": "2a39a31f7f53890b425f2d357f99c97371b815cb"
 }

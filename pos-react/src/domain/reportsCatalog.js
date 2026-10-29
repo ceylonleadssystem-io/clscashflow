@@ -4,6 +4,7 @@
  * Keys follow the Ceylonry POS Reports specification (route keys like sales/order-type).
  */
 export const REPORT_GROUPS = [
+	{ key: "dashboard", title: "Dashboard", icon: "▦", blurb: "Sales, customers and profit at a glance.", subs: [] },
 	{
 		key: "sales",
 		title: "Sales",

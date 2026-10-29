@@ -51,7 +51,7 @@ export function Sidebar() {
 				<span>{currentUser?.role || "Staff session"}</span>
 			</div>
 			{view === "reports" && reportNav ? (
-				<ReportNav open={open} setOpen={setOpen} onHome={() => go("dashboard")} />
+				<ReportNav open={open} setOpen={setOpen} onHome={() => go(NAV_ITEMS.find((i) => canView(i.view))?.view || "dashboard")} />
 			) : (
 			<nav className="nav" id="nav">
 					<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>

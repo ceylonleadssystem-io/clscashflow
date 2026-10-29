@@ -690,9 +690,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/layout/Sidebar.jsx": {
-    "mtime": 1793305664.7779653,
-    "seen": 1793305961.79967,
-    "ast_hash": "004727d43ac979099886df2371f30876",
+    "mtime": 1793306331.689187,
+    "seen": 1793306366.915903,
+    "ast_hash": "dc8fd687b748d84ac1861ef9a3c15653",
     "semantic_hash": ""
   },
   "pos-react/src/components/layout/SyncIndicator.jsx": {
@@ -786,9 +786,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/config/roles.js": {
-    "mtime": 1793293220.1214702,
-    "seen": 1793293432.173453,
-    "ast_hash": "603183768261c11c52cdbb48e5ed5a50",
+    "mtime": 1793306246.7025225,
+    "seen": 1793306366.915916,
+    "ast_hash": "405f6cbf0af6cf4e80cfe526061592c6",
     "semantic_hash": ""
   },
   "pos-react/src/config/subscription.js": {
@@ -1614,9 +1614,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/tables.test.js": {
-    "mtime": 1793069601.1082563,
-    "seen": 1793292707.86391,
-    "ast_hash": "57e1b0d79b3cd73763bad8b6d622ced9",
+    "mtime": 1793306266.3648398,
+    "seen": 1793306366.916026,
+    "ast_hash": "ca0ed49d8d39e0c10ca0eab815f7dbe1",
     "semantic_hash": ""
   },
   "pos-react/src/tests/theme.test.js": {
@@ -1704,9 +1704,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/Reports.jsx": {
-    "mtime": 1793305664.7772932,
-    "seen": 1793305961.7998028,
-    "ast_hash": "f77bd736db42eca41deb3b44c574ce69",
+    "mtime": 1793306246.7034717,
+    "seen": 1793306366.9160361,
+    "ast_hash": "d3d7a5880746740b69720169fe8256ac",
     "semantic_hash": ""
   },
   "pos-react/src/views/Sales.jsx": {
@@ -2244,9 +2244,9 @@
     "semantic_hash": ""
   },
   "pos-react/docs/user-guide.md": {
-    "mtime": 1793305942.7810366,
-    "seen": 1793305961.7998772,
-    "ast_hash": "c89d85b7079f918570837899316e613c",
+    "mtime": 1793306252.318461,
+    "seen": 1793306366.916111,
+    "ast_hash": "2361441f2da2a7037e48cd521468b930",
     "semantic_hash": ""
   },
   "pos-react/index.html": {
@@ -2820,9 +2820,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/domain/reportsCatalog.js": {
-    "mtime": 1793305664.77669,
-    "seen": 1793305961.799707,
-    "ast_hash": "7371db63a08a7c6359f3acdf6d9ffad1",
+    "mtime": 1793306246.7029839,
+    "seen": 1793306366.915939,
+    "ast_hash": "e5518d31afd8b5a73b2cf6056ec14608",
     "semantic_hash": ""
   },
   "pos-react/src/hooks/useReportContext.js": {
@@ -2838,9 +2838,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/reports.test.js": {
-    "mtime": 1793305664.777709,
-    "seen": 1793305961.799786,
-    "ast_hash": "9cc132d31f3f99473564128962d4f274",
+    "mtime": 1793306246.7040346,
+    "seen": 1793306366.916019,
+    "ast_hash": "cf37eb755bfa569f5a9b9bb8704bb6a1",
     "semantic_hash": ""
   },
   "pos-react/src/views/reports/EndOfDay.jsx": {

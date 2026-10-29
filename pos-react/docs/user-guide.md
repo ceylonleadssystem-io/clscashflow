@@ -75,7 +75,7 @@ CRM shows segments, birthdays, WhatsApp messages and feedback requests; a custom
 discount that is applied at checkout.
 
 ## Reports
-Choosing **Reports** opens a page of boxes, one per report group (Sales, Menu, Payroll, Sales vs Labor,
+Choosing **Reports** opens a page of boxes, one per report group (Dashboard, Sales, Menu, Payroll, Sales vs Labor,
 Gift Cards, Taxes, Kitchen Operations, Transactions, Audit Trail, and Multi-Location with two or more locations).
 Opening a box replaces the left navigation with the list of reports plus **Back to home**. Every report has a date
 range (presets: Today, This Week, This Month, Last Month, Last Year), employee / order type / payment filters shown

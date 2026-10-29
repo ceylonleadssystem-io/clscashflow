@@ -1,17 +1,17 @@
 # Graph Report - clscashflow  (2026-10-30)
 
 ## Corpus Check
-- 399 files · ~1,197,285 words
+- 406 files · ~1,199,685 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 22 file(s) not represented in the graph (top: .css 15, (none) 3, .webmanifest 2)
 
 ## Summary
-- 3603 nodes · 10157 edges · 165 communities (147 shown, 18 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 237 edges (avg confidence: 0.86)
+- 3635 nodes · 10286 edges · 174 communities (156 shown, 18 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 242 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0b60c376`
+- Built from commit: `4dac36f7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,20 +19,20 @@
 - guard
 - PosProvider.jsx
 - useFeature
-- constants.js
-- cfg
+- diagnostics.service.js
+- esc
 - appwrite.js
 - diagnosticsShared.js
 - __awaiter
 - invoice-share.test.js
-- createLogger
+- domain/catalog.js
 - index.jsx
 - Ceylo.jsx
 - assets/catalog.js
 - defineTable.js
 - logger.js
 - admin-data.js
-- PosStore.js
+- PosStore
 - settings.js
 - app.mjs
 - appwriteAdmin
@@ -44,7 +44,7 @@
 - labelPrinter
 - pos-routing.test.js
 - EndOfDay.jsx
-- barcodeScanner
+- scanner.js
 - assets/platform.js
 - pos-admin-data.js
 - appwrite-compat.js
@@ -87,7 +87,7 @@
 - getAuthUser
 - payable-webhook.cjs
 - diagnostics-store.js
-- appwrite-files.js
+- package.json
 - Client
 - serviceWorker.test.js
 - getAuthUser
@@ -97,7 +97,7 @@
 - appwrite-sdk.js
 - security.js
 - panels.jsx
-- react
+- App.jsx
 - plans.js
 - health-check.mjs
 - pos-diagnostics.test.js
@@ -107,36 +107,36 @@
 - payable-create-checkout.cjs
 - ReportPage.jsx
 - security-endpoints.test.js
-- assistConfig.js
+- assist.js
 - appwrite-compat-session.test.js
 - public/sw.js
-- ProductModal.jsx
+- domain/inventory.js
 - planFromPath
 - planFromPath
 - account-danger-zone.js
 - pos/inventory.js
-- usePos
+- bookingDialog
 - Root test-suite audit (169 failing tests)
 - link.js
 - User guide
 - apps-used.test.js
 - send-contact.js
-- useData
+- usePos
 - account-purge.test.js
 - Administrator guide
-- auth.service.js
+- KdsApp.jsx
 - getAdmin
 - kds-pair.test.js
 - Locale
 - POS administration portal
 - track-visit.cjs
-- send-invoice.js
+- nodemailer
 - Architecture
 - 4. Run it locally for testing
 - admin-store.js
-- scanner.js
-- pos-reported-bugs.test.js
-- reportPdf.js
+- appwrite-files.js
+- SaleRepository
+- domain.test.js
 - Ceylonry POS — React + WatermelonDB
 - Ceylonry — CashFlow, POS, Kitchen Display and Guest Manager
 - Role
@@ -144,7 +144,6 @@
 - printHtmlInFrame
 - useInstall.js
 - ready.js
-- AppwriteAuthProvider
 - cloud.service.js
 - tests/catalog.test.js
 - bug-report-20260812.test.js
@@ -158,34 +157,43 @@
 - tolerant-match.cjs
 - bug-report-20260811-email-modal-template.test.js
 - quote-email-ui.test.js
-- subscription.js
+- pos/staff.js
 - EmailJS order e-mail template
-- cloud.test.js
-- localAdmin.js
+- hash-admin-password.mjs
+- adminApi.js
 - setup.js
 - payable-create-checkout.js
 - payable-status.js
 - payable-webhook.js
-- env.js
-- Staff.jsx
-- pos-offline-category.test.js
+- createLogger
+- PortalShell.jsx
+- CustomerModal.jsx
 - salesLog.js
-- SubscriptionManagement.jsx
+- PosStore.js
 - appwriteCompat.test.js
 - bug-report-20260810.test.js
 - node-appwrite
 - IMPORTANT: This is NOT a rebuild of the POS system.
-- README.md
+- hardware-order.js
+- adminFeedback.js
+- admin-app/main.jsx
+- ceylo.js
+- Project structure
 - onboarding-terms-acceptance.test.js
-- docs/README.md
+- growth-partner-commissions.test.js
+- CategoryRepository
+- poddo-success-story.test.js
+- Development guide
+- Netlify Story Form Email Setup
+- README.md
 
 ## God Nodes (most connected - your core abstractions)
-1. `usePos()` - 129 edges
-2. `useData()` - 122 edges
-3. `react` - 95 edges
+1. `usePos()` - 134 edges
+2. `useData()` - 129 edges
+3. `react` - 96 edges
 4. `__awaiter()` - 93 edges
 5. `AppwriteException` - 74 edges
-6. `useFeature()` - 71 edges
+6. `useFeature()` - 74 edges
 7. `money()` - 69 edges
 8. `Modal()` - 52 edges
 9. `ModalBody()` - 50 edges
@@ -206,35 +214,35 @@
 ## Import Cycles
 - None detected.
 
-## Communities (165 total, 18 thin omitted)
+## Communities (174 total, 18 thin omitted)
 
 ### Community 0 - "guard"
-Cohesion: 0.11
-Nodes (30): { getUserFromEvent, getDocument, clean }, { guard, reply }, handler(), keys, log, Anthropic, contextText(), { getUserFromEvent, getDocument, clean } (+22 more)
+Cohesion: 0.09
+Nodes (31): { getUserFromEvent, getDocument, clean }, { guard, reply }, handler(), keys, log, Anthropic, contextText(), { getUserFromEvent, getDocument, clean } (+23 more)
 
 ### Community 1 - "PosProvider.jsx"
-Cohesion: 0.14
-Nodes (18): PROVIDERS, STORAGE, ensureProductInventory(), setUploadFailureHandler(), DataContext, useDataRef(), useRepositories(), useStore() (+10 more)
+Cohesion: 0.11
+Nodes (24): NavIcon(), PATHS, ReportNav(), Sidebar(), UI_THEMES, planForSettings(), resolveWelcome(), WelcomeModal() (+16 more)
 
 ### Community 2 - "useFeature"
-Cohesion: 0.11
-Nodes (45): CartLines(), CategoryRail(), CheckoutFields(), CustomerSection(), DiscountSection(), PaymentSection(), ReceiptOptions(), ReferenceSection() (+37 more)
-
-### Community 3 - "constants.js"
 Cohesion: 0.10
-Nodes (24): ADJUST_REASONS, CUSTOMER_TYPES, DEFAULT_BUSINESS_NAME, DEFAULT_OWNER_PIN, DEFAULT_RECEIPT_FOOTER, PAYMENT_ICONS, PAYMENT_METHODS, PLATFORM_CHANNELS (+16 more)
+Nodes (46): CartLines(), CategoryRail(), CheckoutFields(), CustomerSection(), DiscountSection(), PaymentSection(), ReceiptOptions(), ReferenceSection() (+38 more)
 
-### Community 4 - "cfg"
-Cohesion: 0.29
-Nodes (18): bindTables(), business(), cfg(), dateBar(), floorName(), floors(), noTables(), render() (+10 more)
+### Community 3 - "diagnostics.service.js"
+Cohesion: 0.13
+Nodes (21): buildLogText(), checkIn(), cloudSignals(), handled, localPosSignals, log, POLL_MS, _resetForTests() (+13 more)
+
+### Community 4 - "esc"
+Cohesion: 0.18
+Nodes (32): bindTables(), cfg(), dateBar(), esc(), floorName(), floors(), go(), guestOf() (+24 more)
 
 ### Community 5 - "appwrite.js"
 Cohesion: 0.11
-Nodes (51): bodyOf(), handle(), handler(), {headers,getUserFromEvent,getDocument,getDocumentStamp,listStamps,queryDocuments,upsertDocument,deleteDocument,newId,canRead,canWrite,sanitizeProfileWrite}, itemTime(), log, logAdminSettingChanges(), logStripped() (+43 more)
+Nodes (54): bodyOf(), handle(), handler(), {headers,getUserFromEvent,getDocument,getDocumentStamp,listStamps,queryDocuments,upsertDocument,deleteDocument,newId,canRead,canWrite,sanitizeProfileWrite}, itemTime(), log, logAdminSettingChanges(), logStripped() (+46 more)
 
 ### Community 6 - "diagnosticsShared.js"
-Cohesion: 0.07
-Nodes (49): adminSignals(), discardLog(), keyFor(), loadLog(), log, memory, openCache(), requestLog() (+41 more)
+Cohesion: 0.13
+Nodes (25): adminSignals(), discardLog(), keyFor(), loadLog(), log, memory, openCache(), requestLog() (+17 more)
 
 ### Community 7 - "__awaiter"
 Cohesion: 0.07
@@ -242,7 +250,7 @@ Nodes (6): Account, __awaiter(), adopt(), fulfilled(), rejected(), step()
 
 ### Community 8 - "invoice-share.test.js"
 Cohesion: 0.11
-Nodes (46): {
+Nodes (47): {
   clean,
   headers,
   getUserFromEvent,
@@ -250,7 +258,7 @@ Nodes (46): {
   queryDocuments,
   upsertDocument,
   canWrite
-}, findInvoiceSource(), handler(), {
+}, customerMatches(), findCustomer(), findInvoiceSource(), handler(), {
   normalizeWhatsAppNumber,
   generatePublicToken,
   isValidPublicToken,
@@ -259,23 +267,19 @@ Nodes (46): {
   sanitizePublicInvoice,
   buildReminderMessage,
   assertSourceAccess
-}, publicBase(), response(), uniqueToken(), {
-  clean,
-  headers,
-  getDocument
-} (+38 more)
+}, publicBase(), response() (+39 more)
 
-### Community 9 - "createLogger"
-Cohesion: 0.14
-Nodes (23): log, MenuImport(), NUMBERS, log, MenuTab(), STALE_PRESET_CATEGORIES, catalogueNumber(), cell() (+15 more)
+### Community 9 - "domain/catalog.js"
+Cohesion: 0.16
+Nodes (21): log, MenuImport(), NUMBERS, log, MenuTab(), catalogueNumber(), cell(), firstColumn() (+13 more)
 
 ### Community 10 - "index.jsx"
 Cohesion: 0.13
-Nodes (29): Modal(), ModalBody(), NumberInput(), ADJUST_RULES, locationStock(), CustomerMessageModal(), blank(), BranchStockModal() (+21 more)
+Nodes (30): Modal(), ModalBody(), NumberInput(), groupedValue(), locationStock(), CustomerMessageModal(), blank(), BranchStockModal() (+22 more)
 
 ### Community 11 - "Ceylo.jsx"
 Cohesion: 0.14
-Nodes (23): AskCeylo(), CeyloButton(), CeyloMascot(), CeyloPanel(), DOT, EYES, Item(), MOVES (+15 more)
+Nodes (23): AskCeylo(), CeyloButton(), CeyloPanel(), DOT, EYES, Item(), MOVES, reducedMotion() (+15 more)
 
 ### Community 12 - "assets/catalog.js"
 Cohesion: 0.15
@@ -286,56 +290,60 @@ Cohesion: 0.06
 Nodes (33): camelToSnake(), columnName(), defineModel(), defineTable(), pascal(), RESERVED, appMeta, locationAudit (+25 more)
 
 ### Community 14 - "logger.js"
-Cohesion: 0.12
-Nodes (29): capJson(), createRateLimiter(), createTapTracker(), cut(), describeTarget(), descriptorString(), FIELD_TAGS, interactiveTarget() (+21 more)
+Cohesion: 0.11
+Nodes (31): auth(), POS app (browser), capJson(), createRateLimiter(), createTapTracker(), cut(), describeTarget(), descriptorString() (+23 more)
 
 ### Community 15 - "admin-data.js"
 Cohesion: 0.11
 Nodes (38): { appwriteAdmin }, buildRevenueStats(), add(), buildStats(), countQuery(), createPartnerCommission(), crypto, ensureExpiredTrialPaymentRequests() (+30 more)
 
-### Community 16 - "PosStore.js"
-Cohesion: 0.12
-Nodes (19): decode(), encode(), attachLines(), categoryId(), EMPTY_SNAPSHOT(), hintSeq(), LEGACY_ARRAY_TABLES, log (+11 more)
+### Community 16 - "PosStore"
+Cohesion: 0.20
+Nodes (8): PosStore, attachLines(), EMPTY_SNAPSHOT(), nowIso(), PosStore, rawToPlain(), rowPlainToLine(), sortBySeq()
 
 ### Community 17 - "settings.js"
-Cohesion: 0.11
-Nodes (31): isAppwrite(), cleanStations(), authHeaders(), call(), isDataImage(), log, storeImage(), dismissPosSetup() (+23 more)
+Cohesion: 0.09
+Nodes (37): ADJUST_REASONS, DEFAULT_BUSINESS_NAME, DEFAULT_OWNER_PIN, DEFAULT_RECEIPT_FOOTER, PAYMENT_ICONS, PAYMENT_METHODS, SPLIT_PAYMENT_METHODS, STOCK_TYPES (+29 more)
 
 ### Community 18 - "app.mjs"
 Cohesion: 0.09
-Nodes (55): ACTIONS, billsOf(), bindGuestFill(), bookingDialog(), cancelDialog(), canSend(), detailDialog(), dialog() (+47 more)
+Nodes (45): ACTIONS, billsOf(), bindGuestFill(), business(), cancelDialog(), canSend(), detailDialog(), ensureGuest() (+37 more)
 
 ### Community 19 - "appwriteAdmin"
-Cohesion: 0.05
-Nodes (47): esc(), handler(), nodemailer, { appwriteAdmin }, { guard, siteOrigin }, handler(), reply(), responseHeaders (+39 more)
+Cohesion: 0.08
+Nodes (33): { appwriteAdmin }, { guard, siteOrigin }, handler(), reply(), responseHeaders, { appwriteAdmin }, clean(), esc() (+25 more)
 
 ### Community 20 - "labelPrinter.js"
 Cohesion: 0.19
 Nodes (18): CODE128, code128Units(), code128Values(), CODE39, drawCode128(), alignmentAdjust(), DEFAULT_LABEL_STOCK, drawAlignmentLabel() (+10 more)
 
 ### Community 21 - "nowIso"
-Cohesion: 0.13
-Nodes (32): isEmail(), nowIso(), addSubcategory(), saveModifier(), audit(), newId(), stamp(), supportAuditEntry() (+24 more)
+Cohesion: 0.17
+Nodes (27): isEmail(), nowIso(), phoneKey(), whatsappPhone(), saveModifier(), audit(), newId(), stamp() (+19 more)
 
 ### Community 22 - "store.mjs"
-Cohesion: 0.12
-Nodes (38): go(), addDays(), dateStr(), mergeRows(), monthOf(), base(), boot(), bucketOf() (+30 more)
+Cohesion: 0.11
+Nodes (35): DEFAULT_SETTINGS, mergeRows(), pushSeating(), readPos(), base(), bucketOf(), BUCKETS, call() (+27 more)
 
 ### Community 23 - "pos.mjs"
-Cohesion: 0.16
-Nodes (22): layoutDialog(), queueSeating(), refreshPos(), saveSettings(), syncGuests(), bookingsMap(), ownLayout(), effectiveLocation() (+14 more)
+Cohesion: 0.27
+Nodes (14): layoutDialog(), layoutError(), ownLayout(), effectiveLocation(), emptyPos, floorKey(), floorsKey(), floorsOf() (+6 more)
 
 ### Community 24 - "database.js"
-Cohesion: 0.13
-Nodes (17): log, migrations, CashShift, Customer, InventoryItem, Location, modelClasses, ModifierGroup (+9 more)
+Cohesion: 0.09
+Nodes (18): log, migrations, CashShift, Customer, InventoryItem, Location, modelClasses, ModifierGroup (+10 more)
 
 ### Community 26 - "pos-routing.test.js"
-Cohesion: 0.06
-Nodes (33): ask(), askHidden(), db, email, fail(), hash, { hashPassword, verifyPassword }, lines (+25 more)
+Cohesion: 0.10
+Nodes (21): { Client, Databases, Query }, FIELDS, lib, listPosRows(), migrate(), pick(), readOrNull(), verify() (+13 more)
 
 ### Community 27 - "EndOfDay.jsx"
-Cohesion: 0.17
-Nodes (28): birthdayInfo(), closedShiftsInRange(), crmRows(), customerInsights(), customerReport(), customerSegment(), customerStats(), dashboardData() (+20 more)
+Cohesion: 0.16
+Nodes (29): birthdayInfo(), closedShiftsInRange(), crmRows(), customerInsights(), customerReport(), customerSegment(), customerStats(), dashboardData() (+21 more)
+
+### Community 28 - "scanner.js"
+Cohesion: 0.14
+Nodes (8): barcodeScanner, findScannedItem(), findScannedProduct(), HID_MAP, HID_SHIFT, log, scannerCodeVariants(), createEmitter()
 
 ### Community 29 - "assets/platform.js"
 Cohesion: 0.08
@@ -346,8 +354,8 @@ Cohesion: 0.12
 Nodes (30): ACCOUNT_STATUSES, accountStatus(), addBillingPeriod(), { appsUsed }, { appwriteAdmin }, clampNum(), clean(), cleanFounders() (+22 more)
 
 ### Community 31 - "appwrite-compat.js"
-Cohesion: 0.09
-Nodes (16): auth(), CollectionRef(), currentUser(), DocRef(), emit(), firestore(), loadUser(), QueryRef() (+8 more)
+Cohesion: 0.11
+Nodes (12): CollectionRef(), currentUser(), DocRef(), emit(), firestore(), loadUser(), QueryRef(), request() (+4 more)
 
 ### Community 32 - "pos-industry-tools.js"
 Cohesion: 0.17
@@ -358,7 +366,7 @@ Cohesion: 0.08
 Nodes (12): amount(), balance(), chatMessageTime(), chatWhen(), initMobileDataTables(), invoiceCustomTemplateCss(), invoiceTemplateClass(), mobileizeDataTables() (+4 more)
 
 ### Community 34 - "features.js"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (18): FeaturesTab(), NO_OVERRIDE, FEATURE_PRESET_MAP, FEATURE_PRESETS, GM, KITCHEN, presetFlags(), SHOP (+10 more)
 
 ### Community 35 - "CloudSyncService"
@@ -366,12 +374,12 @@ Cohesion: 0.21
 Nodes (6): exactly(), profileHasPosAccess(), clone(), CloudSyncService, withTimeout(), safePayload()
 
 ### Community 36 - "pos/sales.js"
-Cohesion: 0.13
-Nodes (32): cartTotals(), chargeableSubtotal(), discountAmount(), isChargeable(), serviceChargeAmount(), splitByItems(), firstShortIngredient(), saleStockNeeds() (+24 more)
+Cohesion: 0.11
+Nodes (37): PLATFORM_CHANNELS, addConfiguredLine(), cartTotals(), chargeableSubtotal(), discountAmount(), EMPTY_DISCOUNT, isChargeable(), modifierSignature() (+29 more)
 
 ### Community 37 - "vitest"
-Cohesion: 0.18
-Nodes (15): makeCtx(), cash(), form(), addProduct(), createHarness(), line(), noDiscount, openShift() (+7 more)
+Cohesion: 0.16
+Nodes (17): makeCtx(), bind(), bindServices(), cash(), form(), addProduct(), createHarness(), line() (+9 more)
 
 ### Community 38 - "invoiceEscape"
 Cohesion: 0.17
@@ -379,7 +387,7 @@ Nodes (26): clampNumber(), clsLegacyInvoiceRendererRemoved(), documentEmailHtml(
 
 ### Community 39 - "reportBuilders.js"
 Cohesion: 0.09
-Nodes (38): activeSales(), AUDIT, BUILDERS, buildReport(), byLocation(), C, day(), GIFT (+30 more)
+Nodes (37): activeSales(), AUDIT, BUILDERS, buildReport(), byLocation(), C, day(), GIFT (+29 more)
 
 ### Community 40 - "pos-admin-login.js"
 Cohesion: 0.12
@@ -390,8 +398,8 @@ Cohesion: 0.17
 Nodes (26): clampNumber(), clsLegacyInvoiceRendererRemoved(), documentEmailHtml(), emailJsBankDetailsHtml(), humanDate(), invoiceBankEmailHtml(), invoiceBankRows(), invoiceBreaks() (+18 more)
 
 ### Community 42 - "SessionProvider.jsx"
-Cohesion: 0.11
-Nodes (33): createDatabase(), assistActive(), assistInfo(), assistSignedIn(), assistStore(), beginAssist(), configCopy(), COPIED (+25 more)
+Cohesion: 0.15
+Nodes (21): App(), accessAllowed(), billingWarning(), PAID_STATUSES, posAccessProfile(), loadCatalogueImages(), loadPlatformScript(), log (+13 more)
 
 ### Community 43 - "pagePath"
 Cohesion: 0.08
@@ -406,12 +414,12 @@ Cohesion: 0.20
 Nodes (15): { appwriteAdmin, getUserFromEvent, getDocument }, clean(), crypto, decodedFile(), esc(), handler(), json(), log (+7 more)
 
 ### Community 46 - "AdminApp.jsx"
-Cohesion: 0.12
-Nodes (33): Admin portal, AccessTab(), AccountDetail(), TABS, adminApi(), emailInvoice(), log, sendAdminRequest() (+25 more)
+Cohesion: 0.21
+Nodes (20): Admin portal, AccessTab(), AccountDetail(), TABS, adminApi(), AdminApp(), fmtDate(), log (+12 more)
 
 ### Community 48 - "documents.js"
-Cohesion: 0.19
-Nodes (19): esc(), receiptDate(), openKotWindow(), testStation(), kotBody(), kotHtml(), kotTicketsHtml(), padLeft() (+11 more)
+Cohesion: 0.18
+Nodes (18): esc(), receiptDate(), kotBody(), padLeft(), padRight(), prepLines(), receiptHtml(), receiptLayout() (+10 more)
 
 ### Community 49 - "ai-keys.js"
 Cohesion: 0.20
@@ -422,12 +430,12 @@ Cohesion: 0.13
 Nodes (22): bankDetailsHtml(), billingCyclePickerHtml(), cleanString(), clearAccountLocalBackups(), customer(), dangerActionName(), dangerConfirmPhrase(), dangerReasonOptions() (+14 more)
 
 ### Community 52 - "Tables.jsx"
-Cohesion: 0.15
-Nodes (37): ago(), isEmbedded(), isWebLink(), plural(), repeats(), RETAIL_TYPES, runSetupChecks(), WEAK_PINS (+29 more)
+Cohesion: 0.22
+Nodes (28): orderTotal(), allFloorTables(), clamp(), findFreeSpot(), floorLayout(), floorLayoutKey(), floorsFor(), floorsKey() (+20 more)
 
 ### Community 53 - "ref_node_assert"
-Cohesion: 0.06
-Nodes (26): assert, keys, lib, rows, test, assert, keys, test (+18 more)
+Cohesion: 0.07
+Nodes (23): assert, keys, lib, rows, test, assert, keys, test (+15 more)
 
 ### Community 55 - "AppwriteException"
 Cohesion: 0.14
@@ -442,8 +450,8 @@ Cohesion: 0.13
 Nodes (22): bankDetailsHtml(), billingCyclePickerHtml(), cleanString(), clearAccountLocalBackups(), customer(), dangerActionName(), dangerConfirmPhrase(), dangerReasonOptions() (+14 more)
 
 ### Community 58 - "pos/catalog.js"
-Cohesion: 0.19
-Nodes (20): commonModifierPresets(), categoryKey(), productCategories(), addCategory(), addCommonModifiers(), deleteCategory(), deleteModifier(), deleteProduct() (+12 more)
+Cohesion: 0.16
+Nodes (23): commonModifierPresets(), categoryKey(), productCategories(), stalePresetCategory(), visibleProductCategories(), addCategory(), addCommonModifiers(), addSubcategory() (+15 more)
 
 ### Community 59 - "boot"
 Cohesion: 0.13
@@ -458,16 +466,16 @@ Cohesion: 0.12
 Nodes (13): esc(), handler(), nodemailer, { handler }, require, { handler }, require, { handler } (+5 more)
 
 ### Community 62 - "kitchenPrinters.js"
-Cohesion: 0.23
-Nodes (14): kotEscPos(), chooseKitchenPrinter(), claimed, endpointFor(), identity(), log, matches(), printKitchenTicket() (+6 more)
+Cohesion: 0.26
+Nodes (12): kotEscPos(), chooseKitchenPrinter(), claimed, endpointFor(), identity(), log, matches(), printKitchenTicket() (+4 more)
 
 ### Community 63 - "reports.test.js"
-Cohesion: 0.20
-Nodes (17): firstSub(), groupOf(), MANAGER_ONLY, PAYROLL_ROLES, REPORT_GROUPS, visibleGroups(), applyReportFilters(), useReportContext() (+9 more)
+Cohesion: 0.25
+Nodes (13): firstSub(), groupOf(), MANAGER_ONLY, PAYROLL_ROLES, REPORT_GROUPS, subOf(), visibleGroups(), useReportGroups() (+5 more)
 
 ### Community 64 - "logic.mjs"
-Cohesion: 0.09
-Nodes (39): seatDialog(), setStatus(), esc(), mountEditor(), patch(), render(), pct(), rid() (+31 more)
+Cohesion: 0.13
+Nodes (26): esc(), mountEditor(), patch(), render(), pct(), rid(), ACTIVE, bookingsMap() (+18 more)
 
 ### Community 65 - "pos-react/package.json"
 Cohesion: 0.05
@@ -479,7 +487,7 @@ Nodes (19): afterFirstPaint(), boot(), currentUserPayload(), dismissTrialPrompt(
 
 ### Community 67 - "ref_node_fs"
 Cohesion: 0.07
-Nodes (24): assert, compat, fs, path, test, admin, assert, endpoint (+16 more)
+Nodes (24): assert, compat, fs, path, test, assert, fs, path (+16 more)
 
 ### Community 68 - "getAuthUser"
 Cohesion: 0.19
@@ -493,9 +501,9 @@ Nodes (18): authCandidates(), clean(), crypto, firstValue(), { getAdmin }, handl
 Cohesion: 0.24
 Nodes (16): { ADMIN_DATABASE_ID }, badRequest(), checkSdp(), { Databases }, db(), docId(), expired(), get() (+8 more)
 
-### Community 71 - "appwrite-files.js"
-Cohesion: 0.06
-Nodes (36): bodyOf(), deps, ensureBucket(), handle(), handler(), { InputFile }, KINDS, lib (+28 more)
+### Community 71 - "package.json"
+Cohesion: 0.09
+Nodes (21): dependencies, @anthropic-ai/sdk, appwrite, node-appwrite, node-fetch-native-with-agent, nodemailer, stripe, description (+13 more)
 
 ### Community 72 - "Client"
 Cohesion: 0.13
@@ -526,20 +534,20 @@ Cohesion: 0.11
 Nodes (6): Functions, Graphql, Messaging, Permission, Query, Service
 
 ### Community 79 - "security.js"
-Cohesion: 0.08
-Nodes (37): ADMIN_PASSWORD_SHA256, correctAdminCredential(), crypto, handler(), isTransient(), log, { originAllowed, rateLimited, clientIp }, response() (+29 more)
+Cohesion: 0.09
+Nodes (34): ADMIN_PASSWORD_SHA256, correctAdminCredential(), crypto, handler(), isTransient(), log, { originAllowed, rateLimited, clientIp }, response() (+26 more)
 
 ### Community 80 - "panels.jsx"
-Cohesion: 0.10
-Nodes (44): AppearancePanel(), BillingPanel(), BusinessProfilePanel(), DisplayPanel(), FeedbackPanel(), LiveScreenPanel(), LocationsPanel(), PlanSupportPanel() (+36 more)
-
-### Community 81 - "react"
 Cohesion: 0.08
-Nodes (38): App(), Gate(), Loading(), Ready(), Root(), ErrorBoundary, log, AssistMissing() (+30 more)
+Nodes (50): CeyloMascot(), how(), KitchenStations(), AppearancePanel(), BillingPanel(), BusinessProfilePanel(), DisplayPanel(), FeedbackPanel() (+42 more)
+
+### Community 81 - "App.jsx"
+Cohesion: 0.08
+Nodes (48): Gate(), Loading(), Ready(), CeyloAiKeyPanel(), PROVIDERS, CloudBanner(), Shell(), changeQty() (+40 more)
 
 ### Community 82 - "plans.js"
-Cohesion: 0.21
-Nodes (11): buildInvoiceLines(), r2(), fmt(), PlansGrid(), ADDITIONAL_FEATURES, PLAN_CONDITIONS, PLAN_CONTACT, PLAN_FEATURE_OFF (+3 more)
+Cohesion: 0.15
+Nodes (16): emailInvoice(), buildInvoiceLines(), r2(), fmt(), InvoicesTab(), DEV_ADMIN, fmt(), PlansGrid() (+8 more)
 
 ### Community 83 - "health-check.mjs"
 Cohesion: 0.13
@@ -554,7 +562,7 @@ Cohesion: 0.18
 Nodes (15): billingCycleFor(), billingDueDate(), bindBillingCyclePicker(), select(), dateMs(), formatAmount(), injectBillingCardStyle(), isProfilePaidRecord() (+7 more)
 
 ### Community 86 - "POS database and sync changes: team update"
-Cohesion: 0.14
+Cohesion: 0.13
 Nodes (14): 1. Summary, 2.1 Separate POS database, 2.2 Document storage format (netlify/lib/appwrite.js), 2.3 Function actions (netlify/functions/appwrite-docs.js), 2.4 Storage, 2.5 Sales history split (switched ON in production), 2.6 Guest Manager database (`gm` / `gm_documents`), 2. Database changes (+6 more)
 
 ### Community 87 - "Plan: move from Netlify + Appwrite Cloud to a VPS"
@@ -566,16 +574,16 @@ Cohesion: 0.23
 Nodes (13): appendQuery(), clean(), findCheckoutUrl(), { getAdmin }, handler(), headers(), normalizePlan(), payableWebhookUrl() (+5 more)
 
 ### Community 89 - "ReportPage.jsx"
-Cohesion: 0.20
-Nodes (19): localDateValue(), formatCard(), formatCell(), reportCsv(), reportDocument(), sortRows(), tableRows(), totalsLine() (+11 more)
+Cohesion: 0.16
+Nodes (21): localDateValue(), formatCard(), formatCell(), reportCsv(), reportDocument(), sortRows(), tableRows(), totalsLine() (+13 more)
 
 ### Community 90 - "security-endpoints.test.js"
 Cohesion: 0.13
 Nodes (13): adminSigninSource, appwriteCompatSource, assert, ceylonryAdminSource, docsSource, fs, { pagePath }, path (+5 more)
 
-### Community 91 - "assistConfig.js"
-Cohesion: 0.18
-Nodes (18): AssistBar(), log, BLOCKED_SETTINGS, countConfig(), DEFAULTS, DELETE_TYPES, describeConfig(), diffConfig() (+10 more)
+### Community 91 - "assist.js"
+Cohesion: 0.11
+Nodes (38): Root(), AssistBar(), AssistMissing(), log, applyConfig(), BLOCKED_SETTINGS, countConfig(), DEFAULTS (+30 more)
 
 ### Community 92 - "appwrite-compat-session.test.js"
 Cohesion: 0.12
@@ -585,9 +593,9 @@ Nodes (7): Account, assert, Client, fs, path, test, vm
 Cohesion: 0.22
 Nodes (8): isHashed(), SHELL, store(), strategyFor(), 6. Services (abstractions), useServices(), ctx(), res()
 
-### Community 94 - "ProductModal.jsx"
-Cohesion: 0.16
-Nodes (19): how(), KitchenStations(), productSizeGroup(), productSizeItem(), kitchenStations(), named(), PRINTER_KINDS, station() (+11 more)
+### Community 94 - "domain/inventory.js"
+Cohesion: 0.30
+Nodes (13): ADJUST_RULES, availableProductStock(), cartQtyForProduct(), ensureProductInventory(), hasSizedStock(), isService(), lineSize(), productSizeItem() (+5 more)
 
 ### Community 95 - "planFromPath"
 Cohesion: 0.22
@@ -611,48 +619,48 @@ Nodes (16): crypto, deleteAuthUser(), deleteOperationalData(), deleteWorkspace()
 }, log (+8 more)
 
 ### Community 98 - "pos/inventory.js"
-Cohesion: 0.30
-Nodes (13): parseStockCountRows(), adjustmentChange(), stockMovement(), applyStockChange(), movementRow(), activeLocationId(), adjustStock(), importStockCountFile() (+5 more)
+Cohesion: 0.32
+Nodes (12): parseStockCountRows(), adjustmentChange(), stockMovement(), applyStockChange(), movementRow(), activeLocationId(), adjustStock(), importStockCountFile() (+4 more)
 
-### Community 99 - "usePos"
-Cohesion: 0.28
-Nodes (16): CeyloAiKeyPanel(), ConnectButton(), HardwarePanel(), LabelAlignWizard(), SIDES, LabelStockPicker(), BarcodeModalHost(), barcodeSvg() (+8 more)
+### Community 99 - "bookingDialog"
+Cohesion: 0.19
+Nodes (20): bookingDialog(), dialog(), dlg(), saveSettings(), seatDialog(), setStatus(), toast(), waitDialog() (+12 more)
 
 ### Community 100 - "Root test-suite audit (169 failing tests)"
-Cohesion: 0.18
+Cohesion: 0.17
 Nodes (11): A1. Auto-verified with tolerant matching: 140, A2. Reviewed by hand, formatting only: 12, A. Formatting-only: 152, B. Stale tests: 13, C. Real gaps to verify: 4, Method, Recommendations, Resolution (2026-10-02) (+3 more)
 
 ### Community 101 - "link.js"
-Cohesion: 0.13
-Nodes (34): ageLabel(), ageMinutes(), BACK, KDS_COLUMNS, KDS_DESTINATION, kdsStatus(), kdsTickets(), NEXT (+26 more)
+Cohesion: 0.20
+Nodes (22): adoptLegacy(), aggregate(), createLink(), linkFor(), links, listeners, notify(), pairs() (+14 more)
 
 ### Community 102 - "User guide"
-Cohesion: 0.17
-Nodes (12): Checkout, Customers & loyalty, Inventory & stock, Open orders & kitchen (restaurant / café), Products, categories, modifiers, Reports, Roles, Sales, refunds and voids (+4 more)
+Cohesion: 0.14
+Nodes (13): Account admin portal (/admin), Checkout, Customers & loyalty, Inventory & stock, Open orders & kitchen (restaurant / café), Products, categories, modifiers, Reports, Roles (+5 more)
 
 ### Community 103 - "apps-used.test.js"
 Cohesion: 0.40
 Nodes (4): appsUsed(), { appsUsed }, assert, test
 
 ### Community 104 - "send-contact.js"
-Cohesion: 0.29
-Nodes (9): ALLOWED_TOPICS, clean(), escapeHtml(), { guard, siteOrigin }, handler(), JSON_HEADERS, nodemailer, response() (+1 more)
+Cohesion: 0.18
+Nodes (12): ALLOWED_TOPICS, clean(), escapeHtml(), { guard, siteOrigin }, handler(), JSON_HEADERS, nodemailer, response() (+4 more)
 
-### Community 105 - "useData"
-Cohesion: 0.07
-Nodes (47): downloadCsv(), groupedValue(), today(), customerName(), ACTIVE_STATUSES, applyReversal(), calculateRefundAmount(), realLines() (+39 more)
+### Community 105 - "usePos"
+Cohesion: 0.12
+Nodes (38): ConnectButton(), HardwarePanel(), LabelAlignWizard(), SIDES, LabelStockPicker(), today(), customerName(), saleItemCount() (+30 more)
 
 ### Community 106 - "account-purge.test.js"
-Cohesion: 0.29
-Nodes (8): createPurger(), inventory(), purge(), imageIdsOf(), kindOf(), assert, { createPurger, kindOf, imageIdsOf }, test
+Cohesion: 0.26
+Nodes (9): createPurger(), inventory(), purge(), imageIdsOf(), kindOf(), realDeps(), assert, { createPurger, kindOf, imageIdsOf } (+1 more)
 
 ### Community 107 - "Administrator guide"
 Cohesion: 0.17
 Nodes (12): Account list, Administrator guide, Enable / disable an account (non-payment), Features and locations, Import items and the client's POS, Invoices, Known gaps, Related Netlify configuration (+4 more)
 
-### Community 108 - "auth.service.js"
-Cohesion: 0.33
-Nodes (6): KdsGate(), getAppwriteCompat(), installGlobalClsBackend(), friendlyAuthError(), getAuthService(), log
+### Community 108 - "KdsApp.jsx"
+Cohesion: 0.25
+Nodes (15): ageLabel(), ageMinutes(), BACK, KDS_COLUMNS, KDS_DESTINATION, kdsStatus(), kdsTickets(), NEXT (+7 more)
 
 ### Community 109 - "getAdmin"
 Cohesion: 0.14
@@ -670,13 +678,13 @@ Nodes (6): Admin screens, Changing or removing an administrator, Diagnostics, Ho
 Cohesion: 0.31
 Nodes (7): clean(), { getAdmin }, handler(), headers(), isLandingPath(), { handler }, require
 
-### Community 114 - "send-invoice.js"
-Cohesion: 0.14
-Nodes (18): esc(), { guard, siteOrigin }, handler(), money(), nodemailer, { validEmail }, clean(), esc() (+10 more)
+### Community 114 - "nodemailer"
+Cohesion: 0.11
+Nodes (22): esc(), handler(), nodemailer, esc(), { guard, siteOrigin }, handler(), money(), nodemailer (+14 more)
 
 ### Community 115 - "Architecture"
-Cohesion: 0.17
-Nodes (11): Architecture, Cloud sync, Data model, Feature flags, Layers, Order e-mail, PosStore, Responsive layout (+3 more)
+Cohesion: 0.18
+Nodes (10): Architecture, Cloud sync, Data model, Feature flags, Layers, Order e-mail, Responsive layout, Sessions and gates (+2 more)
 
 ### Community 116 - "4. Run it locally for testing"
 Cohesion: 0.33
@@ -684,19 +692,15 @@ Nodes (6): 4.1 POS, offline — no backend, no secrets (easiest), 4.2 Full stack
 
 ### Community 117 - "admin-store.js"
 Cohesion: 0.16
-Nodes (19): verifyAdmin(), { getAdmin, audit }, { guard, reply }, { isAdminEmail, verifyToken }, log, store, verifyAdmin(), isAdminEmail() (+11 more)
+Nodes (18): verifyAdmin(), { getAdmin, audit }, { guard, reply }, { isAdminEmail, verifyToken }, log, store, verifyAdmin(), isAdminEmail() (+10 more)
 
-### Community 118 - "scanner.js"
-Cohesion: 0.33
-Nodes (7): sizeSlug(), findScannedItem(), findScannedProduct(), HID_MAP, HID_SHIFT, log, scannerCodeVariants()
+### Community 118 - "appwrite-files.js"
+Cohesion: 0.21
+Nodes (14): bodyOf(), deps, ensureBucket(), handle(), handler(), { InputFile }, KINDS, lib (+6 more)
 
-### Community 119 - "pos-reported-bugs.test.js"
-Cohesion: 0.20
-Nodes (9): assert, config, fs, mailer, path, platform, root, test (+1 more)
-
-### Community 120 - "reportPdf.js"
-Cohesion: 0.29
-Nodes (5): buildReportPdf(), downloadReportPdf(), PLAIN, jspdf, jspdf-autotable
+### Community 120 - "domain.test.js"
+Cohesion: 0.25
+Nodes (13): ACTIVE_STATUSES, applyReversal(), calculateRefundAmount(), realLines(), refundableLines(), refundRate(), selectedRefundLines(), statusOf() (+5 more)
 
 ### Community 121 - "Ceylonry POS — React + WatermelonDB"
 Cohesion: 0.15
@@ -723,8 +727,8 @@ Cohesion: 0.22
 Nodes (3): { getUserFromEvent, databases, DATABASE_ID, COLLECTION_ID, POS_DATABASE_ID, POS_COLLECTION_ID, GM_DATABASE_ID, GM_COLLECTION_ID }, handler(), response()
 
 ### Community 129 - "cloud.service.js"
-Cohesion: 0.12
-Nodes (31): RETIRED_MODIFIER_NAMES, payloadOf(), ALWAYS_LIVE_KEY, alwaysLive(), log, cacheCatalogue(), catalogueBackupKey(), catalogueIdentityMatches() (+23 more)
+Cohesion: 0.16
+Nodes (25): STORAGE, ALWAYS_LIVE_KEY, alwaysLive(), log, pullDelay(), cacheCatalogue(), catalogueBackupKey(), catalogueIdentityMatches() (+17 more)
 
 ### Community 130 - "tests/catalog.test.js"
 Cohesion: 0.25
@@ -735,16 +739,16 @@ Cohesion: 0.25
 Nodes (7): assert, fs, { pagePath }, path, read(), root, test
 
 ### Community 133 - "tables/index.js"
-Cohesion: 0.05
-Nodes (18): 5. Data layer (WatermelonDB), BaseRepository, CashShiftRepository, CategoryRepository, createRepositories(), CustomerRepository, generic(), InventoryRepository (+10 more)
+Cohesion: 0.07
+Nodes (16): 5. Data layer (WatermelonDB), BaseRepository, CashShiftRepository, createRepositories(), CustomerRepository, generic(), InventoryRepository, MetaRepository (+8 more)
 
 ### Community 134 - "pos-admin-catalog.test.js"
 Cohesion: 0.15
 Nodes (11): handler(), assert, auth, call(), col(), docs, { handler }, items (+3 more)
 
 ### Community 135 - "printing.js"
-Cohesion: 0.18
-Nodes (18): downloadBlob(), routeKitchenLines(), kitchenPrinterHook(), docCtx(), downloadReceipt(), kdsNotice(), locationFor(), log (+10 more)
+Cohesion: 0.16
+Nodes (20): routeKitchenLines(), kitchenPrinterHook(), docCtx(), downloadReceipt(), kdsNotice(), locationFor(), log, openKotWindow() (+12 more)
 
 ### Community 136 - "Deployment & operations"
 Cohesion: 0.29
@@ -770,81 +774,117 @@ Nodes (7): assert, fs, { pagePath }, path, read(), root, test
 Cohesion: 0.25
 Nodes (7): assert, fs, { pagePath }, path, read(), root, test
 
-### Community 142 - "subscription.js"
-Cohesion: 0.27
-Nodes (12): limit(), SubscriptionTab(), activeCount(), limitOrNull(), locationLimitError(), normalizeSubscription(), standardSubscription(), subscriptionOf() (+4 more)
+### Community 142 - "pos/staff.js"
+Cohesion: 0.15
+Nodes (23): FeatureChecklist(), offLabels(), blankFounders(), FoundersEditor(), limitText(), StandardPlans(), SubscriptionManagement(), limit() (+15 more)
 
 ### Community 143 - "EmailJS order e-mail template"
 Cohesion: 0.40
 Nodes (4): EmailJS order e-mail template, Error: "Template: One or more dynamic variables are corrupted", Set it up, Variables the POS sends (all ready-to-show text, money already formatted)
 
-### Community 145 - "localAdmin.js"
-Cohesion: 0.28
-Nodes (9): DEV_ADMIN, getStore(), invoices(), localAdminApi(), localAdminSession, DEFAULT_WELCOME, resolveWelcome(), databaseNameFor() (+1 more)
+### Community 144 - "hash-admin-password.mjs"
+Cohesion: 0.18
+Nodes (12): ask(), askHidden(), db, email, fail(), hash, { hashPassword, verifyPassword }, lines (+4 more)
 
-### Community 153 - "env.js"
-Cohesion: 0.19
-Nodes (10): env, log, aiKey(), askCeylo(), post(), endSupportSession(), log, SUPPORT_USER (+2 more)
+### Community 145 - "adminApi.js"
+Cohesion: 0.18
+Nodes (15): log, sendAdminRequest(), adminSession, getStore(), invoices(), localAdminApi(), localAdminSession, createDatabase() (+7 more)
 
-### Community 154 - "Staff.jsx"
-Cohesion: 0.16
-Nodes (20): FULL_SETTINGS_ROLES, MANAGER_ROLES, OWNER_ROLES, REPORTING_ROLES, ROLE_VIEWS, ROLES, VIEW_TITLES, parseNumber() (+12 more)
+### Community 153 - "createLogger"
+Cohesion: 0.08
+Nodes (23): env, isAppwrite(), KdsGate(), getAppwriteCompat(), installGlobalClsBackend(), log, AppwriteAuthProvider, friendlyAuthError() (+15 more)
 
-### Community 155 - "pos-offline-category.test.js"
-Cohesion: 0.29
-Nodes (6): assert, fs, path, root, test, worker
+### Community 154 - "PortalShell.jsx"
+Cohesion: 0.09
+Nodes (33): Modifiers, PortalHome(), PortalShell(), Products, Reports, Settings, Shop, Timesheets (+25 more)
+
+### Community 155 - "CustomerModal.jsx"
+Cohesion: 0.40
+Nodes (10): FieldError(), cleanPhoneInput(), EMAIL_RE, emailError(), phoneError(), requiredError(), blank(), CustomerModalHost() (+2 more)
 
 ### Community 156 - "salesLog.js"
-Cohesion: 0.31
-Nodes (11): userName(), staffName(), day(), DELETED_ACTION, deletedDetails(), findApprover(), inLocation(), parseDeletedDetails() (+3 more)
+Cohesion: 0.33
+Nodes (10): userName(), staffName(), day(), DELETED_ACTION, findApprover(), inLocation(), parseDeletedDetails(), refundRows() (+2 more)
 
-### Community 157 - "SubscriptionManagement.jsx"
-Cohesion: 0.42
-Nodes (8): FeatureChecklist(), offLabels(), blankFounders(), FoundersEditor(), limitText(), StandardPlans(), SubscriptionManagement(), STANDARD_LIMITS
+### Community 157 - "PosStore.js"
+Cohesion: 0.22
+Nodes (11): decode(), encode(), hintSeq(), LEGACY_ARRAY_TABLES, log, nextSeq(), canonical(), comparable() (+3 more)
 
 ### Community 159 - "bug-report-20260810.test.js"
 Cohesion: 0.22
 Nodes (7): assert, fs, { pagePath }, path, read(), root, test
 
 ### Community 160 - "node-appwrite"
-Cohesion: 0.25
-Nodes (4): realDeps(), node-appwrite, db, db
+Cohesion: 0.29
+Nodes (3): node-appwrite, db, db
 
 ### Community 161 - "IMPORTANT: This is NOT a rebuild of the POS system."
 Cohesion: 0.40
 Nodes (4): IMPORTANT: This is NOT a rebuild of the POS system., Not the objective, Primary objective, Visual direction
 
-### Community 166 - "README.md"
-Cohesion: 0.12
-Nodes (11): How they were recorded, Product walkthroughs, Applications, Backend, Project structure, Public pages (repo root and `cashflow/`), Shared, Tooling and docs (not served) (+3 more)
+### Community 162 - "hardware-order.js"
+Cohesion: 0.25
+Nodes (10): clean(), escapeHtml(), { guard, siteOrigin }, handler(), HEADERS, log, money(), nodemailer (+2 more)
+
+### Community 163 - "adminFeedback.js"
+Cohesion: 0.29
+Nodes (7): adminFeedback, listeners, READ_ACTIONS, state, subscribe(), successText(), useAdminFeedback()
+
+### Community 164 - "admin-app/main.jsx"
+Cohesion: 0.24
+Nodes (3): ErrorBoundary, log, react-dom
+
+### Community 165 - "ceylo.js"
+Cohesion: 0.31
+Nodes (9): ago(), isEmbedded(), isWebLink(), plural(), repeats(), RETAIL_TYPES, runSetupChecks(), WEAK_PINS (+1 more)
+
+### Community 166 - "Project structure"
+Cohesion: 0.29
+Nodes (6): Applications, Backend, Project structure, Public pages (repo root and `cashflow/`), Shared, Tooling and docs (not served)
 
 ### Community 167 - "onboarding-terms-acceptance.test.js"
 Cohesion: 0.22
 Nodes (8): assert, fs, onboarding, { pagePath }, path, root, test, welcome
 
-### Community 173 - "docs/README.md"
-Cohesion: 0.13
-Nodes (10): Conventions, Debugging, Development guide, Recipes, Setup, Ceylonry POS — Documentation, Automated coverage, Harness (+2 more)
+### Community 168 - "growth-partner-commissions.test.js"
+Cohesion: 0.20
+Nodes (9): admin, assert, endpoint, fs, onboardingApi, { pagePath }, path, root (+1 more)
+
+### Community 170 - "poddo-success-story.test.js"
+Cohesion: 0.29
+Nodes (6): assert, fs, page, path, root, test
+
+### Community 171 - "Development guide"
+Cohesion: 0.33
+Nodes (5): Conventions, Debugging, Development guide, Recipes, Setup
+
+### Community 172 - "Netlify Story Form Email Setup"
+Cohesion: 0.50
+Nodes (3): Direct Email, Netlify Forms Notification, Netlify Story Form Email Setup
+
+### Community 173 - "README.md"
+Cohesion: 0.15
+Nodes (9): How they were recorded, Product walkthroughs, Logging, Netlify functions (server), Ceylonry POS — Documentation, Automated coverage, Harness, Manual checklist (not automated) (+1 more)
 
 ## Knowledge Gaps
 - **803 isolated node(s):** `Permission`, `crypto`, `{ getAdmin }`, `PLAN_DETAILS`, `{ appwriteAdmin }` (+798 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1060 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1061 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `PosProvider.jsx`, `useFeature`, `constants.js`, `diagnosticsShared.js`, `createLogger`, `index.jsx`, `Ceylo.jsx`, `subscription.js`, `localAdmin.js`, `env.js`, `Staff.jsx`, `EndOfDay.jsx`, `SubscriptionManagement.jsx`, `features.js`, `SessionProvider.jsx`, `AdminApp.jsx`, `Tables.jsx`, `reports.test.js`, `pos-react/package.json`, `serviceWorker.test.js`, `panels.jsx`, `ReportPage.jsx`, `assistConfig.js`, `ProductModal.jsx`, `usePos`, `link.js`, `useData`, `auth.service.js`, `useInstall.js`?**
-  _High betweenness centrality (0.110) - this node is a cross-community bridge._
-- **Why does `5. Data layer (WatermelonDB)` connect `tables/index.js` to `PosProvider.jsx`, `assets/catalog.js`, `defineTable.js`, `PosStore.js`, `store.mjs`, `Ceylonry POS — React + WatermelonDB`?**
-  _High betweenness centrality (0.099) - this node is a cross-community bridge._
+- **Why does `react` connect `usePos` to `PosProvider.jsx`, `useFeature`, `diagnosticsShared.js`, `domain/catalog.js`, `index.jsx`, `Ceylo.jsx`, `pos/staff.js`, `createLogger`, `PortalShell.jsx`, `CustomerModal.jsx`, `EndOfDay.jsx`, `features.js`, `adminFeedback.js`, `admin-app/main.jsx`, `SessionProvider.jsx`, `AdminApp.jsx`, `Tables.jsx`, `reports.test.js`, `pos-react/package.json`, `serviceWorker.test.js`, `panels.jsx`, `App.jsx`, `plans.js`, `ReportPage.jsx`, `assist.js`, `KdsApp.jsx`, `useInstall.js`?**
+  _High betweenness centrality (0.139) - this node is a cross-community bridge._
+- **Why does `vitest` connect `vitest` to `PosProvider.jsx`, `diagnostics.service.js`, `tables/index.js`, `domain/catalog.js`, `logger.js`, `pos/staff.js`, `labelPrinter.js`, `database.js`, `createLogger`, `PortalShell.jsx`, `EndOfDay.jsx`, `scanner.js`, `salesLog.js`, `appwriteCompat.test.js`, `features.js`, `adminFeedback.js`, `documents.js`, `Tables.jsx`, `salesSplit.test.js`, `reports.test.js`, `pos-react/package.json`, `serviceWorker.test.js`, `plans.js`, `assist.js`, `domain/inventory.js`, `KdsApp.jsx`, `domain.test.js`?**
+  _High betweenness centrality (0.090) - this node is a cross-community bridge._
 - **Why does `key()` connect `panels.jsx` to `public/assets/platform.js`, `public/sw.js`, `assets/platform.js`?**
-  _High betweenness centrality (0.092) - this node is a cross-community bridge._
+  _High betweenness centrality (0.089) - this node is a cross-community bridge._
 - **What connects `Permission`, `crypto`, `{ getAdmin }` to the rest of the system?**
   _803 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `guard` be split into smaller, more focused modules?**
-  _Cohesion score 0.10873440285204991 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09047619047619047 - nodes in this community are weakly interconnected._
 - **Should `PosProvider.jsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.14153846153846153 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11229946524064172 - nodes in this community are weakly interconnected._
 - **Should `useFeature` be split into smaller, more focused modules?**
-  _Cohesion score 0.11475409836065574 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09821428571428571 - nodes in this community are weakly interconnected._

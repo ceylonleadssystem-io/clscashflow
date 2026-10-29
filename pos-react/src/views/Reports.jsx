@@ -2,6 +2,7 @@
  * Reports page: the box home (ReportsHub), then the chosen report. The choice lives in PosProvider (`reportNav`), which also
  * switches the left navigation to the report list. Business reports as defined in the Ceylonry POS Reports specification.
  */
+import { Dashboard } from "./Dashboard";
 import { EndOfDay } from "./reports/EndOfDay";
 import { ReportPage } from "./reports/ReportPage";
 import { ReportsHub } from "./reports/ReportsHub";
@@ -13,6 +14,7 @@ export function Reports() {
 	const { reportNav } = usePos();
 	const groups = useReportGroups();
 	if (!reportNav || !groupOf(reportNav.group) || !groups.some((g) => g.key === reportNav.group)) return <ReportsHub />;
+	if (reportNav.group === "dashboard") return <Dashboard />;
 	if (reportNav.group === "end-of-day") return <EndOfDay />;
 	return <ReportPage key={reportNav.group + "/" + reportNav.sub} group={reportNav.group} sub={reportNav.sub} />;
 }

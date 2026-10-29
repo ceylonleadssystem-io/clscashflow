@@ -115,10 +115,10 @@ describe("move, merge and split", () => {
 		expect(splitByItems(cart, { "x:0": 0, "x:1": 0, "y:0": 0 }, 3, 250)).toHaveLength(1);
 	});
 
-	it("shows every page the owner can open exactly once in the nav", () => {
+	it("shows every page the owner can open exactly once in the nav (the Dashboard is opened from Reports)", () => {
 		const nav = NAV_ITEMS.map((n) => n.view);
 		expect(new Set(nav).size).toBe(nav.length);
-		expect([...nav].sort()).toEqual([...ROLE_VIEWS.owner].sort());
+		expect([...nav].sort()).toEqual(ROLE_VIEWS.owner.filter((v) => v !== "dashboard").sort());
 	});
 });
 
