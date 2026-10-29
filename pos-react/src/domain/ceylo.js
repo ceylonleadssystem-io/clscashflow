@@ -144,7 +144,7 @@ export function runSetupChecks(input) {
 	const STAFF = { view: "staff" };
 	if (on("staff.cashRegister")) {
 		const stale = (input.cashShifts || []).filter((x) => x.status === "open" && ago(x.openedAt, now) > 24 * HOUR).length;
-		if (stale) add("register-open", "Daily routine", plural(stale, "cash register") + " left open for more than a day", "warn", "Close the register at the end of each day so the cash count matches the sales.", STAFF);
+		if (stale) add("register-open", "Daily routine", plural(stale, "cash register") + " left open for more than a day", "warn", "Clock out at the end of each day (it closes the register) so the cash count matches the sales.", STAFF);
 		else add("register-open", "Daily routine", "No cash register left open overnight", "ok", "");
 	}
 	if (on("staff.attendance")) {

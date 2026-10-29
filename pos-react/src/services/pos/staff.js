@@ -1,6 +1,6 @@
 /**
- * Staff actions: clock in/out, breaks, opening and closing the cash register (with expected-versus-actual
- * variance), and saving or deleting POS users with validation (PIN rules, last-owner protection).
+ * Staff actions: clock in/out, breaks, the cash register (it opens when the person clocks in and closes, with the
+ * expected-versus-counted variance, when they clock out), and saving or deleting POS users (PIN rules, last-owner protection).
  */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
@@ -30,31 +30,52 @@ export async function clockInAndOpenRegister(ctx, openingCash) {
 	return true;
 }
 
-export async function clockOut(ctx) {
+/** Clock in without a cash register (businesses that do not use register shifts). */
+export async function clockIn(ctx) {
+	const s = ctx.session();
+	if (activeTimeEntry(ctx.data().timeEntries, s.userId)) return false;
+	await ctx.store.write((tx) => tx.put(T.timeEntries, stamp({ id: newId("t"), userId: s.userId, clockIn: nowIso(), breaks: [] }, s)));
+	log.info("clocked in", { userId: s.userId });
+	return true;
+}
+
+/**
+ * Clock out. A person with an open cash register closes it at the same time: `actualCash` is the cash counted in the drawer, and the
+ * difference from the expected cash is recorded on the shift. Returns false (nothing changes) when a count is needed and is missing.
+ */
+export async function clockOut(ctx, actualCash) {
 	const s = ctx.session();
 	const d = ctx.data();
 	const entry = activeTimeEntry(d.timeEntries, s.userId);
-	if (!entry) return false;
-	if (currentCashShift(d.cashShifts, s.userId)) {
-		await ctx.ui.alert("Close the cash register before clocking out.");
+	const shift = currentCashShift(d.cashShifts, s.userId);
+	if (!entry && !shift) return false;
+	if (shift && (!Number.isFinite(actualCash) || actualCash < 0)) {
+		await ctx.ui.alert("Count the cash in the drawer to clock out.");
 		return false;
 	}
-	const breaks = (entry.breaks || []).map((b) => ({ ...b }));
-	const last = breaks[breaks.length - 1];
-	if (last && !last.end) last.end = nowIso();
-	await ctx.store.write((tx) => tx.put(T.timeEntries, { ...entry, breaks, clockOut: nowIso() }));
-	log.info("clocked out", { userId: s.userId });
+	const at = nowIso();
+	const expected = shift ? expectedCash(shift, d.sales) : 0;
+	await ctx.store.write((tx) => {
+		if (shift) tx.put(T.cashShifts, { ...shift, expectedCash: expected, actualCash, variance: actualCash - expected, closedAt: at, status: "closed" });
+		if (entry) {
+			const breaks = (entry.breaks || []).map((b) => ({ ...b }));
+			const last = breaks[breaks.length - 1];
+			if (last && !last.end) last.end = at;
+			tx.put(T.timeEntries, { ...entry, breaks, clockOut: at });
+		}
+	});
+	log.info("clocked out", { userId: s.userId, registerClosed: !!shift, expected, actual: actualCash });
 	return true;
 }
 
 /**
  * Settings > System Options > Clock In / Out: clocks out whoever has been on too long, or is still on after the daily clock-out time.
- * A person with an open cash register is left clocked in until the register is closed. Returns how many people were clocked out.
+ * Their cash register closes with them, counted as exactly the expected cash (no difference is recorded; the drawer still needs counting).
+ * Returns how many people were clocked out.
  */
 export async function autoClockOutAll(ctx, now = new Date()) {
 	const d = ctx.data();
-	const open = d.timeEntries.filter((e) => !e.clockOut);
-	const due = open.filter((e) => autoClockOutDue(e, resolveOptions(d.settings, "clock", e.locationId || "all"), now) && !d.cashShifts.some((c) => c.status === "open" && c.userId === e.userId));
+	const due = d.timeEntries.filter((e) => !e.clockOut && autoClockOutDue(e, resolveOptions(d.settings, "clock", e.locationId || "all"), now));
 	if (!due.length) return 0;
 	const at = now.toISOString();
 	await ctx.store.write((tx) =>
@@ -63,6 +84,11 @@ export async function autoClockOutAll(ctx, now = new Date()) {
 			const last = breaks[breaks.length - 1];
 			if (last && !last.end) last.end = at;
 			tx.put(T.timeEntries, { ...e, breaks, clockOut: at });
+			const shift = currentCashShift(d.cashShifts, e.userId);
+			if (shift) {
+				const expected = expectedCash(shift, d.sales);
+				tx.put(T.cashShifts, { ...shift, expectedCash: expected, actualCash: expected, variance: 0, closedAt: at, status: "closed" });
+			}
 		}),
 	);
 	log.info("auto clocked out", { people: due.length });
@@ -80,48 +106,6 @@ export async function toggleBreak(ctx) {
 	await ctx.store.write((tx) => tx.put(T.timeEntries, { ...entry, breaks }));
 }
 
-export async function openRegister(ctx, amount) {
-	const s = ctx.session();
-	if (!Number.isFinite(amount) || amount < 0) {
-		await ctx.ui.alert("Enter a valid cash amount.");
-		return false;
-	}
-	if (!activeTimeEntry(ctx.data().timeEntries, s.userId)) {
-		await ctx.ui.alert("Clock in before opening the register.");
-		return false;
-	}
-	await ctx.store.write((tx) =>
-		tx.put(T.cashShifts, stamp({ id: newId("cs"), userId: s.userId, openedAt: nowIso(), openingCash: amount, status: "open" }, s)),
-	);
-	log.info("register opened", { userId: s.userId, openingCash: amount });
-	return true;
-}
-
-export async function closeRegister(ctx, actual) {
-	const s = ctx.session();
-	const d = ctx.data();
-	const shift = currentCashShift(d.cashShifts, s.userId);
-	if (!shift) return false;
-	if (!Number.isFinite(actual) || actual < 0) {
-		await ctx.ui.alert("Enter a valid cash amount.");
-		return false;
-	}
-	const expected = expectedCash(shift, d.sales);
-	await ctx.store.write((tx) =>
-		tx.put(T.cashShifts, {
-			...shift,
-			expectedCash: expected,
-			actualCash: actual,
-			variance: actual - expected,
-			closedAt: nowIso(),
-			status: "closed",
-		}),
-	);
-	log.info("register closed", { userId: s.userId, shiftId: shift.id, expected, actual, variance: actual - expected });
-	return true;
-}
-
-/** @returns the saved user or null after showing a validation message. */
 export async function saveUser(ctx, form) {
 	const d = ctx.data();
 	const { id, name, pin, role, active } = form;

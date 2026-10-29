@@ -81,13 +81,6 @@ export function UserModal({ id, open, onClose }) {
 								<option value="manual">Do not ask</option>
 							</select>
 						</div>
-						<div className="field">
-							<label>Cash register after sign-in</label>
-							<select className="input" id="u-register-behaviour" value={f.registerBehaviour} onChange={set("registerBehaviour")}>
-								<option value="prompt">Offer register opening</option>
-								<option value="manual">Do not ask</option>
-							</select>
-						</div>
 					</div>
 					{multi && (
 						<div className="field full">

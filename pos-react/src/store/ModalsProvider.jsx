@@ -9,7 +9,7 @@ const ModalsContext = createContext(null);
 export function ModalsProvider({ children }) {
 	const [product, setProduct] = useState(null); // null | "" (new) | id
 	const [barcodeProductId, setBarcodeProductId] = useState(null);
-	const [cashMode, setCashMode] = useState(null); // null | "clock-in" | "open" | "close"
+	const [cashMode, setCashMode] = useState(null); // null | "clock-in" | "clock-out"
 	const openProduct = useCallback((id = "") => setProduct(id), []);
 	const closeProduct = useCallback(() => setProduct(null), []);
 	const value = useMemo(

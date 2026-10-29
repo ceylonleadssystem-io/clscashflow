@@ -22,7 +22,7 @@ h.answers.confirm = false;                           // decline confirmations
 | `cloud.test.js` | two-device sync with a fake Appwrite store |
 | `checkout.test.js` | guards, cash/change/register, card, discounts, stock block & deduction, recipes, order e-mail, WhatsApp, split bill, restaurant service charge, open orders, void order |
 | `refunds.test.js` | reason required, full/partial refund, double reversal, cash register rule, stock restore, owner purge vs cashier void, permanent delete rules |
-| `shifts-users.test.js` | Clock In & Open Register, breaks, close variance, clock-out rule, user validation/duplicates/deletion/permissions |
+| `shifts-users.test.js` | Clock In opens the register, breaks, clock-out closes it with the variance, automatic clock-out, user validation/duplicates/deletion/permissions |
 | `catalog.test.js` | product validation, categories, subcategories, modifiers, import (merge/replace) |
 | `inventory.test.js` | item create/edit, every adjustment reason, negative guard, deleting a stock row ⇒ always available, ingredient delete, branch/bulk counts |
 | `customers.test.js` | validation, duplicate phone, total spent/visits, refunded sales excluded, phone matching |

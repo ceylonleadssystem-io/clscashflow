@@ -53,7 +53,7 @@ export function SplitBillModal() {
 		const amount = num(p.amount);
 		if (amount <= 0) return ui.alert("Enter the amount for this share first.");
 		if (p.method === "Cash") {
-			if (!currentCashShift(data.cashShifts, currentUser?.id)) return ui.alert("Open the cash register before taking this cash payment.");
+			if (!currentCashShift(data.cashShifts, currentUser?.id)) return ui.alert("Clock in to open your cash register before taking this cash payment.");
 			const entry = await ui.prompt(`Cash received for Share ${i + 1}\nAmount due: ${money(amount)}`, amount.toFixed(2));
 			if (entry === null) return;
 			const received = num(entry);

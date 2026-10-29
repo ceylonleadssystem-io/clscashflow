@@ -90,7 +90,7 @@ export async function completeSale(ctx, input) {
 		return { needsSplit: true };
 	}
 	if (splits.length && splits.some((p) => p.method === "Cash") && !register) {
-		await ctx.ui.alert("Open the cash register before accepting the cash portion of this split bill.");
+		await ctx.ui.alert("Clock in to open your cash register before accepting the cash portion of this split bill.");
 		return null;
 	}
 	const needs = saleStockNeeds(cart, d.products);
@@ -101,7 +101,7 @@ export async function completeSale(ctx, input) {
 	}
 	const customer = d.customers.find((c) => c.id === input.customerId);
 	if (!splits.length && input.payment === "Cash" && !register) {
-		await ctx.ui.alert("Open the cash register in Staff & Shifts before accepting cash.");
+		await ctx.ui.alert("Clock in to open your cash register before accepting cash.");
 		return null;
 	}
 	if (input.wantsWhatsApp && !customer?.phone) {
@@ -298,9 +298,9 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 	const isSplitCash = sale.payment === "Split" && (sale.payments || []).some((p) => p.method === "Cash");
 	const bypassHistoricalCash = sale.payment === "Cash" && !register && ["owner", "admin"].includes(s.user?.role);
 	if (sale.payment === "Cash" && !register && !bypassHistoricalCash)
-		return void (await ctx.ui.alert("Open a cash register before reversing a cash sale."));
+		return void (await ctx.ui.alert("Clock in to open your cash register before reversing a cash sale."));
 	if (isSplitCash && !register)
-		return void (await ctx.ui.alert("Open a cash register before refunding the cash portion of this split payment."));
+		return void (await ctx.ui.alert("Clock in to open your cash register before refunding the cash portion of this split payment."));
 	let refundLines = [];
 	if (type === "refund") {
 		refundLines = selectedRefundLines(sale, refundType, choices);

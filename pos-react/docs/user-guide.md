@@ -26,8 +26,10 @@ that are already signed in).
 1. Enter the opening cash.
 2. **Clock In** records attendance and opens the register in one step.
 
-Cash sales need an open register. Use **Break** for breaks. To finish: **Close Register** (count the cash; the
-system shows expected cash and the variance), then **Clock Out**. You cannot clock out with the register open.
+Your register opens when you clock in and closes when you clock out, so there is no separate open or close step.
+Cash sales need you to be clocked in. Use **Break** for breaks. To finish, **Clock Out**: count the cash in the drawer
+and the system shows the expected cash and the variance. If Settings > System Options > Clock In / Out has automatic
+clock-out switched on, the register closes with the person, counted as the expected cash (no variance is recorded).
 
 ## Checkout
 1. Tap products (variants/modifiers open a picker). Quantity buttons change lines; **Void** discards the order.
@@ -50,7 +52,7 @@ Open it from **Order Queue**, add items and pay. Voiding an open order asks for 
 
 ## Sales, refunds and voids
 **Sales** lists completed sales. Choose **Refund** (full, or partial by item and quantity) or **Void**. A reason
-is mandatory. Stock is restored, and cash refunds need an open register. A void by an owner/admin removes the
+is mandatory. Stock is restored, and cash refunds need you to be clocked in. A void by an owner/admin removes the
 sale everywhere; a cashier's void stays in the history marked *voided*. Owner/admin can **Delete permanently**
 a refunded/voided sale.
 

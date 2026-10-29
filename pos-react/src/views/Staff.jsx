@@ -27,15 +27,17 @@ export function Staff() {
 	const onBreak = isOnBreak(entry);
 	void locationId;
 
+	// clocking in opens the register and clocking out closes it, so each asks for the cash count when register shifts are on
 	const toggleClock = async () => {
-		if (!entry) return openCash("clock-in");
+		if (!entry) return register ? openCash("clock-in") : svc.staff.clockIn();
+		if (shift) return openCash("clock-out");
 		await svc.staff.clockOut();
 	};
 
 	return (
 		<section className="view active" id="view-staff">
 			<div className="shift-grid">
-				{attendance && (
+				{(attendance || register) && (
 					<div className="card">
 						<div className="label">Attendance</div>
 						<div className="value" id="attendance-status">
@@ -61,12 +63,7 @@ export function Staff() {
 							{shift ? money(expectedCash(shift, data.sales)) : "Closed"}
 						</div>
 						<div className="muted" id="register-note">
-							{shift ? "Expected cash currently in drawer" : "Open a register before taking cash payments."}
-						</div>
-						<div className="shift-actions">
-							<button className="btn gold" id="register-button" onClick={() => openCash(shift ? "close" : "open")}>
-								{shift ? "Close Register" : "Open Register"}
-							</button>
+							{shift ? "Expected cash currently in drawer. It closes when you clock out." : "Your register opens when you clock in."}
 						</div>
 					</div>
 				)}

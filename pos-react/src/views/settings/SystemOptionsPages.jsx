@@ -171,7 +171,7 @@ export function ClockInOut() {
 	return (
 		<>
 			<PageHeader title="Clock In / Out" description="Clock people out automatically so no shift runs on by mistake." note={<ScopeNote />} />
-			<SectionCard title="Automatic clock out" description="Anyone who is on a cash register is not clocked out until the register is closed.">
+			<SectionCard title="Automatic clock out" description="Their cash register closes with them, counted as exactly the expected cash, so count the drawer and check it in the End of Day report.">
 				<ToggleRow id="ck-elapsed" label="Clock out after a maximum time" help="Clocks a person out once this much time has passed since they clocked in." value={values.autoElapsedOn} onChange={(v) => set("autoElapsedOn", v)} overridden={overridden("autoElapsedOn")} onReset={() => reset("autoElapsedOn")} />
 				<ConditionalGroup show={values.autoElapsedOn}>
 					<DurationRow id="ck-max" label="Maximum time clocked in" hours={values.maxHours} minutes={values.maxMinutes} onChange={({ hours, minutes }) => (set("maxHours", hours), set("maxMinutes", minutes))} error={errors.maxHours} />

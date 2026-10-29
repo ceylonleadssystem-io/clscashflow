@@ -24,10 +24,9 @@ export function bindServices(ctx) {
 		staff: bind(ctx, {
 			clockInAndOpenRegister: staff.clockInAndOpenRegister,
 			clockOut: staff.clockOut,
+			clockIn: staff.clockIn,
 			autoClockOutAll: staff.autoClockOutAll,
 			toggleBreak: staff.toggleBreak,
-			openRegister: staff.openRegister,
-			closeRegister: staff.closeRegister,
 			saveUser: staff.saveUser,
 			deleteUser: staff.deleteUser,
 		}),
