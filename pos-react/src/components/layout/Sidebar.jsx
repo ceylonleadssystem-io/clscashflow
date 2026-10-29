@@ -10,9 +10,12 @@ import { usePos } from "../../store/PosProvider";
 import { useSession } from "../../store/SessionProvider";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
+import { useReportGroups } from "../../hooks/useReportGroups";
+import { firstSub } from "../../domain/reportsCatalog";
 
 export function Sidebar() {
-	const { view, go, canView, currentUser, staffLogout } = usePos();
+	const { view, go, canView, currentUser, staffLogout, reportNav, setReportNav } = usePos();
+	const reportGroups = useReportGroups();
 	const { signOut } = useSession();
 	const { settings } = useData();
 	const logo = settings.logo;
@@ -49,29 +52,84 @@ export function Sidebar() {
 				<strong>{currentUser?.name || "Not signed in"}</strong>
 				<span>{currentUser?.role || "Staff session"}</span>
 			</div>
-			<nav className="nav" id="nav">
-				<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
-					<span className="nav-icon" aria-hidden="true">☰</span>
-					<span>Show Navigation</span>
-				</button>
-				{NAV_ITEMS.filter((item) => canView(item.view)).map((item, i, list) => {
-					const group = item.group || "";
-					const heading = i && (list[i - 1].group || "") !== group ? group || "-" : "";
-					return (
-						<Fragment key={item.view}>
-							{heading === "-" && <div className="nav-group nav-sep" role="separator" />}
-							{heading && heading !== "-" && <div className="nav-group">{heading}</div>}
-							<button data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => {
-									go(item.view);
+			{view === "reports" && reportNav ? (
+				<nav className="nav report-nav" id="report-nav" aria-label="Reports">
+					<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
+						<span className="nav-icon" aria-hidden="true">☰</span>
+						<span>Show Navigation</span>
+					</button>
+					<button type="button" id="report-back-home" className="report-back" title="Back to home" onClick={() => go("dashboard")}>
+						<span className="nav-icon" aria-hidden="true">←</span>
+						<span>Back to home</span>
+					</button>
+					<button type="button" id="report-all" title="All reports" onClick={() => setReportNav(null)}>
+						<span className="nav-icon" aria-hidden="true">▤</span>
+						<span>All reports</span>
+					</button>
+					<div className="nav-group nav-sep" role="separator" />
+					{reportGroups.map((g) => (
+						<div key={g.key} className="report-nav-group">
+							<button
+								type="button"
+								data-report={g.key}
+								className={reportNav.group === g.key ? "active" : ""}
+								title={g.title}
+								aria-current={reportNav.group === g.key && !reportNav.sub ? "page" : undefined}
+								onClick={() => {
+									setReportNav({ group: g.key, sub: firstSub(g.key) });
 									setOpen(false);
-								}}>
-								<NavIcon view={item.view} />
-								<span>{item.label.slice(2)}</span>
+								}}
+							>
+								<span className="nav-icon" aria-hidden="true">{g.icon}</span>
+								<span>{g.title}</span>
 							</button>
-						</Fragment>
-					);
-				})}
-			</nav>
+							{reportNav.group === g.key && g.subs.length > 0 && (
+								<div className="report-subnav">
+									{g.subs.map((sub) => (
+										<button
+											key={sub.key}
+											type="button"
+											data-report-sub={sub.key}
+											className={reportNav.sub === sub.key ? "active" : ""}
+											aria-current={reportNav.sub === sub.key ? "page" : undefined}
+											onClick={() => {
+												setReportNav({ group: g.key, sub: sub.key });
+												setOpen(false);
+											}}
+										>
+											<span>{sub.title}</span>
+										</button>
+									))}
+								</div>
+							)}
+						</div>
+					))}
+				</nav>
+			) : (
+			<nav className="nav" id="nav">
+					<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
+						<span className="nav-icon" aria-hidden="true">☰</span>
+						<span>Show Navigation</span>
+					</button>
+					{NAV_ITEMS.filter((item) => canView(item.view)).map((item, i, list) => {
+						const group = item.group || "";
+						const heading = i && (list[i - 1].group || "") !== group ? group || "-" : "";
+						return (
+							<Fragment key={item.view}>
+								{heading === "-" && <div className="nav-group nav-sep" role="separator" />}
+								{heading && heading !== "-" && <div className="nav-group">{heading}</div>}
+								<button data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => {
+										go(item.view);
+										setOpen(false);
+									}}>
+									<NavIcon view={item.view} />
+									<span>{item.label.slice(2)}</span>
+								</button>
+							</Fragment>
+						);
+					})}
+				</nav>
+			)}
 			<div className="side-foot">
 				<strong id="side-business">{settings.business || "My Business"}</strong>
 				<br />

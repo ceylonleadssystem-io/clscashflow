@@ -75,8 +75,15 @@ CRM shows segments, birthdays, WhatsApp messages and feedback requests; a custom
 discount that is applied at checkout.
 
 ## Reports
-Dashboard (today / 7 days / month / custom), item report, payments mix, cash-shift reconciliation, staff hours
-and customer reports, with CSV export. Tables scroll horizontally on small screens.
+Choosing **Reports** opens a page of boxes, one per report group (Dashboard, Sales, Menu, Payroll, Sales vs Labor,
+Gift Cards, Taxes, Kitchen Operations, Transactions, Audit Trail, and Multi-Location with two or more locations).
+Opening a box replaces the left navigation with the list of reports plus **Back to home**. Every report has a date
+range (presets: Today, This Week, This Month, Last Month, Last Year), employee / order type / payment filters shown
+as chips, sortable columns, a totals row, an Info panel, a Graph toggle, and CSV / PDF / Print export. Figures come
+from one shared definition (Net Sales = Item Sales - (Discounts + Refunds)), so the Dashboard, Sales and
+Multi-Location totals match. Where this POS does not record a value (tax, tips by card, wages, zones, gift cards) the
+report says so on screen. **End of Day & Overview** keeps the full End of Day report, item sales, registers, staff
+hours and customer reports. Tables scroll horizontally on small screens.
 
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),

@@ -62,6 +62,11 @@ export function PosProvider({ children }) {
 	const [currentUserId, setCurrentUserId] = useState(() => sessionStorage.getItem(STORAGE.userSession) || "");
 	const locationId = useSyncExternalStore(locationStore.subscribe, locationStore.get);
 	const [view, setView] = useState("dashboard");
+	// the report opened from the Reports page ({ group, sub }); while set, the left navigation lists the reports instead of the pages
+	const [reportNav, setReportNav] = useState(null);
+	useEffect(() => {
+		if (view !== "reports") setReportNav(null);
+	}, [view]);
 	const [layout, setLayout] = useState({ full: false, sidebarCollapsed: false, kiosk: false, mobileCartOpen: false });
 	const [checkoutMode, setCheckoutModeState] = useState(() => localStorage.getItem(STORAGE.checkoutMode) || "");
 	const [chooserOpen, setChooserOpen] = useState(false);
@@ -372,6 +377,8 @@ export function PosProvider({ children }) {
 			view,
 			go,
 			setView,
+			reportNav,
+			setReportNav,
 			canView,
 			title: VIEW_TITLES[view] || ["", ""],
 			staffLogin,
@@ -395,7 +402,7 @@ export function PosProvider({ children }) {
 			sessionId,
 			deviceId,
 		}),
-		[currentUser, locationId, setLocationId, view, go, canView, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
+		[currentUser, locationId, setLocationId, view, reportNav, go, canView, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
 	);
 	return <PosContext.Provider value={value}>{children}</PosContext.Provider>;
 }
