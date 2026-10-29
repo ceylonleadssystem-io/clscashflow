@@ -207,6 +207,7 @@ export const VIEW_FEATURE = {
 	tables: "view.tables",
 	products: "view.products",
 	modifiers: "view.modifiers",
+	stations: "checkout.kitchenTickets",
 	customers: "view.customers",
 	crm: "view.crm",
 	sales: "view.sales",

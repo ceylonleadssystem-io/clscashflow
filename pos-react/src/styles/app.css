@@ -647,3 +647,14 @@ html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
 .eod-panel{margin-bottom:16px}
 .eod-panel .panel-head{flex-wrap:wrap;gap:12px}
 .eod-panel .range-fields{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+/* Stations page */
+.station-cards{display:grid;gap:12px}
+.station-card{border:1px solid var(--line,#eadfce);border-radius:12px;padding:12px;display:grid;gap:10px;min-width:0}
+.station-detail{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.station-detail .btn{min-height:44px}
+.station-printer{display:grid;gap:4px;min-width:min(260px,100%)}
+.station-device{font-size:13px;align-self:center;min-width:0;overflow-wrap:anywhere}
+.station-summary{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.station-summary li{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.kds-pairing{flex:1 1 280px;min-width:0}
+.kds-screen{margin:10px 0;padding-top:10px;border-top:1px solid var(--line,#eadfce)}

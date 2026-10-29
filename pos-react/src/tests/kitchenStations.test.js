@@ -16,7 +16,7 @@ const products = [
 
 describe("kitchen stations", () => {
 	it("keeps the old single destination when no list was saved", () => {
-		expect(kitchenStations({ kotPrinter: "Grill" })).toEqual([{ id: "kot", name: "Grill", type: "printer" }]);
+		expect(kitchenStations({ kotPrinter: "Grill" })).toEqual([{ id: "kot", name: "Grill", type: "printer", printer: { kind: "none" } }]);
 		expect(kitchenStations({ kotPrinter: "Grill" }, true)).toEqual([{ id: "kds", name: "Kitchen Display", type: "kds" }]);
 		expect(kitchenStations({})).toEqual([]);
 		expect(kitchenStations({ kotPrinter: "Grill", kitchenStations: [] })).toEqual([]);
@@ -35,7 +35,7 @@ describe("kitchen stations", () => {
 	});
 	it("cleans the list typed in Settings", () => {
 		expect(cleanStations([{ id: "a", name: " Bar " }, { name: "" }, { id: "k", name: "Kds", type: "kds" }]).stations).toEqual([
-			{ id: "a", name: "Bar", type: "printer" },
+			{ id: "a", name: "Bar", type: "printer", printer: { kind: "none" } },
 			{ id: "k", name: "Kds", type: "kds" },
 		]);
 		expect(cleanStations([{ name: "Bar" }, { name: "bar" }]).error).toMatch(/two kitchen stations/);

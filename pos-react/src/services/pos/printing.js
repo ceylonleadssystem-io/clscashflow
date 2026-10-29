@@ -5,7 +5,8 @@
 import { kitchenPrinterHook } from "../platform.service";
 import { T } from "../../db/tables";
 import { downloadBlob, whatsappPhone } from "../../domain/format";
-import { kotHtml, receiptHtml, receiptMessage } from "../printing/documents";
+import { kotHtml, kotTicketsHtml, receiptHtml, receiptMessage } from "../printing/documents";
+import { printKitchenTicket } from "../printing/kitchenPrinters";
 import { printHtmlInFrame, printHtmlInWindow } from "../printing/printDocument";
 import { receiptPrinter } from "../printing/receiptPrinter";
 import { createLogger } from "../../utils/logger";
@@ -91,7 +92,7 @@ export const kitchenDestination = (settings, features = {}) => (features["checko
 
 const stationDestination = (station, features) => (station.type === "kds" && features["checkout.kds"] ? KDS_DESTINATION : station.name);
 
-async function queueTicket(ctx, order, lines, destination, station) {
+async function queueTicket(ctx, order, lines, destination, station, systemPrints) {
 	const toKds = destination === KDS_DESTINATION;
 	const status = toKds ? "new" : destination === "Kitchen POS" ? "sent-to-kitchen-pos" : "sent-to-printer";
 	const ticket = stamp(
@@ -108,8 +109,19 @@ async function queueTicket(ctx, order, lines, destination, station) {
 		},
 		ctx.session(),
 	);
-	const hook = kitchenPrinterHook();
-	if (destination !== "Kitchen POS" && !toKds) {
+	const kind = !toKds && station?.printer?.kind;
+	if (kind === "usb") {
+		try {
+			await printKitchenTicket(station, ticket);
+			ticket.status = "printed";
+		} catch (error) {
+			log.warn("USB kitchen printer failed; ticket kept in the Order Queue", error, { station: station.name, order: ticket.orderNumber });
+			ticket.status = "printer-unavailable";
+			ctx.ui.notice(station.name + ": " + error.message);
+		}
+	} else if (kind === "system") systemPrints.push(ticket);
+	else if (destination !== "Kitchen POS" && !toKds) {
+		const hook = kitchenPrinterHook();
 		if (hook) {
 			try {
 				await Promise.resolve(hook(ticket));
@@ -121,25 +133,47 @@ async function queueTicket(ctx, order, lines, destination, station) {
 		} else ticket.status = "queued-for-" + destination;
 	}
 	await ctx.store.write((tx) => tx.put(T.kitchenTickets, ticket));
-	if (toKds) kdsLink.send(ticket); // local Wi-Fi only; kept in the outbox until the KDS acknowledges it
+	if (toKds) kdsLink.send(ticket, station?.id); // the station's own screen, over the local Wi-Fi; kept in its outbox until acknowledged
 	log.info("kitchen ticket queued", { order: ticket.orderNumber, destination, status: ticket.status, items: ticket.lines.length });
 	return destination;
 }
 
 /**
  * Queues the kitchen tickets of an order: one per kitchen station that has items on it (an item can go to several stations,
- * an item with none goes to the first). Returns the destinations, e.g. ["Kitchen", "KDS"].
+ * an item with none goes to the first). Stations printing through the system dialog share one print job (one page each).
+ * Returns the destinations, e.g. ["Kitchen", "KDS"].
  */
 export async function queueKitchenTicket(ctx, order) {
 	const d = ctx.data();
 	const features = ctx.features();
 	const stations = kitchenStations(d.settings, features["checkout.kds"]);
-	if (!stations.length) return [await queueTicket(ctx, order, order.lines, "Kitchen POS", null)];
+	const systemPrints = [];
+	if (!stations.length) return [await queueTicket(ctx, order, order.lines, "Kitchen POS", null, systemPrints)];
 	const routes = routeKitchenLines(order.lines || [], d.products || [], stations);
 	const list = routes.length ? routes : [{ station: stations[0], lines: order.lines || [] }];
 	const sent = [];
-	for (const r of list) sent.push(await queueTicket(ctx, order, r.lines, stationDestination(r.station, features), r.station));
+	for (const r of list) sent.push(await queueTicket(ctx, order, r.lines, stationDestination(r.station, features), r.station, systemPrints));
+	if (systemPrints.length) printHtmlInFrame(kotTicketsHtml(systemPrints, { settings: d.settings }), "Kitchen tickets " + (order.orderNumber || order.receipt || ""));
 	return [...new Set(sent)];
+}
+
+/** Test ticket on one station's printer or screen (Stations page). */
+export async function testStation(ctx, station) {
+	const ticket = { id: newId("kot-test-"), orderNumber: "TEST", reference: "Test ticket", station: station.name, createdAt: new Date().toISOString(), lines: [{ name: "Test item", qty: 1, modifiers: [{ groupName: "Note", optionName: "printer test" }] }] };
+	if (station.type === "kds") {
+		kdsLink.send({ ...ticket, destination: KDS_DESTINATION, status: "new" }, station.id);
+		return ctx.ui.notice(kdsLink.station(station.id).state().connected ? "Test ticket sent to " + station.name + "." : station.name + " is not connected. The test ticket is sent when it connects.");
+	}
+	const kind = station.printer?.kind;
+	if (kind === "usb") {
+		try {
+			await printKitchenTicket(station, ticket);
+			ctx.ui.notice("Test ticket printed on " + station.name + ".");
+		} catch (error) {
+			await ctx.ui.alert(error.message);
+		}
+	} else if (kind === "system") printHtmlInFrame(kotTicketsHtml([ticket], { settings: ctx.data().settings }), "Test kitchen ticket");
+	else ctx.ui.notice(station.name + " has no printer. Choose one to print its tickets.");
 }
 
 const kdsNotice = () =>

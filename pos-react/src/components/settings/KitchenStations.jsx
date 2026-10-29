@@ -1,65 +1,60 @@
 /**
- * Settings, Receipts & Printing: the list of kitchen printers and Kitchen Displays (KDS). Items are assigned to them in the item
- * form; an item with none goes to the first one in this list. Edits go into the Settings form and are saved with "Save All Settings".
+ * Settings, Receipts & Printing: the kitchen stations (added on the Stations page) and the main station, which receives every item
+ * that has no station of its own. Choosing the main station moves it to the top of the list; it is saved with "Save All Settings".
  */
-import { kitchenStations, STATION_TYPES } from "../../domain/kitchenStations";
+import { kitchenStations, PRINTER_KINDS } from "../../domain/kitchenStations";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
+import { usePos } from "../../store/PosProvider";
+
+const how = (s, kdsOn) =>
+	s.type === "kds" && kdsOn ? "Kitchen Display" : s.printer?.kind === "usb" && s.printer.usb ? "USB: " + s.printer.usb.productName : PRINTER_KINDS.find((k) => k.value === (s.printer?.kind || "none")).label;
 
 export function KitchenStations({ form, setForm }) {
 	const data = useData();
+	const { go, canView } = usePos();
 	const kdsOn = useFeature("checkout.kds");
 	const rows = form.kitchenStations ?? kitchenStations(data.settings, kdsOn);
-	const types = STATION_TYPES.filter((t) => t.value !== "kds" || kdsOn);
-	const change = (next) => setForm((f) => ({ ...f, kitchenStations: next }));
-	const edit = (i, key) => (e) => change(rows.map((r, j) => (j === i ? { ...r, [key]: e.target.value } : r)));
-	const move = (i, by) => {
-		const next = [...rows];
-		[next[i], next[i + by]] = [next[i + by], next[i]];
-		change(next);
-	};
 	const count = (id) => data.products.filter((p) => (p.stationIds || []).map(String).includes(String(id))).length;
+	const setMain = (id) => setForm((f) => ({ ...f, kitchenStations: [...rows.filter((r) => r.id === id), ...rows.filter((r) => r.id !== id)] }));
 
 	return (
 		<div className="plan-settings" id="kitchen-stations">
-			<div className="label">Kitchen printers & displays</div>
+			<div className="label">Kitchen stations</div>
 			<div className="plan-settings-note">
-				Add every kitchen printer and Kitchen Display. Choose which ones each item goes to in the item form (an item can go to several, for
-				example the kitchen and the bar). Items with none go to the first one in this list.
+				Kitchen tickets go to the stations each item is assigned to (in the item form). Items without a station go to the main station.
 			</div>
-			<div className="station-list">
-				{rows.map((r, i) => (
-					<div className="station-row" key={r.id || i}>
-						<input className="input" aria-label={"Name of station " + (i + 1)} placeholder="Kitchen, Bar, Pastry..." maxLength={40} value={r.name} onChange={edit(i, "name")} />
-						<select className="input" aria-label={"Type of station " + (i + 1)} value={r.type === "kds" && kdsOn ? "kds" : "printer"} onChange={edit(i, "type")}>
-							{types.map((t) => (
-								<option key={t.value} value={t.value}>
-									{t.label}
+			{rows.length > 0 ? (
+				<>
+					<label className="station-printer" style={{ marginTop: 10 }}>
+						<span className="label">Main station</span>
+						<select className="input" id="set-main-station" value={rows[0].id} onChange={(e) => setMain(e.target.value)}>
+							{rows.map((r) => (
+								<option key={r.id} value={r.id}>
+									{r.name}
 								</option>
 							))}
 						</select>
-						<span className="muted station-meta">
-							{i === 0 ? "Main · " : ""}
-							{count(r.id)} item{count(r.id) === 1 ? "" : "s"}
-						</span>
-						<div className="station-actions">
-							<button type="button" className="btn out" aria-label={"Move " + (r.name || "station") + " up"} disabled={!i} onClick={() => move(i, -1)}>
-								↑
-							</button>
-							<button type="button" className="btn out" aria-label={"Move " + (r.name || "station") + " down"} disabled={i === rows.length - 1} onClick={() => move(i, 1)}>
-								↓
-							</button>
-							<button type="button" className="btn out" aria-label={"Remove " + (r.name || "station")} onClick={() => change(rows.filter((_, j) => j !== i))}>
-								Remove
-							</button>
-						</div>
-					</div>
-				))}
-				{!rows.length && <div className="muted">No kitchen printer yet: tickets go to the Kitchen POS (Order Queue).</div>}
-			</div>
-			<button type="button" className="btn out" id="add-kitchen-station" style={{ marginTop: 10 }} onClick={() => change([...rows, { id: "st-" + Date.now().toString(36), name: "", type: "printer" }])}>
-				+ Add printer or display
-			</button>
+					</label>
+					<ul className="station-summary">
+						{rows.map((r) => (
+							<li key={r.id}>
+								<strong>{r.name}</strong>
+								<span className="muted">
+									{how(r, kdsOn)} · {count(r.id)} item{count(r.id) === 1 ? "" : "s"}
+								</span>
+							</li>
+						))}
+					</ul>
+				</>
+			) : (
+				<div className="muted" style={{ marginTop: 8 }}>No stations yet: kitchen tickets stay in the Order Queue.</div>
+			)}
+			{canView("stations") && (
+				<button type="button" className="btn out" id="manage-stations" style={{ marginTop: 10 }} onClick={() => go("stations")}>
+					{rows.length ? "Manage stations and printers" : "Add stations"}
+				</button>
+			)}
 		</div>
 	);
 }

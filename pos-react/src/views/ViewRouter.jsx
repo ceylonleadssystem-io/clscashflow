@@ -12,6 +12,7 @@ const Orders = page(() => import("./Orders"), "Orders");
 const Tables = page(() => import("./Tables"), "Tables");
 const Products = page(() => import("./Products"), "Products");
 const Modifiers = page(() => import("./Modifiers"), "Modifiers");
+const Stations = page(() => import("./Stations"), "Stations");
 const Customers = page(() => import("./Customers"), "Customers");
 const CRM = page(() => import("./CRM"), "CRM");
 const Sales = page(() => import("./Sales"), "Sales");
@@ -29,6 +30,7 @@ const VIEWS = {
 	tables: Tables,
 	products: Products,
 	modifiers: Modifiers,
+	stations: Stations,
 	customers: Customers,
 	crm: CRM,
 	sales: Sales,

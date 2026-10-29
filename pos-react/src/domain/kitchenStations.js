@@ -9,14 +9,33 @@ export const STATION_TYPES = [
 	{ value: "kds", label: "Kitchen Display (KDS)" },
 ];
 
+// How a kitchen printer station prints: "none" keeps the ticket on the POS (Order Queue / printer integration), "system" opens the
+// browser print dialog, "usb" prints straight to the USB ESC/POS printer chosen for the station.
+export const PRINTER_KINDS = [
+	{ value: "none", label: "No printer (Order Queue only)" },
+	{ value: "system", label: "System print dialog" },
+	{ value: "usb", label: "USB kitchen printer (ESC/POS)" },
+];
+
 const named = (s) => s && s.id && String(s.name || "").trim();
+/** The physical printer of a station: { kind, usb? } (usb = the remembered device). */
+export function stationPrinter(s = {}) {
+	const p = s.printer || {};
+	const kind = PRINTER_KINDS.some((k) => k.value === p.kind) ? p.kind : "none";
+	const u = p.usb && Number(p.usb.vendorId) ? { vendorId: Number(p.usb.vendorId), productId: Number(p.usb.productId) || 0, serialNumber: String(p.usb.serialNumber || ""), productName: String(p.usb.productName || "USB printer").slice(0, 80) } : null;
+	return kind === "usb" && u ? { kind, usb: u } : { kind };
+}
+const station = (s) => {
+	const type = s.type === "kds" ? "kds" : "printer";
+	return { id: String(s.id), name: String(s.name).trim().slice(0, 40), type, ...(type === "printer" ? { printer: stationPrinter(s) } : {}) };
+};
 
 /** The business' stations, in order (the first one also receives items that have no station). */
 export function kitchenStations(settings = {}, kdsOn = false) {
-	if (Array.isArray(settings.kitchenStations)) return settings.kitchenStations.filter(named).map((s) => ({ id: String(s.id), name: String(s.name).trim(), type: s.type === "kds" ? "kds" : "printer" }));
+	if (Array.isArray(settings.kitchenStations)) return settings.kitchenStations.filter(named).map(station);
 	if (kdsOn) return [{ id: "kds", name: "Kitchen Display", type: "kds" }];
 	const printer = String(settings.kotPrinter || "").trim();
-	return printer ? [{ id: "kot", name: printer, type: "printer" }] : [];
+	return printer ? [{ id: "kot", name: printer, type: "printer", printer: { kind: "none" } }] : [];
 }
 
 /** Splits an order's prep lines by station: [{ station, lines }] in station order. Discount and service-charge lines never go. */
@@ -45,7 +64,7 @@ export function cleanStations(rows = []) {
 		if (!name) continue;
 		if (names.has(name.toLowerCase())) return { stations: [], error: `There are two kitchen stations called "${name}". Give each one its own name.` };
 		names.add(name.toLowerCase());
-		stations.push({ id: String(r.id || "st-" + Math.random().toString(36).slice(2, 9)), name, type: r.type === "kds" ? "kds" : "printer" });
+		stations.push(station({ ...r, id: r.id || "st-" + Math.random().toString(36).slice(2, 9), name }));
 	}
 	return { stations, error: "" };
 }

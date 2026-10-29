@@ -11,7 +11,8 @@ import { useUi } from "../store/UiProvider";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
-import { KdsPairing } from "../KDS/KdsPairing";
+import { KdsScreens } from "../KDS/KdsPairing";
+import { kitchenStations } from "../domain/kitchenStations";
 import { onSettingsTab, requestedSettingsTab } from "../store/settingsTab";
 import { CeyloMascot } from "../components/ceylo/Ceylo";
 import { CeyloAiKeyPanel } from "../components/ceylo/CeyloAiKey";
@@ -62,7 +63,7 @@ const formFrom = (s) => ({
 /** Settings: business, POS setup, operations, receipt printing and plan & support (tabbed). */
 export function Settings() {
 	const { settings } = useData();
-	const { currentUser, svc, setSetupOpen, setLayout } = usePos();
+	const { currentUser, svc, setSetupOpen, setLayout, canView, go } = usePos();
 	const locationsOn = useFeature("business.locations");
 	const themes = useFeature("settings.themes");
 	const serviceCharge = useFeature("checkout.serviceCharge");
@@ -115,7 +116,7 @@ export function Settings() {
 			</>
 		),
 		printing: <PrintingPanel form={form} set={set} setForm={setForm} />,
-		kds: <KdsPairing />,
+		kds: <KdsScreens stations={kitchenStations(settings, kdsOn)} onManage={canView("stations") ? () => go("stations") : null} />,
 		plan: full && (
 			<>
 				{ceylo && (

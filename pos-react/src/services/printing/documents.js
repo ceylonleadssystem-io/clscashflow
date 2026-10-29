@@ -34,10 +34,11 @@ export function receiptHtml(sale, { settings = {}, location = null, autoPrint = 
 		.join("")}${qr}${powered.map(line).join("")}</div>${autoPrint ? "<script>onload=()=>print()</script>" : ""}</body></html>`;
 }
 
-/** Kitchen order ticket (no prices, quantities + modifiers only). */
-export function kotHtml(order, { settings = {}, customerName = "Walk-in Customer", autoPrint = true } = {}) {
-	const lines = (order.lines || [])
-		.filter((l) => !l.isDiscount && !l.isServiceCharge)
+const KOT_CSS = "@page{size:80mm auto;margin:4mm}body{font:14px Arial;width:72mm;margin:0;color:#000}h1{text-align:center;margin:0;font-size:25px}.station{text-align:center;font-size:18px;font-weight:bold;margin-top:4px}.reference{text-align:center;font-size:26px;font-weight:bold;border:3px solid #000;padding:7px;margin:8px 0}.meta{text-align:center;border-bottom:2px dashed #000;padding:7px 0;line-height:1.55}.item{font-size:18px;padding:10px 0;border-bottom:1px dashed #000}.item span{display:block;font-size:14px;margin:4px 0 0 12px}.foot{text-align:center;margin-top:12px;font-weight:bold}.kot+.kot{break-before:page;page-break-before:always}";
+const prepLines = (order) => (order.lines || []).filter((l) => !l.isDiscount && !l.isServiceCharge);
+
+function kotBody(order, { settings = {}, customerName = "Walk-in Customer", station = "" } = {}) {
+	const lines = prepLines(order)
 		.map(
 			(l) =>
 				`<div class="item"><b>${l.qty} × ${esc(l.name)}</b>${(l.modifiers || [])
@@ -45,12 +46,45 @@ export function kotHtml(order, { settings = {}, customerName = "Walk-in Customer
 					.join("")}</div>`,
 		)
 		.join("");
-	const reference = order.orderReference ? `<div class="reference">${esc(order.orderReference)}</div>` : "";
-	return `<!doctype html><html><head><title>KOT ${esc(order.receipt || order.orderNumber)}</title><style>@page{size:80mm auto;margin:4mm}body{font:14px Arial;width:72mm;margin:0;color:#000}h1{text-align:center;margin:0;font-size:25px}.reference{text-align:center;font-size:26px;font-weight:bold;border:3px solid #000;padding:7px;margin:8px 0}.meta{text-align:center;border-bottom:2px dashed #000;padding:7px 0;line-height:1.55}.item{font-size:18px;padding:10px 0;border-bottom:1px dashed #000}.item span{display:block;font-size:14px;margin:4px 0 0 12px}.foot{text-align:center;margin-top:12px;font-weight:bold}</style></head><body><h1>KITCHEN ORDER</h1>${reference}<div class="meta"><b>${esc(
+	const reference = order.orderReference || order.reference ? `<div class="reference">${esc(order.orderReference || order.reference)}</div>` : "";
+	return `<div class="kot"><h1>KITCHEN ORDER</h1>${station ? `<div class="station">${esc(station)}</div>` : ""}${reference}<div class="meta"><b>${esc(
 		order.receipt || order.orderNumber,
 	)}</b><br><strong>Customer:</strong> ${esc(customerName)}<br>${new Date(order.createdAt || order.openedAt || Date.now()).toLocaleString()}</div>${
 		lines || '<div class="item">No preparation items</div>'
-	}<div class="foot">Route: ${esc(settings.kotPrinter || "Kitchen")}</div>${autoPrint ? "<script>onload=()=>print()</script>" : ""}</body></html>`;
+	}<div class="foot">Route: ${esc(station || settings.kotPrinter || "Kitchen")}</div></div>`;
+}
+
+/** Kitchen order ticket (no prices, quantities + modifiers only). */
+export function kotHtml(order, { settings = {}, customerName = "Walk-in Customer", autoPrint = true, station = "" } = {}) {
+	return `<!doctype html><html><head><title>KOT ${esc(order.receipt || order.orderNumber)}</title><style>${KOT_CSS}</style></head><body>${kotBody(order, { settings, customerName, station })}${autoPrint ? "<script>onload=()=>print()</script>" : ""}</body></html>`;
+}
+
+/** Several kitchen tickets (one per station) in one print job, each on its own page. */
+export function kotTicketsHtml(tickets, { settings = {} } = {}) {
+	return `<!doctype html><html><head><title>KOT ${esc(tickets[0]?.orderNumber || "")}</title><style>${KOT_CSS}</style></head><body>${tickets
+		.map((t) => kotBody(t, { settings, station: t.station }))
+		.join("")}<script>onload=()=>print()</script></body></html>`;
+}
+
+/** Kitchen ticket as ESC/POS bytes for an 80 mm USB printer: big header and items, modifiers indented, then a cut. */
+export function kotEscPos(ticket) {
+	const enc = new TextEncoder();
+	const text = (v) => [...enc.encode(String(v))];
+	const big = (on) => [29, 33, on ? 17 : 0]; // GS ! double width and height
+	const align = (a) => [27, 97, a === "center" ? 1 : 0];
+	const out = [27, 64, ...align("center"), ...big(true), ...text("KITCHEN ORDER"), 10];
+	if (ticket.station) out.push(...text(ticket.station), 10);
+	out.push(...big(false));
+	if (ticket.reference) out.push(...big(true), ...text(ticket.reference), 10, ...big(false));
+	out.push(...text(ticket.orderNumber || ""), 10, ...text(new Date(ticket.createdAt || Date.now()).toLocaleString()), 10, ...text("-".repeat(48)), 10, ...align("left"));
+	const lines = prepLines(ticket);
+	for (const l of lines) {
+		out.push(27, 69, 1, ...big(true), ...text(`${l.qty} x ${l.name}`.slice(0, 24)), 10, ...big(false), 27, 69, 0);
+		for (const m of l.modifiers || []) out.push(...text(`   - ${m.groupName}: ${m.optionName}`.slice(0, 48)), 10);
+	}
+	if (!lines.length) out.push(...text("No preparation items"), 10);
+	out.push(...text("-".repeat(48)), 10, 10, 10, 10, 29, 86, 66, 0); // feed + partial cut
+	return new Uint8Array(out);
 }
 
 /** WhatsApp receipt text. */

@@ -81,6 +81,17 @@ export async function patchSettings(ctx, patch) {
 	return putSettings(ctx, { ...ctx.data().settings, ...patch });
 }
 
+/** Stations page: saves the kitchen printers and displays. Returns true when saved. */
+export async function saveKitchenStations(ctx, rows) {
+	const { stations, error } = cleanStations(rows);
+	if (error) return void (await ctx.ui.alert(error));
+	// the first kitchen printer keeps the old single-printer setting up to date for anything that still reads it
+	await patchSettings(ctx, { kitchenStations: stations, kotPrinter: stations.find((x) => x.type === "printer")?.name || "" });
+	log.info("kitchen stations saved", { stations: stations.length });
+	ctx.ui.notice("Stations saved.");
+	return true;
+}
+
 const generateCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 export async function regenerateSupportCode(ctx) {
