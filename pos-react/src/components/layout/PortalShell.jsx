@@ -117,7 +117,7 @@ export function PortalShell() {
 					{section === "reports" && reportNav ? (
 						<ReportNav open={rail} setOpen={setRail} onHome={() => open("home")} homeLabel="Back to home" />
 					) : (
-						<nav className="nav" id="portal-nav" aria-label="Account admin">
+						<nav className="nav portal-nav" id="nav" aria-label="Account admin">
 							<button type="button" className="rail-toggle" aria-expanded={rail} aria-label="Show page names" onClick={() => setRail((r) => !r)}>
 								<span className="nav-icon" aria-hidden="true">☰</span>
 								<span>Show Navigation</span>
@@ -128,7 +128,7 @@ export function PortalShell() {
 							</button>
 							<div className="nav-group nav-sep" role="separator" />
 							{sections.map((s) => (
-								<div key={s.key} className="report-nav-group">
+								<div key={s.key} className={"report-nav-group" + (section === s.key ? " open" : "")}>
 									<button type="button" data-portal={s.key} className={section === s.key ? "active" : ""} title={s.title} onClick={() => open(s.key)}>
 										<PortalIcon name={s.icon} />
 										<span>{s.title}</span>

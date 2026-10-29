@@ -11,7 +11,7 @@ export function ReportNav({ open, setOpen, onHome, homeLabel = "Back to home" })
 	const { reportNav, setReportNav } = usePos();
 	const groups = useReportGroups();
 	return (
-		<nav className="nav report-nav" id="report-nav" aria-label="Reports">
+		<nav className="nav report-nav" id="nav" aria-label="Reports">
 			<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
 				<span className="nav-icon" aria-hidden="true">☰</span>
 				<span>Show Navigation</span>
@@ -26,7 +26,7 @@ export function ReportNav({ open, setOpen, onHome, homeLabel = "Back to home" })
 			</button>
 			<div className="nav-group nav-sep" role="separator" />
 			{groups.map((g) => (
-				<div key={g.key} className="report-nav-group">
+				<div key={g.key} className={"report-nav-group" + (reportNav.group === g.key ? " open" : "")}>
 					<button
 						type="button"
 						data-report={g.key}

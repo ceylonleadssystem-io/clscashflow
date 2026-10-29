@@ -719,9 +719,15 @@ html body.nav-rail .portal .side .nav button,html body.nav-rail .side .report-na
 .portal-box-icon{display:grid;place-items:center;width:96px;height:96px;border-radius:24px;background:var(--ui-soft,#f2f4f6);color:var(--ui-accent,#ff4d0a)}
 @media(max-width:900px){.portal-hub{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(180px,1fr)}.portal-box-icon{width:72px;height:72px}}
 @media(max-width:560px){.portal-hub{grid-template-columns:minmax(0,1fr)}.portal-box{flex-direction:row;text-align:left;justify-content:flex-start;gap:16px;padding:16px;min-height:96px}.portal-box-icon{flex:none;width:56px;height:56px;border-radius:16px}.portal-box-icon svg{width:32px;height:32px}}
-/* the portal and report navigations get the same rail layout as #nav (see nav-rail.css) */
-html body.nav-rail .side :is(#portal-nav,#report-nav){padding:3px 0 6px!important}
-html body.nav-rail .side :is(#portal-nav,#report-nav) button{justify-content:flex-start;padding:8px 5px!important;overflow:hidden}
-html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) :is(#portal-nav,#report-nav){width:36px}
-html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) :is(#portal-nav,#report-nav) button::after{display:none!important}
-html body.nav-rail .side :is(#portal-nav,#report-nav) .report-subnav{margin-left:14px}
+/* the portal and report navigations use id="nav" too, so they get the rail layout of nav-rail.css (collapsed icons, phone and tablet widths);
+   only the tighter padding is theirs, so the 26px icons fit the 36px collapsed column */
+html body.nav-rail .side #nav:is(.portal-nav,.report-nav) button{padding:8px 5px!important}
+html body.nav-rail .side #nav:is(.portal-nav,.report-nav) .report-subnav{margin-left:14px}
+
+/* the open section of the portal / report navigation is highlighted as one block (its row and its sub-items); the chosen sub-item is a lighter pill inside it */
+html body .side .nav .report-nav-group.open{background:var(--ui-accent,#ff4d0a);border-radius:12px;box-shadow:0 8px 18px color-mix(in srgb,var(--ui-accent,#ff4d0a) 25%,transparent);padding-bottom:4px}
+html body .side .nav .report-nav-group.open > button{background:transparent!important;box-shadow:none!important;color:#fff!important}
+html body .side .nav .report-nav-group.open .report-subnav{margin-bottom:0;border-left-color:rgba(255,255,255,.35)}
+html body .side .nav .report-nav-group.open .report-subnav button{color:rgba(255,255,255,.88)!important}
+html body .side .nav .report-nav-group.open .report-subnav button.active{background:rgba(255,255,255,.24)!important;box-shadow:none!important;color:#fff!important;font-weight:700!important}
+html body .side .nav .report-nav-group.open .report-subnav button:hover{background:rgba(255,255,255,.14)!important}
