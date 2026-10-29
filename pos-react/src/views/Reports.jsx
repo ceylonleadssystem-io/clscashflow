@@ -4,7 +4,9 @@
  */
 import { useMemo, useState } from "react";
 import { closedShiftsInRange, customerReport, defaultRange, rangeDates, reportData, reportKpis, staffHours, birthdayInfo, customerSegment, customerInsights } from "../domain/analytics";
-import { downloadCsv, money } from "../domain/format";
+import { downloadCsv, money, today } from "../domain/format";
+import { endOfDayReport } from "../domain/endOfDay";
+import { usePos } from "../store/PosProvider";
 import { Kpi } from "../components/ui";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
@@ -29,6 +31,36 @@ export function Reports() {
 	const shifts = closedShiftsInRange(cashShifts, range);
 	const hours = staffHours(timeEntries, data.users, range);
 	const cr = useMemo(() => customerReport(data.customers, sales, range), [data.customers, sales, range]);
+	const { locationId } = usePos();
+	const [eodDay, setEodDay] = useState(today);
+
+	// End of Day: one day's sales, refunds, voids, registers, staff hours and the current stock, as a PDF or printed
+	const endOfDay = async (print) => {
+		const report = endOfDayReport({
+			day: eodDay,
+			business: data.settings.business || "",
+			locationName: locationId && locationId !== "all" ? data.locations.find((l) => l.id === locationId)?.name || "" : "All locations",
+			locationId,
+			sales,
+			cashShifts,
+			timeEntries,
+			users: data.users,
+			inventory: data.inventory,
+			stockMovements: data.stockMovements,
+			openOrders: data.openOrders,
+			voidOrders: data.voidOrders,
+			supportAudit: data.supportAudit,
+		});
+		log.info("end of day report", { day: eodDay, print });
+		if (!print && pdfSupportsText(report)) {
+			try {
+				return await downloadReportPdf(report, `end-of-day-${eodDay}.pdf`);
+			} catch (e) {
+				log.error("pdf download failed, using the print dialog", e);
+			}
+		}
+		printHtmlInFrame(reportHtml(report), report.title);
+	};
 
 	const exportReport = () => {
 		log.info("report exported", { from: range.from, to: range.to, items: d.items.length });
@@ -127,6 +159,26 @@ export function Reports() {
 							</button>
 						</>
 					)}
+				</div>
+			</div>
+			<div className="panel eod-panel" id="eod-report">
+				<div className="panel-head">
+					<div>
+						<div className="panel-title">End of Day Report</div>
+						<div className="muted">Sales, payments, refunds, voids, open orders, registers, staff hours and current stock for one day</div>
+					</div>
+					<div className="range-fields">
+						<div className="field">
+							<label htmlFor="eod-day">Day</label>
+							<input className="input" type="date" id="eod-day" max={today()} value={eodDay} onChange={(e) => setEodDay(e.target.value || today())} />
+						</div>
+						<button className="btn gold" id="eod-pdf" onClick={() => endOfDay(false)}>
+							Download PDF
+						</button>
+						<button className="btn out" id="eod-print" onClick={() => endOfDay(true)}>
+							Print
+						</button>
+					</div>
 				</div>
 			</div>
 			<div className="grid4" id="report-kpis">

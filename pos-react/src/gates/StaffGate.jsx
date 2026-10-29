@@ -12,6 +12,9 @@ import { useFeature } from "../store/FeatureProvider";
 import { loginLocationChoices } from "../services/pos/locations";
 
 /** Staff PIN gate: type the PIN to sign in. */
+// The PIN field shows one dot per digit: dots still in the field keep the digits in front of them, typed or pasted digits are added
+const unmask = (pin, shown) => (pin.slice(0, (shown.match(/•/g) || []).length) + shown.replace(/\D/g, "")).slice(0, 6);
+
 export function StaffGate() {
 	const { staffLogin } = usePos();
 	const data = useData();
@@ -96,16 +99,24 @@ export function StaffGate() {
 					<>
 						<h2>Sign in to the register</h2>
 						<div className="field" style={{ marginTop: 10 }}>
-							<label>Enter your PIN</label>
+							<label htmlFor="login-pin">Enter your PIN</label>
+							{/* A text field that shows dots instead of a password field, so browsers and password managers never offer to save or fill the PIN */}
 							<input
 								className="input"
 								id="login-pin"
-								type="password"
+								type="text"
 								inputMode="numeric"
 								autoComplete="off"
+								autoCorrect="off"
+								autoCapitalize="off"
+								spellCheck={false}
+								data-1p-ignore="true"
+								data-lpignore="true"
+								data-bwignore="true"
+								data-form-type="other"
 								maxLength={6}
-								value={pin}
-								onChange={(e) => onChange(e.target.value)}
+								value={"•".repeat(pin.length)}
+								onChange={(e) => onChange(unmask(pin, e.target.value))}
 								onKeyDown={(e) => e.key === "Enter" && signIn(pin, pickId)}
 								autoFocus
 							/>

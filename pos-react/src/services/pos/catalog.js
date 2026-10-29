@@ -70,6 +70,7 @@ export async function saveProduct(ctx, form) {
 		modifierIds: form.modifierIds || [],
 		modifierRules: form.modifierRules || {},
 		recipe: form.recipe || [],
+		stationIds: form.stationIds === undefined ? (existing || {}).stationIds || [] : form.stationIds.map(String),
 	};
 	const hasStockRow = d.inventory.some((i) => String(i.productId || "") === String(product.id));
 	if (rawStock !== undefined && !hasStockRow) {

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal, ModalBody, NumberInput } from "../components/ui";
 import { productCategories, productSizeGroup, subcategoriesFor } from "../domain/catalog";
 import { productSizeItem } from "../domain/inventory";
+import { kitchenStations } from "../domain/kitchenStations";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useModals } from "../store/ModalsProvider";
@@ -32,6 +33,7 @@ const blank = () => ({
 	modifierIds: [],
 	modifierRules: {},
 	recipe: [],
+	stationIds: [],
 });
 
 /** Add / edit a product or service (global host, opened from several screens). */
@@ -43,12 +45,15 @@ export function ProductModalHost() {
 
 function ProductModal({ id, open, onClose }) {
 	const data = useData();
-	const { svc } = usePos();
+	const { svc, kitchen } = usePos();
 	const { openBarcode } = useModals();
 	const subcats = useFeature("catalogue.subcategories");
 	const positioning = useFeature("catalogue.imagePositioning");
 	const recipes = useFeature("inventory.recipes");
 	const barcodes = useFeature("catalogue.barcodeLabels");
+	const tickets = useFeature("checkout.kitchenTickets");
+	const kdsOn = useFeature("checkout.kds");
+	const stations = kitchen && tickets ? kitchenStations(data.settings, kdsOn) : [];
 	const [f, setF] = useState(blank);
 	const dragging = useRef(null);
 	const previewRef = useRef(null);
@@ -73,6 +78,7 @@ function ProductModal({ id, open, onClose }) {
 			modifierIds: p.modifierIds || [],
 			modifierRules: p.modifierRules || {},
 			recipe: p.recipe || [],
+			stationIds: (p.stationIds || []).map(String),
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open, id]);
@@ -346,6 +352,26 @@ function ProductModal({ id, open, onClose }) {
 							{!data.modifiers.length && <span className="muted">Create modifier groups first.</span>}
 						</div>
 					</div>
+					{stations.length > 0 && (
+						<fieldset className="field full" id="p-stations">
+							<legend className="label">Kitchen printers & displays</legend>
+							<div className="muted">Where this item's kitchen ticket goes. Tick more than one to send it to each. None ticked: {stations[0].name}.</div>
+							<div className="station-checks">
+								{stations.map((st) => (
+									<label key={st.id}>
+										<input
+											type="checkbox"
+											data-station-id={st.id}
+											checked={f.stationIds.includes(st.id)}
+											onChange={(e) => setF((v) => ({ ...v, stationIds: e.target.checked ? [...v.stationIds, st.id] : v.stationIds.filter((x) => x !== st.id) }))}
+										/>{" "}
+										{st.name}
+										{st.type === "kds" && kdsOn ? " (KDS)" : ""}
+									</label>
+								))}
+							</div>
+						</fieldset>
+					)}
 					{recipes && (
 						<div className="field full">
 							<label>Inventory / Stock Usage</label>

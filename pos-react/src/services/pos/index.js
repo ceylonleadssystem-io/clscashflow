@@ -78,11 +78,13 @@ export function bindServices(ctx) {
 			shareReceiptWhatsApp: printing.shareReceiptWhatsApp,
 			printKotForSale: printing.printKotForSale,
 			printTestKot: printing.printTestKot,
+			testStation: printing.testStation,
 			sendToKitchen: printing.sendToKitchen,
 		}),
 		settings: bind(ctx, {
 			saveSettings: settings.saveSettings,
 			patchSettings: settings.patchSettings,
+			saveKitchenStations: settings.saveKitchenStations,
 			regenerateSupportCode: settings.regenerateSupportCode,
 			uploadBusinessLogo: settings.uploadBusinessLogo,
 			removeBusinessLogo: settings.removeBusinessLogo,

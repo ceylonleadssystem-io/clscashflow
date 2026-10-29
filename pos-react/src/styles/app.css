@@ -630,3 +630,31 @@ html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
 .assist-bar .btn{min-height:38px}
 .assist-bar .btn.out{background:transparent!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}
 @media (max-width:560px){.assist-bar{left:12px;right:12px;transform:none;bottom:calc(10px + env(safe-area-inset-bottom,0px))}}
+/* Settings > Receipts & Printing: kitchen printers and displays */
+.station-list{display:grid;gap:8px;margin-top:10px}
+.station-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 92px auto;gap:8px;align-items:center}
+.station-meta{font-size:12px;white-space:nowrap}
+.station-actions{display:flex;gap:6px}
+.station-actions .btn{min-height:40px;min-width:40px;padding:0 10px}
+@media (max-width:640px){.station-row{grid-template-columns:minmax(0,1fr) auto;padding-bottom:10px;border-bottom:1px solid var(--line,#eadfce)}.station-row>.input{grid-column:1/-1;min-width:0;width:100%}.station-meta{grid-column:1;white-space:normal}.station-actions{grid-column:2;justify-content:flex-end}}
+/* item form: kitchen printers */
+.station-checks{display:flex;flex-wrap:wrap;gap:8px 16px}
+#p-stations{border:0;padding:0;margin:0;min-width:0}
+#p-stations legend{padding:0;margin-bottom:4px}
+.station-checks{margin-top:6px}
+.station-checks label{display:inline-flex;align-items:center;gap:6px;min-height:36px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;color:inherit}
+/* Reports: End of Day */
+.eod-panel{margin-bottom:16px}
+.eod-panel .panel-head{flex-wrap:wrap;gap:12px}
+.eod-panel .range-fields{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+/* Stations page */
+.station-cards{display:grid;gap:12px}
+.station-card{border:1px solid var(--line,#eadfce);border-radius:12px;padding:12px;display:grid;gap:10px;min-width:0}
+.station-detail{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.station-detail .btn{min-height:44px}
+.station-printer{display:grid;gap:4px;min-width:min(260px,100%)}
+.station-device{font-size:13px;align-self:center;min-width:0;overflow-wrap:anywhere}
+.station-summary{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.station-summary li{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.kds-pairing{flex:1 1 280px;min-width:0}
+.kds-screen{margin:10px 0;padding-top:10px;border-top:1px solid var(--line,#eadfce)}

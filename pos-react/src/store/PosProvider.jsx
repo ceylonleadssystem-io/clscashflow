@@ -15,6 +15,7 @@ import { ensureProductInventory } from "../domain/inventory";
 import { makeCtx, markDeleted } from "../services/pos/common";
 import { bindServices } from "../services/pos";
 import { kdsLink } from "../KDS/link";
+import { kitchenStations } from "../domain/kitchenStations";
 import { userLocationIds, activeLocations } from "../services/pos/locations";
 import { mainLocation } from "../services/sync/account";
 import { SUPPORT_USER, supportModeActive } from "../services/support";
@@ -91,6 +92,7 @@ export function PosProvider({ children }) {
 			// the Order Queue belongs to kitchen presets, but saved orders of any preset stay reachable
 			if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 			if (v === "tables" && !kitchen) return false;
+			if (v === "stations" && !kitchen) return false;
 			if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
 			if (v === "checkout" && locationId === "all") return false;
 			const flag = VIEW_FEATURE[v];
@@ -107,6 +109,7 @@ export function PosProvider({ children }) {
 	function canView2(user, v) {
 		if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 		if (v === "tables" && !kitchen) return false;
+		if (v === "stations" && !kitchen) return false;
 		if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
 		const flag = VIEW_FEATURE[v];
 		return flag ? !!enabled[flag] : true;
@@ -167,6 +170,11 @@ export function PosProvider({ children }) {
 		});
 		return () => kdsLink.stop();
 	}, [kdsOn, store, dataRef]);
+	// one link per Kitchen Display station, each paired with its own kitchen screen
+	const kdsIds = kdsOn ? kitchenStations(settings, true).filter((st) => st.type === "kds").map((st) => st.id).join("|") : "";
+	useEffect(() => {
+		if (kdsOn) kdsLink.sync(kdsIds ? kdsIds.split("|") : []);
+	}, [kdsOn, kdsIds]);
 
 	// --------------------------------------------------------- navigation ---
 	const go = useCallback(

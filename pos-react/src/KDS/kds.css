@@ -7,6 +7,7 @@
 .kds-card.late{border-color:#d33;box-shadow:0 0 0 3px rgba(221,51,51,.18)}
 .kds-head{display:flex;justify-content:space-between;gap:8px;font-weight:800;font-size:17px}
 .kds-ref{font-size:13px;opacity:.75}
+.kds-station{display:inline-block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.14);margin-bottom:4px}
 .kds-item{font-size:18px;font-weight:700;padding:6px 0;border-top:1px dashed var(--ui-line,#ddd)}
 .kds-item span{display:block;font-size:14px;font-weight:500;margin:2px 0 0 12px}
 .kds-actions{display:flex;gap:8px}
