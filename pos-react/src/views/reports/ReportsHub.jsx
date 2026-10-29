@@ -17,10 +17,10 @@ export function ReportsHub() {
 					<div className="muted">Choose a report. The navigation on the left switches to the reports so you can move between them.</div>
 				</div>
 			</div>
-			<div className="reports-hub" id="reports-hub">
+			<div className="reports-grid" id="reports-hub">
 				{groups.map((g) => (
-					<button key={g.key} type="button" className="report-box" data-report={g.key} onClick={() => setReportNav({ group: g.key, sub: firstSub(g.key) })}>
-						<span className="report-box-icon" aria-hidden="true">{g.icon}</span>
+					<button key={g.key} type="button" className="portal-box" data-report={g.key} onClick={() => setReportNav({ group: g.key, sub: firstSub(g.key) })}>
+						<span className="portal-box-icon" aria-hidden="true">{g.icon}</span>
 						<strong>{g.title}</strong>
 						<span className="muted">{g.blurb}</span>
 						{g.subs.length > 0 && <small>{g.subs.length} reports</small>}
