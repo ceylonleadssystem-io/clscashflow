@@ -747,7 +747,8 @@ html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #
 /* the whole sidebar scrolls when its content (brand, user, navigation, buttons) is taller than the screen, so every item can be reached */
 html body.nav-rail:not(.mobile-checkout) .side{overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:none}
 html body.nav-rail .side::-webkit-scrollbar{display:none}
-html body.nav-rail:not(.mobile-checkout) .side #nav.nav{overflow:visible!important;flex:0 0 auto!important;min-height:auto!important}
+/* the nav is as tall as its items (the sidebar scrolls instead) but still clips sideways, so labels never show beside the icons of the collapsed rail */
+html body.nav-rail:not(.mobile-checkout) .side #nav.nav{overflow:hidden!important;flex:0 0 auto!important;min-height:auto!important}
 html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 .reports-grid .portal-box .muted{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
 @media(max-height:800px){.reports-grid .portal-box-icon{width:56px;height:56px;font-size:26px}}
