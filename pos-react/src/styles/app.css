@@ -731,3 +731,23 @@ html body .side #nav .report-subnav button{color:#bfc7cc!important}
 html body .side #nav .report-subnav button.active{color:#fff!important;font-weight:700!important}
 html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav .report-subnav{display:none}
 html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav .report-nav-group.has-subs.open > button{background:var(--ui-accent,#ff4d0a)!important}
+
+/* Reports home: 4 tiles across, the rows stretch to fill the screen (3 rows for 11 to 12 reports, 4 rows for 13 to 16) */
+#view-reports:has(.reports-grid){display:flex;flex-direction:column;min-height:calc(100dvh - 130px)}
+.reports-grid{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(130px,1fr);gap:16px;min-height:min(70dvh,640px)}
+.reports-grid .portal-box{padding:16px;gap:8px}
+.reports-grid .portal-box-icon{width:72px;height:72px;border-radius:20px;font-size:34px;line-height:1}
+.reports-grid .portal-box strong{font-size:calc(19px * var(--ui-fs, 1))}
+.reports-grid .portal-box .muted{font-size:calc(12.5px * var(--ui-fs, 1));max-width:28ch}
+.reports-grid .portal-box small{color:var(--ui-accent,#ff4d0a);font-weight:600}
+@media(max-width:1100px){.reports-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.reports-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reports-grid .portal-box-icon{width:56px;height:56px;font-size:26px}}
+@media(max-width:480px){.reports-grid{grid-template-columns:minmax(0,1fr)}.reports-grid .portal-box{flex-direction:row;text-align:left;justify-content:flex-start;gap:14px;min-height:96px}.reports-grid .portal-box-icon{flex:none}}
+
+/* the whole sidebar scrolls when its content (brand, user, navigation, buttons) is taller than the screen, so every item can be reached */
+html body.nav-rail:not(.mobile-checkout) .side{overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:none}
+html body.nav-rail .side::-webkit-scrollbar{display:none}
+html body.nav-rail:not(.mobile-checkout) .side #nav.nav{overflow:visible!important;flex:0 0 auto!important;min-height:auto!important}
+html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
+.reports-grid .portal-box .muted{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+@media(max-height:800px){.reports-grid .portal-box-icon{width:56px;height:56px;font-size:26px}}
