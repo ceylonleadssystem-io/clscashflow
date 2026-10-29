@@ -16,6 +16,8 @@ import { kitchenStations } from "../domain/kitchenStations";
 import { onSettingsTab, requestedSettingsTab } from "../store/settingsTab";
 import { CeyloMascot } from "../components/ceylo/Ceylo";
 import { CeyloAiKeyPanel } from "../components/ceylo/CeyloAiKey";
+import { SystemOptionsProvider } from "../components/settings/kit/SystemOptionsContext";
+import { SettingsHome } from "./settings/SettingsHome";
 import {
 	AppearancePanel,
 	BillingPanel,
@@ -73,13 +75,19 @@ export function Settings({ only = null }) {
 	const ceyloAi = useFeature("settings.ceyloAi");
 	const ui = useUi();
 	const [tab, setTab] = useState(() => (only && !only.includes(requestedSettingsTab()) ? only[0] : requestedSettingsTab()) || "business");
+	// "legacy" shows the tab content below; any other value is a System Options page (views/settings/)
+	const [page, setPage] = useState("legacy");
 	// Ceylo's fix buttons can ask for a tab while Settings is already open
-	useEffect(() => onSettingsTab((t) => setTab(t)), []);
+	useEffect(() => onSettingsTab((t) => (setTab(t), setPage("legacy"))), []);
 	const [form, setForm] = useState(() => formFrom(settings));
 	useEffect(() => {
 		// reload when a preset/setup is applied elsewhere
 		setForm((f) => ({ ...f, businessType: settings.businessType || f.businessType }));
 	}, [settings.businessType]);
+	// the receipt footer can also be saved from System Options > Receipts: keep this form from overwriting it later
+	useEffect(() => {
+		setForm((f) => ({ ...f, receiptFooter: settings.receiptFooter || f.receiptFooter }));
+	}, [settings.receiptFooter]);
 	const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
 	const full = FULL_SETTINGS_ROLES.includes(currentUser?.role);
 	const save = () => {
@@ -92,6 +100,8 @@ export function Settings({ only = null }) {
 	};
 	const kitchen = hasCapability(form.businessType, "kitchen");
 	// the KDS tab exists only for kitchen businesses whose account has the Kitchen Display switched on
+	// the System Options sidebar is for people who may change settings, and not for the portal's single-tab Location Info
+	const sidebar = full && !only;
 	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn)));
 
 	const sections = {
@@ -140,10 +150,10 @@ export function Settings({ only = null }) {
 		),
 	};
 
-	return (
+	const legacyView = (
 		<section className="view active" id="view-settings">
 			<div className="settings-tabbed" style={{ maxWidth: 900, display: "grid", gap: 16 }}>
-				<div className="settings-tabs" role="tablist" aria-label="Settings sections" style={TABS.length < 2 ? { display: "none" } : undefined}>
+				<div className="settings-tabs" role="tablist" aria-label="Settings sections" style={TABS.length < 2 || sidebar ? { display: "none" } : undefined}>
 					{TABS.map((t, i) => (
 						<button
 							key={t.id}
@@ -188,5 +198,11 @@ export function Settings({ only = null }) {
 				)}
 			</div>
 		</section>
+	);
+	if (!sidebar) return legacyView;
+	return (
+		<SystemOptionsProvider>
+			<SettingsHome page={page} setPage={setPage} legacyTabs={TABS} tab={tab} setTab={setTab} legacyView={legacyView} />
+		</SystemOptionsProvider>
 	);
 }

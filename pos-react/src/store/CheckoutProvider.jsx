@@ -8,6 +8,7 @@ import { addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifi
 import { productSizeGroup } from "../domain/catalog";
 import { availableProductStock, cartQtyForProduct, hasSizedStock, stockSizeFor } from "../domain/inventory";
 import { phoneKey } from "../domain/format";
+import { resolveOptions } from "../domain/systemOptions";
 import { serviceChargeSupported } from "../services/pos/common";
 import { useData } from "./DataProvider";
 import { useFeatures } from "./FeatureProvider";
@@ -43,7 +44,7 @@ export function CheckoutProvider({ children }) {
 	const [printAfter, setPrintAfterState] = useState(() => localStorage.getItem(STORAGE.printSale) !== "false");
 	const [cashTendered, setCashTendered] = useState("");
 	const [orderReference, setOrderReference] = useState("");
-	const [orderChannel, setOrderChannel] = useState("Dine-in");
+	const [orderChannel, setOrderChannel] = useState(() => resolveOptions(data.settings, "orderEntry", locationId).defaultOrderType);
 	const [platformOrderId, setPlatformOrderId] = useState("");
 	const [openOrderId, setOpenOrderId] = useState("");
 	const [category, setCategory] = useState("All");
@@ -71,9 +72,18 @@ export function CheckoutProvider({ children }) {
 		const list = Array.isArray(saved) && saved.length ? saved.filter((c) => ORDER_CHANNELS.includes(c)) : ORDER_CHANNELS;
 		return list.length ? list : ORDER_CHANNELS;
 	}, [settings.orderChannels]);
+	// the order type new orders start with (Settings > System Options > Order Entry); the first channel when that one is switched off
+	const defaultChannel = useMemo(() => {
+		const wanted = resolveOptions(settings, "orderEntry", locationId).defaultOrderType;
+		return channels.includes(wanted) ? wanted : channels[0];
+	}, [settings, locationId, channels]);
+	// an empty order that has not been started follows a changed default straight away
 	useEffect(() => {
-		if (!channels.includes(orderChannel)) setOrderChannel(channels[0]);
-	}, [channels, orderChannel]);
+		if (!cart.length && !openOrderId) setOrderChannel(defaultChannel);
+	}, [defaultChannel]); // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => {
+		if (!channels.includes(orderChannel)) setOrderChannel(defaultChannel);
+	}, [channels, orderChannel, defaultChannel]);
 
 	// a split that no longer matches the total is discarded (legacy behaviour)
 	useEffect(() => {
@@ -154,12 +164,12 @@ export function CheckoutProvider({ children }) {
 		setOpenOrderId("");
 		setOrderReference("");
 		setPlatformOrderId("");
-		setOrderChannel(channels[0] || "Dine-in");
+		setOrderChannel(defaultChannel || "Dine-in");
 		setCashTendered("");
 		setWantsEmail(false);
 		setWantsWhatsApp(false);
 		setReceiptEmail("");
-	}, [channels]);
+	}, [defaultChannel]);
 
 	// ------------------------------------------------------- customers ------
 	const selectCustomer = useCallback(

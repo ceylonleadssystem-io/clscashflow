@@ -11,7 +11,7 @@ import { nowIso } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
 import { isAppwrite } from "../../config/env";
 import { isDataImage, storeImage } from "../imageStorage";
-import { supportAuditEntry, unmarkDeletedCategory } from "./common";
+import { audit, supportAuditEntry, unmarkDeletedCategory } from "./common";
 import { addCommonModifiers } from "./catalog";
 import { createLogger } from "../../utils/logger";
 
@@ -80,6 +80,21 @@ export async function putSettings(ctx, next) {
 
 export async function patchSettings(ctx, patch) {
 	return putSettings(ctx, { ...ctx.data().settings, ...patch });
+}
+
+/**
+ * System Options page: saves the new settings.systemOptions (and the receipt footer, which keeps living in settings.receiptFooter) and
+ * writes one audit entry that lists what changed. `changes` is [{ page, key, before, after }].
+ */
+export async function saveSystemOptions(ctx, { systemOptions, receiptFooter, changes = [], locationId = "all" }) {
+	const patch = { systemOptions };
+	if (receiptFooter !== undefined) patch.receiptFooter = receiptFooter;
+	await patchSettings(ctx, patch);
+	const summary = changes.map((c) => `${c.page}.${c.key}: ${JSON.stringify(c.before)} -> ${JSON.stringify(c.after)}`).join("; ").slice(0, 900);
+	await ctx.store.write((tx) => audit(tx, ctx.session(), "system-options-saved", summary, locationId === "all" ? "" : locationId));
+	log.info("system options saved", { changes: changes.length, locationId });
+	ctx.ui.notice("Settings saved.");
+	return true;
 }
 
 /** Stations page: saves the kitchen printers and displays. Returns true when saved. */

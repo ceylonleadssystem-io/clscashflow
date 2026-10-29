@@ -4,6 +4,7 @@
  */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
+import { autoClockOutDue, resolveOptions } from "../../domain/systemOptions";
 import { activeTimeEntry, currentCashShift, expectedCash } from "../../domain/sales";
 import { subscriptionOf, userLimitError } from "../../config/subscription";
 import { createLogger } from "../../utils/logger";
@@ -44,6 +45,28 @@ export async function clockOut(ctx) {
 	await ctx.store.write((tx) => tx.put(T.timeEntries, { ...entry, breaks, clockOut: nowIso() }));
 	log.info("clocked out", { userId: s.userId });
 	return true;
+}
+
+/**
+ * Settings > System Options > Clock In / Out: clocks out whoever has been on too long, or is still on after the daily clock-out time.
+ * A person with an open cash register is left clocked in until the register is closed. Returns how many people were clocked out.
+ */
+export async function autoClockOutAll(ctx, now = new Date()) {
+	const d = ctx.data();
+	const open = d.timeEntries.filter((e) => !e.clockOut);
+	const due = open.filter((e) => autoClockOutDue(e, resolveOptions(d.settings, "clock", e.locationId || "all"), now) && !d.cashShifts.some((c) => c.status === "open" && c.userId === e.userId));
+	if (!due.length) return 0;
+	const at = now.toISOString();
+	await ctx.store.write((tx) =>
+		due.forEach((e) => {
+			const breaks = (e.breaks || []).map((b) => ({ ...b }));
+			const last = breaks[breaks.length - 1];
+			if (last && !last.end) last.end = at;
+			tx.put(T.timeEntries, { ...e, breaks, clockOut: at });
+		}),
+	);
+	log.info("auto clocked out", { people: due.length });
+	return due.length;
 }
 
 export async function toggleBreak(ctx) {

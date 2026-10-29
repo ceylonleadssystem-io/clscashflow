@@ -5,6 +5,7 @@
 import { useMemo } from "react";
 import { money } from "../../domain/format";
 import { availableProductStock } from "../../domain/inventory";
+import { resolveOptions } from "../../domain/systemOptions";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { useCheckout } from "../../store/CheckoutProvider";
@@ -15,6 +16,8 @@ export function ProductGrid({ products }) {
 	const data = useData();
 	const { addProduct } = useCheckout();
 	const { locationId } = usePos();
+	// Settings > System Options > Order Entry: prices on the buttons
+	const showPrices = resolveOptions(data.settings, "orderEntry", locationId).showPrices;
 	const stockGuard = useFeature("checkout.stockGuard") && useFeature("inventory.productStock");
 	const stock = useMemo(() => {
 		if (!stockGuard) return {};
@@ -62,7 +65,7 @@ export function ProductGrid({ products }) {
 									{p.category} · {p.code}
 								</small>
 							</span>
-							<span className="price">{money(p.price)}</span>
+							{showPrices && <span className="price">{money(p.price)}</span>}
 							{limited && <small className="muted stock-available">{available > 0 ? available + " in stock" : "Out of stock"}</small>}
 						</span>
 					</button>

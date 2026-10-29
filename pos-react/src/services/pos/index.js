@@ -24,6 +24,7 @@ export function bindServices(ctx) {
 		staff: bind(ctx, {
 			clockInAndOpenRegister: staff.clockInAndOpenRegister,
 			clockOut: staff.clockOut,
+			autoClockOutAll: staff.autoClockOutAll,
 			toggleBreak: staff.toggleBreak,
 			openRegister: staff.openRegister,
 			closeRegister: staff.closeRegister,
@@ -85,6 +86,7 @@ export function bindServices(ctx) {
 			saveSettings: settings.saveSettings,
 			patchSettings: settings.patchSettings,
 			saveKitchenStations: settings.saveKitchenStations,
+			saveSystemOptions: settings.saveSystemOptions,
 			regenerateSupportCode: settings.regenerateSupportCode,
 			uploadBusinessLogo: settings.uploadBusinessLogo,
 			removeBusinessLogo: settings.removeBusinessLogo,

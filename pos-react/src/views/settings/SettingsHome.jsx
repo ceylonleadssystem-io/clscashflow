@@ -1,0 +1,41 @@
+/**
+ * Settings with a sidebar: System Options pages (new) and "More settings", the existing tabs, which keep their own content and Save All button.
+ * Rendered inside SystemOptionsProvider so the draft survives moving between System Options pages.
+ */
+import { SYSTEM_PAGES } from "../../domain/systemOptions";
+import { SaveBar, SettingsShell } from "../../components/settings/kit/SettingsShell";
+import { useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
+import { Overview, PAGE_COMPONENTS } from "./SystemOptionsPages";
+
+export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyView }) {
+	const draft = useSystemOptionsDraft();
+	const current = page === "legacy" ? "legacy:" + tab : page;
+	const groups = [
+		{ title: "System Options", items: SYSTEM_PAGES.map((p) => ({ key: p.key, label: p.title })) },
+		{ title: "More settings", items: legacyTabs.map((t) => ({ key: "legacy:" + t.id, label: t.label })) },
+	];
+	const select = (key) => {
+		if (key.startsWith("legacy:")) {
+			setTab(key.slice(7));
+			setPage("legacy");
+		} else setPage(key);
+	};
+	const Page = PAGE_COMPONENTS[page];
+	return (
+		<SettingsShell
+			groups={groups}
+			current={current}
+			onSelect={select}
+			guard={() => !draft.dirty}
+			bottom={page !== "legacy" && <SaveBar count={draft.changes.length} onDiscard={draft.discard} onSave={draft.save} saving={draft.saving} />}
+		>
+			{page === "legacy" ? (
+				legacyView
+			) : (
+				<section className="view active" id="view-settings" data-system-options={page}>
+					{page === "overview" ? <Overview onOpen={select} /> : Page ? <Page /> : null}
+				</section>
+			)}
+		</SettingsShell>
+	);
+}

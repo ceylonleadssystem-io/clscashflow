@@ -9,6 +9,7 @@ import { applyDark, resolveDark, storedDark } from "../utils/theme";
 import { ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
 import { RETIRED_MODIFIER_NAMES } from "../config/presets";
 import { hasCapability } from "../config/capabilities";
+import { landingView, resolveOptions } from "../domain/systemOptions";
 import { VIEW_FEATURE } from "../config/features";
 import { T } from "../db/tables";
 import { migrateOrderNumbers } from "../domain/orders";
@@ -176,6 +177,14 @@ export function PosProvider({ children }) {
 		});
 		return () => kdsLink.stop();
 	}, [kdsOn, store, dataRef]);
+	// Settings > System Options > Clock In / Out: check once a minute whether anyone is due to be clocked out automatically
+	useEffect(() => {
+		if (!currentUser || support || assist) return undefined;
+		const tick = () => svc.staff.autoClockOutAll().catch((e) => log.warn("auto clock-out failed", e));
+		tick();
+		const id = setInterval(tick, 60000);
+		return () => clearInterval(id);
+	}, [currentUser?.id, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
 	// one link per Kitchen Display station, each paired with its own kitchen screen
 	const kdsIds = kdsOn ? kitchenStations(settings, true).filter((st) => st.type === "kds").map((st) => st.id).join("|") : "";
 	useEffect(() => {
@@ -231,7 +240,8 @@ export function PosProvider({ children }) {
 			sessionRef.current = { ...sessionRef.current, userId: user.id, user, locationId: chosen };
 			if (multi) svc.locations.auditLogin(chosen);
 			const first = (ROLE_VIEWS[user.role] || ["staff"]).find((v) => canView2(user, v)) || "settings";
-			setView(first);
+			// Settings > System Options > Sign In: the screen staff land on, when their role may open it
+			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => canView2(user, v), first));
 			if (user.role === "owner" && !d.settings.onboardingComplete && !d.settings.onboardingDismissed && enabled["settings.posSetupWizard"])
 				setTimeout(() => setSetupOpen(true), 250);
 			if (enabled["staff.shiftPrompt"]) setTimeout(() => setShiftStart(user), 80);
