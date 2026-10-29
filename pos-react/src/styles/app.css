@@ -724,10 +724,10 @@ html body.nav-rail .portal .side .nav button,html body.nav-rail .side .report-na
 html body.nav-rail .side #nav:is(.portal-nav,.report-nav) button{padding:8px 5px!important}
 html body.nav-rail .side #nav:is(.portal-nav,.report-nav) .report-subnav{margin-left:14px}
 
-/* the open section of the portal / report navigation is highlighted as one block (its row and its sub-items); the chosen sub-item is a lighter pill inside it */
-html body .side .nav .report-nav-group.open{background:var(--ui-accent,#ff4d0a);border-radius:12px;box-shadow:0 8px 18px color-mix(in srgb,var(--ui-accent,#ff4d0a) 25%,transparent);padding-bottom:4px}
-html body .side .nav .report-nav-group.open > button{background:transparent!important;box-shadow:none!important;color:#fff!important}
-html body .side .nav .report-nav-group.open .report-subnav{margin-bottom:0;border-left-color:rgba(255,255,255,.35)}
-html body .side .nav .report-nav-group.open .report-subnav button{color:rgba(255,255,255,.88)!important}
-html body .side .nav .report-nav-group.open .report-subnav button.active{background:rgba(255,255,255,.24)!important;box-shadow:none!important;color:#fff!important;font-weight:700!important}
-html body .side .nav .report-nav-group.open .report-subnav button:hover{background:rgba(255,255,255,.14)!important}
+/* a section with sub-items: only the chosen sub-item is highlighted (the section row just stays bright, with its sub-items listed under it).
+   While the rail is collapsed to icons the sub-items are hidden, so the section row is highlighted instead. */
+html body .side #nav .report-nav-group.has-subs.open > button{background:transparent!important;box-shadow:none!important;color:#fff!important}
+html body .side #nav .report-subnav button{color:#bfc7cc!important}
+html body .side #nav .report-subnav button.active{color:#fff!important;font-weight:700!important}
+html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav .report-subnav{display:none}
+html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav .report-nav-group.has-subs.open > button{background:var(--ui-accent,#ff4d0a)!important}

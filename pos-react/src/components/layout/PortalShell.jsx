@@ -128,7 +128,7 @@ export function PortalShell() {
 							</button>
 							<div className="nav-group nav-sep" role="separator" />
 							{sections.map((s) => (
-								<div key={s.key} className={"report-nav-group" + (section === s.key ? " open" : "")}>
+								<div key={s.key} className={"report-nav-group" + (section === s.key ? " open" : "") + (s.subs ? " has-subs" : "")}>
 									<button type="button" data-portal={s.key} className={section === s.key ? "active" : ""} title={s.title} onClick={() => open(s.key)}>
 										<PortalIcon name={s.icon} />
 										<span>{s.title}</span>

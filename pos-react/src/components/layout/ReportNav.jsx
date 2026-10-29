@@ -26,7 +26,7 @@ export function ReportNav({ open, setOpen, onHome, homeLabel = "Back to home" })
 			</button>
 			<div className="nav-group nav-sep" role="separator" />
 			{groups.map((g) => (
-				<div key={g.key} className={"report-nav-group" + (reportNav.group === g.key ? " open" : "")}>
+				<div key={g.key} className={"report-nav-group" + (reportNav.group === g.key ? " open" : "") + (g.subs.length ? " has-subs" : "")}>
 					<button
 						type="button"
 						data-report={g.key}
