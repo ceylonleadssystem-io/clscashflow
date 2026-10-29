@@ -112,7 +112,7 @@ describe("labor, transactions, kitchen, multi-location", () => {
 describe("catalogue, filters and formatting", () => {
 	it("every sub-report has a builder result", () => {
 		for (const g of REPORT_GROUPS) {
-			if (g.key === "dashboard" || g.key === "end-of-day") continue;
+			if (g.key === "end-of-day") continue;
 			for (const sub of g.subs.length ? g.subs : [{ key: "" }]) {
 				const r = buildReport(g.key, sub.key, ctx([sale("1")], { locations: [{ id: "l1", name: "A" }] }));
 				expect(r.cols.length, g.key + "/" + sub.key).toBeGreaterThan(0);

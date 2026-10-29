@@ -21,16 +21,10 @@ export function Staff() {
 	const { openCash } = useModals();
 	const attendance = useFeature("staff.attendance");
 	const register = useFeature("staff.cashRegister");
-	const usersOn = useFeature("staff.users");
-	const deletion = useFeature("staff.userDeletion");
-	const multi = useFeature("business.locations");
-	const [editing, setEditing] = useState(null);
 
 	const entry = activeTimeEntry(data.timeEntries, currentUser?.id);
 	const shift = currentCashShift(data.cashShifts, currentUser?.id);
 	const onBreak = isOnBreak(entry);
-	const manage = MANAGER_ROLES.includes(currentUser?.role) || currentUser?.role === "admin";
-	const canDelete = deletion && OWNER_ROLES.includes(currentUser?.role);
 	void locationId;
 
 	const toggleClock = async () => {
@@ -86,63 +80,7 @@ export function Staff() {
 					</div>
 				</div>
 			</div>
-			{usersOn && manage && (
-				<div className="panel" style={{ marginTop: 16 }} id="user-management">
-					<div className="panel-head">
-						<div>
-							<div className="panel-title">Users & Access</div>
-							<div className="muted">Owner, manager, accountant and cashier access</div>
-						</div>
-						<button className="btn" onClick={() => setEditing("")}>
-							+ Add User
-						</button>
-					</div>
-					<div className="table-wrap">
-						<table>
-							<thead>
-								<tr>
-									<th>Name</th>
-									<th>Role</th>
-									<th>Status</th>
-									<th>Last clock in</th>
-									<th></th>
-								</tr>
-							</thead>
-							<tbody id="user-table">
-								{data.users.map((u) => {
-									const last = data.timeEntries.find((e) => e.userId === u.id);
-									const all = u.locationAccess === "all" || u.role === "owner" || u.role === "admin";
-									return (
-										<tr key={u.id}>
-											<td>
-												<strong>{u.name}</strong>
-											</td>
-											<td>
-												<span className="role-pill">{u.role}</span>
-												{multi && <small className="table-subcategory">{all ? "All locations" : (u.locationIds || []).map((id) => locationLabel(data, id)).join(", ") || "No location"}</small>}
-											</td>
-											<td>{u.active === false ? "Inactive" : "Active"}</td>
-											<td>{last ? new Date(last.clockIn).toLocaleString() : "—"}</td>
-											<td>
-												<div className="table-actions" style={{ display: "flex", gap: 8 }}>
-													<button className="btn out" onClick={() => setEditing(u.id)}>
-														Edit
-													</button>
-													{canDelete && u.id !== currentUser?.id && (
-														<button className="btn danger" type="button" onClick={() => svc.staff.deleteUser(u.id)}>
-															Delete
-														</button>
-													)}
-												</div>
-											</td>
-										</tr>
-									);
-								})}
-							</tbody>
-						</table>
-					</div>
-				</div>
-			)}
+			<UserManagement />
 			{register && (
 				<div className="panel" style={{ marginTop: 16 }}>
 					<div className="panel-head">
@@ -186,7 +124,79 @@ export function Staff() {
 					</div>
 				</div>
 			)}
-			<UserModal id={editing} open={editing !== null} onClose={() => setEditing(null)} />
 		</section>
+	);
+}
+
+/** Users & Access: the owner / manager / accountant / cashier list with add, edit and delete (also used by the /admin portal). */
+export function UserManagement() {
+	const data = useData();
+	const { currentUser, svc } = usePos();
+	const usersOn = useFeature("staff.users");
+	const deletion = useFeature("staff.userDeletion");
+	const multi = useFeature("business.locations");
+	const [editing, setEditing] = useState(null);
+	const manage = MANAGER_ROLES.includes(currentUser?.role) || currentUser?.role === "admin";
+	const canDelete = deletion && OWNER_ROLES.includes(currentUser?.role);
+	if (!usersOn || !manage) return null;
+	return (
+		<>
+			<div className="panel" style={{ marginTop: 16 }} id="user-management">
+				<div className="panel-head">
+					<div>
+						<div className="panel-title">Users & Access</div>
+						<div className="muted">Owner, manager, accountant and cashier access</div>
+					</div>
+					<button className="btn" onClick={() => setEditing("")}>
+						+ Add User
+					</button>
+				</div>
+				<div className="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Role</th>
+								<th>Status</th>
+								<th>Last clock in</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody id="user-table">
+							{data.users.map((u) => {
+								const last = data.timeEntries.find((e) => e.userId === u.id);
+								const all = u.locationAccess === "all" || u.role === "owner" || u.role === "admin";
+								return (
+									<tr key={u.id}>
+										<td>
+											<strong>{u.name}</strong>
+										</td>
+										<td>
+											<span className="role-pill">{u.role}</span>
+											{multi && <small className="table-subcategory">{all ? "All locations" : (u.locationIds || []).map((id) => locationLabel(data, id)).join(", ") || "No location"}</small>}
+										</td>
+										<td>{u.active === false ? "Inactive" : "Active"}</td>
+										<td>{last ? new Date(last.clockIn).toLocaleString() : "—"}</td>
+										<td>
+											<div className="table-actions" style={{ display: "flex", gap: 8 }}>
+												<button className="btn out" onClick={() => setEditing(u.id)}>
+													Edit
+												</button>
+												{canDelete && u.id !== currentUser?.id && (
+													<button className="btn danger" type="button" onClick={() => svc.staff.deleteUser(u.id)}>
+														Delete
+													</button>
+												)}
+											</div>
+										</td>
+									</tr>
+								);
+							})}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<UserModal id={editing} open={editing !== null} onClose={() => setEditing(null)} />
+		</>
 	);
 }

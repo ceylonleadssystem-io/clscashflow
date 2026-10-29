@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 const adminRoute = (req, _res, next) => {
 	if (/^\/posv2\/admin\/?(\?.*)?$/.test(req.url || "")) req.url = "/admin.html";
 	if (/^\/(posv2\/)?kds\/?(\?.*)?$/i.test(req.url || "")) req.url = "/kds.html";
+	// the business admin portal (/admin) is the POS app itself; it shows the portal when the path is /admin
+	if (/^\/admin\/?(\?.*)?$/.test(req.url || "")) req.url = "/index.html";
 	next();
 };
 
