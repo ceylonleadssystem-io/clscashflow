@@ -3,7 +3,7 @@
  * (cash received, change, card approval) before continuing to checkout.
  */
 import { useEffect, useState } from "react";
-import { SPLIT_PAYMENT_METHODS } from "../config/constants";
+import { splitChoices } from "../domain/thirdPartyPayments";
 import { equalSplit, splitByItems } from "../domain/cart";
 import { money } from "../domain/format";
 import { Modal, ModalBody } from "../components/ui";
@@ -163,7 +163,7 @@ export function SplitBillModal() {
 								<span>{p.paid ? "Paid" : "Awaiting payment"}</span>
 							</div>
 							<select className="input" disabled={p.paid} value={p.method} onChange={(e) => patch(i, { method: e.target.value, paid: false })}>
-								{SPLIT_PAYMENT_METHODS.map((m) => (
+								{splitChoices(data.settings).map((m) => (
 									<option key={m}>{m}</option>
 								))}
 							</select>

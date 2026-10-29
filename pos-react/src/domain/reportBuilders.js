@@ -10,6 +10,8 @@
 import { isActiveSale } from "./sales";
 import { refundRows, voidRows } from "./salesLog";
 import { userName } from "./names";
+import { payrollHours } from "./payroll";
+import { defaultsFor } from "./systemOptions";
 
 const day = (iso) => String(iso || "").slice(0, 10);
 const inRange = (d, r) => d >= r.from && d <= r.to;
@@ -290,11 +292,14 @@ function laborByEmployee(ctx) {
 }
 const PAYROLL = {
 	"labor-costs"(ctx) {
-		const rows = [...laborByEmployee(ctx).values()].map((g) => {
-			const u = ctx.users.find((x) => x.id === g.id);
-			return { name: u?.name || "Unknown", role: u?.role || "—", regular: hoursOf(g.work), ot: 0, ot2: 0, paid: hoursOf(g.work) };
-		}).sort((a, b) => b.paid - a.paid);
-		return { cols: [C.text("name", "Employee"), C.text("role", "Assignment"), C.hours("regular", "Regular Hours"), C.hours("ot", "OT Hours"), C.hours("ot2", "OT 2 Hours"), C.hours("paid", "Paid Hours")], rows, totals: totalsRow(rows, ["regular", "ot", "ot2", "paid"]), chart: { label: "name", value: "paid" }, note: "Hourly wages, overtime rules and declared tips are not stored in this POS yet, so only hours are shown. All hours count as regular hours." };
+		const po = ctx.payroll || defaultsFor("payroll");
+		const rows = payrollHours(ctx.timeEntries, ctx.range, po)
+			.map((h) => {
+				const u = ctx.users.find((x) => x.id === h.userId);
+				return { name: u?.name || "Unknown", role: u?.role || "—", regular: h.regular, ot: h.ot, ot2: h.ot2, paid: h.total };
+			})
+			.sort((a, b) => b.paid - a.paid);
+		return { cols: [C.text("name", "Employee"), C.text("role", "Assignment"), C.hours("regular", "Regular Hours"), C.hours("ot", "OT Hours"), C.hours("ot2", "OT 2 Hours"), C.hours("paid", "Paid Hours")], rows, totals: totalsRow(rows, ["regular", "ot", "ot2", "paid"]), chart: { label: "name", value: "paid" }, note: "Regular and overtime hours follow the rules in Settings > System Options > Payroll. Hourly wages are not stored in this POS yet, so pay amounts are not calculated." };
 	},
 	"tips-cash"(ctx) {
 		const by = new Map();

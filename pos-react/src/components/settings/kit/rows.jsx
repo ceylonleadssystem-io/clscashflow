@@ -151,3 +151,30 @@ export function TextAreaRow({ id, value, onChange, max, rows = 3, disabled, ...r
 export function ConditionalGroup({ show, children }) {
 	return show ? <div className="sk-conditional">{children}</div> : null;
 }
+
+export function TextRow({ id, value, onChange, max, placeholder, disabled, autoFocus, ...row }) {
+	return (
+		<SettingRow htmlFor={id} {...row}>
+			<input id={id} className="input" type="text" value={value} maxLength={max} placeholder={placeholder} disabled={disabled} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} />
+		</SettingRow>
+	);
+}
+
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+/** A weekday and a time of day side by side. */
+export function DayTimeRow({ id, day, time, onChange, disabled, ...row }) {
+	return (
+		<SettingRow htmlFor={id + "-d"} {...row}>
+			<span className="sk-inline">
+				<select id={id + "-d"} className="input" aria-label="Day" value={day} disabled={disabled} onChange={(e) => onChange({ day: Number(e.target.value), time })}>
+					{DAYS.map((d, i) => (
+						<option key={d} value={i}>
+							{d}
+						</option>
+					))}
+				</select>
+				<input id={id + "-t"} className="input" type="time" aria-label="Time" value={time} disabled={disabled} onChange={(e) => onChange({ day, time: e.target.value })} />
+			</span>
+		</SettingRow>
+	);
+}

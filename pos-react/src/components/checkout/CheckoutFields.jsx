@@ -3,7 +3,8 @@
  * discounts), order discount, table/order reference and channel, payment method with cash tender, split bill, and receipt options.
  */
 import { useEffect, useMemo, useState } from "react";
-import { PAYMENT_ICONS, PAYMENT_METHODS, PLATFORM_CHANNELS } from "../../config/constants";
+import { PAYMENT_ICONS, PLATFORM_CHANNELS } from "../../config/constants";
+import { paymentChoices } from "../../domain/thirdPartyPayments";
 import { birthdayInfo, customerInsights, customerSegment } from "../../domain/analytics";
 import { money, today } from "../../domain/format";
 import { NumberInput } from "../ui";
@@ -230,6 +231,8 @@ function ReferenceSection() {
 
 export function PaymentSection() {
 	const c = useCheckout();
+	// the standard methods plus the 3rd party types set up in Settings > System Options > 3rd Party Payments
+	const methods = paymentChoices(useData().settings);
 	const cashTender = useFeature("checkout.cashTender");
 	const split = useFeature("checkout.splitBill");
 	const locked = c.splitPayments.length > 0;
@@ -242,7 +245,7 @@ export function PaymentSection() {
 	return (
 		<>
 			<div id="payment-method-picker" className="payment-method-picker" role="group" aria-label="Payment method">
-				{PAYMENT_METHODS.map((m) => (
+				{methods.map((m) => (
 					<button
 						type="button"
 						key={m}

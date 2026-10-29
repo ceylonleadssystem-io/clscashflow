@@ -94,6 +94,14 @@ and modifiers), **User Admin**, **Timesheets** (clock-in, clock-out and break ho
 (hardware categories that open a quote email). What each person sees follows their role. Opening Reports swaps the
 left navigation for the report list with a Back to home button. The Ceylonry staff portal remains at `/posv2/admin`.
 
+## System Options (Settings)
+Settings has a sidebar. **System Options** holds Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Party Payments and Zones; the older
+tabs are under **More settings**. Changes are kept as a draft (a bar shows how many) until you press **Save**; **Discard** drops them.
+- **Payroll**: the pay week and overtime rules, used for hours in Reports > Payroll. **History** shows who changed what.
+- **3rd Party Payments**: delivery apps and other payment types; the active ones appear on the payment screen in the order you set.
+- **Zones**: the areas of the floor that hold tables (the same floors as in Table Layout).
+- **Presets** on the Overview page (Quick service, Full service) show what would change before you apply them.
+
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),
 operations (printers, service charge, order channels), support code (24 h, lets Ceylonry support view the

@@ -3,6 +3,7 @@
  * kitchen tickets, users, locations. Employee / order type / payment filters narrow sales (and the employee filter also time entries).
  */
 import { useMemo } from "react";
+import { resolveOptions } from "../domain/systemOptions";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
 import { useScopedData } from "./useScopedData";
@@ -28,6 +29,7 @@ export function useReportContext(range, filters = [], extra = "") {
 		return {
 			range,
 			extra,
+			payroll: resolveOptions(data.settings, "payroll", "all"),
 			locationId,
 			sales: f.sales,
 			allSales: data.sales,

@@ -7,11 +7,13 @@ import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } fr
 import { POS_TYPE_PRESETS } from "../../config/presets";
 import { hasCapability } from "../../config/capabilities";
 import { cleanStations } from "../../domain/kitchenStations";
+import { MAIN_FLOOR, floorLayout, floorLayoutKey, floorsFor, floorsKey } from "../../domain/tables";
+import { nameError, thirdPartyList, usedNames } from "../../domain/thirdPartyPayments";
 import { nowIso } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
 import { isAppwrite } from "../../config/env";
 import { isDataImage, storeImage } from "../imageStorage";
-import { audit, supportAuditEntry, unmarkDeletedCategory } from "./common";
+import { audit, newId, supportAuditEntry, unmarkDeletedCategory } from "./common";
 import { addCommonModifiers } from "./catalog";
 import { createLogger } from "../../utils/logger";
 
@@ -215,3 +217,83 @@ export async function dismissPosSetup(ctx, dontAsk) {
 }
 
 export { supportAuditEntry, T };
+
+// ------------------------------------------------------------------ 3rd party payment types ----
+
+const settingsAudit = (ctx, action, details, locationId = "") => ctx.store.write((tx) => audit(tx, ctx.session(), action, details, locationId));
+
+/** Adds or edits a 3rd party payment type ({ id?, name, active }). Returns true when saved. */
+export async function saveThirdPartyPayment(ctx, { id, name, active = true }) {
+	const list = thirdPartyList(ctx.data().settings);
+	const error = nameError(name, list.filter((t) => t.id !== id));
+	if (error) return void (await ctx.ui.alert(error));
+	const clean = String(name).trim();
+	const next = id ? list.map((t) => (t.id === id ? { ...t, name: clean, active } : t)) : [...list, { id: newId("tp"), name: clean, active }];
+	await patchSettings(ctx, { thirdPartyPayments: next });
+	await settingsAudit(ctx, "third-party-payment-saved", `${id ? "edited" : "added"} ${clean}${active ? "" : " (inactive)"}`);
+	ctx.ui.notice("Payment type saved.");
+	return true;
+}
+
+/** Saves the order of the types (an array of ids). */
+export async function reorderThirdPartyPayments(ctx, next) {
+	await patchSettings(ctx, { thirdPartyPayments: next });
+	return true;
+}
+
+/** Removes a type that no sale has used; a used one can only be switched off. */
+export async function deleteThirdPartyPayment(ctx, id) {
+	const d = ctx.data();
+	const t = thirdPartyList(d.settings).find((x) => x.id === id);
+	if (!t) return false;
+	if (usedNames(d.sales).has(t.name)) return void (await ctx.ui.alert(`${t.name} was used on past sales, so it can only be switched off.`));
+	if (!(await ctx.ui.confirm(`Delete ${t.name}?`))) return false;
+	await patchSettings(ctx, { thirdPartyPayments: thirdPartyList(d.settings).filter((x) => x.id !== id) });
+	await settingsAudit(ctx, "third-party-payment-deleted", t.name);
+	return true;
+}
+
+// ------------------------------------------------------------------------------ zones ----
+// A zone is a floor of the table layout (views/Tables.jsx), so the same saved lists are used.
+
+const trimZone = (v) => String(v || "").trim().slice(0, 40);
+
+/** Adds a zone, or renames one ({ id?, name }) at a location. Returns true when saved. */
+export async function saveZone(ctx, locationId, { id, name }) {
+	const d = ctx.data();
+	const floors = floorsFor(d.settings, locationId);
+	const clean = trimZone(name);
+	if (!clean) return void (await ctx.ui.alert("Enter a name."));
+	if (floors.some((f) => f.id !== id && f.name.toLowerCase() === clean.toLowerCase())) return void (await ctx.ui.alert("There is already a zone called " + clean + "."));
+	const next = id ? floors.map((f) => (f.id === id ? { ...f, name: clean } : f)) : [...floors, { id: newId("fl"), name: clean }];
+	await patchSettings(ctx, { [floorsKey(locationId)]: next });
+	await settingsAudit(ctx, "zone-saved", `${id ? "renamed" : "added"} ${clean}`, locationId);
+	ctx.ui.notice("Zone saved.");
+	return true;
+}
+
+/** Puts the zones in the order of `ids` (the main zone always stays first). */
+export async function reorderZones(ctx, locationId, ids) {
+	const floors = floorsFor(ctx.data().settings, locationId);
+	const byId = new Map(floors.map((f) => [f.id, f]));
+	const next = [byId.get(MAIN_FLOOR), ...ids.filter((id) => id !== MAIN_FLOOR).map((id) => byId.get(id))].filter(Boolean);
+	await patchSettings(ctx, { [floorsKey(locationId)]: next });
+	return true;
+}
+
+/** Deletes a zone and its tables. Refused while a table of it has an open check. */
+export async function deleteZone(ctx, locationId, id) {
+	const d = ctx.data();
+	if (id === MAIN_FLOOR) return void (await ctx.ui.alert("The main zone cannot be deleted."));
+	const floors = floorsFor(d.settings, locationId);
+	const zone = floors.find((f) => f.id === id);
+	if (!zone) return false;
+	const tables = floorLayout(d.settings, locationId, id);
+	const refs = new Set(tables.map((t) => "Table " + t.number));
+	const open = d.openOrders.filter((o) => o.status === "open" && refs.has(o.orderReference));
+	if (open.length) return void (await ctx.ui.alert(`${zone.name} still has ${open.length} open check${open.length === 1 ? "" : "s"}: ${open.map((o) => o.orderReference).join(", ")}. Pay, move or void them first.`));
+	if (!(await ctx.ui.confirm(`Delete ${zone.name}${tables.length ? ` and its ${tables.length} table${tables.length === 1 ? "" : "s"}` : ""}?`))) return false;
+	await patchSettings(ctx, { [floorsKey(locationId)]: floors.filter((f) => f.id !== id), [floorLayoutKey(locationId, id)]: [] });
+	await settingsAudit(ctx, "zone-deleted", zone.name, locationId);
+	return true;
+}

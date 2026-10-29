@@ -22,9 +22,22 @@ drafts and Publish only in the new Menu Admin pages; first delivery = shared com
 
 Auto clock-out defaults to OFF (the spec says on) so existing businesses see no change until they choose it.
 
+## Delivered (slice 2): Payroll, 3rd Party Payments, Zones
+- **Payroll** (organization-wide): pay week start, paid breaks, weekly overtime, daily overtime (two tiers), 7th consecutive day, carryover, and a History drawer.
+  The rules drive Reports > Payroll > Labor Costs (regular, OT and OT 2 hours per employee, from `domain/payroll.js`). Paid meals is not listed: the POS records breaks, not meals.
+  TODO(spec): the 7th-day tiers have no thresholds in the spec; the first 8 hours use tier 1.
+- **3rd Party Payments**: add, edit, reorder, switch off and delete types; active ones appear on the checkout payment picker (after the standard methods) and in split bills
+  (replacing the generic "3rd Party"); reports show them by name. A type used on a sale can only be switched off. Stored as `settings.thirdPartyPayments`.
+- **Zones**: the zones are the floors of the Table Layout, so both pages share the same data. Add, rename, reorder (main zone stays first) and delete (refused while a table has an open check).
+  Deactivating a zone is not offered; the table layout has no inactive floors.
+- New shared pieces: `DetailDrawer`, `SortableList` (drag handle and keyboard up/down), `StatusBadge`, `EmptyState`, `AuditTrailDrawer`, `TextRow`, `DayTimeRow`.
+
+## Register flow (changed with slice 2)
+Clocking in opens the register (opening cash) and clocking out closes it (cash count, variance recorded); the separate Open and Close Register buttons are gone.
+Automatic clock-out closes an open register with the expected cash as the count (no variance), because nobody is there to count.
+
 ## Next slices, in the spec's order
-1. Payroll, 3rd Party Payments, Zones (new tables for payment types and zones).
-2. Users, Jobs and permission keys behind the roles.
-3. Device Manager: Stations (exists as the Stations page) and per-device Printers.
-4. Menu Admin with Save then Publish: Sales Categories, Taxes, Categories, Modifiers, Items, Availability.
-5. Wire the "needs behaviour" rows above as their dependencies land.
+1. Users, Jobs and permission keys behind the roles (jobs with hourly rates will switch on labor cost and Labor % in Reports).
+2. Device Manager: per-device Printers (Stations already exist as the Stations page).
+3. Menu Admin with Save then Publish: Sales Categories, Taxes, Categories, Modifiers, Items, Availability.
+4. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers).

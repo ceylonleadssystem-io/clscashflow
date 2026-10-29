@@ -14,10 +14,13 @@ export const SYSTEM_PAGES = [
 	{ key: "receipts", title: "Receipts", description: "What customers see at the bottom of their receipt." },
 	{ key: "signIn", title: "Sign In", description: "Where staff land after they sign in." },
 	{ key: "clock", title: "Clock In / Out", description: "Clock people out automatically so no shift runs on by mistake." },
+	{ key: "payroll", title: "Payroll", description: "Pay week, paid breaks and overtime rules used for hours and labor cost." },
+	{ key: "thirdParty", title: "3rd Party Payments", description: "Extra ways to take payment, such as delivery apps and bank transfer.", entity: true },
+	{ key: "zones", title: "Zones", description: "The areas of your floor that hold tables.", entity: true },
 ];
 
 /** Pages in System Options that hold values (everything except the overview). */
-export const OPTION_PAGES = ["orderEntry", "receipts", "signIn", "clock"];
+export const OPTION_PAGES = ["orderEntry", "receipts", "signIn", "clock", "payroll"];
 
 /** The views staff can land on after signing in. "auto" keeps the existing behaviour (the first page their role may open). */
 export const LANDING_VIEWS = [
@@ -48,6 +51,25 @@ export const FIELDS = {
 		maxMinutes: { scope: "location", default: 59, min: 0, max: 59 },
 		autoTimeOn: { scope: "location", default: false },
 		autoTime: { scope: "location", default: "03:00" },
+	},
+	// Payroll rules are the organization's (labour law does not change by branch)
+	payroll: {
+		weekDay: { scope: "org", default: 1 },
+		weekTime: { scope: "org", default: "00:00" },
+		paidBreaksOn: { scope: "org", default: false },
+		paidBreakMin: { scope: "org", default: 15 },
+		weeklyOn: { scope: "org", default: false },
+		weeklyAfter: { scope: "org", default: 45 },
+		weeklyMult: { scope: "org", default: 1.5 },
+		dailyOn: { scope: "org", default: false },
+		d1After: { scope: "org", default: 8 },
+		d1Mult: { scope: "org", default: 1.5 },
+		d2After: { scope: "org", default: 12 },
+		d2Mult: { scope: "org", default: 2 },
+		seventhOn: { scope: "org", default: false },
+		s1Mult: { scope: "org", default: 1.5 },
+		s2Mult: { scope: "org", default: 2 },
+		carryover: { scope: "org", default: false },
 	},
 };
 
@@ -110,6 +132,30 @@ export function validateOptions(page, v) {
 			else if (h * 60 + m < 1) e.maxHours = "The maximum time must be at least 1 minute.";
 		}
 		if (v.autoTimeOn && !timeOk(v.autoTime)) e.autoTime = "Enter a time such as 03:00.";
+	}
+	if (page === "payroll") {
+		const num = (x) => Number(x);
+		const mult = (k, label) => {
+			const m = num(v[k]);
+			if (!(m >= 1 && m <= 3)) e[k] = label + " must be between 1.0 and 3.0.";
+		};
+		if (!timeOk(v.weekTime)) e.weekTime = "Enter a time such as 00:00.";
+		if (![0, 1, 2, 3, 4, 5, 6].includes(num(v.weekDay))) e.weekDay = "Choose a day.";
+		if (v.paidBreaksOn && !(num(v.paidBreakMin) >= 1 && num(v.paidBreakMin) <= 120)) e.paidBreakMin = "Enter 1 to 120 minutes.";
+		if (v.weeklyOn) {
+			if (!(num(v.weeklyAfter) > 0 && num(v.weeklyAfter) <= 168)) e.weeklyAfter = "Enter hours from 1 to 168.";
+			mult("weeklyMult", "The weekly rate");
+		}
+		if (v.dailyOn) {
+			if (!(num(v.d1After) > 0 && num(v.d1After) < 24)) e.d1After = "Enter hours from 1 to 23.";
+			if (!(num(v.d2After) > num(v.d1After) && num(v.d2After) <= 24)) e.d2After = "Tier 2 must start after tier 1 and by 24 hours.";
+			mult("d1Mult", "The tier 1 rate");
+			mult("d2Mult", "The tier 2 rate");
+		}
+		if (v.seventhOn) {
+			mult("s1Mult", "The 7th day tier 1 rate");
+			mult("s2Mult", "The 7th day tier 2 rate");
+		}
 	}
 	return e;
 }
