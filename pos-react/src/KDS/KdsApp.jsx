@@ -91,6 +91,7 @@ export function KdsApp() {
 					<span>{t.orderNumber}</span>
 					<span>{ageLabel(mins)}</span>
 				</div>
+				{t.station && t.station !== "Kitchen Display" && <div className="kds-station">{t.station}</div>}
 				{t.reference && <div className="kds-ref">{t.reference}</div>}
 				{(t.lines || [])
 					.filter((l) => !l.isDiscount && !l.isServiceCharge)

@@ -5,6 +5,7 @@
  * switched off is not run at all, so Ceylo never suggests something the business cannot use.
  * See docs/reference/ceylo-setup-checker.html for the product description.
  */
+import { kitchenStations } from "./kitchenStations";
 import { KITCHEN_TYPES } from "../config/presets";
 import { APPROVER_ROLES } from "./salesLog";
 import { emailError } from "./validators";
@@ -88,8 +89,10 @@ export function runSetupChecks(input) {
 		else add("receipt-printer", "Printing", (/epson/i.test(type) ? "Epson network printer" : "System printer") + " is set (Ceylo cannot see if it is switched on: print a test receipt to check)", "ok", "");
 	}
 	if (kitchen && on("checkout.kitchenTickets")) {
-		if (!String(s.kotPrinter || "").trim()) add("kot-printer", "Printing", "Kitchen printer name is empty", "warn", "Kitchen tickets (KOT) will print on the receipt printer instead of the kitchen.", PRINT);
-		else add("kot-printer", "Printing", "Kitchen printer is set", "ok", "");
+		// a saved list of kitchen printers / displays; without one the old single kitchen printer name is checked
+		const stations = Array.isArray(s.kitchenStations) ? kitchenStations(s) : kitchenStations({ kotPrinter: s.kotPrinter });
+		if (!stations.length) add("kot-printer", "Printing", "No kitchen printer is set", "warn", "Kitchen tickets (KOT) will print on the receipt printer instead of the kitchen.", PRINT);
+		else add("kot-printer", "Printing", stations.length === 1 ? "Kitchen printer is set" : stations.length + " kitchen printers and displays are set", "ok", "");
 	}
 	// shops always need the label printer; other businesses only once they have set one up, so they are not nagged
 	const retail = RETAIL_TYPES.includes(s.businessType);

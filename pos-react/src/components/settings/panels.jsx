@@ -22,6 +22,7 @@ import { applyDark, resolveDark, storedDark } from "../../utils/theme";
 import { subscriptionOf, usageOf } from "../../config/subscription";
 import { ALWAYS_LIVE_KEY } from "../../services/cloud.service";
 import { HardwarePanel } from "./HardwarePanel";
+import { KitchenStations } from "./KitchenStations";
 
 /** Individual Settings panels. Each takes the shared `form` state from Settings.jsx. */
 
@@ -353,11 +354,6 @@ export function PrintingPanel({ form, set, setForm }) {
 					<Field label="Epson Printer Address">
 						<input className="input" id="set-printer-address" placeholder="IP address (optional)" value={form.printerAddress} onChange={set("printerAddress")} />
 					</Field>
-					{kitchen && tickets && (
-						<Field label="KOT / Kitchen Printer Name">
-							<input className="input" id="set-kot-printer" placeholder="Kitchen, Bar, Epson TM-T20..." value={form.kotPrinter} onChange={set("kotPrinter")} />
-						</Field>
-					)}
 					<Field label="Receipt Footer">
 						<input className="input" id="set-receipt-footer" placeholder="Thank you for your purchase" value={form.receiptFooter} onChange={set("receiptFooter")} />
 					</Field>
@@ -372,6 +368,7 @@ export function PrintingPanel({ form, set, setForm }) {
 						</label>
 					)}
 				</div>
+				{kitchen && tickets && <KitchenStations form={form} setForm={setForm} />}
 				<div className="tools" style={{ marginTop: 12 }}>
 					<button className="btn out" type="button" onClick={svc.printing.printTestReceipt}>
 						Print Test Receipt

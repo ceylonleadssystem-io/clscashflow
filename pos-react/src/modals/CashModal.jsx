@@ -10,6 +10,7 @@ import { parseNumber } from "../domain/format";
 import { useData } from "../store/DataProvider";
 import { useModals } from "../store/ModalsProvider";
 import { usePos } from "../store/PosProvider";
+import { useUi } from "../store/UiProvider";
 
 const COPY = {
 	"clock-in": { title: "Clock In & Open Register", label: "How much cash is currently in the register?", button: "Clock In" },
@@ -21,7 +22,8 @@ const COPY = {
 export function CashModal() {
 	const { cashMode, closeCash } = useModals();
 	const data = useData();
-	const { currentUser, svc } = usePos();
+	const { currentUser, svc, go, canView } = usePos();
+	const ui = useUi();
 	const [amount, setAmount] = useState("");
 	useEffect(() => setAmount(""), [cashMode]);
 	if (!cashMode) return null;
@@ -35,7 +37,10 @@ export function CashModal() {
 				: cashMode === "open"
 					? await svc.staff.openRegister(value)
 					: await svc.staff.closeRegister(value);
-		if (ok) closeCash();
+		if (!ok) return;
+		closeCash();
+		// end of the day: offer the End of Day report (Reports page) to whoever may see it
+		if (cashMode === "close" && canView("reports") && (await ui.confirm("Register closed. Open the End of Day report?"))) go("reports");
 	};
 	return (
 		<Modal

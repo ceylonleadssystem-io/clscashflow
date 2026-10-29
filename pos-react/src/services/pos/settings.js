@@ -5,6 +5,7 @@
 import { T } from "../../db/tables";
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } from "../../config/constants";
 import { POS_TYPE_PRESETS } from "../../config/presets";
+import { cleanStations } from "../../domain/kitchenStations";
 import { nowIso } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
 import { isAppwrite } from "../../config/env";
@@ -27,8 +28,11 @@ export async function saveSettings(ctx, form) {
 	const foodService = ["restaurant", "cafe"].includes(form.businessType);
 	if (foodService && form.orderChannels && !form.orderChannels.length)
 		return void (await ctx.ui.alert("Enable at least one checkout order type."));
+	const stations = form.kitchenStations ? cleanStations(form.kitchenStations) : null;
+	if (stations?.error) return void (await ctx.ui.alert(stations.error));
 	const next = {
 		...d.settings,
+		...(stations ? { kitchenStations: stations.stations } : {}),
 		business: form.business.trim() || DEFAULT_BUSINESS_NAME,
 		email: form.email.trim(),
 		address: form.address.trim(),
@@ -40,7 +44,8 @@ export async function saveSettings(ctx, form) {
 		printerAddress: form.printerAddress.trim(),
 		autoPrint: !!form.autoPrint,
 		autoPrintKot: !!form.autoPrintKot,
-		kotPrinter: form.kotPrinter.trim(),
+		// the first kitchen printer keeps the old single-printer setting up to date for anything that still reads it
+		kotPrinter: stations ? stations.stations.find((x) => x.type === "printer")?.name || "" : form.kotPrinter.trim(),
 		receiptFooter: form.receiptFooter.trim() || DEFAULT_RECEIPT_FOOTER,
 		supportEnabled: !!form.supportEnabled,
 		onboardingComplete: true,
