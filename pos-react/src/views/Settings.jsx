@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { FULL_SETTINGS_ROLES } from "../config/roles";
-import { KITCHEN_TYPES, SERVICE_CHARGE_TYPES } from "../config/presets";
+import { hasCapability } from "../config/capabilities";
 import { ORDER_CHANNELS } from "../config/constants";
 import { emailError } from "../domain/validators";
 import { useUi } from "../store/UiProvider";
@@ -90,7 +90,7 @@ export function Settings({ only = null }) {
 		}
 		return svc.settings.saveSettings(form);
 	};
-	const kitchen = KITCHEN_TYPES.includes(form.businessType);
+	const kitchen = hasCapability(form.businessType, "kitchen");
 	// the KDS tab exists only for kitchen businesses whose account has the Kitchen Display switched on
 	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn)));
 
@@ -104,7 +104,7 @@ export function Settings({ only = null }) {
 		pos: full && (
 			<>
 				<PosTypePanel form={form} set={set} onApplyPreset={() => setSetupOpen(true)} />
-				{serviceCharge && SERVICE_CHARGE_TYPES.includes(form.businessType) && <ServiceChargePanel form={form} set={set} />}
+				{serviceCharge && hasCapability(form.businessType, "serviceCharge") && <ServiceChargePanel form={form} set={set} />}
 			</>
 		),
 		operations: (

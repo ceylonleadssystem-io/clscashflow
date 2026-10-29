@@ -6,13 +6,12 @@
  * See docs/reference/ceylo-setup-checker.html for the product description.
  */
 import { kitchenStations } from "./kitchenStations";
-import { KITCHEN_TYPES } from "../config/presets";
+import { hasCapability } from "../config/capabilities";
 import { APPROVER_ROLES } from "./salesLog";
 import { emailError } from "./validators";
 import { layoutFor } from "./tables";
 
 /** Shops that sell barcoded goods: Ceylo also checks the barcode scanner and the label printer for them. */
-export const RETAIL_TYPES = ["retail", "grocery", "hardware", "pharmacy"];
 const WEAK_PINS = new Set(["0000", "1111", "1234", "4321", "1212", "9999"]);
 const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
 const isEmbedded = (v) => typeof v === "string" && v.startsWith("data:");
@@ -40,7 +39,7 @@ export function runSetupChecks(input) {
 	const locations = input.locations || [];
 	const products = input.products || [];
 	const on = (id) => !!input.features?.[id];
-	const kitchen = KITCHEN_TYPES.includes(s.businessType);
+	const kitchen = hasCapability(s.businessType, "kitchen");
 	const out = [];
 	const add = (id, area, title, status, text, fix = null) => out.push({ id, area, title, status, text, fix });
 	const BUSINESS = { view: "settings", tab: "business" };
@@ -95,7 +94,7 @@ export function runSetupChecks(input) {
 		else add("kot-printer", "Printing", stations.length === 1 ? "Kitchen printer is set" : stations.length + " kitchen printers and displays are set", "ok", "");
 	}
 	// shops always need the label printer; other businesses only once they have set one up, so they are not nagged
-	const retail = RETAIL_TYPES.includes(s.businessType);
+	const retail = hasCapability(s.businessType, "barcodeLabels");
 	const labelSetUp = !!(s.barcodePrinter && Object.keys(s.barcodePrinter).length);
 	if (on("hardware.labelPrinter") && (retail || labelSetUp)) {
 		if (printers.label) add("label-printer", "Printing", "Label printer is connected", "ok", "");

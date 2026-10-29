@@ -3,7 +3,8 @@
  * text size and thickness, receipts and printing, customer feedback, billing, and plan and support.
  */
 import { useState } from "react";
-import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS, KITCHEN_TYPES } from "../../config/presets";
+import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS } from "../../config/presets";
+import { hasCapability } from "../../config/capabilities";
 import { ORDER_CHANNELS, UI_THEMES } from "../../config/constants";
 import { ADDITIONAL_FEATURES, planForSettings } from "../../config/plans";
 import { env, isAppwrite } from "../../config/env";
@@ -331,7 +332,7 @@ export function PrintingPanel({ form, set, setForm }) {
 	const channelsOn = useFeature("checkout.orderChannels");
 	const tickets = useFeature("checkout.kitchenTickets");
 	const fullSettings = ["owner", "manager", "admin"].includes(currentUser?.role);
-	const foodService = KITCHEN_TYPES.includes(form.businessType);
+	const foodService = hasCapability(form.businessType, "kitchen");
 	const qr = data.settings.receiptSocialQr;
 	const preview = ["instagram", "facebook", "tiktok", "website"].map((k) => form.socials[k]?.trim()).filter(Boolean).join(" · ");
 	const toggleChannel = (name) =>

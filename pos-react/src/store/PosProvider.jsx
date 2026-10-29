@@ -7,7 +7,8 @@ import { locationStore } from "./locationStore";
 import { STORAGE, UI_THEMES } from "../config/constants";
 import { applyDark, resolveDark, storedDark } from "../utils/theme";
 import { ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
-import { INDUSTRY_TYPES, KITCHEN_TYPES, RETIRED_MODIFIER_NAMES } from "../config/presets";
+import { RETIRED_MODIFIER_NAMES } from "../config/presets";
+import { hasCapability } from "../config/capabilities";
 import { VIEW_FEATURE } from "../config/features";
 import { T } from "../db/tables";
 import { migrateOrderNumbers } from "../domain/orders";
@@ -81,7 +82,7 @@ export function PosProvider({ children }) {
 	);
 
 	const settings = data.settings;
-	const kitchen = KITCHEN_TYPES.includes(settings.businessType);
+	const kitchen = hasCapability(settings.businessType, "kitchen");
 	const hasOpenOrders = data.openOrders.some((o) => o.status === "open");
 
 	const currentUser = useMemo(() => {
@@ -98,7 +99,7 @@ export function PosProvider({ children }) {
 			if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 			if (v === "tables" && !kitchen) return false;
 			if (v === "stations" && !kitchen) return false;
-			if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
+			if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
 			if (v === "checkout" && locationId === "all") return false;
 			const flag = VIEW_FEATURE[v];
 			return flag ? !!enabled[flag] : true;
@@ -115,7 +116,7 @@ export function PosProvider({ children }) {
 		if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 		if (v === "tables" && !kitchen) return false;
 		if (v === "stations" && !kitchen) return false;
-		if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
+		if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
 		const flag = VIEW_FEATURE[v];
 		return flag ? !!enabled[flag] : true;
 	}

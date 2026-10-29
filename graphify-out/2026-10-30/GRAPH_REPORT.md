@@ -1,17 +1,17 @@
 # Graph Report - clscashflow  (2026-10-30)
 
 ## Corpus Check
-- 406 files · ~1,199,685 words
+- 406 files · ~1,199,726 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 22 file(s) not represented in the graph (top: .css 15, (none) 3, .webmanifest 2)
 
 ## Summary
-- 3635 nodes · 10286 edges · 174 communities (156 shown, 18 thin omitted)
+- 3635 nodes · 10289 edges · 174 communities (156 shown, 18 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 242 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4dac36f7`
+- Built from commit: `2a39a31f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -877,7 +877,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `react` connect `usePos` to `PosProvider.jsx`, `useFeature`, `diagnosticsShared.js`, `domain/catalog.js`, `index.jsx`, `Ceylo.jsx`, `pos/staff.js`, `createLogger`, `PortalShell.jsx`, `CustomerModal.jsx`, `EndOfDay.jsx`, `features.js`, `adminFeedback.js`, `admin-app/main.jsx`, `SessionProvider.jsx`, `AdminApp.jsx`, `Tables.jsx`, `reports.test.js`, `pos-react/package.json`, `serviceWorker.test.js`, `panels.jsx`, `App.jsx`, `plans.js`, `ReportPage.jsx`, `assist.js`, `KdsApp.jsx`, `useInstall.js`?**
   _High betweenness centrality (0.139) - this node is a cross-community bridge._
 - **Why does `vitest` connect `vitest` to `PosProvider.jsx`, `diagnostics.service.js`, `tables/index.js`, `domain/catalog.js`, `logger.js`, `pos/staff.js`, `labelPrinter.js`, `database.js`, `createLogger`, `PortalShell.jsx`, `EndOfDay.jsx`, `scanner.js`, `salesLog.js`, `appwriteCompat.test.js`, `features.js`, `adminFeedback.js`, `documents.js`, `Tables.jsx`, `salesSplit.test.js`, `reports.test.js`, `pos-react/package.json`, `serviceWorker.test.js`, `plans.js`, `assist.js`, `domain/inventory.js`, `KdsApp.jsx`, `domain.test.js`?**
-  _High betweenness centrality (0.090) - this node is a cross-community bridge._
+  _High betweenness centrality (0.091) - this node is a cross-community bridge._
 - **Why does `key()` connect `panels.jsx` to `public/assets/platform.js`, `public/sw.js`, `assets/platform.js`?**
   _High betweenness centrality (0.089) - this node is a cross-community bridge._
 - **What connects `Permission`, `crypto`, `{ getAdmin }` to the rest of the system?**
