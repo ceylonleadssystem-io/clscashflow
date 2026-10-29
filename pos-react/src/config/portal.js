@@ -4,13 +4,13 @@
  * `view` is the id kept in PosProvider while the section is open; `needs` lists the POS pages whose role access it follows.
  */
 export const PORTAL_SECTIONS = [
-	{ key: "location", view: "location", title: "Location Info", icon: "⌂", blurb: "Business name, address, logo, contact details and locations.", needs: ["settings"], roles: ["owner", "admin", "manager"] },
-	{ key: "reports", view: "reports", title: "Reports", icon: "▤", blurb: "Sales, menu, payroll, kitchen, transactions and more.", needs: ["reports"] },
+	{ key: "location", view: "location", title: "Location Info", icon: "location", blurb: "Business name, address, logo, contact details and locations.", needs: ["settings"], roles: ["owner", "admin", "manager"] },
+	{ key: "reports", view: "reports", title: "Reports", icon: "reports", blurb: "Sales, menu, payroll, kitchen, transactions and more.", needs: ["reports"] },
 	{
 		key: "menu",
 		view: "products",
 		title: "Menu Admin",
-		icon: "□",
+		icon: "menu",
 		blurb: "Manage items, prices, categories and modifiers.",
 		needs: ["products"],
 		subs: [
@@ -18,9 +18,9 @@ export const PORTAL_SECTIONS = [
 			{ view: "modifiers", title: "Modifiers" },
 		],
 	},
-	{ key: "users", view: "users", title: "User Admin", icon: "♙", blurb: "Add and manage users, roles and access.", needs: ["staff"], roles: ["owner", "admin", "manager"] },
-	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "◷", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], roles: ["owner", "admin", "manager", "accountant"] },
-	{ key: "shop", view: "shop", title: "Shop", icon: "✦", blurb: "One stop to buy POS hardware: printers, scanners, drawers and screens.", needs: [] },
+	{ key: "users", view: "users", title: "User Admin", icon: "users", blurb: "Add and manage users, roles and access.", needs: ["staff"], roles: ["owner", "admin", "manager"] },
+	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "timesheets", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], roles: ["owner", "admin", "manager", "accountant"] },
+	{ key: "shop", view: "shop", title: "Shop", icon: "shop", blurb: "One stop to buy POS hardware: printers, scanners, drawers and screens.", needs: [] },
 ];
 
 /** True when the page was opened at /admin (and not the Ceylonry staff portal at /posv2/admin). */

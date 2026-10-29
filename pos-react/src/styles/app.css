@@ -704,3 +704,24 @@ th.n,td.n{text-align:right;white-space:nowrap}
 .portal-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .portal .side-foot .btn{box-sizing:border-box}
 a.report-box{text-decoration:none;color:inherit}a.report-box strong{text-decoration:none}a.report-box small{color:var(--ui-accent,#ff4d0a);font-weight:600}
+
+/* /admin portal: bigger rail icons, and a home of six large boxes (3 x 2) that fills the screen */
+html body.nav-rail .portal .side .nav button .nav-icon,html body.nav-rail .report-nav .nav-icon{width:26px;height:26px}
+html body.nav-rail .portal .side .nav button,html body.nav-rail .side .report-nav button:not(.rail-toggle){min-height:48px}
+.nav-icon:not(svg){display:inline-grid;place-items:center;font-size:22px;line-height:1}
+.portal .content{display:flex;flex-direction:column;min-height:calc(100dvh - 92px)}
+#portal-home{flex:1;display:flex;flex-direction:column;min-height:0}
+.portal-hub{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:20px;min-height:min(70dvh,640px)}
+.portal-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;border:1px solid var(--ui-line,#e4e8eb);border-radius:calc(var(--ui-radius,14px) + 4px);background:var(--ui-surface,#fff);color:inherit;cursor:pointer;font:inherit;transition:.15s ease}
+.portal-box:hover,.portal-box:focus-visible{border-color:var(--ui-accent,#ff4d0a);box-shadow:var(--ui-shadow,0 10px 32px rgba(20,31,40,.08));transform:translateY(-2px);outline:none}
+.portal-box strong{font-size:calc(22px * var(--ui-fs, 1))}
+.portal-box .muted{max-width:34ch;font-size:calc(14px * var(--ui-fs, 1));line-height:1.45}
+.portal-box-icon{display:grid;place-items:center;width:96px;height:96px;border-radius:24px;background:var(--ui-soft,#f2f4f6);color:var(--ui-accent,#ff4d0a)}
+@media(max-width:900px){.portal-hub{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(180px,1fr)}.portal-box-icon{width:72px;height:72px}}
+@media(max-width:560px){.portal-hub{grid-template-columns:minmax(0,1fr)}.portal-box{flex-direction:row;text-align:left;justify-content:flex-start;gap:16px;padding:16px;min-height:96px}.portal-box-icon{flex:none;width:56px;height:56px;border-radius:16px}.portal-box-icon svg{width:32px;height:32px}}
+/* the portal and report navigations get the same rail layout as #nav (see nav-rail.css) */
+html body.nav-rail .side :is(#portal-nav,#report-nav){padding:3px 0 6px!important}
+html body.nav-rail .side :is(#portal-nav,#report-nav) button{justify-content:flex-start;padding:8px 5px!important;overflow:hidden}
+html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) :is(#portal-nav,#report-nav){width:36px}
+html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) :is(#portal-nav,#report-nav) button::after{display:none!important}
+html body.nav-rail .side :is(#portal-nav,#report-nav) .report-subnav{margin-left:14px}

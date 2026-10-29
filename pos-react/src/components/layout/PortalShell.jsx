@@ -15,6 +15,7 @@ import { LocationSwitcherModal } from "../../modals/LocationSwitcherModal";
 import { ProductModalHost } from "../../modals/ProductModal";
 import { BarcodeModalHost } from "../../modals/BarcodeModal";
 import { ModifierPickerModal } from "../../modals/ModifierPickerModal";
+import { PortalIcon } from "./PortalIcon";
 import { ReportNav } from "./ReportNav";
 
 const page = (load, name) => lazy(() => load().then((m) => ({ default: m[name] })));
@@ -35,10 +36,10 @@ export function PortalHome({ sections, open }) {
 					<div className="muted">Choose what you want to manage. The POS (checkout, tables, orders) is not part of this page.</div>
 				</div>
 			</div>
-			<div className="reports-hub" id="portal-hub">
+			<div className="portal-hub" id="portal-hub">
 				{sections.map((s) => (
-					<button key={s.key} type="button" className="report-box" data-portal={s.key} onClick={() => open(s.key)}>
-						<span className="report-box-icon" aria-hidden="true">{s.icon}</span>
+					<button key={s.key} type="button" className="portal-box" data-portal={s.key} onClick={() => open(s.key)}>
+						<span className="portal-box-icon"><PortalIcon name={s.icon} size={56} /></span>
 						<strong>{s.title}</strong>
 						<span className="muted">{s.blurb}</span>
 					</button>
@@ -122,14 +123,14 @@ export function PortalShell() {
 								<span>Show Navigation</span>
 							</button>
 							<button type="button" data-portal="home" className={section === "home" ? "active" : ""} title="Home" onClick={() => open("home")}>
-								<span className="nav-icon" aria-hidden="true">⌂</span>
+								<PortalIcon name="home" />
 								<span>Home</span>
 							</button>
 							<div className="nav-group nav-sep" role="separator" />
 							{sections.map((s) => (
 								<div key={s.key} className="report-nav-group">
 									<button type="button" data-portal={s.key} className={section === s.key ? "active" : ""} title={s.title} onClick={() => open(s.key)}>
-										<span className="nav-icon" aria-hidden="true">{s.icon}</span>
+										<PortalIcon name={s.icon} />
 										<span>{s.title}</span>
 									</button>
 									{section === s.key && s.subs && (

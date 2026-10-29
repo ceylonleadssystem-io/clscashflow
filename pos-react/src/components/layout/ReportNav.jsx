@@ -2,6 +2,7 @@
  * Left navigation shown while a report is open (POS Reports page and the /admin portal): Back to home, All reports and the report
  * groups with the sub-reports of the open group. `onHome` leaves Reports; `open`/`setOpen` is the touch-screen rail state.
  */
+import { PortalIcon } from "./PortalIcon";
 import { firstSub } from "../../domain/reportsCatalog";
 import { useReportGroups } from "../../hooks/useReportGroups";
 import { usePos } from "../../store/PosProvider";
@@ -16,11 +17,11 @@ export function ReportNav({ open, setOpen, onHome, homeLabel = "Back to home" })
 				<span>Show Navigation</span>
 			</button>
 			<button type="button" id="report-back-home" className="report-back" title={homeLabel} onClick={onHome}>
-				<span className="nav-icon" aria-hidden="true">←</span>
+				<PortalIcon name="back" />
 				<span>{homeLabel}</span>
 			</button>
 			<button type="button" id="report-all" title="All reports" onClick={() => setReportNav(null)}>
-				<span className="nav-icon" aria-hidden="true">▤</span>
+				<PortalIcon name="all" />
 				<span>All reports</span>
 			</button>
 			<div className="nav-group nav-sep" role="separator" />
