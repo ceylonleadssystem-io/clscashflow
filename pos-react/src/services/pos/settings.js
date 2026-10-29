@@ -5,6 +5,7 @@
 import { T } from "../../db/tables";
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } from "../../config/constants";
 import { POS_TYPE_PRESETS } from "../../config/presets";
+import { hasCapability } from "../../config/capabilities";
 import { cleanStations } from "../../domain/kitchenStations";
 import { nowIso } from "../../domain/format";
 import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
@@ -25,7 +26,7 @@ export async function saveSettings(ctx, form) {
 		if (form.serviceChargeEnabled && (!Number.isFinite(rate) || rate < 0 || rate > 100))
 			return void (await ctx.ui.alert("Enter a service charge percentage from 0 to 100."));
 	}
-	const foodService = ["restaurant", "cafe"].includes(form.businessType);
+	const foodService = hasCapability(form.businessType, "kitchen");
 	if (foodService && form.orderChannels && !form.orderChannels.length)
 		return void (await ctx.ui.alert("Enable at least one checkout order type."));
 	const stations = form.kitchenStations ? cleanStations(form.kitchenStations) : null;

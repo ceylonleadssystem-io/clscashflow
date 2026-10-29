@@ -7,7 +7,8 @@ import { locationStore } from "./locationStore";
 import { STORAGE, UI_THEMES } from "../config/constants";
 import { applyDark, resolveDark, storedDark } from "../utils/theme";
 import { ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
-import { INDUSTRY_TYPES, KITCHEN_TYPES, RETIRED_MODIFIER_NAMES } from "../config/presets";
+import { RETIRED_MODIFIER_NAMES } from "../config/presets";
+import { hasCapability } from "../config/capabilities";
 import { VIEW_FEATURE } from "../config/features";
 import { T } from "../db/tables";
 import { migrateOrderNumbers } from "../domain/orders";
@@ -62,6 +63,11 @@ export function PosProvider({ children }) {
 	const [currentUserId, setCurrentUserId] = useState(() => sessionStorage.getItem(STORAGE.userSession) || "");
 	const locationId = useSyncExternalStore(locationStore.subscribe, locationStore.get);
 	const [view, setView] = useState("dashboard");
+	// the report opened from the Reports page ({ group, sub }); while set, the left navigation lists the reports instead of the pages
+	const [reportNav, setReportNav] = useState(null);
+	useEffect(() => {
+		if (view !== "reports") setReportNav(null);
+	}, [view]);
 	const [layout, setLayout] = useState({ full: false, sidebarCollapsed: false, kiosk: false, mobileCartOpen: false });
 	const [checkoutMode, setCheckoutModeState] = useState(() => localStorage.getItem(STORAGE.checkoutMode) || "");
 	const [chooserOpen, setChooserOpen] = useState(false);
@@ -76,7 +82,7 @@ export function PosProvider({ children }) {
 	);
 
 	const settings = data.settings;
-	const kitchen = KITCHEN_TYPES.includes(settings.businessType);
+	const kitchen = hasCapability(settings.businessType, "kitchen");
 	const hasOpenOrders = data.openOrders.some((o) => o.status === "open");
 
 	const currentUser = useMemo(() => {
@@ -93,7 +99,7 @@ export function PosProvider({ children }) {
 			if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 			if (v === "tables" && !kitchen) return false;
 			if (v === "stations" && !kitchen) return false;
-			if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
+			if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
 			if (v === "checkout" && locationId === "all") return false;
 			const flag = VIEW_FEATURE[v];
 			return flag ? !!enabled[flag] : true;
@@ -110,7 +116,7 @@ export function PosProvider({ children }) {
 		if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 		if (v === "tables" && !kitchen) return false;
 		if (v === "stations" && !kitchen) return false;
-		if (v === "industry" && !INDUSTRY_TYPES.includes(settings.businessType)) return false;
+		if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
 		const flag = VIEW_FEATURE[v];
 		return flag ? !!enabled[flag] : true;
 	}
@@ -372,6 +378,8 @@ export function PosProvider({ children }) {
 			view,
 			go,
 			setView,
+			reportNav,
+			setReportNav,
 			canView,
 			title: VIEW_TITLES[view] || ["", ""],
 			staffLogin,
@@ -395,7 +403,7 @@ export function PosProvider({ children }) {
 			sessionId,
 			deviceId,
 		}),
-		[currentUser, locationId, setLocationId, view, go, canView, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
+		[currentUser, locationId, setLocationId, view, reportNav, go, canView, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
 	);
 	return <PosContext.Provider value={value}>{children}</PosContext.Provider>;
 }

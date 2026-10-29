@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { FULL_SETTINGS_ROLES } from "../config/roles";
-import { KITCHEN_TYPES, SERVICE_CHARGE_TYPES } from "../config/presets";
+import { hasCapability } from "../config/capabilities";
 import { ORDER_CHANNELS } from "../config/constants";
 import { emailError } from "../domain/validators";
 import { useUi } from "../store/UiProvider";
@@ -61,7 +61,7 @@ const formFrom = (s) => ({
 });
 
 /** Settings: business, POS setup, operations, receipt printing and plan & support (tabbed). */
-export function Settings() {
+export function Settings({ only = null }) {
 	const { settings } = useData();
 	const { currentUser, svc, setSetupOpen, setLayout, canView, go } = usePos();
 	const locationsOn = useFeature("business.locations");
@@ -72,7 +72,7 @@ export function Settings() {
 	const ceylo = useFeature("settings.ceylo");
 	const ceyloAi = useFeature("settings.ceyloAi");
 	const ui = useUi();
-	const [tab, setTab] = useState(() => requestedSettingsTab() || "business");
+	const [tab, setTab] = useState(() => (only && !only.includes(requestedSettingsTab()) ? only[0] : requestedSettingsTab()) || "business");
 	// Ceylo's fix buttons can ask for a tab while Settings is already open
 	useEffect(() => onSettingsTab((t) => setTab(t)), []);
 	const [form, setForm] = useState(() => formFrom(settings));
@@ -90,9 +90,9 @@ export function Settings() {
 		}
 		return svc.settings.saveSettings(form);
 	};
-	const kitchen = KITCHEN_TYPES.includes(form.businessType);
+	const kitchen = hasCapability(form.businessType, "kitchen");
 	// the KDS tab exists only for kitchen businesses whose account has the Kitchen Display switched on
-	const TABS = ALL_TABS.filter((t) => t.id !== "kds" || (kitchen && kdsOn));
+	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn)));
 
 	const sections = {
 		business: full && (
@@ -104,7 +104,7 @@ export function Settings() {
 		pos: full && (
 			<>
 				<PosTypePanel form={form} set={set} onApplyPreset={() => setSetupOpen(true)} />
-				{serviceCharge && SERVICE_CHARGE_TYPES.includes(form.businessType) && <ServiceChargePanel form={form} set={set} />}
+				{serviceCharge && hasCapability(form.businessType, "serviceCharge") && <ServiceChargePanel form={form} set={set} />}
 			</>
 		),
 		operations: (
@@ -143,7 +143,7 @@ export function Settings() {
 	return (
 		<section className="view active" id="view-settings">
 			<div className="settings-tabbed" style={{ maxWidth: 900, display: "grid", gap: 16 }}>
-				<div className="settings-tabs" role="tablist" aria-label="Settings sections">
+				<div className="settings-tabs" role="tablist" aria-label="Settings sections" style={TABS.length < 2 ? { display: "none" } : undefined}>
 					{TABS.map((t, i) => (
 						<button
 							key={t.id}

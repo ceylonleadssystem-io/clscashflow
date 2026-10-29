@@ -4,6 +4,7 @@
  */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
+import { hasCapability } from "../../config/capabilities";
 
 /**
  * Shared plumbing for the POS action services.
@@ -113,6 +114,5 @@ export function movementRow(item, balance, change, reason, note, session) {
 	};
 }
 
-export const kitchenMode = (settings) => ["restaurant", "cafe"].includes(settings.businessType);
-export const serviceChargeSupported = (settings) =>
-	["restaurant", "cafe", "salon", "services"].includes(settings.businessType);
+export const kitchenMode = (settings) => hasCapability(settings.businessType, "kitchen");
+export const serviceChargeSupported = (settings) => hasCapability(settings.businessType, "serviceCharge");

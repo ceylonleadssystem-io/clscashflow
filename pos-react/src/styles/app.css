@@ -658,3 +658,76 @@ html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
 .station-summary li{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .kds-pairing{flex:1 1 280px;min-width:0}
 .kds-screen{margin:10px 0;padding-top:10px;border-top:1px solid var(--line,#eadfce)}
+
+/* Reports: box home, report page controls, chips, sortable table, dashboard widgets, report navigation in the sidebar */
+.reports-hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:14px}
+.report-box{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;min-height:130px;padding:16px;border:1px solid var(--ui-line,#e4e8eb);border-radius:var(--ui-radius,14px);background:var(--ui-surface,#fff);color:inherit;cursor:pointer;font:inherit;transition:.15s ease}
+.report-box:hover,.report-box:focus-visible{border-color:var(--ui-accent,#ff4d0a);box-shadow:var(--ui-shadow,0 10px 32px rgba(20,31,40,.08));outline:none}
+.report-box strong{font-size:calc(16px * var(--ui-fs, 1))}
+.report-box .muted{font-size:calc(12.5px * var(--ui-fs, 1));line-height:1.4}
+.report-box small{margin-top:auto;color:var(--ui-accent,#ff4d0a);font-weight:600}
+.report-box-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:var(--ui-soft,#f2f4f6);font-size:20px}
+.report-actions{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin:0 0 12px}
+.report-filter,.report-buttons{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.report-buttons{margin-left:auto}
+.report-buttons .btn.active{background:var(--ui-ink,#111820);color:#fff}
+.report-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;align-items:center}
+.report-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;border-radius:999px;background:var(--ui-soft,#f2f4f6);font-size:calc(12.5px * var(--ui-fs, 1))}
+.report-chip button{min-width:28px;min-height:28px;border:0;border-radius:50%;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:inherit}
+.report-chip button:hover{background:rgba(0,0,0,.08)}
+.report-note{margin:0 0 12px;padding:10px 14px;border-left:3px solid var(--ui-accent,#ff4d0a);background:var(--ui-soft,#f2f4f6);border-radius:8px;font-size:calc(13px * var(--ui-fs, 1));color:var(--ui-muted,#68717a)}
+.report-info{padding:14px 16px;margin-bottom:12px}
+.report-info ul{margin:8px 0 0;padding-left:18px}
+.report-cards{margin-bottom:12px}
+.report-cards .value.negative,.report-table td.negative{color:var(--ui-danger,#e23d2f)}
+.report-chart{padding:14px 16px}
+.report-table th.n,.report-table td.n{text-align:right;white-space:nowrap}
+.report-table tfoot td{border-top:2px solid var(--ui-line,#e4e8eb);background:var(--ui-soft,#f2f4f6)}
+.th-sort{border:0;background:transparent;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;padding:6px 0;min-height:32px;white-space:nowrap}
+.th-sort:focus-visible{outline:2px solid var(--ui-accent,#ff4d0a);outline-offset:2px}
+.report-page .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dash-widget summary{cursor:pointer;padding:12px 16px;list-style:none;display:flex;align-items:center}
+.dash-widget summary::-webkit-details-marker{display:none}
+.dash-widget summary:before{content:'▾';margin-right:8px;transition:.15s}
+.dash-widget:not([open]) summary:before{transform:rotate(-90deg)}
+.dash-widget-link{margin:10px 16px 14px}
+.dash-widget .empty{padding:8px 16px 14px}
+.report-nav .report-subnav{display:flex;flex-direction:column;gap:2px;margin:2px 0 6px 18px;padding-left:10px;border-left:1px solid rgba(255,255,255,.14)}
+html body .side .nav .report-subnav button{min-height:36px!important;padding:7px 12px!important;font-weight:500!important}
+html body .side .nav .report-subnav button:after{content:none!important}
+html body .side .nav .report-back{background:rgba(255,255,255,.08)!important;color:#fff!important}
+@media(max-width:640px){.report-buttons{margin-left:0}.report-actions .field,.report-filter .field{flex:1 1 140px}}
+@media(min-width:1101px){html body.nav-rail .side:not(:hover):not(:focus-within) .report-subnav{display:none}}
+
+/* /admin portal */
+th.n,td.n{text-align:right;white-space:nowrap}
+.portal-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.portal .side-foot .btn{box-sizing:border-box}
+a.report-box{text-decoration:none;color:inherit}a.report-box strong{text-decoration:none}a.report-box small{color:var(--ui-accent,#ff4d0a);font-weight:600}
+
+/* /admin portal: bigger rail icons, and a home of six large boxes (3 x 2) that fills the screen */
+html body.nav-rail .portal .side .nav button .nav-icon,html body.nav-rail .report-nav .nav-icon{width:26px;height:26px}
+html body.nav-rail .portal .side .nav button,html body.nav-rail .side .report-nav button:not(.rail-toggle){min-height:48px}
+.nav-icon:not(svg){display:inline-grid;place-items:center;font-size:22px;line-height:1}
+.portal .content{display:flex;flex-direction:column;min-height:calc(100dvh - 92px)}
+#portal-home{flex:1;display:flex;flex-direction:column;min-height:0}
+.portal-hub{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:20px;min-height:min(70dvh,640px)}
+.portal-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;border:1px solid var(--ui-line,#e4e8eb);border-radius:calc(var(--ui-radius,14px) + 4px);background:var(--ui-surface,#fff);color:inherit;cursor:pointer;font:inherit;transition:.15s ease}
+.portal-box:hover,.portal-box:focus-visible{border-color:var(--ui-accent,#ff4d0a);box-shadow:var(--ui-shadow,0 10px 32px rgba(20,31,40,.08));transform:translateY(-2px);outline:none}
+.portal-box strong{font-size:calc(22px * var(--ui-fs, 1))}
+.portal-box .muted{max-width:34ch;font-size:calc(14px * var(--ui-fs, 1));line-height:1.45}
+.portal-box-icon{display:grid;place-items:center;width:96px;height:96px;border-radius:24px;background:var(--ui-soft,#f2f4f6);color:var(--ui-accent,#ff4d0a)}
+@media(max-width:900px){.portal-hub{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(180px,1fr)}.portal-box-icon{width:72px;height:72px}}
+@media(max-width:560px){.portal-hub{grid-template-columns:minmax(0,1fr)}.portal-box{flex-direction:row;text-align:left;justify-content:flex-start;gap:16px;padding:16px;min-height:96px}.portal-box-icon{flex:none;width:56px;height:56px;border-radius:16px}.portal-box-icon svg{width:32px;height:32px}}
+/* the portal and report navigations use id="nav" too, so they get the rail layout of nav-rail.css (collapsed icons, phone and tablet widths);
+   only the tighter padding is theirs, so the 26px icons fit the 36px collapsed column */
+html body.nav-rail .side #nav:is(.portal-nav,.report-nav) button{padding:8px 5px!important}
+html body.nav-rail .side #nav:is(.portal-nav,.report-nav) .report-subnav{margin-left:14px}
+
+/* a section with sub-items: only the chosen sub-item is highlighted (the section row just stays bright, with its sub-items listed under it).
+   While the rail is collapsed to icons the sub-items are hidden, so the section row is highlighted instead. */
+html body .side #nav .report-nav-group.has-subs.open > button{background:transparent!important;box-shadow:none!important;color:#fff!important}
+html body .side #nav .report-subnav button{color:#bfc7cc!important}
+html body .side #nav .report-subnav button.active{color:#fff!important;font-weight:700!important}
+html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav .report-subnav{display:none}
+html body.nav-rail .side:not(:hover):not(:has(:focus-visible)):not(.rail-open) #nav .report-nav-group.has-subs.open > button{background:var(--ui-accent,#ff4d0a)!important}

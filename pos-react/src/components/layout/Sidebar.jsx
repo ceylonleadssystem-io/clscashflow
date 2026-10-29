@@ -10,9 +10,10 @@ import { usePos } from "../../store/PosProvider";
 import { useSession } from "../../store/SessionProvider";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
+import { ReportNav } from "./ReportNav";
 
 export function Sidebar() {
-	const { view, go, canView, currentUser, staffLogout } = usePos();
+	const { view, go, canView, currentUser, staffLogout, reportNav } = usePos();
 	const { signOut } = useSession();
 	const { settings } = useData();
 	const logo = settings.logo;
@@ -49,29 +50,33 @@ export function Sidebar() {
 				<strong>{currentUser?.name || "Not signed in"}</strong>
 				<span>{currentUser?.role || "Staff session"}</span>
 			</div>
+			{view === "reports" && reportNav ? (
+				<ReportNav open={open} setOpen={setOpen} onHome={() => go(NAV_ITEMS.find((i) => canView(i.view))?.view || "dashboard")} />
+			) : (
 			<nav className="nav" id="nav">
-				<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
-					<span className="nav-icon" aria-hidden="true">☰</span>
-					<span>Show Navigation</span>
-				</button>
-				{NAV_ITEMS.filter((item) => canView(item.view)).map((item, i, list) => {
-					const group = item.group || "";
-					const heading = i && (list[i - 1].group || "") !== group ? group || "-" : "";
-					return (
-						<Fragment key={item.view}>
-							{heading === "-" && <div className="nav-group nav-sep" role="separator" />}
-							{heading && heading !== "-" && <div className="nav-group">{heading}</div>}
-							<button data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => {
-									go(item.view);
-									setOpen(false);
-								}}>
-								<NavIcon view={item.view} />
-								<span>{item.label.slice(2)}</span>
-							</button>
-						</Fragment>
-					);
-				})}
-			</nav>
+					<button type="button" className="rail-toggle" aria-expanded={open} aria-label="Show page names" onClick={() => setOpen((o) => !o)}>
+						<span className="nav-icon" aria-hidden="true">☰</span>
+						<span>Show Navigation</span>
+					</button>
+					{NAV_ITEMS.filter((item) => canView(item.view)).map((item, i, list) => {
+						const group = item.group || "";
+						const heading = i && (list[i - 1].group || "") !== group ? group || "-" : "";
+						return (
+							<Fragment key={item.view}>
+								{heading === "-" && <div className="nav-group nav-sep" role="separator" />}
+								{heading && heading !== "-" && <div className="nav-group">{heading}</div>}
+								<button data-view={item.view} className={view === item.view ? "active" : ""} title={item.label.slice(2)} onClick={() => {
+										go(item.view);
+										setOpen(false);
+									}}>
+									<NavIcon view={item.view} />
+									<span>{item.label.slice(2)}</span>
+								</button>
+							</Fragment>
+						);
+					})}
+				</nav>
+			)}
 			<div className="side-foot">
 				<strong id="side-business">{settings.business || "My Business"}</strong>
 				<br />

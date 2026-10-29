@@ -2,6 +2,8 @@
  * Business-type presets (restaurant, cafe, retail, hardware, grocery, salon, pharmacy, services, other):
  * default categories, kitchen workflow flags, guidance notes, the common modifier groups and legacy clean-up lists.
  */
+import { hasCapability, typesWith } from "./capabilities";
+
 /** POS business-type presets (categories, kitchen workflow, guidance). */
 export const POS_TYPE_PRESETS = {
 	restaurant: {
@@ -86,9 +88,10 @@ export const BUSINESS_TYPE_OPTIONS = [
 	"other",
 ];
 
-export const KITCHEN_TYPES = ["restaurant", "cafe"];
-export const SERVICE_CHARGE_TYPES = ["restaurant", "cafe", "salon", "services"];
-export const INDUSTRY_TYPES = ["salon", "services", "pharmacy"];
+// kept for existing imports; they are derived from config/capabilities.js, which is where a business type's abilities are defined
+export const KITCHEN_TYPES = typesWith("kitchen");
+export const SERVICE_CHARGE_TYPES = typesWith("serviceCharge");
+export const INDUSTRY_TYPES = typesWith("industryTools");
 
 /** Preset categories that are hidden while they contain nothing (legacy rule). */
 export const STALE_PRESET_CATEGORIES = [
@@ -103,7 +106,7 @@ export const STALE_PRESET_CATEGORIES = [
 
 /** Ready-made modifier groups offered by "Add Common Modifiers". */
 export function commonModifierPresets(businessType = "other") {
-	const food = KITCHEN_TYPES.includes(businessType);
+	const food = hasCapability(businessType, "kitchen");
 	return food
 		? [
 				{

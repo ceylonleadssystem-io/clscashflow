@@ -92,7 +92,6 @@ export const NAV_ITEMS = [
 	{ view: "stations", label: "⎙ Stations", group: "Items" },
 	{ view: "inventory", label: "▥ Inventory & Stock", group: "Items" },
 	{ view: "industry", label: "✦ Business Tools", group: "Items" },
-	{ view: "dashboard", label: "▦ Dashboard", group: "Reports" },
 	{ view: "sales", label: "↗ Sales History", group: "Reports" },
 	{ view: "reports", label: "▤ Reports", group: "Reports" },
 	{ view: "customers", label: "♙ Customers", group: "Customer Relationship" },

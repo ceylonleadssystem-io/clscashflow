@@ -17,6 +17,8 @@ import { StockCount } from "./views/StockCount";
 import { AssistBar, AssistMissing } from "./components/layout/AssistBar";
 import { assistActive, assistRequested } from "./services/assist";
 import { Shell } from "./components/layout/Shell";
+import { PortalShell } from "./components/layout/PortalShell";
+import { isPortalPath } from "./config/portal";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GearLoader } from "./components/ui/GearLoader";
 
@@ -104,6 +106,7 @@ function Gate() {
 			</>
 		);
 	if (hash === "#/count" && !support) return <StockCount />;
+	if (isPortalPath()) return <PortalShell />;
 	return (
 		<>
 			<Shell />
