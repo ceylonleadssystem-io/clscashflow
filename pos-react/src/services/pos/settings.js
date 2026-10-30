@@ -18,7 +18,11 @@ import { fitBusinessLogo, cleanReceiptQrImage } from "../printing/imageTools";
 import { isAppwrite } from "../../config/env";
 import { isDataImage, storeImage } from "../imageStorage";
 import { audit, newId, supportAuditEntry, unmarkDeletedCategory } from "./common";
-import { addCommonModifiers } from "./catalog";
+import { addCommonModifiers, applyCatalogDrafts } from "./catalog";
+import { APPLY_KEYS } from "../../domain/menuAdmin";
+import { categoryKey, productCategories } from "../../domain/catalog";
+import { effectiveCategory, categoryEditError, cleanCategoryEdit, cleanGroupEdit, draftList, groupEditError, itemChanges, itemEditError, remainingNames, workingCategories, workingGroups } from "../../domain/catalogDraft";
+import { categorySettingBlank, cleanCategorySetting } from "../../domain/deleteApproval";
 import { createLogger } from "../../utils/logger";
 
 const log = createLogger("settings");
@@ -483,6 +487,55 @@ export async function saveMenuEntity(ctx, key, form) {
 		await writeDraft(ctx, key, limitBlank(clean) ? rest : [...rest, clean]);
 		ctx.ui.notice(DRAFT_NOTE);
 		return true;
+	} else if (key === "categorySettings") {
+		const names = productCategories(ctx.data().categories, products);
+		const real = names.find((n) => categoryKey(n) === categoryKey(form.name ?? form.id));
+		if (!real) return void (await ctx.ui.alert("That category no longer exists."));
+		clean = cleanCategorySetting({ ...form, name: real, id: real });
+		const rest = all.filter((e) => e.id !== clean.id);
+		await writeDraft(ctx, key, categorySettingBlank(clean) ? rest : [...rest, clean]);
+		ctx.ui.notice(DRAFT_NOTE);
+		return true;
+	} else if (key === "categoryEdits") {
+		// add ("original" empty), rename or remove a category; applied to the live catalogue on Publish
+		const d = ctx.data();
+		const live = productCategories(d.categories, d.products);
+		const edits = draftList(settings, "categoryEdits");
+		const e = cleanCategoryEdit(form, form.original ? categoryKey(form.original) : form.id || newId("nc"));
+		// the other categories: this one does not clash with itself
+		const others = workingCategories(live, edits.filter((x) => x.id !== e.id)).filter((r) => !(e.original && categoryKey(r.original) === categoryKey(e.original)));
+		const problem = categoryEditError(e, others);
+		if (problem) return void (await ctx.ui.alert(problem));
+		const unchanged = !e.removed && e.original && e.name === e.original;
+		const rest = edits.filter((x) => x.id !== e.id);
+		await writeDraft(ctx, key, unchanged ? rest : [...rest, e]);
+		ctx.ui.notice(DRAFT_NOTE);
+		return true;
+	} else if (key === "itemEdits") {
+		const product = products.find((p) => String(p.id) === String(form.id));
+		if (!product) return void (await ctx.ui.alert("That item no longer exists."));
+		const d = ctx.data();
+		const rows = workingCategories(productCategories(d.categories, products), draftList(settings, "categoryEdits"));
+		const problem = itemEditError(form, remainingNames(rows));
+		if (problem) return void (await ctx.ui.alert(problem));
+		const changes = itemChanges({ ...product, category: effectiveCategory(rows, product.category) }, form); // against the category it will have once published
+		const rest = draftList(settings, "itemEdits").filter((x) => x.id !== String(product.id));
+		await writeDraft(ctx, key, Object.keys(changes).length ? [...rest, { id: String(product.id), name: changes.name || product.name, original: product.name, changes, was: Object.fromEntries(Object.keys(changes).map((f) => [f, product[f]])) }] : rest);
+		ctx.ui.notice(DRAFT_NOTE);
+		return true;
+	} else if (key === "groupEdits") {
+		const d = ctx.data();
+		const edits = draftList(settings, "groupEdits");
+		const live = d.modifiers.find((m) => m.id === form.id);
+		const e = cleanGroupEdit({ ...form, id: live ? live.id : form.id || newId("m"), isNew: !live });
+		const others = workingGroups(d.modifiers, edits).filter((g) => g.state !== "removed" && g.id !== e.id);
+		const problem = groupEditError(e, others);
+		if (problem) return void (await ctx.ui.alert(problem));
+		const rest = edits.filter((x) => x.id !== e.id);
+		const same = live && !e.removed && live.name === e.name && live.mode === e.mode && (live.required !== false) === e.required && JSON.stringify(live.options.map((o) => [o.name, +o.price || 0])) === JSON.stringify(e.options.map((o) => [o.name, o.price]));
+		await writeDraft(ctx, key, same || (e.removed && e.isNew) ? rest : [...rest, e]);
+		ctx.ui.notice(DRAFT_NOTE);
+		return true;
 	} else if (key === "itemSettings") {
 		// overrides of an existing item; clearing every field removes the entry
 		const product = products.find((p) => String(p.id) === String(form.id));
@@ -545,18 +598,34 @@ export async function addStandardSalesCategories(ctx) {
 	return add.length;
 }
 
-/** Puts every draft on the POS at once. Returns true when something was published. */
+/**
+ * Puts every draft on the POS at once: the published lists are replaced and the catalogue drafts (categories, items, modifier groups)
+ * are applied to the live catalogue, all in one write. Returns true when something was published.
+ */
 export async function publishMenu(ctx) {
-	const { settings } = ctx.data();
+	const d = ctx.data();
+	const { settings } = d;
 	const changes = draftChanges(settings);
 	if (!changes.length) return void ctx.ui.notice("There is nothing to publish.");
-	const patch = { menuDraft: {}, menuVersion: (Number(settings.menuVersion) || 0) + 1 };
-	for (const key of MENU_KEYS) if (settings.menuDraft?.[key]) patch[key] = settings.menuDraft[key];
-	await patchSettings(ctx, patch);
+	const drafts = settings.menuDraft || {};
+	const copied = {};
+	for (const key of MENU_KEYS) if (drafts[key]) copied[key] = drafts[key];
+	const version = (Number(settings.menuVersion) || 0) + 1;
+	await ctx.store.write(async (tx) => {
+		const carried = APPLY_KEYS.some((k) => Array.isArray(drafts[k]) && drafts[k].length) ? await applyCatalogDrafts(tx, d, drafts, { ...settings, ...copied }, { syncStock: !!ctx.features()["inventory.productStock"] }) : {};
+		const patch = { ...copied, ...carried, menuDraft: {}, menuVersion: version };
+		for (const [k, v] of Object.entries(patch)) if (JSON.stringify(settings[k]) !== JSON.stringify(v)) tx.setSetting(k, v);
+	});
 	const summary = changes.map((c) => `${MENU_PAGES[c.page].label} ${c.name || ""} ${c.kind}`).join("; ").slice(0, 900);
 	await settingsAudit(ctx, "menu-published", summary);
-	log.info("menu published", { changes: changes.length, version: patch.menuVersion });
+	log.info("menu published", { changes: changes.length, version });
 	ctx.ui.notice("Menu published.");
+	return true;
+}
+
+/** Takes one unpublished catalogue edit back out of the draft (by its id). */
+export async function revertMenuEdit(ctx, key, id) {
+	await writeDraft(ctx, key, draftList(ctx.data().settings, key).filter((x) => x.id !== id));
 	return true;
 }
 

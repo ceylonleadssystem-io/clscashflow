@@ -122,6 +122,10 @@ Menu Admin pages save **drafts**: nothing changes on the register until you pres
 - **Taxes**: add your rates (for example VAT 18%) and groups, choose a default tax and a tax per category, then Publish. Tax is added on top of item prices after any discount, and shows on the
   checkout, the receipt and Reports, Taxes. Until a tax is published nothing is added. A partial refund returns the tax with the items.
 - **Items**: for each item, its own tax (or none), a takeaway tax, the **prep ticket name** shown to the kitchen and the **receipt name** printed on receipts. Name, price and stock stay in Products & Services.
+- **Categories**: add, rename or remove categories, give them a description, and decide whether taking items off an order **after it was sent to the kitchen** needs a manager's PIN (and after how many seconds).
+  Managers and owners are never asked; the removal is recorded in the audit log.
+- **Items, categories and modifier groups** can be edited here as drafts (name, price, cost, category, code, description, groups and their options); they change on the register only when you Publish.
+  Creating items, photos, stock and printing stations stay in Products & Services.
 - **Modifiers**: set how many options of a "choose several" group staff must or may pick, and add **global modifiers** (onion, sauce, ice) with prefixes such as Add, Extra, Side and No. When global modifiers are
   on in Order Entry, each order line shows **Add extras**; "No Onion" or "Extra Sauce" then prints on the receipt and the kitchen ticket.
 

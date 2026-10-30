@@ -18,6 +18,7 @@ export const PERMISSIONS = [
 	{ group: "POS", key: "pos.order.create", label: "Take orders (Checkout)", tip: "Opens Checkout so the person can sell." },
 	{ group: "POS", key: "pos.discount", label: "Give discounts", tip: "Shows the discount controls at checkout." },
 	{ group: "POS", key: "pos.refund", label: "Refund without a manager", tip: "Without this, a refund needs a manager's PIN." },
+	{ group: "POS", key: "pos.void.item", label: "Remove sent items without a manager", tip: "Without this, taking an item off an order after it was sent to the kitchen needs a manager's PIN, where the category asks for it." },
 	{ group: "POS", key: "pos.void.order", label: "Void without a manager", tip: "Without this, a void needs a manager's PIN." },
 	{ group: "POS", key: "pos.payments.third_party", label: "Take 3rd party payments", tip: "Uber Eats, PickMe Food and the other types set up in Settings." },
 ];
@@ -29,7 +30,7 @@ const roleHas = (role, key) => {
 	if (viewKey[key]) return (ROLE_VIEWS[role] || []).includes(viewKey[key]);
 	if (key === "settings.system.edit") return FULL_SETTINGS_ROLES.includes(role);
 	if (key === "users.view" || key === "users.edit") return role === "manager";
-	if (key === "pos.refund" || key === "pos.void.order") return APPROVER_ROLES.includes(role);
+	if (key === "pos.refund" || key === "pos.void.order" || key === "pos.void.item") return APPROVER_ROLES.includes(role);
 	return key === "pos.discount" || key === "pos.payments.third_party"; // every role could already do these
 };
 

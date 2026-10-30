@@ -114,6 +114,18 @@ a tax group applies each member to the same amount (not compounded) and lists th
   modifiers" is replaced by the Add extras button on each line; a limit stored for a deleted group is simply ignored.
 - Seen while testing and not changed: at 375 px the existing "Choose Modifiers" dialog is partly covered on the left by the navigation rail.
 
+## Delivered (slice 9): sent-item approval, Categories, catalogue edits on drafts
+- **Till check** (`domain/deleteApproval.js`, `pos.void.item`): when an order is sent to the kitchen its lines remember how many were sent and when. If a category asks for approval (Categories page: switch
+  and grace period in seconds), taking those sent items off the order after the grace period shows a **Manager approval** dialog; a manager's or owner's PIN lets it through and writes a
+  "sent-item-removed" audit entry. New permission "Remove sent items without a manager": owners, admins and managers hold it; accountants and cashiers do not (an owner can grant it to anyone). Nothing is asked until a category switches it on.
+  Not covered: voiding a whole order (its own permission), items that were never sent, and lines removed by paying.
+- **Menu Admin > Categories** (`settings.categorySettings` plus drafts): list with item counts and tax, **Add**, **rename**, **remove** (choose where its items move) as drafts, a **description**, and the approval rule.
+  A rename or removal carries availability menus, tax by category and category settings with it (the Products screen's rename and delete do the same now).
+- **Items, categories and modifier groups on drafts** (`domain/catalogDraft.js`, `applyCatalogDrafts`): the Items drawer edits name, selling price, cost, category, code and description; Modifiers has Add / Edit / Remove for groups
+  (name, one or several choices, required, options with prices). These are held as drafts; **Publish applies them to the live catalogue in the same write as the rest of the menu** (adds and renames first, then removals, then item
+  edits, then groups; stock rows follow). Review shows before and after, a single entry can be undone, and **Discard all** drops them. Live screens keep showing the old values until then.
+- Still edited live in Products & Services (not on drafts): creating an item, photos, stock counts, printing stations, modifier assignment to items, subcategories. Item descriptions have no online use yet.
+
 ## Next slices, in the spec's order
-1. Menu Admin remainder: a Categories page (description; delete approval needs a till check that stops staff removing sent items without a manager), and moving group, item and category editing itself behind drafts.
+1. Menu Admin remainder: creating items on drafts (with photos, stock and stations), modifier assignment to items, subcategories. Then wire the remaining Settings rows that waited for these (see the tables above).
 2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

@@ -5,8 +5,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { AssignmentTree } from "../../components/settings/kit/AssignmentTree";
 import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
-import { NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
-import { categoryKey, visibleProductCategories } from "../../domain/catalog";
+import { ConditionalGroup, NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextAreaRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
+import { categoryKey, productCategories, visibleProductCategories } from "../../domain/catalog";
+import { DEFAULT_GRACE, cleanCategorySetting } from "../../domain/deleteApproval";
+import { UNCATEGORIZED, cleanGroupEdit, effectiveCategory, draftList, groupEditError, itemEditError, remainingNames, withItemEdit, workingCategories, workingGroups } from "../../domain/catalogDraft";
 import { WEEKDAYS, DEFAULT_PREFIXES, cleanGlobalModifier, cleanItemSetting, cleanLimit, cleanMenu, cleanPrefixes, globalModifierError, limitError, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { money } from "../../domain/format";
 import { cleanTax, cleanTaxRules, previewTax, round2, taxError } from "../../domain/taxes";
@@ -395,8 +397,177 @@ export function Taxes() {
 	);
 }
 
+
+export function CategoriesAdmin() {
+	const { settings, categories, products, subcategories } = useData();
+	const { svc, go, canView } = usePos();
+	const [edit, setEdit] = useState(null); // { row, name, description, deleteApprovalOn, graceSeconds }
+	const [removing, setRemoving] = useState(null); // { row, moveTo }
+	const [touched, setTouched] = useState(false);
+	const live = useMemo(() => visibleProductCategories(categories, products, subcategories, settings.userCategories || []).sort((a, b) => a.localeCompare(b)), [categories, products, subcategories, settings.userCategories]);
+	const edits = draftList(settings, "categoryEdits");
+	const rows = useMemo(() => workingCategories(live, edits), [live, edits]);
+	const rules = useMemo(() => new Map(workingOf(settings, "categorySettings").map((c) => [c.id, c])), [settings]);
+	const taxes = workingOf(settings, "taxes");
+	const taxRules = cleanTaxRules(workingOf(settings, "taxRules")[0] || {});
+	const count = (r) => products.filter((p) => categoryKey(p.category) === categoryKey(r.original || r.name)).length;
+	const taxOf = (r) => taxes.find((t) => t.id === (taxRules.categoryTaxes[categoryKey(r.original || r.name)]?.tax || taxRules.defaultTaxId))?.name || "None";
+	const others = (r) => rows.filter((x) => x !== r);
+	const nameClash = edit && rows.some((x) => x !== edit.row && x.state !== "removed" && categoryKey(x.name) === categoryKey(edit.name));
+	const error = edit ? (!edit.name.trim() ? "Enter a name." : nameClash ? "There is already a category called " + edit.name.trim() + "." : "") : "";
+	const close = () => (setEdit(null), setTouched(false));
+	const open = (r) => {
+		const c = rules.get(categoryKey(r.original || r.name));
+		setEdit({ row: r, name: r.name, description: c?.description || "", deleteApprovalOn: !!c?.deleteApprovalOn, graceSeconds: c ? c.graceSeconds : DEFAULT_GRACE });
+	};
+	const save = async () => {
+		setTouched(true);
+		if (error) return;
+		const r = edit.row;
+		if (!(await svc.settings.saveMenuEntity("categoryEdits", { id: r.state === "added" ? r.key : undefined, original: r.original, name: edit.name }))) return;
+		if (r.original) await svc.settings.saveMenuEntity("categorySettings", { name: r.original, description: edit.description, deleteApprovalOn: edit.deleteApprovalOn, graceSeconds: edit.graceSeconds });
+		close();
+	};
+	const undo = (r) => svc.settings.revertMenuEdit("categoryEdits", r.original ? categoryKey(r.original) : r.key);
+	const stateBadge = (r) => ({ added: "New", renamed: "Renamed from " + r.original, removed: "Will be removed" })[r.state];
+	return (
+		<>
+			<PageHeader
+				title="Categories"
+				description="The groups customers see on the register. Add, rename and remove them here as drafts; a description and the approval rule for removing sent items are saved with them."
+				actions={
+					<>
+						<DraftBadge show={edits.length > 0 || hasDraft(settings, "categorySettings")} />
+						{canView("products") && (
+							<button type="button" className="btn out" onClick={() => go("products")}>
+								Open Products & Services
+							</button>
+						)}
+						<button type="button" className="btn gold" id="add-category" onClick={() => setEdit({ row: { state: "added", key: "", original: "", name: "" }, name: "", description: "", deleteApprovalOn: false, graceSeconds: DEFAULT_GRACE })}>
+							Add category
+						</button>
+					</>
+				}
+			/>
+			<SectionCard>
+				{!rows.length ? (
+					<EmptyState title="No categories yet">Add one, or create items in Products & Services.</EmptyState>
+				) : (
+					<ul className="sk-list">
+						{rows.map((r) => {
+							const c = rules.get(categoryKey(r.original || r.name));
+							return (
+								<li key={r.key + r.name} className="sk-list-row" data-category={r.name} style={r.state === "removed" ? { opacity: 0.6 } : undefined}>
+									<div className="sk-list-main">
+										<div className="sk-list-line">
+											<strong>{r.name}</strong>
+											{stateBadge(r) && <span className="sk-badge">{stateBadge(r)}</span>}
+											<span className="muted">
+												{count(r)} item{count(r) === 1 ? "" : "s"} · Tax: {taxOf(r)}
+												{c?.deleteApprovalOn ? ` · Manager approval to remove sent items after ${c.graceSeconds}s` : ""}
+											</span>
+										</div>
+										{c?.description && <p className="muted" style={{ margin: "2px 0 0" }}>{c.description}</p>}
+									</div>
+									<span className="sk-list-actions">
+										{r.state === "removed" ? (
+											<button type="button" className="btn out" onClick={() => undo(r)}>
+												Undo
+											</button>
+										) : (
+											<>
+												<button type="button" className="btn out" onClick={() => open(r)}>
+													Edit
+												</button>
+												<button type="button" className="btn danger" onClick={() => (r.state === "added" ? undo(r) : setRemoving({ row: r, moveTo: "" }))}>
+													Remove
+												</button>
+											</>
+										)}
+									</span>
+								</li>
+							);
+						})}
+					</ul>
+				)}
+			</SectionCard>
+			<DetailDrawer
+				open={!!edit}
+				wide
+				title={edit?.row.state === "added" && !edit.row.key ? "Add category" : "Edit category"}
+				onClose={close}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={close}>
+							Cancel
+						</button>
+						<button type="button" className="btn gold" id="save-category" onClick={save}>
+							Save draft
+						</button>
+					</>
+				}
+			>
+				{edit && (
+					<>
+						<TextRow id="cat-name" label="Name" help="Renaming moves all of its items to the new name when you publish." value={edit.name} max={60} autoFocus onChange={(name) => setEdit((x) => ({ ...x, name }))} error={touched ? error : ""} />
+						{edit.row.original ? (
+							<>
+								<TextAreaRow id="cat-desc" label="Description" help="Shown with the category online (Online is not built yet)." value={edit.description} max={300} onChange={(description) => setEdit((x) => ({ ...x, description }))} />
+								<ToggleRow id="cat-approval" label="Manager approval to remove sent items" help="Once an order has been sent to the kitchen, taking items of this category off it needs a manager's PIN after the grace period. People allowed to remove sent items without a manager are not asked." value={edit.deleteApprovalOn} onChange={(on) => setEdit((x) => ({ ...x, deleteApprovalOn: on }))} />
+								<ConditionalGroup show={edit.deleteApprovalOn}>
+									<NumberRow id="cat-grace" label="Grace period" help="Seconds after sending during which an item can still be taken off freely." value={edit.graceSeconds} min={0} max={3600} suffix="seconds" onChange={(graceSeconds) => setEdit((x) => ({ ...x, graceSeconds }))} />
+								</ConditionalGroup>
+								<SettingRow label="Tax" help="Set in Taxes, Tax by category." wide>
+									<span>{taxOf(edit.row)}</span>
+								</SettingRow>
+							</>
+						) : (
+							<p className="muted">Add a description and the approval rule once this category is published.</p>
+						)}
+					</>
+				)}
+			</DetailDrawer>
+			<DetailDrawer
+				open={!!removing}
+				wide
+				title={removing ? "Remove " + removing.row.name : ""}
+				onClose={() => setRemoving(null)}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={() => setRemoving(null)}>
+							Cancel
+						</button>
+						<button
+							type="button"
+							className="btn danger"
+							id="confirm-remove-category"
+							onClick={async () => {
+								if (await svc.settings.saveMenuEntity("categoryEdits", { original: removing.row.original, name: removing.row.original, removed: true, moveTo: removing.moveTo })) setRemoving(null);
+							}}
+						>
+							Remove on publish
+						</button>
+					</>
+				}
+			>
+				{removing && (
+					<>
+						<p>
+							{count(removing.row) ? `${count(removing.row)} item${count(removing.row) === 1 ? "" : "s"} in ${removing.row.name} must go somewhere. ` : ""}Nothing changes on the register until you publish.
+						</p>
+						{count(removing.row) > 0 && (
+							<SelectRow id="cat-move" label="Move its items to" value={removing.moveTo} options={[{ value: "", label: UNCATEGORIZED }, ...remainingNames(others(removing.row)).filter((n) => n && categoryKey(n) !== categoryKey(removing.row.name)).map((n) => ({ value: n, label: n }))]} onChange={(moveTo) => setRemoving((x) => ({ ...x, moveTo }))} />
+						)}
+					</>
+				)}
+			</DetailDrawer>
+		</>
+	);
+}
+
 export function Items() {
-	const { settings, products } = useData();
+	const { settings, products: liveProducts, categories: categoriesLive } = useData();
+	const products = useMemo(() => liveProducts.map((p) => withItemEdit(p, draftList(settings, "itemEdits"))), [liveProducts, settings]);
 	const { svc, go, canView } = usePos();
 	const [q, setQ] = useState("");
 	const [edit, setEdit] = useState(null);
@@ -425,17 +596,25 @@ export function Items() {
 	const options = [{ value: "none", label: "No tax" }, ...taxes.filter((t) => t.status === "active").map((t) => ({ value: t.id, label: t.name }))];
 	const tax = edit ? taxes.find((t) => t.id === (edit.taxId || rules.categoryTaxes[categoryKey(edit.product.category)]?.tax || rules.defaultTaxId)) : null;
 	const withTax = tax && tax.status === "active" ? previewTax(tax, taxes, +edit.product.price || 0) : null;
-	const open = (p) => setEdit({ product: p, ...cleanItemSetting({ ...(overrides.get(String(p.id)) || {}), id: String(p.id) }) });
+	const itemEdits = draftList(settings, "itemEdits");
+	const catRows = workingCategories(useMemo(() => productCategories(categoriesLive, liveProducts).sort((a, b) => a.localeCompare(b)), [categoriesLive, liveProducts]), draftList(settings, "categoryEdits"));
+	const catNames = remainingNames(catRows);
+	const open = (p) => {
+		const w = withItemEdit(p, itemEdits);
+		setEdit({ product: w, ...cleanItemSetting({ ...(overrides.get(String(p.id)) || {}), id: String(p.id) }), details: { name: w.name, price: String(w.price), cost: String(w.cost), category: effectiveCategory(catRows, w.category), code: w.code || "", description: w.description || "" } });
+	};
 	const close = () => setEdit(null);
 	const save = async () => {
-		if (await svc.settings.saveMenuEntity("itemSettings", edit)) close();
+		const ok = await svc.settings.saveMenuEntity("itemEdits", { id: edit.id, ...edit.details });
+		if (ok && (await svc.settings.saveMenuEntity("itemSettings", edit))) close();
 	};
+	const setDetail = (k) => (v) => setEdit((x) => ({ ...x, details: { ...x.details, [k]: v } }));
 	const name = (n) => (n.length > 24 ? n.slice(0, 24) + "…" : n);
 	return (
 		<>
 			<PageHeader
 				title="Items"
-				description="Per-item tax and the names used on kitchen tickets and receipts. Name, price, stock and photos are edited in Products & Services."
+				description="Edit an item's details, its own tax and the names used on kitchen tickets and receipts. Photos, stock and printing stations are edited in Products & Services."
 				actions={
 					<>
 						<DraftBadge show={hasDraft(settings, "itemSettings")} />
@@ -465,6 +644,7 @@ export function Items() {
 										<span className="sk-item-name">
 											<strong>{name(p.name)}</strong>
 											{o && <span className="sk-badge">Customised</span>}
+											{itemEdits.some((e) => e.id === String(p.id)) && <span className="sk-badge">Edited</span>}
 										</span>
 										<span className="muted">
 											{money(p.price)} · Tax: {effective(p)} · {salesOf.get(String(p.id)) || "No sales category"}
@@ -498,6 +678,14 @@ export function Items() {
 			>
 				{edit && (
 					<>
+						<SectionCard title="Details" description="Applied to the live item when you publish. Photos, stock and the stations an item prints to are edited in Products & Services.">
+							<TextRow id="it-name" label="Name" value={edit.details.name} max={80} onChange={setDetail("name")} />
+							<NumberRow id="it-price" label="Selling price" value={edit.details.price} min={0} step={0.01} onChange={(v) => setDetail("price")(v === "" ? "" : String(v))} />
+							<NumberRow id="it-cost" label="Cost price" value={edit.details.cost} min={0} step={0.01} onChange={(v) => setDetail("cost")(v === "" ? "" : String(v))} />
+							<SelectRow id="it-category" label="Category" value={edit.details.category} options={catNames.map((n) => ({ value: n, label: n }))} onChange={setDetail("category")} />
+							<TextRow id="it-code" label="Item code" help="Used for barcode and lookup." value={edit.details.code} max={40} onChange={setDetail("code")} />
+							<TextAreaRow id="it-desc" label="Description" value={edit.details.description} max={200} onChange={setDetail("description")} />
+						</SectionCard>
 						<SelectRow id="it-tax" label="Tax" help="Leave on the category tax to follow Taxes, Tax by category." value={edit.taxId} options={[{ value: "", label: "Follow the category" }, ...options]} onChange={(taxId) => setEdit((x) => ({ ...x, taxId }))} />
 						{rules.takeawayOn && <SelectRow id="it-take" label="Takeaway tax" help="Used on takeaway orders. Blank uses the tax above." value={edit.takeawayTaxId} options={[{ value: "", label: "Same as the tax above" }, ...options]} onChange={(takeawayTaxId) => setEdit((x) => ({ ...x, takeawayTaxId }))} />}
 						{withTax && (
@@ -518,6 +706,17 @@ export function ModifiersAdmin() {
 	const { settings, modifiers, products } = useData();
 	const { svc, go, canView } = usePos();
 	const [tab, setTab] = useState("groups");
+	const [group, setGroup] = useState(null); // a modifier group being added or edited as a draft
+	const [groupTouched, setGroupTouched] = useState(false);
+	const groupEdits = draftList(settings, "groupEdits");
+	const groupRows = useMemo(() => workingGroups(modifiers, groupEdits), [modifiers, groupEdits]);
+	const groupError = group ? groupEditError(cleanGroupEdit({ ...group, id: group.id || "new" }), groupRows.filter((g) => g.state !== "removed" && g.id !== group.id)) : "";
+	const saveGroup = async () => {
+		setGroupTouched(true);
+		if (groupError) return;
+		if (await svc.settings.saveMenuEntity("groupEdits", group)) (setGroup(null), setGroupTouched(false));
+	};
+	const setOption = (i, next) => setGroup((x) => ({ ...x, options: x.options.map((o, j) => (j === i ? { ...o, ...next } : o)) }));
 	const [limit, setLimit] = useState(null);
 	const [edit, setEdit] = useState(null);
 	const [touched, setTouched] = useState(false);
@@ -556,6 +755,11 @@ export function ModifiersAdmin() {
 				actions={
 					<>
 						<DraftBadge show={hasDraft(settings, "modifierLimits") || hasDraft(settings, "globalModifiers") || hasDraft(settings, "modifierPrefixes")} />
+						{tab === "groups" && (
+							<button type="button" className="btn gold" id="add-group" onClick={() => setGroup({ id: "", name: "", mode: "single", required: true, options: [{ name: "", price: 0 }] })}>
+								Add modifier group
+							</button>
+						)}
 						{tab === "global" && (
 							<button type="button" className="btn gold" id="add-global" onClick={() => setEdit({ id: "", name: "", price: "", status: "active" })}>
 								Add global modifier
@@ -580,22 +784,37 @@ export function ModifiersAdmin() {
 							</button>
 						</p>
 					)}
-					{!modifiers.length ? (
-						<EmptyState title="No modifier groups yet">Create groups in Modifier Groups first.</EmptyState>
+					{!groupRows.length ? (
+						<EmptyState title="No modifier groups yet">Add a group, for example Size or Toppings.</EmptyState>
 					) : (
 						<ul className="sk-list">
-							{modifiers.map((g) => (
+							{groupRows.map((g) => (
 								<li key={g.id} className="sk-list-row" data-group={g.id}>
 									<div className="sk-list-main">
 										<div className="sk-list-line">
 											<strong>{g.name}</strong>
+											{g.state !== "live" && <span className="sk-badge">{{ added: "New", edited: "Edited", removed: "Will be removed" }[g.state]}</span>}
 											<span className="muted">
-												{g.options.length} options · {g.required === false ? "Optional" : "Required"} · {rule(g)} · {assigned(g)} item{assigned(g) === 1 ? "" : "s"}
+												{g.options.length} option{g.options.length === 1 ? "" : "s"} · {g.required === false ? "Optional" : "Required"} · {rule(g)} · {assigned(g)} item{assigned(g) === 1 ? "" : "s"}
 											</span>
 										</div>
 									</div>
 									<span className="sk-list-actions">
-										<button type="button" className="btn out" disabled={g.mode !== "multiple"} title={g.mode !== "multiple" ? "Limits apply to groups where several options can be chosen" : ""} onClick={() => setLimit({ id: g.id, min: limits.get(g.id)?.min || 0, max: limits.get(g.id)?.max || 0 })}>
+										{g.state === "removed" ? (
+											<button type="button" className="btn out" onClick={() => svc.settings.revertMenuEdit("groupEdits", g.id)}>
+												Undo
+											</button>
+										) : (
+											<>
+												<button type="button" className="btn out" onClick={() => setGroup({ id: g.id, name: g.name, mode: g.mode, required: g.required !== false, options: g.options.map((o) => ({ name: o.name, price: +o.price || 0 })) })}>
+													Edit
+												</button>
+												<button type="button" className="btn danger" onClick={() => (g.state === "added" ? svc.settings.revertMenuEdit("groupEdits", g.id) : svc.settings.saveMenuEntity("groupEdits", { id: g.id, removed: true }))}>
+													Remove
+												</button>
+											</>
+										)}
+										<button type="button" className="btn out" disabled={g.mode !== "multiple" || g.state === "added" || g.state === "removed"} title={g.mode !== "multiple" ? "Limits apply to groups where several options can be chosen" : ""} onClick={() => setLimit({ id: g.id, min: limits.get(g.id)?.min || 0, max: limits.get(g.id)?.max || 0 })}>
 											Limits
 										</button>
 									</span>
@@ -661,6 +880,47 @@ export function ModifiersAdmin() {
 				</>
 			)}
 			<DetailDrawer
+				open={!!group}
+				wide
+				title={group?.id ? "Edit modifier group" : "Add modifier group"}
+				subtitle="Applied to the live group when you publish. Assign groups to items in Products & Services."
+				onClose={() => (setGroup(null), setGroupTouched(false))}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={() => (setGroup(null), setGroupTouched(false))}>
+							Cancel
+						</button>
+						<button type="button" className="btn gold" id="save-group" onClick={saveGroup}>
+							Save draft
+						</button>
+					</>
+				}
+			>
+				{group && (
+					<>
+						<TextRow id="mg-name" label="Name" help="For example Size or Toppings." value={group.name} max={40} autoFocus onChange={(name) => setGroup((x) => ({ ...x, name }))} error={groupTouched && groupError.startsWith("Enter") ? groupError : groupTouched && groupError.startsWith("There is") ? groupError : ""} />
+						<SelectRow id="mg-mode" label="Choices" value={group.mode} options={[{ value: "single", label: "Choose one" }, { value: "multiple", label: "Choose several" }]} onChange={(mode) => setGroup((x) => ({ ...x, mode }))} />
+						<ToggleRow id="mg-required" label="Required" help="Staff must choose before the item is added." value={group.required} onChange={(required) => setGroup((x) => ({ ...x, required }))} />
+						<SettingRow label="Options" help="The name and extra price of each choice." wide error={groupTouched && /option|Add at least/.test(groupError) ? groupError : ""}>
+							<div className="sk-options">
+								{group.options.map((o, i) => (
+									<div key={i} className="sk-option-row">
+										<input className="input" aria-label={"Option " + (i + 1) + " name"} placeholder="Name" maxLength={40} value={o.name} onChange={(e) => setOption(i, { name: e.target.value })} />
+										<input className="input" aria-label={"Option " + (i + 1) + " extra price"} type="number" inputMode="decimal" min="0" step="0.01" placeholder="Extra price" value={o.price} onChange={(e) => setOption(i, { price: e.target.value === "" ? "" : Number(e.target.value) })} />
+										<button type="button" className="btn out" aria-label={"Remove option " + (i + 1)} disabled={group.options.length < 2} onClick={() => setGroup((x) => ({ ...x, options: x.options.filter((_, j) => j !== i) }))}>
+											Remove
+										</button>
+									</div>
+								))}
+								<button type="button" className="btn out" onClick={() => setGroup((x) => ({ ...x, options: [...x.options, { name: "", price: 0 }] }))}>
+									Add option
+								</button>
+							</div>
+						</SettingRow>
+					</>
+				)}
+			</DetailDrawer>
+			<DetailDrawer
 				open={!!limit}
 				wide
 				title={limit ? modifiers.find((m) => m.id === limit.id)?.name || "Group" : ""}
@@ -720,4 +980,4 @@ export function ModifiersAdmin() {
 	);
 }
 
-export const MENU_ADMIN_COMPONENTS = { modifiers: ModifiersAdmin, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: Items };
+export const MENU_ADMIN_COMPONENTS = { categories: CategoriesAdmin, modifiers: ModifiersAdmin, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: Items };

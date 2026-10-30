@@ -18,11 +18,12 @@ import {
 } from "../../domain/sales";
 import { DELETED_ACTION, deletedDetails, findApprover } from "../../domain/salesLog";
 import { can } from "../../domain/access";
+import { markSent } from "../../domain/deleteApproval";
 import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem, stockRowForLine } from "../../domain/inventory";
 import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
 import { orderEmailHtml, orderEmailSubject, orderEmailVariables } from "../printing/orderEmail";
-import { applyStockChange, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
+import { applyStockChange, audit, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
 import { createLogger } from "../../utils/logger";
 import { printKotForSale, printReceipt, queueKitchenTicket, shareReceiptWhatsApp } from "./printing";
 
@@ -459,6 +460,7 @@ export async function saveOpenOrder(ctx, input) {
 		platformOrderId: input.platformOrderId,
 	};
 	if (input.sendKitchen) {
+		order.lines = markSent(order.lines, now); // so taking a sent item off later can ask for a manager (Menu Admin, Categories)
 		order.kitchenSentAt = now;
 		order.kitchenSendCount = (order.kitchenSendCount || 0) + 1;
 	}
@@ -478,7 +480,8 @@ export async function resendOpenOrder(ctx, id) {
 	if (!kitchenMode(d.settings)) return void ctx.ui.notice("Kitchen tickets are available for Restaurant and Café / Bakery presets.");
 	const order = d.openOrders.find((o) => o.id === id && o.status === "open");
 	if (!order) return;
-	const next = { ...order, kitchenSentAt: nowIso(), kitchenSendCount: (order.kitchenSendCount || 0) + 1 };
+	const sentAt = nowIso();
+	const next = { ...order, lines: markSent(order.lines || [], sentAt), kitchenSentAt: sentAt, kitchenSendCount: (order.kitchenSendCount || 0) + 1 };
 	await ctx.store.write((tx) => tx.put(T.openOrders, next));
 	await queueKitchenTicket(ctx, next);
 	ctx.ui.notice("Kitchen ticket sent for " + order.orderNumber + ".");
@@ -525,3 +528,16 @@ export async function mergeOpenOrders(ctx, fromId, intoId) {
 }
 
 export { refundableLines, whatsappPhone };
+
+/**
+ * A manager approves taking sent items off an order: checks the PIN against people who hold "Remove sent items without a manager",
+ * writes an audit entry and returns the approver (null, with a message, when the PIN is wrong).
+ */
+export async function approveItemRemoval(ctx, { pin, line, removed }) {
+	const d = ctx.data();
+	const approver = findApprover(d.users, pin, (u) => can(u, "pos.void.item", d.settings));
+	if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to take sent items off the order."));
+	await ctx.store.write((tx) => audit(tx, ctx.session(), "sent-item-removed", `${line.name} x${removed} (already sent to the kitchen) · approved by ${approver.name}`, ctx.session().locationId === "all" ? "" : ctx.session().locationId));
+	log.info("sent item removal approved", { item: line.name, removed, approver: approver.name });
+	return approver;
+}

@@ -12,6 +12,7 @@
  * Categories are referred to by name, as everywhere else in this POS.
  */
 import { categoryKey } from "./catalog";
+import { catalogDraftChanges } from "./catalogDraft";
 
 export const PAGES = {
 	salesCategories: { label: "Sales category", plural: "Sales categories" },
@@ -22,8 +23,14 @@ export const PAGES = {
 	globalModifiers: { label: "Global modifier", plural: "Global modifiers" },
 	modifierPrefixes: { label: "Modifier prefixes", plural: "Modifier prefixes" },
 	modifierLimits: { label: "Modifier group", plural: "Modifier groups" },
+	categorySettings: { label: "Category", plural: "Categories" },
+	// catalogue edits are applied to the live catalogue on Publish rather than copied over a published list (see catalogDraft.js)
+	categoryEdits: { label: "Category", plural: "Categories", apply: true },
+	itemEdits: { label: "Item", plural: "Items", apply: true },
+	groupEdits: { label: "Modifier group", plural: "Modifier groups", apply: true },
 };
-export const PAGE_KEYS = Object.keys(PAGES);
+export const APPLY_KEYS = Object.keys(PAGES).filter((k) => PAGES[k].apply);
+export const PAGE_KEYS = Object.keys(PAGES).filter((k) => !PAGES[k].apply);
 export const SALES_DEFAULTS = ["Food", "Beverage", "Alcohol", "Retail", "Other"];
 export const WEEKDAYS = [
 	{ value: 1, label: "Mon" },
@@ -149,6 +156,7 @@ const FIELD_LABELS = {
 	isGroup: "Tax group", rate: "Rate (%)", memberTaxIds: "Taxes in group",
 	price: "Price", prefixes: "Prefixes", min: "Minimum choices", max: "Maximum choices",
 	taxId: "Tax", takeawayTaxId: "Takeaway tax", prepTicketName: "Prep ticket name", receiptName: "Receipt name",
+	description: "Description", deleteApprovalOn: "Approval to remove sent items", graceSeconds: "Grace period (seconds)",
 	defaultTaxId: "Default tax", takeawayOn: "Takeaway tax", serviceTaxOn: "Tax on service charge", serviceTaxId: "Service charge tax", categoryTaxes: "Category taxes",
 };
 const brief = (field, v) => {
@@ -169,7 +177,8 @@ export function draftChanges(settings = {}) {
 		const after = workingOf(settings, key);
 		for (const e of after) {
 			const old = before.get(e.id);
-			if (!old) out.push({ page: key, id: e.id, name: e.name, kind: "added", fields: [] });
+			if (!old && key === "categorySettings") out.push({ page: key, id: e.id, name: e.name, kind: "edited", fields: [e.description && { field: "Description", before: "", after: e.description }, e.deleteApprovalOn && { field: "Approval to remove sent items", before: "Off", after: `On after ${e.graceSeconds}s` }].filter(Boolean) });
+			else if (!old) out.push({ page: key, id: e.id, name: e.name, kind: "added", fields: [] });
 			else {
 				const fields = Object.keys(FIELD_LABELS).filter((f) => !same(old[f], e[f])).map((f) => ({ field: FIELD_LABELS[f], before: brief(f, old[f]), after: brief(f, e[f]) }));
 				if (fields.length) out.push({ page: key, id: e.id, name: e.name, kind: "edited", fields });
@@ -182,7 +191,7 @@ export function draftChanges(settings = {}) {
 			out.push({ page: key, id: "", name: PAGES[key].plural, kind: "edited", fields: [{ field: "Order", before: "", after: "changed" }] });
 		}
 	}
-	return out;
+	return [...out, ...catalogDraftChanges(settings)];
 }
 
 /** The drafts to store after `next` was saved for `key`: a list equal to the published one is not a draft. */

@@ -6,6 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { ORDER_CHANNELS, STORAGE } from "../config/constants";
 import { addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
 import { productSizeGroup } from "../domain/catalog";
+import { removalNeedsApproval } from "../domain/deleteApproval";
 import { availableProductStock, cartQtyForProduct, hasSizedStock, stockSizeFor } from "../domain/inventory";
 import { phoneKey } from "../domain/format";
 import { resolveOptions } from "../domain/systemOptions";
@@ -27,7 +28,7 @@ const CheckoutContext = createContext(null);
 export function CheckoutProvider({ children }) {
 	const data = useData();
 	const { enabled } = useFeatures();
-	const { svc, locationId, go, kitchen } = usePos();
+	const { svc, locationId, go, kitchen, can } = usePos();
 	const ui = useUi();
 
 	const [cart, setCart] = useState([]);
@@ -50,6 +51,7 @@ export function CheckoutProvider({ children }) {
 	const [category, setCategory] = useState("All");
 	const [search, setSearch] = useState("");
 	const [picker, setPicker] = useState(null); // { productId, lineKey }
+	const [approval, setApproval] = useState(null); // { key, delta, line, removed }: a removal waiting for a manager
 	const [splitOpen, setSplitOpen] = useState(false);
 	const [customerModal, setCustomerModal] = useState(null); // { id, phone, source }
 	const busy = useRef(false);
@@ -149,9 +151,26 @@ export function CheckoutProvider({ children }) {
 					return;
 				}
 			}
+			// taking sent items off an order can need a manager (Menu Admin, Categories); people who hold the permission never do
+			if (line && delta < 0 && !can("pos.void.item")) {
+				const check = removalNeedsApproval(line, line.qty + delta, data.settings);
+				if (check.needed) return void setApproval({ key, delta, line, removed: check.removed });
+			}
 			setCart((c) => changeQty(c, key, delta));
 		},
-		[cart, enabled, data, locationId, ui],
+		[cart, enabled, data, locationId, ui, can],
+	);
+	/** The manager's PIN for the pending removal: on success the quantity change goes through. */
+	const approveRemoval = useCallback(
+		async (pin) => {
+			if (!approval) return false;
+			const approver = await svc.sales.approveItemRemoval({ pin, line: approval.line, removed: approval.removed });
+			if (!approver) return false;
+			setCart((c) => changeQty(c, approval.key, approval.delta));
+			setApproval(null);
+			return true;
+		},
+		[approval, svc],
 	);
 
 	const removeProductFromCart = useCallback((productId) => setCart((c) => c.filter((l) => l.productId !== productId)), []);
@@ -357,7 +376,7 @@ export function CheckoutProvider({ children }) {
 		phoneSearch, setPhoneSearch, findNote, findCustomerByPhone, clearCustomer, wantsEmail, toggleEmail, receiptEmail, setReceiptEmail,
 		wantsWhatsApp, setWantsWhatsApp, printAfter, setPrintAfter, cashTendered, setCashTendered, orderReference, setOrderReference,
 		orderChannel, setOrderChannel, platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
-		picker, setPicker, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
+		picker, setPicker, approval, setApproval, approveRemoval, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
 		addProduct, addScanned, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
 		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
 	};

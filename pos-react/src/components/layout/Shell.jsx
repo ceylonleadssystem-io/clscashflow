@@ -16,6 +16,7 @@ import { ShiftStartModal } from "../../modals/ShiftStartModal";
 import { WelcomeModal } from "../../modals/WelcomeModal";
 import { CheckoutModeGate } from "../../gates/CheckoutModeGate";
 import { CustomerModalHost } from "../../modals/CustomerModal";
+import { ItemApprovalModal } from "../../modals/ItemApprovalModal";
 import { ModifierPickerModal } from "../../modals/ModifierPickerModal";
 import { useApplyDisplayPrefs } from "../../hooks/useDisplayPrefs";
 import { useBarcodeScanning } from "../../hooks/useBarcodeScanning";
@@ -61,6 +62,7 @@ export function Shell() {
 			<SplitBillModal />
 			<BarcodeModalHost />
 			<ModifierPickerModal />
+			<ItemApprovalModal />
 			<LocationSwitcherModal open={locationsOpen} onClose={() => setLocationsOpen(false)} />
 			<PosSetupModal />
 			<ShiftStartModal />

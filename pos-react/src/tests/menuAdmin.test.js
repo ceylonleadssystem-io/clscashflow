@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createHarness, addProduct } from "./harness";
+import { createHarness, addProduct, line, productForm } from "./harness";
 import { allowedCategoryKeys, assignItems, cleanMenu, cleanSalesCategory, draftChanges, hoursSummary, inHours, menuError, menusInEffect, nextDrafts, overlappingMenus, salesCategoryError, salesCategoryNameOf, workingOf } from "../domain/menuAdmin";
 import { buildReport } from "../domain/reportBuilders";
 
@@ -215,5 +215,149 @@ describe("modifiers: limits, global modifiers and prefixes", () => {
 		await h.svc.settings.saveMenuEntity("modifierLimits", { id: g.id, min: 0, max: 0 });
 		await h.svc.settings.publishMenu();
 		expect(h.data().settings.modifierLimits).toEqual([]);
+	});
+});
+
+describe("approval to remove sent items", () => {
+	it("applies only to sent items, past the grace period, in categories that ask", async () => {
+		const { markSent, removalNeedsApproval, cleanCategorySetting } = await import("../domain/deleteApproval");
+		const t0 = "2026-10-30T10:00:00.000Z";
+		const sentLine = markSent([{ productId: "p", name: "Roti", category: "Food", qty: 2 }, { isDiscount: true, qty: 1 }], t0);
+		expect(sentLine[0]).toMatchObject({ sentQty: 2, sentAt: t0 });
+		expect(sentLine[1].sentQty).toBeUndefined();
+		expect(markSent([{ ...sentLine[0] }], "2026-10-30T11:00:00.000Z")[0].sentAt).toBe(t0); // unchanged quantity keeps the first time
+		expect(markSent([{ ...sentLine[0], qty: 3 }], "2026-10-30T11:00:00.000Z")[0]).toMatchObject({ sentQty: 3, sentAt: "2026-10-30T11:00:00.000Z" });
+		const settings = { categorySettings: [cleanCategorySetting({ name: "Food", deleteApprovalOn: true, graceSeconds: 60 })] };
+		const at = (s) => new Date(t0).getTime() + s * 1000;
+		const line = sentLine[0];
+		expect(removalNeedsApproval(line, 1, settings, at(30))).toEqual({ needed: false, removed: 1 }); // inside the grace period
+		expect(removalNeedsApproval(line, 1, settings, at(61))).toEqual({ needed: true, removed: 1 });
+		expect(removalNeedsApproval(line, 0, settings, at(61))).toEqual({ needed: true, removed: 2 });
+		expect(removalNeedsApproval(line, 2, settings, at(600))).toEqual({ needed: false, removed: 0 }); // nothing sent is removed
+		expect(removalNeedsApproval(line, 1, {}, at(600)).needed).toBe(false); // the category does not ask
+		expect(removalNeedsApproval({ ...line, sentQty: 0 }, 0, settings, at(600)).needed).toBe(false); // never sent
+		expect(removalNeedsApproval({ ...line, category: "Drinks" }, 0, settings, at(600)).needed).toBe(false);
+	});
+	it("a send marks the lines, and the approval needs a PIN of someone who holds the permission", async () => {
+		const h = await createHarness({ settings: { businessType: "restaurant" } });
+		await addProduct(h, { name: "Roti", price: "60", cost: "10", category: "Food" });
+		const p = h.data().products[0];
+		const order = await h.svc.sales.saveOpenOrder({ cart: [{ ...line(p, 2), category: "Food" }], discount: { type: "percent", value: 0 }, sendKitchen: true, orderChannel: "Dine-in" });
+		expect(order.lines[0]).toMatchObject({ sentQty: 2 });
+		expect(order.lines[0].sentAt).toBeTruthy();
+		const owner = h.data().users.find((u) => u.role === "owner");
+		expect(await h.svc.sales.approveItemRemoval({ pin: "0000", line: order.lines[0], removed: 1 })).toBeUndefined();
+		expect(h.lastAlert()).toMatch(/PIN of a manager/);
+		expect(owner.pin).toBeTruthy();
+		expect((await h.svc.sales.approveItemRemoval({ pin: owner.pin, line: order.lines[0], removed: 1 }))?.id).toBe(owner.id);
+		expect(h.data().locationAudit.some((a) => a.action === "sent-item-removed" && /Roti x1/.test(a.details))).toBe(true);
+	});
+	it("the permission follows the role: managers hold it, cashiers do not", async () => {
+		const { can } = await import("../domain/access");
+		expect(can({ id: "m", role: "manager" }, "pos.void.item")).toBe(true);
+		expect(can({ id: "c", role: "cashier" }, "pos.void.item")).toBe(false);
+		expect(can({ id: "c", role: "cashier" }, "pos.void.item", { userAccess: { c: { grant: ["pos.void.item"] } } })).toBe(true);
+	});
+});
+
+describe("catalogue drafts", () => {
+	let h;
+	beforeEach(async () => {
+		h = await createHarness();
+		await addProduct(h, { name: "Tea", price: "250", cost: "100", category: "Drinks" });
+		await addProduct(h, { name: "Roti", price: "60", cost: "10", category: "Food" });
+	});
+	const live = (name) => h.data().products.find((p) => p.name === name);
+
+	it("changes nothing live until Publish, then applies adds, renames and removals together", async () => {
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Drinks", name: "Beverages" });
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "", name: "Desserts" });
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Food", removed: true, moveTo: "Desserts" });
+		expect(live("Tea").category).toBe("Drinks");
+		expect(live("Roti").category).toBe("Food");
+		expect(draftChanges(h.data().settings).map((c) => c.kind).sort()).toEqual(["added", "edited", "removed"]);
+		await h.svc.settings.publishMenu();
+		expect(live("Tea").category).toBe("Beverages");
+		expect(live("Roti").category).toBe("Desserts");
+		const names = h.data().categories;
+		expect(names).toEqual(expect.arrayContaining(["Beverages", "Desserts"]));
+		expect(names.some((c) => c === "Drinks" || c === "Food")).toBe(false);
+		expect(h.data().settings.menuDraft).toEqual({});
+	});
+	it("a rename carries menus, tax by category and category settings with it, including those published in the same go", async () => {
+		await h.svc.settings.saveMenuEntity("availabilityMenus", { name: "All day", hours: [{ days: [1], start: "08:00", end: "09:00" }], categories: ["Drinks"] });
+		await h.svc.settings.saveMenuEntity("taxes", { name: "VAT", rate: 18 });
+		await h.svc.settings.saveMenuEntity("taxRules", { categoryTaxes: { drinks: { tax: h.data().settings.menuDraft.taxes[0].id } } });
+		await h.svc.settings.saveMenuEntity("categorySettings", { name: "Drinks", description: "Hot and cold", deleteApprovalOn: true });
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Drinks", name: "Beverages" });
+		await h.svc.settings.publishMenu();
+		const s = h.data().settings;
+		expect(s.availabilityMenus[0].categories).toEqual(["Beverages"]);
+		expect(Object.keys(s.taxRules[0].categoryTaxes)).toEqual(["beverages"]);
+		expect(s.categorySettings).toMatchObject([{ id: "beverages", name: "Beverages", description: "Hot and cold", deleteApprovalOn: true }]);
+	});
+	it("rejects duplicate names and missing moves, and an unchanged rename leaves no draft", async () => {
+		expect(await h.svc.settings.saveMenuEntity("categoryEdits", { original: "", name: "food" })).toBeUndefined();
+		expect(h.lastAlert()).toMatch(/already/);
+		expect(await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Food", removed: true, moveTo: "Nowhere" })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Drinks", name: "Drinks" })).toBe(true);
+		expect(h.data().settings.menuDraft?.categoryEdits).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Drinks", name: "Food" })).toBeUndefined(); // a rename onto another category
+		expect(h.lastAlert()).toMatch(/already/);
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Drinks", name: "DRINKS" }); // a case-only rename is a rename
+		expect(h.data().settings.menuDraft.categoryEdits[0].name).toBe("DRINKS");
+	});
+	it("edits an item's details as a draft and applies only the changed fields", async () => {
+		const tea = live("Tea");
+		expect(await h.svc.settings.saveMenuEntity("itemEdits", { id: tea.id, name: "Masala Tea", price: 0, cost: 100, category: "Drinks", code: tea.code, description: "" })).toBeUndefined();
+		expect(h.lastAlert()).toMatch(/price/);
+		await h.svc.settings.saveMenuEntity("itemEdits", { id: tea.id, name: "Masala Tea", price: 275, cost: 100, category: "Drinks", code: tea.code, description: tea.description || "" });
+		expect(h.data().settings.menuDraft.itemEdits[0].changes).toEqual({ name: "Masala Tea", price: 275 });
+		expect(live("Tea").price).toBe(250);
+		await h.svc.settings.publishMenu();
+		expect(h.data().products.find((p) => p.id === tea.id)).toMatchObject({ name: "Masala Tea", price: 275, cost: 100, category: "Drinks" });
+		// putting every field back leaves no draft
+		const t2 = h.data().products.find((p) => p.id === tea.id);
+		await h.svc.settings.saveMenuEntity("itemEdits", { id: t2.id, name: t2.name, price: t2.price, cost: t2.cost, category: t2.category, code: t2.code, description: t2.description || "" });
+		expect(h.data().settings.menuDraft?.itemEdits).toBeUndefined();
+	});
+	it("an item edit made after a category rename is judged against the new name", async () => {
+		const tea = live("Tea");
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Drinks", name: "Beverages" });
+		expect(await h.svc.settings.saveMenuEntity("itemEdits", { id: tea.id, name: "Tea", price: 300, cost: 100, category: "Drinks", code: tea.code, description: "" })).toBeUndefined(); // the old name is gone in the draft
+		expect(await h.svc.settings.saveMenuEntity("itemEdits", { id: tea.id, name: "Tea", price: 300, cost: 100, category: "Beverages", code: tea.code, description: "" })).toBe(true);
+		expect(h.data().settings.menuDraft.itemEdits[0].changes).toEqual({ price: 300 });
+		await h.svc.settings.publishMenu();
+		expect(live("Tea")).toMatchObject({ price: 300, category: "Beverages" });
+	});
+	it("an item can move to a category that is added in the same publish", async () => {
+		const roti = live("Roti");
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "", name: "Bakery" });
+		await h.svc.settings.saveMenuEntity("itemEdits", { id: roti.id, name: roti.name, price: roti.price, cost: roti.cost, category: "Bakery", code: roti.code, description: "" });
+		await h.svc.settings.publishMenu();
+		expect(live("Roti").category).toBe("Bakery");
+	});
+	it("adds, edits and removes modifier groups, removing a deleted group from its items", async () => {
+		await h.svc.settings.saveMenuEntity("groupEdits", { name: "Toppings", mode: "multiple", required: false, options: [{ name: "Cheese", price: 50 }, { name: "Egg", price: 40 }] });
+		expect(h.data().modifiers).toHaveLength(0);
+		expect(await h.svc.settings.saveMenuEntity("groupEdits", { name: "Bad", options: [] })).toBeUndefined();
+		await h.svc.settings.publishMenu();
+		const g = h.data().modifiers.find((m) => m.name === "Toppings");
+		expect(g).toMatchObject({ mode: "multiple", required: false });
+		expect(g.options.map((o) => [o.name, o.price])).toEqual([["Cheese", 50], ["Egg", 40]]);
+		await h.svc.catalog.saveProduct({ ...productForm({ name: "Burger", price: "800", category: "Food" }), modifierIds: [g.id], modifierRules: { [g.id]: false } });
+		await h.svc.settings.saveMenuEntity("groupEdits", { id: g.id, name: "Toppings+", mode: "multiple", required: false, options: [{ name: "Cheese", price: 60 }] });
+		await h.svc.settings.publishMenu();
+		expect(h.data().modifiers.find((m) => m.id === g.id)).toMatchObject({ name: "Toppings+", options: [{ name: "Cheese", price: 60 }] });
+		await h.svc.settings.saveMenuEntity("groupEdits", { id: g.id, removed: true });
+		await h.svc.settings.publishMenu();
+		expect(h.data().modifiers).toHaveLength(0);
+		expect(h.data().products.find((p) => p.name === "Burger").modifierIds).toEqual([]);
+	});
+	it("reverting a draft entry takes it out of the review list", async () => {
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "", name: "Desserts" });
+		const id = h.data().settings.menuDraft.categoryEdits[0].id;
+		await h.svc.settings.revertMenuEdit("categoryEdits", id);
+		expect(draftChanges(h.data().settings)).toEqual([]);
 	});
 });
