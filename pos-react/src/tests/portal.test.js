@@ -17,11 +17,11 @@ describe("admin portal", () => {
 		expect(isPortalPath("/administrator")).toBe(false);
 	});
 	it("shows the sections to an owner (Timesheets is under User Admin for anyone who sees users, and a box of its own for the rest) and follows the role for others", () => {
-		expect(keys("owner")).toEqual(["location", "reports", "system", "menu", "users", "devices", "shop"]);
-		expect(keys("manager")).toEqual(["location", "system", "menu", "users", "devices", "shop"]);
+		expect(keys("owner")).toEqual(["location", "reports", "menu", "users", "devices", "shop"]);
+		expect(keys("manager")).toEqual(["location", "menu", "users", "devices", "shop"]);
 		expect(keys("accountant")).toEqual(["reports", "timesheets", "shop"]);
 		expect(keys("cashier")).toEqual(["shop"]);
-		expect(PORTAL_SECTIONS.map((s) => s.title)).toEqual(["Location Info", "Reports", "System Options", "Menu Admin", "User Admin", "Device Manager", "Timesheets", "Shop"]);
+		expect(PORTAL_SECTIONS.map((s) => s.title)).toEqual(["Location Info", "Reports", "Menu Admin", "User Admin", "Device Manager", "Timesheets", "Shop"]);
 	});
 	it("Menu Admin owns Products and Modifiers", () => {
 		expect(sectionOfView("modifiers").key).toBe("menu");
@@ -33,7 +33,7 @@ describe("admin portal", () => {
 describe("portal pages", () => {
 	it("every page in System Options, Menu Admin, User Admin and Device Manager is a Settings page (the same component the POS uses)", async () => {
 		const { PAGE_COMPONENTS } = await import("../views/settings/SettingsHome");
-		for (const key of ["system", "menu", "users", "devices"]) {
+		for (const key of ["menu", "users", "devices"]) {
 			const s = PORTAL_SECTIONS.find((x) => x.key === key);
 			for (const sub of s.subs) expect(sub.view in PAGE_COMPONENTS || sub.view === "overview", key + "/" + sub.view).toBe(true);
 		}

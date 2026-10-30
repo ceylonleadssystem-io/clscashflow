@@ -7,28 +7,6 @@ export const PORTAL_SECTIONS = [
 	{ key: "location", view: "location", title: "Location Info", icon: "location", blurb: "Business name, address, logo, contact details and locations.", needs: ["settings"], permission: "settings.system.edit" },
 	{ key: "reports", view: "reports", title: "Reports", icon: "reports", blurb: "Sales, menu, payroll, kitchen, transactions and more.", needs: ["reports"] },
 	{
-		key: "system",
-		view: "overview",
-		title: "System Options",
-		icon: "system",
-		blurb: "Ordering, receipts, sign in, clock in and out, payroll, zones, service charge, appearance and feedback.",
-		needs: ["settings"],
-		permission: "settings.system.edit",
-		// the same pages, from the same code, as Settings > System Options
-		subs: [
-			{ view: "overview", title: "Overview" },
-			{ view: "orderEntry", title: "Order Entry" },
-			{ view: "receipts", title: "Receipts" },
-			{ view: "signIn", title: "Sign In" },
-			{ view: "clock", title: "Clock In / Out" },
-			{ view: "payroll", title: "Payroll" },
-			{ view: "zones", title: "Zones" },
-			{ view: "serviceCharge", title: "Service Charge" },
-			{ view: "appearance", title: "Appearance" },
-			{ view: "feedback", title: "Customer Feedback" },
-		],
-	},
-	{
 		key: "menu",
 		view: "items",
 		title: "Menu Admin",
