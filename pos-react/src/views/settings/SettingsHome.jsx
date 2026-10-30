@@ -86,9 +86,6 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 						<button key={g.title} type="button" className="sk-tile" data-settings-group={g.title} onClick={() => select(g.items[0].key)}>
 							<strong>{g.title}</strong>
 							<span className="muted">{g.blurb}</span>
-							<span className="sk-link">
-								{g.items.length} page{g.items.length === 1 ? "" : "s"} →
-							</span>
 						</button>
 					))}
 				</div>
