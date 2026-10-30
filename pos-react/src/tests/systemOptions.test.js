@@ -5,12 +5,12 @@ describe("system options values", () => {
 	it("defaults keep today's behaviour", () => {
 		expect(resolveOptions({}, "clock")).toMatchObject({ autoElapsedOn: false, autoTimeOn: false });
 		expect(resolveOptions({}, "signIn").defaultView).toBe("auto");
-		expect(resolveOptions({}, "orderEntry")).toEqual({ defaultOrderType: "Dine-in", showPrices: true, defaultMenu: "" });
+		expect(resolveOptions({}, "orderEntry")).toEqual({ defaultOrderType: "Dine-in", showPrices: true, globalModifiers: true, defaultMenu: "" });
 	});
 	it("resolves default < organization < location override, only for settings a location may override", () => {
-		const settings = { systemOptions: { org: { orderEntry: { defaultOrderType: "Takeaway" }, receipts: { footer: "Org" } }, locations: { l1: { orderEntry: { defaultOrderType: "Dine-in", showPrices: false, defaultMenu: "" }, receipts: { footer: "Branch" } } } } };
+		const settings = { systemOptions: { org: { orderEntry: { defaultOrderType: "Takeaway" }, receipts: { footer: "Org" } }, locations: { l1: { orderEntry: { defaultOrderType: "Dine-in", showPrices: false, globalModifiers: true, defaultMenu: "" }, receipts: { footer: "Branch" } } } } };
 		expect(resolveOptions(settings, "orderEntry", "all").defaultOrderType).toBe("Takeaway");
-		expect(resolveOptions(settings, "orderEntry", "l1")).toEqual({ defaultOrderType: "Dine-in", showPrices: false, defaultMenu: "" });
+		expect(resolveOptions(settings, "orderEntry", "l1")).toEqual({ defaultOrderType: "Dine-in", showPrices: false, globalModifiers: true, defaultMenu: "" });
 		expect(resolveOptions(settings, "orderEntry", "l2").defaultOrderType).toBe("Takeaway");
 		expect(resolveOptions(settings, "receipts", "l1").footer).toBe("Org"); // footer is organization-wide
 		expect(isOverridden(settings, "orderEntry", "showPrices", "l1")).toBe(true);

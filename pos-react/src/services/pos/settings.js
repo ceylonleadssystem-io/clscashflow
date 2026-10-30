@@ -8,7 +8,7 @@ import { POS_TYPE_PRESETS } from "../../config/presets";
 import { hasCapability } from "../../config/capabilities";
 import { cleanStations, kitchenStations } from "../../domain/kitchenStations";
 import { cleanTax, cleanTaxRules, taxError, taxUses } from "../../domain/taxes";
-import { PAGES as MENU_PAGES, PAGE_KEYS as MENU_KEYS, SALES_DEFAULTS, assignItems, cleanItemSetting, cleanMenu, itemSettingBlank, cleanSalesCategory, draftChanges, menuError, nextDrafts, salesCategoryError, workingOf } from "../../domain/menuAdmin";
+import { PAGES as MENU_PAGES, PAGE_KEYS as MENU_KEYS, SALES_DEFAULTS, assignItems, cleanGlobalModifier, cleanItemSetting, cleanLimit, cleanMenu, cleanPrefixes, globalModifierError, itemSettingBlank, limitBlank, limitError, cleanSalesCategory, draftChanges, menuError, nextDrafts, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { copyPrinters, deviceNameError, devicesOf, normalizePrinter, printerError, printersOf, receiptPrinterId } from "../../domain/devices";
 import { PERMISSION_KEYS, accessFromKeys, accessOf, jobError, jobsOf } from "../../domain/access";
 import { MAIN_FLOOR, floorLayout, floorLayoutKey, floorsFor, floorsKey } from "../../domain/tables";
@@ -465,6 +465,24 @@ export async function saveMenuEntity(ctx, key, form) {
 	} else if (key === "taxes") {
 		clean = cleanTax({ ...form, id });
 		error = taxError(clean, others);
+	} else if (key === "globalModifiers") {
+		clean = cleanGlobalModifier({ ...form, id });
+		error = globalModifierError(clean, others);
+	} else if (key === "modifierPrefixes") {
+		clean = cleanPrefixes(form);
+		if (!clean.prefixes.length) return void (await ctx.ui.alert("Add at least one prefix, such as Add or No."));
+		await writeDraft(ctx, key, [clean]);
+		ctx.ui.notice(DRAFT_NOTE);
+		return true;
+	} else if (key === "modifierLimits") {
+		const group = ctx.data().modifiers.find((m) => m.id === form.id);
+		clean = cleanLimit({ ...form, name: group?.name });
+		const problem = limitError(clean, group);
+		if (problem) return void (await ctx.ui.alert(problem));
+		const rest = all.filter((e) => e.id !== clean.id);
+		await writeDraft(ctx, key, limitBlank(clean) ? rest : [...rest, clean]);
+		ctx.ui.notice(DRAFT_NOTE);
+		return true;
 	} else if (key === "itemSettings") {
 		// overrides of an existing item; clearing every field removes the entry
 		const product = products.find((p) => String(p.id) === String(form.id));

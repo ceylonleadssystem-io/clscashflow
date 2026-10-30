@@ -38,6 +38,7 @@ export const FIELDS = {
 	orderEntry: {
 		defaultOrderType: { scope: "location", default: "Dine-in" },
 		showPrices: { scope: "location", default: true },
+		globalModifiers: { scope: "org", default: true }, // offer the global modifiers (Menu Admin, Modifiers) on an order line
 		defaultMenu: { scope: "location", default: "" }, // an Availability menu id; "" = all items
 	},
 	receipts: {

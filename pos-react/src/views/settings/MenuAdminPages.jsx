@@ -7,7 +7,7 @@ import { AssignmentTree } from "../../components/settings/kit/AssignmentTree";
 import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
 import { NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
 import { categoryKey, visibleProductCategories } from "../../domain/catalog";
-import { WEEKDAYS, cleanItemSetting, cleanMenu, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
+import { WEEKDAYS, DEFAULT_PREFIXES, cleanGlobalModifier, cleanItemSetting, cleanLimit, cleanMenu, cleanPrefixes, globalModifierError, limitError, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { money } from "../../domain/format";
 import { cleanTax, cleanTaxRules, previewTax, round2, taxError } from "../../domain/taxes";
 import { useData } from "../../store/DataProvider";
@@ -514,4 +514,210 @@ export function Items() {
 	);
 }
 
-export const MENU_ADMIN_COMPONENTS = { salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: Items };
+export function ModifiersAdmin() {
+	const { settings, modifiers, products } = useData();
+	const { svc, go, canView } = usePos();
+	const [tab, setTab] = useState("groups");
+	const [limit, setLimit] = useState(null);
+	const [edit, setEdit] = useState(null);
+	const [touched, setTouched] = useState(false);
+	const limits = useMemo(() => new Map(workingOf(settings, "modifierLimits").map((l) => [l.id, l])), [settings]);
+	const globals = workingOf(settings, "globalModifiers");
+	const savedPrefixes = useMemo(() => (workingOf(settings, "modifierPrefixes")[0]?.prefixes?.length ? workingOf(settings, "modifierPrefixes")[0].prefixes : DEFAULT_PREFIXES), [settings]);
+	const [prefixes, setPrefixes] = useState(savedPrefixes);
+	const [newPrefix, setNewPrefix] = useState("");
+	useEffect(() => setPrefixes(savedPrefixes), [savedPrefixes]);
+	const prefixDirty = JSON.stringify(prefixes) !== JSON.stringify(savedPrefixes);
+	const assigned = (g) => products.filter((p) => (p.modifierIds || []).includes(g.id)).length;
+	const rule = (g) => {
+		const l = limits.get(g.id);
+		if (g.mode !== "multiple") return "Choose one";
+		return l ? "Choose " + [l.min && "at least " + l.min, l.max && "up to " + l.max].filter(Boolean).join(", ") : "Choose any";
+	};
+	const clean = edit ? cleanGlobalModifier({ ...edit, id: edit.id || "new" }) : null;
+	const error = clean ? globalModifierError(clean, globals.filter((m) => m.id !== edit.id)) : "";
+	const close = () => (setEdit(null), setTouched(false));
+	const save = async () => {
+		setTouched(true);
+		if (error) return;
+		if (await svc.settings.saveMenuEntity("globalModifiers", edit)) close();
+	};
+	const addPrefix = () => {
+		const v = newPrefix.trim();
+		if (v && !prefixes.some((x) => x.toLowerCase() === v.toLowerCase())) setPrefixes([...prefixes, v.slice(0, 12)]);
+		setNewPrefix("");
+	};
+	const limitErr = limit ? limitError(cleanLimit(limit), modifiers.find((m) => m.id === limit.id)) : "";
+	return (
+		<>
+			<PageHeader
+				title="Modifiers"
+				description="Selection limits for modifier groups, and global modifiers staff can add to any item."
+				actions={
+					<>
+						<DraftBadge show={hasDraft(settings, "modifierLimits") || hasDraft(settings, "globalModifiers") || hasDraft(settings, "modifierPrefixes")} />
+						{tab === "global" && (
+							<button type="button" className="btn gold" id="add-global" onClick={() => setEdit({ id: "", name: "", price: "", status: "active" })}>
+								Add global modifier
+							</button>
+						)}
+					</>
+				}
+			/>
+			<div className="sk-tabs" role="tablist">
+				{[["groups", "Modifier groups"], ["global", "Global modifiers"]].map(([k, label]) => (
+					<button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "active" : ""} onClick={() => setTab(k)}>
+						{label}
+					</button>
+				))}
+			</div>
+			{tab === "groups" ? (
+				<SectionCard description="Groups are created and assigned to items in the Modifier Groups and Products screens. Here you set how many options staff must or may pick.">
+					{canView("modifiers") && (
+						<p>
+							<button type="button" className="sk-link" onClick={() => go("modifiers")}>
+								Open Modifier Groups
+							</button>
+						</p>
+					)}
+					{!modifiers.length ? (
+						<EmptyState title="No modifier groups yet">Create groups in Modifier Groups first.</EmptyState>
+					) : (
+						<ul className="sk-list">
+							{modifiers.map((g) => (
+								<li key={g.id} className="sk-list-row" data-group={g.id}>
+									<div className="sk-list-main">
+										<div className="sk-list-line">
+											<strong>{g.name}</strong>
+											<span className="muted">
+												{g.options.length} options · {g.required === false ? "Optional" : "Required"} · {rule(g)} · {assigned(g)} item{assigned(g) === 1 ? "" : "s"}
+											</span>
+										</div>
+									</div>
+									<span className="sk-list-actions">
+										<button type="button" className="btn out" disabled={g.mode !== "multiple"} title={g.mode !== "multiple" ? "Limits apply to groups where several options can be chosen" : ""} onClick={() => setLimit({ id: g.id, min: limits.get(g.id)?.min || 0, max: limits.get(g.id)?.max || 0 })}>
+											Limits
+										</button>
+									</span>
+								</li>
+							))}
+						</ul>
+					)}
+				</SectionCard>
+			) : (
+				<>
+					<SectionCard title="Global modifiers" description="Extras available on every item when Enable global modifiers is on in Order Entry. Staff add them as an instruction plus an option, for example No onion or Extra sauce.">
+						{!globals.length ? (
+							<EmptyState title="No global modifiers yet">Add options such as onion, sauce or ice.</EmptyState>
+						) : (
+							<SortableList
+								items={globals}
+								label="Global modifier"
+								onReorder={(ids) => svc.settings.reorderMenuEntities("globalModifiers", ids)}
+								render={(m) => (
+									<div className="sk-list-line" data-global={m.id}>
+										<strong>{m.name}</strong>
+										<span className="muted">{m.price ? "+" + money(m.price) : "No charge"}</span>
+										<StatusBadge status={m.status} />
+										<span className="sk-list-actions">
+											<button type="button" className="btn out" onClick={() => setEdit(cleanGlobalModifier(m))}>
+												Edit
+											</button>
+											<button type="button" className="btn danger" onClick={() => svc.settings.deleteMenuEntity("globalModifiers", m.id)}>
+												Remove
+											</button>
+										</span>
+									</div>
+								)}
+							/>
+						)}
+					</SectionCard>
+					<SectionCard title="Instruction prefixes" description="The words staff put in front of a global modifier.">
+						<div className="sk-chips">
+							{prefixes.map((x) => (
+								<span key={x} className="sk-chip">
+									{x}
+									<button type="button" aria-label={"Remove " + x} onClick={() => setPrefixes(prefixes.filter((y) => y !== x))}>
+										×
+									</button>
+								</span>
+							))}
+						</div>
+						<div className="sk-inline" style={{ padding: "8px 0" }}>
+							<input className="input" aria-label="New prefix" placeholder="New prefix" maxLength={12} value={newPrefix} onChange={(e) => setNewPrefix(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addPrefix())} />
+							<button type="button" className="btn out" onClick={addPrefix} disabled={!newPrefix.trim()}>
+								Add
+							</button>
+						</div>
+						<div className="sk-list-line" style={{ padding: "4px 0" }}>
+							<button type="button" className="btn gold" id="save-prefixes" disabled={!prefixDirty} onClick={() => svc.settings.saveMenuEntity("modifierPrefixes", cleanPrefixes({ prefixes }))}>
+								Save draft
+							</button>
+							<button type="button" className="btn out" disabled={!prefixDirty} onClick={() => setPrefixes(savedPrefixes)}>
+								Discard
+							</button>
+						</div>
+					</SectionCard>
+				</>
+			)}
+			<DetailDrawer
+				open={!!limit}
+				wide
+				title={limit ? modifiers.find((m) => m.id === limit.id)?.name || "Group" : ""}
+				subtitle="Selection limits"
+				onClose={() => setLimit(null)}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={() => setLimit(null)}>
+							Cancel
+						</button>
+						<button
+							type="button"
+							className="btn gold"
+							id="save-limit"
+							onClick={async () => {
+								if (await svc.settings.saveMenuEntity("modifierLimits", limit)) setLimit(null);
+							}}
+						>
+							Save draft
+						</button>
+					</>
+				}
+			>
+				{limit && (
+					<>
+						<NumberRow id="ml-min" label="Minimum choices" help="Staff must pick at least this many (0 = no minimum)." value={limit.min} min={0} max={20} onChange={(min) => setLimit((x) => ({ ...x, min }))} />
+						<NumberRow id="ml-max" label="Maximum choices" help="Staff can pick up to this many (0 = no limit)." value={limit.max} min={0} max={20} onChange={(max) => setLimit((x) => ({ ...x, max }))} />
+						{limitErr && <p className="sk-error" role="alert">{limitErr}</p>}
+					</>
+				)}
+			</DetailDrawer>
+			<DetailDrawer
+				open={!!edit}
+				wide
+				title={edit?.id ? "Edit global modifier" : "Add global modifier"}
+				onClose={close}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={close}>
+							Cancel
+						</button>
+						<button type="button" className="btn gold" id="save-global" onClick={save}>
+							Save draft
+						</button>
+					</>
+				}
+			>
+				{edit && (
+					<>
+						<TextRow id="gm-name" label="Name" help="For example Onion, Sauce or Ice." value={edit.name} max={40} autoFocus onChange={(name) => setEdit((x) => ({ ...x, name }))} error={touched ? error : ""} />
+						<NumberRow id="gm-price" label="Extra charge" help="Added to the price each time it is used. Leave 0 for no charge." value={edit.price} min={0} step={0.01} onChange={(price) => setEdit((x) => ({ ...x, price }))} />
+						<ToggleRow id="gm-active" label="Active" help="An inactive modifier is kept but not offered." value={edit.status === "active"} onChange={(on) => setEdit((x) => ({ ...x, status: on ? "active" : "inactive" }))} />
+					</>
+				)}
+			</DetailDrawer>
+		</>
+	);
+}
+
+export const MENU_ADMIN_COMPONENTS = { modifiers: ModifiersAdmin, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: Items };

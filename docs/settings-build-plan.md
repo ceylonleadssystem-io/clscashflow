@@ -100,6 +100,20 @@ a tax group applies each member to the same amount (not compounded) and lists th
 - Deviation: name, price, code, stock, photos, categories, stations and modifier assignment are still edited in Products & Services (live), not on drafts. Moving that editing behind Publish would change the working
   catalogue screens and stock handling; the new page links to it. No show-on-POS/Online chips (Online is not built), no "Duplicate item".
 
+## Delivered (slice 8): Modifiers (limits and global modifiers)
+- **Menu Admin > Modifiers** has two tabs, on Save then Publish like the other pages.
+  - **Modifier groups**: the live groups (created and assigned to items in Modifier Groups and Products as before) with their options, required or optional, assigned item count and the new
+    **Limits** drawer: minimum and maximum choices for "choose several" groups (`settings.modifierLimits`, no database change). The picker at the register enforces them: a box past the maximum will not tick,
+    and Save to Ticket asks for the minimum. Groups where staff choose one have no limits.
+  - **Global modifiers**: extras offered on any item, each with a name, an optional extra charge and an active switch (`settings.globalModifiers`), plus editable **instruction prefixes**
+    (`settings.modifierPrefixes`, Add / Extra / Side / No until changed).
+- **At the register:** with **Enable global modifiers** on (System Options > Order Entry, on by default) and at least one active global modifier, every order line gets an **Add extras** button
+  (and the picker gets an Extras section): choose an instruction and a modifier, for example "No Onion" or "Extra Sauce (+50)". The charge goes into the line price (and is taxed with it), and the extra prints on the
+  receipt, the kitchen ticket and the Kitchen Display without a group prefix ("No Onion", not "Global: No Onion"). Nothing shows until a global modifier is published.
+- Deviations from the spec: groups are still created, edited and assigned in Modifier Groups and Products (live), so the assignment tree and "Show on" chips are not rebuilt; the option "Also show for items without
+  modifiers" is replaced by the Add extras button on each line; a limit stored for a deleted group is simply ignored.
+- Seen while testing and not changed: at 375 px the existing "Choose Modifiers" dialog is partly covered on the left by the navigation rail.
+
 ## Next slices, in the spec's order
-1. Menu Admin remainder: Modifiers (min/max selections, assignment tree, global modifiers with Add / Extra / Side / No prefixes) and a Categories page (description, delete approval); both need POS behaviour built first.
+1. Menu Admin remainder: a Categories page (description; delete approval needs a till check that stops staff removing sent items without a manager), and moving group, item and category editing itself behind drafts.
 2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

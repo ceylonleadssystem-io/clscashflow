@@ -4,6 +4,7 @@
  */
 import { DEFAULT_RECEIPT_FOOTER } from "../../config/constants";
 import { esc, money } from "../../domain/format";
+import { modifierLabel } from "../../domain/menuAdmin";
 
 /**
  * E-mail sent to the customer after checkout: the ORDER itself (items,
@@ -42,7 +43,7 @@ export function orderEmailVariables(sale, { settings = {}, customerName = "Custo
 			name: l.name || "Item",
 			description: l.description || "",
 			has_description: l.description ? "yes" : "",
-			modifiers: (l.modifiers || []).map((m) => `${m.groupName}: ${m.optionName}`).join(", "),
+			modifiers: (l.modifiers || []).map((m) => modifierLabel(m)).join(", "),
 			has_modifiers: (l.modifiers || []).length ? "yes" : "",
 			quantity: l.isDiscount || l.isServiceCharge ? "" : String(l.qty),
 			unit_price: l.isDiscount || l.isServiceCharge ? "" : money(l.price),
@@ -69,7 +70,7 @@ export function orderEmailHtml(sale, { settings = {}, customerName = "Customer" 
 	const lines = sale.lines || [];
 	const rows = lines
 		.map((l) => {
-			const mods = (l.modifiers || []).map((m) => esc(m.groupName + ": " + m.optionName)).join("<br>");
+			const mods = (l.modifiers || []).map((m) => esc(modifierLabel(m))).join("<br>");
 			return `<tr><td style="padding:10px 8px;border-bottom:1px solid #eee7dc;vertical-align:top"><strong>${esc(l.name)}</strong>${
 				mods ? `<div style="font-size:12px;color:#7a6f63;margin-top:3px">${mods}</div>` : ""
 			}</td><td align="center" style="padding:10px 8px;border-bottom:1px solid #eee7dc">${l.isDiscount ? "" : l.qty}</td><td align="right" style="padding:10px 8px;border-bottom:1px solid #eee7dc;white-space:nowrap">${money(l.price * l.qty)}</td></tr>`;

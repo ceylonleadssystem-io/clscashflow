@@ -140,6 +140,9 @@ export function OrderEntry() {
 					onReset={() => reset("defaultMenu")}
 				/>
 			</SectionCard>
+			<SectionCard title="Modifiers">
+				<ToggleRow id="oe-global-modifiers" label="Enable global modifiers" help="Lets staff add extras such as No onion or Extra sauce to any item from the order. The extras are set up in Menu Admin, Modifiers." value={values.globalModifiers} onChange={(v) => set("globalModifiers", v)} />
+			</SectionCard>
 			<SectionCard title="Display">
 				<ToggleRow id="oe-show-prices" label="Show prices on menu item buttons" help="Turn off to keep prices off the buttons, for example when prices are on the menu board." value={values.showPrices} onChange={(v) => set("showPrices", v)} overridden={overridden("showPrices")} onReset={() => reset("showPrices")} />
 			</SectionCard>

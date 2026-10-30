@@ -122,6 +122,8 @@ Menu Admin pages save **drafts**: nothing changes on the register until you pres
 - **Taxes**: add your rates (for example VAT 18%) and groups, choose a default tax and a tax per category, then Publish. Tax is added on top of item prices after any discount, and shows on the
   checkout, the receipt and Reports, Taxes. Until a tax is published nothing is added. A partial refund returns the tax with the items.
 - **Items**: for each item, its own tax (or none), a takeaway tax, the **prep ticket name** shown to the kitchen and the **receipt name** printed on receipts. Name, price and stock stay in Products & Services.
+- **Modifiers**: set how many options of a "choose several" group staff must or may pick, and add **global modifiers** (onion, sauce, ice) with prefixes such as Add, Extra, Side and No. When global modifiers are
+  on in Order Entry, each order line shows **Add extras**; "No Onion" or "Extra Sauce" then prints on the receipt and the kitchen ticket.
 
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),

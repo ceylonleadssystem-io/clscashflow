@@ -4,7 +4,7 @@
  */
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER } from "../../config/constants";
 import { esc, money } from "../../domain/format";
-import { receiptName } from "../../domain/menuAdmin";
+import { modifierLabel, receiptName } from "../../domain/menuAdmin";
 import { receiptDate } from "../../domain/sales";
 
 /**
@@ -43,7 +43,7 @@ function kotBody(order, { settings = {}, customerName = "Walk-in Customer", stat
 		.map(
 			(l) =>
 				`<div class="item"><b>${l.qty} × ${esc(l.name)}</b>${(l.modifiers || [])
-					.map((m) => `<span>• ${esc(m.groupName)}: ${esc(m.optionName)}</span>`)
+					.map((m) => `<span>• ${esc(modifierLabel(m))}</span>`)
 					.join("")}</div>`,
 		)
 		.join("");
@@ -81,7 +81,7 @@ export function kotEscPos(ticket) {
 	const lines = prepLines(ticket);
 	for (const l of lines) {
 		out.push(27, 69, 1, ...big(true), ...text(`${l.qty} x ${l.name}`.slice(0, 24)), 10, ...big(false), 27, 69, 0);
-		for (const m of l.modifiers || []) out.push(...text(`   - ${m.groupName}: ${m.optionName}`.slice(0, 48)), 10);
+		for (const m of l.modifiers || []) out.push(...text(`   - ${modifierLabel(m)}`.slice(0, 48)), 10);
 	}
 	if (!lines.length) out.push(...text("No preparation items"), 10);
 	out.push(...text("-".repeat(48)), 10, 10, 10, 10, 29, 86, 66, 0); // feed + partial cut
@@ -167,7 +167,7 @@ export function receiptLayout(sale, { settings = {}, location = null } = {}) {
 		main.push(left(padRight(first, 30) + padLeft(money(line.price * line.qty).replace("LKR ", ""), 16)));
 		rest.forEach((r) => main.push(left("  " + r)));
 		if (line.description) wrapLine(line.description, width - 2).forEach((r) => main.push(left("  " + r)));
-		(line.modifiers || []).forEach((m) => main.push(left("  " + m.groupName + ": " + m.optionName)));
+		(line.modifiers || []).forEach((m) => main.push(left("  " + modifierLabel(m))));
 	});
 	main.push(left(rule));
 	main.push(left(padRight("TOTAL", 26) + padLeft(money(sale.total), 20)));

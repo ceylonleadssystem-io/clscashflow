@@ -100,7 +100,7 @@ export function KdsApp() {
 							{l.qty} × {l.name}
 							{(l.modifiers || []).map((m, j) => (
 								<span key={j}>
-									• {m.groupName}: {m.optionName}
+									• {m.groupName ? m.groupName + ": " : ""}{m.optionName}
 								</span>
 							))}
 						</div>

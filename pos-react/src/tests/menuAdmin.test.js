@@ -159,3 +159,61 @@ describe("category rename", () => {
 		expect(h.data().settings.menuDraft.availabilityMenus[0].categories).toEqual(["Beverages"]);
 	});
 });
+
+describe("modifiers: limits, global modifiers and prefixes", () => {
+	it("checks a group's limits only for choose-any groups", async () => {
+		const { limitProblem, limitError, cleanLimit, limitBlank } = await import("../domain/menuAdmin");
+		const group = { id: "g", name: "Toppings", mode: "multiple", required: true, options: [{ name: "a" }, { name: "b" }, { name: "c" }] };
+		const lim = cleanLimit({ id: "g", min: 1, max: 2 });
+		expect(limitProblem(group, 0, lim)).toMatch(/at least 1/);
+		expect(limitProblem(group, 2, lim)).toBe("");
+		expect(limitProblem(group, 3, lim)).toMatch(/no more than 2/);
+		expect(limitProblem({ ...group, required: false }, 0, lim)).toBe(""); // optional group left empty is fine
+		expect(limitProblem({ ...group, mode: "single" }, 3, lim)).toBe("");
+		expect(limitProblem(group, 5, undefined)).toBe("");
+		expect(limitError(cleanLimit({ id: "g", min: 3, max: 2 }), group)).toMatch(/less than the minimum/);
+		expect(limitError(cleanLimit({ id: "g", min: 4 }), group)).toMatch(/only 3 options/);
+		expect(limitError(lim, { ...group, mode: "single" })).toMatch(/several options/);
+		expect(limitBlank(cleanLimit({ id: "g" }))).toBe(true);
+	});
+	it("reads a modifier the same way on every ticket, global or not", async () => {
+		const { modifierLabel } = await import("../domain/menuAdmin");
+		expect(modifierLabel({ groupName: "Size", optionName: "Large" })).toBe("Size: Large");
+		expect(modifierLabel({ groupName: "", optionName: "No onion" })).toBe("No onion");
+	});
+	it("saves as drafts, publishes, and a global modifier priced into the line", async () => {
+		const { prefixesOf, globalModifiersOf, limitsById, GLOBAL_GROUP_ID } = await import("../domain/menuAdmin");
+		const { addConfiguredLine } = await import("../domain/cart");
+		const h = await createHarness();
+		expect(prefixesOf(h.data().settings)).toEqual(["Add", "Extra", "Side", "No"]);
+		expect(await h.svc.settings.saveMenuEntity("globalModifiers", { name: "" })).toBeUndefined();
+		await h.svc.settings.saveMenuEntity("globalModifiers", { name: "Sauce", price: 50 });
+		await h.svc.settings.saveMenuEntity("globalModifiers", { name: "Onion" });
+		expect(await h.svc.settings.saveMenuEntity("globalModifiers", { name: "onion" })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("modifierPrefixes", { prefixes: [] })).toBeUndefined();
+		await h.svc.settings.saveMenuEntity("modifierPrefixes", { prefixes: ["No", "Extra", "no", " Hold "] });
+		expect(globalModifiersOf(h.data().settings)).toEqual([]); // drafts are not on the POS yet
+		await h.svc.settings.publishMenu();
+		const s = h.data().settings;
+		expect(globalModifiersOf(s).map((m) => [m.name, m.price])).toEqual([["Sauce", 50], ["Onion", 0]]);
+		expect(prefixesOf(s)).toEqual(["No", "Extra", "Hold"]);
+		const product = { id: "p1", name: "Burger", price: 800 };
+		const cart = addConfiguredLine([], product, [{ groupId: GLOBAL_GROUP_ID, groupName: "", optionName: "Extra Sauce", prefix: "Extra", name: "Sauce", price: 50 }]);
+		expect(cart[0]).toMatchObject({ price: 850, basePrice: 800 });
+		expect(limitsById(s)).toEqual({});
+	});
+	it("a limit on a real group is validated against it and cleared when blank", async () => {
+		const { limitsById } = await import("../domain/menuAdmin");
+		const h = await createHarness();
+		await h.svc.catalog.saveModifier({ name: "Toppings", mode: "multiple", required: true, options: [{ name: "a", price: 0 }, { name: "b", price: 0 }, { name: "c", price: 0 }] });
+		const g = h.data().modifiers.find((m) => m.name === "Toppings");
+		expect(await h.svc.settings.saveMenuEntity("modifierLimits", { id: "ghost", min: 1 })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("modifierLimits", { id: g.id, min: 2, max: 1 })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("modifierLimits", { id: g.id, min: 1, max: 2 })).toBe(true);
+		await h.svc.settings.publishMenu();
+		expect(limitsById(h.data().settings)[g.id]).toMatchObject({ min: 1, max: 2, name: "Toppings" });
+		await h.svc.settings.saveMenuEntity("modifierLimits", { id: g.id, min: 0, max: 0 });
+		await h.svc.settings.publishMenu();
+		expect(h.data().settings.modifierLimits).toEqual([]);
+	});
+});
