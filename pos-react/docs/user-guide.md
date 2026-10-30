@@ -116,7 +116,7 @@ whether this device prints at all (off = log only), a **backup printer** and a *
 
 ## Where things are in Settings
 System Options: Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Party Payments, Zones, **Service Charge**, **Appearance** and **Customer Feedback**. Menu Admin: Items, Categories, Modifiers, Availability, Taxes, Sales Categories
-(Items and Modifiers also hold the full item and group editors). Device Manager: Printers, **Receipts & Printing** and **Stations**. The business type is chosen once during setup; Ceylonry support changes it afterwards.
+(Items and Modifiers also hold the full item and group editors). Device Manager: **Printers** (when to print, each device's printers, USB devices) and **Stations**; receipt socials are under Receipts and the order types under Order Entry. The business type is chosen once during setup; Ceylonry support changes it afterwards.
 
 ## Menu Admin (Settings)
 Menu Admin pages save **drafts**: nothing changes on the register until you press **Publish** in the bar at the bottom ("N unpublished changes", with **Review** to see each change and **Discard all**).

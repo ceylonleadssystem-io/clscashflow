@@ -13,6 +13,8 @@ import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
+import { HardwarePanel } from "../../components/settings/HardwarePanel";
+import { PrintWhenCard } from "../../components/settings/PrintingExtras";
 import { useUi } from "../../store/UiProvider";
 
 const none = { value: "", label: "None" };
@@ -86,6 +88,7 @@ export function Printers() {
 				description="Set up the receipt and kitchen printers of each register or order pad. A device without a setup keeps using Receipt Printing and the Stations page."
 				note={locationId && locationId !== "all" ? "Devices at " + (locationName(locationId) || "this location") + "." : "Devices of every location."}
 			/>
+			<PrintWhenCard />
 			{!devices.length ? (
 				<SectionCard>
 					<EmptyState title="No devices yet">A register appears here the first time someone signs in to the POS on it.</EmptyState>
@@ -166,6 +169,11 @@ export function Printers() {
 						</SectionCard>
 					</div>
 				</div>
+			)}
+			{current && mine && (
+				<SectionCard title="USB devices on this device" description="Connect a USB receipt printer, label printer or barcode scanner plugged into this device. Access is remembered on this device only.">
+					<HardwarePanel />
+				</SectionCard>
 			)}
 			{gaps.length > 0 && (
 				<SectionCard title="Stations without a printer" description="Tickets for these stations stay in the Order Queue because no printer serves them.">

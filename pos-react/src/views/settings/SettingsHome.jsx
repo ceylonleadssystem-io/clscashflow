@@ -7,7 +7,7 @@ import { SaveBar, SettingsShell } from "../../components/settings/kit/SettingsSh
 import { useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
 import { Overview, PAGE_COMPONENTS as SYSTEM_COMPONENTS } from "./SystemOptionsPages";
 import { DEVICE_COMPONENTS } from "./DevicePages";
-import { AppearancePage, FeedbackPage, ReceiptPrintingPage, ServiceChargePage, StationsPage } from "./MovedPages";
+import { AppearancePage, FeedbackPage, ServiceChargePage, StationsPage } from "./MovedPages";
 import { hasCapability } from "../../config/capabilities";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
@@ -16,7 +16,7 @@ import { PublishBar } from "../../components/settings/kit/PublishBar";
 import { Jobs, Users } from "./UsersPages";
 import { usePos } from "../../store/PosProvider";
 
-const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, receiptPrinting: ReceiptPrintingPage, stations: StationsPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
+const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
 
 /** The Menu Admin pages in the order the menu is built: items, categories, modifiers, availability, taxes, sales categories. */
 export const MENU_ADMIN_NAV = [
@@ -46,7 +46,7 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 		},
 		...(can("users.view") ? [{ title: "Users", items: [{ key: "users", label: "Users" }, { key: "jobs", label: "Jobs" }] }] : []),
 		...(can("menu.view") ? [{ title: "Menu Admin", items: MENU_ADMIN_NAV }] : []),
-		{ title: "Device Manager", items: [{ key: "printers", label: "Printers" }, { key: "receiptPrinting", label: "Receipts & Printing" }, ...(can("menu.view") ? [{ key: "stations", label: "Stations" }] : [])] },
+		{ title: "Device Manager", items: [{ key: "printers", label: "Printers" }, ...(can("menu.view") ? [{ key: "stations", label: "Stations" }] : [])] },
 		{ title: "More settings", items: legacyTabs.map((t) => ({ key: "legacy:" + t.id, label: t.label })) },
 	];
 	const select = (key) => {

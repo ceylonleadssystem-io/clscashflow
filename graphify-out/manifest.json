@@ -2238,9 +2238,9 @@
     "semantic_hash": ""
   },
   "pos-react/docs/user-guide.md": {
-    "mtime": 1793335726.551272,
-    "seen": 1793335745.522384,
-    "ast_hash": "2c7524db324f2a3f13f4d18588f5179e",
+    "mtime": 1793336173.366403,
+    "seen": 1793336196.545713,
+    "ast_hash": "d743466a7cbc9b5f705b722a51a57042",
     "semantic_hash": ""
   },
   "pos-react/index.html": {
@@ -3006,15 +3006,15 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SettingsHome.jsx": {
-    "mtime": 1793335338.4183476,
-    "seen": 1793335745.522316,
-    "ast_hash": "8c93a0622dea034d72c030b389966f70",
+    "mtime": 1793336138.429239,
+    "seen": 1793336196.545643,
+    "ast_hash": "90afe3979639a06087ccc1734e1af030",
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SystemOptionsPages.jsx": {
-    "mtime": 1793334368.9768553,
-    "seen": 1793334486.495689,
-    "ast_hash": "691d1771a712aba1ec6d112c8edbb80b",
+    "mtime": 1793336138.4288383,
+    "seen": 1793336196.545644,
+    "ast_hash": "d91cb3585d0562aec92a8f4d61f7d221",
     "semantic_hash": ""
   },
   "tests/seo.test.js": {
@@ -3024,9 +3024,9 @@
     "semantic_hash": ""
   },
   "docs/settings-build-plan.md": {
-    "mtime": 1793335726.550119,
-    "seen": 1793335745.52237,
-    "ast_hash": "8c9b66a9f595628ddd7ccf4b5a545b1c",
+    "mtime": 1793336173.3653572,
+    "seen": 1793336196.5456982,
+    "ast_hash": "b7396386a78a5d1cbc820331970fadec",
     "semantic_hash": ""
   },
   "llms.txt": {
@@ -3114,9 +3114,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/DevicePages.jsx": {
-    "mtime": 1793331415.7076838,
-    "seen": 1793331479.219768,
-    "ast_hash": "2286def29fea0148f373cd8a1e6b9204",
+    "mtime": 1793336129.6414926,
+    "seen": 1793336196.545641,
+    "ast_hash": "1a76e507173a4bc19bcdf679f175669d",
     "semantic_hash": ""
   },
   "pos-react/src/components/settings/kit/AssignmentTree.jsx": {
@@ -3234,9 +3234,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/MovedPages.jsx": {
-    "mtime": 1793335322.548823,
-    "seen": 1793335745.522315,
-    "ast_hash": "5ced2d5fc56ebc9b184b5be49a335a4d",
+    "mtime": 1793336138.4295924,
+    "seen": 1793336196.545642,
+    "ast_hash": "be5161fb28d7980b860a4bea89e42b42",
     "semantic_hash": ""
   },
   "tests/pos-admin-rollup.test.js": {
@@ -3246,9 +3246,15 @@
     "semantic_hash": ""
   },
   "docs/settings-pending.md": {
-    "mtime": 1793335726.549061,
-    "seen": 1793335745.52237,
-    "ast_hash": "c7fd8fe5025b893b425ccd0968f70594",
+    "mtime": 1793336173.365887,
+    "seen": 1793336196.5456991,
+    "ast_hash": "3a814b7b238e8597bbcff92c4d16641e",
+    "semantic_hash": ""
+  },
+  "pos-react/src/components/settings/PrintingExtras.jsx": {
+    "mtime": 1793336129.6195085,
+    "seen": 1793336196.545475,
+    "ast_hash": "69fdc5a7b48147e4a356f758b98bd76b",
     "semantic_hash": ""
   }
 }

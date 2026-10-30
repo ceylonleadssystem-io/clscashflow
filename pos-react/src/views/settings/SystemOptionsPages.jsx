@@ -11,6 +11,7 @@ import { publishedOf } from "../../domain/menuAdmin";
 import { MAIN_FLOOR, floorLayout, floorsFor } from "../../domain/tables";
 import { MAX_NAME, nameError, reorder as reorderList, thirdPartyList, usedNames } from "../../domain/thirdPartyPayments";
 import { usePos } from "../../store/PosProvider";
+import { OrderTypesCard, SocialsCard } from "../../components/settings/PrintingExtras";
 import { useSystemOptions, useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
 import { LANDING_VIEWS, PRESETS, SYSTEM_PAGES, presetChanges, resolveOptions } from "../../domain/systemOptions";
 import { useData } from "../../store/DataProvider";
@@ -141,6 +142,7 @@ export function OrderEntry() {
 					onReset={() => reset("defaultMenu")}
 				/>
 			</SectionCard>
+			<OrderTypesCard />
 			<SectionCard title="Modifiers">
 				<ToggleRow id="oe-global-modifiers" label="Enable global modifiers" help="Lets staff add extras such as No onion or Extra sauce to any item from the order. The extras are set up in Menu Admin, Modifiers." value={values.globalModifiers} onChange={(v) => set("globalModifiers", v)} />
 			</SectionCard>
@@ -159,6 +161,7 @@ export function Receipts() {
 			<SectionCard title="Footer">
 				<TextAreaRow id="rc-footer" label="Footer message" help="Printed at the bottom of every receipt. A location can set its own under Business Profile › Locations." value={values.footer} onChange={(v) => set("footer", v)} max={200} error={errors.footer} />
 			</SectionCard>
+			<SocialsCard />
 		</>
 	);
 }

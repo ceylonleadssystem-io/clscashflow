@@ -1,6 +1,6 @@
 /**
  * Settings pages that used to be tabs under "More settings": Service Charge, Appearance and text size, and Customer Feedback (System Options),
- * Receipts & Printing and Stations (Device Manager), and the full catalogue and modifier editors (Menu Admin). Each wraps the existing panel, so what
+ * Stations (Device Manager), and the full catalogue and modifier editors (Menu Admin). Each wraps the existing panel, so what
  * it can do is unchanged; only where it lives changed.
  */
 import { useEffect, useState } from "react";
@@ -8,7 +8,7 @@ import { hasCapability } from "../../config/capabilities";
 import { formFrom } from "../../domain/settingsForm";
 import { emailError } from "../../domain/validators";
 import { PageHeader, SectionCard } from "../../components/settings/kit/rows";
-import { AppearancePanel, DisplayPanel, FeedbackPanel, PrintingPanel, ServiceChargePanel } from "../../components/settings/panels";
+import { AppearancePanel, DisplayPanel, FeedbackPanel, ServiceChargePanel } from "../../components/settings/panels";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
@@ -83,14 +83,6 @@ export function FeedbackPage() {
 	return (
 		<FormPage title="Customer Feedback" description="Where customers are sent to review you, and how long after their visit.">
 			{(form, set) => <FeedbackPanel form={form} set={set} />}
-		</FormPage>
-	);
-}
-
-export function ReceiptPrintingPage() {
-	return (
-		<FormPage title="Receipts & Printing" description="Receipt and kitchen ticket printing, order types on the checkout, socials on the receipt, and USB printers and scanners.">
-			{(form, set, setForm) => <PrintingPanel form={form} set={set} setForm={setForm} />}
 		</FormPage>
 	);
 }
