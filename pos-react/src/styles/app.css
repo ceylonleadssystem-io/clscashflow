@@ -773,6 +773,10 @@ html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 .sk-main{min-width:0;display:flex;flex-direction:column;gap:14px}
 .sk-main-body{max-width:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));align-items:start;gap:16px}
 .sk-main-body>*:not(.sk-card){grid-column:1/-1}
+/* the pages sit in a <section class="view"> inside the body: it is the grid that spaces the cards */
+.sk-main-body>section.view{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));align-items:start;gap:16px;padding:0}
+.sk-main-body>section.view>*:not(.sk-card){grid-column:1/-1}
+.sk-main-body>section.view>.sk-page-head{margin-bottom:4px}
 .sk-page-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
 .sk-page-head h2{margin:0;font-size:calc(22px * var(--ui-fs,1))}
 .sk-page-head p{margin:4px 0 0}
