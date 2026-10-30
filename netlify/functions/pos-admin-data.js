@@ -144,6 +144,25 @@ const SETTING_SANITIZERS = {
   subscription: function(v) { return v === null ? { enforced: false } : cleanSubscription(v); }
 };
 
+// Sales summary that travels with each account in the list: 7 and 30 day totals, the last sale and 30 daily sales figures.
+// Same rules as pos-react/src/domain/adminAnalytics.js rollup(): only completed and partly refunded sales count, "sales" is the sale total.
+function salesRollup(sales) {
+  var DAY = 86400000, today = new Date().toISOString().slice(0, 10);
+  var start = Date.parse(today) - 29 * DAY, daily = [], orders = [];
+  for (var i = 0; i < 30; i++) { daily.push(0); orders.push(0); }
+  var last = '';
+  (Array.isArray(sales) ? sales : []).forEach(function(s) {
+    var status = s && s.status || 'completed';
+    if (status !== 'completed' && status !== 'partially_refunded') return;
+    var at = String(s.createdAt || s.date || '');
+    if (at > last) last = at;
+    var idx = Math.round((Date.parse(String(s.date || at).slice(0, 10)) - start) / DAY);
+    if (idx >= 0 && idx < 30) { daily[idx] += Number(s.total) || 0; orders[idx] += 1; }
+  });
+  function sum(a, from) { return a.slice(from).reduce(function(x, y) { return x + y; }, 0); }
+  return { orders30: sum(orders, 0), sales30: sum(daily, 0), orders7: sum(orders, 23), sales7: sum(daily, 23), daily: daily, lastSaleAt: last };
+}
+
 function addBillingPeriod(start, cycle) {
   const date = new Date(start);
   if (cycle === 'annual') date.setUTCFullYear(date.getUTCFullYear() + 1);
@@ -242,7 +261,7 @@ async function handle(event) {
           name: row.data.name || row.data.displayName || (authUser && authUser.displayName) || '', email: row.data.email || (authUser && authUser.email) || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
-          apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
+          analytics: salesRollup(payload.sales), apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
           updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: accountStatus(row.data) === 'test', status: accountStatus(row.data), subscriptionType: clean(row.data.posBillingCycle) === 'annual' ? 'annual' : 'monthly', paused: row.data.posAccountPaused === true,
           authStatus: !authAvailable ? 'unavailable' : !authUser ? 'missing' : authUser.disabled ? 'disabled' : 'ready',
           authLastSignInAt: authUser && authUser.metadata && authUser.metadata.lastSignInTime || ''

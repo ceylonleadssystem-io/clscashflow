@@ -8,6 +8,7 @@ import { env } from "../config/env";
 import { adminSession } from "./adminSession";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
+import { OverallAnalytics } from "./OverallAnalytics";
 import { SubscriptionManagement } from "./SubscriptionManagement";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
@@ -151,6 +152,7 @@ export function AdminApp() {
 							<div className="card"><div className="label">Disabled accounts</div><div className="value" style={{ color: accounts.some((a) => a.paused) ? "#a5362b" : undefined }}>{accounts.filter((a) => a.paused).length}</div></div>
 						</section>
 					)}
+					<OverallAnalytics accounts={accounts} onOpen={setSelected} />
 					<section className="admin-toolbar" style={{ gridTemplateColumns: "1fr auto auto" }}>
 						<input className="input" placeholder="Search business, e-mail or name…" value={q} onChange={(e) => setQ(e.target.value)} />
 						<select className="input" aria-label="Filter by status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>

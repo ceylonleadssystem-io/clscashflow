@@ -135,6 +135,16 @@ a tax group applies each member to the same amount (not compounded) and lists th
   order number reset and limit (changes numbering on live data, needs its own decision); delivery postal code (no delivery address exists); Quick PIN, card swipe, staff survey, shift summary printing and the email / WhatsApp
   receipt toggles (each needs a feature that does not exist yet); "Start a new order after completing" (the register already does this).
 
+## Delivered (slice 11): moves, business type, admin portal
+- **Moved** (same panels, new homes): Service Charge, Appearance and text size, and Customer Feedback are now System Options pages; Receipts & Printing (receipt printer, kitchen tickets, order types, socials, USB hardware) and Stations are Device Manager pages.
+  The "POS Setup" tab is gone. The "Operations" tab keeps the per-device Always live screen switch, plus text size for staff without settings access; the "Receipt Printing" tab stays for staff without settings access so they can reconnect a USB printer.
+- **Products & Services, Modifiers and Stations** left the navigation (the group is now "Inventory"). Opening them from anywhere (links, Ceylo fixes) opens the Settings page. Menu Admin > Items has a **Catalogue tools** tab and Modifiers a **Group editor** tab holding the full live editors,
+  so nothing the old pages could do was lost. Menu Admin order: Items, Categories, Modifiers, Availability, Taxes, Sales Categories (Settings and the admin portal).
+- **Business type** is chosen once, in the setup shown when a business first opens the POS, then read only (`businessTypeLocked`; businesses that finished setup earlier count as locked). The Ceylonry admin portal has a **Business type** tab that changes it (and the server accepts only the known types).
+- **Jobs** start as the roles: the missing Owner, Admin, Accountant, Manager and Cashier jobs are added once to every business (pay rate 0); a job deleted later is not brought back.
+- **Admin portal**: Menu Admin shows the same six pages as Settings; the account list now carries a 30 day sales rollup, the main page shows **overall analytics** (sales, orders, average order, businesses selling this week, sales per day, top businesses) and every business has an **Analytics** tab (period, location, per day chart, best sellers, payment mix, order types, locations).
+- What is left is listed in `docs/settings-pending.md`.
+
 ## Next slices, in the spec's order
-1. Photos and stock counts on drafts; then each Settings row listed under slice 10 as the feature behind it is built.
+1. See `docs/settings-pending.md`.
 2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

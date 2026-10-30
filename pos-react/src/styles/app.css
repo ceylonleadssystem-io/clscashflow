@@ -19,6 +19,12 @@
 .admin-brand em{font-style:normal;font:600 15px "DM Sans",sans-serif;color:#6b6258;margin-left:8px}
 .admin-top-actions{display:flex;gap:10px;align-items:center}
 .admin-user{font-size:calc(13px * var(--ui-fs, 1));color:#6b6258;text-transform:capitalize}
+.admin-analytics{margin-bottom:16px}
+.admin-bar{fill:var(--ui-accent,#ff4d0a)}.admin-bar.empty{fill:#e4e0d8}
+.admin-ranked{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.admin-ranked-top{display:flex;justify-content:space-between;gap:10px}
+.admin-ranked-bar{display:block;height:6px;margin-top:4px;border-radius:99px;background:#eee9df;overflow:hidden}
+.admin-ranked-bar span{display:block;height:100%;background:var(--ui-accent,#ff4d0a);border-radius:99px}
 .admin-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
 .admin-summary .value small{font-size:calc(14px * var(--ui-fs, 1));color:#8a8175;font-weight:calc(600 + var(--ui-fw, 0))}
 .admin-small{font-size:calc(18px * var(--ui-fs, 1))!important;text-transform:capitalize}
