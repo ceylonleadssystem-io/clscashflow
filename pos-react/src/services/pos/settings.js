@@ -312,11 +312,16 @@ export async function deleteZone(ctx, locationId, id) {
 
 // ------------------------------------------------------------------------- jobs and access ----
 
-/** The first time a business has no jobs list, adds one job per role (Owner, Admin, Manager, Accountant, Cashier). Returns true when it did. */
+/**
+ * Once per business, adds a job for each role (Owner, Admin, Manager, Accountant, Cashier) that the jobs list does not already have by that title,
+ * so the Jobs page matches the roles people already hold. A job deleted afterwards stays deleted. Returns true when it ran.
+ */
 export async function seedRoleJobs(ctx) {
 	const { settings } = ctx.data();
-	if (Array.isArray(settings.jobs)) return false;
-	await patchSettings(ctx, { jobs: ROLE_JOBS });
+	if (settings.roleJobsSeeded) return false;
+	const have = jobsOf(settings);
+	const missing = ROLE_JOBS.filter((r) => !have.some((j) => j.title.trim().toLowerCase() === r.title.toLowerCase()));
+	await patchSettings(ctx, { jobs: [...(Array.isArray(settings.jobs) ? settings.jobs : []), ...missing], roleJobsSeeded: true });
 	return true;
 }
 

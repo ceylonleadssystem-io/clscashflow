@@ -116,17 +116,20 @@ describe("labor cost in reports", () => {
 });
 
 describe("jobs start as the roles", () => {
-	it("adds one job per role once, and leaves an existing list alone", async () => {
+	it("adds a job per role once, keeps the ones a business already has, and does not bring back deleted ones", async () => {
 		const { createHarness } = await import("./harness");
 		const { ROLE_JOBS, jobsOf } = await import("../domain/access");
-		const h = await createHarness();
+		const h = await createHarness({ settings: { jobs: [{ id: "j1", title: "Server", code: "SRV", rate: 500, color: "", active: true }, { id: "j2", title: "cashier", code: "C", rate: 450, color: "", active: true }] } });
 		expect(await h.svc.settings.seedRoleJobs()).toBe(true);
-		expect(jobsOf(h.data().settings).map((j) => j.title)).toEqual(["Owner", "Admin", "Accountant", "Manager", "Cashier"]);
+		expect(jobsOf(h.data().settings).map((j) => j.title)).toEqual(["Server", "cashier", "Owner", "Admin", "Accountant", "Manager"]); // an existing "cashier" is not duplicated
 		expect(ROLE_JOBS.every((j) => j.rate === 0 && j.active)).toBe(true);
 		expect(await h.svc.settings.seedRoleJobs()).toBe(false);
-		await h.svc.settings.saveJob({ title: "Barista", code: "BAR", rate: 400 });
-		expect(jobsOf(h.data().settings)).toHaveLength(6);
-		const h2 = await createHarness({ settings: { jobs: [] } }); // a business that deleted them all keeps an empty list
-		expect(await h2.svc.settings.seedRoleJobs()).toBe(false);
+		h.answers.confirm = true;
+		await h.svc.settings.deleteJob("job-role-owner");
+		await h.svc.settings.seedRoleJobs();
+		expect(jobsOf(h.data().settings).some((j) => j.title === "Owner")).toBe(false);
+		const h2 = await createHarness();
+		await h2.svc.settings.seedRoleJobs();
+		expect(jobsOf(h2.data().settings)).toHaveLength(5);
 	});
 });
