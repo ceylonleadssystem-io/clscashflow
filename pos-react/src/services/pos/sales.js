@@ -10,17 +10,20 @@ import {
 	currentCashShift,
 	makeDiscountLine,
 	makeServiceLine,
+	makeTaxLine,
 	refundableLines,
 	selectedRefundLines,
 	calculateRefundAmount,
 	statusOf,
 } from "../../domain/sales";
-import { APPROVER_ROLES, DELETED_ACTION, deletedDetails, findApprover } from "../../domain/salesLog";
+import { DELETED_ACTION, deletedDetails, findApprover } from "../../domain/salesLog";
+import { can } from "../../domain/access";
+import { markSent } from "../../domain/deleteApproval";
 import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem, stockRowForLine } from "../../domain/inventory";
 import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
 import { orderEmailHtml, orderEmailSubject, orderEmailVariables } from "../printing/orderEmail";
-import { applyStockChange, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
+import { applyStockChange, audit, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
 import { createLogger } from "../../utils/logger";
 import { printKotForSale, printReceipt, queueKitchenTicket, shareReceiptWhatsApp } from "./printing";
 
@@ -55,7 +58,7 @@ export async function completeSale(ctx, input) {
 	if (!cart.length) return null;
 	const discount = f["checkout.discounts"] ? input.discount : { type: "percent", value: 0 };
 	const supported = f["checkout.serviceCharge"] && serviceChargeSupported(settings);
-	const totals = cartTotals(cart, discount, settings, supported);
+	const totals = cartTotals(cart, discount, settings, supported, input.orderChannel);
 	const splits = f["checkout.splitBill"] ? input.splitPayments || [] : [];
 	const register = currentCashShift(d.cashShifts, s.userId);
 	const loc = activeLocation(ctx);
@@ -90,7 +93,7 @@ export async function completeSale(ctx, input) {
 		return { needsSplit: true };
 	}
 	if (splits.length && splits.some((p) => p.method === "Cash") && !register) {
-		await ctx.ui.alert("Open the cash register before accepting the cash portion of this split bill.");
+		await ctx.ui.alert("Clock in to open your cash register before accepting the cash portion of this split bill.");
 		return null;
 	}
 	const needs = saleStockNeeds(cart, d.products);
@@ -101,7 +104,7 @@ export async function completeSale(ctx, input) {
 	}
 	const customer = d.customers.find((c) => c.id === input.customerId);
 	if (!splits.length && input.payment === "Cash" && !register) {
-		await ctx.ui.alert("Open the cash register in Staff & Shifts before accepting cash.");
+		await ctx.ui.alert("Clock in to open your cash register before accepting cash.");
 		return null;
 	}
 	if (input.wantsWhatsApp && !customer?.phone) {
@@ -122,6 +125,7 @@ export async function completeSale(ctx, input) {
 	const discountValue = discountAmount(cart, discount);
 	const lines = JSON.parse(JSON.stringify(cart));
 	if (serviceAmount) lines.push(makeServiceLine(serviceAmount, serviceRate));
+	for (const row of totals.taxRows) lines.push(makeTaxLine(row));
 	if (discountValue) lines.push(makeDiscountLine(discountValue));
 	const total = lines.reduce((a, l) => a + l.price * l.qty, 0);
 	const cost = lines.reduce((a, l) => a + (+l.cost || 0) * l.qty, 0);
@@ -285,10 +289,11 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 	const sale = d.sales.find((x) => x.id === saleId);
 	const text = (reason || "").trim();
 	if (!text) return void (await ctx.ui.alert("Enter a reason."));
-	// owners and managers approve their own refunds and voids; anyone else needs a manager's or owner's PIN
+	// people who hold the refund / void permission approve their own (owners and managers by default); anyone else needs the PIN of someone who does
+	const key = type === "refund" ? "pos.refund" : "pos.void.order";
 	let authorizedBy = s.userId;
-	if (!APPROVER_ROLES.includes(s.user?.role)) {
-		const approver = findApprover(d.users, approverPin);
+	if (!can(s.user, key, d.settings)) {
+		const approver = findApprover(d.users, approverPin, (u) => can(u, key, d.settings));
 		if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to approve this."));
 		authorizedBy = approver.id;
 	}
@@ -298,9 +303,9 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 	const isSplitCash = sale.payment === "Split" && (sale.payments || []).some((p) => p.method === "Cash");
 	const bypassHistoricalCash = sale.payment === "Cash" && !register && ["owner", "admin"].includes(s.user?.role);
 	if (sale.payment === "Cash" && !register && !bypassHistoricalCash)
-		return void (await ctx.ui.alert("Open a cash register before reversing a cash sale."));
+		return void (await ctx.ui.alert("Clock in to open your cash register before reversing a cash sale."));
 	if (isSplitCash && !register)
-		return void (await ctx.ui.alert("Open a cash register before refunding the cash portion of this split payment."));
+		return void (await ctx.ui.alert("Clock in to open your cash register before refunding the cash portion of this split payment."));
 	let refundLines = [];
 	if (type === "refund") {
 		refundLines = selectedRefundLines(sale, refundType, choices);
@@ -455,6 +460,7 @@ export async function saveOpenOrder(ctx, input) {
 		platformOrderId: input.platformOrderId,
 	};
 	if (input.sendKitchen) {
+		order.lines = markSent(order.lines, now); // so taking a sent item off later can ask for a manager (Menu Admin, Categories)
 		order.kitchenSentAt = now;
 		order.kitchenSendCount = (order.kitchenSendCount || 0) + 1;
 	}
@@ -474,7 +480,8 @@ export async function resendOpenOrder(ctx, id) {
 	if (!kitchenMode(d.settings)) return void ctx.ui.notice("Kitchen tickets are available for Restaurant and Café / Bakery presets.");
 	const order = d.openOrders.find((o) => o.id === id && o.status === "open");
 	if (!order) return;
-	const next = { ...order, kitchenSentAt: nowIso(), kitchenSendCount: (order.kitchenSendCount || 0) + 1 };
+	const sentAt = nowIso();
+	const next = { ...order, lines: markSent(order.lines || [], sentAt), kitchenSentAt: sentAt, kitchenSendCount: (order.kitchenSendCount || 0) + 1 };
 	await ctx.store.write((tx) => tx.put(T.openOrders, next));
 	await queueKitchenTicket(ctx, next);
 	ctx.ui.notice("Kitchen ticket sent for " + order.orderNumber + ".");
@@ -521,3 +528,16 @@ export async function mergeOpenOrders(ctx, fromId, intoId) {
 }
 
 export { refundableLines, whatsappPhone };
+
+/**
+ * A manager approves taking sent items off an order: checks the PIN against people who hold "Remove sent items without a manager",
+ * writes an audit entry and returns the approver (null, with a message, when the PIN is wrong).
+ */
+export async function approveItemRemoval(ctx, { pin, line, removed }) {
+	const d = ctx.data();
+	const approver = findApprover(d.users, pin, (u) => can(u, "pos.void.item", d.settings));
+	if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to take sent items off the order."));
+	await ctx.store.write((tx) => audit(tx, ctx.session(), "sent-item-removed", `${line.name} x${removed} (already sent to the kitchen) · approved by ${approver.name}`, ctx.session().locationId === "all" ? "" : ctx.session().locationId));
+	log.info("sent item removal approved", { item: line.name, removed, approver: approver.name });
+	return approver;
+}

@@ -8,13 +8,12 @@ import { calculateRefundAmount, refundableLines, selectedRefundLines } from "../
 import { customerName } from "../domain/names";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
-import { APPROVER_ROLES } from "../domain/salesLog";
 
 /** Refund (full / partial by line) or void a completed sale, with a mandatory reason. */
 export function SaleActionModal({ target, onClose }) {
 	const data = useData();
-	const { svc, role } = usePos();
-	const needsApproval = !APPROVER_ROLES.includes(role);
+	const { svc, can } = usePos();
+	const needsApproval = !can(target?.type === "refund" ? "pos.refund" : "pos.void.order");
 	const [pin, setPin] = useState("");
 	const [reason, setReason] = useState("");
 	const [refundType, setRefundType] = useState("full");

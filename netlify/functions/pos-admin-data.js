@@ -137,9 +137,49 @@ const SETTING_SANITIZERS = {
     return { enabled: v.enabled === true, rate: clampNum(v.rate, 0, 100) };
   },
   businessCategory: function(v) { return typeof v === 'string' ? clean(v, 40) : undefined; },
+  // chosen once by the business at setup; afterwards only changed here. The list matches pos-react/src/config/presets.js BUSINESS_TYPE_OPTIONS.
+  businessType: function(v) { return ['restaurant', 'cafe', 'retail', 'hardware', 'grocery', 'salon', 'pharmacy', 'services', 'other'].indexOf(v) >= 0 ? v : undefined; },
+  businessTypeLocked: function(v) { return v === true ? true : undefined; },
   // The plan assigned to this business: how many users and locations it may have and which features are forced off. null removes it.
   subscription: function(v) { return v === null ? { enforced: false } : cleanSubscription(v); }
 };
+
+// Sales summary that travels with each account in the list: 7 and 30 day totals, the last sale and 30 daily sales figures.
+// Same rules as pos-react/src/domain/adminAnalytics.js rollup(): only completed and partly refunded sales count, "sales" is the sale total.
+function salesRollup(sales) {
+  var DAY = 86400000, today = new Date().toISOString().slice(0, 10);
+  var start = Date.parse(today) - 29 * DAY, daily = [], orders = [];
+  for (var i = 0; i < 30; i++) { daily.push(0); orders.push(0); }
+  var last = '';
+  (Array.isArray(sales) ? sales : []).forEach(function(s) {
+    var status = s && s.status || 'completed';
+    if (status !== 'completed' && status !== 'partially_refunded') return;
+    var at = String(s.createdAt || s.date || '');
+    if (at > last) last = at;
+    var idx = Math.round((Date.parse(String(s.date || at).slice(0, 10)) - start) / DAY);
+    if (idx >= 0 && idx < 30) { daily[idx] += Number(s.total) || 0; orders[idx] += 1; }
+  });
+  function sum(a, from) { return a.slice(from).reduce(function(x, y) { return x + y; }, 0); }
+  // when the business trades: orders, sales and people selling per hour of the day on the business's clock (same rules as adminAnalytics.js hourlyActivity)
+  var fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
+  var from = new Date(start).toISOString().slice(0, 10), hOrders = [], hSales = [], hSellers = [], days = {};
+  for (var h = 0; h < 24; h++) { hOrders.push(0); hSales.push(0); hSellers.push({}); }
+  (Array.isArray(sales) ? sales : []).forEach(function(s) {
+    var status = s && s.status || 'completed';
+    if (status !== 'completed' && status !== 'partially_refunded') return;
+    var d = new Date(s.createdAt || s.date);
+    if (isNaN(d.getTime())) return;
+    var p = {}; fmt.formatToParts(d).forEach(function(x) { p[x.type] = x.value; });
+    var day = p.year + '-' + p.month + '-' + p.day, hour = Number(p.hour) % 24;
+    if (day < from) return;
+    days[day] = true;
+    hOrders[hour] += 1; hSales[hour] += Number(s.total) || 0;
+    (hSellers[hour][day] = hSellers[hour][day] || {})[s.staffId || '?'] = true;
+  });
+  var activeDays = Math.max(1, Object.keys(days).length);
+  var sellers = hSellers.map(function(byDay) { return Object.keys(byDay).reduce(function(n, k) { return n + Object.keys(byDay[k]).length; }, 0) / activeDays; });
+  return { orders30: sum(orders, 0), sales30: sum(daily, 0), orders7: sum(orders, 23), sales7: sum(daily, 23), daily: daily, hourly: { orders: hOrders, sales: hSales, sellers: sellers, activeDays: Object.keys(days).length }, lastSaleAt: last };
+}
 
 function addBillingPeriod(start, cycle) {
   const date = new Date(start);
@@ -239,7 +279,7 @@ async function handle(event) {
           name: row.data.name || row.data.displayName || (authUser && authUser.displayName) || '', email: row.data.email || (authUser && authUser.email) || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
-          apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
+          analytics: salesRollup(payload.sales), apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
           updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: accountStatus(row.data) === 'test', status: accountStatus(row.data), subscriptionType: clean(row.data.posBillingCycle) === 'annual' ? 'annual' : 'monthly', paused: row.data.posAccountPaused === true,
           authStatus: !authAvailable ? 'unavailable' : !authUser ? 'missing' : authUser.disabled ? 'disabled' : 'ready',
           authLastSignInAt: authUser && authUser.metadata && authUser.metadata.lastSignInTime || ''

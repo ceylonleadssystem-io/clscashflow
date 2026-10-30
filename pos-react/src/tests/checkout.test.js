@@ -23,7 +23,7 @@ describe("checkout workflow", () => {
 
 	it("requires an open register for cash", async () => {
 		expect(await cash(h, tea)).toBeNull();
-		expect(h.lastAlert()).toMatch(/Open the cash register/);
+		expect(h.lastAlert()).toMatch(/Clock in to open your cash register/);
 		expect(h.data().sales).toHaveLength(0);
 	});
 
@@ -140,7 +140,7 @@ describe("checkout workflow", () => {
 			expect((await h.svc.sales.completeSale({ cart: [line(tea)], discount: noDiscount, splitPayments: split, cashTendered: "200" })).needsSplit).toBe(true);
 			split[1].paid = true;
 			expect(await h.svc.sales.completeSale({ cart: [line(tea)], discount: noDiscount, splitPayments: split, cashTendered: "200" })).toBeNull();
-			expect(h.lastAlert()).toMatch(/Open the cash register/);
+			expect(h.lastAlert()).toMatch(/Clock in to open your cash register/);
 		});
 		it("stores the payments", async () => {
 			await openShift(h);

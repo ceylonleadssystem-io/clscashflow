@@ -1,5 +1,5 @@
 /**
- * Tests for shifts, attendance and user management: clock-in with register, breaks, closing with variance, and
+ * Tests for shifts, attendance and user management: clock-in opens the register, breaks, clock-out closes it with the variance, and
  * user validation, PIN rules and deletion permissions.
  */
 import { describe, it, expect, beforeEach } from "vitest";
@@ -19,10 +19,6 @@ describe("shifts & attendance", () => {
 		expect(await h.svc.staff.clockInAndOpenRegister(-5)).toBe(false);
 		expect(h.data().timeEntries).toHaveLength(0);
 	});
-	it("opening the register needs a clock-in", async () => {
-		expect(await h.svc.staff.openRegister(500)).toBe(false);
-		expect(h.lastAlert()).toMatch(/Clock in/);
-	});
 	it("tracks breaks", async () => {
 		await h.svc.staff.clockInAndOpenRegister(0);
 		await h.svc.staff.toggleBreak();
@@ -30,18 +26,35 @@ describe("shifts & attendance", () => {
 		await h.svc.staff.toggleBreak();
 		expect(h.data().timeEntries[0].breaks[0].end).toBeTruthy();
 	});
-	it("cannot clock out with the register open", async () => {
+	it("clocking out needs the cash count while the register is open, and changes nothing without it", async () => {
 		await h.svc.staff.clockInAndOpenRegister(0);
 		expect(await h.svc.staff.clockOut()).toBe(false);
-		expect(h.lastAlert()).toMatch(/Close the cash register/);
+		expect(h.lastAlert()).toMatch(/Count the cash/);
+		expect(await h.svc.staff.clockOut(-1)).toBe(false);
+		expect(h.data().timeEntries[0].clockOut).toBeUndefined();
+		expect(h.data().cashShifts[0].status).toBe("open");
 	});
-	it("closes the register with the variance, then clocks out", async () => {
+	it("clocking out closes the register with the variance", async () => {
 		await h.svc.staff.clockInAndOpenRegister(1000);
-		expect(await h.svc.staff.closeRegister(950)).toBe(true);
-		const shift = h.data().cashShifts[0];
-		expect(shift).toMatchObject({ status: "closed", expectedCash: 1000, actualCash: 950, variance: -50 });
+		expect(await h.svc.staff.clockOut(950)).toBe(true);
+		expect(h.data().cashShifts[0]).toMatchObject({ status: "closed", expectedCash: 1000, actualCash: 950, variance: -50 });
+		expect(h.data().cashShifts[0].closedAt).toBeTruthy();
+		expect(h.data().timeEntries[0].clockOut).toBeTruthy();
+	});
+	it("a business without register shifts clocks in and out with no count", async () => {
+		expect(await h.svc.staff.clockIn()).toBe(true);
+		expect(await h.svc.staff.clockIn()).toBe(false); // already clocked in
+		expect(h.data().cashShifts).toHaveLength(0);
 		expect(await h.svc.staff.clockOut()).toBe(true);
 		expect(h.data().timeEntries[0].clockOut).toBeTruthy();
+	});
+	it("automatic clock-out closes the register with the expected cash and no variance", async () => {
+		await h.svc.settings.patchSettings({ systemOptions: { org: { clock: { autoElapsedOn: true, maxHours: 0, maxMinutes: 1 } } } });
+		await h.svc.staff.clockInAndOpenRegister(500);
+		expect(await h.svc.staff.autoClockOutAll(new Date(Date.now() + 30 * 1000))).toBe(0); // not due yet
+		expect(await h.svc.staff.autoClockOutAll(new Date(Date.now() + 120 * 1000))).toBe(1);
+		expect(h.data().timeEntries[0].clockOut).toBeTruthy();
+		expect(h.data().cashShifts[0]).toMatchObject({ status: "closed", expectedCash: 500, actualCash: 500, variance: 0 });
 	});
 });
 

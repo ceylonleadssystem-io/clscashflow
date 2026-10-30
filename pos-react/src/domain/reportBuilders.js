@@ -7,9 +7,12 @@
  *   note   what the report cannot show yet (a field the POS does not record), shown above the table
  * Every money figure comes from `saleFigures`, so Dashboard, Sales and Multi-Location totals always agree.
  */
+import { salesCategoryNameOf } from "./menuAdmin";
 import { isActiveSale } from "./sales";
 import { refundRows, voidRows } from "./salesLog";
 import { userName } from "./names";
+import { bucketHours, payCost, payrollDays, payrollHours } from "./payroll";
+import { defaultsFor } from "./systemOptions";
 
 const day = (iso) => String(iso || "").slice(0, 10);
 const inRange = (d, r) => d >= r.from && d <= r.to;
@@ -21,21 +24,27 @@ const pct = (a, b) => (b ? (a / b) * 100 : 0);
 /**
  * Global metric dictionary for one sale. item_sales = lines before discounts; discounts_comps = discount lines; refunds = refunded
  * amounts; net_sales = item_sales - (discounts + refunds); gross_sales = net_sales + tax; tips = service charge;
- * total_sales = gross_sales + tips + fees. The POS records no tax, card fee or guest count: tax and fees are 0 and guests default to 1.
+ * total_sales = gross_sales + tips + fees. Tax is the sale's tax lines (code TAX); the POS records no card fee or guest count: fees are 0 and guests default to 1.
  */
 export function saleFigures(s) {
 	let item = 0;
 	let disc = 0;
 	let service = 0;
+	let tax = 0;
 	for (const l of s.lines || []) {
 		const v = (+l.price || 0) * (+l.qty || 0);
 		if (l.isDiscount) disc += -v;
+		else if (l.code === "TAX") tax += v;
 		else if (l.isServiceCharge) service += v;
 		else item += v;
 	}
-	const refunds = (s.refunds || []).reduce((a, r) => a + (+r.amount || 0), 0);
+	const refundsPaid = (s.refunds || []).reduce((a, r) => a + (+r.amount || 0), 0);
+	// a refund returns the tax with the items, so the tax share of it comes off the tax, not off net sales
+	const taxShare = tax && s.originalTotal ? Math.min(1, tax / s.originalTotal) : 0;
+	const refunds = refundsPaid * (1 - taxShare);
+	tax -= refundsPaid * taxShare;
 	const net = item - disc - refunds;
-	return { item, disc, refunds, net, tax: 0, gross: net, tips: service, fees: 0, total: net + service, orders: 1, guests: +s.guests || 1 };
+	return { item, disc, refunds, net, tax, gross: net + tax, tips: service, fees: 0, total: net + tax + service, orders: 1, guests: +s.guests || 1 };
 }
 
 const ZERO = () => ({ item: 0, disc: 0, refunds: 0, net: 0, tax: 0, gross: 0, tips: 0, fees: 0, total: 0, orders: 0, guests: 0 });
@@ -53,7 +62,7 @@ const TIPS = {
 	discounts: "Percentage and fixed discounts, free items and rewards (shown as a negative)",
 	refunds: "Total amount refunded (shown as a negative)",
 	net_sales: "Item Sales − (Discounts & Comps + Refunds)",
-	tax: "Sales tax collected. This POS does not record tax yet.",
+	tax: "Tax added to the sale (Settings, Menu Admin, Taxes).",
 	gross_sales: "Net Sales + Tax",
 	tips: "Tips and service charges",
 	fees: "Extra, card and online fees. This POS does not record fees yet.",
@@ -223,7 +232,9 @@ function groupItems(ctx, keyOf) {
 }
 const MENU = {
 	"sales-category"(ctx) {
-		const rows = groupItems(ctx, (l) => l.category);
+		// once Sales Categories are published, items are bucketed by them; until then by their display category, as before
+		const sales = (ctx.salesCategories || []).length ? (l) => salesCategoryNameOf(ctx.salesCategories, l.productId) || "Unassigned" : (l) => l.category;
+		const rows = groupItems(ctx, sales);
 		return { cols: [C.text("name", "Name"), C.num("qty", "Quantity (#)"), C.money("net", "Net Sales"), C.pct("share", "% of Net Sales")], rows, totals: { ...totalsRow(rows, ["qty", "net"]), share: rows.length ? 100 : 0 }, chart: { label: "name", value: "net" } };
 	},
 	"product-category"(ctx) {
@@ -290,11 +301,25 @@ function laborByEmployee(ctx) {
 }
 const PAYROLL = {
 	"labor-costs"(ctx) {
-		const rows = [...laborByEmployee(ctx).values()].map((g) => {
-			const u = ctx.users.find((x) => x.id === g.id);
-			return { name: u?.name || "Unknown", role: u?.role || "—", regular: hoursOf(g.work), ot: 0, ot2: 0, paid: hoursOf(g.work) };
-		}).sort((a, b) => b.paid - a.paid);
-		return { cols: [C.text("name", "Employee"), C.text("role", "Assignment"), C.hours("regular", "Regular Hours"), C.hours("ot", "OT Hours"), C.hours("ot2", "OT 2 Hours"), C.hours("paid", "Paid Hours")], rows, totals: totalsRow(rows, ["regular", "ot", "ot2", "paid"]), chart: { label: "name", value: "paid" }, note: "Hourly wages, overtime rules and declared tips are not stored in this POS yet, so only hours are shown. All hours count as regular hours." };
+		const po = ctx.payroll || defaultsFor("payroll");
+		const rates = ctx.rates || {};
+		const rows = payrollHours(ctx.timeEntries, ctx.range, po)
+			.map((h) => {
+				const u = ctx.users.find((x) => x.id === h.userId);
+				const rate = rates[h.userId] ?? null;
+				return { name: u?.name || "Unknown", role: u?.role || "—", regular: h.regular, ot: h.ot, ot2: h.ot2, paid: h.total, rate, pay: rate === null ? null : payCost(h.buckets, rate, po) };
+			})
+			.sort((a, b) => b.paid - a.paid);
+		const noRate = rows.filter((r) => r.rate === null).length;
+		const pay = rows.reduce((a, r) => a + (r.pay || 0), 0);
+		return {
+			cards: [money("Labor cost", pay, "Pay for the hours below, with overtime rates, for people who have an hourly rate"), num("Paid hours", rows.reduce((a, r) => a + r.paid, 0))],
+			cols: [C.text("name", "Employee"), C.text("role", "Assignment"), C.hours("regular", "Regular Hours"), C.hours("ot", "OT Hours"), C.hours("ot2", "OT 2 Hours"), C.hours("paid", "Paid Hours"), C.money("rate", "Hourly Rate"), C.money("pay", "Paid")],
+			rows,
+			totals: { ...totalsRow(rows, ["regular", "ot", "ot2", "paid"]), pay },
+			chart: { label: "name", value: "paid" },
+			note: "Regular and overtime hours follow Settings > System Options > Payroll. Pay uses each person's hourly rate (their first job, set in Settings > Users)." + (noRate ? ` ${noRate} ${noRate === 1 ? "person has" : "people have"} no hourly rate, so ${noRate === 1 ? "their" : "their"} pay is not counted.` : ""),
+		};
 	},
 	"tips-cash"(ctx) {
 		const by = new Map();
@@ -315,14 +340,36 @@ const PAYROLL = {
 
 // ----------------------------------------------------------- sales vs labor --
 function salesVsLabor(ctx) {
+	const po = ctx.payroll || defaultsFor("payroll");
+	const rates = ctx.rates || {};
 	const net = new Map();
 	for (const s of activeSales(ctx)) net.set(s.date, (net.get(s.date) || 0) + saleFigures(s).net);
 	const hrs = new Map();
-	for (const g of laborByEmployee(ctx).values()) for (const [d, ms] of Object.entries(g.days)) hrs.set(d, (hrs.get(d) || 0) + hoursOf(ms));
+	const cost = new Map();
+	let unrated = 0;
+	const unratedIds = new Set();
+	for (const d of payrollDays(ctx.timeEntries, ctx.range, po)) {
+		hrs.set(d.date, (hrs.get(d.date) || 0) + bucketHours(d));
+		const rate = rates[d.userId] ?? null;
+		if (rate === null) unratedIds.add(d.userId);
+		else cost.set(d.date, (cost.get(d.date) || 0) + payCost(d, rate, po));
+	}
+	unrated = unratedIds.size;
 	const days = [...new Set([...net.keys(), ...hrs.keys()])].sort();
-	const rows = days.map((d) => ({ date: d, net: net.get(d) || 0, hours: hrs.get(d) || 0, perHour: hrs.get(d) ? (net.get(d) || 0) / hrs.get(d) : 0 }));
-	const t = totalsRow(rows, ["net", "hours"]);
-	return { cols: [C.text("date", "Period"), C.money("net", "Net Sales"), C.hours("hours", "Labor Hours"), C.money("perHour", "Sales per Labor Hour")], rows, totals: { ...t, perHour: t.hours ? t.net / t.hours : 0 }, chart: { label: "date", value: "net" }, note: "Labor cost and Labor % need hourly wages, which this POS does not store yet. Net sales are compared with hours worked." };
+	const rows = days.map((d) => {
+		const n = net.get(d) || 0;
+		const c = cost.get(d) || 0;
+		return { date: d, net: n, hours: hrs.get(d) || 0, cost: c, pct: n ? (c / n) * 100 : null, perHour: hrs.get(d) ? n / hrs.get(d) : 0 };
+	});
+	const t = totalsRow(rows, ["net", "hours", "cost"]);
+	return {
+		cards: [money("Net sales", t.net), money("Labor cost", t.cost, "Pay for hours worked, with overtime rates"), { label: "Labor %", value: t.net ? (t.cost / t.net) * 100 : 0, type: "pct", tip: "Labor cost ÷ net sales × 100" }],
+		cols: [C.text("date", "Period"), C.money("net", "Net Sales"), C.hours("hours", "Labor Hours"), C.money("cost", "Labor Cost"), C.pct("pct", "Labor %"), C.money("perHour", "Sales per Labor Hour")],
+		rows,
+		totals: { ...t, pct: t.net ? (t.cost / t.net) * 100 : null, perHour: t.hours ? t.net / t.hours : 0 },
+		chart: { label: "date", value: "net" },
+		note: "Labor cost uses each person's hourly rate (set in Settings > Users) and the overtime rules in Settings > System Options > Payroll." + (unrated ? ` ${unrated} ${unrated === 1 ? "person has" : "people have"} no hourly rate and ${unrated === 1 ? "is" : "are"} not costed.` : "") + " Labor % shows a dash on a day with no sales.",
+	};
 }
 
 // ----------------------------------------------------------------- not yet --
@@ -331,7 +378,21 @@ const GIFT = {
 	balances: () => unavailable([C.text("card", "Card #"), C.text("date", "Activation Date"), C.money("balance", "Outstanding Balance")], NO_GIFT),
 	transactions: () => unavailable([C.text("card", "Card #"), C.time("at", "Date"), C.text("location", "Location"), C.text("employee", "Employee"), C.text("type", "TXN"), C.money("amount", "Amount")], NO_GIFT),
 };
-const TAXES = () => unavailable([C.text("name", "Tax Name"), C.pct("rate", "Tax Rate (%)"), C.money("sold", "Taxable Items Sold"), C.num("items", "Taxable Items"), C.money("amount", "Tax Amount")], "No tax is configured or recorded by this POS yet, so no tax was collected in these reports.");
+const TAXES = (ctx) => {
+	const map = new Map();
+	for (const s of activeSales(ctx))
+		for (const l of s.lines || []) {
+			if (l.code !== "TAX") continue;
+			const g = map.get(l.id) || { name: String(l.name).replace(/ \([\d.]+%\)$/, ""), rate: +(String(l.name).match(/\(([\d.]+)%\)$/)?.[1] || 0), sold: 0, amount: 0 };
+			g.sold += +l.basePrice || 0;
+			g.amount += +l.price || 0;
+			map.set(l.id, g);
+		}
+	const rows = [...map.values()].sort((a, b) => b.amount - a.amount);
+	const cols = [C.text("name", "Tax Name"), C.pct("rate", "Tax Rate (%)"), C.money("sold", "Taxable Sales"), C.money("amount", "Tax Amount")];
+	if (!rows.length) return { cols, rows, note: "No tax was collected in these reports. Add your taxes under Settings, Menu Admin, Taxes and publish them." };
+	return { cols, rows, totals: totalsRow(rows, ["sold", "amount"]), chart: { label: "name", value: "amount" } };
+};
 const PAYMENTS = {
 	"credit-card-deposits": () => unavailable([C.time("at", "Time"), C.text("what", "Description"), C.money("total", "Total")], "Card deposits need a connected card processor."),
 	"credit-card-transactions": () => unavailable([C.time("at", "Time"), C.text("ref", "Reference Number"), C.text("card", "Card Number"), C.money("total", "Total"), C.text("status", "Status")], "Card transactions need a connected card processor."),
@@ -486,7 +547,7 @@ const BUILDERS = { sales: SALES, menu: MENU, payroll: PAYROLL, "gift-cards": GIF
 export function buildReport(group, sub, ctx) {
 	const full = { allSales: ctx.sales, kitchenTickets: [], openOrders: [], voidOrders: [], supportAudit: [], stockTransfers: [], inventory: [], locations: [], cashShifts: [], timeEntries: [], users: [], ...ctx };
 	if (group === "sales-vs-labor") return salesVsLabor(full);
-	if (group === "taxes") return TAXES();
+	if (group === "taxes") return TAXES(full);
 	if (group === "loyalty") return LOYALTY();
 	const fn = BUILDERS[group]?.[sub];
 	return fn ? fn(full) : unavailable([], "This report is not available.");

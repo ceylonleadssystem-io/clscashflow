@@ -2,6 +2,8 @@
  * Pure cart maths for checkout: modifier handling and validation, adding/editing/merging order lines,
  * quantity changes, discount and service-charge calculation, order totals and equal bill splitting.
  */
+import { itemSettingsById } from "./menuAdmin";
+import { calculateTaxes, rulesOf } from "./taxes";
 import { PLATFORM_CHANNELS } from "../config/constants";
 
 /** Cart maths and modifier logic (final behaviour of the legacy checkout). */
@@ -118,16 +120,20 @@ export function serviceChargeAmount(cart, discount, settings, supported) {
 	return (Math.max(0, chargeableSubtotal(cart) - discountAmount(cart, discount)) * rate) / 100;
 }
 
-export function cartTotals(cart, discount, settings, serviceChargeSupported) {
+/** Totals of the order. `channel` is the order type: it picks a category's takeaway tax. Tax is 0 until taxes are published (Menu Admin, Taxes). */
+export function cartTotals(cart, discount, settings, serviceChargeSupported, channel = "") {
 	const subtotal = chargeableSubtotal(cart);
 	const discountValue = discountAmount(cart, discount);
 	const service = serviceChargeAmount(cart, discount, settings, serviceChargeSupported);
+	const tax = calculateTaxes({ cart, discount: discountValue, service, channel, taxes: settings?.taxes, rules: rulesOf(settings), items: itemSettingsById(settings) });
 	return {
 		count: cart.filter(isChargeable).reduce((a, l) => a + l.qty, 0),
 		subtotal,
 		discount: discountValue,
 		service,
-		total: Math.max(0, subtotal - discountValue + service),
+		tax: tax.amount,
+		taxRows: tax.rows,
+		total: Math.max(0, subtotal - discountValue + service + tax.amount),
 	};
 }
 

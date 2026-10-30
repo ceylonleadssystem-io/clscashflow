@@ -108,7 +108,7 @@ export const FEATURES = [
 
 	// ----------------------------------------------------------------- staff
 	f("staff.attendance", "staff", "Clock in / out & breaks", "Attendance tracking.", { requires: ["view.staff"] }),
-	f("staff.cashRegister", "staff", "Cash register shifts", "Open/close register with expected vs counted cash.", { requires: ["view.staff"] }),
+	f("staff.cashRegister", "staff", "Cash register shifts", "The register opens when a person clocks in and closes when they clock out, with expected vs counted cash.", { requires: ["view.staff"] }),
 	f("staff.users", "staff", "User management", "Create, edit and deactivate POS users.", { requires: ["view.staff"] }),
 	f("staff.userDeletion", "staff", "Permanent user deletion", "Owner/admin can delete users.", { requires: ["staff.users"] }),
 	f("staff.shiftPrompt", "staff", "Start-shift prompt", "Offer clock-in / register opening right after sign-in.", { requires: ["view.staff"] }),

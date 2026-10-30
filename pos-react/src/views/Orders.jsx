@@ -3,6 +3,7 @@
  */
 import { useMemo, useState } from "react";
 import { money } from "../domain/format";
+import { modifierLabel } from "../domain/menuAdmin";
 import { orderTotal } from "../domain/orders";
 import { customerName, userName } from "../domain/names";
 import { useData } from "../store/DataProvider";
@@ -82,7 +83,7 @@ export function Orders() {
 												.map((l, i) => (
 													<li key={l.key || i}>
 														{l.qty} × {l.name}
-														{(l.modifiers || []).length > 0 && <small>{l.modifiers.map((m) => m.groupName + ": " + m.optionName).join(", ")}</small>}
+														{(l.modifiers || []).length > 0 && <small>{l.modifiers.map((m) => modifierLabel(m)).join(", ")}</small>}
 													</li>
 												))}
 										</ul>

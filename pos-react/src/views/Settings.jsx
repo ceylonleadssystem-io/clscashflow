@@ -3,9 +3,8 @@
  * sharing one form state with a single Save All Settings button.
  */
 import { useEffect, useState } from "react";
-import { FULL_SETTINGS_ROLES } from "../config/roles";
 import { hasCapability } from "../config/capabilities";
-import { ORDER_CHANNELS } from "../config/constants";
+import { formFrom } from "../domain/settingsForm";
 import { emailError } from "../domain/validators";
 import { useUi } from "../store/UiProvider";
 import { useData } from "../store/DataProvider";
@@ -16,6 +15,8 @@ import { kitchenStations } from "../domain/kitchenStations";
 import { onSettingsTab, requestedSettingsTab } from "../store/settingsTab";
 import { CeyloMascot } from "../components/ceylo/Ceylo";
 import { CeyloAiKeyPanel } from "../components/ceylo/CeyloAiKey";
+import { SystemOptionsProvider } from "../components/settings/kit/SystemOptionsContext";
+import { SettingsHome } from "./settings/SettingsHome";
 import {
 	AppearancePanel,
 	BillingPanel,
@@ -32,38 +33,16 @@ import {
 
 const ALL_TABS = [
 	{ id: "business", label: "Business Profile" },
-	{ id: "pos", label: "POS Setup" },
 	{ id: "operations", label: "Operations" },
-	{ id: "printing", label: "Receipt Printing" },
+	{ id: "printing", label: "Receipt Printing" }, // full-access users find this under Device Manager; everyone else keeps it so a USB printer can be reconnected
 	{ id: "kds", label: "KDS" },
 	{ id: "plan", label: "Plan & Support" },
 ];
 
-const formFrom = (s) => ({
-	business: s.business || "",
-	email: s.email || "",
-	address: s.address || "",
-	businessType: s.businessType || "other",
-	feedbackLink: s.feedbackLink || "",
-	feedbackDelay: s.feedbackDelay ?? 2,
-	posUsers: Math.max(1, +s.posUsers || 1),
-	printerType: s.printerType || "system",
-	printerAddress: s.printerAddress || "",
-	autoPrint: !!s.autoPrint,
-	autoPrintKot: !!s.autoPrintKot,
-	kotPrinter: s.kotPrinter || "",
-	receiptFooter: s.receiptFooter || "Thank you for your purchase",
-	supportEnabled: !!s.supportEnabled,
-	serviceChargeEnabled: !!s.serviceChargeEnabled,
-	serviceChargeRate: Math.max(0, Math.min(100, +s.serviceChargeRate || 0)),
-	orderChannels: Array.isArray(s.orderChannels) && s.orderChannels.length ? s.orderChannels.filter((c) => ORDER_CHANNELS.includes(c)) : ORDER_CHANNELS,
-	socials: { instagram: "", facebook: "", tiktok: "", website: "", ...(s.receiptSocials || {}) },
-});
-
 /** Settings: business, POS setup, operations, receipt printing and plan & support (tabbed). */
 export function Settings({ only = null }) {
 	const { settings } = useData();
-	const { currentUser, svc, setSetupOpen, setLayout, canView, go } = usePos();
+	const { currentUser, svc, setSetupOpen, setLayout, canView, go, can } = usePos();
 	const locationsOn = useFeature("business.locations");
 	const themes = useFeature("settings.themes");
 	const serviceCharge = useFeature("checkout.serviceCharge");
@@ -72,16 +51,25 @@ export function Settings({ only = null }) {
 	const ceylo = useFeature("settings.ceylo");
 	const ceyloAi = useFeature("settings.ceyloAi");
 	const ui = useUi();
-	const [tab, setTab] = useState(() => (only && !only.includes(requestedSettingsTab()) ? only[0] : requestedSettingsTab()) || "business");
-	// Ceylo's fix buttons can ask for a tab while Settings is already open
-	useEffect(() => onSettingsTab((t) => setTab(t)), []);
+	// a request is a legacy tab id, or "page:<key>" for one of the pages in the sidebar (Menu Admin, Device Manager ...)
+	const asked = requestedSettingsTab();
+	const [tab, setTab] = useState(() => (only && !only.includes(asked) ? only[0] : asked.startsWith("page:") ? "" : asked) || "business");
+	// "legacy" shows the tab content below; any other value is a page of the sidebar (views/settings/)
+	const [page, setPage] = useState(() => (asked.startsWith("page:") && !only ? asked.slice(5) : !only && !asked && can("settings.system.edit") ? "home" : "legacy"));
+	// Ceylo's fix buttons and the moved pages can ask for a tab or page while Settings is already open
+	useEffect(() => onSettingsTab((t) => (t.startsWith("page:") ? setPage(t.slice(5)) : (setTab(t), setPage("legacy")))), []);
 	const [form, setForm] = useState(() => formFrom(settings));
 	useEffect(() => {
 		// reload when a preset/setup is applied elsewhere
 		setForm((f) => ({ ...f, businessType: settings.businessType || f.businessType }));
 	}, [settings.businessType]);
+	// the receipt footer can also be saved from System Options > Receipts: keep this form from overwriting it later
+	useEffect(() => {
+		setForm((f) => ({ ...f, receiptFooter: settings.receiptFooter || f.receiptFooter }));
+	}, [settings.receiptFooter]);
 	const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
-	const full = FULL_SETTINGS_ROLES.includes(currentUser?.role);
+	// who may change settings: owners, managers and admins by default, or anyone given the permission
+	const full = can("settings.system.edit");
 	const save = () => {
 		const bad = emailError(form.email);
 		if (bad) {
@@ -92,27 +80,22 @@ export function Settings({ only = null }) {
 	};
 	const kitchen = hasCapability(form.businessType, "kitchen");
 	// the KDS tab exists only for kitchen businesses whose account has the Kitchen Display switched on
-	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn)));
+	// the System Options sidebar is for people who may change settings, and not for the portal's single-tab Location Info
+	const sidebar = full && !only;
+	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn && !full)) && (t.id !== "printing" || !full));
 
 	const sections = {
 		business: full && (
 			<>
 				<BusinessProfilePanel form={form} set={set} />
+				<PosTypePanel form={form} onApplyPreset={() => setSetupOpen(true)} />
 				{locationsOn && <LocationsPanel />}
-			</>
-		),
-		pos: full && (
-			<>
-				<PosTypePanel form={form} set={set} onApplyPreset={() => setSetupOpen(true)} />
-				{serviceCharge && hasCapability(form.businessType, "serviceCharge") && <ServiceChargePanel form={form} set={set} />}
 			</>
 		),
 		operations: (
 			<>
-				{full && themes && <AppearancePanel />}
-				<DisplayPanel />
+				{!full && <DisplayPanel />}
 				<LiveScreenPanel />
-				{full && <FeedbackPanel form={form} set={set} />}
 			</>
 		),
 		printing: <PrintingPanel form={form} set={set} setForm={setForm} />,
@@ -140,10 +123,10 @@ export function Settings({ only = null }) {
 		),
 	};
 
-	return (
+	const legacyView = (
 		<section className="view active" id="view-settings">
-			<div className="settings-tabbed" style={{ maxWidth: 900, display: "grid", gap: 16 }}>
-				<div className="settings-tabs" role="tablist" aria-label="Settings sections" style={TABS.length < 2 ? { display: "none" } : undefined}>
+			<div className="settings-tabbed" style={{ maxWidth: sidebar ? "none" : 900, display: "grid", gap: 16 }}>
+				<div className="settings-tabs" role="tablist" aria-label="Settings sections" style={TABS.length < 2 || sidebar ? { display: "none" } : undefined}>
 					{TABS.map((t, i) => (
 						<button
 							key={t.id}
@@ -188,5 +171,11 @@ export function Settings({ only = null }) {
 				)}
 			</div>
 		</section>
+	);
+	if (!sidebar) return legacyView;
+	return (
+		<SystemOptionsProvider>
+			<SettingsHome page={page} setPage={setPage} legacyTabs={TABS} tab={tab} setTab={setTab} legacyView={legacyView} />
+		</SystemOptionsProvider>
 	);
 }

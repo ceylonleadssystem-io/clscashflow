@@ -27,7 +27,7 @@ export function refundableLines(sale) {
 			lineIndex,
 			available: Math.max(0, line.qty - (refunded[lineIndex] || 0)),
 		}))
-		.filter((x) => !x.line.isDiscount && x.available > 0);
+		.filter((x) => !x.line.isDiscount && x.line.code !== "TAX" && x.available > 0); // tax is refunded with the items, never picked on its own
 }
 
 /**
@@ -37,7 +37,7 @@ export function refundableLines(sale) {
  */
 export function refundRate(sale) {
 	const gross = (sale.lines || [])
-		.filter((l) => !l.isDiscount)
+		.filter((l) => !l.isDiscount && l.code !== "TAX")
 		.reduce((a, l) => a + l.price * l.qty, 0);
 	const original =
 		sale.originalTotal ?? (sale.lines || []).reduce((a, l) => a + l.price * l.qty, 0);
@@ -221,6 +221,25 @@ export function makeServiceLine(amount, rate) {
 		category: "Service Charge",
 		cost: 0,
 		price: amount,
+		qty: 1,
+		isServiceCharge: true,
+		recipe: [],
+		modifiers: [],
+	};
+}
+
+/** A tax on the receipt. It is a service-charge style line (so item lists and kitchen tickets skip it) with code TAX; basePrice keeps the taxable amount. */
+export function makeTaxLine(row) {
+	return {
+		id: "tax-" + row.id,
+		productId: "",
+		key: "tax-" + row.id + "-" + Date.now(),
+		name: row.name + " (" + row.rate + "%)",
+		code: "TAX",
+		category: "Tax",
+		cost: 0,
+		price: row.amount,
+		basePrice: row.base,
 		qty: 1,
 		isServiceCharge: true,
 		recipe: [],

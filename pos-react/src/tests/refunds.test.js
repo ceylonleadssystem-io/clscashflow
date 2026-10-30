@@ -74,9 +74,9 @@ describe("refunds, voids and deletion", () => {
 		await openShift(h);
 		const sale = (await h.svc.sales.completeSale({ cart: [line(tea)], discount: noDiscount, payment: "Cash", cashTendered: "500" })).sale;
 		const shift = h.data().cashShifts[0];
-		await h.svc.staff.closeRegister(1250);
+		await h.svc.staff.clockOut(1250); // clocking out closes the register
 		await h.svc.sales.reverseSale({ ...APPROVED, saleId: sale.id, type: "refund", reason: "x" });
-		expect(h.lastAlert()).toMatch(/Open a cash register/);
+		expect(h.lastAlert()).toMatch(/Clock in to open your cash register/);
 		expect(shift.id).toBeTruthy();
 	});
 

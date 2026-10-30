@@ -5,6 +5,7 @@
 import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
 import { payloadToSnapshot, snapshotToPayload } from "../services/sync/payload";
+import { rollup } from "../domain/adminAnalytics";
 import { applyConfig } from "../domain/assistConfig";
 import { resolveFeatures } from "../config/features";
 import { flagsWithPlan, subscriptionOf } from "../config/subscription";
@@ -42,7 +43,7 @@ export async function localAdminApi(body) {
 	const status = snap.settings.devAccountStatus || "trial";
 	const cycle = snap.settings.devBillingCycle || "monthly";
 	const payment = { paid: false, status: profile.posAccountPaused ? "paused" : "trial", billingCycle: cycle, trialEnd: "", nextPaymentDue: "" };
-	const account = { id: "local", name: profile.name, email: profile.email || "owner@local", business: snap.settings.business || "My Business", setupStatus: "local", payment, paused: profile.posAccountPaused, status, subscriptionType: cycle, isTestAccount: status === "test" };
+	const account = { analytics: rollup(snap.sales || []), id: "local", name: profile.name, email: profile.email || "owner@local", business: snap.settings.business || "My Business", setupStatus: "local", payment, paused: profile.posAccountPaused, status, subscriptionType: cycle, isTestAccount: status === "test" };
 	const enabled = resolveFeatures(flagsWithPlan(snap.settings.features || {}, subscriptionOf(snap.settings))).enabled;
 	account.apps = ["POS", ...(enabled["view.guestManager"] ? ["GM"] : []), ...(enabled["checkout.kds"] ? ["KDS"] : [])];
 	const action = body?.action || "list";
@@ -64,7 +65,7 @@ export async function localAdminApi(body) {
 	}
 	if (action === "saveSettings") {
 		await s.write((tx) => {
-			for (const k of ["features", "locationFeatures", "welcome", "plan", "invoiceExtras", "invoiceTax", "businessCategory", "subscription"]) if (body.settings && k in body.settings) tx.setSetting(k, body.settings[k]);
+			for (const k of ["features", "locationFeatures", "welcome", "plan", "invoiceExtras", "invoiceTax", "businessCategory", "subscription", "businessType", "businessTypeLocked"]) if (body.settings && k in body.settings) tx.setSetting(k, body.settings[k]);
 		});
 		return { ok: true };
 	}

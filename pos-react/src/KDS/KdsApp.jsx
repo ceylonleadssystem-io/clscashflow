@@ -3,6 +3,7 @@
  * over the local Wi-Fi (new / preparing / ready). Tickets are kept in this device's storage, so a reload loses nothing.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { KDS_DEFAULTS, cleanKds } from "../domain/kdsSettings";
 import { KDS_COLUMNS, ageLabel, ageMinutes, kdsStatus, kdsTickets, nextStatus, prevStatus, recentDone, urgency } from "./kds";
 import { readJson, writeJson } from "./net";
 import { hostKds } from "./peer";
@@ -30,6 +31,7 @@ export function KdsApp() {
 	const [link, setLink] = useState({ phase: "pairing", code: "" });
 	const [business, setBusiness] = useState("");
 	const [now, setNow] = useState(Date.now());
+	const [cfg, setCfg] = useState(KDS_DEFAULTS); // from the POS (Settings > Device Manager > KDS) when the screen connects
 	const [sound, setSound] = useState(true);
 	const [showDone, setShowDone] = useState(false);
 	const host = useRef(null);
@@ -45,7 +47,14 @@ export function KdsApp() {
 		const h = hostKds({
 			onState: setLink,
 			onMessage: (msg) => {
-				if (msg.type === "hello") setBusiness(msg.business || "");
+				if (msg.type === "hello") {
+					setBusiness(msg.business || "");
+					if (msg.kds) {
+						const next = cleanKds(msg.kds);
+						setCfg(next);
+						setSound(next.sound);
+					}
+				}
 				if (msg.type !== "ticket" || !msg.ticket?.id) return;
 				h.send({ type: "ack", id: msg.ticket.id });
 				setTickets((list) => {
@@ -60,7 +69,7 @@ export function KdsApp() {
 	}, []);
 
 	const open = useMemo(() => kdsTickets(tickets, ""), [tickets]);
-	const done = useMemo(() => recentDone(tickets), [tickets]);
+	const done = useMemo(() => recentDone(tickets, cfg.recallCount), [tickets, cfg.recallCount]);
 	const move = (t, status) => {
 		setTickets((list) => list.map((x) => (x.id === t.id ? { ...x, status, updatedAt: new Date().toISOString() } : x)));
 		host.current?.send({ type: "status", id: t.id, status });
@@ -86,7 +95,7 @@ export function KdsApp() {
 		const back = prevStatus(status);
 		const col = KDS_COLUMNS.find((c) => c.status === status);
 		return (
-			<article key={t.id} className={"kds-card " + (status === "ready" ? "" : urgency(mins))} aria-label={"Ticket " + t.orderNumber}>
+			<article key={t.id} className={"kds-card " + (status === "ready" ? "" : urgency(mins, cfg.warnMinutes, cfg.lateMinutes))} aria-label={"Ticket " + t.orderNumber}>
 				<div className="kds-head">
 					<span>{t.orderNumber}</span>
 					<span>{ageLabel(mins)}</span>
@@ -100,7 +109,7 @@ export function KdsApp() {
 							{l.qty} × {l.name}
 							{(l.modifiers || []).map((m, j) => (
 								<span key={j}>
-									• {m.groupName}: {m.optionName}
+									• {m.groupName ? m.groupName + ": " : ""}{m.optionName}
 								</span>
 							))}
 						</div>

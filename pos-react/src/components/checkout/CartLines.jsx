@@ -4,11 +4,19 @@
  */
 import { useEffect, useRef } from "react";
 import { money } from "../../domain/format";
+import { globalModifiersOf, modifierLabel } from "../../domain/menuAdmin";
+import { resolveOptions } from "../../domain/systemOptions";
+import { useData } from "../../store/DataProvider";
+import { usePos } from "../../store/PosProvider";
 import { useCheckout } from "../../store/CheckoutProvider";
 
 /** Order lines with quantity controls. Scrolls to the newest line. */
 export function CartLines() {
 	const { cart, changeLineQty, setPicker } = useCheckout();
+	const { settings } = useData();
+	const { locationId } = usePos();
+	// with global modifiers on, every line can take extras ("No onion"), not only items that have modifier groups
+	const extras = resolveOptions(settings, "orderEntry", locationId).globalModifiers && globalModifiersOf(settings).length > 0;
 	const ref = useRef(null);
 	const last = useRef(0);
 	useEffect(() => {
@@ -27,7 +35,7 @@ export function CartLines() {
 								<div className="line-modifiers">
 									{line.modifiers.map((m, i) => (
 										<span key={i}>
-											{m.groupName + ": " + m.optionName + (m.price ? " (+" + money(m.price) + ")" : "")}
+											{modifierLabel(m) + (m.price ? " (+" + money(m.price) + ")" : "")}
 											{i < line.modifiers.length - 1 && <br />}
 										</span>
 									))}
@@ -36,6 +44,11 @@ export function CartLines() {
 									Edit modifiers
 								</button>
 							</>
+						)}
+						{extras && !(line.modifiers || []).length && !line.isDiscount && (
+							<button className="line-edit" onClick={() => setPicker({ productId: line.productId, lineKey: line.key })}>
+								Add extras
+							</button>
 						)}
 						<div className="muted">{money(line.price * line.qty)}</div>
 					</div>

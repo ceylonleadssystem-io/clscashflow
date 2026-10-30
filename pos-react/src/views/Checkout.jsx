@@ -6,7 +6,8 @@ import { useMemo, useState } from "react";
 import { money } from "../domain/format";
 import { formatOrderNumber, nextSequence } from "../domain/orders";
 import { customerName } from "../domain/names";
-import { subcategoriesFor, visibleProductCategories } from "../domain/catalog";
+import { categoryKey, subcategoriesFor, visibleProductCategories } from "../domain/catalog";
+import { useAllowedCategories } from "../hooks/useMenuInEffect";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useCheckout } from "../store/CheckoutProvider";
@@ -39,18 +40,20 @@ const ToolBox = ({ icon, label, onClick, danger, disabled, id }) => (
 export function Checkout() {
 	const data = useData();
 	const c = useCheckout();
-	const { kitchen, currentUser } = usePos();
+	const { kitchen, currentUser, can } = usePos();
 	const { openProduct } = useModals();
 	const openOrders = useFeature("checkout.openOrders");
 	const kitchenTickets = useFeature("checkout.kitchenTickets");
-	const discounts = useFeature("checkout.discounts");
+	const discounts = useFeature("checkout.discounts") && can("pos.discount");
 	const splitBill = useFeature("checkout.splitBill");
 	const customerLookup = useFeature("checkout.customerLookup");
 	const [tool, setTool] = useState(null); // "discount" | "customer" | null
 	const { settings } = data;
+	// the Availability menu in effect narrows the categories (null = no menu applies, everything shows)
+	const allowed = useAllowedCategories();
 	const categories = useMemo(
-		() => ["All", ...visibleProductCategories(data.categories, data.products, data.subcategories, data.settings.userCategories || [])].sort((a, b) => a.localeCompare(b)),
-		[data.categories, data.products, data.subcategories, data.settings.userCategories],
+		() => ["All", ...visibleProductCategories(data.categories, data.products, data.subcategories, data.settings.userCategories || []).filter((name) => !allowed || allowed.has(categoryKey(name)))].sort((a, b) => a.localeCompare(b)),
+		[data.categories, data.products, data.subcategories, data.settings.userCategories, allowed],
 	);
 	const category = categories.includes(c.category) ? c.category : "All";
 	const q = c.search.trim().toLowerCase();
@@ -65,9 +68,10 @@ export function Checkout() {
 			data.products.filter((p) => {
 				if (q) return (String(p.name || "") + " " + String(p.code || "") + " " + String(p.category || "")).toLowerCase().includes(q);
 				if (category !== "All" && p.category !== category) return false;
+				if (category === "All" && allowed && !allowed.has(categoryKey(p.category))) return false;
 				return !sub || p.subcategory === sub;
 			}),
-		[data.products, category, q, subs, sub],
+		[data.products, category, q, subs, sub, allowed],
 	);
 	const t = c.totals;
 	const [payMode, setPayMode] = useState(null); // "quick" | "full" | null
@@ -166,6 +170,14 @@ export function Checkout() {
 							<span id="cart-service-label">Service charge ({rate}%)</span>
 							<span id="cart-service-charge">{money(t.service)}</span>
 						</div>
+						{(t.taxRows || []).map((r) => (
+							<div className="row tax-summary" key={r.id}>
+								<span>
+									{r.name} ({r.rate}%)
+								</span>
+								<span>{money(r.amount)}</span>
+							</div>
+						))}
 						<div className="row grand">
 							<span>Total</span>
 							<span id="cart-total">{money(t.total)}</span>

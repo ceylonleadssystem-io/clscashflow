@@ -6,9 +6,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { locationStore } from "./locationStore";
 import { STORAGE, UI_THEMES } from "../config/constants";
 import { applyDark, resolveDark, storedDark } from "../utils/theme";
-import { ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
+import { ROLE_VIEWS, SETTINGS_PAGE_OF_VIEW, VIEW_TITLES } from "../config/roles";
+import { openSettingsTab } from "./settingsTab";
 import { RETIRED_MODIFIER_NAMES } from "../config/presets";
 import { hasCapability } from "../config/capabilities";
+import { landingView, resolveOptions } from "../domain/systemOptions";
+import { can as canDo } from "../domain/access";
 import { VIEW_FEATURE } from "../config/features";
 import { T } from "../db/tables";
 import { migrateOrderNumbers } from "../domain/orders";
@@ -16,6 +19,7 @@ import { ensureProductInventory } from "../domain/inventory";
 import { makeCtx, markDeleted } from "../services/pos/common";
 import { bindServices } from "../services/pos";
 import { kdsLink } from "../KDS/link";
+import { kdsSettingsOf } from "../domain/kdsSettings";
 import { kitchenStations } from "../domain/kitchenStations";
 import { userLocationIds, activeLocations } from "../services/pos/locations";
 import { mainLocation } from "../services/sync/account";
@@ -91,10 +95,14 @@ export function PosProvider({ children }) {
 	}, [support, assist, data.users, currentUserId]);
 
 	// ------------------------------------------------------------- access ---
+	// Pages tied to a permission key follow it (the role preset plus personal changes); the others follow the role's page list.
+	const viewAllowed = useCallback((user, v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], settings) : (ROLE_VIEWS[user.role] || []).includes(v)), [settings]);
+	/** Does the signed-in person hold this permission key (see domain/access.js)? */
+	const can = useCallback((key) => canDo(currentUser, key, settings), [currentUser, settings]);
 	const canView = useCallback(
 		(v) => {
 			if (!currentUser) return false;
-			if (!(ROLE_VIEWS[currentUser.role] || []).includes(v)) return false;
+			if (!viewAllowed(currentUser, v)) return false;
 			// the Order Queue belongs to kitchen presets, but saved orders of any preset stay reachable
 			if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 			if (v === "tables" && !kitchen) return false;
@@ -104,7 +112,7 @@ export function PosProvider({ children }) {
 			const flag = VIEW_FEATURE[v];
 			return flag ? !!enabled[flag] : true;
 		},
-		[currentUser, kitchen, hasOpenOrders, settings.businessType, enabled, locationId],
+		[currentUser, viewAllowed, kitchen, hasOpenOrders, settings.businessType, enabled, locationId],
 	);
 
 	const firstView = useCallback(
@@ -168,7 +176,7 @@ export function PosProvider({ children }) {
 	useEffect(() => {
 		if (!kdsOn) return undefined;
 		kdsLink.start({
-			getHello: () => ({ business: dataRef.current.settings?.business || "" }),
+			getHello: () => ({ business: dataRef.current.settings?.business || "", kds: kdsSettingsOf(dataRef.current.settings) }),
 			onStatus: (id, status) => {
 				const t = (dataRef.current.kitchenTickets || []).find((x) => x.id === id);
 				if (t && t.status !== status) store.write((tx) => tx.put(T.kitchenTickets, { ...t, status })).catch(() => {});
@@ -176,6 +184,21 @@ export function PosProvider({ children }) {
 		});
 		return () => kdsLink.stop();
 	}, [kdsOn, store, dataRef]);
+	// Settings > System Options > Clock In / Out: check once a minute whether anyone is due to be clocked out automatically
+	useEffect(() => {
+		if (!currentUser || support || assist) return undefined;
+		const tick = () => svc.staff.autoClockOutAll().catch((e) => log.warn("auto clock-out failed", e));
+		tick();
+		const id = setInterval(tick, 60000);
+		return () => clearInterval(id);
+	}, [currentUser?.id, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
+	// Settings > Device Manager: the first time a signed-in browser is used it adds itself to the list of devices (only once the saved list has loaded)
+	useEffect(() => {
+		if (currentUser && data.ready && !support && !assist) {
+			svc.settings.registerDevice().catch((e) => log.warn("device registration failed", e));
+			svc.settings.seedRoleJobs().catch((e) => log.warn("seeding jobs failed", e)); // one job per role, the first time
+		}
+	}, [currentUser?.id, data.ready, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
 	// one link per Kitchen Display station, each paired with its own kitchen screen
 	const kdsIds = kdsOn ? kitchenStations(settings, true).filter((st) => st.type === "kds").map((st) => st.id).join("|") : "";
 	useEffect(() => {
@@ -189,6 +212,11 @@ export function PosProvider({ children }) {
 				if (v === "checkout" && locationId === "all") ui.notice("Choose a real location before starting checkout.");
 				else ui.notice("Your access role does not allow this section.");
 				return;
+			}
+			if (SETTINGS_PAGE_OF_VIEW[v]) {
+				// these pages now live inside Settings (Menu Admin, Device Manager)
+				openSettingsTab("page:" + SETTINGS_PAGE_OF_VIEW[v]);
+				return setView("settings");
 			}
 			setView(v);
 			setLayout((l) => ({ ...l, mobileCartOpen: false }));
@@ -231,7 +259,8 @@ export function PosProvider({ children }) {
 			sessionRef.current = { ...sessionRef.current, userId: user.id, user, locationId: chosen };
 			if (multi) svc.locations.auditLogin(chosen);
 			const first = (ROLE_VIEWS[user.role] || ["staff"]).find((v) => canView2(user, v)) || "settings";
-			setView(first);
+			// Settings > System Options > Sign In: the screen staff land on, when their role may open it
+			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], d.settings) : (ROLE_VIEWS[user.role] || []).includes(v)) && canView2(user, v), first));
 			if (user.role === "owner" && !d.settings.onboardingComplete && !d.settings.onboardingDismissed && enabled["settings.posSetupWizard"])
 				setTimeout(() => setSetupOpen(true), 250);
 			if (enabled["staff.shiftPrompt"]) setTimeout(() => setShiftStart(user), 80);
@@ -380,6 +409,7 @@ export function PosProvider({ children }) {
 			setView,
 			reportNav,
 			setReportNav,
+			can,
 			canView,
 			title: VIEW_TITLES[view] || ["", ""],
 			staffLogin,
@@ -403,10 +433,12 @@ export function PosProvider({ children }) {
 			sessionId,
 			deviceId,
 		}),
-		[currentUser, locationId, setLocationId, view, reportNav, go, canView, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
+		[currentUser, locationId, setLocationId, view, reportNav, go, canView, can, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
 	);
 	return <PosContext.Provider value={value}>{children}</PosContext.Provider>;
 }
+
+const VIEW_PERMISSION = { reports: "reports.pos", products: "menu.view", modifiers: "menu.view", stations: "menu.view", inventory: "inventory.view", checkout: "pos.order.create" };
 
 export const usePos = () => useContext(PosContext);
 export const useServices = () => useContext(PosContext).svc;

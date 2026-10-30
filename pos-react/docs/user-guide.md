@@ -26,8 +26,10 @@ that are already signed in).
 1. Enter the opening cash.
 2. **Clock In** records attendance and opens the register in one step.
 
-Cash sales need an open register. Use **Break** for breaks. To finish: **Close Register** (count the cash; the
-system shows expected cash and the variance), then **Clock Out**. You cannot clock out with the register open.
+Your register opens when you clock in and closes when you clock out, so there is no separate open or close step.
+Cash sales need you to be clocked in. Use **Break** for breaks. To finish, **Clock Out**: count the cash in the drawer
+and the system shows the expected cash and the variance. If Settings > System Options > Clock In / Out has automatic
+clock-out switched on, the register closes with the person, counted as the expected cash (no variance is recorded).
 
 ## Checkout
 1. Tap products (variants/modifiers open a picker). Quantity buttons change lines; **Void** discards the order.
@@ -50,7 +52,7 @@ Open it from **Order Queue**, add items and pay. Voiding an open order asks for 
 
 ## Sales, refunds and voids
 **Sales** lists completed sales. Choose **Refund** (full, or partial by item and quantity) or **Void**. A reason
-is mandatory. Stock is restored, and cash refunds need an open register. A void by an owner/admin removes the
+is mandatory. Stock is restored, and cash refunds need you to be clocked in. A void by an owner/admin removes the
 sale everywhere; a cashier's void stays in the history marked *voided*. Owner/admin can **Delete permanently**
 a refunded/voided sale.
 
@@ -91,6 +93,48 @@ POS features. Boxes: **Location Info** (business name, address, logo, locations)
 and modifiers), **User Admin**, **Timesheets** (clock-in, clock-out and break hours with CSV export) and **Shop**
 (hardware categories that open a quote email). What each person sees follows their role. Opening Reports swaps the
 left navigation for the report list with a Back to home button. The Ceylonry staff portal remains at `/posv2/admin`.
+
+## System Options (Settings)
+Settings has a sidebar. **System Options** holds Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Party Payments and Zones; the older
+tabs are under **More settings**. Changes are kept as a draft (a bar shows how many) until you press **Save**; **Discard** drops them.
+- **Payroll**: the pay week and overtime rules, used for hours in Reports > Payroll. **History** shows who changed what.
+- **3rd Party Payments**: delivery apps and other payment types; the active ones appear on the payment screen in the order you set.
+- **Zones**: the areas of the floor that hold tables (the same floors as in Table Layout).
+- **Presets** on the Overview page (Quick service, Full service) show what would change before you apply them.
+
+## Users, jobs and permissions (Settings)
+**Settings > Users** lists everyone who signs in. Open a person to change their **General** details and role, their **Permissions** (start from a role with
+*Copy from*, then switch individual permissions) and their **POS setup** (jobs with an hourly rate, PIN, clock-in behaviour). **Jobs** holds the job titles and
+their default hourly rate. The rate on a person's first job prices their hours in **Reports > Payroll** and **Sales vs Labor** (labor cost and labor %).
+Owners and admins always have every permission, and you can only give a permission you hold yourself.
+
+## Printers by device (Settings > Device Manager)
+Each register or order pad appears in **Printers** the first time someone signs in on it. Pick a device on the left to see its printers: a **Receipt printer** and any
+kitchen printers you add, each serving a station. Open a printer to choose the connection (USB or the system print dialog), the station, the number of receipt copies,
+whether this device prints at all (off = log only), a **backup printer** and a **duplicate to** printer. Connect and test a USB printer on the device it is plugged into.
+**Copy setup from** another device saves retyping. A device you have not set up keeps using Receipt Printing and the Stations page.
+
+## Where things are in Settings
+Settings opens on four boxes: System Options, Users, Menu Admin and Device Manager. Open one to see its pages; "All settings" brings you back. Business Profile is the first page under System Options.
+
+System Options: Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Party Payments, Zones, **Service Charge**, **Appearance** and **Customer Feedback**. Menu Admin: Items, Categories, Modifiers, Availability, Taxes, Sales Categories
+(Items and Modifiers also hold the full item and group editors). Device Manager: **Printers** (when to print, each device's printers, USB devices) and **Stations**; receipt socials are under Receipts and the order types under Order Entry. The business type is chosen once during setup; Ceylonry support changes it afterwards.
+
+## Menu Admin (Settings)
+Menu Admin pages save **drafts**: nothing changes on the register until you press **Publish** in the bar at the bottom ("N unpublished changes", with **Review** to see each change and **Discard all**).
+- **Sales Categories**: reporting groups (Food, Beverage and so on) that you fill with items. Once published, Reports, Menu, Sales Category uses them; items with none show as Unassigned.
+- **Availability**: menus such as Breakfast and Dinner, each with days, hours and the categories to show. The register shows the categories of every menu running now; when none runs it shows the
+  Default menu from System Options, Order Entry (or everything). Overlapping menus both show.
+- **Taxes**: add your rates (for example VAT 18%) and groups, choose a default tax and a tax per category, then Publish. Tax is added on top of item prices after any discount, and shows on the
+  checkout, the receipt and Reports, Taxes. Until a tax is published nothing is added. A partial refund returns the tax with the items.
+- **Items**: for each item, its own tax (or none), a takeaway tax, the **prep ticket name** shown to the kitchen and the **receipt name** printed on receipts. Name, price and stock stay in Products & Services.
+- **Categories**: add, rename or remove categories, give them a description, and decide whether taking items off an order **after it was sent to the kitchen** needs a manager's PIN (and after how many seconds).
+  Managers and owners are never asked; the removal is recorded in the audit log.
+- **Items, categories and modifier groups** can be edited here as drafts (name, price, cost, category, code, description, groups and their options); they change on the register only when you Publish.
+  You can also **add items** here (with their stations, modifier groups and subcategory); photos and stock counts are added in Products & Services.
+- **Require order type selection** (Order Entry): payment waits until the order type is chosen.
+- **Modifiers**: set how many options of a "choose several" group staff must or may pick, and add **global modifiers** (onion, sauce, ice) with prefixes such as Add, Extra, Side and No. When global modifiers are
+  on in Order Entry, each order line shows **Add extras**; "No Onion" or "Extra Sauce" then prints on the receipt and the kitchen ticket.
 
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),

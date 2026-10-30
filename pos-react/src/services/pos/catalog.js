@@ -5,6 +5,7 @@
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
 import { categoryKey, productCategories } from "../../domain/catalog";
+import { carryCategoryRename } from "../../domain/catalogDraft";
 import { ensureProductInventory, productSizeItem } from "../../domain/inventory";
 import { sizeSlug } from "../printing/barcode";
 import { storeImage } from "../imageStorage";
@@ -178,6 +179,8 @@ export async function renameCategory(ctx, oldName) {
 		d.subcategories.filter((s) => s.parent === oldName).forEach((s) => tx.put(T.subcategories, { ...s, parent: next }));
 		await markDeleted(tx, "categories", categoryKey(oldName));
 		await unmarkDeletedCategory(tx, next);
+		// Availability menus, tax by category and category settings (published and draft) refer to categories by name: keep them pointing at this one
+		for (const [k, v] of Object.entries(carryCategoryRename(d.settings, oldName, next))) tx.setSetting(k, v);
 	});
 	ctx.ui.notice(oldName + " renamed to " + next + ".");
 }
@@ -202,6 +205,7 @@ export async function deleteCategory(ctx, name) {
 			used.forEach((p) => tx.put(T.products, { ...p, category: fallback, subcategory: "" }));
 		}
 		await markDeleted(tx, "categories", categoryKey(name));
+		for (const [k, v] of Object.entries(carryCategoryRename(d.settings, name, null))) tx.setSetting(k, v);
 	});
 	log.info("category deleted", { productsMoved: used.length });
 	ctx.ui.notice(name + " category deleted.");
@@ -390,4 +394,129 @@ export async function applyBundledCatalogueImages(ctx, images) {
 		),
 	);
 	return true;
+}
+
+
+// ------------------------------------------------------------- catalogue drafts ---
+/**
+ * Applies the catalogue drafts of Menu Admin (categoryEdits, itemEdits, groupEdits) inside the publish transaction `tx`.
+ * `base` is the settings as they will be once the other drafts are published; the returned object is what must change in the settings
+ * because of renamed or removed categories (menus, tax by category, category settings follow the new name).
+ */
+export async function applyCatalogDrafts(tx, d, drafts, base, { syncStock }) {
+	const products = new Map(d.products.map((p) => [p.id, { ...p }]));
+	const dirty = new Set();
+	const subs = new Map(d.subcategories.map((s) => [s.id, { ...s }]));
+	const subDirty = new Set();
+	const patch = {};
+	let settings = { ...base };
+	const carry = (oldName, next) => {
+		const { menuDraft: _ignored, ...p } = carryCategoryRename(settings, oldName, next);
+		Object.assign(patch, p);
+		settings = { ...settings, ...p };
+	};
+	const names = new Set(d.categories.map(categoryKey));
+	const edits = drafts.categoryEdits || [];
+	// adds and renames first, so a removal can move its items to a category that is new or renamed in the same publish
+	for (const e of edits.filter((x) => !x.removed && !x.original)) {
+		tx.addCategory(e.name);
+		await unmarkDeletedCategory(tx, e.name);
+		names.add(categoryKey(e.name));
+		const mine = settings.userCategories || [];
+		if (!mine.some((c) => categoryKey(c) === categoryKey(e.name))) {
+			patch.userCategories = [...mine, e.name];
+			settings = { ...settings, userCategories: patch.userCategories };
+		}
+	}
+	for (const e of edits.filter((x) => !x.removed && x.original && x.name !== x.original)) {
+		d.categories.filter((c) => categoryKey(c) === categoryKey(e.original)).forEach((c) => tx.removeCategory(c));
+		tx.addCategory(e.name);
+		for (const p of products.values()) if (categoryKey(p.category) === categoryKey(e.original)) (p.category = e.name), dirty.add(p.id);
+		for (const x of subs.values()) if (x.parent === e.original) (x.parent = e.name), subDirty.add(x.id);
+		await markDeleted(tx, "categories", categoryKey(e.original));
+		await unmarkDeletedCategory(tx, e.name);
+		names.delete(categoryKey(e.original));
+		names.add(categoryKey(e.name));
+		carry(e.original, e.name);
+	}
+	for (const e of edits.filter((x) => x.removed)) {
+		const moved = [...products.values()].filter((p) => categoryKey(p.category) === categoryKey(e.original));
+		d.categories.filter((c) => categoryKey(c) === categoryKey(e.original)).forEach((c) => tx.removeCategory(c));
+		for (const s of [...subs.values()].filter((x) => x.parent === e.original)) {
+			await markDeleted(tx, "subcategories", s.id);
+			tx.remove(T.subcategories, s.id);
+			subs.delete(s.id);
+		}
+		if (moved.length) {
+			const fallback = e.moveTo || productCategories(d.categories, d.products).find((c) => c.toLowerCase() === "uncategorized") || "Uncategorized";
+			tx.addCategory(fallback);
+			await unmarkDeletedCategory(tx, fallback);
+			names.add(categoryKey(fallback));
+			moved.forEach((p) => ((p.category = fallback), (p.subcategory = ""), dirty.add(p.id)));
+		}
+		await markDeleted(tx, "categories", categoryKey(e.original));
+		names.delete(categoryKey(e.original));
+		carry(e.original, null);
+	}
+	for (const e of drafts.subcategoryEdits || []) {
+		const inParent = (p) => categoryKey(p.category) === categoryKey(e.parent);
+		if (e.removed) {
+			if (!subs.has(e.id)) continue;
+			await markDeleted(tx, "subcategories", e.id);
+			tx.remove(T.subcategories, e.id);
+			subs.delete(e.id);
+			for (const p of products.values()) if (inParent(p) && p.subcategory === e.original) (p.subcategory = ""), dirty.add(p.id);
+		} else if (e.isNew) {
+			subs.set(e.id, { id: e.id, name: e.name, parent: e.parent });
+			subDirty.add(e.id);
+		} else if (subs.has(e.id)) {
+			subs.get(e.id).name = e.name;
+			subDirty.add(e.id);
+			for (const p of products.values()) if (inParent(p) && p.subcategory === e.original) (p.subcategory = e.name), dirty.add(p.id);
+		}
+	}
+	for (const id of subDirty) if (subs.has(id)) tx.put(T.subcategories, { ...subs.get(id), updatedAt: nowIso() });
+	for (const e of drafts.itemEdits || []) {
+		if (e.isNew) {
+			const c = e.changes;
+			if (!names.has(categoryKey(c.category))) {
+				tx.addCategory(c.category);
+				names.add(categoryKey(c.category));
+			}
+			products.set(e.id, {
+				id: e.id, createdAt: nowIso(), type: "Product", image: "", imageFit: "cover", imagePositionX: 50, imagePositionY: 50, recipe: [], modifierRules: {}, trackStock: false, stock: 0,
+				subcategory: "", description: "", stationIds: [], modifierIds: [], ...c, code: c.code || "POS-" + String(Date.now()).slice(-5),
+			});
+			dirty.add(e.id);
+			continue;
+		}
+		const p = products.get(e.id);
+		if (!p) continue;
+		Object.assign(p, e.changes);
+		if (e.changes.category && !names.has(categoryKey(e.changes.category))) {
+			tx.addCategory(e.changes.category);
+			names.add(categoryKey(e.changes.category));
+		}
+		dirty.add(p.id);
+	}
+	for (const e of drafts.groupEdits || []) {
+		if (e.removed) {
+			for (const p of products.values()) {
+				if (!(p.modifierIds || []).includes(e.id)) continue;
+				const rules = { ...(p.modifierRules || {}) };
+				delete rules[e.id];
+				p.modifierIds = p.modifierIds.filter((m) => m !== e.id);
+				p.modifierRules = rules;
+				dirty.add(p.id);
+			}
+			await markDeleted(tx, "modifiers", e.id);
+			tx.remove(T.modifierGroups, e.id);
+		} else {
+			const existing = d.modifiers.find((m) => m.id === e.id);
+			tx.put(T.modifierGroups, { ...(existing || { id: e.id, createdAt: nowIso() }), name: e.name, mode: e.mode, required: e.required, options: e.options });
+		}
+	}
+	for (const id of dirty) tx.put(T.products, { ...products.get(id), updatedAt: nowIso() });
+	if (dirty.size && syncStock) syncProductInventory(tx, d, [...products.values()]);
+	return patch;
 }

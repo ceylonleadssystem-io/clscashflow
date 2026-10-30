@@ -1,6 +1,6 @@
 /**
- * Cash register dialog used for clock-in with opening cash, opening the register and closing it with
- * the expected-versus-counted reconciliation.
+ * Cash register dialog: clock in (the register opens with the opening cash) and clock out (the register closes with the
+ * expected-versus-counted reconciliation). There is no separate open or close register step.
  */
 import { useEffect, useState } from "react";
 import { money } from "../domain/format";
@@ -14,11 +14,10 @@ import { useUi } from "../store/UiProvider";
 
 const COPY = {
 	"clock-in": { title: "Clock In & Open Register", label: "How much cash is currently in the register?", button: "Clock In" },
-	open: { title: "Open Cash Register", label: "Opening cash amount", button: "Open Register" },
-	close: { title: "Close Cash Register", label: "Actual cash counted", button: "Close Register" },
+	"clock-out": { title: "Clock Out & Close Register", label: "Actual cash counted", button: "Clock Out" },
 };
 
-/** Clock in (+ open register), open register, or close register with reconciliation. */
+/** Clock in (+ open register) or clock out (+ close register with reconciliation). */
 export function CashModal() {
 	const { cashMode, closeCash } = useModals();
 	const data = useData();
@@ -31,16 +30,11 @@ export function CashModal() {
 	const shift = currentCashShift(data.cashShifts, currentUser?.id);
 	const submit = async () => {
 		const value = parseNumber(amount === "" ? "0" : amount);
-		const ok =
-			cashMode === "clock-in"
-				? await svc.staff.clockInAndOpenRegister(value)
-				: cashMode === "open"
-					? await svc.staff.openRegister(value)
-					: await svc.staff.closeRegister(value);
+		const ok = cashMode === "clock-in" ? await svc.staff.clockInAndOpenRegister(value) : await svc.staff.clockOut(value);
 		if (!ok) return;
 		closeCash();
 		// end of the day: offer the End of Day report (Reports page) to whoever may see it
-		if (cashMode === "close" && canView("reports") && (await ui.confirm("Register closed. Open the End of Day report?"))) go("reports");
+		if (cashMode === "clock-out" && canView("reports") && (await ui.confirm("Clocked out and register closed. Open the End of Day report?"))) go("reports");
 	};
 	return (
 		<Modal
@@ -64,7 +58,7 @@ export function CashModal() {
 					<label id="cash-amount-label">{copy.label}</label>
 					<NumberInput id="cash-amount" value={amount} onChange={setAmount} autoFocus />
 				</div>
-				{cashMode === "close" && shift && (
+				{cashMode === "clock-out" && shift && (
 					<div id="cash-close-summary" className="plan-settings">
 						<div className="label">Expected in drawer</div>
 						<div className="plan-settings-price">{money(expectedCash(shift, data.sales))}</div>

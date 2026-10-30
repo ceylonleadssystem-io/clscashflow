@@ -8,9 +8,9 @@ import { userName } from "./names";
 export const APPROVER_ROLES = ["owner", "manager", "admin"];
 
 /** The active owner / manager / admin whose PIN this is, or null. */
-export function findApprover(users, pin) {
+export function findApprover(users, pin, isApprover = (u) => APPROVER_ROLES.includes(u.role)) {
 	const p = String(pin || "").trim();
-	return p ? (users || []).find((u) => u.active !== false && u.pin && u.pin === p && APPROVER_ROLES.includes(u.role)) || null : null;
+	return p ? (users || []).find((u) => u.active !== false && u.pin && u.pin === p && isApprover(u)) || null : null;
 }
 
 const SEP = " · ";

@@ -233,3 +233,24 @@ html[data-theme="dark"] .floor-table.inactive{background:repeating-linear-gradie
 html[data-theme="dark"] .floor-tab{background:#23201b;border-color:#3a352d;color:#e7e2d8}
 html[data-theme="dark"] .floor-tab.active{background:var(--accent,#ef5b2d);color:#fff}
 html[data-theme="dark"] .floor-table.gm-reserved{background:#16294d;color:#b9cff7;border-color:#2f4f8c}
+
+/* Settings kit, reports, portal: the badge tints and shadows need their own dark values (the rest use the surface variables) */
+html[data-theme="dark"] .sk-badge-active,html[data-theme="dark"] .sk-badge-online{background:#12332a;color:#6fe0ac}
+html[data-theme="dark"] .sk-badge-offline,html[data-theme="dark"] .sk-badge-archived{background:#3a1c19;color:#ff9a90}
+html[data-theme="dark"] .sk-switch span{background:#4a545e}
+html[data-theme="dark"] .sk-switch input:checked + span{background:var(--ui-accent,#ff4d0a)}
+html[data-theme="dark"] .sk-drawer{box-shadow:-8px 0 28px rgba(0,0,0,.55)}
+html[data-theme="dark"] .sk-drawer-backdrop{background:rgba(0,0,0,.6)}
+html[data-theme="dark"] .report-buttons .btn.active{background:var(--ui-accent,#ff4d0a);color:#fff}
+
+/* Found by a contrast audit of every page in dark mode */
+html[data-theme="dark"] .checkout-business-copy span,
+html[data-theme="dark"] .business-logo-help,
+html[data-theme="dark"] .top p,
+html[data-theme="dark"] .label { color: #a3adb7 !important; }
+/* the dark red used for danger text on light is too light behind white button text */
+html[data-theme="dark"] .btn.danger,
+html[data-theme="dark"] .order-tool.danger { background: #c43a2c !important; border-color: #c43a2c !important; color: #fff !important; }
+html[data-theme="dark"] .image-position-controls span { color: #a3adb7 !important; }
+html[data-theme="dark"] .login-brand { color: #eceff2 !important; }
+html[data-theme="dark"] .account-home { color: #ff9a62 !important; }

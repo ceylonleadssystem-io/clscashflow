@@ -6,8 +6,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { ORDER_CHANNELS, STORAGE } from "../config/constants";
 import { addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
 import { productSizeGroup } from "../domain/catalog";
+import { removalNeedsApproval } from "../domain/deleteApproval";
 import { availableProductStock, cartQtyForProduct, hasSizedStock, stockSizeFor } from "../domain/inventory";
 import { phoneKey } from "../domain/format";
+import { resolveOptions } from "../domain/systemOptions";
 import { serviceChargeSupported } from "../services/pos/common";
 import { useData } from "./DataProvider";
 import { useFeatures } from "./FeatureProvider";
@@ -26,7 +28,7 @@ const CheckoutContext = createContext(null);
 export function CheckoutProvider({ children }) {
 	const data = useData();
 	const { enabled } = useFeatures();
-	const { svc, locationId, go, kitchen } = usePos();
+	const { svc, locationId, go, kitchen, can } = usePos();
 	const ui = useUi();
 
 	const [cart, setCart] = useState([]);
@@ -43,12 +45,14 @@ export function CheckoutProvider({ children }) {
 	const [printAfter, setPrintAfterState] = useState(() => localStorage.getItem(STORAGE.printSale) !== "false");
 	const [cashTendered, setCashTendered] = useState("");
 	const [orderReference, setOrderReference] = useState("");
-	const [orderChannel, setOrderChannel] = useState("Dine-in");
+	const [orderChannel, setOrderChannel] = useState(() => resolveOptions(data.settings, "orderEntry", locationId).defaultOrderType);
 	const [platformOrderId, setPlatformOrderId] = useState("");
 	const [openOrderId, setOpenOrderId] = useState("");
 	const [category, setCategory] = useState("All");
 	const [search, setSearch] = useState("");
+	const [channelPicked, setChannelPicked] = useState(false); // the order type was chosen on this order (Order Entry: require order type)
 	const [picker, setPicker] = useState(null); // { productId, lineKey }
+	const [approval, setApproval] = useState(null); // { key, delta, line, removed }: a removal waiting for a manager
 	const [splitOpen, setSplitOpen] = useState(false);
 	const [customerModal, setCustomerModal] = useState(null); // { id, phone, source }
 	const busy = useRef(false);
@@ -61,8 +65,8 @@ export function CheckoutProvider({ children }) {
 
 	const settings = data.settings;
 	const totals = useMemo(
-		() => cartTotals(cart, enabled["checkout.discounts"] ? discount : EMPTY_DISCOUNT, settings, enabled["checkout.serviceCharge"] && serviceChargeSupported(settings)),
-		[cart, discount, settings, enabled],
+		() => cartTotals(cart, enabled["checkout.discounts"] ? discount : EMPTY_DISCOUNT, settings, enabled["checkout.serviceCharge"] && serviceChargeSupported(settings), orderChannel),
+		[cart, discount, settings, enabled, orderChannel],
 	);
 
 	// order channels configured in settings (kitchen presets only)
@@ -71,9 +75,18 @@ export function CheckoutProvider({ children }) {
 		const list = Array.isArray(saved) && saved.length ? saved.filter((c) => ORDER_CHANNELS.includes(c)) : ORDER_CHANNELS;
 		return list.length ? list : ORDER_CHANNELS;
 	}, [settings.orderChannels]);
+	// the order type new orders start with (Settings > System Options > Order Entry); the first channel when that one is switched off
+	const defaultChannel = useMemo(() => {
+		const wanted = resolveOptions(settings, "orderEntry", locationId).defaultOrderType;
+		return channels.includes(wanted) ? wanted : channels[0];
+	}, [settings, locationId, channels]);
+	// an empty order that has not been started follows a changed default straight away
 	useEffect(() => {
-		if (!channels.includes(orderChannel)) setOrderChannel(channels[0]);
-	}, [channels, orderChannel]);
+		if (!cart.length && !openOrderId) setOrderChannel(defaultChannel);
+	}, [defaultChannel]); // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => {
+		if (!channels.includes(orderChannel)) setOrderChannel(defaultChannel);
+	}, [channels, orderChannel, defaultChannel]);
 
 	// a split that no longer matches the total is discarded (legacy behaviour)
 	useEffect(() => {
@@ -139,9 +152,26 @@ export function CheckoutProvider({ children }) {
 					return;
 				}
 			}
+			// taking sent items off an order can need a manager (Menu Admin, Categories); people who hold the permission never do
+			if (line && delta < 0 && !can("pos.void.item")) {
+				const check = removalNeedsApproval(line, line.qty + delta, data.settings);
+				if (check.needed) return void setApproval({ key, delta, line, removed: check.removed });
+			}
 			setCart((c) => changeQty(c, key, delta));
 		},
-		[cart, enabled, data, locationId, ui],
+		[cart, enabled, data, locationId, ui, can],
+	);
+	/** The manager's PIN for the pending removal: on success the quantity change goes through. */
+	const approveRemoval = useCallback(
+		async (pin) => {
+			if (!approval) return false;
+			const approver = await svc.sales.approveItemRemoval({ pin, line: approval.line, removed: approval.removed });
+			if (!approver) return false;
+			setCart((c) => changeQty(c, approval.key, approval.delta));
+			setApproval(null);
+			return true;
+		},
+		[approval, svc],
 	);
 
 	const removeProductFromCart = useCallback((productId) => setCart((c) => c.filter((l) => l.productId !== productId)), []);
@@ -154,12 +184,13 @@ export function CheckoutProvider({ children }) {
 		setOpenOrderId("");
 		setOrderReference("");
 		setPlatformOrderId("");
-		setOrderChannel(channels[0] || "Dine-in");
+		setOrderChannel(defaultChannel || "Dine-in");
+		setChannelPicked(false);
 		setCashTendered("");
 		setWantsEmail(false);
 		setWantsWhatsApp(false);
 		setReceiptEmail("");
-	}, [channels]);
+	}, [defaultChannel]);
 
 	// ------------------------------------------------------- customers ------
 	const selectCustomer = useCallback(
@@ -233,6 +264,10 @@ export function CheckoutProvider({ children }) {
 	// --------------------------------------------------------- actions ------
 	const completeSale = useCallback(async () => {
 		if (busy.current || !cart.length) return;
+		if (kitchen && enabled["checkout.orderChannels"] && !channelPicked && !openOrderId && resolveOptions(data.settings, "orderEntry", locationId).requireOrderType) {
+			await ui.alert("Choose the order type (Dine-in, Takeaway...) before taking payment.");
+			return false;
+		}
 		busy.current = true;
 		setBusyUi(true);
 		try {
@@ -267,7 +302,7 @@ export function CheckoutProvider({ children }) {
 			busy.current = false;
 			setBusyUi(false);
 		}
-	}, [cart, discount, payment, splitPayments, customerId, wantsEmail, receiptEmail, wantsWhatsApp, printAfter, cashTendered, orderReference, orderChannel, platformOrderId, openOrderId, svc, enabled, resetOrder]);
+	}, [cart, discount, payment, splitPayments, customerId, wantsEmail, receiptEmail, wantsWhatsApp, printAfter, cashTendered, orderReference, orderChannel, platformOrderId, openOrderId, svc, enabled, resetOrder, kitchen, channelPicked, data.settings, locationId, ui]);
 
 	const voidOrder = useCallback(async () => {
 		if (await svc.sales.voidCurrentOrder(cart)) {
@@ -346,8 +381,8 @@ export function CheckoutProvider({ children }) {
 		cart, setCart, discount, discountOn, payment, setPayment, splitPayments, setSplitPayments, customerId, selectCustomer,
 		phoneSearch, setPhoneSearch, findNote, findCustomerByPhone, clearCustomer, wantsEmail, toggleEmail, receiptEmail, setReceiptEmail,
 		wantsWhatsApp, setWantsWhatsApp, printAfter, setPrintAfter, cashTendered, setCashTendered, orderReference, setOrderReference,
-		orderChannel, setOrderChannel, platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
-		picker, setPicker, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
+		orderChannel, setOrderChannel, pickOrderChannel: (v) => (setChannelPicked(true), setOrderChannel(v)), platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
+		picker, setPicker, approval, setApproval, approveRemoval, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
 		addProduct, addScanned, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
 		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
 	};

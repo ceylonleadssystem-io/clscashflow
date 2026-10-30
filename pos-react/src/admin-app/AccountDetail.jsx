@@ -10,6 +10,8 @@ import { WelcomeTab } from "./WelcomeTab";
 import { InvoicesTab } from "./InvoicesTab";
 import { DiagnosticsTab } from "./DiagnosticsTab";
 import { MenuTab } from "./MenuTab";
+import { AnalyticsTab } from "./AnalyticsTab";
+import { BusinessTypeTab } from "./BusinessTypeTab";
 import { SubscriptionTab } from "./SubscriptionTab";
 import { DeleteAccountTab } from "./DeleteAccountTab";
 import { useUi } from "../store/UiProvider";
@@ -17,7 +19,9 @@ import { adminApi } from "./adminApi";
 import { beginAssist } from "../services/assist";
 
 const TABS = [
+	["analytics", "Analytics"],
 	["access", "Access"],
+	["businessType", "Business type"],
 	["subscription", "Subscription"],
 	["features", "Features"],
 	["welcome", "Welcome message"],
@@ -29,7 +33,7 @@ const TABS = [
 
 export function AccountDetail({ account, onBack, onChanged }) {
 	const ui = useUi();
-	const [tab, setTab] = useState("access");
+	const [tab, setTab] = useState("analytics");
 	const [data, setData] = useState(null);
 	const [invoices, setInvoices] = useState([]);
 	const [saving, setSaving] = useState(false);
@@ -115,7 +119,9 @@ export function AccountDetail({ account, onBack, onChanged }) {
 					</button>
 				))}
 			</div>
+			{tab === "analytics" && <AnalyticsTab workspace={data.workspace} locations={locations} />}
 			{tab === "access" && <AccessTab account={account} profile={profile} settings={settings} save={save} saving={saving} onChanged={() => { onChanged(); reload(); }} ui={ui} />}
+			{tab === "businessType" && <BusinessTypeTab settings={settings} save={save} saving={saving} ui={ui} />}
 			{tab === "subscription" && <SubscriptionTab settings={settings} workspace={data.workspace} save={save} saving={saving} />}
 			{tab === "features" && <FeaturesTab settings={settings} locations={locations} save={save} saving={saving} ui={ui} />}
 			{tab === "welcome" && <WelcomeTab settings={settings} save={save} saving={saving} />}

@@ -3,7 +3,8 @@
  * discounts), order discount, table/order reference and channel, payment method with cash tender, split bill, and receipt options.
  */
 import { useEffect, useMemo, useState } from "react";
-import { PAYMENT_ICONS, PAYMENT_METHODS, PLATFORM_CHANNELS } from "../../config/constants";
+import { PAYMENT_ICONS, PLATFORM_CHANNELS } from "../../config/constants";
+import { paymentChoices } from "../../domain/thirdPartyPayments";
 import { birthdayInfo, customerInsights, customerSegment } from "../../domain/analytics";
 import { money, today } from "../../domain/format";
 import { NumberInput } from "../ui";
@@ -135,7 +136,8 @@ export function CustomerSection() {
 
 export function DiscountSection() {
 	const c = useCheckout();
-	const enabled = useFeature("checkout.discounts");
+	const { can } = usePos();
+	const enabled = useFeature("checkout.discounts") && can("pos.discount");
 	const [type, setType] = useDiscountDraft(c);
 	if (!enabled) return null;
 	const amount = c.totals.discount;
@@ -194,7 +196,7 @@ function ReferenceSection() {
 		<>
 			{kitchen && channels && (
 				<div id="order-channel-fields" className="order-channel-fields" aria-hidden="false">
-					<select className="input" id="order-channel" aria-label="Order source" value={c.orderChannel} onChange={(e) => c.setOrderChannel(e.target.value)}>
+					<select className="input" id="order-channel" aria-label="Order source" value={c.orderChannel} onChange={(e) => c.pickOrderChannel(e.target.value)}>
 						{c.channels.map((ch) => (
 							<option key={ch} value={ch}>
 								{ch}
@@ -230,6 +232,8 @@ function ReferenceSection() {
 
 export function PaymentSection() {
 	const c = useCheckout();
+	// the standard methods plus the 3rd party types set up in Settings > System Options > 3rd Party Payments
+	const methods = paymentChoices(useData().settings, usePos().can("pos.payments.third_party"));
 	const cashTender = useFeature("checkout.cashTender");
 	const split = useFeature("checkout.splitBill");
 	const locked = c.splitPayments.length > 0;
@@ -242,7 +246,7 @@ export function PaymentSection() {
 	return (
 		<>
 			<div id="payment-method-picker" className="payment-method-picker" role="group" aria-label="Payment method">
-				{PAYMENT_METHODS.map((m) => (
+				{methods.map((m) => (
 					<button
 						type="button"
 						key={m}

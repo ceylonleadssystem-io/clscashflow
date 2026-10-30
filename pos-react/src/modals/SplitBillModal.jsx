@@ -3,7 +3,7 @@
  * (cash received, change, card approval) before continuing to checkout.
  */
 import { useEffect, useState } from "react";
-import { SPLIT_PAYMENT_METHODS } from "../config/constants";
+import { splitChoices } from "../domain/thirdPartyPayments";
 import { equalSplit, splitByItems } from "../domain/cart";
 import { money } from "../domain/format";
 import { Modal, ModalBody } from "../components/ui";
@@ -23,7 +23,7 @@ export function SplitBillModal() {
 	const c = useCheckout();
 	const ui = useUi();
 	const data = useData();
-	const { currentUser } = usePos();
+	const { currentUser, can } = usePos();
 	const total = c.totals.total;
 	const open = c.splitOpen;
 	const [itemMode, setItemMode] = useState(false);
@@ -53,7 +53,7 @@ export function SplitBillModal() {
 		const amount = num(p.amount);
 		if (amount <= 0) return ui.alert("Enter the amount for this share first.");
 		if (p.method === "Cash") {
-			if (!currentCashShift(data.cashShifts, currentUser?.id)) return ui.alert("Open the cash register before taking this cash payment.");
+			if (!currentCashShift(data.cashShifts, currentUser?.id)) return ui.alert("Clock in to open your cash register before taking this cash payment.");
 			const entry = await ui.prompt(`Cash received for Share ${i + 1}\nAmount due: ${money(amount)}`, amount.toFixed(2));
 			if (entry === null) return;
 			const received = num(entry);
@@ -163,7 +163,7 @@ export function SplitBillModal() {
 								<span>{p.paid ? "Paid" : "Awaiting payment"}</span>
 							</div>
 							<select className="input" disabled={p.paid} value={p.method} onChange={(e) => patch(i, { method: e.target.value, paid: false })}>
-								{SPLIT_PAYMENT_METHODS.map((m) => (
+								{splitChoices(data.settings, can("pos.payments.third_party")).map((m) => (
 									<option key={m}>{m}</option>
 								))}
 							</select>

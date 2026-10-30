@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS } from "../config/presets";
 import { Modal, ModalBody } from "../components/ui";
+import { businessTypeLocked } from "../domain/businessType";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
 
@@ -55,13 +56,16 @@ export function PosSetupModal() {
 			<ModalBody>
 				<div className="field">
 					<label>What type of business is this?</label>
-					<select className="input" id="setup-business-type" value={type} onChange={(e) => setType(e.target.value)}>
+					<select className="input" id="setup-business-type" value={type} disabled={businessTypeLocked(settings)} onChange={(e) => setType(e.target.value)}>
 						{BUSINESS_TYPE_OPTIONS.map((t) => (
 							<option key={t} value={t}>
 								{t === "cafe" ? "Café / Bakery" : POS_TYPE_PRESETS[t].label}
 							</option>
 						))}
 					</select>
+				</div>
+				<div className="plan-settings-note" style={{ marginTop: 6 }}>
+					{businessTypeLocked(settings) ? "The business type was set earlier. Contact Ceylonry support to change it." : "You choose this once. After setup, only Ceylonry support can change the business type."}
 				</div>
 				<div className="plan-settings" id="setup-preview">
 					<div className="label">Recommended for {preset.label}</div>
