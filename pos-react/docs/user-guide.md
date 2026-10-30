@@ -108,6 +108,12 @@ tabs are under **More settings**. Changes are kept as a draft (a bar shows how m
 their default hourly rate. The rate on a person's first job prices their hours in **Reports > Payroll** and **Sales vs Labor** (labor cost and labor %).
 Owners and admins always have every permission, and you can only give a permission you hold yourself.
 
+## Printers by device (Settings > Device Manager)
+Each register or order pad appears in **Printers** the first time someone signs in on it. Pick a device on the left to see its printers: a **Receipt printer** and any
+kitchen printers you add, each serving a station. Open a printer to choose the connection (USB or the system print dialog), the station, the number of receipt copies,
+whether this device prints at all (off = log only), a **backup printer** and a **duplicate to** printer. Connect and test a USB printer on the device it is plugged into.
+**Copy setup from** another device saves retyping. A device you have not set up keeps using Receipt Printing and the Stations page.
+
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),
 operations (printers, service charge, order channels), support code (24 h, lets Ceylonry support view the

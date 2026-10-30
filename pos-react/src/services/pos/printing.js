@@ -14,6 +14,7 @@ import { KDS_DESTINATION } from "../../KDS/kds";
 import { kdsLink } from "../../KDS/link";
 import { kitchenMode, newId, stamp } from "./common";
 import { kitchenStations, routeKitchenLines } from "../../domain/kitchenStations";
+import { receiptPlan, ticketPlan } from "../../domain/devices";
 
 const log = createLogger("printing");
 
@@ -27,16 +28,25 @@ const docCtx = (ctx, sale, extra = {}) => {
 	return { settings: d.settings, location: locationFor(d, sale, ctx.session()), ...extra };
 };
 
-/** Sends a sale receipt to the configured printer. Returns true when printed. */
-export async function printReceipt(ctx, sale) {
+/**
+ * Sends a sale receipt to the printer of this device (Settings, Device Manager); a device without a setup uses Settings, Receipt Printing.
+ * `plan` replaces the saved setup (the test print in the Device Manager tries a setup before it is saved). Returns true when printed.
+ */
+export async function printReceipt(ctx, sale, plan) {
 	const d = ctx.data();
 	if (!sale) return void (await ctx.ui.alert("Receipt not found."));
-	const type = d.settings.printerType || "system";
+	const setup = plan || receiptPlan(d.settings, ctx.session().deviceId);
+	if (!setup.print) {
+		log.info("receipt not printed: this device is log only", { receipt: sale.receipt });
+		ctx.ui.notice("This device is set to log only, so receipt " + sale.receipt + " was not printed.");
+		return false;
+	}
+	const type = setup.kind === "usb" ? "usb-direct" : setup.kind === "system" ? "system" : d.settings.printerType || "system";
 	if (type === "usb-direct" && ctx.features()["hardware.usbPrinter"]) {
 		try {
-			await receiptPrinter.print(sale, { ...docCtx(ctx, sale), saved: d.settings.usbPrinter });
-			log.info("receipt printed", { receipt: sale.receipt, method: "usb-direct" });
-			ctx.ui.notice("Receipt " + sale.receipt + " sent directly to the USB receipt printer.");
+			for (let i = 0; i < setup.copies; i++) await receiptPrinter.print(sale, { ...docCtx(ctx, sale), saved: setup.usb || d.settings.usbPrinter });
+			log.info("receipt printed", { receipt: sale.receipt, method: "usb-direct", copies: setup.copies });
+			ctx.ui.notice("Receipt " + sale.receipt + " sent directly to the USB receipt printer" + (setup.copies > 1 ? " (" + setup.copies + " copies)." : "."));
 			return true;
 		} catch (error) {
 			console.error("Direct USB receipt print failed", error);
@@ -53,16 +63,20 @@ export async function printReceipt(ctx, sale) {
 	return true;
 }
 
-export async function printTestReceipt(ctx) {
-	return printReceipt(ctx, {
-		id: "test",
-		receipt: "TEST-RECEIPT",
-		createdAt: new Date().toISOString(),
-		payment: "Cash",
-		total: 350,
-		lines: [{ name: "Test Item", qty: 1, price: 350, modifiers: [] }],
-		locationId: ctx.session().locationId === "all" ? "" : ctx.session().locationId,
-	});
+export async function printTestReceipt(ctx, plan) {
+	return printReceipt(
+		ctx,
+		{
+			id: "test",
+			receipt: "TEST-RECEIPT",
+			createdAt: new Date().toISOString(),
+			payment: "Cash",
+			total: 350,
+			lines: [{ name: "Test Item", qty: 1, price: 350, modifiers: [] }],
+			locationId: ctx.session().locationId === "all" ? "" : ctx.session().locationId,
+		},
+		plan,
+	);
 }
 
 export function downloadReceipt(ctx, sale) {
@@ -109,15 +123,27 @@ async function queueTicket(ctx, order, lines, destination, station, systemPrints
 		},
 		ctx.session(),
 	);
-	const kind = !toKds && station?.printer?.kind;
-	if (kind === "usb") {
+	// this device's own printer for the station (Settings, Device Manager) wins over the station's printer; without one nothing changes
+	const plan = !toKds && station ? ticketPlan(ctx.data().settings, ctx.session().deviceId, station) : null;
+	const target = plan?.primary || station;
+	const kind = !toKds && target?.printer?.kind;
+	if (plan && !plan.print) {
+		ticket.status = "logged";
+		log.info("kitchen ticket logged only: this device does not print it", { station: station.name, order: ticket.orderNumber });
+	} else if (kind === "usb") {
 		try {
-			await printKitchenTicket(station, ticket);
+			await printKitchenTicket(target, ticket);
 			ticket.status = "printed";
 		} catch (error) {
-			log.warn("USB kitchen printer failed; ticket kept in the Order Queue", error, { station: station.name, order: ticket.orderNumber });
-			ticket.status = "printer-unavailable";
-			ctx.ui.notice(station.name + ": " + error.message);
+			const backedUp = plan?.backup?.printer?.kind === "usb" && (await printKitchenTicket(plan.backup, ticket).then(() => true, () => false));
+			if (backedUp) {
+				ticket.status = "printed";
+				ctx.ui.notice(target.name + " failed, so the ticket went to " + plan.backup.name + ".");
+			} else {
+				log.warn("USB kitchen printer failed; ticket kept in the Order Queue", error, { station: station.name, order: ticket.orderNumber });
+				ticket.status = "printer-unavailable";
+				ctx.ui.notice(target.name + ": " + error.message);
+			}
 		}
 	} else if (kind === "system") systemPrints.push(ticket);
 	else if (destination !== "Kitchen POS" && !toKds) {
@@ -131,6 +157,11 @@ async function queueTicket(ctx, order, lines, destination, station, systemPrints
 				ctx.ui.notice("Kitchen printer " + destination + " unavailable. Ticket sent to the Kitchen POS instead.");
 			}
 		} else ticket.status = "queued-for-" + destination;
+	}
+	// a copy for another printer of this device (for example kitchen to expo)
+	if (plan?.print && plan.duplicate) {
+		if (plan.duplicate.printer.kind === "usb") await printKitchenTicket(plan.duplicate, ticket).catch((error) => ctx.ui.notice(plan.duplicate.name + ": " + error.message));
+		else if (plan.duplicate.printer.kind === "system") systemPrints.push({ ...ticket, station: plan.duplicate.name });
 	}
 	await ctx.store.write((tx) => tx.put(T.kitchenTickets, ticket));
 	if (toKds) kdsLink.send(ticket, station?.id); // the station's own screen, over the local Wi-Fi; kept in its outbox until acknowledged

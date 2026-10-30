@@ -833,6 +833,14 @@ html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 .sk-badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--ui-soft,#f2f4f6);color:var(--ui-muted,#68717a)}
 .sk-badge-active,.sk-badge-online{background:#e6f6ee;color:#12794b}
 .sk-badge-offline,.sk-badge-archived{background:#fdecea;color:#b3261e}
+.sk-devices{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+.sk-device-list{display:flex;flex-direction:column;gap:6px}
+.sk-device-list button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:48px;padding:10px 12px;border:1px solid var(--ui-line,#e4e8eb);border-radius:10px;background:var(--ui-surface,#fff);color:var(--ui-text,#12171c);font:inherit;text-align:left;cursor:pointer}
+.sk-device-list button span{font-size:12px;color:var(--ui-muted,#68717a)}
+.sk-device-list button.active{border-color:var(--ui-accent,#ff4d0a);box-shadow:inset 3px 0 0 var(--ui-accent,#ff4d0a)}
+.sk-device-list button:focus-visible{outline:2px solid var(--ui-accent,#ff4d0a);outline-offset:2px}
+.sk-device-main{min-width:0;display:grid;gap:16px}
+@media (max-width:760px){.sk-devices{grid-template-columns:1fr}.sk-device-list{flex-direction:row;overflow-x:auto;padding-bottom:4px}.sk-device-list button{flex:0 0 auto;min-width:150px}}
 .sk-empty{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px 4px}
 .sk-empty p{margin:0}
 .sk-history{list-style:none;margin:0;padding:0;display:grid;gap:12px}

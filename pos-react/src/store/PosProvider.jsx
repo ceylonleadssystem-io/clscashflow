@@ -190,6 +190,10 @@ export function PosProvider({ children }) {
 		const id = setInterval(tick, 60000);
 		return () => clearInterval(id);
 	}, [currentUser?.id, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
+	// Settings > Device Manager: the first time a signed-in browser is used it adds itself to the list of devices (only once the saved list has loaded)
+	useEffect(() => {
+		if (currentUser && data.ready && !support && !assist) svc.settings.registerDevice().catch((e) => log.warn("device registration failed", e));
+	}, [currentUser?.id, data.ready, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
 	// one link per Kitchen Display station, each paired with its own kitchen screen
 	const kdsIds = kdsOn ? kitchenStations(settings, true).filter((st) => st.type === "kds").map((st) => st.id).join("|") : "";
 	useEffect(() => {

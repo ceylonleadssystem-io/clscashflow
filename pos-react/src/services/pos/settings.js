@@ -6,7 +6,8 @@ import { T } from "../../db/tables";
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } from "../../config/constants";
 import { POS_TYPE_PRESETS } from "../../config/presets";
 import { hasCapability } from "../../config/capabilities";
-import { cleanStations } from "../../domain/kitchenStations";
+import { cleanStations, kitchenStations } from "../../domain/kitchenStations";
+import { copyPrinters, deviceNameError, devicesOf, normalizePrinter, printerError, printersOf, receiptPrinterId } from "../../domain/devices";
 import { PERMISSION_KEYS, accessFromKeys, accessOf, jobError, jobsOf } from "../../domain/access";
 import { MAIN_FLOOR, floorLayout, floorLayoutKey, floorsFor, floorsKey } from "../../domain/tables";
 import { nameError, thirdPartyList, usedNames } from "../../domain/thirdPartyPayments";
@@ -347,5 +348,91 @@ export async function saveUserAccess(ctx, userId, { keys, jobs }) {
 	await patchSettings(ctx, { userAccess: next });
 	await settingsAudit(ctx, "user-access-saved", `${user.name}: ${next[userId].grant.length} granted, ${next[userId].revoke.length} removed, ${cleanJobs.length} job${cleanJobs.length === 1 ? "" : "s"}`);
 	ctx.ui.notice("Access saved.");
+	return true;
+}
+
+// ------------------------------------------------------------------------------ devices and printers ----
+
+const rawPrinters = (settings) => (Array.isArray(settings.devicePrinters) ? settings.devicePrinters : []);
+
+/** Adds the device the POS is running on to the list the first time it is used. Returns true when it was added. */
+export async function registerDevice(ctx) {
+	const { settings } = ctx.data();
+	const { deviceId, locationId } = ctx.session();
+	const all = devicesOf(settings);
+	if (!deviceId || all.some((x) => x.id === deviceId)) return false;
+	const device = { id: deviceId, name: "Register " + (all.length + 1), kind: "register", locationId: locationId && locationId !== "all" ? locationId : "" };
+	await patchSettings(ctx, { posDevices: [...(Array.isArray(settings.posDevices) ? settings.posDevices : []), device] });
+	log.info("device registered", { device: device.name });
+	return true;
+}
+
+/** Renames a device or changes its kind ({ id, name, kind }). Returns true when saved. */
+export async function saveDevice(ctx, form) {
+	const { settings } = ctx.data();
+	const error = deviceNameError(settings, form);
+	if (error) return void (await ctx.ui.alert(error));
+	const name = String(form.name).trim().slice(0, 40);
+	await patchSettings(ctx, { posDevices: (settings.posDevices || []).map((x) => (x.id === form.id ? { ...x, name, kind: form.kind === "orderpad" ? "orderpad" : "register" } : x)) });
+	await settingsAudit(ctx, "device-saved", name);
+	ctx.ui.notice("Device saved.");
+	return true;
+}
+
+/** Removes a device and its printers. The device in use cannot be removed. */
+export async function deleteDevice(ctx, id) {
+	const { settings } = ctx.data();
+	const dev = devicesOf(settings).find((x) => x.id === id);
+	if (!dev) return false;
+	if (id === ctx.session().deviceId) return void (await ctx.ui.alert("This is the device you are using. Remove it from another device."));
+	if (!(await ctx.ui.confirm(`Remove ${dev.name} and its printers?`))) return false;
+	await patchSettings(ctx, { posDevices: settings.posDevices.filter((x) => x.id !== id), devicePrinters: rawPrinters(settings).filter((p) => p.deviceId !== id) });
+	await settingsAudit(ctx, "device-deleted", dev.name);
+	return true;
+}
+
+/** Saves one printer of a device ({ id?, deviceId, role, ... }). Returns true when saved. */
+export async function saveDevicePrinter(ctx, form) {
+	const d = ctx.data();
+	const stations = kitchenStations(d.settings, ctx.features()["checkout.kds"]);
+	const clean = normalizePrinter({ ...form, id: form.id || (form.role === "receipt" ? receiptPrinterId(form.deviceId) : newId("prn")) });
+	const siblings = printersOf(d.settings, clean.deviceId).filter((x) => x.id !== clean.id);
+	const error = printerError({ ...clean, receiptCopies: form.role === "kitchen" ? 1 : form.receiptCopies ?? 1 }, siblings, stations);
+	if (error) return void (await ctx.ui.alert(error));
+	const others = rawPrinters(d.settings).filter((x) => x.id !== clean.id);
+	await patchSettings(ctx, { devicePrinters: [...others, clean] });
+	const device = devicesOf(d.settings).find((x) => x.id === clean.deviceId);
+	await settingsAudit(ctx, "device-printer-saved", `${clean.name} on ${device?.name || "a device"}`);
+	ctx.ui.notice("Printer saved.");
+	return true;
+}
+
+/** Removes a kitchen printer (and any backup or duplicate link to it), or puts a Receipt printer back to its default. */
+export async function deleteDevicePrinter(ctx, id) {
+	const { settings } = ctx.data();
+	const p = rawPrinters(settings).find((x) => x.id === id);
+	if (!p) return false;
+	const label = p.role === "receipt" ? "Reset the receipt printer of this device to its default?" : `Delete ${p.name}?`;
+	if (!(await ctx.ui.confirm(label))) return false;
+	const left = rawPrinters(settings)
+		.filter((x) => x.id !== id)
+		.map((x) => ({ ...x, backupPrinterId: x.backupPrinterId === id ? "" : x.backupPrinterId, duplicateToPrinterId: x.duplicateToPrinterId === id ? "" : x.duplicateToPrinterId }));
+	await patchSettings(ctx, { devicePrinters: left });
+	await settingsAudit(ctx, "device-printer-deleted", p.name);
+	return true;
+}
+
+/** Copies the printers of one device to another (replacing the target's). USB connections are not copied: connect them on the device. */
+export async function copyDevicePrinters(ctx, fromId, toId) {
+	const { settings } = ctx.data();
+	const devices = devicesOf(settings);
+	const from = devices.find((x) => x.id === fromId);
+	const to = devices.find((x) => x.id === toId);
+	if (!from || !to || fromId === toId) return false;
+	if (rawPrinters(settings).some((p) => p.deviceId === toId) && !(await ctx.ui.confirm(`Replace the printers of ${to.name} with those of ${from.name}?`))) return false;
+	const copied = copyPrinters(printersOf(settings, fromId), toId, () => newId("prn"));
+	await patchSettings(ctx, { devicePrinters: [...rawPrinters(settings).filter((p) => p.deviceId !== toId), ...copied] });
+	await settingsAudit(ctx, "device-printers-copied", `${from.name} to ${to.name}`);
+	ctx.ui.notice("Printers copied. Connect any USB printers on " + to.name + ".");
 	return true;
 }

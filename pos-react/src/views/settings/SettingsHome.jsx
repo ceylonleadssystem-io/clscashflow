@@ -6,10 +6,11 @@ import { SYSTEM_PAGES } from "../../domain/systemOptions";
 import { SaveBar, SettingsShell } from "../../components/settings/kit/SettingsShell";
 import { useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
 import { Overview, PAGE_COMPONENTS as SYSTEM_COMPONENTS } from "./SystemOptionsPages";
+import { DEVICE_COMPONENTS } from "./DevicePages";
 import { Jobs, Users } from "./UsersPages";
 import { usePos } from "../../store/PosProvider";
 
-const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs };
+const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, ...DEVICE_COMPONENTS };
 
 export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyView }) {
 	const draft = useSystemOptionsDraft();
@@ -18,6 +19,7 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 	const groups = [
 		{ title: "System Options", items: SYSTEM_PAGES.map((p) => ({ key: p.key, label: p.title })) },
 		...(can("users.view") ? [{ title: "Users", items: [{ key: "users", label: "Users" }, { key: "jobs", label: "Jobs" }] }] : []),
+		{ title: "Device Manager", items: [{ key: "printers", label: "Printers" }] },
 		{ title: "More settings", items: legacyTabs.map((t) => ({ key: "legacy:" + t.id, label: t.label })) },
 	];
 	const select = (key) => {

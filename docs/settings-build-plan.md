@@ -49,7 +49,20 @@ Auto clock-out defaults to OFF (the spec says on) so existing businesses see no 
 Clocking in opens the register (opening cash) and clocking out closes it (cash count, variance recorded); the separate Open and Close Register buttons are gone.
 Automatic clock-out closes an open register with the expected cash as the count, because nobody is there to count.
 
+## Delivered (slice 4): Device Manager > Printers
+- **Devices** register themselves: the first time a signed-in browser opens the POS it adds itself to `settings.posDevices` as "Register N" (rename it, or mark it an order pad, in Printers).
+  The page lists the devices of the location chosen in the top bar; "Copy setup from another device" copies printers (USB connections are not copied: USB access belongs to the browser it was granted in).
+- **Printers** (`settings.devicePrinters`, `domain/devices.js`): every device has a Receipt printer, plus kitchen printers that each serve a station. Drawer: Connection (with Connect and Test print on the device itself),
+  Station, Receipt copies (USB), Print from this device, Backup printer, Duplicate to. Backup and duplicate must be another printer of the same device; a printer cannot back itself up and backup loops are refused.
+- **What it changes at the till** (`services/pos/printing.js`): a device with a Receipt printer setup prints receipts that way (copies, log only); a kitchen ticket for a station prints on this device's printer for that station
+  (backup if it fails, a copy to the duplicate printer, "logged" and not printed when Print from this device is off). A device with no setup behaves exactly as before.
+- **Stations without a printer** are listed on the page (printer stations with no printer chosen on the Stations page and none on any device).
+- Deviations from the spec: the connection is the existing USB (WebUSB) or system print dialog flow, not an IP address (this POS has no network printing); Paper width and Printer type are not offered
+  (receipts and tickets are laid out for 80 mm only, so a switch would do nothing); the status badge is live only for the receipt printer of the device you are on, other printers show no status;
+  an offline printer shows a notice and the ticket stays in the Order Queue (no banner, no automatic retry); the "items with no station" warning is omitted because an item with no station goes to the first station;
+  no `devices.edit` key: the page follows the Settings permission.
+- Not yet verified: a real USB printer (no hardware here), a second physical device picking up the list.
+
 ## Next slices, in the spec's order
-1. Device Manager: per-device Printers (Stations already exist as the Stations page).
-2. Menu Admin with Save then Publish: Sales Categories, Taxes, Categories, Modifiers, Items, Availability.
-3. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.
+1. Menu Admin with Save then Publish: Sales Categories, Taxes, Categories, Modifiers, Items, Availability.
+2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.
