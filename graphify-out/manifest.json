@@ -216,9 +216,9 @@
     "semantic_hash": ""
   },
   "netlify/functions/pos-admin-data.js": {
-    "mtime": 1793348256.2608135,
-    "seen": 1793348402.4648561,
-    "ast_hash": "739f1cc4c08f746417fe0893953ae9b6",
+    "mtime": 1793351618.5595725,
+    "seen": 1793351809.415555,
+    "ast_hash": "c369b10bb4df1e77bccb9673187eb94d",
     "semantic_hash": ""
   },
   "netlify/functions/pos-admin-diagnostics.js": {
@@ -498,15 +498,15 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/AccountDetail.jsx": {
-    "mtime": 1793335616.433386,
-    "seen": 1793335745.5221171,
-    "ast_hash": "6c6100e540dbebb39a3bdc4cb51a6a2d",
+    "mtime": 1793351717.7353785,
+    "seen": 1793351809.415591,
+    "ast_hash": "9ab7ed2f0e90634f3c145eae04d1872e",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/AdminApp.jsx": {
-    "mtime": 1793335616.4343805,
-    "seen": 1793335745.5221179,
-    "ast_hash": "cad9f1c1b20dab7619b3708ed7b657cc",
+    "mtime": 1793351717.7349408,
+    "seen": 1793351809.415591,
+    "ast_hash": "8727f467ba5c63b159e2472b2ef4c7b5",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/AdminLogin.jsx": {
@@ -606,9 +606,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/localAdmin.js": {
-    "mtime": 1793335576.4569254,
-    "seen": 1793335745.5221329,
-    "ast_hash": "1b9660521fcba498794a87f9fef48cf2",
+    "mtime": 1793351763.963904,
+    "seen": 1793351809.4156082,
+    "ast_hash": "8b2b2dc29f501b6ef77482f4054eee13",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/main.jsx": {
@@ -1716,9 +1716,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/Settings.jsx": {
-    "mtime": 1793348930.9890227,
-    "seen": 1793349005.382452,
-    "ast_hash": "c18d2c67416d038a812d80966fd372dd",
+    "mtime": 1793349266.7071097,
+    "seen": 1793351809.415786,
+    "ast_hash": "5dbbda969bdf938c9b8ac7af999e8c12",
     "semantic_hash": ""
   },
   "pos-react/src/views/Staff.jsx": {
@@ -3006,9 +3006,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SettingsHome.jsx": {
-    "mtime": 1793348975.206453,
-    "seen": 1793349005.3824692,
-    "ast_hash": "c3b7995d0620624a43d8524c60214bd0",
+    "mtime": 1793349072.2388282,
+    "seen": 1793351809.4158,
+    "ast_hash": "6900b37edcebbdd4be27cffc169fdde4",
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SystemOptionsPages.jsx": {
@@ -3018,27 +3018,27 @@
     "semantic_hash": ""
   },
   "tests/seo.test.js": {
-    "mtime": 1793308175.3131912,
-    "seen": 1793310525.598565,
-    "ast_hash": "6d3b571f7989d99a713888ac165be429",
+    "mtime": 1793350588.7946725,
+    "seen": 1793351809.4158342,
+    "ast_hash": "75331ccaf859f7fe781336587886fd94",
     "semantic_hash": ""
   },
   "docs/settings-build-plan.md": {
-    "mtime": 1793348985.8525407,
-    "seen": 1793349005.382529,
-    "ast_hash": "f12f1f9ca057852133fa839f513e8502",
+    "mtime": 1793351790.7104642,
+    "seen": 1793351809.4158552,
+    "ast_hash": "e5feb797f13f70423f71b7aee883dac2",
     "semantic_hash": ""
   },
   "llms.txt": {
-    "mtime": 1793308175.3064454,
-    "seen": 1793310525.598591,
-    "ast_hash": "e3a21af85dc93a6b86c70695c1d8adec",
+    "mtime": 1793350540.160046,
+    "seen": 1793351809.415861,
+    "ast_hash": "3e926f676ffe99fdf0dafa5ab25ef459",
     "semantic_hash": ""
   },
   "robots.txt": {
-    "mtime": 1793308156.9080658,
-    "seen": 1793310525.598604,
-    "ast_hash": "e2392e46af841d2eaafe4b578c3d910f",
+    "mtime": 1793350540.1575449,
+    "seen": 1793351809.415874,
+    "ast_hash": "ff93e28d18f42657c5d5ba616c4475a6",
     "semantic_hash": ""
   },
   "pos-react/src/components/settings/kit/entities.jsx": {
@@ -3186,15 +3186,15 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/AdminCharts.jsx": {
-    "mtime": 1793348275.9791095,
-    "seen": 1793348402.464894,
-    "ast_hash": "2b085445d9a132d467a0b0a88d674639",
+    "mtime": 1793351717.7364326,
+    "seen": 1793351809.415592,
+    "ast_hash": "ec9b8994a9b4a1b7e98c9dba8401d813",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/AnalyticsTab.jsx": {
-    "mtime": 1793348275.9798183,
-    "seen": 1793348402.464895,
-    "ast_hash": "8e99f205c6af94ef779a75d709040ca5",
+    "mtime": 1793351734.9082942,
+    "seen": 1793351809.415594,
+    "ast_hash": "c8df7c74ae28317e46f9eb5da6718998",
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/BusinessTypeTab.jsx": {
@@ -3204,15 +3204,15 @@
     "semantic_hash": ""
   },
   "pos-react/src/admin-app/OverallAnalytics.jsx": {
-    "mtime": 1793348367.6030364,
-    "seen": 1793348402.4649012,
-    "ast_hash": "f406fc18745e4869ca29e690354bb69e",
+    "mtime": 1793351717.7359934,
+    "seen": 1793351809.415601,
+    "ast_hash": "e7f1d1270f4823d562cc17504d0dc605",
     "semantic_hash": ""
   },
   "pos-react/src/domain/adminAnalytics.js": {
-    "mtime": 1793348367.6027994,
-    "seen": 1793348402.464958,
-    "ast_hash": "3f2364f8bfe995b9ca1c14493a8f3309",
+    "mtime": 1793351600.2972288,
+    "seen": 1793351809.4156559,
+    "ast_hash": "d680b60612a35b2a9f465ef741eba2c8",
     "semantic_hash": ""
   },
   "pos-react/src/domain/businessType.js": {
@@ -3285,6 +3285,30 @@
     "mtime": 1793348975.2115223,
     "seen": 1793349005.382432,
     "ast_hash": "6ff3160e885d61ad8f714bd8c1a5846b",
+    "semantic_hash": ""
+  },
+  "pos-react/src/admin-app/InsightPanels.jsx": {
+    "mtime": 1793351696.2451963,
+    "seen": 1793351809.4155982,
+    "ast_hash": "8acebced3d357a3b08a33d67599e1f64",
+    "semantic_hash": ""
+  },
+  "pos-react/src/domain/adminInsights.js": {
+    "mtime": 1793351600.2792072,
+    "seen": 1793351809.415657,
+    "ast_hash": "3eb5f43e40983d014a87d17e657b4abf",
+    "semantic_hash": ""
+  },
+  "pos-react/src/tests/adminInsights.test.js": {
+    "mtime": 1793351663.9197066,
+    "seen": 1793351809.4157388,
+    "ast_hash": "6ef5f20db0b02f101c271bbd1630b6df",
+    "semantic_hash": ""
+  },
+  "pos-react/src/tests/adminInsightsParity.test.js": {
+    "mtime": 1793351634.002749,
+    "seen": 1793351809.4157388,
+    "ast_hash": "a779d81a6736ec98e112f4944b2b9776",
     "semantic_hash": ""
   }
 }

@@ -16,17 +16,27 @@ describe("admin portal", () => {
 		expect(isPortalPath("/posv2/")).toBe(false);
 		expect(isPortalPath("/administrator")).toBe(false);
 	});
-	it("shows the six sections to an owner and follows the role for others", () => {
-		expect(keys("owner")).toEqual(["location", "reports", "menu", "users", "timesheets", "shop"]);
-		expect(keys("manager")).toEqual(["location", "menu", "users", "timesheets", "shop"]);
+	it("shows the eight sections to an owner and follows the role for others", () => {
+		expect(keys("owner")).toEqual(["location", "reports", "system", "menu", "users", "devices", "timesheets", "shop"]);
+		expect(keys("manager")).toEqual(["location", "system", "menu", "users", "devices", "timesheets", "shop"]);
 		expect(keys("accountant")).toEqual(["reports", "timesheets", "shop"]);
 		expect(keys("cashier")).toEqual(["shop"]);
-		expect(PORTAL_SECTIONS.map((s) => s.title)).toEqual(["Location Info", "Reports", "Menu Admin", "User Admin", "Timesheets", "Shop"]);
+		expect(PORTAL_SECTIONS.map((s) => s.title)).toEqual(["Location Info", "Reports", "System Options", "Menu Admin", "User Admin", "Device Manager", "Timesheets", "Shop"]);
 	});
 	it("Menu Admin owns Products and Modifiers", () => {
 		expect(sectionOfView("modifiers").key).toBe("menu");
 		expect(sectionOfView("items").key).toBe("menu");
 		expect(PORTAL_SECTIONS.find((s) => s.key === "menu").subs.map((s) => s.view)).toEqual(["items", "categories", "modifiers", "availability", "taxes", "salesCategories"]);
+	});
+});
+
+describe("portal pages", () => {
+	it("every page in System Options, Menu Admin, User Admin and Device Manager is a Settings page (the same component the POS uses)", async () => {
+		const { PAGE_COMPONENTS } = await import("../views/settings/SettingsHome");
+		for (const key of ["system", "menu", "users", "devices"]) {
+			const s = PORTAL_SECTIONS.find((x) => x.key === key);
+			for (const sub of s.subs) expect(sub.view in PAGE_COMPONENTS || sub.view === "overview", key + "/" + sub.view).toBe(true);
+		}
 	});
 });
 

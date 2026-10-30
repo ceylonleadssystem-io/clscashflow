@@ -929,3 +929,40 @@ html[data-theme="dark"] .health-ok,html[data-theme="dark"] .health-good{color:#6
 .sk-detail-actions{display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:12px}
 .sk-search{padding:10px 0}.sk-search .input{max-width:320px;width:100%}
 .sk-search .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* wide screens: the header is 74px tall by default, so when its buttons wrap to a second row they were pushed out of it (cut off at the top).
+   Let it grow with its content, give the buttons the room the title does not need, and keep them right-aligned. */
+@media (min-width:1101px){
+	html body .top,html body.full .top{height:auto!important;min-height:74px;padding-top:8px!important;padding-bottom:8px!important;gap:16px!important}
+	html body .top-title{flex:0 1 24%;min-width:0}
+	html body .top-right{flex:1 1 auto;min-width:0;justify-content:flex-end;flex-wrap:wrap}
+	html body .top-actions{min-width:0;flex:0 1 auto;justify-content:flex-end}
+}
+
+/* admin analytics: activation funnel and heat map */
+.admin-funnel{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.admin-funnel-row{display:grid;grid-template-columns:minmax(150px,2fr) minmax(80px,3fr) 48px minmax(120px,1.5fr);gap:12px;align-items:center;width:100%;min-height:44px;padding:6px 10px;border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.admin-funnel-row:hover:not(:disabled){background:var(--ui-soft,#f2f4f6)}.admin-funnel-row:disabled{cursor:default}
+.admin-funnel-bar{display:block;height:14px;border-radius:99px;background:#eee9df;overflow:hidden}.admin-funnel-bar span{display:block;height:100%;background:var(--ui-accent,#ff4d0a)}
+@media (max-width:640px){.admin-funnel-row{grid-template-columns:1fr 48px;grid-template-areas:"l c" "b b" "p p"}.admin-funnel-label{grid-area:l}.admin-funnel-bar{grid-area:b}.admin-funnel-row strong{grid-area:c}.admin-funnel-row .muted{grid-area:p}}
+.admin-heat{display:grid;gap:3px;overflow-x:auto}
+.admin-heat-row,.admin-heat-hours{display:grid;grid-template-columns:38px repeat(24,minmax(14px,1fr));gap:3px;align-items:center;min-width:420px}
+.admin-heat-hours{font-size:10px;color:#756f66}.admin-heat-hours span{white-space:nowrap;overflow:visible}
+.admin-heat-day{font-size:12px;color:#756f66}
+.admin-heat-cell{display:block;height:24px;border-radius:4px;background:var(--ui-accent,#ff4d0a)}
+
+/* admin portal: eight boxes (4 x 2) now that System Options and Device Manager are in it */
+@media(min-width:901px){.portal-hub.portal-hub-8{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.portal-hub-8 .portal-box{padding:18px}.portal-hub-8 .portal-box strong{font-size:calc(20px * var(--ui-fs, 1))}
+.portal-hub-8 .portal-box-icon{width:80px;height:80px}
+
+/* a sub-item (Items, Categories ...) is highlighted across the whole row, not as a small pill: the list is not indented, its text is */
+html body .side #nav .report-subnav,html body.nav-rail .side #nav:is(.portal-nav,.report-nav) .report-subnav{margin:2px 0 6px 0!important;padding-left:0!important;border-left:0!important}
+html body .side #nav .report-subnav button,html body.nav-rail .side #nav:is(.portal-nav,.report-nav) .report-subnav button{width:100%!important;padding:8px 12px 8px 52px!important;border-radius:10px!important}
+
+/* settings and portal pages: the groups of items in a card are spaced apart, and a page's cards sit inside the portal's own padding */
+.sk-tree-group+.sk-tree-group{margin-top:8px}
+.sk-card-body>.input[type=search]{margin-bottom:10px}
+.portal .sk-main{padding:0;gap:16px}
+.portal .sk-main-body{margin-bottom:0}
+.portal .sk-savebar{margin-top:4px}

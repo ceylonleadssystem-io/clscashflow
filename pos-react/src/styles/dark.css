@@ -254,3 +254,8 @@ html[data-theme="dark"] .order-tool.danger { background: #c43a2c !important; bor
 html[data-theme="dark"] .image-position-controls span { color: #a3adb7 !important; }
 html[data-theme="dark"] .login-brand { color: #eceff2 !important; }
 html[data-theme="dark"] .account-home { color: #ff9a62 !important; }
+
+/* the gear shown while information loads must be visible on a dark page */
+html[data-theme="dark"] .gear-loader{color:#eceff2}
+html[data-theme="dark"] .gear-overlay{background:rgba(17,21,25,.88)}
+html[data-theme="dark"] .app-loading{background:#111519;color:#c3cbd3}

@@ -21,8 +21,7 @@ import { ReportNav } from "./ReportNav";
 const page = (load, name) => lazy(() => load().then((m) => ({ default: m[name] })));
 const Settings = page(() => import("../../views/Settings"), "Settings");
 const Reports = page(() => import("../../views/Reports"), "Reports");
-const MenuAdminPortal = page(() => import("../../views/settings/MenuAdminPages"), "MenuAdminPortal");
-const UserManagement = page(() => import("../../views/Staff"), "UserManagement");
+const PortalSettingsPage = page(() => import("../../views/settings/SettingsHome"), "PortalSettingsPage");
 const Timesheets = page(() => import("../../views/Timesheets"), "Timesheets");
 const Shop = page(() => import("../../views/Shop"), "Shop");
 
@@ -35,7 +34,7 @@ export function PortalHome({ sections, open }) {
 					<div className="muted">Choose what you want to manage. The POS (checkout, tables, orders) is not part of this page.</div>
 				</div>
 			</div>
-			<div className="portal-hub" id="portal-hub">
+			<div className={"portal-hub" + (sections.length > 6 ? " portal-hub-8" : "")} id="portal-hub">
 				{sections.map((s) => (
 					<button key={s.key} type="button" className="portal-box" data-portal={s.key} onClick={() => open(s.key)}>
 						<span className="portal-box-icon"><PortalIcon name={s.icon} size={56} /></span>
@@ -84,19 +83,7 @@ export function PortalShell() {
 	if (current && sections.includes(current)) {
 		if (section === "location") content = <Settings only={["business"]} />;
 		else if (section === "reports") content = <Reports />;
-		else if (section === "menu") content = <MenuAdminPortal page={sub} />;
-		else if (section === "users")
-			content = (
-				<section className="view active" id="view-users">
-					<div className="dashboard-toolbar">
-						<div>
-							<div className="panel-title">User Admin</div>
-							<div className="muted">Add and manage users, roles and access</div>
-						</div>
-					</div>
-					<UserManagement />
-				</section>
-			);
+		else if (["system", "menu", "users", "devices"].includes(section)) content = <PortalSettingsPage key={sub} page={sub} onOpen={(k) => open(section, k)} />;
 		else if (section === "timesheets") content = <Timesheets />;
 		else if (section === "shop") content = <Shop />;
 	}

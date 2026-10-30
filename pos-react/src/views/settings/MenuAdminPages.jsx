@@ -16,7 +16,6 @@ import { compressProductImage } from "../../services/printing/imageTools";
 import { kitchenStations } from "../../domain/kitchenStations";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
-import { PublishBar } from "../../components/settings/kit/PublishBar";
 import { CatalogueEditor, ModifierGroupEditor } from "./MovedPages";
 import { usePos } from "../../store/PosProvider";
 
@@ -1089,16 +1088,3 @@ export const ModifiersPage = () => (
 );
 
 export const MENU_ADMIN_COMPONENTS = { categories: CategoriesAdmin, modifiers: ModifiersPage, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: ItemsPage };
-
-/** The Menu Admin pages for the account admin portal (/admin): one page at a time with the same publish bar as in Settings. */
-export function MenuAdminPortal({ page }) {
-	const Page = MENU_ADMIN_COMPONENTS[page] || MENU_ADMIN_COMPONENTS.items;
-	return (
-		<section className="view active sk-main" id="view-menu-admin">
-			<div className="sk-main-body">
-				<Page />
-			</div>
-			<PublishBar />
-		</section>
-	);
-}

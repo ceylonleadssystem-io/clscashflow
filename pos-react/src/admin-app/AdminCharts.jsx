@@ -59,12 +59,12 @@ export function RankedBars({ rows, empty = "Nothing to show yet." }) {
 	);
 }
 
-export function Kpi({ label, value, hint }) {
+export function Kpi({ label, value, hint, tone = "" }) {
 	return (
 		<div className="card">
 			<div className="label">{label}</div>
 			<div className="value admin-small">{value}</div>
-			{hint && <small className="muted">{hint}</small>}
+			{hint && <small className={tone || "muted"}>{hint}</small>}
 		</div>
 	);
 }

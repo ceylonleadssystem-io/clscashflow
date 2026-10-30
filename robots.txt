@@ -50,4 +50,4 @@ Disallow: /cashflow/invoice-public.html
 Disallow: /i/
 Disallow: /.netlify/
 
-Sitemap: https://www.ceylonrylabs.io/sitemap.xml
+Sitemap: https://ceylonrylabs.io/sitemap.xml

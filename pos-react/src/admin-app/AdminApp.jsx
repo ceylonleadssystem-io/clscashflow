@@ -9,6 +9,7 @@ import { adminSession } from "./adminSession";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
 import { OverallAnalytics } from "./OverallAnalytics";
+import { ChurnPanel, FunnelPanel, HeatmapPanel, KitchenPanel, LossPanel, TypesPanel } from "./InsightPanels";
 import { SubscriptionManagement } from "./SubscriptionManagement";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
@@ -31,6 +32,7 @@ export function AdminApp() {
 	const [loading, setLoading] = useState(false);
 	const [selected, setSelected] = useState("");
 	const [page, setPage] = useState("accounts"); // "accounts" | "subscriptions"
+	const [mainTab, setMainTab] = useState("analytics"); // the main page: "analytics" | "accounts" (account management)
 	const [q, setQ] = useState("");
 	const [fStatus, setFStatus] = useState("");
 	const [fSub, setFSub] = useState("");
@@ -135,6 +137,7 @@ export function AdminApp() {
 			) : current ? (
 				<AccountDetail
 					account={current}
+					accounts={accounts}
 					onBack={() => {
 						setSelected("");
 						load();
@@ -143,6 +146,15 @@ export function AdminApp() {
 				/>
 			) : (
 				<>
+					<div className="admin-tabs sk-tabs" role="tablist" aria-label="Administration">
+						{[["analytics", "Analytics"], ["accounts", "Account management"]].map(([k, label]) => (
+							<button key={k} type="button" role="tab" aria-selected={mainTab === k} id={"admin-tab-" + k} className={mainTab === k ? "active" : ""} onClick={() => setMainTab(k)}>
+								{label}
+							</button>
+						))}
+					</div>
+					{mainTab === "analytics" && (
+						<div role="tabpanel" aria-labelledby="admin-tab-analytics">
 					{stats && (
 						<section className="admin-summary">
 							<div className="card"><div className="label">Trial</div><div className="value">{stats.trialAccounts ?? accounts.filter((a) => statusOf(a).value === "trial").length}</div></div>
@@ -152,7 +164,17 @@ export function AdminApp() {
 							<div className="card"><div className="label">Disabled accounts</div><div className="value" style={{ color: accounts.some((a) => a.paused) ? "#a5362b" : undefined }}>{accounts.filter((a) => a.paused).length}</div></div>
 						</section>
 					)}
+					<ChurnPanel accounts={accounts} onOpen={setSelected} />
 					<OverallAnalytics accounts={accounts} onOpen={setSelected} />
+					<HeatmapPanel accounts={accounts} />
+					<FunnelPanel accounts={accounts} onOpen={setSelected} />
+					<TypesPanel accounts={accounts} />
+					<LossPanel accounts={accounts} onOpen={setSelected} />
+					<KitchenPanel accounts={accounts} onOpen={setSelected} />
+						</div>
+					)}
+					{mainTab === "accounts" && (
+						<div role="tabpanel" aria-labelledby="admin-tab-accounts">
 					<section className="admin-toolbar" style={{ gridTemplateColumns: "1fr auto auto" }}>
 						<input className="input" placeholder="Search business, e-mail or name…" value={q} onChange={(e) => setQ(e.target.value)} />
 						<select className="input" aria-label="Filter by status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
@@ -234,6 +256,8 @@ export function AdminApp() {
 					<p className="muted" style={{ marginTop: 10 }}>
 						Open an account to switch its features on or off (per business or per location), edit its welcome message and manage invoices.
 					</p>
+						</div>
+					)}
 				</>
 			)}
 		</div>
