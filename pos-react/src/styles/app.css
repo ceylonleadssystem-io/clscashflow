@@ -950,3 +950,19 @@ html[data-theme="dark"] .health-ok,html[data-theme="dark"] .health-good{color:#6
 .admin-heat-hours{font-size:10px;color:#756f66}.admin-heat-hours span{white-space:nowrap;overflow:visible}
 .admin-heat-day{font-size:12px;color:#756f66}
 .admin-heat-cell{display:block;height:24px;border-radius:4px;background:var(--ui-accent,#ff4d0a)}
+
+/* admin portal: eight boxes (4 x 2) now that System Options and Device Manager are in it */
+@media(min-width:901px){.portal-hub.portal-hub-8{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.portal-hub-8 .portal-box{padding:18px}.portal-hub-8 .portal-box strong{font-size:calc(20px * var(--ui-fs, 1))}
+.portal-hub-8 .portal-box-icon{width:80px;height:80px}
+
+/* a sub-item (Items, Categories ...) is highlighted across the whole row, not as a small pill: the list is not indented, its text is */
+html body .side #nav .report-subnav,html body.nav-rail .side #nav:is(.portal-nav,.report-nav) .report-subnav{margin:2px 0 6px 0!important;padding-left:0!important;border-left:0!important}
+html body .side #nav .report-subnav button,html body.nav-rail .side #nav:is(.portal-nav,.report-nav) .report-subnav button{width:100%!important;padding:8px 12px 8px 52px!important;border-radius:10px!important}
+
+/* settings and portal pages: the groups of items in a card are spaced apart, and a page's cards sit inside the portal's own padding */
+.sk-tree-group+.sk-tree-group{margin-top:8px}
+.sk-card-body>.input[type=search]{margin-bottom:10px}
+.portal .sk-main{padding:0;gap:16px}
+.portal .sk-main-body{margin-bottom:0}
+.portal .sk-savebar{margin-top:4px}

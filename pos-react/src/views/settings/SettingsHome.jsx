@@ -17,7 +17,7 @@ import { PublishBar } from "../../components/settings/kit/PublishBar";
 import { Jobs, Users } from "./UsersPages";
 import { usePos } from "../../store/PosProvider";
 
-const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, kds: KdsPage, health: HealthPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
+export const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, kds: KdsPage, health: HealthPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
 
 /** The Menu Admin pages in the order the menu is built: items, categories, modifiers, availability, taxes, sales categories. */
 export const MENU_ADMIN_NAV = [
@@ -111,5 +111,30 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 				</section>
 			)}
 		</SettingsShell>
+	);
+}
+
+/**
+ * One Settings page for the account admin portal (/admin): the same page components, save bar and publish bar as Settings, so the portal can
+ * never lag behind the POS. `onOpen(key)` lets the overview tiles move to another page of the portal.
+ */
+export function PortalSettingsPage({ page, onOpen }) {
+	return (
+		<SystemOptionsProvider>
+			<PortalPageBody page={page} onOpen={onOpen} />
+		</SystemOptionsProvider>
+	);
+}
+function PortalPageBody({ page, onOpen }) {
+	const draft = useSystemOptionsDraft();
+	const Page = PAGE_COMPONENTS[page];
+	const menu = page in MENU_ADMIN_COMPONENTS;
+	return (
+		<section className="view active sk-main" id="view-portal-page" data-system-options={page}>
+			<div className="sk-main-body" data-page={page}>
+				{page === "overview" ? <Overview onOpen={onOpen} /> : Page ? <Page /> : null}
+			</div>
+			{menu ? <PublishBar /> : <SaveBar count={draft.changes.length} onDiscard={draft.discard} onSave={draft.save} saving={draft.saving} />}
+		</section>
 	);
 }
