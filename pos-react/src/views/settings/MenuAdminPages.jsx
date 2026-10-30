@@ -2,12 +2,14 @@
  * Settings > Menu Admin: Sales Categories and Availability. Both save a draft; the publish bar at the bottom puts every draft on the
  * POS at once (see domain/menuAdmin.js).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AssignmentTree } from "../../components/settings/kit/AssignmentTree";
 import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
-import { PageHeader, SectionCard, SettingRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
+import { NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
 import { categoryKey, visibleProductCategories } from "../../domain/catalog";
 import { WEEKDAYS, cleanMenu, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
+import { money } from "../../domain/format";
+import { cleanTax, cleanTaxRules, previewTax, taxError } from "../../domain/taxes";
 import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 
@@ -253,4 +255,144 @@ export function Availability() {
 	);
 }
 
-export const MENU_ADMIN_COMPONENTS = { salesCategories: SalesCategories, availability: Availability };
+export function Taxes() {
+	const { settings, categories, products, subcategories } = useData();
+	const { svc } = usePos();
+	const [edit, setEdit] = useState(null);
+	const [touched, setTouched] = useState(false);
+	const list = workingOf(settings, "taxes");
+	const saved = useMemo(() => cleanTaxRules(workingOf(settings, "taxRules")[0] || {}), [settings]);
+	const [rules, setRules] = useState(saved);
+	useEffect(() => setRules(saved), [saved]);
+	const rulesDirty = JSON.stringify(rules) !== JSON.stringify(saved);
+	const names = useMemo(() => visibleProductCategories(categories, products, subcategories, settings.userCategories || []).sort((a, b) => a.localeCompare(b)), [categories, products, subcategories, settings.userCategories]);
+	const taxOptions = [{ value: "", label: "None" }, ...list.filter((t) => t.status === "active").map((t) => ({ value: t.id, label: t.name }))];
+	const clean = edit ? cleanTax({ ...edit, id: edit.id || "new" }) : null;
+	const error = clean ? taxError(clean, list.filter((t) => t.id !== edit.id)) : "";
+	const preview = clean && !error ? previewTax(clean, list) : null;
+	const close = () => (setEdit(null), setTouched(false));
+	const save = async () => {
+		setTouched(true);
+		if (error) return;
+		if (await svc.settings.saveMenuEntity("taxes", edit)) close();
+	};
+	const summary = (t) => (t.isGroup ? "Group: " + t.memberTaxIds.map((id) => list.find((x) => x.id === id)?.name || "?").join(" + ") : t.rate + "%");
+	const setCat = (name, field, v) => setRules((r) => ({ ...r, categoryTaxes: { ...r.categoryTaxes, [categoryKey(name)]: { ...(r.categoryTaxes[categoryKey(name)] || { tax: "", takeaway: "" }), [field]: v } } }));
+	return (
+		<>
+			<PageHeader
+				title="Taxes"
+				description="Tax is added on top of item prices when an order is paid. Nothing is added until you publish at least one active tax."
+				note="Rate changes apply to new orders only. Past sales keep the tax they were charged."
+				actions={
+					<>
+						<DraftBadge show={hasDraft(settings, "taxes") || hasDraft(settings, "taxRules")} />
+						<button type="button" className="btn gold" id="add-tax" onClick={() => setEdit({ id: "", name: "", isGroup: false, rate: "", memberTaxIds: [], status: "active" })}>
+							Add tax
+						</button>
+					</>
+				}
+			/>
+			<SectionCard title="General taxes">
+				{!list.length ? (
+					<EmptyState title="No taxes yet">Add your current rates, for example VAT. There are no preset rates.</EmptyState>
+				) : (
+					<SortableList
+						items={list}
+						label="Tax"
+						onReorder={(ids) => svc.settings.reorderMenuEntities("taxes", ids)}
+						render={(t) => (
+							<div className="sk-list-line" data-tax={t.id}>
+								<strong>{t.name}</strong>
+								<span className="muted">{summary(t)}</span>
+								<StatusBadge status={t.status} />
+								<span className="sk-list-actions">
+									<button type="button" className="btn out" onClick={() => setEdit(cleanTax(t))}>
+										Edit
+									</button>
+									<button type="button" className="btn danger" onClick={() => svc.settings.deleteMenuEntity("taxes", t.id)}>
+										Remove
+									</button>
+								</span>
+							</div>
+						)}
+					/>
+				)}
+			</SectionCard>
+			<SectionCard title="Special tax treatments" description="Apply to the whole business.">
+				<SelectRow id="tx-default" label="Default tax" help="Used for every item whose category has no tax of its own." value={rules.defaultTaxId} options={taxOptions} onChange={(v) => setRules((r) => ({ ...r, defaultTaxId: v }))} />
+				<ToggleRow id="tx-takeaway" label="Takeaway tax" help="When on, each category can have a separate tax for takeaway orders." value={rules.takeawayOn} onChange={(v) => setRules((r) => ({ ...r, takeawayOn: v }))} />
+				<ToggleRow id="tx-service" label="Tax on service charge" help="Charge tax on the service charge too (only if a service charge is switched on in Settings)." value={rules.serviceTaxOn} onChange={(v) => setRules((r) => ({ ...r, serviceTaxOn: v }))} />
+				{rules.serviceTaxOn && <SelectRow id="tx-service-tax" label="Service charge tax" value={rules.serviceTaxId} options={taxOptions} onChange={(v) => setRules((r) => ({ ...r, serviceTaxId: v }))} />}
+			</SectionCard>
+			<SectionCard title="Tax by category" description="An item takes its category's tax. Categories left on None use the default tax.">
+				{!names.length ? <p className="muted">There are no categories yet.</p> : names.map((n) => {
+					const c = rules.categoryTaxes[categoryKey(n)] || { tax: "", takeaway: "" };
+					return (
+						<div key={n} className="sk-cat-tax" data-cat-tax={n}>
+							<SelectRow id={"tx-cat-" + categoryKey(n)} label={n} value={c.tax} options={taxOptions} onChange={(v) => setCat(n, "tax", v)} />
+							{rules.takeawayOn && <SelectRow id={"tx-cat-take-" + categoryKey(n)} label={n + " takeaway"} value={c.takeaway} options={taxOptions} onChange={(v) => setCat(n, "takeaway", v)} />}
+						</div>
+					);
+				})}
+				<div className="sk-list-line" style={{ padding: "12px 0 4px" }}>
+					<button type="button" className="btn gold" id="save-tax-rules" disabled={!rulesDirty} onClick={() => svc.settings.saveMenuEntity("taxRules", rules)}>
+						Save draft
+					</button>
+					<button type="button" className="btn out" disabled={!rulesDirty} onClick={() => setRules(saved)}>
+						Discard
+					</button>
+				</div>
+			</SectionCard>
+			<DetailDrawer
+				open={!!edit}
+				wide
+				title={edit?.id ? "Edit tax" : "Add tax"}
+				onClose={close}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={close}>
+							Cancel
+						</button>
+						<button type="button" className="btn gold" id="save-tax" onClick={save}>
+							Save draft
+						</button>
+					</>
+				}
+			>
+				{edit && (
+					<>
+						<TextRow id="tx-name" label="Name" help="For example VAT or Service levy." value={edit.name} max={40} autoFocus onChange={(name) => setEdit((x) => ({ ...x, name }))} error={touched && error.startsWith("Enter a name") ? error : ""} />
+						<ToggleRow id="tx-group" label="This is a tax group" help="A group applies several taxes to the same amount and shows each one on the receipt." value={edit.isGroup} onChange={(isGroup) => setEdit((x) => ({ ...x, isGroup }))} />
+						{edit.isGroup ? (
+							<SettingRow label="Taxes in this group" help="Only single taxes that already exist." wide error={touched && error.startsWith("Choose") ? error : ""}>
+								<div className="sk-checks">
+									{list.filter((t) => !t.isGroup && t.id !== edit.id).map((t) => (
+										<label key={t.id}>
+											<input type="checkbox" checked={edit.memberTaxIds.includes(t.id)} onChange={(e) => setEdit((x) => ({ ...x, memberTaxIds: e.target.checked ? [...x.memberTaxIds, t.id] : x.memberTaxIds.filter((i) => i !== t.id) }))} />
+											<span>
+												{t.name} ({t.rate}%)
+											</span>
+										</label>
+									))}
+									{!list.some((t) => !t.isGroup && t.id !== edit.id) && <p className="muted">Add single taxes first.</p>}
+								</div>
+							</SettingRow>
+						) : (
+							<NumberRow id="tx-rate" label="Rate" help="A percentage, up to 3 decimals." value={edit.rate} min={0} max={100} step={0.001} suffix="%" onChange={(rate) => setEdit((x) => ({ ...x, rate }))} error={touched && error.startsWith("Enter a rate") ? error : ""} />
+						)}
+						<ToggleRow id="tx-active" label="Active" help="An inactive tax is kept but not charged." value={edit.status === "active"} onChange={(on) => setEdit((x) => ({ ...x, status: on ? "active" : "inactive" }))} />
+						{touched && error && !/^(Enter a (name|rate)|Choose)/.test(error) && <p className="sk-error" role="alert">{error}</p>}
+						{preview && (
+							<p className="sk-tax-preview" aria-live="polite">
+								{money(preview.amount)} → tax {money(preview.tax)} → total {money(preview.total)}
+							</p>
+						)}
+					</>
+				)}
+			</DetailDrawer>
+		</>
+	);
+}
+
+export const MENU_ADMIN_COMPONENTS = { salesCategories: SalesCategories, availability: Availability, taxes: Taxes };

@@ -10,6 +10,7 @@ import {
 	currentCashShift,
 	makeDiscountLine,
 	makeServiceLine,
+	makeTaxLine,
 	refundableLines,
 	selectedRefundLines,
 	calculateRefundAmount,
@@ -56,7 +57,7 @@ export async function completeSale(ctx, input) {
 	if (!cart.length) return null;
 	const discount = f["checkout.discounts"] ? input.discount : { type: "percent", value: 0 };
 	const supported = f["checkout.serviceCharge"] && serviceChargeSupported(settings);
-	const totals = cartTotals(cart, discount, settings, supported);
+	const totals = cartTotals(cart, discount, settings, supported, input.orderChannel);
 	const splits = f["checkout.splitBill"] ? input.splitPayments || [] : [];
 	const register = currentCashShift(d.cashShifts, s.userId);
 	const loc = activeLocation(ctx);
@@ -123,6 +124,7 @@ export async function completeSale(ctx, input) {
 	const discountValue = discountAmount(cart, discount);
 	const lines = JSON.parse(JSON.stringify(cart));
 	if (serviceAmount) lines.push(makeServiceLine(serviceAmount, serviceRate));
+	for (const row of totals.taxRows) lines.push(makeTaxLine(row));
 	if (discountValue) lines.push(makeDiscountLine(discountValue));
 	const total = lines.reduce((a, l) => a + l.price * l.qty, 0);
 	const cost = lines.reduce((a, l) => a + (+l.cost || 0) * l.qty, 0);

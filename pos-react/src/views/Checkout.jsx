@@ -170,6 +170,14 @@ export function Checkout() {
 							<span id="cart-service-label">Service charge ({rate}%)</span>
 							<span id="cart-service-charge">{money(t.service)}</span>
 						</div>
+						{(t.taxRows || []).map((r) => (
+							<div className="row tax-summary" key={r.id}>
+								<span>
+									{r.name} ({r.rate}%)
+								</span>
+								<span>{money(r.amount)}</span>
+							</div>
+						))}
 						<div className="row grand">
 							<span>Total</span>
 							<span id="cart-total">{money(t.total)}</span>

@@ -119,6 +119,8 @@ Menu Admin pages save **drafts**: nothing changes on the register until you pres
 - **Sales Categories**: reporting groups (Food, Beverage and so on) that you fill with items. Once published, Reports, Menu, Sales Category uses them; items with none show as Unassigned.
 - **Availability**: menus such as Breakfast and Dinner, each with days, hours and the categories to show. The register shows the categories of every menu running now; when none runs it shows the
   Default menu from System Options, Order Entry (or everything). Overlapping menus both show.
+- **Taxes**: add your rates (for example VAT 18%) and groups, choose a default tax and a tax per category, then Publish. Tax is added on top of item prices after any discount, and shows on the
+  checkout, the receipt and Reports, Taxes. Until a tax is published nothing is added. A partial refund returns the tax with the items.
 
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),

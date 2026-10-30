@@ -24,21 +24,27 @@ const pct = (a, b) => (b ? (a / b) * 100 : 0);
 /**
  * Global metric dictionary for one sale. item_sales = lines before discounts; discounts_comps = discount lines; refunds = refunded
  * amounts; net_sales = item_sales - (discounts + refunds); gross_sales = net_sales + tax; tips = service charge;
- * total_sales = gross_sales + tips + fees. The POS records no tax, card fee or guest count: tax and fees are 0 and guests default to 1.
+ * total_sales = gross_sales + tips + fees. Tax is the sale's tax lines (code TAX); the POS records no card fee or guest count: fees are 0 and guests default to 1.
  */
 export function saleFigures(s) {
 	let item = 0;
 	let disc = 0;
 	let service = 0;
+	let tax = 0;
 	for (const l of s.lines || []) {
 		const v = (+l.price || 0) * (+l.qty || 0);
 		if (l.isDiscount) disc += -v;
+		else if (l.code === "TAX") tax += v;
 		else if (l.isServiceCharge) service += v;
 		else item += v;
 	}
-	const refunds = (s.refunds || []).reduce((a, r) => a + (+r.amount || 0), 0);
+	const refundsPaid = (s.refunds || []).reduce((a, r) => a + (+r.amount || 0), 0);
+	// a refund returns the tax with the items, so the tax share of it comes off the tax, not off net sales
+	const taxShare = tax && s.originalTotal ? Math.min(1, tax / s.originalTotal) : 0;
+	const refunds = refundsPaid * (1 - taxShare);
+	tax -= refundsPaid * taxShare;
 	const net = item - disc - refunds;
-	return { item, disc, refunds, net, tax: 0, gross: net, tips: service, fees: 0, total: net + service, orders: 1, guests: +s.guests || 1 };
+	return { item, disc, refunds, net, tax, gross: net + tax, tips: service, fees: 0, total: net + tax + service, orders: 1, guests: +s.guests || 1 };
 }
 
 const ZERO = () => ({ item: 0, disc: 0, refunds: 0, net: 0, tax: 0, gross: 0, tips: 0, fees: 0, total: 0, orders: 0, guests: 0 });
@@ -56,7 +62,7 @@ const TIPS = {
 	discounts: "Percentage and fixed discounts, free items and rewards (shown as a negative)",
 	refunds: "Total amount refunded (shown as a negative)",
 	net_sales: "Item Sales − (Discounts & Comps + Refunds)",
-	tax: "Sales tax collected. This POS does not record tax yet.",
+	tax: "Tax added to the sale (Settings, Menu Admin, Taxes).",
 	gross_sales: "Net Sales + Tax",
 	tips: "Tips and service charges",
 	fees: "Extra, card and online fees. This POS does not record fees yet.",
@@ -372,7 +378,21 @@ const GIFT = {
 	balances: () => unavailable([C.text("card", "Card #"), C.text("date", "Activation Date"), C.money("balance", "Outstanding Balance")], NO_GIFT),
 	transactions: () => unavailable([C.text("card", "Card #"), C.time("at", "Date"), C.text("location", "Location"), C.text("employee", "Employee"), C.text("type", "TXN"), C.money("amount", "Amount")], NO_GIFT),
 };
-const TAXES = () => unavailable([C.text("name", "Tax Name"), C.pct("rate", "Tax Rate (%)"), C.money("sold", "Taxable Items Sold"), C.num("items", "Taxable Items"), C.money("amount", "Tax Amount")], "No tax is configured or recorded by this POS yet, so no tax was collected in these reports.");
+const TAXES = (ctx) => {
+	const map = new Map();
+	for (const s of activeSales(ctx))
+		for (const l of s.lines || []) {
+			if (l.code !== "TAX") continue;
+			const g = map.get(l.id) || { name: String(l.name).replace(/ \([\d.]+%\)$/, ""), rate: +(String(l.name).match(/\(([\d.]+)%\)$/)?.[1] || 0), sold: 0, amount: 0 };
+			g.sold += +l.basePrice || 0;
+			g.amount += +l.price || 0;
+			map.set(l.id, g);
+		}
+	const rows = [...map.values()].sort((a, b) => b.amount - a.amount);
+	const cols = [C.text("name", "Tax Name"), C.pct("rate", "Tax Rate (%)"), C.money("sold", "Taxable Sales"), C.money("amount", "Tax Amount")];
+	if (!rows.length) return { cols, rows, note: "No tax was collected in these reports. Add your taxes under Settings, Menu Admin, Taxes and publish them." };
+	return { cols, rows, totals: totalsRow(rows, ["sold", "amount"]), chart: { label: "name", value: "amount" } };
+};
 const PAYMENTS = {
 	"credit-card-deposits": () => unavailable([C.time("at", "Time"), C.text("what", "Description"), C.money("total", "Total")], "Card deposits need a connected card processor."),
 	"credit-card-transactions": () => unavailable([C.time("at", "Time"), C.text("ref", "Reference Number"), C.text("card", "Card Number"), C.money("total", "Total"), C.text("status", "Status")], "Card transactions need a connected card processor."),
@@ -527,7 +547,7 @@ const BUILDERS = { sales: SALES, menu: MENU, payroll: PAYROLL, "gift-cards": GIF
 export function buildReport(group, sub, ctx) {
 	const full = { allSales: ctx.sales, kitchenTickets: [], openOrders: [], voidOrders: [], supportAudit: [], stockTransfers: [], inventory: [], locations: [], cashShifts: [], timeEntries: [], users: [], ...ctx };
 	if (group === "sales-vs-labor") return salesVsLabor(full);
-	if (group === "taxes") return TAXES();
+	if (group === "taxes") return TAXES(full);
 	if (group === "loyalty") return LOYALTY();
 	const fn = BUILDERS[group]?.[sub];
 	return fn ? fn(full) : unavailable([], "This report is not available.");

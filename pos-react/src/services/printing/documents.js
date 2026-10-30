@@ -162,7 +162,7 @@ export function receiptLayout(sale, { settings = {}, location = null } = {}) {
 	main.push(left((sale.receipt || "RECEIPT") + "  " + receiptDate(sale)));
 	main.push(left(rule));
 	(sale.lines || []).forEach((line) => {
-		const [first, ...rest] = wrapLine(line.qty + " x " + line.name, 29);
+		const [first, ...rest] = wrapLine(line.code === "TAX" ? line.name : line.qty + " x " + line.name, 29); // a tax is a charge, not an item
 		main.push(left(padRight(first, 30) + padLeft(money(line.price * line.qty).replace("LKR ", ""), 16)));
 		rest.forEach((r) => main.push(left("  " + r)));
 		if (line.description) wrapLine(line.description, width - 2).forEach((r) => main.push(left("  " + r)));

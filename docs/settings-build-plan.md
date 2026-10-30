@@ -78,6 +78,19 @@ Automatic clock-out closes an open register with the expected cash as the count,
 - **Not built, and why**: Taxes (this POS has no tax concept: adding one changes every total, receipt and report, so it needs a decision on rounding, inclusive or exclusive prices and takeaway rules first);
   Categories, Modifiers and Items as draft pages (the existing Products, Modifiers and category screens edit these live; putting them behind drafts means moving that editing, which is a larger change to the working catalogue).
 
+## Delivered (slice 6): Taxes
+Decisions taken (change them if you disagree): prices are entered **without tax** and tax is **added on top**; it is worked out **per line**, **half-up to the cent**, on the amount after the order discount;
+a tax group applies each member to the same amount (not compounded) and lists them separately; no preset rates.
+- **Taxes page** (Menu Admin, same Save then Publish): single taxes and groups (name, rate to 3 decimals, active, live preview "1,000 -> tax -> total"); **Special tax treatments** (default tax, takeaway tax,
+  tax on the service charge with its own tax); **Tax by category** (a tax per category, and a takeaway tax per category when that is on). A tax in use (group member, default, category, service charge) cannot be removed.
+- **At the till** (`domain/taxes.js`, `cartTotals`, `completeSale`): nothing is added until an active tax is published and a default or category tax applies, so existing businesses see no change. The checkout summary and pay screen
+  show each tax; the sale stores each tax as its own line (code TAX, taxable amount in `basePrice`, so no database change); receipts print it as "VAT (18%)".
+- **Refunds:** a partial refund returns the tax in proportion with the items (the tax line is not offered on its own); a full refund returns the total. Past sales keep the tax they were charged.
+- **Reports:** Sales (Tax and Gross Sales), Dashboard figures and Total Sales now include tax; Reports > Taxes lists each tax with its rate, taxable sales and tax collected.
+- Deviations from the spec: tax is set per **category** and as a default, not per **item** (the item screens are not on drafts yet, so there is nowhere to put an item tax; the per-item and takeaway-per-item fields come with Items);
+  "Takeaway" means the Takeaway order type only (delivery apps count as other channels); custom keypad items and the Order Entry custom-item tax rows are not built.
+- Not yet verified: card or cash rounding rules beyond the cent, tax on gift cards (none), a second terminal picking up published taxes.
+
 ## Next slices, in the spec's order
-1. Menu Admin remainder: Taxes (needs the tax decisions above), then Categories, Modifiers (groups, then global) and Items on drafts.
+1. Menu Admin remainder: Categories, Modifiers (groups, then global) and Items on drafts (Items brings the per-item and takeaway-per-item tax fields).
 2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

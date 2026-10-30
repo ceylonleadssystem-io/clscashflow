@@ -45,6 +45,7 @@ export function PayPopup({ mode, onClose }) {
 						<span className="muted">{t.count} item{t.count === 1 ? "" : "s"}</span>
 						{t.discount > 0 && <span className="muted"> · discount -{money(t.discount)}</span>}
 						{t.service > 0 && <span className="muted"> · service {money(t.service)}</span>}
+						{t.tax > 0 && <span className="muted"> · tax {money(t.tax)}</span>}
 					</div>
 					<strong className="pay-summary-total">{money(t.total)}</strong>
 				</div>

@@ -11,6 +11,8 @@ import { categoryKey } from "./catalog";
 export const PAGES = {
 	salesCategories: { label: "Sales category", plural: "Sales categories" },
 	availabilityMenus: { label: "Menu", plural: "Menus" },
+	taxes: { label: "Tax", plural: "Taxes" },
+	taxRules: { label: "Tax rules", plural: "Tax rules" },
 };
 export const PAGE_KEYS = Object.keys(PAGES);
 export const SALES_DEFAULTS = ["Food", "Beverage", "Alcohol", "Retail", "Other"];
@@ -133,8 +135,18 @@ export function overlappingMenus(menu, others = []) {
 }
 
 // ------------------------------------------------------------------------------ drafts ----
-const FIELD_LABELS = { name: "Name", status: "Status", itemIds: "Items", hours: "Hours", categories: "Categories" };
-const brief = (field, v) => (field === "hours" ? hoursSummary(v) : Array.isArray(v) ? `${v.length} ${field === "itemIds" ? "items" : "categories"}` : String(v));
+const FIELD_LABELS = {
+	name: "Name", status: "Status", itemIds: "Items", hours: "Hours", categories: "Categories",
+	isGroup: "Tax group", rate: "Rate (%)", memberTaxIds: "Taxes in group",
+	defaultTaxId: "Default tax", takeawayOn: "Takeaway tax", serviceTaxOn: "Tax on service charge", serviceTaxId: "Service charge tax", categoryTaxes: "Category taxes",
+};
+const brief = (field, v) => {
+	if (field === "hours") return hoursSummary(v);
+	if (Array.isArray(v)) return `${v.length} ${field === "itemIds" ? "items" : field === "memberTaxIds" ? "taxes" : "categories"}`;
+	if (field === "categoryTaxes") return `${Object.keys(v || {}).length} categories`;
+	if (typeof v === "boolean") return v ? "On" : "Off";
+	return v === undefined || v === "" ? "None" : String(v);
+};
 
 /** Every unpublished change: [{ page, key, id, name, kind: "added" | "edited" | "removed", fields: [{ field, before, after }] }]. */
 export function draftChanges(settings = {}) {

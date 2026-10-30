@@ -62,8 +62,8 @@ export function CheckoutProvider({ children }) {
 
 	const settings = data.settings;
 	const totals = useMemo(
-		() => cartTotals(cart, enabled["checkout.discounts"] ? discount : EMPTY_DISCOUNT, settings, enabled["checkout.serviceCharge"] && serviceChargeSupported(settings)),
-		[cart, discount, settings, enabled],
+		() => cartTotals(cart, enabled["checkout.discounts"] ? discount : EMPTY_DISCOUNT, settings, enabled["checkout.serviceCharge"] && serviceChargeSupported(settings), orderChannel),
+		[cart, discount, settings, enabled, orderChannel],
 	);
 
 	// order channels configured in settings (kitchen presets only)
