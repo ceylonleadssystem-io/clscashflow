@@ -39,3 +39,54 @@ describe("admin analytics", () => {
 		expect(o.top.map((t) => t.name)).toEqual(["A", "B", "Quiet"]);
 	});
 });
+
+import { hourLabel, hourlyActivity, localParts, overallHourly } from "../domain/adminAnalytics";
+
+describe("hourly activity", () => {
+	// Colombo is UTC+5:30: 04:00Z is 09:30 there, 10:00Z is 15:30, 20:00Z is 01:30 the next day
+	const at = (z, extra = {}) => ({ id: z + JSON.stringify(extra), date: z.slice(0, 10), createdAt: z, status: "completed", total: 100, staffId: "a", locationId: "l1", lines: [], ...extra });
+	const sales = [at("2026-10-29T04:00:00Z"), at("2026-10-29T04:10:00Z", { staffId: "b", total: 50 }), at("2026-10-30T04:20:00Z"), at("2026-10-30T10:00:00Z", { staffId: "b" }), at("2026-10-30T10:05:00Z", { status: "voided" }), at("2026-10-29T20:00:00Z", { locationId: "l2" })];
+	it("buckets by the hour on the business's clock", () => {
+		expect(localParts("2026-10-29T20:00:00Z")).toEqual({ day: "2026-10-30", hour: 1 });
+		expect(localParts("2026-10-29T04:00:00Z", "UTC")).toEqual({ day: "2026-10-29", hour: 4 });
+		expect([0, 9, 12, 15, 23].map(hourLabel)).toEqual(["12 am", "9 am", "12 pm", "3 pm", "11 pm"]);
+	});
+	it("counts orders, sales and the people selling each hour", () => {
+		const { hours, summary } = hourlyActivity(sales, { now });
+		expect(hours[9]).toMatchObject({ orders: 3, sales: 250, peakSellers: 2 });
+		expect(hours[9].sellers).toBeCloseTo(1.5, 5); // two people on 29 Oct, one on 30 Oct, over two active days
+		expect(hours[15]).toMatchObject({ orders: 1, peakSellers: 1 });
+		expect(hours[1].orders).toBe(1);
+		expect(summary).toMatchObject({ orders: 5, busiestHour: 9, firstHour: 1, lastHour: 15, peakSellers: 2 });
+		expect(summary.activeDays).toBe(2); // 29 and 30 Oct (the 01:30 sale belongs to 30 Oct on the business's clock)
+	});
+	it("narrows to a location and counts people on the clock", () => {
+		const l1 = hourlyActivity(sales, { now, locationId: "l1" });
+		expect(l1.summary.orders).toBe(4);
+		const shift = { userId: "a", clockIn: "2026-10-30T03:30:00Z", clockOut: "2026-10-30T05:30:00Z", locationId: "l1" }; // 09:00 to 11:00 in Colombo
+		const clocked = hourlyActivity(sales, { now, timeEntries: [shift, { ...shift, userId: "b" }] });
+		expect(clocked.hours[9].peakOnClock).toBe(2);
+		expect(clocked.hours[12].peakOnClock).toBe(0);
+		expect(hourlyActivity([], { now }).summary).toMatchObject({ orders: 0, busiestHour: null, firstHour: null, activeDays: 0 });
+	});
+	it("adds businesses together for the main page", () => {
+		const a = { analytics: { hourly: { orders: Array(24).fill(0).map((_, i) => (i === 9 ? 3 : 0)), sales: Array(24).fill(0).map((_, i) => (i === 9 ? 300 : 0)), sellers: Array(24).fill(0).map((_, i) => (i === 9 ? 1.5 : 0)) } } };
+		const b = { analytics: { hourly: { orders: Array(24).fill(0).map((_, i) => (i === 9 || i === 20 ? 2 : 0)), sales: Array(24).fill(0), sellers: Array(24).fill(0).map((_, i) => (i === 9 ? 1 : 0)) } } };
+		const o = overallHourly([a, b, { id: "no data" }]);
+		expect(o.hours[9]).toMatchObject({ orders: 5, sales: 300, sellers: 2.5 });
+		expect(o).toMatchObject({ busiestHour: 9, firstHour: 9, lastHour: 20, peakSellers: 2.5 });
+	});
+	it("a shift nobody clocked out of counts for at most a day", () => {
+		const forgotten = { userId: "z", clockIn: "2026-10-20T04:00:00Z", locationId: "l1" }; // never closed: would otherwise run to "now"
+		const { hours } = hourlyActivity(sales, { now, timeEntries: [forgotten] });
+		expect(hours.reduce((a, h) => a + h.peakOnClock, 0)).toBeLessThanOrEqual(24);
+		expect(hours[9].onClock).toBeGreaterThan(0);
+		expect(hours[9].onClock).toBeLessThanOrEqual(1);
+	});
+	it("averages people over the days that had sales, not over days that only had a clock-in", () => {
+		const longShift = { userId: "z", clockIn: "2026-10-01T04:00:00Z", clockOut: "2026-10-01T05:00:00Z", locationId: "l1" };
+		const { hours, summary } = hourlyActivity(sales, { now, timeEntries: [longShift] });
+		expect(summary.activeDays).toBe(2);
+		expect(hours[9].sellers).toBeCloseTo(1.5, 5);
+	});
+});

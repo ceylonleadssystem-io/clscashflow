@@ -82,7 +82,7 @@ export function Settings({ only = null }) {
 	// the KDS tab exists only for kitchen businesses whose account has the Kitchen Display switched on
 	// the System Options sidebar is for people who may change settings, and not for the portal's single-tab Location Info
 	const sidebar = full && !only;
-	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn)) && (t.id !== "printing" || !full));
+	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn && !full)) && (t.id !== "printing" || !full));
 
 	const sections = {
 		business: full && (

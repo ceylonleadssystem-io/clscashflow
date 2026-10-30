@@ -3,8 +3,8 @@
  * how customers paid, order types, and each location. Built from the business's own sales.
  */
 import { useMemo, useState } from "react";
-import { summarize } from "../domain/adminAnalytics";
-import { BarChart, Kpi, RankedBars, lkr } from "./AdminCharts";
+import { hourLabel, hourlyActivity, summarize } from "../domain/adminAnalytics";
+import { BarChart, HourlyPanel, Kpi, RankedBars, lkr } from "./AdminCharts";
 
 const RANGES = [[7, "7 days"], [30, "30 days"], [90, "90 days"]];
 
@@ -13,6 +13,7 @@ export function AnalyticsTab({ workspace, locations }) {
 	const [locationId, setLocationId] = useState("");
 	const sales = workspace?.sales || [];
 	const s = useMemo(() => summarize(sales, { days, locationId }), [sales, days, locationId]);
+	const hr = useMemo(() => hourlyActivity(sales, { days, locationId, timeEntries: workspace?.timeEntries || [] }), [sales, days, locationId, workspace]);
 	return (
 		<section className="panel admin-analytics">
 			<div className="panel-head">
@@ -61,6 +62,20 @@ export function AnalyticsTab({ workspace, locations }) {
 						<RankedBars rows={s.channels.map((p) => ({ name: p.name, value: p.sales, note: p.orders + (p.orders === 1 ? " order" : " orders") }))} />
 					</div>
 				</div>
+				<h4 style={{ margin: "18px 0 6px" }}>Hourly activity</h4>
+				<HourlyPanel
+					hours={hr.hours}
+					hourLabel={hourLabel}
+					facts={
+						hr.summary.busiestHour == null
+							? ["No transactions in this period."]
+							: [
+									`The POS is in use from ${hourLabel(hr.summary.firstHour)} to ${hourLabel(hr.summary.lastHour)} (business time, Sri Lanka), on ${hr.summary.activeDays} day${hr.summary.activeDays === 1 ? "" : "s"}.`,
+									`Busiest hour: ${hourLabel(hr.summary.busiestHour)}, ${hr.hours[hr.summary.busiestHour].orders} transactions and ${lkr(hr.hours[hr.summary.busiestHour].sales)}.`,
+									`${hr.summary.orders} transactions and ${lkr(hr.summary.sales)} in total. Most users selling in one hour: ${hr.summary.peakSellers}${hr.summary.peakOnClock ? `; most clocked in: ${hr.summary.peakOnClock}` : ""}.`,
+								]
+					}
+				/>
 				{!locationId && s.locations.length > 1 && (
 					<>
 						<h4 style={{ margin: "16px 0 6px" }}>Locations</h4>

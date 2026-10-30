@@ -550,7 +550,7 @@ export async function saveMenuEntity(ctx, key, form) {
 		if (problem) return void (await ctx.ui.alert(problem));
 		const changes = itemChanges({ ...product, category: effectiveCategory(rows, product.category) }, form); // against the category it will have once published
 		const rest = draftList(settings, "itemEdits").filter((x) => x.id !== String(product.id));
-		await writeDraft(ctx, key, Object.keys(changes).length ? [...rest, { id: String(product.id), name: changes.name || product.name, original: product.name, changes, was: Object.fromEntries(Object.keys(changes).map((f) => [f, product[f]])) }] : rest);
+		await writeDraft(ctx, key, Object.keys(changes).length ? [...rest, { id: String(product.id), name: changes.name || product.name, original: product.name, changes, was: Object.fromEntries(Object.keys(changes).map((f) => [f, f === "image" ? !!product.image : product[f]])) }] : rest);
 		ctx.ui.notice(DRAFT_NOTE);
 		return true;
 	} else if (key === "subcategoryEdits") {
@@ -649,8 +649,10 @@ export async function publishMenu(ctx) {
 	const copied = {};
 	for (const key of MENU_KEYS) if (drafts[key]) copied[key] = drafts[key];
 	const version = (Number(settings.menuVersion) || 0) + 1;
+	// photos added to items go to cloud storage first (outside the write); a link or an offline failure keeps the picture as it is
+	const toApply = { ...drafts, itemEdits: await Promise.all(draftList(settings, "itemEdits").map(async (e) => (isDataImage(e.changes?.image) ? { ...e, changes: { ...e.changes, image: await storeImage(e.changes.image, "product") } } : e))) };
 	await ctx.store.write(async (tx) => {
-		const carried = APPLY_KEYS.some((k) => Array.isArray(drafts[k]) && drafts[k].length) ? await applyCatalogDrafts(tx, d, drafts, { ...settings, ...copied }, { syncStock: !!ctx.features()["inventory.productStock"] }) : {};
+		const carried = APPLY_KEYS.some((k) => Array.isArray(drafts[k]) && drafts[k].length) ? await applyCatalogDrafts(tx, d, toApply, { ...settings, ...copied }, { syncStock: !!ctx.features()["inventory.productStock"] }) : {};
 		const patch = { ...copied, ...carried, menuDraft: {}, menuVersion: version };
 		for (const [k, v] of Object.entries(patch)) if (JSON.stringify(settings[k]) !== JSON.stringify(v)) tx.setSetting(k, v);
 	});

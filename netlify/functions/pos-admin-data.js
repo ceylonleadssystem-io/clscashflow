@@ -160,7 +160,25 @@ function salesRollup(sales) {
     if (idx >= 0 && idx < 30) { daily[idx] += Number(s.total) || 0; orders[idx] += 1; }
   });
   function sum(a, from) { return a.slice(from).reduce(function(x, y) { return x + y; }, 0); }
-  return { orders30: sum(orders, 0), sales30: sum(daily, 0), orders7: sum(orders, 23), sales7: sum(daily, 23), daily: daily, lastSaleAt: last };
+  // when the business trades: orders, sales and people selling per hour of the day on the business's clock (same rules as adminAnalytics.js hourlyActivity)
+  var fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
+  var from = new Date(start).toISOString().slice(0, 10), hOrders = [], hSales = [], hSellers = [], days = {};
+  for (var h = 0; h < 24; h++) { hOrders.push(0); hSales.push(0); hSellers.push({}); }
+  (Array.isArray(sales) ? sales : []).forEach(function(s) {
+    var status = s && s.status || 'completed';
+    if (status !== 'completed' && status !== 'partially_refunded') return;
+    var d = new Date(s.createdAt || s.date);
+    if (isNaN(d.getTime())) return;
+    var p = {}; fmt.formatToParts(d).forEach(function(x) { p[x.type] = x.value; });
+    var day = p.year + '-' + p.month + '-' + p.day, hour = Number(p.hour) % 24;
+    if (day < from) return;
+    days[day] = true;
+    hOrders[hour] += 1; hSales[hour] += Number(s.total) || 0;
+    (hSellers[hour][day] = hSellers[hour][day] || {})[s.staffId || '?'] = true;
+  });
+  var activeDays = Math.max(1, Object.keys(days).length);
+  var sellers = hSellers.map(function(byDay) { return Object.keys(byDay).reduce(function(n, k) { return n + Object.keys(byDay[k]).length; }, 0) / activeDays; });
+  return { orders30: sum(orders, 0), sales30: sum(daily, 0), orders7: sum(orders, 23), sales7: sum(daily, 23), daily: daily, hourly: { orders: hOrders, sales: hSales, sellers: sellers, activeDays: Object.keys(days).length }, lastSaleAt: last };
 }
 
 function addBillingPeriod(start, cycle) {

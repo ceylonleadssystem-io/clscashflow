@@ -115,5 +115,7 @@ Each is **Small** to add as its check is added. **Needs a decision:** splitting 
 4. Card swipe devices: none supported; stays off.
 
 ## 9. New requests from this round, and their state
+Later round, all done: hourly activity in admin analytics, Device Manager KDS and Health pages, item photos in Menu Admin, 3rd Party Payments removed from System Options. Not covered: managing 3rd party payment types now has no page (add one back wherever you prefer); the time zone for hourly figures is fixed to Asia/Colombo.
+
 Done: Service Charge, Appearance and text size, Customer Feedback moved to System Options; Receipts & Printing folded into Printers (when to print, USB devices), System Options > Receipts (socials) and Order Entry (order types), Stations in Device Manager; business type chosen once at setup and changed only from the admin portal; jobs start as the roles; Products & Services, Modifiers and Stations removed from the navigation and available in Menu Admin / Device Manager (with the full live editors kept under "Catalogue tools" and "Group editor"); Menu Admin order; admin portal Menu Admin updated; admin portal analytics (overall on the main page and a tab per business).
 Not done or partly: the Operations tab keeps "Always live screen" (a per-device switch) and, for staff without settings access, text size; the "Receipt Printing" tab remains for staff without settings access so they can reconnect a USB printer.

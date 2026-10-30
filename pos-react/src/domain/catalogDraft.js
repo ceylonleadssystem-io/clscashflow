@@ -12,7 +12,7 @@ import { categoryKey } from "./catalog";
 const list = (v) => (Array.isArray(v) ? v : []);
 const text = (v, max) => String(v ?? "").trim().slice(0, max);
 export const UNCATEGORIZED = "Uncategorized";
-export const ITEM_FIELDS = ["name", "price", "cost", "category", "subcategory", "code", "description", "stationIds", "modifierIds"];
+export const ITEM_FIELDS = ["name", "price", "cost", "category", "subcategory", "code", "description", "stationIds", "modifierIds", "image"];
 const ARRAY_FIELDS = ["stationIds", "modifierIds"];
 
 export const draftList = (settings = {}, key) => list(settings.menuDraft?.[key]);
@@ -56,7 +56,7 @@ export function categoryEditError(e, rows) {
 // ------------------------------------------------------------------------------------ items ----
 /** The fields of an item edit that differ from the live item (price and cost as numbers). */
 export function itemChanges(product, form) {
-	const next = { name: text(form.name, 80), price: Number(form.price), cost: Number(form.cost), category: text(form.category, 60), subcategory: text(form.subcategory, 60), code: text(form.code, 40), description: text(form.description, 200), stationIds: list(form.stationIds === undefined ? product.stationIds : form.stationIds).map(String), modifierIds: list(form.modifierIds === undefined ? product.modifierIds : form.modifierIds).map(String) };
+	const next = { name: text(form.name, 80), price: Number(form.price), cost: Number(form.cost), category: text(form.category, 60), subcategory: text(form.subcategory, 60), code: text(form.code, 40), description: text(form.description, 200), image: form.image === undefined ? String(product.image || "") : String(form.image || ""), stationIds: list(form.stationIds === undefined ? product.stationIds : form.stationIds).map(String), modifierIds: list(form.modifierIds === undefined ? product.modifierIds : form.modifierIds).map(String) };
 	const out = {};
 	for (const f of ITEM_FIELDS) {
 		const was = f === "price" || f === "cost" ? Number(product[f]) : ARRAY_FIELDS.includes(f) ? list(product[f]).map(String) : String(product[f] ?? "");
@@ -73,7 +73,7 @@ export function itemEditError(form, categories) {
 	return "";
 }
 /** The fields of a new item as the draft stores them. */
-export const newItemFields = (form) => itemChanges({ name: "", price: 0, cost: 0, category: "", subcategory: "", code: "", description: "", stationIds: [], modifierIds: [] }, { ...form, price: form.price, cost: form.cost });
+export const newItemFields = (form) => itemChanges({ name: "", price: 0, cost: 0, category: "", subcategory: "", code: "", description: "", image: "", stationIds: [], modifierIds: [] }, { ...form, price: form.price, cost: form.cost });
 /** New items waiting to be published, shaped like products so lists can show them. */
 export const draftNewItems = (edits) => list(edits).filter((e) => e.isNew).map((e) => ({ id: e.id, type: "Product", stationIds: [], modifierIds: [], code: "", description: "", subcategory: "", ...e.changes, isDraft: true }));
 /** An item with its draft changes applied (for lists that show what Publish will do). */
@@ -165,9 +165,9 @@ export function catalogDraftChanges(settings = {}) {
 		else out.push({ page: "categoryEdits", id: e.id, name: e.original, kind: "edited", fields: [{ field: "Name", before: e.original, after: e.name }] });
 	}
 	for (const e of draftList(settings, "itemEdits")) {
-		const label = { name: "Name", price: "Price", cost: "Cost", category: "Category", subcategory: "Subcategory", code: "Code", description: "Description", stationIds: "Stations", modifierIds: "Modifier groups" };
-		const show = (v) => (Array.isArray(v) ? `${v.length} chosen` : String(v ?? ""));
-		out.push({ page: "itemEdits", id: e.id, name: e.original || e.name, kind: e.isNew ? "added" : "edited", fields: e.isNew ? [{ field: "Price", before: "", after: String(e.changes.price) }, { field: "Category", before: "", after: e.changes.category }] : Object.entries(e.changes).map(([f, v]) => ({ field: label[f], before: show(e.was?.[f]), after: show(v) })) });
+		const label = { name: "Name", price: "Price", cost: "Cost", category: "Category", subcategory: "Subcategory", code: "Code", description: "Description", stationIds: "Stations", modifierIds: "Modifier groups", image: "Photo" };
+		const show = (v, f) => (f === "image" ? (v ? "photo" : "none") : Array.isArray(v) ? `${v.length} chosen` : String(v ?? ""));
+		out.push({ page: "itemEdits", id: e.id, name: e.original || e.name, kind: e.isNew ? "added" : "edited", fields: e.isNew ? [{ field: "Price", before: "", after: String(e.changes.price) }, { field: "Category", before: "", after: e.changes.category }] : Object.entries(e.changes).map(([f, v]) => ({ field: label[f], before: show(e.was?.[f], f), after: show(v, f) })) });
 	}
 	for (const e of draftList(settings, "subcategoryEdits")) {
 		out.push({ page: "subcategoryEdits", id: e.id, name: `${e.parent}: ${e.original || e.name}`, kind: e.removed ? "removed" : e.isNew ? "added" : "edited", fields: !e.removed && !e.isNew ? [{ field: "Name", before: e.original, after: e.name }] : [] });

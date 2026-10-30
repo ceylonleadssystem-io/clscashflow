@@ -20,6 +20,7 @@
 .admin-top-actions{display:flex;gap:10px;align-items:center}
 .admin-user{font-size:calc(13px * var(--ui-fs, 1));color:#6b6258;text-transform:capitalize}
 .admin-analytics{margin-bottom:16px}
+.admin-facts{margin:0 0 10px;padding-left:18px;display:grid;gap:4px}
 .admin-bar{fill:var(--ui-accent,#ff4d0a)}.admin-bar.empty{fill:#e4e0d8}
 .admin-ranked{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .admin-ranked-top{display:flex;justify-content:space-between;gap:10px}
@@ -884,6 +885,10 @@ html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 .sk-options{display:grid;gap:8px;width:100%}
 .sk-option-row{display:grid;grid-template-columns:minmax(0,1fr) 110px auto;gap:8px;align-items:center}
 @media (max-width:520px){.sk-option-row{grid-template-columns:1fr 1fr}.sk-option-row .btn{grid-column:1 / -1}}
+.sk-photo{display:grid;gap:10px;justify-items:start}.sk-photo img{width:120px;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--ui-line,#e4e8eb)}
+.health-ok{color:#12794b;font-weight:600}.health-good{color:#12794b;font-weight:600}.health-bad,.health-slow{color:#b3261e;font-weight:600}.health-fair{color:#9a6700;font-weight:600}
+.health-issues{margin:0;padding:0 0 10px 20px;display:grid;gap:6px}
+html[data-theme="dark"] .health-ok,html[data-theme="dark"] .health-good{color:#6fe0ac}html[data-theme="dark"] .health-bad,html[data-theme="dark"] .health-slow{color:#ff9a90}html[data-theme="dark"] .health-fair{color:#f2c14e}
 .sk-empty{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px 4px}
 .sk-empty p{margin:0}
 .sk-history{list-style:none;margin:0;padding:0;display:grid;gap:12px}

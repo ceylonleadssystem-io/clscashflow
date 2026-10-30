@@ -12,6 +12,7 @@ import { UNCATEGORIZED, cleanGroupEdit, draftNewItems, subcategoryError, working
 import { WEEKDAYS, DEFAULT_PREFIXES, cleanGlobalModifier, cleanItemSetting, cleanLimit, cleanMenu, cleanPrefixes, globalModifierError, limitError, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { money } from "../../domain/format";
 import { cleanTax, cleanTaxRules, previewTax, round2, taxError } from "../../domain/taxes";
+import { compressProductImage } from "../../services/printing/imageTools";
 import { kitchenStations } from "../../domain/kitchenStations";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
@@ -634,10 +635,10 @@ export function Items() {
 	};
 	const open = (p) => {
 		const w = withItemEdit(p, itemEdits);
-		const base = { name: w.name, price: String(w.price), cost: String(w.cost), category: effectiveCategory(catRows, w.category), subcategory: w.subcategory || "", code: w.code || "", description: w.description || "", stationIds: (w.stationIds || []).map(String), modifierIds: (w.modifierIds || []).map(String) };
+		const base = { name: w.name, price: String(w.price), cost: String(w.cost), category: effectiveCategory(catRows, w.category), subcategory: w.subcategory || "", code: w.code || "", description: w.description || "", image: w.image || "", stationIds: (w.stationIds || []).map(String), modifierIds: (w.modifierIds || []).map(String) };
 		setEdit({ product: w, isNew: !!p.isDraft, ...cleanItemSetting({ ...(overrides.get(String(p.id)) || {}), id: String(p.id) }), details: base });
 	};
-	const addNew = () => setEdit({ product: { id: "", name: "", price: 0, category: "" }, isNew: true, ...cleanItemSetting({ id: "" }), id: "", details: { name: "", price: "", cost: "", category: catNames[0] || "", subcategory: "", code: "", description: "", stationIds: [], modifierIds: [] } });
+	const addNew = () => setEdit({ product: { id: "", name: "", price: 0, category: "" }, isNew: true, ...cleanItemSetting({ id: "" }), id: "", details: { name: "", price: "", cost: "", category: catNames[0] || "", subcategory: "", code: "", description: "", image: "", stationIds: [], modifierIds: [] } });
 	const close = () => setEdit(null);
 	const save = async () => {
 		const ok = await svc.settings.saveMenuEntity("itemEdits", { id: edit.id, isNew: edit.isNew, ...edit.details });
@@ -725,6 +726,22 @@ export function Items() {
 							<SelectRow id="it-category" label="Category" value={edit.details.category} options={catNames.map((n) => ({ value: n, label: n }))} onChange={setDetail("category")} />
 							<SelectRow id="it-sub" label="Subcategory" value={edit.details.subcategory} options={[{ value: "", label: "None" }, ...subNames(edit.details.category).map((n) => ({ value: n, label: n }))]} onChange={setDetail("subcategory")} />
 							<TextRow id="it-code" label="Item code" help="Used for barcode and lookup." value={edit.details.code} max={40} onChange={setDetail("code")} />
+							<SettingRow label="Photo" help="Shown on the register's item button. Compressed on this device; it goes to cloud storage when you publish." wide>
+								<div className="sk-photo">
+									{edit.details.image ? <img src={edit.details.image} alt="Item photo preview" /> : <span className="muted">No photo</span>}
+									<div className="sk-list-line">
+										<label className="btn out" htmlFor="it-photo" style={{ cursor: "pointer" }}>
+											{edit.details.image ? "Change photo" : "Upload photo"}
+										</label>
+										<input id="it-photo" type="file" accept="image/*" style={{ position: "absolute", width: 1, height: 1, opacity: 0 }} onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) setDetail("image")(await compressProductImage(f)); }} />
+										{edit.details.image && (
+											<button type="button" className="btn out" onClick={() => setDetail("image")("")}>
+												Remove photo
+											</button>
+										)}
+									</div>
+								</div>
+							</SettingRow>
 							<TextAreaRow id="it-desc" label="Description" value={edit.details.description} max={200} onChange={setDetail("description")} />
 						</SectionCard>
 						<SectionCard title="Kitchen and modifiers">

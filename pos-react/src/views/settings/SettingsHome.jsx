@@ -12,11 +12,12 @@ import { hasCapability } from "../../config/capabilities";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { MENU_ADMIN_COMPONENTS } from "./MenuAdminPages";
+import { HealthPage, KdsPage } from "./KdsHealthPages";
 import { PublishBar } from "../../components/settings/kit/PublishBar";
 import { Jobs, Users } from "./UsersPages";
 import { usePos } from "../../store/PosProvider";
 
-const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
+const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, kds: KdsPage, health: HealthPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
 
 /** The Menu Admin pages in the order the menu is built: items, categories, modifiers, availability, taxes, sales categories. */
 export const MENU_ADMIN_NAV = [
@@ -46,7 +47,7 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 		},
 		...(can("users.view") ? [{ title: "Users", items: [{ key: "users", label: "Users" }, { key: "jobs", label: "Jobs" }] }] : []),
 		...(can("menu.view") ? [{ title: "Menu Admin", items: MENU_ADMIN_NAV }] : []),
-		{ title: "Device Manager", items: [{ key: "printers", label: "Printers" }, ...(can("menu.view") ? [{ key: "stations", label: "Stations" }] : [])] },
+		{ title: "Device Manager", items: [{ key: "printers", label: "Printers" }, ...(hasCapability(settings.businessType, "kitchen") ? [{ key: "kds", label: "KDS" }] : []), ...(can("menu.view") ? [{ key: "stations", label: "Stations" }] : []), { key: "health", label: "Health" }] },
 		{ title: "More settings", items: legacyTabs.map((t) => ({ key: "legacy:" + t.id, label: t.label })) },
 	];
 	const select = (key) => {

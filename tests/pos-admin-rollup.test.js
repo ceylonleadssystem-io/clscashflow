@@ -29,3 +29,15 @@ test('an account with no sales rolls up to zeros', () => {
   assert.deepStrictEqual([r.orders30, r.sales30, r.orders7, r.sales7, r.lastSaleAt], [0, 0, 0, 0, '']);
   assert.strictEqual(r.daily.length, 30);
 });
+
+test('the rollup carries when the business trades, by hour on its own clock', () => {
+  // 04:00Z is 09:30 in Colombo (UTC+5:30)
+  const at = (dayOffset, z, staff) => { const d = new Date(Date.now() - dayOffset * 86400000); return { date: d.toISOString().slice(0, 10), createdAt: d.toISOString().slice(0, 10) + z, status: 'completed', total: 100, staffId: staff }; };
+  const r = salesRollup([at(0, 'T04:00:00.000Z', 'a'), at(0, 'T04:10:00.000Z', 'b'), at(1, 'T04:00:00.000Z', 'a'), at(1, 'T10:00:00.000Z', 'a')]);
+  assert.strictEqual(r.hourly.orders[9], 3);
+  assert.strictEqual(r.hourly.orders[15], 1);
+  assert.strictEqual(r.hourly.sales[9], 300);
+  assert.strictEqual(r.hourly.activeDays, 2);
+  assert.strictEqual(r.hourly.sellers[9], 1.5);
+  assert.strictEqual(r.hourly.orders.length, 24);
+});

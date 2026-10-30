@@ -15,7 +15,6 @@ export const SYSTEM_PAGES = [
 	{ key: "signIn", title: "Sign In", description: "Where staff land after they sign in." },
 	{ key: "clock", title: "Clock In / Out", description: "Clock people out automatically so no shift runs on by mistake." },
 	{ key: "payroll", title: "Payroll", description: "Pay week, paid breaks and overtime rules used for hours and labor cost." },
-	{ key: "thirdParty", title: "3rd Party Payments", description: "Extra ways to take payment, such as delivery apps and bank transfer.", entity: true },
 	{ key: "zones", title: "Zones", description: "The areas of your floor that hold tables.", entity: true },
 ];
 

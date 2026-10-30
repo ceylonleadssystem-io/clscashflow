@@ -19,6 +19,7 @@ import { ensureProductInventory } from "../domain/inventory";
 import { makeCtx, markDeleted } from "../services/pos/common";
 import { bindServices } from "../services/pos";
 import { kdsLink } from "../KDS/link";
+import { kdsSettingsOf } from "../domain/kdsSettings";
 import { kitchenStations } from "../domain/kitchenStations";
 import { userLocationIds, activeLocations } from "../services/pos/locations";
 import { mainLocation } from "../services/sync/account";
@@ -175,7 +176,7 @@ export function PosProvider({ children }) {
 	useEffect(() => {
 		if (!kdsOn) return undefined;
 		kdsLink.start({
-			getHello: () => ({ business: dataRef.current.settings?.business || "" }),
+			getHello: () => ({ business: dataRef.current.settings?.business || "", kds: kdsSettingsOf(dataRef.current.settings) }),
 			onStatus: (id, status) => {
 				const t = (dataRef.current.kitchenTickets || []).find((x) => x.id === id);
 				if (t && t.status !== status) store.write((tx) => tx.put(T.kitchenTickets, { ...t, status })).catch(() => {});

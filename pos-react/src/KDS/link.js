@@ -167,6 +167,10 @@ function createLink(id) {
 			sendRaw({ type: "ticket", ticket });
 		},
 		pending: () => outbox().length,
+		/** Sends the welcome message again (the business name and the Kitchen Display settings) to a connected screen. */
+		hello() {
+			sendRaw({ type: "hello", ...(running?.getHello?.() || {}) });
+		},
 		close() {
 			close();
 			if (state.connected) set({ connected: false });
@@ -216,6 +220,10 @@ export const kdsLink = {
 		running = null;
 		clearInterval(timer);
 		links.forEach((l) => l.close());
+	},
+	/** Sends the current settings to every connected screen now. */
+	refresh() {
+		links.forEach((l) => l.hello());
 	},
 	/** Queues a ticket for a station's screen and sends it now if connected; it is kept until the screen acknowledges it. */
 	send(ticket, stationId) {

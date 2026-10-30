@@ -429,4 +429,20 @@ describe("new items and subcategories on drafts", () => {
 		await h.svc.settings.publishMenu();
 		expect(h.data().subcategories.map((s) => [s.parent, s.name]).sort()).toEqual([["Beverages", "Cold"], ["Beverages", "Hot drinks"]]);
 	});
+	it("photos: a new item and an existing one take a photo as a draft and keep it on Publish; removing clears it", async () => {
+		const png = "data:image/png;base64,iVBORw0KGgo=";
+		const tea = live("Tea");
+		await h.svc.settings.saveMenuEntity("itemEdits", { id: tea.id, name: "Tea", price: 250, cost: 100, category: "Drinks", code: tea.code, description: "", image: png });
+		await h.svc.settings.saveMenuEntity("itemEdits", { isNew: true, name: "Bun", price: 100, cost: 40, category: "Drinks", image: png });
+		const review = draftChanges(h.data().settings).find((c) => c.name === "Tea");
+		expect(review.fields).toEqual([{ field: "Photo", before: "none", after: "photo" }]);
+		expect(live("Tea").image || "").toBe("");
+		await h.svc.settings.publishMenu();
+		expect(live("Tea").image).toBe(png);
+		expect(live("Bun").image).toBe(png);
+		const t = live("Tea");
+		await h.svc.settings.saveMenuEntity("itemEdits", { id: t.id, name: t.name, price: t.price, cost: t.cost, category: t.category, code: t.code, description: "", image: "" });
+		await h.svc.settings.publishMenu();
+		expect(live("Tea").image).toBe("");
+	});
 });

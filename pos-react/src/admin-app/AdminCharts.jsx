@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 /**
  * Small charts for the administration portal: a bar chart of a daily series, and a ranked list with bars. Plain SVG / CSS, no chart library.
  */
@@ -63,6 +65,84 @@ export function Kpi({ label, value, hint }) {
 			<div className="label">{label}</div>
 			<div className="value admin-small">{value}</div>
 			{hint && <small className="muted">{hint}</small>}
+		</div>
+	);
+}
+
+const METRICS = [
+	["orders", "Transactions"],
+	["sales", "Sales"],
+	["sellers", "Users selling"],
+];
+const one = (n) => (Math.round(n * 10) / 10).toLocaleString();
+
+/**
+ * When a business (or every business) is active, hour by hour. `hours` is [{ hour, orders, sales, sellers, onClock? }]; the chart shows one of
+ * transactions, sales or users selling. `facts` is the sentence list above it (busiest hour, opening window, peaks).
+ */
+export function HourlyPanel({ hours, facts, hourLabel }) {
+	const [metric, setMetric] = useState("orders");
+	const data = hours.map((h) => ({ label: hourLabel(h.hour), value: h[metric] || 0 }));
+	const fmtValue = (v) => (metric === "sales" ? lkr(v) : one(v));
+	return (
+		<div className="admin-hourly">
+			<ul className="admin-facts">
+				{facts.map((f) => (
+					<li key={f}>{f}</li>
+				))}
+			</ul>
+			<div className="sk-tabs" role="group" aria-label="Show">
+				{METRICS.map(([k, label]) => (
+					<button key={k} type="button" className={metric === k ? "active" : ""} aria-pressed={metric === k} onClick={() => setMetric(k)}>
+						{label}
+					</button>
+				))}
+			</div>
+			<svg viewBox="0 0 96 36" preserveAspectRatio="none" role="img" aria-label={"Hourly " + METRICS.find((m) => m[0] === metric)[1].toLowerCase()} style={{ width: "100%", height: 150 }}>
+				{data.map((d, i) => {
+					const max = Math.max(1, ...data.map((x) => x.value));
+					const h = (d.value / max) * 32;
+					return (
+						<rect key={i} x={i * 4 + 0.5} y={34 - h} width={3} height={Math.max(h, d.value ? 0.6 : 0.25)} rx="0.4" className={"admin-bar" + (d.value ? "" : " empty")}>
+							<title>{`${d.label}: ${fmtValue(d.value)}`}</title>
+						</rect>
+					);
+				})}
+			</svg>
+			<div className="muted" style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+				{[0, 6, 12, 18, 23].map((h) => (
+					<span key={h}>{hourLabel(h)}</span>
+				))}
+			</div>
+			<div className="table-wrap" style={{ marginTop: 10 }}>
+				<table>
+					<thead>
+						<tr>
+							<th>Hour</th>
+							<th>Transactions</th>
+							<th>Sales</th>
+							<th>Users selling (average)</th>
+							{hours.some((h) => h.onClock != null) && <th>Clocked in (average)</th>}
+						</tr>
+					</thead>
+					<tbody>
+						{hours.filter((h) => h.orders > 0 || h.onClock > 0).map((h) => (
+							<tr key={h.hour}>
+								<td>{hourLabel(h.hour)}</td>
+								<td>{h.orders}</td>
+								<td>{lkr(h.sales)}</td>
+								<td>{one(h.sellers)}</td>
+								{hours.some((x) => x.onClock != null) && <td>{one(h.onClock || 0)}</td>}
+							</tr>
+						))}
+						{!hours.some((h) => h.orders > 0) && (
+							<tr>
+								<td colSpan="5" className="muted">No transactions in this period.</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	);
 }
