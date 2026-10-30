@@ -7,6 +7,7 @@ import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } fr
 import { POS_TYPE_PRESETS } from "../../config/presets";
 import { hasCapability } from "../../config/capabilities";
 import { cleanStations, kitchenStations } from "../../domain/kitchenStations";
+import { PAGES as MENU_PAGES, PAGE_KEYS as MENU_KEYS, SALES_DEFAULTS, assignItems, cleanMenu, cleanSalesCategory, draftChanges, menuError, nextDrafts, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { copyPrinters, deviceNameError, devicesOf, normalizePrinter, printerError, printersOf, receiptPrinterId } from "../../domain/devices";
 import { PERMISSION_KEYS, accessFromKeys, accessOf, jobError, jobsOf } from "../../domain/access";
 import { MAIN_FLOOR, floorLayout, floorLayoutKey, floorsFor, floorsKey } from "../../domain/tables";
@@ -434,5 +435,89 @@ export async function copyDevicePrinters(ctx, fromId, toId) {
 	await patchSettings(ctx, { devicePrinters: [...rawPrinters(settings).filter((p) => p.deviceId !== toId), ...copied] });
 	await settingsAudit(ctx, "device-printers-copied", `${from.name} to ${to.name}`);
 	ctx.ui.notice("Printers copied. Connect any USB printers on " + to.name + ".");
+	return true;
+}
+
+// -------------------------------------------------------------------------------- menu admin ----
+// Saving stores a draft (settings.menuDraft); Publish copies every draft over the published lists in one write.
+
+const writeDraft = (ctx, key, next) => patchSettings(ctx, { menuDraft: nextDrafts(ctx.data().settings, key, next) });
+const DRAFT_NOTE = "Saved as a draft. Publish the menu to put it on the POS.";
+
+/** Adds or edits a sales category or availability menu as a draft. Returns true when saved. */
+export async function saveMenuEntity(ctx, key, form) {
+	const { settings, products } = ctx.data();
+	const all = workingOf(settings, key);
+	const id = form.id || newId(key === "salesCategories" ? "sc" : "mn");
+	const others = all.filter((e) => e.id !== id);
+	let clean;
+	let error;
+	if (key === "salesCategories") {
+		clean = cleanSalesCategory({ ...form, id });
+		error = salesCategoryError(clean, others);
+		const known = new Set(products.map((p) => String(p.id)));
+		clean.itemIds = clean.itemIds.filter((i) => known.has(i));
+		if (!error && clean.status === "inactive" && clean.itemIds.length) error = `${clean.itemIds.length} item${clean.itemIds.length === 1 ? " is" : "s are"} still in ${clean.name}. Move them to another sales category first.`;
+	} else if (key === "availabilityMenus") {
+		clean = cleanMenu({ ...form, id });
+		error = menuError(clean, others);
+	} else return false;
+	if (error) return void (await ctx.ui.alert(error));
+	let next = all.some((e) => e.id === id) ? all.map((e) => (e.id === id ? clean : e)) : [...all, clean];
+	if (key === "salesCategories") next = assignItems(next, id, clean.itemIds);
+	await writeDraft(ctx, key, next);
+	ctx.ui.notice(DRAFT_NOTE);
+	return true;
+}
+
+/** Removes one (as a draft). A sales category that still holds items cannot be removed. */
+export async function deleteMenuEntity(ctx, key, id) {
+	const all = workingOf(ctx.data().settings, key);
+	const e = all.find((x) => x.id === id);
+	if (!e) return false;
+	if (key === "salesCategories" && e.itemIds.length) return void (await ctx.ui.alert(`${e.name} still holds ${e.itemIds.length} item${e.itemIds.length === 1 ? "" : "s"}. Move them to another sales category first, or set it to inactive once it is empty.`));
+	if (!(await ctx.ui.confirm(`Remove ${e.name}? It stays on the POS until you publish.`))) return false;
+	await writeDraft(ctx, key, all.filter((x) => x.id !== id));
+	return true;
+}
+
+/** Saves the order of a list (ids) as a draft. */
+export async function reorderMenuEntities(ctx, key, ids) {
+	const all = workingOf(ctx.data().settings, key);
+	const byId = new Map(all.map((e) => [e.id, e]));
+	await writeDraft(ctx, key, ids.map((i) => byId.get(i)).filter(Boolean));
+	return true;
+}
+
+/** Adds the standard sales categories (Food, Beverage, Alcohol, Retail, Other) that are missing, as a draft. */
+export async function addStandardSalesCategories(ctx) {
+	const all = workingOf(ctx.data().settings, "salesCategories");
+	const have = new Set(all.map((c) => c.name.toLowerCase()));
+	const add = SALES_DEFAULTS.filter((n) => !have.has(n.toLowerCase())).map((name) => cleanSalesCategory({ id: newId("sc"), name }));
+	if (add.length) await writeDraft(ctx, "salesCategories", [...all, ...add]);
+	return add.length;
+}
+
+/** Puts every draft on the POS at once. Returns true when something was published. */
+export async function publishMenu(ctx) {
+	const { settings } = ctx.data();
+	const changes = draftChanges(settings);
+	if (!changes.length) return void ctx.ui.notice("There is nothing to publish.");
+	const patch = { menuDraft: {}, menuVersion: (Number(settings.menuVersion) || 0) + 1 };
+	for (const key of MENU_KEYS) if (settings.menuDraft?.[key]) patch[key] = settings.menuDraft[key];
+	await patchSettings(ctx, patch);
+	const summary = changes.map((c) => `${MENU_PAGES[c.page].label} ${c.name || ""} ${c.kind}`).join("; ").slice(0, 900);
+	await settingsAudit(ctx, "menu-published", summary);
+	log.info("menu published", { changes: changes.length, version: patch.menuVersion });
+	ctx.ui.notice("Menu published.");
+	return true;
+}
+
+/** Throws away every unpublished change. */
+export async function discardMenuDraft(ctx) {
+	const changes = draftChanges(ctx.data().settings);
+	if (!changes.length) return false;
+	if (!(await ctx.ui.confirm(`Discard ${changes.length} unpublished change${changes.length === 1 ? "" : "s"}?`))) return false;
+	await patchSettings(ctx, { menuDraft: {} });
 	return true;
 }

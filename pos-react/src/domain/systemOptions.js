@@ -38,6 +38,7 @@ export const FIELDS = {
 	orderEntry: {
 		defaultOrderType: { scope: "location", default: "Dine-in" },
 		showPrices: { scope: "location", default: true },
+		defaultMenu: { scope: "location", default: "" }, // an Availability menu id; "" = all items
 	},
 	receipts: {
 		footer: { scope: "org", default: "Thank you for your purchase", max: 200 },

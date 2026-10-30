@@ -7,6 +7,7 @@ import { ORDER_CHANNELS } from "../../config/constants";
 import { hasCapability } from "../../config/capabilities";
 import { ConditionalGroup, DayTimeRow, DurationRow, NumberRow, PageHeader, SectionCard, SelectRow, TextAreaRow, TextRow, TimeRow, ToggleRow } from "../../components/settings/kit/rows";
 import { AuditTrailDrawer, DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
+import { publishedOf } from "../../domain/menuAdmin";
 import { MAIN_FLOOR, floorLayout, floorsFor } from "../../domain/tables";
 import { MAX_NAME, nameError, reorder as reorderList, thirdPartyList, usedNames } from "../../domain/thirdPartyPayments";
 import { usePos } from "../../store/PosProvider";
@@ -18,6 +19,7 @@ const LABELS = {
 	"orderEntry.defaultOrderType": "Default order type",
 	"signIn.defaultView": "Screen after signing in",
 	"orderEntry.showPrices": "Show prices on menu item buttons",
+	"orderEntry.defaultMenu": "Default menu",
 };
 const viewLabel = (v) => LANDING_VIEWS.find((x) => x.value === v)?.label || v;
 const show = (key, v) => (key === "defaultView" ? viewLabel(v) : typeof v === "boolean" ? (v ? "On" : "Off") : String(v));
@@ -126,6 +128,18 @@ export function OrderEntry() {
 					/>
 				</SectionCard>
 			)}
+			<SectionCard title="Menu">
+				<SelectRow
+					id="oe-default-menu"
+					label="Default menu"
+					help="The menu the register shows when none of your menus runs at this time of day. Menus and their hours are set in Menu Admin, Availability."
+					value={values.defaultMenu}
+					onChange={(v) => set("defaultMenu", v)}
+					options={[{ value: "", label: "All items" }, ...publishedOf(settings, "availabilityMenus").filter((m) => m.status === "active").map((m) => ({ value: m.id, label: m.name }))]}
+					overridden={overridden("defaultMenu")}
+					onReset={() => reset("defaultMenu")}
+				/>
+			</SectionCard>
 			<SectionCard title="Display">
 				<ToggleRow id="oe-show-prices" label="Show prices on menu item buttons" help="Turn off to keep prices off the buttons, for example when prices are on the menu board." value={values.showPrices} onChange={(v) => set("showPrices", v)} overridden={overridden("showPrices")} onReset={() => reset("showPrices")} />
 			</SectionCard>

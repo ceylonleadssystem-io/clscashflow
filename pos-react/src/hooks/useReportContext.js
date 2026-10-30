@@ -2,6 +2,7 @@
  * Everything a report builder reads, for the active location and the chosen filters: sales, registers, time entries,
  * kitchen tickets, users, locations. Employee / order type / payment filters narrow sales (and the employee filter also time entries).
  */
+import { publishedOf } from "../domain/menuAdmin";
 import { useMemo } from "react";
 import { userRate } from "../domain/access";
 import { resolveOptions } from "../domain/systemOptions";
@@ -31,6 +32,7 @@ export function useReportContext(range, filters = [], extra = "") {
 			range,
 			extra,
 			payroll: resolveOptions(data.settings, "payroll", "all"),
+			salesCategories: publishedOf(data.settings, "salesCategories"),
 			rates: Object.fromEntries(data.users.map((u) => [u.id, userRate(data.settings, u.id)])),
 			locationId,
 			sales: f.sales,

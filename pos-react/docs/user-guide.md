@@ -114,6 +114,12 @@ kitchen printers you add, each serving a station. Open a printer to choose the c
 whether this device prints at all (off = log only), a **backup printer** and a **duplicate to** printer. Connect and test a USB printer on the device it is plugged into.
 **Copy setup from** another device saves retyping. A device you have not set up keeps using Receipt Printing and the Stations page.
 
+## Menu Admin (Settings)
+Menu Admin pages save **drafts**: nothing changes on the register until you press **Publish** in the bar at the bottom ("N unpublished changes", with **Review** to see each change and **Discard all**).
+- **Sales Categories**: reporting groups (Food, Beverage and so on) that you fill with items. Once published, Reports, Menu, Sales Category uses them; items with none show as Unassigned.
+- **Availability**: menus such as Breakfast and Dinner, each with days, hours and the categories to show. The register shows the categories of every menu running now; when none runs it shows the
+  Default menu from System Options, Order Entry (or everything). Overlapping menus both show.
+
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),
 operations (printers, service charge, order channels), support code (24 h, lets Ceylonry support view the

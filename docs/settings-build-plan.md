@@ -15,7 +15,7 @@ drafts and Publish only in the new Menu Admin pages; first delivery = shared com
 ## Only settings that act today are listed (no dead switches)
 | Page | Live now | Needs behaviour built first |
 |---|---|---|
-| Order Entry | default order type, show prices on buttons | require order type, start new order after completing, split screen, default menu (needs Availability), modifiers screen rules, ready-by time, custom item tax (needs Taxes), delivery postal code, order number reset and limit |
+| Order Entry | default order type, show prices on buttons | require order type, start new order after completing, split screen, modifiers screen rules, ready-by time, custom item tax (needs Taxes), delivery postal code, order number reset and limit |
 | Receipts | footer message (shared with the older tab and printed receipts) | auto print, modifiers on receipts, tip line and suggestions, email / WhatsApp toggles |
 | Sign In | screen after sign in | Quick PIN toggle, card swipe, staff feedback survey |
 | Clock In / Out | clock out after a maximum time, clock out at a time of day | print shift summary; an "Auto" flag on the time entry (needs a new column) |
@@ -63,6 +63,21 @@ Automatic clock-out closes an open register with the expected cash as the count,
   no `devices.edit` key: the page follows the Settings permission.
 - Not yet verified: a real USB printer (no hardware here), a second physical device picking up the list.
 
+## Delivered (slice 5): Menu Admin foundation, Sales Categories, Availability
+- **Save then Publish** (`domain/menuAdmin.js`, `components/settings/kit/PublishBar.jsx`): a Save in a Menu Admin drawer stores a draft in `settings.menuDraft`; nothing changes on the POS until **Publish**,
+  which copies every draft over the published lists in one write, bumps `settings.menuVersion` and writes an audit entry. The bar shows "N unpublished changes" with **Review** (each entity, field, before to after) and **Discard all**.
+  A draft equal to the published list is not counted. Any further Menu Admin page plugs into the same bar by adding its key to `PAGES`.
+- **Sales Categories** (`settings.salesCategories`): list with drag reorder, drawer with name, active and an item tree (ticking a category ticks its items; an item has one sales category, so ticking it moves it).
+  "Add the standard five" (Food, Beverage, Alcohol, Retail, Other) for an empty list. A category that holds items cannot be removed or made inactive. **Live:** once published, Reports > Menu > Sales Category groups by them
+  (items with none show as Unassigned); until then it groups by display category, as before.
+- **Availability** (`settings.availabilityMenus`): menus with hours (days, start, end; an end before the start runs past midnight) and categories. **Live:** the register follows every active menu whose hours apply now
+  (overlaps show both), else the **Default menu** chosen in Order Entry, else everything; the category chips and the "All" list narrow to those categories and switch at the boundary (checked every 30 seconds).
+  A search still looks through every item. Renaming a category keeps menus pointing at it.
+- Deviations from the spec: categories are referred to by name (this POS has no category ids); times follow the device clock, not a per-location time zone; the menu page permission is `menu.view`
+  (there is no separate publish key yet); no VisibilityChips (Online is not built) and no per-category tax.
+- **Not built, and why**: Taxes (this POS has no tax concept: adding one changes every total, receipt and report, so it needs a decision on rounding, inclusive or exclusive prices and takeaway rules first);
+  Categories, Modifiers and Items as draft pages (the existing Products, Modifiers and category screens edit these live; putting them behind drafts means moving that editing, which is a larger change to the working catalogue).
+
 ## Next slices, in the spec's order
-1. Menu Admin with Save then Publish: Sales Categories, Taxes, Categories, Modifiers, Items, Availability.
+1. Menu Admin remainder: Taxes (needs the tax decisions above), then Categories, Modifiers (groups, then global) and Items on drafts.
 2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

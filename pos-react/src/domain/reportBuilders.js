@@ -7,6 +7,7 @@
  *   note   what the report cannot show yet (a field the POS does not record), shown above the table
  * Every money figure comes from `saleFigures`, so Dashboard, Sales and Multi-Location totals always agree.
  */
+import { salesCategoryNameOf } from "./menuAdmin";
 import { isActiveSale } from "./sales";
 import { refundRows, voidRows } from "./salesLog";
 import { userName } from "./names";
@@ -225,7 +226,9 @@ function groupItems(ctx, keyOf) {
 }
 const MENU = {
 	"sales-category"(ctx) {
-		const rows = groupItems(ctx, (l) => l.category);
+		// once Sales Categories are published, items are bucketed by them; until then by their display category, as before
+		const sales = (ctx.salesCategories || []).length ? (l) => salesCategoryNameOf(ctx.salesCategories, l.productId) || "Unassigned" : (l) => l.category;
+		const rows = groupItems(ctx, sales);
 		return { cols: [C.text("name", "Name"), C.num("qty", "Quantity (#)"), C.money("net", "Net Sales"), C.pct("share", "% of Net Sales")], rows, totals: { ...totalsRow(rows, ["qty", "net"]), share: rows.length ? 100 : 0 }, chart: { label: "name", value: "net" } };
 	},
 	"product-category"(ctx) {

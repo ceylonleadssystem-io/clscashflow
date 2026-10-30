@@ -178,6 +178,12 @@ export async function renameCategory(ctx, oldName) {
 		d.subcategories.filter((s) => s.parent === oldName).forEach((s) => tx.put(T.subcategories, { ...s, parent: next }));
 		await markDeleted(tx, "categories", categoryKey(oldName));
 		await unmarkDeletedCategory(tx, next);
+		// Availability menus (published and draft) refer to categories by name: keep them pointing at this one
+		const rename = (list) => list.map((m) => ({ ...m, categories: (m.categories || []).map((c) => (categoryKey(c) === categoryKey(oldName) ? next : c)) }));
+		const menus = d.settings.availabilityMenus;
+		const draft = d.settings.menuDraft?.availabilityMenus;
+		if (Array.isArray(menus)) tx.setSetting("availabilityMenus", rename(menus));
+		if (Array.isArray(draft)) tx.setSetting("menuDraft", { ...d.settings.menuDraft, availabilityMenus: rename(draft) });
 	});
 	ctx.ui.notice(oldName + " renamed to " + next + ".");
 }

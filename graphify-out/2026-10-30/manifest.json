@@ -1260,9 +1260,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/pos/settings.js": {
-    "mtime": 1793331000.9414845,
-    "seen": 1793331039.337964,
-    "ast_hash": "d9aaaf2d27890fc2bdfddf948aa9e184",
+    "mtime": 1793331405.58321,
+    "seen": 1793331479.219688,
+    "ast_hash": "fa1c3cd59f6153336297997831a2c243",
     "semantic_hash": ""
   },
   "pos-react/src/services/pos/staff.js": {
@@ -3024,9 +3024,9 @@
     "semantic_hash": ""
   },
   "docs/settings-build-plan.md": {
-    "mtime": 1793331023.5047624,
-    "seen": 1793331039.338094,
-    "ast_hash": "d59557345f2fe26ca7be5215c0052e8d",
+    "mtime": 1793331471.2033062,
+    "seen": 1793331479.219829,
+    "ast_hash": "1547affdd0e241466d9abe3df99137d6",
     "semantic_hash": ""
   },
   "llms.txt": {
@@ -3042,9 +3042,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/settings/kit/entities.jsx": {
-    "mtime": 1793311090.7255213,
-    "seen": 1793311317.592493,
-    "ast_hash": "0ea00caabce3c4e2351e427eff23f41e",
+    "mtime": 1793331444.8363185,
+    "seen": 1793331479.219607,
+    "ast_hash": "984861d9d03ec2ef110fb7ed76df0b7c",
     "semantic_hash": ""
   },
   "pos-react/src/domain/payroll.js": {
@@ -3102,21 +3102,21 @@
     "semantic_hash": ""
   },
   "pos-react/src/domain/devices.js": {
-    "mtime": 1793330694.493013,
-    "seen": 1793331039.3379169,
-    "ast_hash": "c9d220b696987821c278d40acdf34a2e",
+    "mtime": 1793331405.5827188,
+    "seen": 1793331479.219638,
+    "ast_hash": "4704dcc80be01a62ab3263459d3addf1",
     "semantic_hash": ""
   },
   "pos-react/src/tests/devices.test.js": {
-    "mtime": 1793331012.73646,
-    "seen": 1793331039.337992,
-    "ast_hash": "1af62f27ff374f04bd50aaf246c4666a",
+    "mtime": 1793331425.7993896,
+    "seen": 1793331479.219718,
+    "ast_hash": "0fe9b960bbc71e18e7eee7f7ee5aaff0",
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/DevicePages.jsx": {
-    "mtime": 1793330805.6632166,
-    "seen": 1793331039.33804,
-    "ast_hash": "865504e1f67214a68210bd824bffbc1d",
+    "mtime": 1793331415.7076838,
+    "seen": 1793331479.219768,
+    "ast_hash": "2286def29fea0148f373cd8a1e6b9204",
     "semantic_hash": ""
   }
 }
