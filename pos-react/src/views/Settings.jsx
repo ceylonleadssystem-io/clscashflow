@@ -125,7 +125,7 @@ export function Settings({ only = null }) {
 
 	const legacyView = (
 		<section className="view active" id="view-settings">
-			<div className="settings-tabbed" style={{ maxWidth: 900, display: "grid", gap: 16 }}>
+			<div className="settings-tabbed" style={{ maxWidth: sidebar ? "none" : 900, display: "grid", gap: 16 }}>
 				<div className="settings-tabs" role="tablist" aria-label="Settings sections" style={TABS.length < 2 || sidebar ? { display: "none" } : undefined}>
 					{TABS.map((t, i) => (
 						<button
