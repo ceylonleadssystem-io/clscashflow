@@ -890,8 +890,8 @@ html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 .health-issues{margin:0;padding:0 0 10px 20px;display:grid;gap:6px}
 html[data-theme="dark"] .health-ok,html[data-theme="dark"] .health-good{color:#6fe0ac}html[data-theme="dark"] .health-bad,html[data-theme="dark"] .health-slow{color:#ff9a90}html[data-theme="dark"] .health-fair{color:#f2c14e}
 #view-settings[data-settings-home]{display:flex;flex-direction:column;min-height:calc(100dvh - 130px)}
-.sk-grid4{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:minmax(0,1fr);gap:16px;min-height:min(70dvh,640px)}
-@media (max-width:1000px){.sk-grid4{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(160px,1fr))}}@media (max-width:560px){.sk-grid4{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:minmax(130px,auto)}}
+.sk-grid4{flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:16px;min-height:min(70dvh,640px)}
+@media (max-width:760px){.sk-grid4{grid-template-rows:repeat(2,minmax(150px,1fr))}.sk-grid4 .sk-tile{padding:16px}.sk-grid4 .sk-tile strong{font-size:calc(19px * var(--ui-fs, 1))}.sk-grid4 .sk-tile .muted{font-size:calc(13px * var(--ui-fs, 1))}}@media (max-width:420px){.sk-grid4{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:minmax(130px,auto)}}
 .sk-grid4 .sk-tile{min-height:0;height:100%;justify-content:center;align-items:center;text-align:center;gap:14px;padding:24px}
 .sk-grid4 .sk-tile strong{font-size:calc(24px * var(--ui-fs, 1))}
 .sk-grid4 .sk-tile .muted{font-size:calc(14.5px * var(--ui-fs, 1));max-width:30ch}
