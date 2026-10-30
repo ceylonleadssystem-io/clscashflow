@@ -10,7 +10,7 @@
 import { isActiveSale } from "./sales";
 import { refundRows, voidRows } from "./salesLog";
 import { userName } from "./names";
-import { payrollHours } from "./payroll";
+import { bucketHours, payCost, payrollDays, payrollHours } from "./payroll";
 import { defaultsFor } from "./systemOptions";
 
 const day = (iso) => String(iso || "").slice(0, 10);
@@ -293,13 +293,24 @@ function laborByEmployee(ctx) {
 const PAYROLL = {
 	"labor-costs"(ctx) {
 		const po = ctx.payroll || defaultsFor("payroll");
+		const rates = ctx.rates || {};
 		const rows = payrollHours(ctx.timeEntries, ctx.range, po)
 			.map((h) => {
 				const u = ctx.users.find((x) => x.id === h.userId);
-				return { name: u?.name || "Unknown", role: u?.role || "—", regular: h.regular, ot: h.ot, ot2: h.ot2, paid: h.total };
+				const rate = rates[h.userId] ?? null;
+				return { name: u?.name || "Unknown", role: u?.role || "—", regular: h.regular, ot: h.ot, ot2: h.ot2, paid: h.total, rate, pay: rate === null ? null : payCost(h.buckets, rate, po) };
 			})
 			.sort((a, b) => b.paid - a.paid);
-		return { cols: [C.text("name", "Employee"), C.text("role", "Assignment"), C.hours("regular", "Regular Hours"), C.hours("ot", "OT Hours"), C.hours("ot2", "OT 2 Hours"), C.hours("paid", "Paid Hours")], rows, totals: totalsRow(rows, ["regular", "ot", "ot2", "paid"]), chart: { label: "name", value: "paid" }, note: "Regular and overtime hours follow the rules in Settings > System Options > Payroll. Hourly wages are not stored in this POS yet, so pay amounts are not calculated." };
+		const noRate = rows.filter((r) => r.rate === null).length;
+		const pay = rows.reduce((a, r) => a + (r.pay || 0), 0);
+		return {
+			cards: [money("Labor cost", pay, "Pay for the hours below, with overtime rates, for people who have an hourly rate"), num("Paid hours", rows.reduce((a, r) => a + r.paid, 0))],
+			cols: [C.text("name", "Employee"), C.text("role", "Assignment"), C.hours("regular", "Regular Hours"), C.hours("ot", "OT Hours"), C.hours("ot2", "OT 2 Hours"), C.hours("paid", "Paid Hours"), C.money("rate", "Hourly Rate"), C.money("pay", "Paid")],
+			rows,
+			totals: { ...totalsRow(rows, ["regular", "ot", "ot2", "paid"]), pay },
+			chart: { label: "name", value: "paid" },
+			note: "Regular and overtime hours follow Settings > System Options > Payroll. Pay uses each person's hourly rate (their first job, set in Settings > Users)." + (noRate ? ` ${noRate} ${noRate === 1 ? "person has" : "people have"} no hourly rate, so ${noRate === 1 ? "their" : "their"} pay is not counted.` : ""),
+		};
 	},
 	"tips-cash"(ctx) {
 		const by = new Map();
@@ -320,14 +331,36 @@ const PAYROLL = {
 
 // ----------------------------------------------------------- sales vs labor --
 function salesVsLabor(ctx) {
+	const po = ctx.payroll || defaultsFor("payroll");
+	const rates = ctx.rates || {};
 	const net = new Map();
 	for (const s of activeSales(ctx)) net.set(s.date, (net.get(s.date) || 0) + saleFigures(s).net);
 	const hrs = new Map();
-	for (const g of laborByEmployee(ctx).values()) for (const [d, ms] of Object.entries(g.days)) hrs.set(d, (hrs.get(d) || 0) + hoursOf(ms));
+	const cost = new Map();
+	let unrated = 0;
+	const unratedIds = new Set();
+	for (const d of payrollDays(ctx.timeEntries, ctx.range, po)) {
+		hrs.set(d.date, (hrs.get(d.date) || 0) + bucketHours(d));
+		const rate = rates[d.userId] ?? null;
+		if (rate === null) unratedIds.add(d.userId);
+		else cost.set(d.date, (cost.get(d.date) || 0) + payCost(d, rate, po));
+	}
+	unrated = unratedIds.size;
 	const days = [...new Set([...net.keys(), ...hrs.keys()])].sort();
-	const rows = days.map((d) => ({ date: d, net: net.get(d) || 0, hours: hrs.get(d) || 0, perHour: hrs.get(d) ? (net.get(d) || 0) / hrs.get(d) : 0 }));
-	const t = totalsRow(rows, ["net", "hours"]);
-	return { cols: [C.text("date", "Period"), C.money("net", "Net Sales"), C.hours("hours", "Labor Hours"), C.money("perHour", "Sales per Labor Hour")], rows, totals: { ...t, perHour: t.hours ? t.net / t.hours : 0 }, chart: { label: "date", value: "net" }, note: "Labor cost and Labor % need hourly wages, which this POS does not store yet. Net sales are compared with hours worked." };
+	const rows = days.map((d) => {
+		const n = net.get(d) || 0;
+		const c = cost.get(d) || 0;
+		return { date: d, net: n, hours: hrs.get(d) || 0, cost: c, pct: n ? (c / n) * 100 : null, perHour: hrs.get(d) ? n / hrs.get(d) : 0 };
+	});
+	const t = totalsRow(rows, ["net", "hours", "cost"]);
+	return {
+		cards: [money("Net sales", t.net), money("Labor cost", t.cost, "Pay for hours worked, with overtime rates"), { label: "Labor %", value: t.net ? (t.cost / t.net) * 100 : 0, type: "pct", tip: "Labor cost ÷ net sales × 100" }],
+		cols: [C.text("date", "Period"), C.money("net", "Net Sales"), C.hours("hours", "Labor Hours"), C.money("cost", "Labor Cost"), C.pct("pct", "Labor %"), C.money("perHour", "Sales per Labor Hour")],
+		rows,
+		totals: { ...t, pct: t.net ? (t.cost / t.net) * 100 : null, perHour: t.hours ? t.net / t.hours : 0 },
+		chart: { label: "date", value: "net" },
+		note: "Labor cost uses each person's hourly rate (set in Settings > Users) and the overtime rules in Settings > System Options > Payroll." + (unrated ? ` ${unrated} ${unrated === 1 ? "person has" : "people have"} no hourly rate and ${unrated === 1 ? "is" : "are"} not costed.` : "") + " Labor % shows a dash on a day with no sales.",
+	};
 }
 
 // ----------------------------------------------------------------- not yet --

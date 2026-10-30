@@ -136,7 +136,8 @@ export function CustomerSection() {
 
 export function DiscountSection() {
 	const c = useCheckout();
-	const enabled = useFeature("checkout.discounts");
+	const { can } = usePos();
+	const enabled = useFeature("checkout.discounts") && can("pos.discount");
 	const [type, setType] = useDiscountDraft(c);
 	if (!enabled) return null;
 	const amount = c.totals.discount;
@@ -232,7 +233,7 @@ function ReferenceSection() {
 export function PaymentSection() {
 	const c = useCheckout();
 	// the standard methods plus the 3rd party types set up in Settings > System Options > 3rd Party Payments
-	const methods = paymentChoices(useData().settings);
+	const methods = paymentChoices(useData().settings, usePos().can("pos.payments.third_party"));
 	const cashTender = useFeature("checkout.cashTender");
 	const split = useFeature("checkout.splitBill");
 	const locked = c.splitPayments.length > 0;

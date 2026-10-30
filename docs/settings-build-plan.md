@@ -32,12 +32,24 @@ Auto clock-out defaults to OFF (the spec says on) so existing businesses see no 
   Deactivating a zone is not offered; the table layout has no inactive floors.
 - New shared pieces: `DetailDrawer`, `SortableList` (drag handle and keyboard up/down), `StatusBadge`, `EmptyState`, `AuditTrailDrawer`, `TextRow`, `DayTimeRow`.
 
+## Delivered (slice 3): Users, Jobs and permission keys
+- **Permission keys behind the roles** (`domain/access.js`): 11 keys, each already enforced by the POS: reports.pos, settings.system.edit, menu.view, inventory.view,
+  users.view, users.edit, pos.order.create, pos.discount, pos.refund, pos.void.order, pos.payments.third_party. Role presets reproduce what each role could already do
+  (checked by tests), so nothing changes until an owner edits a person. Personal changes are stored as `settings.userAccess[userId] = { grant, revoke, jobs }`.
+  Owners and admins always hold everything. A person can only grant keys they hold themselves.
+  Keys not in the list (void item, no-sale drawer, tips, transfers and so on) are not added until the POS has a check for them, so no switch is ever dead.
+- **Jobs** (`settings.jobs`): title, code, default hourly rate, active; reorder, edit, delete (refused while someone holds the job).
+- **Users page** (Settings > Users): list with search, and a detail view with General, Permissions (copy from a role) and POS setup (jobs with a pay rate each, PIN, clock-in behaviour).
+  Only an owner or admin can give the owner or admin role. Deleting a user removes their access record.
+- **Labor cost**: a person's rate is the rate on their first job. Reports > Payroll > Labor Costs now shows Hourly Rate and Paid (overtime priced at the multipliers), and
+  Reports > Sales vs Labor shows Labor Cost and Labor % per day. People with no rate are listed in a note and not costed.
+- Deviations from the spec: one Name field (no first and last name), no email, phone or invite (needs a backend), no job colour, and one rate per person because time entries do not record a job yet.
+
 ## Register flow (changed with slice 2)
 Clocking in opens the register (opening cash) and clocking out closes it (cash count, variance recorded); the separate Open and Close Register buttons are gone.
-Automatic clock-out closes an open register with the expected cash as the count (no variance), because nobody is there to count.
+Automatic clock-out closes an open register with the expected cash as the count, because nobody is there to count.
 
 ## Next slices, in the spec's order
-1. Users, Jobs and permission keys behind the roles (jobs with hourly rates will switch on labor cost and Labor % in Reports).
-2. Device Manager: per-device Printers (Stations already exist as the Stations page).
-3. Menu Admin with Save then Publish: Sales Categories, Taxes, Categories, Modifiers, Items, Availability.
-4. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers).
+1. Device Manager: per-device Printers (Stations already exist as the Stations page).
+2. Menu Admin with Save then Publish: Sales Categories, Taxes, Categories, Modifiers, Items, Availability.
+3. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

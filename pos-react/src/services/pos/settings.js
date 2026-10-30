@@ -7,6 +7,7 @@ import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER, SUPPORT_CODE_TTL_MS } fr
 import { POS_TYPE_PRESETS } from "../../config/presets";
 import { hasCapability } from "../../config/capabilities";
 import { cleanStations } from "../../domain/kitchenStations";
+import { PERMISSION_KEYS, accessFromKeys, accessOf, jobError, jobsOf } from "../../domain/access";
 import { MAIN_FLOOR, floorLayout, floorLayoutKey, floorsFor, floorsKey } from "../../domain/tables";
 import { nameError, thirdPartyList, usedNames } from "../../domain/thirdPartyPayments";
 import { nowIso } from "../../domain/format";
@@ -295,5 +296,56 @@ export async function deleteZone(ctx, locationId, id) {
 	if (!(await ctx.ui.confirm(`Delete ${zone.name}${tables.length ? ` and its ${tables.length} table${tables.length === 1 ? "" : "s"}` : ""}?`))) return false;
 	await patchSettings(ctx, { [floorsKey(locationId)]: floors.filter((f) => f.id !== id), [floorLayoutKey(locationId, id)]: [] });
 	await settingsAudit(ctx, "zone-deleted", zone.name, locationId);
+	return true;
+}
+
+// ------------------------------------------------------------------------- jobs and access ----
+
+/** Adds or edits a job ({ id?, title, code, rate, color, active }). Returns true when saved. */
+export async function saveJob(ctx, form) {
+	const jobs = jobsOf(ctx.data().settings);
+	const error = jobError(form, jobs.filter((j) => j.id !== form.id));
+	if (error) return void (await ctx.ui.alert(error));
+	const clean = { id: form.id || newId("job"), title: form.title.trim(), code: String(form.code || "").trim().toUpperCase(), rate: Number(form.rate), color: form.color || "", active: form.active !== false };
+	await patchSettings(ctx, { jobs: form.id ? jobs.map((j) => (j.id === form.id ? clean : j)) : [...jobs, clean] });
+	await settingsAudit(ctx, "job-saved", `${form.id ? "edited" : "added"} ${clean.title} at ${clean.rate} an hour`);
+	ctx.ui.notice("Job saved.");
+	return true;
+}
+
+export async function reorderJobs(ctx, next) {
+	await patchSettings(ctx, { jobs: next });
+	return true;
+}
+
+/** Removes a job nobody holds; a job in use can only be switched off. */
+export async function deleteJob(ctx, id) {
+	const d = ctx.data();
+	const job = jobsOf(d.settings).find((j) => j.id === id);
+	if (!job) return false;
+	const holders = d.users.filter((u) => accessOf(d.settings, u.id).jobs.some((x) => x.jobId === id));
+	if (holders.length) return void (await ctx.ui.alert(`${job.title} is held by ${holders.map((u) => u.name).join(", ")}. Remove it from them first, or switch it off.`));
+	if (!(await ctx.ui.confirm(`Delete ${job.title}?`))) return false;
+	await patchSettings(ctx, { jobs: jobsOf(d.settings).filter((j) => j.id !== id) });
+	await settingsAudit(ctx, "job-deleted", job.title);
+	return true;
+}
+
+/**
+ * Saves a person's permissions and jobs: `keys` is the full set they should hold, `jobs` is [{ jobId, rate }] (rate "" = the job's default).
+ * The person doing this can only grant permissions they hold. Returns true when saved.
+ */
+export async function saveUserAccess(ctx, userId, { keys, jobs }) {
+	const d = ctx.data();
+	const user = d.users.find((u) => u.id === userId);
+	if (!user) return false;
+	const known = new Set(jobsOf(d.settings).map((j) => j.id));
+	const cleanJobs = (jobs || []).filter((j) => known.has(j.jobId));
+	if (cleanJobs.some((j) => j.rate !== "" && j.rate !== undefined && !(Number(j.rate) >= 0))) return void (await ctx.ui.alert("Enter pay rates of 0 or more."));
+	const wanted = (keys || []).filter((k) => PERMISSION_KEYS.includes(k));
+	const next = { ...(d.settings.userAccess || {}), [userId]: { ...accessFromKeys(user, wanted, d.settings, ctx.session().user), jobs: cleanJobs.map((j) => ({ jobId: j.jobId, rate: j.rate === "" || j.rate === undefined ? "" : Number(j.rate) })) } };
+	await patchSettings(ctx, { userAccess: next });
+	await settingsAudit(ctx, "user-access-saved", `${user.name}: ${next[userId].grant.length} granted, ${next[userId].revoke.length} removed, ${cleanJobs.length} job${cleanJobs.length === 1 ? "" : "s"}`);
+	ctx.ui.notice("Access saved.");
 	return true;
 }

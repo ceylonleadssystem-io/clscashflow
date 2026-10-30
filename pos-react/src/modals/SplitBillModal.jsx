@@ -23,7 +23,7 @@ export function SplitBillModal() {
 	const c = useCheckout();
 	const ui = useUi();
 	const data = useData();
-	const { currentUser } = usePos();
+	const { currentUser, can } = usePos();
 	const total = c.totals.total;
 	const open = c.splitOpen;
 	const [itemMode, setItemMode] = useState(false);
@@ -163,7 +163,7 @@ export function SplitBillModal() {
 								<span>{p.paid ? "Paid" : "Awaiting payment"}</span>
 							</div>
 							<select className="input" disabled={p.paid} value={p.method} onChange={(e) => patch(i, { method: e.target.value, paid: false })}>
-								{splitChoices(data.settings).map((m) => (
+								{splitChoices(data.settings, can("pos.payments.third_party")).map((m) => (
 									<option key={m}>{m}</option>
 								))}
 							</select>

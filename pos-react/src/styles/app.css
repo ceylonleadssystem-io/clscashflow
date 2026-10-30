@@ -849,3 +849,12 @@ html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 @media (max-width: 1100px), (pointer: coarse) {
 	.subcategory-chip button { min-width: 32px; min-height: 32px; }
 }
+
+/* Settings > Users */
+.sk-tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--ui-line,#e4e8eb)}
+.sk-tabs button{min-height:40px;padding:8px 16px;border:0;border-bottom:3px solid transparent;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.sk-tabs button.active{border-bottom-color:var(--ui-accent,#ff4d0a);font-weight:700}
+.sk-tabs button:focus-visible{outline:2px solid var(--ui-accent,#ff4d0a);outline-offset:-2px}
+.sk-detail-actions{display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:12px}
+.sk-search{padding:10px 0}.sk-search .input{max-width:320px;width:100%}
+.sk-search .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

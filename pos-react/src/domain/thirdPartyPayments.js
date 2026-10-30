@@ -20,11 +20,11 @@ export const thirdPartyList = (settings = {}) => (Array.isArray(settings.thirdPa
 export const activeThirdParty = (settings) => thirdPartyList(settings).filter((t) => t.active !== false);
 
 /** What the payment picker at checkout offers: the standard methods, then the active 3rd party types in their order. */
-export const paymentChoices = (settings) => [...PAYMENT_METHODS, ...activeThirdParty(settings).map((t) => t.name)];
+export const paymentChoices = (settings, allowThirdParty = true) => [...PAYMENT_METHODS, ...(allowThirdParty ? activeThirdParty(settings).map((t) => t.name) : [])];
 
 /** The split-bill picker: the generic "3rd Party" entry is replaced by the named types once any are set up. */
-export function splitChoices(settings) {
-	const named = activeThirdParty(settings).map((t) => t.name);
+export function splitChoices(settings, allowThirdParty = true) {
+	const named = allowThirdParty ? activeThirdParty(settings).map((t) => t.name) : [];
 	return named.length ? [...SPLIT_PAYMENT_METHODS.filter((m) => m !== "3rd Party"), ...named] : SPLIT_PAYMENT_METHODS;
 }
 

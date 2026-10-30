@@ -4,7 +4,7 @@
  * `view` is the id kept in PosProvider while the section is open; `needs` lists the POS pages whose role access it follows.
  */
 export const PORTAL_SECTIONS = [
-	{ key: "location", view: "location", title: "Location Info", icon: "location", blurb: "Business name, address, logo, contact details and locations.", needs: ["settings"], roles: ["owner", "admin", "manager"] },
+	{ key: "location", view: "location", title: "Location Info", icon: "location", blurb: "Business name, address, logo, contact details and locations.", needs: ["settings"], permission: "settings.system.edit" },
 	{ key: "reports", view: "reports", title: "Reports", icon: "reports", blurb: "Sales, menu, payroll, kitchen, transactions and more.", needs: ["reports"] },
 	{
 		key: "menu",
@@ -18,17 +18,17 @@ export const PORTAL_SECTIONS = [
 			{ view: "modifiers", title: "Modifiers" },
 		],
 	},
-	{ key: "users", view: "users", title: "User Admin", icon: "users", blurb: "Add and manage users, roles and access.", needs: ["staff"], roles: ["owner", "admin", "manager"] },
-	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "timesheets", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], roles: ["owner", "admin", "manager", "accountant"] },
+	{ key: "users", view: "users", title: "User Admin", icon: "users", blurb: "Add and manage users, jobs, pay rates and access.", needs: ["staff"], permission: "users.view" },
+	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "timesheets", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], permission: ["users.view", "reports.pos"] },
 	{ key: "shop", view: "shop", title: "Shop", icon: "shop", blurb: "One stop to buy POS hardware: printers, scanners, drawers and screens.", needs: [] },
 ];
 
 /** True when the page was opened at /admin (and not the Ceylonry staff portal at /posv2/admin). */
 export const isPortalPath = (pathname = typeof location === "undefined" ? "" : location.pathname) => /^\/admin\/?$/.test(pathname);
 
-/** Sections this user may open. `canView` is the POS role check; `role` is the signed-in user's role. */
-export function visiblePortalSections({ role = "", canView = () => true } = {}) {
-	return PORTAL_SECTIONS.filter((s) => (!s.roles || s.roles.includes(role)) && s.needs.every((v) => canView(v)));
+/** Sections this user may open. `canView` is the POS page check, `can` the permission check; a section with several permissions needs any one. */
+export function visiblePortalSections({ canView = () => true, can = () => true } = {}) {
+	return PORTAL_SECTIONS.filter((s) => (!s.permission || [].concat(s.permission).some((k) => can(k))) && s.needs.every((v) => canView(v)));
 }
 
 /** The section a view id belongs to (the Menu Admin section also owns Modifiers). */

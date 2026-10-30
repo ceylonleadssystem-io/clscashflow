@@ -50,7 +50,7 @@ export function PortalHome({ sections, open }) {
 }
 
 export function PortalShell() {
-	const { view, setView, canView, currentUser, staffLogout, reportNav, role, locationId } = usePos();
+	const { view, setView, canView, can, currentUser, staffLogout, reportNav, locationId } = usePos();
 	const { signOut } = useSession();
 	const { settings, locations } = useData();
 	const notice = useNotice();
@@ -59,7 +59,7 @@ export function PortalShell() {
 	const [sub, setSub] = useState("");
 	const [rail, setRail] = useState(false);
 	const [locationsOpen, setLocationsOpen] = useState(false);
-	const sections = visiblePortalSections({ role, canView });
+	const sections = visiblePortalSections({ canView, can });
 	const plan = planForSettings(settings);
 	const current = PORTAL_SECTIONS.find((s) => s.key === section);
 

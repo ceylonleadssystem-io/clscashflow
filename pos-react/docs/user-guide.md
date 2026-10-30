@@ -102,6 +102,12 @@ tabs are under **More settings**. Changes are kept as a draft (a bar shows how m
 - **Zones**: the areas of the floor that hold tables (the same floors as in Table Layout).
 - **Presets** on the Overview page (Quick service, Full service) show what would change before you apply them.
 
+## Users, jobs and permissions (Settings)
+**Settings > Users** lists everyone who signs in. Open a person to change their **General** details and role, their **Permissions** (start from a role with
+*Copy from*, then switch individual permissions) and their **POS setup** (jobs with an hourly rate, PIN, clock-in behaviour). **Jobs** holds the job titles and
+their default hourly rate. The rate on a person's first job prices their hours in **Reports > Payroll** and **Sales vs Labor** (labor cost and labor %).
+Owners and admins always have every permission, and you can only give a permission you hold yourself.
+
 ## Settings
 Business profile (name, e-mail, address, logo, receipt footer, socials), POS setup (business type presets),
 operations (printers, service charge, order channels), support code (24 h, lets Ceylonry support view the

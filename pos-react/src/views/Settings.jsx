@@ -3,7 +3,6 @@
  * sharing one form state with a single Save All Settings button.
  */
 import { useEffect, useState } from "react";
-import { FULL_SETTINGS_ROLES } from "../config/roles";
 import { hasCapability } from "../config/capabilities";
 import { ORDER_CHANNELS } from "../config/constants";
 import { emailError } from "../domain/validators";
@@ -65,7 +64,7 @@ const formFrom = (s) => ({
 /** Settings: business, POS setup, operations, receipt printing and plan & support (tabbed). */
 export function Settings({ only = null }) {
 	const { settings } = useData();
-	const { currentUser, svc, setSetupOpen, setLayout, canView, go } = usePos();
+	const { currentUser, svc, setSetupOpen, setLayout, canView, go, can } = usePos();
 	const locationsOn = useFeature("business.locations");
 	const themes = useFeature("settings.themes");
 	const serviceCharge = useFeature("checkout.serviceCharge");
@@ -89,7 +88,8 @@ export function Settings({ only = null }) {
 		setForm((f) => ({ ...f, receiptFooter: settings.receiptFooter || f.receiptFooter }));
 	}, [settings.receiptFooter]);
 	const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
-	const full = FULL_SETTINGS_ROLES.includes(currentUser?.role);
+	// who may change settings: owners, managers and admins by default, or anyone given the permission
+	const full = can("settings.system.edit");
 	const save = () => {
 		const bad = emailError(form.email);
 		if (bad) {

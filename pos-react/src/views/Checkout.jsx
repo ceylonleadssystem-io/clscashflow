@@ -39,11 +39,11 @@ const ToolBox = ({ icon, label, onClick, danger, disabled, id }) => (
 export function Checkout() {
 	const data = useData();
 	const c = useCheckout();
-	const { kitchen, currentUser } = usePos();
+	const { kitchen, currentUser, can } = usePos();
 	const { openProduct } = useModals();
 	const openOrders = useFeature("checkout.openOrders");
 	const kitchenTickets = useFeature("checkout.kitchenTickets");
-	const discounts = useFeature("checkout.discounts");
+	const discounts = useFeature("checkout.discounts") && can("pos.discount");
 	const splitBill = useFeature("checkout.splitBill");
 	const customerLookup = useFeature("checkout.customerLookup");
 	const [tool, setTool] = useState(null); // "discount" | "customer" | null

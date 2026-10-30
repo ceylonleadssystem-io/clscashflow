@@ -10,6 +10,7 @@ import { ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
 import { RETIRED_MODIFIER_NAMES } from "../config/presets";
 import { hasCapability } from "../config/capabilities";
 import { landingView, resolveOptions } from "../domain/systemOptions";
+import { can as canDo } from "../domain/access";
 import { VIEW_FEATURE } from "../config/features";
 import { T } from "../db/tables";
 import { migrateOrderNumbers } from "../domain/orders";
@@ -92,10 +93,14 @@ export function PosProvider({ children }) {
 	}, [support, assist, data.users, currentUserId]);
 
 	// ------------------------------------------------------------- access ---
+	// Pages tied to a permission key follow it (the role preset plus personal changes); the others follow the role's page list.
+	const viewAllowed = useCallback((user, v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], settings) : (ROLE_VIEWS[user.role] || []).includes(v)), [settings]);
+	/** Does the signed-in person hold this permission key (see domain/access.js)? */
+	const can = useCallback((key) => canDo(currentUser, key, settings), [currentUser, settings]);
 	const canView = useCallback(
 		(v) => {
 			if (!currentUser) return false;
-			if (!(ROLE_VIEWS[currentUser.role] || []).includes(v)) return false;
+			if (!viewAllowed(currentUser, v)) return false;
 			// the Order Queue belongs to kitchen presets, but saved orders of any preset stay reachable
 			if (v === "orders" && !kitchen && !hasOpenOrders) return false;
 			if (v === "tables" && !kitchen) return false;
@@ -105,7 +110,7 @@ export function PosProvider({ children }) {
 			const flag = VIEW_FEATURE[v];
 			return flag ? !!enabled[flag] : true;
 		},
-		[currentUser, kitchen, hasOpenOrders, settings.businessType, enabled, locationId],
+		[currentUser, viewAllowed, kitchen, hasOpenOrders, settings.businessType, enabled, locationId],
 	);
 
 	const firstView = useCallback(
@@ -241,7 +246,7 @@ export function PosProvider({ children }) {
 			if (multi) svc.locations.auditLogin(chosen);
 			const first = (ROLE_VIEWS[user.role] || ["staff"]).find((v) => canView2(user, v)) || "settings";
 			// Settings > System Options > Sign In: the screen staff land on, when their role may open it
-			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => canView2(user, v), first));
+			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], d.settings) : (ROLE_VIEWS[user.role] || []).includes(v)) && canView2(user, v), first));
 			if (user.role === "owner" && !d.settings.onboardingComplete && !d.settings.onboardingDismissed && enabled["settings.posSetupWizard"])
 				setTimeout(() => setSetupOpen(true), 250);
 			if (enabled["staff.shiftPrompt"]) setTimeout(() => setShiftStart(user), 80);
@@ -390,6 +395,7 @@ export function PosProvider({ children }) {
 			setView,
 			reportNav,
 			setReportNav,
+			can,
 			canView,
 			title: VIEW_TITLES[view] || ["", ""],
 			staffLogin,
@@ -413,10 +419,12 @@ export function PosProvider({ children }) {
 			sessionId,
 			deviceId,
 		}),
-		[currentUser, locationId, setLocationId, view, reportNav, go, canView, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
+		[currentUser, locationId, setLocationId, view, reportNav, go, canView, can, staffLogin, staffLogout, layout, checkoutMode, setCheckoutMode, chooserOpen, setupOpen, shiftStart, welcomeUser, kitchen, support, svc, ctx, sessionId, deviceId],
 	);
 	return <PosContext.Provider value={value}>{children}</PosContext.Provider>;
 }
+
+const VIEW_PERMISSION = { reports: "reports.pos", products: "menu.view", modifiers: "menu.view", stations: "menu.view", inventory: "inventory.view", checkout: "pos.order.create" };
 
 export const usePos = () => useContext(PosContext);
 export const useServices = () => useContext(PosContext).svc;

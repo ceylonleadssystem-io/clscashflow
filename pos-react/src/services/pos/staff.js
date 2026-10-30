@@ -9,6 +9,7 @@ import { activeTimeEntry, currentCashShift, expectedCash } from "../../domain/sa
 import { subscriptionOf, userLimitError } from "../../config/subscription";
 import { createLogger } from "../../utils/logger";
 import { markDeleted, newId, stamp } from "./common";
+import { patchSettings } from "./settings";
 
 const log = createLogger("staff");
 
@@ -118,6 +119,9 @@ export async function saveUser(ctx, form) {
 	if (ctx.features()["business.locations"] && access === "selected" && !ids.length && role !== "owner")
 		return void (await ctx.ui.alert("Choose at least one location for this user."));
 	const existing = d.users.find((u) => u.id === id);
+	// only an owner or admin can give the owner or admin role
+	if (["owner", "admin"].includes(role) && !["owner", "admin"].includes(ctx.session().user?.role) && existing?.role !== role)
+		return void (await ctx.ui.alert("Only an owner or admin can give the owner or admin role."));
 	// the plan assigned in the admin portal limits how many users can be active
 	if (active !== false && (!existing || existing.active === false)) {
 		const limit = userLimitError(subscriptionOf(d.settings), d.users, id);
@@ -161,6 +165,8 @@ export async function deleteUser(ctx, id) {
 		await markDeleted(tx, "users", user.id);
 		tx.remove(T.users, user.id);
 	});
+	// their jobs and permission changes go with them
+	if (d.settings.userAccess?.[user.id]) await patchSettings(ctx, { userAccess: Object.fromEntries(Object.entries(d.settings.userAccess).filter(([k]) => k !== user.id)) });
 	log.warn("user deleted", { userId: user.id, role: user.role, by: s.userId });
 	ctx.ui.notice(user.name + " was permanently deleted.");
 }

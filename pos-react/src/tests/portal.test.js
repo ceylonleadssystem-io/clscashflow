@@ -3,9 +3,10 @@ import { PORTAL_SECTIONS, isPortalPath, sectionOfView, visiblePortalSections } f
 import { SHOP_CATEGORIES, quoteLink } from "../config/shop";
 import { timesheetRows } from "../domain/timesheets";
 import { ROLE_VIEWS } from "../config/roles";
+import { can as canDo } from "../domain/access";
 
 const canViewFor = (role) => (v) => (ROLE_VIEWS[role] || []).includes(v);
-const keys = (role) => visiblePortalSections({ role, canView: canViewFor(role) }).map((s) => s.key);
+const keys = (role) => visiblePortalSections({ canView: canViewFor(role), can: (k) => canDo({ id: role, role }, k, {}) }).map((s) => s.key);
 
 describe("admin portal", () => {
 	it("is the /admin path only, not the Ceylonry staff portal", () => {

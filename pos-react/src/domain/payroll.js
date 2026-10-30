@@ -69,10 +69,10 @@ export function splitWeek(days, opts, weekStart) {
 }
 
 /**
- * Hours per employee for a date range ({from, to}, YYYY-MM-DD), using whole payroll weeks so a week that starts before the range is still counted
- * correctly. Returns [{ userId, regular, ot, ot2, total, buckets }]: `ot` = weekly + daily tier 1 + 7th-day tier 1, `ot2` = daily tier 2 + 7th-day tier 2.
+ * Every employee-day inside a date range ({from, to}, YYYY-MM-DD), split into pay buckets, using whole payroll weeks so a week that starts
+ * before the range is still counted correctly. Returns [{ userId, date, regular, weeklyOt, ot1, ot2, s1, s2 }].
  */
-export function payrollHours(entries, range, opts, now = new Date()) {
+export function payrollDays(entries, range, opts, now = new Date()) {
 	const byUser = new Map();
 	for (const e of entries) {
 		const start = new Date(e.clockIn);
@@ -86,16 +86,28 @@ export function payrollHours(entries, range, opts, now = new Date()) {
 		byUser.set(e.userId, u);
 	}
 	const out = [];
-	for (const [userId, weeks] of byUser) {
-		const b = { regular: 0, weeklyOt: 0, ot1: 0, ot2: 0, s1: 0, s2: 0 };
-		for (const w of weeks.values()) {
-			const rows = splitWeek([...w.days].map(([date, hours]) => ({ date, hours })), opts, w.start);
-			for (const r of rows) if (r.date >= range.from && r.date <= range.to) for (const k of Object.keys(b)) b[k] += r[k];
-		}
-		const total = Object.values(b).reduce((a, x) => a + x, 0);
-		if (total > 0) out.push({ userId, regular: b.regular, ot: b.weeklyOt + b.ot1 + b.s1, ot2: b.ot2 + b.s2, total, buckets: b });
-	}
+	for (const [userId, weeks] of byUser)
+		for (const w of weeks.values())
+			for (const r of splitWeek([...w.days].map(([date, hours]) => ({ date, hours })), opts, w.start)) if (r.date >= range.from && r.date <= range.to) out.push({ userId, ...r });
 	return out;
+}
+
+const sumBuckets = (rows) => rows.reduce((b, r) => ({ regular: b.regular + r.regular, weeklyOt: b.weeklyOt + r.weeklyOt, ot1: b.ot1 + r.ot1, ot2: b.ot2 + r.ot2, s1: b.s1 + r.s1, s2: b.s2 + r.s2 }), { regular: 0, weeklyOt: 0, ot1: 0, ot2: 0, s1: 0, s2: 0 });
+export const bucketHours = (b) => b.regular + b.weeklyOt + b.ot1 + b.ot2 + b.s1 + b.s2;
+
+/**
+ * Hours per employee for a date range. Returns [{ userId, regular, ot, ot2, total, buckets }]: `ot` = weekly + daily tier 1 + 7th-day tier 1,
+ * `ot2` = daily tier 2 + 7th-day tier 2.
+ */
+export function payrollHours(entries, range, opts, now = new Date()) {
+	const days = payrollDays(entries, range, opts, now);
+	const ids = [...new Set(days.map((d) => d.userId))];
+	return ids
+		.map((userId) => {
+			const b = sumBuckets(days.filter((d) => d.userId === userId));
+			return { userId, regular: b.regular, ot: b.weeklyOt + b.ot1 + b.s1, ot2: b.ot2 + b.s2, total: bucketHours(b), buckets: b };
+		})
+		.filter((r) => r.total > 0);
 }
 
 /** Pay for the hours in `buckets` at an hourly `rate`, applying the multipliers from the settings. */

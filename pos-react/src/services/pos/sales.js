@@ -15,7 +15,8 @@ import {
 	calculateRefundAmount,
 	statusOf,
 } from "../../domain/sales";
-import { APPROVER_ROLES, DELETED_ACTION, deletedDetails, findApprover } from "../../domain/salesLog";
+import { DELETED_ACTION, deletedDetails, findApprover } from "../../domain/salesLog";
+import { can } from "../../domain/access";
 import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem, stockRowForLine } from "../../domain/inventory";
 import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
 import { sendOrderEmail } from "../platform.service";
@@ -285,10 +286,11 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 	const sale = d.sales.find((x) => x.id === saleId);
 	const text = (reason || "").trim();
 	if (!text) return void (await ctx.ui.alert("Enter a reason."));
-	// owners and managers approve their own refunds and voids; anyone else needs a manager's or owner's PIN
+	// people who hold the refund / void permission approve their own (owners and managers by default); anyone else needs the PIN of someone who does
+	const key = type === "refund" ? "pos.refund" : "pos.void.order";
 	let authorizedBy = s.userId;
-	if (!APPROVER_ROLES.includes(s.user?.role)) {
-		const approver = findApprover(d.users, approverPin);
+	if (!can(s.user, key, d.settings)) {
+		const approver = findApprover(d.users, approverPin, (u) => can(u, key, d.settings));
 		if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to approve this."));
 		authorizedBy = approver.id;
 	}

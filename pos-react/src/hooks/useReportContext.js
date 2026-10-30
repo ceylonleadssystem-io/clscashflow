@@ -3,6 +3,7 @@
  * kitchen tickets, users, locations. Employee / order type / payment filters narrow sales (and the employee filter also time entries).
  */
 import { useMemo } from "react";
+import { userRate } from "../domain/access";
 import { resolveOptions } from "../domain/systemOptions";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
@@ -30,6 +31,7 @@ export function useReportContext(range, filters = [], extra = "") {
 			range,
 			extra,
 			payroll: resolveOptions(data.settings, "payroll", "all"),
+			rates: Object.fromEntries(data.users.map((u) => [u.id, userRate(data.settings, u.id)])),
 			locationId,
 			sales: f.sales,
 			allSales: data.sales,

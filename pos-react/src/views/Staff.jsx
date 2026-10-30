@@ -3,7 +3,7 @@
  * and the shift and register history.
  */
 import { useState } from "react";
-import { MANAGER_ROLES, OWNER_ROLES } from "../config/roles";
+import { OWNER_ROLES } from "../config/roles";
 import { activeTimeEntry, currentCashShift, expectedCash, isOnBreak } from "../domain/sales";
 import { money } from "../domain/format";
 import { Panel } from "../components/ui";
@@ -128,14 +128,15 @@ export function Staff() {
 /** Users & Access: the owner / manager / accountant / cashier list with add, edit and delete (also used by the /admin portal). */
 export function UserManagement() {
 	const data = useData();
-	const { currentUser, svc } = usePos();
+	const { currentUser, svc, can } = usePos();
 	const usersOn = useFeature("staff.users");
 	const deletion = useFeature("staff.userDeletion");
 	const multi = useFeature("business.locations");
 	const [editing, setEditing] = useState(null);
-	const manage = MANAGER_ROLES.includes(currentUser?.role) || currentUser?.role === "admin";
-	const canDelete = deletion && OWNER_ROLES.includes(currentUser?.role);
-	if (!usersOn || !manage) return null;
+	// seeing the list needs users.view; adding, editing and removing need users.edit (managers and owners hold both by default)
+	const edit = can("users.edit");
+	const canDelete = edit && deletion && OWNER_ROLES.includes(currentUser?.role);
+	if (!usersOn || !can("users.view")) return null;
 	return (
 		<>
 			<div className="panel" style={{ marginTop: 16 }} id="user-management">
@@ -144,9 +145,11 @@ export function UserManagement() {
 						<div className="panel-title">Users & Access</div>
 						<div className="muted">Owner, manager, accountant and cashier access</div>
 					</div>
-					<button className="btn" onClick={() => setEditing("")}>
-						+ Add User
-					</button>
+					{edit && (
+						<button className="btn" onClick={() => setEditing("")}>
+							+ Add User
+						</button>
+					)}
 				</div>
 				<div className="table-wrap">
 					<table>
@@ -176,9 +179,11 @@ export function UserManagement() {
 										<td>{last ? new Date(last.clockIn).toLocaleString() : "—"}</td>
 										<td>
 											<div className="table-actions" style={{ display: "flex", gap: 8 }}>
-												<button className="btn out" onClick={() => setEditing(u.id)}>
-													Edit
-												</button>
+												{edit && (
+													<button className="btn out" onClick={() => setEditing(u.id)}>
+														Edit
+													</button>
+												)}
 												{canDelete && u.id !== currentUser?.id && (
 													<button className="btn danger" type="button" onClick={() => svc.staff.deleteUser(u.id)}>
 														Delete
