@@ -1,17 +1,17 @@
 # Graph Report - clscashflow  (2026-10-30)
 
 ## Corpus Check
-- 439 files · ~1,224,716 words
+- 439 files · ~1,224,739 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 23 file(s) not represented in the graph (top: .css 15, (none) 3, .webmanifest 2)
 
 ## Summary
-- 3851 nodes · 11221 edges · 188 communities (164 shown, 24 thin omitted)
+- 3851 nodes · 11220 edges · 188 communities (164 shown, 24 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 273 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d666905b`
+- Built from commit: `c0951415`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -157,7 +157,7 @@
 - config-merge.js
 - tolerant-match.cjs
 - bug-report-20260811-email-modal-template.test.js
-- devices.js
+- imageStorage.js
 - subscription.js
 - EmailJS order e-mail template
 - hasCapability
@@ -257,8 +257,8 @@ Cohesion: 0.11
 Nodes (53): bodyOf(), handle(), handler(), {headers,getUserFromEvent,getDocument,getDocumentStamp,listStamps,queryDocuments,upsertDocument,deleteDocument,newId,canRead,canWrite,sanitizeProfileWrite}, itemTime(), log, logAdminSettingChanges(), logStripped() (+45 more)
 
 ### Community 6 - "settings.js"
-Cohesion: 0.11
-Nodes (42): isAppwrite(), devicesOf(), cleanStations(), thirdPartyList(), authHeaders(), call(), isDataImage(), log (+34 more)
+Cohesion: 0.09
+Nodes (55): asStation(), copyPrinters(), device(), DEVICE_KINDS, deviceNameError(), devicesOf(), KITCHEN_CONNECTIONS, MAX_COPIES (+47 more)
 
 ### Community 7 - "__awaiter"
 Cohesion: 0.07
@@ -774,9 +774,9 @@ Nodes (5): assert, canon(), canonRegex(), strict, wrap()
 Cohesion: 0.25
 Nodes (7): assert, fs, { pagePath }, path, read(), root, test
 
-### Community 141 - "devices.js"
-Cohesion: 0.17
-Nodes (21): asStation(), connection(), copyPrinters(), device(), DEVICE_KINDS, deviceNameError(), KITCHEN_CONNECTIONS, MAX_COPIES (+13 more)
+### Community 141 - "imageStorage.js"
+Cohesion: 0.46
+Nodes (7): isAppwrite(), authHeaders(), call(), isDataImage(), log, storeImage(), moveImagesToCloud()
 
 ### Community 142 - "subscription.js"
 Cohesion: 0.19
@@ -839,8 +839,8 @@ Cohesion: 0.13
 Nodes (21): buildLogText(), checkIn(), cloudSignals(), handled, localPosSignals, log, POLL_MS, _resetForTests() (+13 more)
 
 ### Community 163 - "kitchenStations"
-Cohesion: 0.20
-Nodes (15): ago(), isEmbedded(), isWebLink(), plural(), repeats(), runSetupChecks(), WEAK_PINS, kitchenStations() (+7 more)
+Cohesion: 0.18
+Nodes (16): ago(), isEmbedded(), isWebLink(), plural(), repeats(), runSetupChecks(), WEAK_PINS, connection() (+8 more)
 
 ### Community 165 - "apps-used.test.js"
 Cohesion: 0.40
@@ -924,7 +924,7 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `react` connect `react` to `SystemOptionsPages.jsx`, `adminFeedback.js`, `useFeature`, `env.js`, `PosProvider.jsx`, `subscription.js`, `EndOfDay.jsx`, `serviceWorker.test.js`, `features.js`, `constants.js`, `SessionProvider.jsx`, `KdsApp.jsx`, `AdminApp.jsx`, `systemOptions.js`, `Tables.jsx`, `usePos`, `pos-react/package.json`, `auth.service.js`, `panels.jsx`, `index.jsx`, `plans.js`, `ReportPage.jsx`, `assist.js`, `CustomerModal.jsx`, `diagnosticsShared.js`, `useData`, `ViewRouter.jsx`, `Ceylo.jsx`, `useInstall.js`?**
   _High betweenness centrality (0.141) - this node is a cross-community bridge._
-- **Why does `vitest` connect `vitest` to `adminFeedback.js`, `appwriteCompat.test.js`, `env.js`, `PosProvider.jsx`, `devices.js`, `logger.js`, `subscription.js`, `hasCapability`, `labelPrinter.js`, `scanner.js`, `portal.test.js`, `salesLog.js`, `serviceWorker.test.js`, `features.js`, `diagnostics.service.js`, `kitchenStations`, `KdsApp.jsx`, `access.js`, `payroll.test.js`, `localAdmin.js`, `systemOptions.js`, `Tables.jsx`, `cloud.test.js`, `salesSplit.test.js`, `imageStorage.test.js`, `pos-react/package.json`, `plans.js`, `ReportPage.jsx`, `assist.js`, `domain.test.js`, `documents.js`, `thirdPartyPayments.js`, `useData`?**
+- **Why does `vitest` connect `vitest` to `adminFeedback.js`, `appwriteCompat.test.js`, `settings.js`, `env.js`, `PosProvider.jsx`, `logger.js`, `subscription.js`, `hasCapability`, `labelPrinter.js`, `scanner.js`, `portal.test.js`, `salesLog.js`, `serviceWorker.test.js`, `features.js`, `diagnostics.service.js`, `kitchenStations`, `KdsApp.jsx`, `access.js`, `payroll.test.js`, `localAdmin.js`, `systemOptions.js`, `Tables.jsx`, `cloud.test.js`, `salesSplit.test.js`, `imageStorage.test.js`, `pos-react/package.json`, `plans.js`, `ReportPage.jsx`, `assist.js`, `domain.test.js`, `documents.js`, `thirdPartyPayments.js`, `useData`?**
   _High betweenness centrality (0.106) - this node is a cross-community bridge._
 - **Why does `line()` connect `guard` to `public/assets/platform.js`, `appwrite.js`, `assets/platform.js`?**
   _High betweenness centrality (0.090) - this node is a cross-community bridge._

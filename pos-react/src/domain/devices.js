@@ -62,7 +62,7 @@ export function normalizePrinter(p = {}) {
 		id: String(p.id),
 		deviceId: String(p.deviceId),
 		role,
-		name: role === "receipt" ? "Receipt printer" : text(p.name),
+		name: role === "receipt" ? "Receipt printer" : text(p.name), // a kitchen printer is named after its station
 		connection: connection(role, p.connection),
 		stationId: role === "kitchen" ? String(p.stationId || "") : "",
 		receiptCopies: role === "receipt" ? (copies >= 1 && copies <= MAX_COPIES ? copies : 1) : 1,
@@ -82,8 +82,6 @@ export function printersOf(settings = {}, deviceId = "") {
 /** Why a printer cannot be saved ("" when it can). `siblings` are the other printers of the same device. */
 export function printerError(p, siblings = [], stations = []) {
 	if (p.role === "kitchen") {
-		if (!text(p.name)) return "Enter a name for the printer.";
-		if (siblings.some((s) => s.role === "kitchen" && s.name.toLowerCase() === text(p.name).toLowerCase())) return "This device already has a printer called " + text(p.name) + ".";
 		if (!p.stationId) return "Choose the station this printer serves.";
 		if (!stations.some((s) => s.id === p.stationId)) return "That station no longer exists. Choose another.";
 	}
@@ -131,7 +129,7 @@ export function receiptPlan(settings, deviceId) {
 	return { kind: p.connection.kind, usb: p.connection.usb, copies: p.receiptCopies, print: p.printFromThisDevice };
 }
 
-const asStation = (p, station) => ({ ...station, name: p.name || station.name, type: "printer", printer: p.connection });
+const asStation = (p, station) => ({ ...station, type: "printer", printer: p.connection });
 
 /**
  * How a kitchen ticket of `station` prints on this device, or null when the device has no printer for it (the station's own printer

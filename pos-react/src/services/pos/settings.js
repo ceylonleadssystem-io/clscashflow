@@ -395,7 +395,7 @@ export async function deleteDevice(ctx, id) {
 export async function saveDevicePrinter(ctx, form) {
 	const d = ctx.data();
 	const stations = kitchenStations(d.settings, ctx.features()["checkout.kds"]);
-	const clean = normalizePrinter({ ...form, id: form.id || (form.role === "receipt" ? receiptPrinterId(form.deviceId) : newId("prn")) });
+	const clean = normalizePrinter({ ...form, name: stations.find((x) => x.id === form.stationId)?.name || "", id: form.id || (form.role === "receipt" ? receiptPrinterId(form.deviceId) : newId("prn")) });
 	const siblings = printersOf(d.settings, clean.deviceId).filter((x) => x.id !== clean.id);
 	const error = printerError({ ...clean, receiptCopies: form.role === "kitchen" ? 1 : form.receiptCopies ?? 1 }, siblings, stations);
 	if (error) return void (await ctx.ui.alert(error));

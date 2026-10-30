@@ -37,11 +37,9 @@ describe("printers", () => {
 		expect(normalizePrinter({ id: "r", deviceId: "d", role: "receipt", backupPrinterId: "b" }).backupPrinterId).toBe("");
 	});
 	it("validates a printer", () => {
-		expect(printerError(kitchen({ name: "" }), [], stations)).toMatch(/name/);
 		expect(printerError(kitchen({ stationId: "" }), [], stations)).toMatch(/station/);
 		expect(printerError(kitchen({ stationId: "gone" }), [], stations)).toMatch(/no longer exists/);
 		expect(printerError(kitchen({ connection: { kind: "usb" } }), [], stations)).toMatch(/Connect/);
-		expect(printerError(kitchen({}), [kitchen({ id: "k2", name: "pass" })], stations)).toMatch(/already has/);
 		expect(printerError(kitchen({}), [], stations)).toBe("");
 		expect(printerError({ ...normalizePrinter({ id: "r", deviceId: "d", role: "receipt" }), receiptCopies: 6 }, [], stations)).toMatch(/1 to 5/);
 	});
@@ -84,9 +82,9 @@ describe("printing plans", () => {
 		const s = { devicePrinters: [kitchen({ backupPrinterId: "k2", duplicateToPrinterId: "k3" }), kitchen({ id: "k2", name: "Spare", stationId: "st-b", connection: { kind: "system" } }), kitchen({ id: "k3", name: "Expo", stationId: "st-b", connection: { kind: "system" } })] };
 		const plan = ticketPlan(s, "d1", station);
 		expect(plan.print).toBe(true);
-		expect(plan.primary).toMatchObject({ id: "st-k", name: "Pass", printer: { kind: "usb" } });
-		expect(plan.backup.name).toBe("Spare");
-		expect(plan.duplicate).toMatchObject({ name: "Expo", printer: { kind: "system" } });
+		expect(plan.primary).toMatchObject({ id: "st-k", name: "Kitchen", printer: { kind: "usb" } });
+		expect(plan.backup.printer.kind).toBe("system");
+		expect(plan.duplicate).toMatchObject({ printer: { kind: "system" } });
 		expect(ticketPlan(s, "d2", station)).toBeNull(); // another device has no printer of its own
 		expect(ticketPlan({ devicePrinters: [kitchen({ printFromThisDevice: false })] }, "d1", station).print).toBe(false);
 	});
@@ -114,14 +112,14 @@ describe("Device Manager services", () => {
 	});
 	it("saves, edits and deletes a kitchen printer, with an audit entry", async () => {
 		await setup();
-		expect(await h.svc.settings.saveDevicePrinter(kitchenForm({ name: "" }))).toBeUndefined();
-		expect(h.lastAlert()).toMatch(/name/);
+		expect(await h.svc.settings.saveDevicePrinter(kitchenForm({ stationId: "" }))).toBeUndefined();
+		expect(h.lastAlert()).toMatch(/station/);
 		expect(await h.svc.settings.saveDevicePrinter(kitchenForm({}))).toBe(true);
 		const [, k] = printersOf(h.data().settings, "dev1");
-		expect(k).toMatchObject({ name: "Pass", stationId: "st1" });
-		expect(await h.svc.settings.saveDevicePrinter({ ...k, name: "Pass 2" })).toBe(true);
+		expect(k).toMatchObject({ name: "Kitchen", stationId: "st1" }); // named after its station
+		expect(await h.svc.settings.saveDevicePrinter({ ...k, connection: { kind: "system" } })).toBe(true);
 		expect(printersOf(h.data().settings, "dev1")).toHaveLength(2);
-		expect(h.data().locationAudit.some((a) => a.action === "device-printer-saved" && /Pass 2/.test(a.details))).toBe(true);
+		expect(h.data().locationAudit.some((a) => a.action === "device-printer-saved" && /Kitchen/.test(a.details))).toBe(true);
 		h.answers.confirm = true;
 		expect(await h.svc.settings.deleteDevicePrinter(k.id)).toBe(true);
 		expect(printersOf(h.data().settings, "dev1")).toHaveLength(1);
@@ -139,9 +137,9 @@ describe("Device Manager services", () => {
 		await setup();
 		await h.svc.settings.deleteDevice("dev1");
 		expect(h.lastAlert()).toMatch(/device you are using/);
-		await h.svc.settings.saveDevicePrinter(kitchenForm({ name: "Spare" }));
+		await h.svc.settings.saveDevicePrinter(kitchenForm({ connection: { kind: "system" } }));
 		const spare = printersOf(h.data().settings, "dev1")[1];
-		await h.svc.settings.saveDevicePrinter(kitchenForm({ name: "Main", backupPrinterId: spare.id }));
+		await h.svc.settings.saveDevicePrinter(kitchenForm({ backupPrinterId: spare.id }));
 		h.answers.confirm = true;
 		await h.svc.settings.deleteDevicePrinter(spare.id);
 		expect(printersOf(h.data().settings, "dev1")[1].backupPrinterId).toBe("");
@@ -163,7 +161,7 @@ describe("Device Manager services", () => {
 		await h.svc.settings.patchSettings({ posDevices: [...h.data().settings.posDevices, { id: "dev2", name: "Patio", kind: "orderpad" }] });
 		await h.svc.settings.saveDevicePrinter(kitchenForm({ connection: { kind: "system" } }));
 		expect(await h.svc.settings.copyDevicePrinters("dev1", "dev2")).toBe(true);
-		expect(printersOf(h.data().settings, "dev2").map((p) => [p.name, p.connection.kind])).toEqual([["Receipt printer", "default"], ["Pass", "system"]]);
+		expect(printersOf(h.data().settings, "dev2").map((p) => [p.name, p.connection.kind])).toEqual([["Receipt printer", "default"], ["Kitchen", "system"]]);
 		h.answers.confirm = false;
 		expect(await h.svc.settings.copyDevicePrinters("dev1", "dev2")).toBe(false); // dev2 already has printers: not replaced without a yes
 		expect(await h.svc.settings.copyDevicePrinters("dev1", "dev1")).toBe(false);

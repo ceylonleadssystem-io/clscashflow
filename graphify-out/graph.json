@@ -860,7 +860,7 @@
       "file_type": "code",
       "norm_label": "audittraildrawer()",
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L107"
+      "source_location": "L110"
     },
     {
       "id": "pos_react_src_components_settings_kit_entities_detaildrawer",
@@ -884,7 +884,7 @@
       "file_type": "code",
       "norm_label": "emptystate()",
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L47"
+      "source_location": "L50"
     },
     {
       "id": "pos_react_src_components_settings_kit_entities_sortablelist",
@@ -896,7 +896,7 @@
       "file_type": "code",
       "norm_label": "sortablelist()",
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L61"
+      "source_location": "L64"
     },
     {
       "id": "pos_react_src_components_settings_kit_entities_statusbadge",
@@ -908,7 +908,7 @@
       "file_type": "code",
       "norm_label": "statusbadge()",
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L42"
+      "source_location": "L45"
     },
     {
       "id": "pos_react_src_components_settings_kit_rows_conditionalgroup",
@@ -1088,7 +1088,7 @@
       "file_type": "code",
       "norm_label": "connectionlabel()",
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L158"
+      "source_location": "L156"
     },
     {
       "id": "pos_react_src_domain_thirdpartypayments_reorder",
@@ -6119,184 +6119,76 @@
       "source_location": "L8"
     },
     {
-      "id": "pos_react_src_domain_devices_asstation",
-      "label": "asStation()",
+      "id": "pos_react_src_config_env_isappwrite",
+      "label": "isAppwrite()",
       "_callable": true,
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "asstation()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L134"
+      "norm_label": "isappwrite()",
+      "source_file": "pos-react/src/config/env.js",
+      "source_location": "L47"
     },
     {
-      "id": "pos_react_src_domain_devices_connection",
-      "label": "connection()",
+      "id": "pos_react_src_services_imagestorage_authheaders",
+      "label": "authHeaders()",
       "_callable": true,
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "connection()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L51"
+      "norm_label": "authheaders()",
+      "source_file": "pos-react/src/services/imageStorage.js",
+      "source_location": "L14"
     },
     {
-      "id": "pos_react_src_domain_devices_copyprinters",
-      "label": "copyPrinters()",
+      "id": "pos_react_src_services_imagestorage_call",
+      "label": "call()",
       "_callable": true,
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "copyprinters()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L113"
+      "norm_label": "call()",
+      "source_file": "pos-react/src/services/imageStorage.js",
+      "source_location": "L21"
     },
     {
-      "id": "pos_react_src_domain_devices_device",
-      "label": "device()",
+      "id": "pos_react_src_services_imagestorage_isdataimage",
+      "label": "isDataImage()",
       "_callable": true,
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "device()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L33"
+      "norm_label": "isdataimage()",
+      "source_file": "pos-react/src/services/imageStorage.js",
+      "source_location": "L12"
     },
     {
-      "id": "pos_react_src_domain_devices_devicenameerror",
-      "label": "deviceNameError()",
+      "id": "pos_react_src_services_imagestorage_storeimage",
+      "label": "storeImage()",
       "_callable": true,
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "devicenameerror()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L43"
+      "norm_label": "storeimage()",
+      "source_file": "pos-react/src/services/imageStorage.js",
+      "source_location": "L37"
     },
     {
-      "id": "pos_react_src_domain_devices_list",
-      "label": "list()",
+      "id": "pos_react_src_services_pos_settings_moveimagestocloud",
+      "label": "moveImagesToCloud()",
       "_callable": true,
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "list()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L28"
-    },
-    {
-      "id": "pos_react_src_domain_devices_normalizeprinter",
-      "label": "normalizePrinter()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "normalizeprinter()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L58"
-    },
-    {
-      "id": "pos_react_src_domain_devices_printererror",
-      "label": "printerError()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "printererror()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L83"
-    },
-    {
-      "id": "pos_react_src_domain_devices_printersof",
-      "label": "printersOf()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "printersof()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L76"
-    },
-    {
-      "id": "pos_react_src_domain_devices_receiptplan",
-      "label": "receiptPlan()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "receiptplan()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L129"
-    },
-    {
-      "id": "pos_react_src_domain_devices_receiptprinterid",
-      "label": "receiptPrinterId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "receiptprinterid()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L30"
-    },
-    {
-      "id": "pos_react_src_domain_devices_stationswithoutprinter",
-      "label": "stationsWithoutPrinter()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "stationswithoutprinter()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L152"
-    },
-    {
-      "id": "pos_react_src_domain_devices_text",
-      "label": "text()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "text()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L27"
-    },
-    {
-      "id": "pos_react_src_domain_devices_ticketplan",
-      "label": "ticketPlan()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "ticketplan()",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L140"
-    },
-    {
-      "id": "pos_react_src_tests_devices_test_kitchen",
-      "label": "kitchen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "kitchen()",
-      "source_file": "pos-react/src/tests/devices.test.js",
-      "source_location": "L6"
+      "norm_label": "moveimagestocloud()",
+      "source_file": "pos-react/src/services/pos/settings.js",
+      "source_location": "L154"
     },
     {
       "id": "pos_react_src_admin_app_featurechecklist_featurechecklist",
@@ -8457,6 +8349,18 @@
       "norm_label": "runsetupchecks()",
       "source_file": "pos-react/src/domain/ceylo.js",
       "source_location": "L36"
+    },
+    {
+      "id": "pos_react_src_domain_devices_connection",
+      "label": "connection()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 163,
+      "community_name": "kitchenStations",
+      "file_type": "code",
+      "norm_label": "connection()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L51"
     },
     {
       "id": "pos_react_src_domain_kitchenstations_kitchenstations",
@@ -20387,16 +20291,52 @@
       "source_location": "L2203"
     },
     {
-      "id": "pos_react_src_config_env_isappwrite",
-      "label": "isAppwrite()",
+      "id": "pos_react_src_domain_devices_asstation",
+      "label": "asStation()",
       "_callable": true,
       "_origin": "ast",
       "community": 6,
       "community_name": "settings.js",
       "file_type": "code",
-      "norm_label": "isappwrite()",
-      "source_file": "pos-react/src/config/env.js",
-      "source_location": "L47"
+      "norm_label": "asstation()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L132"
+    },
+    {
+      "id": "pos_react_src_domain_devices_copyprinters",
+      "label": "copyPrinters()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "copyprinters()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L111"
+    },
+    {
+      "id": "pos_react_src_domain_devices_device",
+      "label": "device()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "device()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L33"
+    },
+    {
+      "id": "pos_react_src_domain_devices_devicenameerror",
+      "label": "deviceNameError()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "devicenameerror()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L43"
     },
     {
       "id": "pos_react_src_domain_devices_devicesof",
@@ -20409,6 +20349,114 @@
       "norm_label": "devicesof()",
       "source_file": "pos-react/src/domain/devices.js",
       "source_location": "L36"
+    },
+    {
+      "id": "pos_react_src_domain_devices_list",
+      "label": "list()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "list()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L28"
+    },
+    {
+      "id": "pos_react_src_domain_devices_normalizeprinter",
+      "label": "normalizePrinter()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "normalizeprinter()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L58"
+    },
+    {
+      "id": "pos_react_src_domain_devices_printererror",
+      "label": "printerError()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "printererror()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L83"
+    },
+    {
+      "id": "pos_react_src_domain_devices_printersof",
+      "label": "printersOf()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "printersof()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L76"
+    },
+    {
+      "id": "pos_react_src_domain_devices_receiptplan",
+      "label": "receiptPlan()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "receiptplan()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L127"
+    },
+    {
+      "id": "pos_react_src_domain_devices_receiptprinterid",
+      "label": "receiptPrinterId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "receiptprinterid()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L30"
+    },
+    {
+      "id": "pos_react_src_domain_devices_stationswithoutprinter",
+      "label": "stationsWithoutPrinter()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "stationswithoutprinter()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L150"
+    },
+    {
+      "id": "pos_react_src_domain_devices_text",
+      "label": "text()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "text()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L27"
+    },
+    {
+      "id": "pos_react_src_domain_devices_ticketplan",
+      "label": "ticketPlan()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "ticketplan()",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L138"
     },
     {
       "id": "pos_react_src_domain_kitchenstations_cleanstations",
@@ -20433,54 +20481,6 @@
       "norm_label": "thirdpartylist()",
       "source_file": "pos-react/src/domain/thirdPartyPayments.js",
       "source_location": "L19"
-    },
-    {
-      "id": "pos_react_src_services_imagestorage_authheaders",
-      "label": "authHeaders()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "settings.js",
-      "file_type": "code",
-      "norm_label": "authheaders()",
-      "source_file": "pos-react/src/services/imageStorage.js",
-      "source_location": "L14"
-    },
-    {
-      "id": "pos_react_src_services_imagestorage_call",
-      "label": "call()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "settings.js",
-      "file_type": "code",
-      "norm_label": "call()",
-      "source_file": "pos-react/src/services/imageStorage.js",
-      "source_location": "L21"
-    },
-    {
-      "id": "pos_react_src_services_imagestorage_isdataimage",
-      "label": "isDataImage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "settings.js",
-      "file_type": "code",
-      "norm_label": "isdataimage()",
-      "source_file": "pos-react/src/services/imageStorage.js",
-      "source_location": "L12"
-    },
-    {
-      "id": "pos_react_src_services_imagestorage_storeimage",
-      "label": "storeImage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "settings.js",
-      "file_type": "code",
-      "norm_label": "storeimage()",
-      "source_file": "pos-react/src/services/imageStorage.js",
-      "source_location": "L37"
     },
     {
       "id": "pos_react_src_services_pos_catalog_addcommonmodifiers",
@@ -20589,18 +20589,6 @@
       "norm_label": "generatecode()",
       "source_file": "pos-react/src/services/pos/settings.js",
       "source_location": "L115"
-    },
-    {
-      "id": "pos_react_src_services_pos_settings_moveimagestocloud",
-      "label": "moveImagesToCloud()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 6,
-      "community_name": "settings.js",
-      "file_type": "code",
-      "norm_label": "moveimagestocloud()",
-      "source_file": "pos-react/src/services/pos/settings.js",
-      "source_location": "L154"
     },
     {
       "id": "pos_react_src_services_pos_settings_patchsettings",
@@ -20865,6 +20853,18 @@
       "norm_label": "uploadsocialqr()",
       "source_file": "pos-react/src/services/pos/settings.js",
       "source_location": "L138"
+    },
+    {
+      "id": "pos_react_src_tests_devices_test_kitchen",
+      "label": "kitchen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "kitchen()",
+      "source_file": "pos-react/src/tests/devices.test.js",
+      "source_location": "L6"
     },
     {
       "id": "reservation_system_js_app_bindtables",
@@ -32606,103 +32606,26 @@
       "source_location": "L1"
     },
     {
-      "id": "pos_react_src_domain_devices",
-      "label": "devices.js",
+      "id": "pos_react_src_services_imagestorage",
+      "label": "imageStorage.js",
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "devices.js",
-      "source_file": "pos-react/src/domain/devices.js",
+      "norm_label": "imagestorage.js",
+      "source_file": "pos-react/src/services/imageStorage.js",
       "source_location": "L1"
     },
     {
-      "id": "pos_react_src_domain_devices_device_kinds",
-      "label": "DEVICE_KINDS",
+      "id": "pos_react_src_services_imagestorage_log",
+      "label": "log",
       "_origin": "ast",
       "community": 141,
-      "community_name": "devices.js",
+      "community_name": "imageStorage.js",
       "file_type": "code",
-      "norm_label": "device_kinds",
-      "source_file": "pos-react/src/domain/devices.js",
+      "norm_label": "log",
+      "source_file": "pos-react/src/services/imageStorage.js",
       "source_location": "L10"
-    },
-    {
-      "id": "pos_react_src_domain_devices_kitchen_connections",
-      "label": "KITCHEN_CONNECTIONS",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "kitchen_connections",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L19"
-    },
-    {
-      "id": "pos_react_src_domain_devices_max_copies",
-      "label": "MAX_COPIES",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "max_copies",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L24"
-    },
-    {
-      "id": "pos_react_src_domain_devices_max_name",
-      "label": "MAX_NAME",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "max_name",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L25"
-    },
-    {
-      "id": "pos_react_src_domain_devices_receipt_connections",
-      "label": "RECEIPT_CONNECTIONS",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "receipt_connections",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L14"
-    },
-    {
-      "id": "pos_react_src_tests_devices_test",
-      "label": "devices.test.js",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "devices.test.js",
-      "source_file": "pos-react/src/tests/devices.test.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "pos_react_src_tests_devices_test_stations",
-      "label": "stations",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "stations",
-      "source_file": "pos-react/src/tests/devices.test.js",
-      "source_location": "L7"
-    },
-    {
-      "id": "pos_react_src_tests_devices_test_usb",
-      "label": "usb",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "devices.js",
-      "file_type": "code",
-      "norm_label": "usb",
-      "source_file": "pos-react/src/tests/devices.test.js",
-      "source_location": "L5"
     },
     {
       "id": "pos_react_src_admin_app_subscriptionmanagement",
@@ -39381,7 +39304,7 @@
       "file_type": "code",
       "norm_label": "device_components",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L276"
+      "source_location": "L278"
     },
     {
       "id": "pos_react_src_views_settings_settingshome",
@@ -40011,26 +39934,70 @@
       "source_location": "L15"
     },
     {
-      "id": "pos_react_src_services_imagestorage",
-      "label": "imageStorage.js",
+      "id": "pos_react_src_domain_devices",
+      "label": "devices.js",
       "_origin": "ast",
       "community": 6,
       "community_name": "settings.js",
       "file_type": "code",
-      "norm_label": "imagestorage.js",
-      "source_file": "pos-react/src/services/imageStorage.js",
+      "norm_label": "devices.js",
+      "source_file": "pos-react/src/domain/devices.js",
       "source_location": "L1"
     },
     {
-      "id": "pos_react_src_services_imagestorage_log",
-      "label": "log",
+      "id": "pos_react_src_domain_devices_device_kinds",
+      "label": "DEVICE_KINDS",
       "_origin": "ast",
       "community": 6,
       "community_name": "settings.js",
       "file_type": "code",
-      "norm_label": "log",
-      "source_file": "pos-react/src/services/imageStorage.js",
+      "norm_label": "device_kinds",
+      "source_file": "pos-react/src/domain/devices.js",
       "source_location": "L10"
+    },
+    {
+      "id": "pos_react_src_domain_devices_kitchen_connections",
+      "label": "KITCHEN_CONNECTIONS",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "kitchen_connections",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L19"
+    },
+    {
+      "id": "pos_react_src_domain_devices_max_copies",
+      "label": "MAX_COPIES",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "max_copies",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L24"
+    },
+    {
+      "id": "pos_react_src_domain_devices_max_name",
+      "label": "MAX_NAME",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "max_name",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L25"
+    },
+    {
+      "id": "pos_react_src_domain_devices_receipt_connections",
+      "label": "RECEIPT_CONNECTIONS",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "receipt_connections",
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L14"
     },
     {
       "id": "pos_react_src_services_pos_settings",
@@ -40053,6 +40020,39 @@
       "norm_label": "log",
       "source_file": "pos-react/src/services/pos/settings.js",
       "source_location": "L22"
+    },
+    {
+      "id": "pos_react_src_tests_devices_test",
+      "label": "devices.test.js",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "devices.test.js",
+      "source_file": "pos-react/src/tests/devices.test.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "pos_react_src_tests_devices_test_stations",
+      "label": "stations",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "stations",
+      "source_file": "pos-react/src/tests/devices.test.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "pos_react_src_tests_devices_test_usb",
+      "label": "usb",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "settings.js",
+      "file_type": "code",
+      "norm_label": "usb",
+      "source_file": "pos-react/src/tests/devices.test.js",
+      "source_location": "L5"
     },
     {
       "id": "netlify_function_handlers_send_welcome",
@@ -65552,7 +65552,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L108",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -65564,7 +65564,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L111",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -65576,7 +65576,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L129",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -68288,7 +68288,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L114",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -68300,7 +68300,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L116",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -68364,18 +68364,6 @@
       "weight": 1.0
     },
     {
-      "source": "pos_react_src_domain_devices_printererror",
-      "target": "pos_react_src_domain_devices_text",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L85",
-      "weight": 1.0
-    },
-    {
       "source": "pos_react_src_domain_devices_printersof",
       "target": "pos_react_src_domain_devices_receiptprinterid",
       "relation": "calls",
@@ -68396,7 +68384,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L130",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -68408,7 +68396,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L153",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -68420,7 +68408,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L141",
+      "source_location": "L139",
       "weight": 1.0
     },
     {
@@ -68432,7 +68420,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L146",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -84925,18 +84913,6 @@
     },
     {
       "source": "pos_react_src_views_settings_devicepages_printers",
-      "target": "pos_react_src_domain_devices_connectionlabel",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L143",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_views_settings_devicepages_printers",
       "target": "pos_react_src_components_settings_kit_entities_statusbadge",
       "relation": "calls",
       "_origin": "ast",
@@ -84944,7 +84920,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L147",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -84956,19 +84932,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L180",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_views_settings_devicepages_printers",
-      "target": "pos_react_src_components_settings_kit_rows_textrow",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L203",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -84980,31 +84944,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L204",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_views_settings_devicepages_printers",
-      "target": "pos_react_src_components_settings_kit_rows_settingrow",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L206",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_views_settings_devicepages_printers",
-      "target": "pos_react_src_services_printing_kitchenprinters_usbsupported",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L206",
+      "source_location": "L207",
       "weight": 1.0
     },
     {
@@ -85021,6 +84961,30 @@
     },
     {
       "source": "pos_react_src_views_settings_devicepages_printers",
+      "target": "pos_react_src_components_settings_kit_rows_settingrow",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
+      "source_location": "L211",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_settings_devicepages_printers",
+      "target": "pos_react_src_services_printing_kitchenprinters_usbsupported",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
+      "source_location": "L211",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_settings_devicepages_printers",
       "target": "pos_react_src_components_settings_kit_rows_numberrow",
       "relation": "calls",
       "_origin": "ast",
@@ -85028,7 +84992,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L226",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -85045,18 +85009,6 @@
     },
     {
       "source": "pos_react_src_views_settings_devicepages_printers",
-      "target": "pos_react_src_components_settings_kit_rows_togglerow",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L238",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_views_settings_devicepages_printers",
       "target": "pos_react_src_store_uiprovider_useui",
       "relation": "calls",
       "_origin": "ast",
@@ -85069,6 +85021,18 @@
     },
     {
       "source": "pos_react_src_views_settings_devicepages_printers",
+      "target": "pos_react_src_components_settings_kit_rows_togglerow",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
+      "source_location": "L240",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_settings_devicepages_printers",
       "target": "pos_react_src_store_featureprovider_usefeature",
       "relation": "calls",
       "_origin": "ast",
@@ -85077,6 +85041,18 @@
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
       "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_settings_devicepages_printers",
+      "target": "pos_react_src_components_settings_kit_rows_textrow",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
+      "source_location": "L269",
       "weight": 1.0
     },
     {
@@ -85136,7 +85112,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L41",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -85148,7 +85124,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L62",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -85160,7 +85136,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L70",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_views_settings_devicepages_printers",
+      "target": "pos_react_src_domain_devices_connectionlabel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "pos-react/src/views/settings/DevicePages.jsx",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -85172,7 +85160,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L82",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -85184,7 +85172,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L88",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -85196,7 +85184,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L89",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -151338,7 +151326,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L107",
+      "source_location": "L110",
       "weight": 1.0
     },
     {
@@ -151349,7 +151337,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L42",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -151360,7 +151348,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L47",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -151371,7 +151359,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/components/settings/kit/entities.jsx",
-      "source_location": "L61",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -154748,7 +154736,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L113",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -154759,7 +154747,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L129",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -154770,7 +154758,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L134",
+      "source_location": "L132",
+      "weight": 1.0
+    },
+    {
+      "source": "pos_react_src_domain_devices",
+      "target": "pos_react_src_domain_devices_ticketplan",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pos-react/src/domain/devices.js",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -154786,24 +154785,13 @@
     },
     {
       "source": "pos_react_src_domain_devices",
-      "target": "pos_react_src_domain_devices_ticketplan",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L140",
-      "weight": 1.0
-    },
-    {
-      "source": "pos_react_src_domain_devices",
       "target": "pos_react_src_domain_devices_stationswithoutprinter",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L152",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -154814,7 +154802,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/domain/devices.js",
-      "source_location": "L158",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -164076,7 +164064,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L276",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -175732,7 +175720,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "pos-react/src/views/settings/DevicePages.jsx",
-      "source_location": "L276",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -176601,5 +176589,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "d666905bd5608a228cdcc6fbab230a03175e1a99"
+  "built_at_commit": "c095141540b98ac241e568f649251c3bf925efc8"
 }

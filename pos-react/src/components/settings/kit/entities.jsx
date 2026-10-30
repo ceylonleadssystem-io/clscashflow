@@ -6,23 +6,26 @@ import { useEffect, useRef, useState } from "react";
 import { useData } from "../../../store/DataProvider";
 
 /** Right-hand panel. Escape or the backdrop closes it; focus moves to it on open and returns afterwards. */
-export function DetailDrawer({ open, title, subtitle, onClose, children, footer }) {
+export function DetailDrawer({ open, title, subtitle, onClose, children, footer, wide }) {
 	const ref = useRef(null);
+	// the latest onClose, so the focus effect runs only when the drawer opens (it used to run on every keystroke and pull focus out of the field)
+	const closeRef = useRef(onClose);
+	closeRef.current = onClose;
 	useEffect(() => {
 		if (!open) return undefined;
 		const before = document.activeElement;
-		ref.current?.focus();
-		const esc = (e) => e.key === "Escape" && onClose();
+		if (!ref.current?.contains(document.activeElement)) ref.current?.focus(); // keep a field that took focus itself (autoFocus)
+		const esc = (e) => e.key === "Escape" && closeRef.current();
 		document.addEventListener("keydown", esc);
 		return () => {
 			document.removeEventListener("keydown", esc);
 			before?.focus?.();
 		};
-	}, [open, onClose]);
+	}, [open]);
 	if (!open) return null;
 	return (
 		<div className="sk-drawer-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-			<aside className="sk-drawer" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={ref}>
+			<aside className={"sk-drawer" + (wide ? " sk-drawer-wide" : "")} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={ref}>
 				<header>
 					<div>
 						<h3>{title}</h3>

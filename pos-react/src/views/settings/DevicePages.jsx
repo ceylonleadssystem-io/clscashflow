@@ -35,6 +35,8 @@ export function Printers() {
 	const printers = current ? printersOf(settings, current.id) : [];
 	const gaps = stationsWithoutPrinter(settings, stations);
 	const stationName = (id) => stations.find((s) => s.id === id)?.name || "";
+	// a kitchen printer is named after its station
+	const printerName = (p) => (p.role === "receipt" ? p.name : stationName(p.stationId) || p.name || "Kitchen printer");
 	const locationName = (id) => locations.find((l) => l.id === id)?.name || "";
 
 	const siblings = edit ? printers.filter((x) => x.id !== edit.id) : [];
@@ -70,12 +72,12 @@ export function Printers() {
 		if (edit.role === "receipt") return void (await svc.printing.printTestReceipt({ ...receiptPlan({ devicePrinters: [{ ...edit, receiptCopies: Number(edit.receiptCopies) || 1 }] }, edit.deviceId), print: true }));
 		const station = stations.find((s) => s.id === edit.stationId);
 		if (!station) return void (await ui.alert("Choose a station first."));
-		await svc.printing.testStation({ ...station, name: edit.name || station.name, printer: edit.connection });
+		await svc.printing.testStation({ ...station, printer: edit.connection });
 	};
 
 	const connections = edit?.role === "receipt" ? RECEIPT_CONNECTIONS.filter((c) => c.value !== "usb" || usbReceipt) : KITCHEN_CONNECTIONS;
 	const conn = edit?.connection || {};
-	const linkChoices = (self) => [none, ...siblings.filter((x) => x.role === "kitchen" && x.id !== self).map((x) => ({ value: x.id, label: x.name }))];
+	const linkChoices = (self) => [none, ...siblings.filter((x) => x.role === "kitchen" && x.id !== self).map((x) => ({ value: x.id, label: printerName(x) + " · " + connectionLabel(x) }))];
 
 	return (
 		<>
@@ -138,7 +140,7 @@ export function Printers() {
 									<li key={p.id} className="sk-list-row" data-printer={p.id}>
 										<div className="sk-list-main">
 											<div className="sk-list-line">
-												<strong>{p.name}</strong>
+												<strong>{printerName(p)}</strong>
 												<span className="muted">
 													{p.role === "receipt" ? "Receipts" : "Station: " + (stationName(p.stationId) || "none")} · {connectionLabel(p)}
 													{p.role === "receipt" && p.receiptCopies > 1 ? " · " + p.receiptCopies + " copies" : ""}
@@ -179,7 +181,8 @@ export function Printers() {
 
 			<DetailDrawer
 				open={!!edit}
-				title={edit?.isNew ? "Add printer" : edit?.name || "Printer"}
+				title={edit?.isNew ? "Add printer" : printerName(edit || {}) }
+				wide
 				subtitle={edit && current ? "On " + current.name : ""}
 				onClose={close}
 				footer={
@@ -200,7 +203,9 @@ export function Printers() {
 			>
 				{edit && (
 					<>
-						{edit.role === "kitchen" && <TextRow id="printer-name" label="Name" help="For example Kitchen, Bar or Expo." value={edit.name} max={40} autoFocus onChange={(name) => patch({ name })} error={touched && !edit.name.trim() ? "Enter a name for the printer." : ""} />}
+						{edit.role === "kitchen" && (
+							<SelectRow id="printer-station" label="Station" help="The tickets this printer prints. Items are assigned to stations in the item form." value={edit.stationId} options={[{ value: "", label: "Choose a station" }, ...stations.map((s) => ({ value: s.id, label: s.name }))]} onChange={(stationId) => patch({ stationId })} error={touched && !edit.stationId ? "Choose the station this printer serves." : ""} />
+						)}
 						<SelectRow id="printer-connection" label="Connection" value={conn.kind} options={connections} onChange={setConn} />
 						{conn.kind === "usb" && (
 							<SettingRow label="USB printer" help={mine ? (usbSupported() ? "Choose the printer in the browser's list. Access is remembered on this device." : "USB printing is not available in this browser. Use Chrome on Android, Windows or macOS.") : "USB printers are connected on the device itself."} wide>
@@ -218,9 +223,6 @@ export function Printers() {
 									Test print
 								</button>
 							</SettingRow>
-						)}
-						{edit.role === "kitchen" && (
-							<SelectRow id="printer-station" label="Station" help="The tickets this printer prints. Items are assigned to stations in the item form." value={edit.stationId} options={[{ value: "", label: "Choose a station" }, ...stations.map((s) => ({ value: s.id, label: s.name }))]} onChange={(stationId) => patch({ stationId })} error={touched && !edit.stationId ? "Choose the station this printer serves." : ""} />
 						)}
 						{edit.role === "receipt" && (
 							<NumberRow
@@ -242,7 +244,7 @@ export function Printers() {
 								<SelectRow id="printer-duplicate" label="Duplicate to" help="Also print a copy here, for example kitchen to expo." value={edit.duplicateToPrinterId} options={linkChoices(edit.id)} onChange={(duplicateToPrinterId) => patch({ duplicateToPrinterId })} />
 							</>
 						)}
-						{touched && error && !error.startsWith("Receipt copies") && !error.startsWith("Enter a name") && !error.startsWith("Choose the station") && <p className="sk-error" role="alert">{error}</p>}
+						{touched && error && !error.startsWith("Receipt copies") && !error.startsWith("Choose the station") && <p className="sk-error" role="alert">{error}</p>}
 					</>
 				)}
 			</DetailDrawer>
