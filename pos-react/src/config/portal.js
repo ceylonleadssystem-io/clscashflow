@@ -56,6 +56,7 @@ export const PORTAL_SECTIONS = [
 		subs: [
 			{ view: "users", title: "Users" },
 			{ view: "jobs", title: "Jobs" },
+			{ view: "timesheets", title: "Timesheets" },
 		],
 	},
 	{
@@ -73,7 +74,7 @@ export const PORTAL_SECTIONS = [
 			{ view: "health", title: "Health" },
 		],
 	},
-	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "timesheets", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], permission: ["users.view", "reports.pos"] },
+	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "timesheets", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], permission: ["users.view", "reports.pos"], hideWhen: "users.view" },
 	{ key: "shop", view: "shop", title: "Shop", icon: "shop", blurb: "One stop to buy POS hardware: printers, scanners, drawers and screens.", needs: [] },
 ];
 
@@ -82,7 +83,7 @@ export const isPortalPath = (pathname = typeof location === "undefined" ? "" : l
 
 /** Sections this user may open. `canView` is the POS page check, `can` the permission check; a section with several permissions needs any one. */
 export function visiblePortalSections({ canView = () => true, can = () => true } = {}) {
-	return PORTAL_SECTIONS.filter((s) => (!s.permission || [].concat(s.permission).some((k) => can(k))) && s.needs.every((v) => canView(v)));
+	return PORTAL_SECTIONS.filter((s) => !(s.hideWhen && can(s.hideWhen)) && (!s.permission || [].concat(s.permission).some((k) => can(k))) && s.needs.every((v) => canView(v)));
 }
 
 /** The section a view id belongs to (the Menu Admin section owns every one of its pages). */

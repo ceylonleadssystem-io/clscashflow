@@ -8,7 +8,9 @@ import { autoClockOutDue, resolveOptions } from "../../domain/systemOptions";
 import { activeTimeEntry, currentCashShift, expectedCash } from "../../domain/sales";
 import { subscriptionOf, userLimitError } from "../../config/subscription";
 import { createLogger } from "../../utils/logger";
-import { markDeleted, newId, stamp } from "./common";
+import { can } from "../../domain/access";
+import { AUDIT_ACTION, auditDetails, diffEntry, entryError, entryLocked } from "../../domain/timesheetEdit";
+import { audit, markDeleted, newId, stamp } from "./common";
 import { patchSettings } from "./settings";
 
 const log = createLogger("staff");
@@ -169,4 +171,57 @@ export async function deleteUser(ctx, id) {
 	if (d.settings.userAccess?.[user.id]) await patchSettings(ctx, { userAccess: Object.fromEntries(Object.entries(d.settings.userAccess).filter(([k]) => k !== user.id)) });
 	log.warn("user deleted", { userId: user.id, role: user.role, by: s.userId });
 	ctx.ui.notice(user.name + " was permanently deleted.");
+}
+
+// ------------------------------------------------------------------------------------------ timesheets ----
+
+const allowed = (ctx) => can(ctx.session().user, "time.edit_entries", ctx.data().settings);
+
+const cleanBreaks = (breaks = []) => breaks.filter((b) => b.start).map((b) => ({ start: b.start, ...(b.end ? { end: b.end } : {}) })).sort((a, b) => String(a.start).localeCompare(String(b.start)));
+
+/**
+ * Corrects a shift (`form.id`) or adds one ({ userId, clockIn, clockOut, breaks, reason }). Needs the "Edit timesheets" permission; a shift that began more
+ * than a month ago, or before the employee was added, cannot be saved. Each change is written to the audit log. Returns true when saved.
+ */
+export async function saveTimeEntry(ctx, form) {
+	const d = ctx.data();
+	if (!allowed(ctx)) return void (await ctx.ui.alert("You do not have permission to edit timesheets."));
+	const existing = form.id ? d.timeEntries.find((e) => e.id === form.id) : null;
+	if (form.id && !existing) return void (await ctx.ui.alert("That shift no longer exists."));
+	const userId = existing ? existing.userId : form.userId;
+	const user = d.users.find((u) => u.id === userId);
+	const next = { clockIn: form.clockIn, clockOut: form.clockOut || "", breaks: cleanBreaks(form.breaks) };
+	const problem = entryError({ ...next, userId }, { user, existing, others: d.timeEntries.filter((e) => e.userId === userId) });
+	if (problem) return void (await ctx.ui.alert(problem));
+	const changes = diffEntry(existing, { ...next });
+	if (!changes.length) return true;
+	const entry = existing ? { ...existing, ...next, ...(next.clockOut ? {} : { clockOut: undefined }) } : stamp({ id: newId("t"), userId, ...next }, ctx.session());
+	if (!next.clockOut) delete entry.clockOut;
+	const s = ctx.session();
+	await ctx.store.write((tx) => {
+		tx.put(T.timeEntries, { ...entry, updatedAt: nowIso() });
+		for (const change of changes) audit(tx, s, AUDIT_ACTION, auditDetails({ userId, entryId: entry.id, change, reason: form.reason }), entry.locationId || "");
+	});
+	log.info(existing ? "timesheet edited" : "timesheet shift added", { userId, entry: entry.id, changes: changes.length });
+	ctx.ui.notice(existing ? "Shift saved." : "Shift added.");
+	return true;
+}
+
+/** Deletes a shift (same rules as saving; written to the audit log). Returns true when deleted. */
+export async function deleteTimeEntry(ctx, id) {
+	const d = ctx.data();
+	if (!allowed(ctx)) return void (await ctx.ui.alert("You do not have permission to edit timesheets."));
+	const entry = d.timeEntries.find((e) => e.id === id);
+	if (!entry) return false;
+	if (entryLocked(entry)) return void (await ctx.ui.alert("This shift is more than a month old and can no longer be changed."));
+	const name = d.users.find((u) => u.id === entry.userId)?.name || "this employee";
+	if (!(await ctx.ui.confirm(`Delete this shift of ${name}? It stays in the audit log.`))) return false;
+	const s = ctx.session();
+	await ctx.store.write(async (tx) => {
+		await markDeleted(tx, "timeEntries", id);
+		tx.remove(T.timeEntries, id);
+		for (const change of diffEntry(entry, null)) audit(tx, s, AUDIT_ACTION, auditDetails({ userId: entry.userId, entryId: id, change }), entry.locationId || "");
+	});
+	log.info("timesheet shift deleted", { userId: entry.userId, entry: id });
+	return true;
 }
