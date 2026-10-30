@@ -406,6 +406,8 @@ export async function applyBundledCatalogueImages(ctx, images) {
 export async function applyCatalogDrafts(tx, d, drafts, base, { syncStock }) {
 	const products = new Map(d.products.map((p) => [p.id, { ...p }]));
 	const dirty = new Set();
+	const subs = new Map(d.subcategories.map((s) => [s.id, { ...s }]));
+	const subDirty = new Set();
 	const patch = {};
 	let settings = { ...base };
 	const carry = (oldName, next) => {
@@ -430,7 +432,7 @@ export async function applyCatalogDrafts(tx, d, drafts, base, { syncStock }) {
 		d.categories.filter((c) => categoryKey(c) === categoryKey(e.original)).forEach((c) => tx.removeCategory(c));
 		tx.addCategory(e.name);
 		for (const p of products.values()) if (categoryKey(p.category) === categoryKey(e.original)) (p.category = e.name), dirty.add(p.id);
-		d.subcategories.filter((x) => x.parent === e.original).forEach((x) => tx.put(T.subcategories, { ...x, parent: e.name }));
+		for (const x of subs.values()) if (x.parent === e.original) (x.parent = e.name), subDirty.add(x.id);
 		await markDeleted(tx, "categories", categoryKey(e.original));
 		await unmarkDeletedCategory(tx, e.name);
 		names.delete(categoryKey(e.original));
@@ -440,9 +442,10 @@ export async function applyCatalogDrafts(tx, d, drafts, base, { syncStock }) {
 	for (const e of edits.filter((x) => x.removed)) {
 		const moved = [...products.values()].filter((p) => categoryKey(p.category) === categoryKey(e.original));
 		d.categories.filter((c) => categoryKey(c) === categoryKey(e.original)).forEach((c) => tx.removeCategory(c));
-		for (const s of d.subcategories.filter((x) => x.parent === e.original)) {
+		for (const s of [...subs.values()].filter((x) => x.parent === e.original)) {
 			await markDeleted(tx, "subcategories", s.id);
 			tx.remove(T.subcategories, s.id);
+			subs.delete(s.id);
 		}
 		if (moved.length) {
 			const fallback = e.moveTo || productCategories(d.categories, d.products).find((c) => c.toLowerCase() === "uncategorized") || "Uncategorized";
@@ -455,7 +458,38 @@ export async function applyCatalogDrafts(tx, d, drafts, base, { syncStock }) {
 		names.delete(categoryKey(e.original));
 		carry(e.original, null);
 	}
+	for (const e of drafts.subcategoryEdits || []) {
+		const inParent = (p) => categoryKey(p.category) === categoryKey(e.parent);
+		if (e.removed) {
+			if (!subs.has(e.id)) continue;
+			await markDeleted(tx, "subcategories", e.id);
+			tx.remove(T.subcategories, e.id);
+			subs.delete(e.id);
+			for (const p of products.values()) if (inParent(p) && p.subcategory === e.original) (p.subcategory = ""), dirty.add(p.id);
+		} else if (e.isNew) {
+			subs.set(e.id, { id: e.id, name: e.name, parent: e.parent });
+			subDirty.add(e.id);
+		} else if (subs.has(e.id)) {
+			subs.get(e.id).name = e.name;
+			subDirty.add(e.id);
+			for (const p of products.values()) if (inParent(p) && p.subcategory === e.original) (p.subcategory = e.name), dirty.add(p.id);
+		}
+	}
+	for (const id of subDirty) if (subs.has(id)) tx.put(T.subcategories, { ...subs.get(id), updatedAt: nowIso() });
 	for (const e of drafts.itemEdits || []) {
+		if (e.isNew) {
+			const c = e.changes;
+			if (!names.has(categoryKey(c.category))) {
+				tx.addCategory(c.category);
+				names.add(categoryKey(c.category));
+			}
+			products.set(e.id, {
+				id: e.id, createdAt: nowIso(), type: "Product", image: "", imageFit: "cover", imagePositionX: 50, imagePositionY: 50, recipe: [], modifierRules: {}, trackStock: false, stock: 0,
+				subcategory: "", description: "", stationIds: [], modifierIds: [], ...c, code: c.code || "POS-" + String(Date.now()).slice(-5),
+			});
+			dirty.add(e.id);
+			continue;
+		}
 		const p = products.get(e.id);
 		if (!p) continue;
 		Object.assign(p, e.changes);

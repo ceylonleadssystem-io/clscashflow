@@ -361,3 +361,72 @@ describe("catalogue drafts", () => {
 		expect(draftChanges(h.data().settings)).toEqual([]);
 	});
 });
+
+describe("new items and subcategories on drafts", () => {
+	let h;
+	beforeEach(async () => {
+		h = await createHarness();
+		await addProduct(h, { name: "Tea", price: "250", cost: "100", category: "Drinks" });
+		await h.svc.settings.patchSettings({ kitchenStations: [{ id: "k", name: "Kitchen", type: "printer", printer: { kind: "none" } }] });
+	});
+	const live = (name) => h.data().products.find((p) => p.name === name);
+
+	it("creates an item on Publish, with its category, stations and modifier groups, and nothing before", async () => {
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "", name: "Bakery" });
+		await h.svc.settings.saveMenuEntity("groupEdits", { name: "Toppings", mode: "multiple", required: false, options: [{ name: "Cheese", price: 50 }] });
+		const groupId = h.data().settings.menuDraft.groupEdits[0].id;
+		expect(await h.svc.settings.saveMenuEntity("itemEdits", { isNew: true, name: "Cheese Bun", price: 0, cost: 10, category: "Bakery" })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("itemEdits", { isNew: true, name: "Cheese Bun", price: 120, cost: 40, category: "Bakery", code: "", description: "Fresh", stationIds: ["k", "ghost"], modifierIds: [groupId, "ghost"] })).toBe(true);
+		expect(live("Cheese Bun")).toBeUndefined();
+		const c = draftChanges(h.data().settings).find((x) => x.page === "itemEdits");
+		expect(c).toMatchObject({ kind: "added", name: "Cheese Bun" });
+		await h.svc.settings.publishMenu();
+		const bun = live("Cheese Bun");
+		expect(bun).toMatchObject({ price: 120, cost: 40, category: "Bakery", description: "Fresh", stationIds: ["k"], modifierIds: [groupId], trackStock: false });
+		expect(bun.code).toMatch(/^POS-/);
+		expect(h.data().modifiers.find((m) => m.id === groupId)).toBeTruthy();
+		expect(h.data().products).toHaveLength(2);
+	});
+	it("editing a drafted new item replaces it rather than adding a second", async () => {
+		await h.svc.settings.saveMenuEntity("itemEdits", { isNew: true, name: "Bun", price: 100, cost: 40, category: "Drinks" });
+		const id = h.data().settings.menuDraft.itemEdits[0].id;
+		await h.svc.settings.saveMenuEntity("itemEdits", { id, name: "Bun", price: 110, cost: 40, category: "Drinks" });
+		expect(h.data().settings.menuDraft.itemEdits).toHaveLength(1);
+		expect(h.data().settings.menuDraft.itemEdits[0].changes.price).toBe(110);
+	});
+	it("changes an existing item's stations and modifier groups as drafts", async () => {
+		const tea = live("Tea");
+		await h.svc.settings.saveMenuEntity("itemEdits", { id: tea.id, name: "Tea", price: 250, cost: 100, category: "Drinks", code: tea.code, description: "", stationIds: ["k"] });
+		expect(h.data().settings.menuDraft.itemEdits[0].changes).toEqual({ stationIds: ["k"] });
+		await h.svc.settings.publishMenu();
+		expect(live("Tea").stationIds).toEqual(["k"]);
+	});
+	it("adds, renames and removes subcategories, moving the items that used them", async () => {
+		await h.svc.catalog.saveProduct({ ...productForm({ name: "Iced Tea", category: "Drinks", subcategory: "Cold" }) });
+		await h.svc.catalog.addSubcategory?.("Drinks");
+		const before = h.data().subcategories.length;
+		const group = "drinks";
+		expect(await h.svc.settings.saveMenuEntity("subcategoryEdits", { group, parent: "Drinks", wanted: [{ name: "Hot" }, { name: "hot" }] })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("subcategoryEdits", { group, parent: "Drinks", wanted: [{ name: "Hot" }, { name: "Cold" }] })).toBe(true);
+		expect(h.data().subcategories.length).toBe(before);
+		await h.svc.settings.publishMenu();
+		const names = h.data().subcategories.filter((s) => s.parent === "Drinks").map((s) => s.name).sort();
+		expect(names).toEqual(expect.arrayContaining(["Cold", "Hot"]));
+		const cold = h.data().subcategories.find((s) => s.name === "Cold");
+		await h.svc.settings.saveMenuEntity("subcategoryEdits", { group, parent: "Drinks", wanted: h.data().subcategories.filter((s) => s.parent === "Drinks").map((s) => ({ id: s.id, name: s.id === cold.id ? "Iced" : s.name })) });
+		await h.svc.settings.publishMenu();
+		expect(live("Iced Tea").subcategory).toBe("Iced");
+		await h.svc.settings.saveMenuEntity("subcategoryEdits", { group, parent: "Drinks", wanted: h.data().subcategories.filter((s) => s.parent === "Drinks" && s.name !== "Iced").map((s) => ({ id: s.id, name: s.name })) });
+		await h.svc.settings.publishMenu();
+		expect(h.data().subcategories.some((s) => s.name === "Iced")).toBe(false);
+		expect(live("Iced Tea").subcategory).toBe("");
+	});
+	it("a category rename keeps its subcategories attached in the same publish", async () => {
+		await h.svc.settings.saveMenuEntity("subcategoryEdits", { group: "drinks", parent: "Drinks", wanted: [{ name: "Hot" }] });
+		await h.svc.settings.publishMenu();
+		await h.svc.settings.saveMenuEntity("categoryEdits", { original: "Drinks", name: "Beverages" });
+		await h.svc.settings.saveMenuEntity("subcategoryEdits", { group: "drinks", parent: "Beverages", wanted: [{ id: h.data().subcategories[0].id, name: "Hot drinks" }, { name: "Cold" }] });
+		await h.svc.settings.publishMenu();
+		expect(h.data().subcategories.map((s) => [s.parent, s.name]).sort()).toEqual([["Beverages", "Cold"], ["Beverages", "Hot drinks"]]);
+	});
+});

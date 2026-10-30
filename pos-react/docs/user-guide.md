@@ -125,7 +125,8 @@ Menu Admin pages save **drafts**: nothing changes on the register until you pres
 - **Categories**: add, rename or remove categories, give them a description, and decide whether taking items off an order **after it was sent to the kitchen** needs a manager's PIN (and after how many seconds).
   Managers and owners are never asked; the removal is recorded in the audit log.
 - **Items, categories and modifier groups** can be edited here as drafts (name, price, cost, category, code, description, groups and their options); they change on the register only when you Publish.
-  Creating items, photos, stock and printing stations stay in Products & Services.
+  You can also **add items** here (with their stations, modifier groups and subcategory); photos and stock counts are added in Products & Services.
+- **Require order type selection** (Order Entry): payment waits until the order type is chosen.
 - **Modifiers**: set how many options of a "choose several" group staff must or may pick, and add **global modifiers** (onion, sauce, ice) with prefixes such as Add, Extra, Side and No. When global modifiers are
   on in Order Entry, each order line shows **Add extras**; "No Onion" or "Extra Sauce" then prints on the receipt and the kitchen ticket.
 

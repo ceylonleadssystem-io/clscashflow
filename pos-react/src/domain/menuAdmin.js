@@ -28,6 +28,7 @@ export const PAGES = {
 	categoryEdits: { label: "Category", plural: "Categories", apply: true },
 	itemEdits: { label: "Item", plural: "Items", apply: true },
 	groupEdits: { label: "Modifier group", plural: "Modifier groups", apply: true },
+	subcategoryEdits: { label: "Subcategory", plural: "Subcategories", apply: true },
 };
 export const APPLY_KEYS = Object.keys(PAGES).filter((k) => PAGES[k].apply);
 export const PAGE_KEYS = Object.keys(PAGES).filter((k) => !PAGES[k].apply);

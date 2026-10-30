@@ -196,7 +196,7 @@ function ReferenceSection() {
 		<>
 			{kitchen && channels && (
 				<div id="order-channel-fields" className="order-channel-fields" aria-hidden="false">
-					<select className="input" id="order-channel" aria-label="Order source" value={c.orderChannel} onChange={(e) => c.setOrderChannel(e.target.value)}>
+					<select className="input" id="order-channel" aria-label="Order source" value={c.orderChannel} onChange={(e) => c.pickOrderChannel(e.target.value)}>
 						{c.channels.map((ch) => (
 							<option key={ch} value={ch}>
 								{ch}

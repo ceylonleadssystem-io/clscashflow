@@ -2,7 +2,8 @@
  * Catalogue edits kept as drafts (pure). Unlike the other Menu Admin lists, these are not copied over a published list: Publish applies them to the
  * live catalogue (categories, items, modifier groups) in the same write that publishes everything else. The drafts are:
  *   settings.menuDraft.categoryEdits  [{ id, original, name, removed, moveTo }]       add ("original" is ""), rename, or remove a category
- *   settings.menuDraft.itemEdits      [{ id: productId, name, original, changes }]     changed core fields of an existing item
+ *   settings.menuDraft.itemEdits      [{ id: productId, name, original, changes, isNew? }]   changed fields of an existing item, or a new item (isNew: every field in `changes`)
+ *   settings.menuDraft.subcategoryEdits [{ id, group, parent, name, original, isNew?, removed? }]   add, rename or remove a subcategory (group = the parent's key)
  *   settings.menuDraft.groupEdits     [{ id, isNew, name, mode, required, options, removed }]   add, edit or remove a modifier group
  * Categories are referred to by name, as everywhere in this POS.
  */
@@ -11,7 +12,8 @@ import { categoryKey } from "./catalog";
 const list = (v) => (Array.isArray(v) ? v : []);
 const text = (v, max) => String(v ?? "").trim().slice(0, max);
 export const UNCATEGORIZED = "Uncategorized";
-export const ITEM_FIELDS = ["name", "price", "cost", "category", "code", "description"];
+export const ITEM_FIELDS = ["name", "price", "cost", "category", "subcategory", "code", "description", "stationIds", "modifierIds"];
+const ARRAY_FIELDS = ["stationIds", "modifierIds"];
 
 export const draftList = (settings = {}, key) => list(settings.menuDraft?.[key]);
 
@@ -54,11 +56,11 @@ export function categoryEditError(e, rows) {
 // ------------------------------------------------------------------------------------ items ----
 /** The fields of an item edit that differ from the live item (price and cost as numbers). */
 export function itemChanges(product, form) {
-	const next = { name: text(form.name, 80), price: Number(form.price), cost: Number(form.cost), category: text(form.category, 60), code: text(form.code, 40), description: text(form.description, 200) };
+	const next = { name: text(form.name, 80), price: Number(form.price), cost: Number(form.cost), category: text(form.category, 60), subcategory: text(form.subcategory, 60), code: text(form.code, 40), description: text(form.description, 200), stationIds: list(form.stationIds === undefined ? product.stationIds : form.stationIds).map(String), modifierIds: list(form.modifierIds === undefined ? product.modifierIds : form.modifierIds).map(String) };
 	const out = {};
 	for (const f of ITEM_FIELDS) {
-		const was = f === "price" || f === "cost" ? Number(product[f]) : String(product[f] ?? "");
-		if (next[f] !== was) out[f] = next[f];
+		const was = f === "price" || f === "cost" ? Number(product[f]) : ARRAY_FIELDS.includes(f) ? list(product[f]).map(String) : String(product[f] ?? "");
+		if (JSON.stringify(next[f]) !== JSON.stringify(was)) out[f] = next[f];
 	}
 	return out;
 }
@@ -70,6 +72,10 @@ export function itemEditError(form, categories) {
 	if (!categories.some((c) => categoryKey(c) === categoryKey(form.category))) return "Choose a category.";
 	return "";
 }
+/** The fields of a new item as the draft stores them. */
+export const newItemFields = (form) => itemChanges({ name: "", price: 0, cost: 0, category: "", subcategory: "", code: "", description: "", stationIds: [], modifierIds: [] }, { ...form, price: form.price, cost: form.cost });
+/** New items waiting to be published, shaped like products so lists can show them. */
+export const draftNewItems = (edits) => list(edits).filter((e) => e.isNew).map((e) => ({ id: e.id, type: "Product", stationIds: [], modifierIds: [], code: "", description: "", subcategory: "", ...e.changes, isDraft: true }));
 /** An item with its draft changes applied (for lists that show what Publish will do). */
 export const withItemEdit = (product, edits) => {
 	const e = list(edits).find((x) => x.id === String(product.id));
@@ -112,6 +118,43 @@ export function workingGroups(live = [], edits = []) {
 	return rows;
 }
 
+// ------------------------------------------------------------------------------ subcategories ----
+/**
+ * Subcategories of one category as the draft leaves them: [{ id, name, original, state }].
+ * `group` is the category's key (its live name, or its new name when it is itself new); `liveSubs` are the live subcategory rows.
+ */
+export function workingSubcategories(liveSubs = [], edits = [], group = "") {
+	const mine = list(edits);
+	const rows = liveSubs.filter((s) => categoryKey(s.parent) === group).map((s) => {
+		const e = mine.find((x) => x.id === s.id);
+		if (!e) return { id: s.id, name: s.name, original: s.name, state: "live" };
+		return { id: s.id, name: e.removed ? s.name : e.name, original: s.name, state: e.removed ? "removed" : "renamed" };
+	});
+	for (const e of mine.filter((x) => x.isNew && !x.removed && x.group === group)) rows.push({ id: e.id, name: e.name, original: "", state: "added" });
+	return rows;
+}
+/** The draft entries for one category's subcategories, from the list the person edited: [{ id?, name }] against the live rows. */
+export function subcategoryEntries(liveSubs, group, parent, wanted, newId) {
+	const have = liveSubs.filter((s) => categoryKey(s.parent) === group);
+	const out = [];
+	const seen = new Set();
+	for (const w of wanted) {
+		const name = text(w.name, 60);
+		if (!name) continue;
+		const live = have.find((s) => s.id === w.id);
+		if (live) {
+			seen.add(live.id);
+			if (live.name !== name) out.push({ id: live.id, group, parent, name, original: live.name });
+		} else out.push({ id: w.id || newId(), group, parent, name, original: "", isNew: true });
+	}
+	for (const s of have) if (!seen.has(s.id)) out.push({ id: s.id, group, parent, name: s.name, original: s.name, removed: true });
+	return out;
+}
+export function subcategoryError(wanted) {
+	const names = wanted.map((w) => text(w.name, 60).toLowerCase()).filter(Boolean);
+	return new Set(names).size !== names.length ? "Two subcategories have the same name." : "";
+}
+
 // ------------------------------------------------------------------------- publish preview ----
 /** One line per unpublished catalogue change, for the Review list: [{ page, id, name, kind, fields }]. */
 export function catalogDraftChanges(settings = {}) {
@@ -122,8 +165,12 @@ export function catalogDraftChanges(settings = {}) {
 		else out.push({ page: "categoryEdits", id: e.id, name: e.original, kind: "edited", fields: [{ field: "Name", before: e.original, after: e.name }] });
 	}
 	for (const e of draftList(settings, "itemEdits")) {
-		const label = { name: "Name", price: "Price", cost: "Cost", category: "Category", code: "Code", description: "Description" };
-		out.push({ page: "itemEdits", id: e.id, name: e.original, kind: "edited", fields: Object.entries(e.changes).map(([f, v]) => ({ field: label[f], before: String(e.was?.[f] ?? ""), after: String(v) })) });
+		const label = { name: "Name", price: "Price", cost: "Cost", category: "Category", subcategory: "Subcategory", code: "Code", description: "Description", stationIds: "Stations", modifierIds: "Modifier groups" };
+		const show = (v) => (Array.isArray(v) ? `${v.length} chosen` : String(v ?? ""));
+		out.push({ page: "itemEdits", id: e.id, name: e.original || e.name, kind: e.isNew ? "added" : "edited", fields: e.isNew ? [{ field: "Price", before: "", after: String(e.changes.price) }, { field: "Category", before: "", after: e.changes.category }] : Object.entries(e.changes).map(([f, v]) => ({ field: label[f], before: show(e.was?.[f]), after: show(v) })) });
+	}
+	for (const e of draftList(settings, "subcategoryEdits")) {
+		out.push({ page: "subcategoryEdits", id: e.id, name: `${e.parent}: ${e.original || e.name}`, kind: e.removed ? "removed" : e.isNew ? "added" : "edited", fields: !e.removed && !e.isNew ? [{ field: "Name", before: e.original, after: e.name }] : [] });
 	}
 	for (const e of draftList(settings, "groupEdits")) {
 		if (e.removed) out.push({ page: "groupEdits", id: e.id, name: e.name, kind: "removed", fields: [] });

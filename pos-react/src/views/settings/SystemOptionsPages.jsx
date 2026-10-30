@@ -115,6 +115,7 @@ export function OrderEntry() {
 			<PageHeader title="Order Entry" description="How an order is started and how the menu looks while taking it." note={<ScopeNote />} />
 			{kitchen && (
 				<SectionCard title="Order type">
+					<ToggleRow id="oe-require-type" label="Require order type selection" help="Staff must choose Dine-in, Takeaway or another order type on each new order before taking payment." value={values.requireOrderType} onChange={(v) => set("requireOrderType", v)} overridden={overridden("requireOrderType")} onReset={() => reset("requireOrderType")} />
 					<SelectRow
 						id="oe-default-type"
 						label="Default order type"

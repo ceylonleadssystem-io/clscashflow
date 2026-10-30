@@ -126,6 +126,15 @@ a tax group applies each member to the same amount (not compounded) and lists th
   edits, then groups; stock rows follow). Review shows before and after, a single entry can be undone, and **Discard all** drops them. Live screens keep showing the old values until then.
 - Still edited live in Products & Services (not on drafts): creating an item, photos, stock counts, printing stations, modifier assignment to items, subcategories. Item descriptions have no online use yet.
 
+## Delivered (slice 10): new items, stations and groups on items, subcategories, Require order type
+- **Add item** on Menu Admin > Items (draft, created on Publish): name, price, cost, category, subcategory, code, description, **stations** and **modifier groups** (including groups added in the same publish). Existing items can change
+  their stations, modifier groups and subcategory too. A new item has no photo and no stock tracking (always available); add those in Products & Services. Tax and the kitchen / receipt names are set once the item exists.
+- **Subcategories** in the Categories drawer (shown when subcategories are on): add, rename, remove as drafts. A rename or removal updates the items that used it, and a category rename in the same publish keeps them attached.
+- **Require order type selection** (System Options > Order Entry, off by default, restaurant and café businesses): payment is refused with a message until the order type was picked on that order (recalled open orders count as picked).
+- Still not built, and why: photos and stock counts on drafts (images upload and stock rows are tied to the item form); tax on custom keypad items (there are no custom items); tips and the receipt tip line (the POS records no tips);
+  order number reset and limit (changes numbering on live data, needs its own decision); delivery postal code (no delivery address exists); Quick PIN, card swipe, staff survey, shift summary printing and the email / WhatsApp
+  receipt toggles (each needs a feature that does not exist yet); "Start a new order after completing" (the register already does this).
+
 ## Next slices, in the spec's order
-1. Menu Admin remainder: creating items on drafts (with photos, stock and stations), modifier assignment to items, subcategories. Then wire the remaining Settings rows that waited for these (see the tables above).
+1. Photos and stock counts on drafts; then each Settings row listed under slice 10 as the feature behind it is built.
 2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

@@ -8,11 +8,13 @@ import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../compo
 import { ConditionalGroup, NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextAreaRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
 import { categoryKey, productCategories, visibleProductCategories } from "../../domain/catalog";
 import { DEFAULT_GRACE, cleanCategorySetting } from "../../domain/deleteApproval";
-import { UNCATEGORIZED, cleanGroupEdit, effectiveCategory, draftList, groupEditError, itemEditError, remainingNames, withItemEdit, workingCategories, workingGroups } from "../../domain/catalogDraft";
+import { UNCATEGORIZED, cleanGroupEdit, draftNewItems, subcategoryError, workingSubcategories, effectiveCategory, draftList, groupEditError, itemEditError, remainingNames, withItemEdit, workingCategories, workingGroups } from "../../domain/catalogDraft";
 import { WEEKDAYS, DEFAULT_PREFIXES, cleanGlobalModifier, cleanItemSetting, cleanLimit, cleanMenu, cleanPrefixes, globalModifierError, limitError, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { money } from "../../domain/format";
 import { cleanTax, cleanTaxRules, previewTax, round2, taxError } from "../../domain/taxes";
+import { kitchenStations } from "../../domain/kitchenStations";
 import { useData } from "../../store/DataProvider";
+import { useFeature } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
 
 const newMenu = () => ({ id: "", name: "", status: "active", hours: [{ days: [1, 2, 3, 4, 5], start: "07:00", end: "11:00" }], categories: [] });
@@ -403,6 +405,7 @@ export function CategoriesAdmin() {
 	const { svc, go, canView } = usePos();
 	const [edit, setEdit] = useState(null); // { row, name, description, deleteApprovalOn, graceSeconds }
 	const [removing, setRemoving] = useState(null); // { row, moveTo }
+	const subsOn = useFeature("catalogue.subcategories");
 	const [touched, setTouched] = useState(false);
 	const live = useMemo(() => visibleProductCategories(categories, products, subcategories, settings.userCategories || []).sort((a, b) => a.localeCompare(b)), [categories, products, subcategories, settings.userCategories]);
 	const edits = draftList(settings, "categoryEdits");
@@ -413,18 +416,22 @@ export function CategoriesAdmin() {
 	const count = (r) => products.filter((p) => categoryKey(p.category) === categoryKey(r.original || r.name)).length;
 	const taxOf = (r) => taxes.find((t) => t.id === (taxRules.categoryTaxes[categoryKey(r.original || r.name)]?.tax || taxRules.defaultTaxId))?.name || "None";
 	const others = (r) => rows.filter((x) => x !== r);
-	const nameClash = edit && rows.some((x) => x !== edit.row && x.state !== "removed" && categoryKey(x.name) === categoryKey(edit.name));
+	const nameClash = edit && rows.some((x) => x.key !== edit.row.key && x.state !== "removed" && categoryKey(x.name) === categoryKey(edit.name));
 	const error = edit ? (!edit.name.trim() ? "Enter a name." : nameClash ? "There is already a category called " + edit.name.trim() + "." : "") : "";
 	const close = () => (setEdit(null), setTouched(false));
 	const open = (r) => {
 		const c = rules.get(categoryKey(r.original || r.name));
-		setEdit({ row: r, name: r.name, description: c?.description || "", deleteApprovalOn: !!c?.deleteApprovalOn, graceSeconds: c ? c.graceSeconds : DEFAULT_GRACE });
+		const subs = r.original ? workingSubcategories(subcategories, draftList(settings, "subcategoryEdits"), categoryKey(r.original)).filter((s) => s.state !== "removed").map((s) => ({ id: s.id, name: s.name })) : [];
+		setEdit({ row: r, subs, name: r.name, description: c?.description || "", deleteApprovalOn: !!c?.deleteApprovalOn, graceSeconds: c ? c.graceSeconds : DEFAULT_GRACE });
 	};
 	const save = async () => {
 		setTouched(true);
 		if (error) return;
 		const r = edit.row;
 		if (!(await svc.settings.saveMenuEntity("categoryEdits", { id: r.state === "added" ? r.key : undefined, original: r.original, name: edit.name }))) return;
+		if (r.original && (subsOn || edit.subs.length || draftList(settings, "subcategoryEdits").some((x) => x.group === categoryKey(r.original)))) {
+			if (!(await svc.settings.saveMenuEntity("subcategoryEdits", { group: categoryKey(r.original), parent: edit.name.trim(), wanted: edit.subs }))) return;
+		}
 		if (r.original) await svc.settings.saveMenuEntity("categorySettings", { name: r.original, description: edit.description, deleteApprovalOn: edit.deleteApprovalOn, graceSeconds: edit.graceSeconds });
 		close();
 	};
@@ -517,6 +524,23 @@ export function CategoriesAdmin() {
 								<ConditionalGroup show={edit.deleteApprovalOn}>
 									<NumberRow id="cat-grace" label="Grace period" help="Seconds after sending during which an item can still be taken off freely." value={edit.graceSeconds} min={0} max={3600} suffix="seconds" onChange={(graceSeconds) => setEdit((x) => ({ ...x, graceSeconds }))} />
 								</ConditionalGroup>
+								{(subsOn || edit.subs.length > 0) && (
+									<SettingRow label="Subcategories" help="A second row of buttons on the register under this category." wide error={subcategoryError(edit.subs)}>
+										<div className="sk-options">
+											{edit.subs.map((s, i) => (
+												<div key={s.id || "n" + i} className="sk-option-row" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+													<input className="input" aria-label={"Subcategory " + (i + 1)} maxLength={60} value={s.name} onChange={(e) => setEdit((x) => ({ ...x, subs: x.subs.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)) }))} />
+													<button type="button" className="btn out" aria-label={"Remove subcategory " + (i + 1)} onClick={() => setEdit((x) => ({ ...x, subs: x.subs.filter((_, j) => j !== i) }))}>
+														Remove
+													</button>
+												</div>
+											))}
+											<button type="button" className="btn out" id="add-subcategory" onClick={() => setEdit((x) => ({ ...x, subs: [...x.subs, { id: "", name: "" }] }))}>
+												Add subcategory
+											</button>
+										</div>
+									</SettingRow>
+								)}
 								<SettingRow label="Tax" help="Set in Taxes, Tax by category." wide>
 									<span>{taxOf(edit.row)}</span>
 								</SettingRow>
@@ -566,8 +590,9 @@ export function CategoriesAdmin() {
 }
 
 export function Items() {
-	const { settings, products: liveProducts, categories: categoriesLive } = useData();
-	const products = useMemo(() => liveProducts.map((p) => withItemEdit(p, draftList(settings, "itemEdits"))), [liveProducts, settings]);
+	const { settings, products: liveProducts, categories: categoriesLive, modifiers, subcategories } = useData();
+	const kdsOn = useFeature("checkout.kds");
+	const products = useMemo(() => [...liveProducts.map((p) => withItemEdit(p, draftList(settings, "itemEdits"))), ...draftNewItems(draftList(settings, "itemEdits"))], [liveProducts, settings]);
 	const { svc, go, canView } = usePos();
 	const [q, setQ] = useState("");
 	const [edit, setEdit] = useState(null);
@@ -599,25 +624,38 @@ export function Items() {
 	const itemEdits = draftList(settings, "itemEdits");
 	const catRows = workingCategories(useMemo(() => productCategories(categoriesLive, liveProducts).sort((a, b) => a.localeCompare(b)), [categoriesLive, liveProducts]), draftList(settings, "categoryEdits"));
 	const catNames = remainingNames(catRows);
+	const stationList = kitchenStations(settings, kdsOn);
+	const groupList = workingGroups(modifiers, draftList(settings, "groupEdits")).filter((g) => g.state !== "removed");
+	const subNames = (cat) => {
+		const row = catRows.find((r) => r.name === cat);
+		return workingSubcategories(subcategories, draftList(settings, "subcategoryEdits"), categoryKey(row?.original || cat)).filter((s) => s.state !== "removed").map((s) => s.name);
+	};
 	const open = (p) => {
 		const w = withItemEdit(p, itemEdits);
-		setEdit({ product: w, ...cleanItemSetting({ ...(overrides.get(String(p.id)) || {}), id: String(p.id) }), details: { name: w.name, price: String(w.price), cost: String(w.cost), category: effectiveCategory(catRows, w.category), code: w.code || "", description: w.description || "" } });
+		const base = { name: w.name, price: String(w.price), cost: String(w.cost), category: effectiveCategory(catRows, w.category), subcategory: w.subcategory || "", code: w.code || "", description: w.description || "", stationIds: (w.stationIds || []).map(String), modifierIds: (w.modifierIds || []).map(String) };
+		setEdit({ product: w, isNew: !!p.isDraft, ...cleanItemSetting({ ...(overrides.get(String(p.id)) || {}), id: String(p.id) }), details: base });
 	};
+	const addNew = () => setEdit({ product: { id: "", name: "", price: 0, category: "" }, isNew: true, ...cleanItemSetting({ id: "" }), id: "", details: { name: "", price: "", cost: "", category: catNames[0] || "", subcategory: "", code: "", description: "", stationIds: [], modifierIds: [] } });
 	const close = () => setEdit(null);
 	const save = async () => {
-		const ok = await svc.settings.saveMenuEntity("itemEdits", { id: edit.id, ...edit.details });
-		if (ok && (await svc.settings.saveMenuEntity("itemSettings", edit))) close();
+		const ok = await svc.settings.saveMenuEntity("itemEdits", { id: edit.id, isNew: edit.isNew, ...edit.details });
+		// tax and names can be set once the item exists on the register (a new item is created on Publish)
+		if (ok && (edit.isNew || (await svc.settings.saveMenuEntity("itemSettings", edit)))) close();
 	};
+	const toggleIn = (k, id) => setEdit((x) => ({ ...x, details: { ...x.details, [k]: x.details[k].includes(id) ? x.details[k].filter((i) => i !== id) : [...x.details[k], id] } }));
 	const setDetail = (k) => (v) => setEdit((x) => ({ ...x, details: { ...x.details, [k]: v } }));
 	const name = (n) => (n.length > 24 ? n.slice(0, 24) + "…" : n);
 	return (
 		<>
 			<PageHeader
 				title="Items"
-				description="Edit an item's details, its own tax and the names used on kitchen tickets and receipts. Photos, stock and printing stations are edited in Products & Services."
+				description="Add items and edit their details, stations, modifier groups, own tax and the names used on kitchen tickets and receipts. Photos and stock counts are edited in Products & Services."
 				actions={
 					<>
-						<DraftBadge show={hasDraft(settings, "itemSettings")} />
+						<DraftBadge show={hasDraft(settings, "itemSettings") || itemEdits.length > 0} />
+						<button type="button" className="btn gold" id="add-item" onClick={addNew}>
+							Add item
+						</button>
 						{canView("products") && (
 							<button type="button" className="btn out" onClick={() => go("products")}>
 								Open Products & Services
@@ -644,7 +682,7 @@ export function Items() {
 										<span className="sk-item-name">
 											<strong>{name(p.name)}</strong>
 											{o && <span className="sk-badge">Customised</span>}
-											{itemEdits.some((e) => e.id === String(p.id)) && <span className="sk-badge">Edited</span>}
+											{p.isDraft ? <span className="sk-badge">New</span> : itemEdits.some((e) => e.id === String(p.id)) && <span className="sk-badge">Edited</span>}
 										</span>
 										<span className="muted">
 											{money(p.price)} · Tax: {effective(p)} · {salesOf.get(String(p.id)) || "No sales category"}
@@ -662,8 +700,8 @@ export function Items() {
 			<DetailDrawer
 				open={!!edit}
 				wide
-				title={edit?.product.name || "Item"}
-				subtitle={edit ? edit.product.category + " · " + money(edit.product.price) : ""}
+				title={edit?.id ? edit.details.name || "Item" : "Add item"}
+				subtitle={edit?.id ? edit.details.category + " · " + money(+edit.details.price || 0) : "Created on the register when you publish"}
 				onClose={close}
 				footer={
 					<>
@@ -678,14 +716,40 @@ export function Items() {
 			>
 				{edit && (
 					<>
-						<SectionCard title="Details" description="Applied to the live item when you publish. Photos, stock and the stations an item prints to are edited in Products & Services.">
+						<SectionCard title="Details" description="Applied to the live item when you publish. Photos and stock counts are edited in Products & Services.">
 							<TextRow id="it-name" label="Name" value={edit.details.name} max={80} onChange={setDetail("name")} />
 							<NumberRow id="it-price" label="Selling price" value={edit.details.price} min={0} step={0.01} onChange={(v) => setDetail("price")(v === "" ? "" : String(v))} />
 							<NumberRow id="it-cost" label="Cost price" value={edit.details.cost} min={0} step={0.01} onChange={(v) => setDetail("cost")(v === "" ? "" : String(v))} />
 							<SelectRow id="it-category" label="Category" value={edit.details.category} options={catNames.map((n) => ({ value: n, label: n }))} onChange={setDetail("category")} />
+							<SelectRow id="it-sub" label="Subcategory" value={edit.details.subcategory} options={[{ value: "", label: "None" }, ...subNames(edit.details.category).map((n) => ({ value: n, label: n }))]} onChange={setDetail("subcategory")} />
 							<TextRow id="it-code" label="Item code" help="Used for barcode and lookup." value={edit.details.code} max={40} onChange={setDetail("code")} />
 							<TextAreaRow id="it-desc" label="Description" value={edit.details.description} max={200} onChange={setDetail("description")} />
 						</SectionCard>
+						<SectionCard title="Kitchen and modifiers">
+							<SettingRow label="Stations" help="Where this item's kitchen tickets go. With none chosen it goes to the first station." wide>
+								<div className="sk-checks">
+									{stationList.map((s) => (
+										<label key={s.id}>
+											<input type="checkbox" checked={edit.details.stationIds.includes(s.id)} onChange={() => toggleIn("stationIds", s.id)} />
+											<span>{s.name}</span>
+										</label>
+									))}
+									{!stationList.length && <p className="muted">No stations yet. Add them on the Stations page.</p>}
+								</div>
+							</SettingRow>
+							<SettingRow label="Modifier groups" help="Groups staff pick from when adding this item." wide>
+								<div className="sk-checks">
+									{groupList.map((g) => (
+										<label key={g.id}>
+											<input type="checkbox" checked={edit.details.modifierIds.includes(g.id)} onChange={() => toggleIn("modifierIds", g.id)} />
+											<span>{g.name}</span>
+										</label>
+									))}
+									{!groupList.length && <p className="muted">No modifier groups yet.</p>}
+								</div>
+							</SettingRow>
+						</SectionCard>
+						{edit.isNew ? <p className="muted">Tax and the kitchen and receipt names can be set once the item has been published.</p> : (<>
 						<SelectRow id="it-tax" label="Tax" help="Leave on the category tax to follow Taxes, Tax by category." value={edit.taxId} options={[{ value: "", label: "Follow the category" }, ...options]} onChange={(taxId) => setEdit((x) => ({ ...x, taxId }))} />
 						{rules.takeawayOn && <SelectRow id="it-take" label="Takeaway tax" help="Used on takeaway orders. Blank uses the tax above." value={edit.takeawayTaxId} options={[{ value: "", label: "Same as the tax above" }, ...options]} onChange={(takeawayTaxId) => setEdit((x) => ({ ...x, takeawayTaxId }))} />}
 						{withTax && (
@@ -695,6 +759,7 @@ export function Items() {
 						)}
 						<TextRow id="it-prep" label="Prep ticket name" help="The name on kitchen tickets and the kitchen screen. Blank uses the item name." value={edit.prepTicketName} max={60} onChange={(prepTicketName) => setEdit((x) => ({ ...x, prepTicketName }))} />
 						<TextRow id="it-receipt" label="Receipt name" help="The name on receipts. Blank uses the item name." value={edit.receiptName} max={60} onChange={(receiptName) => setEdit((x) => ({ ...x, receiptName }))} />
+						</>)}
 					</>
 				)}
 			</DetailDrawer>

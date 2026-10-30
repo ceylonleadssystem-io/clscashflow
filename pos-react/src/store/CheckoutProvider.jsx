@@ -50,6 +50,7 @@ export function CheckoutProvider({ children }) {
 	const [openOrderId, setOpenOrderId] = useState("");
 	const [category, setCategory] = useState("All");
 	const [search, setSearch] = useState("");
+	const [channelPicked, setChannelPicked] = useState(false); // the order type was chosen on this order (Order Entry: require order type)
 	const [picker, setPicker] = useState(null); // { productId, lineKey }
 	const [approval, setApproval] = useState(null); // { key, delta, line, removed }: a removal waiting for a manager
 	const [splitOpen, setSplitOpen] = useState(false);
@@ -184,6 +185,7 @@ export function CheckoutProvider({ children }) {
 		setOrderReference("");
 		setPlatformOrderId("");
 		setOrderChannel(defaultChannel || "Dine-in");
+		setChannelPicked(false);
 		setCashTendered("");
 		setWantsEmail(false);
 		setWantsWhatsApp(false);
@@ -262,6 +264,10 @@ export function CheckoutProvider({ children }) {
 	// --------------------------------------------------------- actions ------
 	const completeSale = useCallback(async () => {
 		if (busy.current || !cart.length) return;
+		if (kitchen && enabled["checkout.orderChannels"] && !channelPicked && !openOrderId && resolveOptions(data.settings, "orderEntry", locationId).requireOrderType) {
+			await ui.alert("Choose the order type (Dine-in, Takeaway...) before taking payment.");
+			return false;
+		}
 		busy.current = true;
 		setBusyUi(true);
 		try {
@@ -296,7 +302,7 @@ export function CheckoutProvider({ children }) {
 			busy.current = false;
 			setBusyUi(false);
 		}
-	}, [cart, discount, payment, splitPayments, customerId, wantsEmail, receiptEmail, wantsWhatsApp, printAfter, cashTendered, orderReference, orderChannel, platformOrderId, openOrderId, svc, enabled, resetOrder]);
+	}, [cart, discount, payment, splitPayments, customerId, wantsEmail, receiptEmail, wantsWhatsApp, printAfter, cashTendered, orderReference, orderChannel, platformOrderId, openOrderId, svc, enabled, resetOrder, kitchen, channelPicked, data.settings, locationId, ui]);
 
 	const voidOrder = useCallback(async () => {
 		if (await svc.sales.voidCurrentOrder(cart)) {
@@ -375,7 +381,7 @@ export function CheckoutProvider({ children }) {
 		cart, setCart, discount, discountOn, payment, setPayment, splitPayments, setSplitPayments, customerId, selectCustomer,
 		phoneSearch, setPhoneSearch, findNote, findCustomerByPhone, clearCustomer, wantsEmail, toggleEmail, receiptEmail, setReceiptEmail,
 		wantsWhatsApp, setWantsWhatsApp, printAfter, setPrintAfter, cashTendered, setCashTendered, orderReference, setOrderReference,
-		orderChannel, setOrderChannel, platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
+		orderChannel, setOrderChannel, pickOrderChannel: (v) => (setChannelPicked(true), setOrderChannel(v)), platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
 		picker, setPicker, approval, setApproval, approveRemoval, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
 		addProduct, addScanned, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
 		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
