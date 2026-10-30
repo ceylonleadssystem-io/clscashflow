@@ -929,3 +929,12 @@ html[data-theme="dark"] .health-ok,html[data-theme="dark"] .health-good{color:#6
 .sk-detail-actions{display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:12px}
 .sk-search{padding:10px 0}.sk-search .input{max-width:320px;width:100%}
 .sk-search .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* wide screens: the header is 74px tall by default, so when its buttons wrap to a second row they were pushed out of it (cut off at the top).
+   Let it grow with its content, give the buttons the room the title does not need, and keep them right-aligned. */
+@media (min-width:1101px){
+	html body .top,html body.full .top{height:auto!important;min-height:74px;padding-top:8px!important;padding-bottom:8px!important;gap:16px!important}
+	html body .top-title{flex:0 1 24%;min-width:0}
+	html body .top-right{flex:1 1 auto;min-width:0;justify-content:flex-end;flex-wrap:wrap}
+	html body .top-actions{min-width:0;flex:0 1 auto;justify-content:flex-end}
+}

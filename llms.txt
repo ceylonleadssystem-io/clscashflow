@@ -3,11 +3,11 @@
 > Ceylonry POS by CeylonryLabs.io is point-of-sale software for Sri Lankan retail shops, restaurants, cafés, salons and other service businesses. It runs in the browser and works on a counter terminal, tablet or phone. Plans start at LKR 5,500 per month.
 
 ## Pages
-- [Home](https://www.ceylonrylabs.io/): what Ceylonry POS does, plans, hardware and FAQ
-- [Start a POS trial](https://www.ceylonrylabs.io/pos-onboarding.html): create an account
-- [Mrs. Gamage's story](https://www.ceylonrylabs.io/mrs-gamage-story): a customer story
-- [Privacy policy](https://www.ceylonrylabs.io/privacy.html)
-- [Terms of service](https://www.ceylonrylabs.io/terms.html)
+- [Home](https://ceylonrylabs.io/): what Ceylonry POS does, plans, hardware and FAQ
+- [Start a POS trial](https://ceylonrylabs.io/pos-onboarding.html): create an account
+- [Mrs. Gamage's story](https://ceylonrylabs.io/mrs-gamage-story): a customer story
+- [Privacy policy](https://ceylonrylabs.io/privacy.html)
+- [Terms of service](https://ceylonrylabs.io/terms.html)
 
 ## Contact
 hello@ceylonrylabs.io
