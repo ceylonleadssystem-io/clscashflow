@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { hasCapability } from "../config/capabilities";
-import { ORDER_CHANNELS } from "../config/constants";
+import { formFrom } from "../domain/settingsForm";
 import { emailError } from "../domain/validators";
 import { useUi } from "../store/UiProvider";
 import { useData } from "../store/DataProvider";
@@ -33,33 +33,11 @@ import {
 
 const ALL_TABS = [
 	{ id: "business", label: "Business Profile" },
-	{ id: "pos", label: "POS Setup" },
 	{ id: "operations", label: "Operations" },
-	{ id: "printing", label: "Receipt Printing" },
+	{ id: "printing", label: "Receipt Printing" }, // full-access users find this under Device Manager; everyone else keeps it so a USB printer can be reconnected
 	{ id: "kds", label: "KDS" },
 	{ id: "plan", label: "Plan & Support" },
 ];
-
-const formFrom = (s) => ({
-	business: s.business || "",
-	email: s.email || "",
-	address: s.address || "",
-	businessType: s.businessType || "other",
-	feedbackLink: s.feedbackLink || "",
-	feedbackDelay: s.feedbackDelay ?? 2,
-	posUsers: Math.max(1, +s.posUsers || 1),
-	printerType: s.printerType || "system",
-	printerAddress: s.printerAddress || "",
-	autoPrint: !!s.autoPrint,
-	autoPrintKot: !!s.autoPrintKot,
-	kotPrinter: s.kotPrinter || "",
-	receiptFooter: s.receiptFooter || "Thank you for your purchase",
-	supportEnabled: !!s.supportEnabled,
-	serviceChargeEnabled: !!s.serviceChargeEnabled,
-	serviceChargeRate: Math.max(0, Math.min(100, +s.serviceChargeRate || 0)),
-	orderChannels: Array.isArray(s.orderChannels) && s.orderChannels.length ? s.orderChannels.filter((c) => ORDER_CHANNELS.includes(c)) : ORDER_CHANNELS,
-	socials: { instagram: "", facebook: "", tiktok: "", website: "", ...(s.receiptSocials || {}) },
-});
 
 /** Settings: business, POS setup, operations, receipt printing and plan & support (tabbed). */
 export function Settings({ only = null }) {
@@ -73,11 +51,13 @@ export function Settings({ only = null }) {
 	const ceylo = useFeature("settings.ceylo");
 	const ceyloAi = useFeature("settings.ceyloAi");
 	const ui = useUi();
-	const [tab, setTab] = useState(() => (only && !only.includes(requestedSettingsTab()) ? only[0] : requestedSettingsTab()) || "business");
-	// "legacy" shows the tab content below; any other value is a System Options page (views/settings/)
-	const [page, setPage] = useState("legacy");
-	// Ceylo's fix buttons can ask for a tab while Settings is already open
-	useEffect(() => onSettingsTab((t) => (setTab(t), setPage("legacy"))), []);
+	// a request is a legacy tab id, or "page:<key>" for one of the pages in the sidebar (Menu Admin, Device Manager ...)
+	const asked = requestedSettingsTab();
+	const [tab, setTab] = useState(() => (only && !only.includes(asked) ? only[0] : asked.startsWith("page:") ? "" : asked) || "business");
+	// "legacy" shows the tab content below; any other value is a page of the sidebar (views/settings/)
+	const [page, setPage] = useState(() => (asked.startsWith("page:") && !only ? asked.slice(5) : "legacy"));
+	// Ceylo's fix buttons and the moved pages can ask for a tab or page while Settings is already open
+	useEffect(() => onSettingsTab((t) => (t.startsWith("page:") ? setPage(t.slice(5)) : (setTab(t), setPage("legacy")))), []);
 	const [form, setForm] = useState(() => formFrom(settings));
 	useEffect(() => {
 		// reload when a preset/setup is applied elsewhere
@@ -102,27 +82,20 @@ export function Settings({ only = null }) {
 	// the KDS tab exists only for kitchen businesses whose account has the Kitchen Display switched on
 	// the System Options sidebar is for people who may change settings, and not for the portal's single-tab Location Info
 	const sidebar = full && !only;
-	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn)));
+	const TABS = ALL_TABS.filter((t) => (!only || only.includes(t.id)) && (t.id !== "kds" || (kitchen && kdsOn)) && (t.id !== "printing" || !full));
 
 	const sections = {
 		business: full && (
 			<>
 				<BusinessProfilePanel form={form} set={set} />
+				<PosTypePanel form={form} onApplyPreset={() => setSetupOpen(true)} />
 				{locationsOn && <LocationsPanel />}
-			</>
-		),
-		pos: full && (
-			<>
-				<PosTypePanel form={form} set={set} onApplyPreset={() => setSetupOpen(true)} />
-				{serviceCharge && hasCapability(form.businessType, "serviceCharge") && <ServiceChargePanel form={form} set={set} />}
 			</>
 		),
 		operations: (
 			<>
-				{full && themes && <AppearancePanel />}
-				<DisplayPanel />
+				{!full && <DisplayPanel />}
 				<LiveScreenPanel />
-				{full && <FeedbackPanel form={form} set={set} />}
 			</>
 		),
 		printing: <PrintingPanel form={form} set={set} setForm={setForm} />,

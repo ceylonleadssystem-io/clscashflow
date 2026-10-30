@@ -64,7 +64,7 @@ export async function localAdminApi(body) {
 	}
 	if (action === "saveSettings") {
 		await s.write((tx) => {
-			for (const k of ["features", "locationFeatures", "welcome", "plan", "invoiceExtras", "invoiceTax", "businessCategory", "subscription"]) if (body.settings && k in body.settings) tx.setSetting(k, body.settings[k]);
+			for (const k of ["features", "locationFeatures", "welcome", "plan", "invoiceExtras", "invoiceTax", "businessCategory", "subscription", "businessType", "businessTypeLocked"]) if (body.settings && k in body.settings) tx.setSetting(k, body.settings[k]);
 		});
 		return { ok: true };
 	}

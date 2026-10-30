@@ -68,6 +68,9 @@ export function accessFromKeys(user, wanted, settings, actor) {
 
 // ------------------------------------------------------------------------------------------ jobs ----
 
+/** The jobs a business starts with: one per role, so the Jobs list matches the roles people already have. Pay rates start at 0. */
+export const ROLE_JOBS = ROLES.slice().reverse().map((role) => ({ id: "job-role-" + role, title: role[0].toUpperCase() + role.slice(1), code: role.toUpperCase(), rate: 0, color: "", active: true }));
+
 export const jobsOf = (settings = {}) => (Array.isArray(settings.jobs) ? settings.jobs.filter((j) => j && j.id && String(j.title || "").trim()) : []);
 
 /** Validation message for a job ("" when fine). `others` are the other jobs. */

@@ -98,6 +98,7 @@ export function bindServices(ctx) {
 			reorderZones: settings.reorderZones,
 			deleteZone: settings.deleteZone,
 			registerDevice: settings.registerDevice,
+			seedRoleJobs: settings.seedRoleJobs,
 			saveDevice: settings.saveDevice,
 			deleteDevice: settings.deleteDevice,
 			saveDevicePrinter: settings.saveDevicePrinter,

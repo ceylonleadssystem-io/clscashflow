@@ -8,9 +8,10 @@ import { POS_TYPE_PRESETS } from "../../config/presets";
 import { hasCapability } from "../../config/capabilities";
 import { cleanStations, kitchenStations } from "../../domain/kitchenStations";
 import { cleanTax, cleanTaxRules, taxError, taxUses } from "../../domain/taxes";
+import { businessTypeLocked } from "../../domain/businessType";
 import { PAGES as MENU_PAGES, PAGE_KEYS as MENU_KEYS, SALES_DEFAULTS, assignItems, cleanGlobalModifier, cleanItemSetting, cleanLimit, cleanMenu, cleanPrefixes, globalModifierError, itemSettingBlank, limitBlank, limitError, cleanSalesCategory, draftChanges, menuError, nextDrafts, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { copyPrinters, deviceNameError, devicesOf, normalizePrinter, printerError, printersOf, receiptPrinterId } from "../../domain/devices";
-import { PERMISSION_KEYS, accessFromKeys, accessOf, jobError, jobsOf } from "../../domain/access";
+import { ROLE_JOBS, PERMISSION_KEYS, accessFromKeys, accessOf, jobError, jobsOf } from "../../domain/access";
 import { MAIN_FLOOR, floorLayout, floorLayoutKey, floorsFor, floorsKey } from "../../domain/tables";
 import { nameError, thirdPartyList, usedNames } from "../../domain/thirdPartyPayments";
 import { nowIso } from "../../domain/format";
@@ -197,10 +198,13 @@ export const setTheme = async (ctx, id, label) => {
 // ------------------------------------------------------------- POS setup ---
 export async function applyPosSetup(ctx, { type, addCategories, enableKot }) {
 	const d = ctx.data();
+	// the type is chosen once; afterwards only the Ceylonry administration team can change it
+	if (businessTypeLocked(d.settings) && type !== d.settings.businessType) return void (await ctx.ui.alert("The business type was set during setup. Contact Ceylonry support to change it."));
 	const preset = POS_TYPE_PRESETS[type] || POS_TYPE_PRESETS.other;
 	log.info("POS setup applied", { type, addCategories: !!addCategories, enableKot: !!enableKot });
 	await ctx.store.write(async (tx) => {
 		tx.setSetting("businessType", type);
+		tx.setSetting("businessTypeLocked", true);
 		tx.setSetting("autoPrintKot", !!enableKot);
 		tx.setSetting("onboardingComplete", true);
 		if (addCategories) {
@@ -307,6 +311,14 @@ export async function deleteZone(ctx, locationId, id) {
 }
 
 // ------------------------------------------------------------------------- jobs and access ----
+
+/** The first time a business has no jobs list, adds one job per role (Owner, Admin, Manager, Accountant, Cashier). Returns true when it did. */
+export async function seedRoleJobs(ctx) {
+	const { settings } = ctx.data();
+	if (Array.isArray(settings.jobs)) return false;
+	await patchSettings(ctx, { jobs: ROLE_JOBS });
+	return true;
+}
 
 /** Adds or edits a job ({ id?, title, code, rate, color, active }). Returns true when saved. */
 export async function saveJob(ctx, form) {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mergeOrders } from "../domain/orders";
 import { splitByItems } from "../domain/cart";
-import { NAV_ITEMS, ROLE_VIEWS } from "../config/roles";
+import { NAV_ITEMS, ROLE_VIEWS, SETTINGS_PAGE_OF_VIEW } from "../config/roles";
 import { GRID, MAIN_FLOOR, allFloorTables, findFreeSpot, floorLayout, floorLayoutKey, floorsFor, floorsKey, layoutFor, layoutKey, locationOrders, moveTargets, overlapsOthers, nextTableNumber, normalizeTable, tableNumberError, tableReference, tableStatus, gmBooking } from "../domain/tables";
 
 describe("table layout", () => {
@@ -118,7 +118,7 @@ describe("move, merge and split", () => {
 	it("shows every page the owner can open exactly once in the nav (the Dashboard is opened from Reports)", () => {
 		const nav = NAV_ITEMS.map((n) => n.view);
 		expect(new Set(nav).size).toBe(nav.length);
-		expect([...nav].sort()).toEqual(ROLE_VIEWS.owner.filter((v) => v !== "dashboard").sort());
+		expect([...nav].sort()).toEqual(ROLE_VIEWS.owner.filter((v) => v !== "dashboard" && !SETTINGS_PAGE_OF_VIEW[v]).sort()); // Products, Modifiers and Stations open inside Settings
 	});
 });
 

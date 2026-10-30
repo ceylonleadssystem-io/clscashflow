@@ -21,8 +21,7 @@ import { ReportNav } from "./ReportNav";
 const page = (load, name) => lazy(() => load().then((m) => ({ default: m[name] })));
 const Settings = page(() => import("../../views/Settings"), "Settings");
 const Reports = page(() => import("../../views/Reports"), "Reports");
-const Products = page(() => import("../../views/Products"), "Products");
-const Modifiers = page(() => import("../../views/Modifiers"), "Modifiers");
+const MenuAdminPortal = page(() => import("../../views/settings/MenuAdminPages"), "MenuAdminPortal");
 const UserManagement = page(() => import("../../views/Staff"), "UserManagement");
 const Timesheets = page(() => import("../../views/Timesheets"), "Timesheets");
 const Shop = page(() => import("../../views/Shop"), "Shop");
@@ -85,7 +84,7 @@ export function PortalShell() {
 	if (current && sections.includes(current)) {
 		if (section === "location") content = <Settings only={["business"]} />;
 		else if (section === "reports") content = <Reports />;
-		else if (section === "menu") content = sub === "modifiers" ? <Modifiers /> : <Products />;
+		else if (section === "menu") content = <MenuAdminPortal page={sub} />;
 		else if (section === "users")
 			content = (
 				<section className="view active" id="view-users">

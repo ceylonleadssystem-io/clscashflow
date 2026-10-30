@@ -6,7 +6,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { locationStore } from "./locationStore";
 import { STORAGE, UI_THEMES } from "../config/constants";
 import { applyDark, resolveDark, storedDark } from "../utils/theme";
-import { ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
+import { ROLE_VIEWS, SETTINGS_PAGE_OF_VIEW, VIEW_TITLES } from "../config/roles";
+import { openSettingsTab } from "./settingsTab";
 import { RETIRED_MODIFIER_NAMES } from "../config/presets";
 import { hasCapability } from "../config/capabilities";
 import { landingView, resolveOptions } from "../domain/systemOptions";
@@ -192,7 +193,10 @@ export function PosProvider({ children }) {
 	}, [currentUser?.id, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
 	// Settings > Device Manager: the first time a signed-in browser is used it adds itself to the list of devices (only once the saved list has loaded)
 	useEffect(() => {
-		if (currentUser && data.ready && !support && !assist) svc.settings.registerDevice().catch((e) => log.warn("device registration failed", e));
+		if (currentUser && data.ready && !support && !assist) {
+			svc.settings.registerDevice().catch((e) => log.warn("device registration failed", e));
+			svc.settings.seedRoleJobs().catch((e) => log.warn("seeding jobs failed", e)); // one job per role, the first time
+		}
 	}, [currentUser?.id, data.ready, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
 	// one link per Kitchen Display station, each paired with its own kitchen screen
 	const kdsIds = kdsOn ? kitchenStations(settings, true).filter((st) => st.type === "kds").map((st) => st.id).join("|") : "";
@@ -207,6 +211,11 @@ export function PosProvider({ children }) {
 				if (v === "checkout" && locationId === "all") ui.notice("Choose a real location before starting checkout.");
 				else ui.notice("Your access role does not allow this section.");
 				return;
+			}
+			if (SETTINGS_PAGE_OF_VIEW[v]) {
+				// these pages now live inside Settings (Menu Admin, Device Manager)
+				openSettingsTab("page:" + SETTINGS_PAGE_OF_VIEW[v]);
+				return setView("settings");
 			}
 			setView(v);
 			setLayout((l) => ({ ...l, mobileCartOpen: false }));

@@ -8,14 +8,19 @@ export const PORTAL_SECTIONS = [
 	{ key: "reports", view: "reports", title: "Reports", icon: "reports", blurb: "Sales, menu, payroll, kitchen, transactions and more.", needs: ["reports"] },
 	{
 		key: "menu",
-		view: "products",
+		view: "items",
 		title: "Menu Admin",
 		icon: "menu",
-		blurb: "Manage items, prices, categories and modifiers.",
+		blurb: "Manage items, categories, modifiers, availability, taxes and sales categories.",
 		needs: ["products"],
+		// the same pages, in the same order, as Settings > Menu Admin
 		subs: [
-			{ view: "products", title: "Products & Services" },
+			{ view: "items", title: "Items" },
+			{ view: "categories", title: "Categories" },
 			{ view: "modifiers", title: "Modifiers" },
+			{ view: "availability", title: "Availability" },
+			{ view: "taxes", title: "Taxes" },
+			{ view: "salesCategories", title: "Sales Categories" },
 		],
 	},
 	{ key: "users", view: "users", title: "User Admin", icon: "users", blurb: "Add and manage users, jobs, pay rates and access.", needs: ["staff"], permission: "users.view" },
@@ -31,5 +36,5 @@ export function visiblePortalSections({ canView = () => true, can = () => true }
 	return PORTAL_SECTIONS.filter((s) => (!s.permission || [].concat(s.permission).some((k) => can(k))) && s.needs.every((v) => canView(v)));
 }
 
-/** The section a view id belongs to (the Menu Admin section also owns Modifiers). */
+/** The section a view id belongs to (the Menu Admin section owns every one of its pages). */
 export const sectionOfView = (view) => PORTAL_SECTIONS.find((s) => s.view === view || s.subs?.some((x) => x.view === view)) || null;

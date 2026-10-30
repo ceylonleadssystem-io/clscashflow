@@ -114,3 +114,19 @@ describe("labor cost in reports", () => {
 		expect(r.rows[0].pct).toBeNull();
 	});
 });
+
+describe("jobs start as the roles", () => {
+	it("adds one job per role once, and leaves an existing list alone", async () => {
+		const { createHarness } = await import("./harness");
+		const { ROLE_JOBS, jobsOf } = await import("../domain/access");
+		const h = await createHarness();
+		expect(await h.svc.settings.seedRoleJobs()).toBe(true);
+		expect(jobsOf(h.data().settings).map((j) => j.title)).toEqual(["Owner", "Admin", "Accountant", "Manager", "Cashier"]);
+		expect(ROLE_JOBS.every((j) => j.rate === 0 && j.active)).toBe(true);
+		expect(await h.svc.settings.seedRoleJobs()).toBe(false);
+		await h.svc.settings.saveJob({ title: "Barista", code: "BAR", rate: 400 });
+		expect(jobsOf(h.data().settings)).toHaveLength(6);
+		const h2 = await createHarness({ settings: { jobs: [] } }); // a business that deleted them all keeps an empty list
+		expect(await h2.svc.settings.seedRoleJobs()).toBe(false);
+	});
+});

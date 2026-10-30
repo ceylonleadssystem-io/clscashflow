@@ -12,6 +12,7 @@ import { money } from "../../domain/format";
 import { Panel, Field, Switch } from "../ui";
 import { FieldError } from "../ui/FieldError";
 import { emailError } from "../../domain/validators";
+import { businessTypeLocked } from "../../domain/businessType";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
@@ -126,39 +127,34 @@ export function LocationsPanel() {
 	);
 }
 
-export function PosTypePanel({ form, set, onApplyPreset }) {
+/** The business type: chosen once during setup (a button opens the setup), then read only; Ceylonry support can change it. */
+export function PosTypePanel({ form, onApplyPreset }) {
+	const settings = useData().settings;
+	const locked = businessTypeLocked(settings);
 	const preset = POS_TYPE_PRESETS[form.businessType] || POS_TYPE_PRESETS.other;
 	const wizard = useFeature("settings.posSetupWizard");
 	return (
 		<Panel
-			title="POS Type"
-			subtitle="Choose the preset that best matches this business"
+			title="Business type"
+			subtitle={locked ? "Set during setup" : "Choose it once, when you set up"}
 			actions={
+				!locked &&
 				wizard && (
-					<button className="btn out" onClick={onApplyPreset}>
-						Apply Preset Defaults
+					<button className="btn gold" id="choose-business-type" onClick={onApplyPreset}>
+						Set up my POS
 					</button>
 				)
 			}
 		>
 			<div className="modal-body">
-				<div className="category-feature-note">
-					<strong>Category scope</strong>
-					<br />
-					Only POS type, category and catalogue behavior belong here. Business identity, printing, feedback, billing and support stay in their own settings sections so each category remains focused.
-				</div>
 				<div className="field">
-					<label>Business / POS Type</label>
-					<select className="input" id="set-business-type" value={form.businessType} onChange={set("businessType")}>
-						{BUSINESS_TYPE_OPTIONS.map((t) => (
-							<option key={t} value={t}>
-								{t === "cafe" ? "Café / Bakery" : POS_TYPE_PRESETS[t].label}
-							</option>
-						))}
-					</select>
+					<label>Business / POS type</label>
+					<div id="set-business-type" style={{ fontWeight: 700 }}>
+						{form.businessType === "cafe" ? "Café / Bakery" : preset.label}
+					</div>
 				</div>
 				<div className="plan-settings-note" id="business-type-note" style={{ marginTop: 8 }}>
-					{preset.note}
+					{preset.note} {locked ? "To change the business type, contact Ceylonry support." : ""}
 				</div>
 			</div>
 		</Panel>

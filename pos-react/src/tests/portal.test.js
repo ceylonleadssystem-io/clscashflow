@@ -25,7 +25,8 @@ describe("admin portal", () => {
 	});
 	it("Menu Admin owns Products and Modifiers", () => {
 		expect(sectionOfView("modifiers").key).toBe("menu");
-		expect(sectionOfView("products").key).toBe("menu");
+		expect(sectionOfView("items").key).toBe("menu");
+		expect(PORTAL_SECTIONS.find((s) => s.key === "menu").subs.map((s) => s.view)).toEqual(["items", "categories", "modifiers", "availability", "taxes", "salesCategories"]);
 	});
 });
 

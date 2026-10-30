@@ -137,6 +137,9 @@ const SETTING_SANITIZERS = {
     return { enabled: v.enabled === true, rate: clampNum(v.rate, 0, 100) };
   },
   businessCategory: function(v) { return typeof v === 'string' ? clean(v, 40) : undefined; },
+  // chosen once by the business at setup; afterwards only changed here. The list matches pos-react/src/config/presets.js BUSINESS_TYPE_OPTIONS.
+  businessType: function(v) { return ['restaurant', 'cafe', 'retail', 'hardware', 'grocery', 'salon', 'pharmacy', 'services', 'other'].indexOf(v) >= 0 ? v : undefined; },
+  businessTypeLocked: function(v) { return v === true ? true : undefined; },
   // The plan assigned to this business: how many users and locations it may have and which features are forced off. null removes it.
   subscription: function(v) { return v === null ? { enforced: false } : cleanSubscription(v); }
 };

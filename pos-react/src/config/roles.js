@@ -87,11 +87,9 @@ export const NAV_ITEMS = [
 	{ view: "orders", label: "☰ Order Queue" },
 	{ view: "tables", label: "▦ Table Layout" },
 	{ view: "receipts", label: "⎙ Receipts & Refunds" },
-	{ view: "products", label: "□ Products & Services", group: "Items" },
-	{ view: "modifiers", label: "＋ Modifiers", group: "Items" },
-	{ view: "stations", label: "⎙ Stations", group: "Items" },
-	{ view: "inventory", label: "▥ Inventory & Stock", group: "Items" },
-	{ view: "industry", label: "✦ Business Tools", group: "Items" },
+	// Products & Services, Modifiers and Stations now live in Settings (Menu Admin and Device Manager): see SETTINGS_PAGE_OF_VIEW
+	{ view: "inventory", label: "▥ Inventory & Stock", group: "Inventory" },
+	{ view: "industry", label: "✦ Business Tools", group: "Inventory" },
 	{ view: "sales", label: "↗ Sales History", group: "Reports" },
 	{ view: "reports", label: "▤ Reports", group: "Reports" },
 	{ view: "customers", label: "♙ Customers", group: "Customer Relationship" },
@@ -99,6 +97,9 @@ export const NAV_ITEMS = [
 	{ view: "staff", label: "◷ Staff & Shifts", group: "User management" },
 	{ view: "settings", label: "⚙ Settings" },
 ];
+
+/** Views that moved into Settings: opening one opens that Settings page instead. */
+export const SETTINGS_PAGE_OF_VIEW = { products: "items", modifiers: "modifiers", stations: "stations" };
 
 export const FULL_SETTINGS_ROLES = ["owner", "manager", "admin"];
 export const MANAGER_ROLES = ["owner", "manager"];

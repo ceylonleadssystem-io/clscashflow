@@ -15,6 +15,8 @@ import { cleanTax, cleanTaxRules, previewTax, round2, taxError } from "../../dom
 import { kitchenStations } from "../../domain/kitchenStations";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
+import { PublishBar } from "../../components/settings/kit/PublishBar";
+import { CatalogueEditor, ModifierGroupEditor } from "./MovedPages";
 import { usePos } from "../../store/PosProvider";
 
 const newMenu = () => ({ id: "", name: "", status: "active", hours: [{ days: [1, 2, 3, 4, 5], start: "07:00", end: "11:00" }], categories: [] });
@@ -1045,4 +1047,41 @@ export function ModifiersAdmin() {
 	);
 }
 
-export const MENU_ADMIN_COMPONENTS = { categories: CategoriesAdmin, modifiers: ModifiersAdmin, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: Items };
+/** A page with two views: the Menu Admin drafts, and the full live editor that Products & Services and Modifiers used to be. */
+function TwoViews({ first, second, a, b, note }) {
+	const [tab, setTab] = useState("a");
+	return (
+		<>
+			<div className="sk-tabs" role="tablist">
+				{[["a", first], ["b", second]].map(([k, label]) => (
+					<button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "active" : ""} onClick={() => setTab(k)}>
+						{label}
+					</button>
+				))}
+			</div>
+			{tab === "b" && <p className="muted">{note}</p>}
+			{tab === "a" ? a : b}
+		</>
+	);
+}
+export const ItemsPage = () => (
+	<TwoViews first="Items" second="Catalogue tools" a={<Items />} b={<CatalogueEditor />} note="The full item list and editor: photos, stock counts, barcodes and labels, import and export, delete. Changes here save straight away and are not drafts." />
+);
+export const ModifiersPage = () => (
+	<TwoViews first="Limits and global modifiers" second="Group editor" a={<ModifiersAdmin />} b={<ModifierGroupEditor />} note="The full modifier group editor. Changes here save straight away and are not drafts." />
+);
+
+export const MENU_ADMIN_COMPONENTS = { categories: CategoriesAdmin, modifiers: ModifiersPage, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: ItemsPage };
+
+/** The Menu Admin pages for the account admin portal (/admin): one page at a time with the same publish bar as in Settings. */
+export function MenuAdminPortal({ page }) {
+	const Page = MENU_ADMIN_COMPONENTS[page] || MENU_ADMIN_COMPONENTS.items;
+	return (
+		<section className="view active sk-main" id="view-menu-admin">
+			<div className="sk-main-body">
+				<Page />
+			</div>
+			<PublishBar />
+		</section>
+	);
+}
