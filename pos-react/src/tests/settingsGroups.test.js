@@ -12,7 +12,7 @@ describe("settings grid", () => {
 		expect(keys(g[0])[0]).toBe("legacy:business");
 		expect(keys(g[0])).toEqual(expect.arrayContaining(["overview", "orderEntry", "receipts", "signIn", "clock", "payroll", "zones", "serviceCharge", "appearance", "feedback", "legacy:operations", "legacy:plan"]));
 		expect(keys(g[0])).not.toContain("thirdParty");
-		expect(keys(g[1])).toEqual(["users", "jobs"]);
+		expect(keys(g[1])).toEqual(["users", "jobs", "timesheets"]);
 		expect(keys(g[2])).toEqual(["items", "categories", "modifiers", "availability", "taxes", "salesCategories"]);
 		expect(keys(g[3])).toEqual(["printers", "kds", "stations", "health"]);
 		expect(g.every((x) => x.blurb)).toBe(true);

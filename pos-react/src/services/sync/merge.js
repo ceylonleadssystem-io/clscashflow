@@ -69,6 +69,7 @@ const DELETED_KEYS = [
 	"sales",
 	"saleReceipts",
 	"users",
+	"timeEntries",
 	"categories",
 	"subcategories",
 ];

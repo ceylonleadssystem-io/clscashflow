@@ -14,6 +14,7 @@ export const PERMISSIONS = [
 	{ group: "Menu", key: "menu.view", label: "Menu: items, modifiers and stations", tip: "Opens Products & Services, Modifiers and Stations." },
 	{ group: "Menu", key: "inventory.view", label: "Inventory and stock", tip: "Opens Inventory & Stock." },
 	{ group: "Users", key: "users.view", label: "See users and timesheets", tip: "Lists users and shows timesheets." },
+	{ group: "Users", key: "time.edit_entries", label: "Edit timesheets", tip: "Correct or add a shift in the last month. Older shifts are locked for everyone." },
 	{ group: "Users", key: "users.edit", label: "Add, edit and remove users", tip: "Includes PINs, roles, jobs and pay rates." },
 	{ group: "POS", key: "pos.order.create", label: "Take orders (Checkout)", tip: "Opens Checkout so the person can sell." },
 	{ group: "POS", key: "pos.discount", label: "Give discounts", tip: "Shows the discount controls at checkout." },
@@ -29,7 +30,7 @@ const roleHas = (role, key) => {
 	if (role === "owner" || role === "admin") return true;
 	if (viewKey[key]) return (ROLE_VIEWS[role] || []).includes(viewKey[key]);
 	if (key === "settings.system.edit") return FULL_SETTINGS_ROLES.includes(role);
-	if (key === "users.view" || key === "users.edit") return role === "manager";
+	if (key === "users.view" || key === "users.edit" || key === "time.edit_entries") return role === "manager";
 	if (key === "pos.refund" || key === "pos.void.order" || key === "pos.void.item") return APPROVER_ROLES.includes(role);
 	return key === "pos.discount" || key === "pos.payments.third_party"; // every role could already do these
 };

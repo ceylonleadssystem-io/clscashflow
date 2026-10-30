@@ -4,9 +4,10 @@
  */
 import { SYSTEM_PAGES } from "../../domain/systemOptions";
 import { SaveBar, SettingsShell } from "../../components/settings/kit/SettingsShell";
-import { useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
+import { SystemOptionsProvider, useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
 import { Overview, PAGE_COMPONENTS as SYSTEM_COMPONENTS } from "./SystemOptionsPages";
 import { DEVICE_COMPONENTS } from "./DevicePages";
+import { Timesheets } from "../Timesheets";
 import { AppearancePage, FeedbackPage, ServiceChargePage, StationsPage } from "./MovedPages";
 import { hasCapability } from "../../config/capabilities";
 import { useData } from "../../store/DataProvider";
@@ -17,7 +18,7 @@ import { PublishBar } from "../../components/settings/kit/PublishBar";
 import { Jobs, Users } from "./UsersPages";
 import { usePos } from "../../store/PosProvider";
 
-export const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, kds: KdsPage, health: HealthPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
+export const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, timesheets: Timesheets, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, kds: KdsPage, health: HealthPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
 
 /** The Menu Admin pages in the order the menu is built: items, categories, modifiers, availability, taxes, sales categories. */
 export const MENU_ADMIN_NAV = [
@@ -49,7 +50,7 @@ export function settingsGroups({ can, serviceChargeOn, kitchen, legacyTabs }) {
 				...legacy("plan"),
 			],
 		},
-		...(can("users.view") ? [{ title: "Users", blurb: "The people who work here: their roles, permissions, jobs and pay rates.", items: [{ key: "users", label: "Users" }, { key: "jobs", label: "Jobs" }] }] : []),
+		...(can("users.view") ? [{ title: "Users", blurb: "The people who work here: their roles, permissions, jobs, pay rates and timesheets.", items: [{ key: "users", label: "Users" }, { key: "jobs", label: "Jobs" }, { key: "timesheets", label: "Timesheets" }] }] : []),
 		...(can("menu.view") ? [{ title: "Menu Admin", blurb: "What you sell: items, categories, modifiers, availability, taxes and sales categories.", items: MENU_ADMIN_NAV }] : []),
 		{
 			title: "Device Manager",

@@ -3,6 +3,7 @@
  * kitchen tickets, users, locations. Employee / order type / payment filters narrow sales (and the employee filter also time entries).
  */
 import { publishedOf } from "../domain/menuAdmin";
+import { AUDIT_ACTION } from "../domain/timesheetEdit";
 import { useMemo } from "react";
 import { userRate } from "../domain/access";
 import { resolveOptions } from "../domain/systemOptions";
@@ -45,6 +46,7 @@ export function useReportContext(range, filters = [], extra = "") {
 			openOrders: data.openOrders || [],
 			voidOrders: data.voidOrders || [],
 			supportAudit: data.supportAudit || [],
+			timesheetAudit: (data.locationAudit || []).filter((a) => a.action === AUDIT_ACTION),
 			stockTransfers: data.stockTransfers || [],
 			inventory: data.inventory || [],
 		};

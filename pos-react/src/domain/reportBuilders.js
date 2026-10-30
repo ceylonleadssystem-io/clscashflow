@@ -8,6 +8,7 @@
  * Every money figure comes from `saleFigures`, so Dashboard, Sales and Multi-Location totals always agree.
  */
 import { salesCategoryNameOf } from "./menuAdmin";
+import { readAudit } from "./timesheetEdit";
 import { isActiveSale } from "./sales";
 import { refundRows, voidRows } from "./salesLog";
 import { userName } from "./names";
@@ -484,7 +485,15 @@ const AUDIT = {
 		const rows = ctx.stockTransfers.filter((t) => inRange(day(t.createdAt), ctx.range)).map((t) => ({ at: t.createdAt, item: ctx.inventory.find((i) => i.id === t.itemId)?.name || "Item", from: ctx.locations.find((l) => l.id === t.fromLocationId)?.name || "—", to: ctx.locations.find((l) => l.id === t.toLocationId)?.name || "—", by: staffName(ctx, t.userId), qty: +t.qty || 0 }));
 		return { cols: [C.time("at", "Date"), C.text("item", "Item"), C.text("from", "From"), C.text("to", "To"), C.text("by", "Transferred By"), C.num("qty", "Quantity")], rows, totals: totalsRow(rows, ["qty"]), note: "Stock transfers between locations are listed. Moving a check to another table or server is not logged by this POS yet." };
 	},
-	"timesheet-audit": () => unavailable([C.time("at", "Changed At"), C.text("employee", "Employee"), C.text("field", "Field"), C.text("old", "Old Value"), C.text("new", "New Value"), C.text("by", "Changed By")], "Timesheet edits are not logged by this POS yet, so there is nothing to show."),
+	"timesheet-audit"(ctx) {
+		const users = new Map((ctx.users || []).map((u) => [u.id, u.name]));
+		const rows = (ctx.timesheetAudit || [])
+			.map((a) => ({ a, d: readAudit(a.details) }))
+			.filter((x) => x.d && inRange(String(x.a.at || "").slice(0, 10), ctx.range))
+			.map(({ a, d }) => ({ at: a.at, employee: users.get(d.userId) || "Unknown", field: d.field + (d.reason ? " (" + d.reason + ")" : ""), old: d.old || "—", new: d.new || "—", by: users.get(a.userId) || "Unknown" }))
+			.sort((x, y) => String(y.at).localeCompare(String(x.at)));
+		return { cols: [C.time("at", "Changed At"), C.text("employee", "Employee"), C.text("field", "Field"), C.text("old", "Old Value"), C.text("new", "New Value"), C.text("by", "Changed By")], rows, note: rows.length ? "" : "No timesheet has been changed in this period." };
+	},
 };
 
 // ----------------------------------------------------------- multi-location --

@@ -83,7 +83,7 @@ export function PortalShell() {
 	if (current && sections.includes(current)) {
 		if (section === "location") content = <Settings only={["business"]} />;
 		else if (section === "reports") content = <Reports />;
-		else if (["system", "menu", "users", "devices"].includes(section)) content = <PortalSettingsPage key={sub} page={sub} onOpen={(k) => open(section, k)} />;
+		else if (["menu", "users", "devices"].includes(section)) content = <PortalSettingsPage key={sub} page={sub} onOpen={(k) => open(section, k)} />;
 		else if (section === "timesheets") content = <Timesheets />;
 		else if (section === "shop") content = <Shop />;
 	}

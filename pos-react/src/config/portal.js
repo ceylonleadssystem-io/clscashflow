@@ -7,28 +7,6 @@ export const PORTAL_SECTIONS = [
 	{ key: "location", view: "location", title: "Location Info", icon: "location", blurb: "Business name, address, logo, contact details and locations.", needs: ["settings"], permission: "settings.system.edit" },
 	{ key: "reports", view: "reports", title: "Reports", icon: "reports", blurb: "Sales, menu, payroll, kitchen, transactions and more.", needs: ["reports"] },
 	{
-		key: "system",
-		view: "overview",
-		title: "System Options",
-		icon: "system",
-		blurb: "Ordering, receipts, sign in, clock in and out, payroll, zones, service charge, appearance and feedback.",
-		needs: ["settings"],
-		permission: "settings.system.edit",
-		// the same pages, from the same code, as Settings > System Options
-		subs: [
-			{ view: "overview", title: "Overview" },
-			{ view: "orderEntry", title: "Order Entry" },
-			{ view: "receipts", title: "Receipts" },
-			{ view: "signIn", title: "Sign In" },
-			{ view: "clock", title: "Clock In / Out" },
-			{ view: "payroll", title: "Payroll" },
-			{ view: "zones", title: "Zones" },
-			{ view: "serviceCharge", title: "Service Charge" },
-			{ view: "appearance", title: "Appearance" },
-			{ view: "feedback", title: "Customer Feedback" },
-		],
-	},
-	{
 		key: "menu",
 		view: "items",
 		title: "Menu Admin",
@@ -56,6 +34,7 @@ export const PORTAL_SECTIONS = [
 		subs: [
 			{ view: "users", title: "Users" },
 			{ view: "jobs", title: "Jobs" },
+			{ view: "timesheets", title: "Timesheets" },
 		],
 	},
 	{
@@ -73,7 +52,7 @@ export const PORTAL_SECTIONS = [
 			{ view: "health", title: "Health" },
 		],
 	},
-	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "timesheets", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], permission: ["users.view", "reports.pos"] },
+	{ key: "timesheets", view: "timesheets", title: "Timesheets", icon: "timesheets", blurb: "Employee clock-in, clock-out and break hours.", needs: ["staff"], permission: ["users.view", "reports.pos"], hideWhen: "users.view" },
 	{ key: "shop", view: "shop", title: "Shop", icon: "shop", blurb: "One stop to buy POS hardware: printers, scanners, drawers and screens.", needs: [] },
 ];
 
@@ -82,7 +61,7 @@ export const isPortalPath = (pathname = typeof location === "undefined" ? "" : l
 
 /** Sections this user may open. `canView` is the POS page check, `can` the permission check; a section with several permissions needs any one. */
 export function visiblePortalSections({ canView = () => true, can = () => true } = {}) {
-	return PORTAL_SECTIONS.filter((s) => (!s.permission || [].concat(s.permission).some((k) => can(k))) && s.needs.every((v) => canView(v)));
+	return PORTAL_SECTIONS.filter((s) => !(s.hideWhen && can(s.hideWhen)) && (!s.permission || [].concat(s.permission).some((k) => can(k))) && s.needs.every((v) => canView(v)));
 }
 
 /** The section a view id belongs to (the Menu Admin section owns every one of its pages). */
