@@ -43,7 +43,7 @@ export async function localAdminApi(body) {
 	const status = snap.settings.devAccountStatus || "trial";
 	const cycle = snap.settings.devBillingCycle || "monthly";
 	const payment = { paid: false, status: profile.posAccountPaused ? "paused" : "trial", billingCycle: cycle, trialEnd: "", nextPaymentDue: "" };
-	const account = { analytics: rollup(snap.sales || []), id: "local", name: profile.name, email: profile.email || "owner@local", business: snap.settings.business || "My Business", setupStatus: "local", payment, paused: profile.posAccountPaused, status, subscriptionType: cycle, isTestAccount: status === "test" };
+	const account = { businessType: snap.settings.businessType || "", analytics: rollup(snap.sales || [], new Date(), { cashShifts: snap.cashShifts, kitchenTickets: snap.kitchenTickets }), id: "local", name: profile.name, email: profile.email || "owner@local", business: snap.settings.business || "My Business", setupStatus: "local", products: (snap.products || []).length, payment, paused: profile.posAccountPaused, status, subscriptionType: cycle, isTestAccount: status === "test" };
 	const enabled = resolveFeatures(flagsWithPlan(snap.settings.features || {}, subscriptionOf(snap.settings))).enabled;
 	account.apps = ["POS", ...(enabled["view.guestManager"] ? ["GM"] : []), ...(enabled["checkout.kds"] ? ["KDS"] : [])];
 	const action = body?.action || "list";

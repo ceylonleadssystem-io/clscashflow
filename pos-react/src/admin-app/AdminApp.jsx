@@ -9,6 +9,7 @@ import { adminSession } from "./adminSession";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
 import { OverallAnalytics } from "./OverallAnalytics";
+import { ChurnPanel, FunnelPanel, HeatmapPanel, KitchenPanel, LossPanel, TypesPanel } from "./InsightPanels";
 import { SubscriptionManagement } from "./SubscriptionManagement";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
@@ -136,6 +137,7 @@ export function AdminApp() {
 			) : current ? (
 				<AccountDetail
 					account={current}
+					accounts={accounts}
 					onBack={() => {
 						setSelected("");
 						load();
@@ -162,7 +164,13 @@ export function AdminApp() {
 							<div className="card"><div className="label">Disabled accounts</div><div className="value" style={{ color: accounts.some((a) => a.paused) ? "#a5362b" : undefined }}>{accounts.filter((a) => a.paused).length}</div></div>
 						</section>
 					)}
+					<ChurnPanel accounts={accounts} onOpen={setSelected} />
 					<OverallAnalytics accounts={accounts} onOpen={setSelected} />
+					<HeatmapPanel accounts={accounts} />
+					<FunnelPanel accounts={accounts} onOpen={setSelected} />
+					<TypesPanel accounts={accounts} />
+					<LossPanel accounts={accounts} onOpen={setSelected} />
+					<KitchenPanel accounts={accounts} onOpen={setSelected} />
 						</div>
 					)}
 					{mainTab === "accounts" && (

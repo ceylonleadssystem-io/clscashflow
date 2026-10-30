@@ -1716,9 +1716,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/Settings.jsx": {
-    "mtime": 1793348166.7954469,
-    "seen": 1793348402.465083,
-    "ast_hash": "038bd2d5b7aaa3ea093a20a77203939c",
+    "mtime": 1793348930.9890227,
+    "seen": 1793349005.382452,
+    "ast_hash": "c18d2c67416d038a812d80966fd372dd",
     "semantic_hash": ""
   },
   "pos-react/src/views/Staff.jsx": {
@@ -2238,9 +2238,9 @@
     "semantic_hash": ""
   },
   "pos-react/docs/user-guide.md": {
-    "mtime": 1793336173.366403,
-    "seen": 1793336196.545713,
-    "ast_hash": "d743466a7cbc9b5f705b722a51a57042",
+    "mtime": 1793348985.8528502,
+    "seen": 1793349005.382545,
+    "ast_hash": "16a54cd2a25621ca04df18d966c17ce3",
     "semantic_hash": ""
   },
   "pos-react/index.html": {
@@ -2976,9 +2976,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/settings/kit/SettingsShell.jsx": {
-    "mtime": 1793309974.6873512,
-    "seen": 1793310525.598389,
-    "ast_hash": "537634268a37281aa6fe6bbc371fd4c2",
+    "mtime": 1793348930.9879057,
+    "seen": 1793349005.382277,
+    "ast_hash": "f27cf065f3222f42f4733e3bc56d10c8",
     "semantic_hash": ""
   },
   "pos-react/src/components/settings/kit/SystemOptionsContext.jsx": {
@@ -3006,9 +3006,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SettingsHome.jsx": {
-    "mtime": 1793348166.7949622,
-    "seen": 1793348402.465097,
-    "ast_hash": "55ead3ba224d6e70579bcac4246522d4",
+    "mtime": 1793348975.206453,
+    "seen": 1793349005.3824692,
+    "ast_hash": "c3b7995d0620624a43d8524c60214bd0",
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SystemOptionsPages.jsx": {
@@ -3024,9 +3024,9 @@
     "semantic_hash": ""
   },
   "docs/settings-build-plan.md": {
-    "mtime": 1793348383.1023498,
-    "seen": 1793348402.465151,
-    "ast_hash": "185dab1427c274aab3e7e82a5f960d43",
+    "mtime": 1793348985.8525407,
+    "seen": 1793349005.382529,
+    "ast_hash": "f12f1f9ca057852133fa839f513e8502",
     "semantic_hash": ""
   },
   "llms.txt": {
@@ -3279,6 +3279,12 @@
     "mtime": 1793348181.3226094,
     "seen": 1793348402.4650948,
     "ast_hash": "927b564ded03f3bb9b01f13aba699a65",
+    "semantic_hash": ""
+  },
+  "pos-react/src/tests/settingsGroups.test.js": {
+    "mtime": 1793348975.2115223,
+    "seen": 1793349005.382432,
+    "ast_hash": "6ff3160e885d61ad8f714bd8c1a5846b",
     "semantic_hash": ""
   }
 }

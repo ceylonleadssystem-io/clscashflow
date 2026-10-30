@@ -31,7 +31,7 @@ const TABS = [
 	["delete", "Delete account"],
 ];
 
-export function AccountDetail({ account, onBack, onChanged }) {
+export function AccountDetail({ account, accounts = [], onBack, onChanged }) {
 	const ui = useUi();
 	const [tab, setTab] = useState("analytics");
 	const [data, setData] = useState(null);
@@ -119,7 +119,7 @@ export function AccountDetail({ account, onBack, onChanged }) {
 					</button>
 				))}
 			</div>
-			{tab === "analytics" && <AnalyticsTab workspace={data.workspace} locations={locations} />}
+			{tab === "analytics" && <AnalyticsTab account={account} accounts={accounts} workspace={data.workspace} locations={locations} />}
 			{tab === "access" && <AccessTab account={account} profile={profile} settings={settings} save={save} saving={saving} onChanged={() => { onChanged(); reload(); }} ui={ui} />}
 			{tab === "businessType" && <BusinessTypeTab settings={settings} save={save} saving={saving} ui={ui} />}
 			{tab === "subscription" && <SubscriptionTab settings={settings} workspace={data.workspace} save={save} saving={saving} />}

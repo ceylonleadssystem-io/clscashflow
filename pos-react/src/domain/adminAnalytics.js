@@ -4,6 +4,7 @@
  * uses the full summary. "Sales" is the sale total as it stands (after refunds, with service charge and tax); voided and refunded sales are left out.
  * `dailySeries` / `rollup` are small enough to travel with the account list, so the main page does not need every business's sales.
  */
+import { insightRollup } from "./adminInsights";
 import { isActiveSale } from "./sales";
 
 const DAY = 86400000;
@@ -62,7 +63,7 @@ export function summarize(sales = [], { days = 30, now = new Date(), locationId 
 }
 
 /** The small summary that travels with each account in the list: totals for 7 and 30 days, the last sale, and 30 daily sales figures. */
-export function rollup(sales = [], now = new Date()) {
+export function rollup(sales = [], now = new Date(), payload = {}) {
 	const s30 = dailySeries(sales, 30, now);
 	const last7 = s30.slice(-7);
 	const sum = (rows, k) => rows.reduce((a, r) => a + r[k], 0);
@@ -73,6 +74,7 @@ export function rollup(sales = [], now = new Date()) {
 		sales7: sum(last7, "sales"),
 		daily: s30.map((d) => d.sales),
 		hourly: hourlyRollup(sales, { now }),
+		insights: insightRollup({ ...payload, sales }, { now }),
 		lastSaleAt: sales.filter(isActiveSale).map((s) => s.createdAt || s.date || "").sort().pop() || "",
 	};
 }

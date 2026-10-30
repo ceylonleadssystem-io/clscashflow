@@ -146,7 +146,7 @@ const SETTING_SANITIZERS = {
 
 // Sales summary that travels with each account in the list: 7 and 30 day totals, the last sale and 30 daily sales figures.
 // Same rules as pos-react/src/domain/adminAnalytics.js rollup(): only completed and partly refunded sales count, "sales" is the sale total.
-function salesRollup(sales) {
+function salesRollup(sales, payload) {
   var DAY = 86400000, today = new Date().toISOString().slice(0, 10);
   var start = Date.parse(today) - 29 * DAY, daily = [], orders = [];
   for (var i = 0; i < 30; i++) { daily.push(0); orders.push(0); }
@@ -178,7 +178,60 @@ function salesRollup(sales) {
   });
   var activeDays = Math.max(1, Object.keys(days).length);
   var sellers = hSellers.map(function(byDay) { return Object.keys(byDay).reduce(function(n, k) { return n + Object.keys(byDay[k]).length; }, 0) / activeDays; });
-  return { orders30: sum(orders, 0), sales30: sum(daily, 0), orders7: sum(orders, 23), sales7: sum(daily, 23), daily: daily, hourly: { orders: hOrders, sales: hSales, sellers: sellers, activeDays: Object.keys(days).length }, lastSaleAt: last };
+  return { orders30: sum(orders, 0), sales30: sum(daily, 0), orders7: sum(orders, 23), sales7: sum(daily, 23), daily: daily, hourly: { orders: hOrders, sales: hSales, sellers: sellers, activeDays: Object.keys(days).length }, insights: insightsRollup(Object.assign({}, payload, { sales: sales })), lastSaleAt: last };
+}
+
+// Deeper summary per business (churn, activation, heat map, payment mix, losses, kitchen speed). Same rules as pos-react/src/domain/adminInsights.js
+// insightRollup(); tests/adminInsightsParity.test.js runs both on the same data and requires equal results.
+function insightsRollup(payload) {
+  var DAY = 86400000, TZ = 'Asia/Colombo';
+  var fmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
+  function parts(at) { var p = {}; fmt.formatToParts(new Date(at)).forEach(function(x) { p[x.type] = x.value; }); return { day: p.year + '-' + p.month + '-' + p.day, hour: Number(p.hour) % 24 }; }
+  function num(v) { return Number(v) || 0; }
+  function r1(n) { return Math.round(n * 10) / 10; }
+  var today = new Date().toISOString().slice(0, 10);
+  var start30 = new Date(Date.parse(today) - 29 * DAY).toISOString().slice(0, 10), start60 = new Date(Date.parse(today) - 59 * DAY).toISOString().slice(0, 10);
+  var sales = Array.isArray(payload && payload.sales) ? payload.sales : [];
+  var out = { saleCount: 0, firstSaleAt: '', salesDays30: 0, prev30: { orders: 0, sales: 0 }, heat: [], items30: 0, gross30: 0, records30: 0, payments: {}, channels: {}, refunds: { count: 0, amount: 0 }, voids: { count: 0, amount: 0 }, discounts: { count: 0, amount: 0 }, cash: { shifts: 0, net: 0, abs: 0 }, kitchen: { tickets: 0, avgMinutes: 0, medianMinutes: 0 } };
+  for (var i = 0; i < 168; i++) out.heat.push(0);
+  var days = {};
+  sales.forEach(function(s) {
+    var at = String(s.createdAt || s.date || ''), status = s.status || 'completed', active = status === 'completed' || status === 'partially_refunded';
+    if (active) { out.saleCount += 1; if (at && (!out.firstSaleAt || at < out.firstSaleAt)) out.firstSaleAt = at; }
+    var d = at && !isNaN(new Date(at).getTime()) ? parts(at) : null;
+    if (!d || d.day < start60) return;
+    if (d.day < start30) { if (active) { out.prev30.orders += 1; out.prev30.sales += num(s.total); } return; }
+    out.records30 += 1;
+    if (status === 'voided') { out.voids.count += 1; out.voids.amount += num(s.voidAmount != null ? s.voidAmount : (s.originalTotal != null ? s.originalTotal : s.total)); }
+    (s.refunds || []).forEach(function(r) { out.refunds.count += 1; out.refunds.amount += num(r.amount); });
+    if (!active) return;
+    days[d.day] = true;
+    out.heat[((new Date(d.day + 'T00:00:00Z').getUTCDay() + 6) % 7) * 24 + d.hour] += 1;
+    var items = 0, discount = 0;
+    (s.lines || []).forEach(function(l) { var v = num(l.price) * num(l.qty); if (l.isDiscount) discount += -v; else if (!l.isServiceCharge) { items += num(l.qty); out.gross30 += v; } });
+    out.items30 += items;
+    if (discount > 0) { out.discounts.count += 1; out.discounts.amount += discount; }
+    var pay = s.payment || 'Other', p = out.payments[pay] || (out.payments[pay] = { orders: 0, sales: 0 }); p.orders += 1; p.sales += num(s.total);
+    var ch = s.orderChannel || 'Other', c = out.channels[ch] || (out.channels[ch] = { orders: 0, sales: 0 }); c.orders += 1; c.sales += num(s.total);
+  });
+  out.salesDays30 = Object.keys(days).length;
+  (Array.isArray(payload && payload.cashShifts) ? payload.cashShifts : []).forEach(function(sh) {
+    if (sh.status !== 'closed' || !sh.closedAt || parts(sh.closedAt).day < start30) return;
+    out.cash.shifts += 1; out.cash.net += num(sh.variance); out.cash.abs += Math.abs(num(sh.variance));
+  });
+  var mins = [];
+  (Array.isArray(payload && payload.kitchenTickets) ? payload.kitchenTickets : []).forEach(function(t) {
+    if (t.destination !== 'KDS' || ['ready', 'done'].indexOf(t.status) < 0 || !t.createdAt || !t.updatedAt) return;
+    if (parts(t.createdAt).day < start30) return;
+    var m = (new Date(t.updatedAt).getTime() - new Date(t.createdAt).getTime()) / 60000;
+    if (m > 0 && m < 240) mins.push(m);
+  });
+  if (mins.length) { mins.sort(function(a, b) { return a - b; }); out.kitchen = { tickets: mins.length, avgMinutes: r1(mins.reduce(function(a, b) { return a + b; }, 0) / mins.length), medianMinutes: r1(mins[Math.floor(mins.length / 2)]) }; }
+  ['refunds', 'voids', 'discounts'].forEach(function(k) { out[k].amount = Math.round(out[k].amount); });
+  out.gross30 = Math.round(out.gross30); out.cash.net = Math.round(out.cash.net); out.cash.abs = Math.round(out.cash.abs); out.prev30.sales = Math.round(out.prev30.sales);
+  function top(o) { var res = {}; Object.keys(o).sort(function(a, b) { return o[b].sales - o[a].sales; }).slice(0, 8).forEach(function(k) { res[k] = { orders: o[k].orders, sales: Math.round(o[k].sales) }; }); return res; }
+  out.payments = top(out.payments); out.channels = top(out.channels);
+  return out;
 }
 
 function addBillingPeriod(start, cycle) {
@@ -279,7 +332,7 @@ async function handle(event) {
           name: row.data.name || row.data.displayName || (authUser && authUser.displayName) || '', email: row.data.email || (authUser && authUser.email) || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
           business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
-          analytics: salesRollup(payload.sales), apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
+          businessType: clean((payload.settings || {}).businessType, 20), analytics: salesRollup(payload.sales, payload), apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
           updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: accountStatus(row.data) === 'test', status: accountStatus(row.data), subscriptionType: clean(row.data.posBillingCycle) === 'annual' ? 'annual' : 'monthly', paused: row.data.posAccountPaused === true,
           authStatus: !authAvailable ? 'unavailable' : !authUser ? 'missing' : authUser.disabled ? 'disabled' : 'ready',
           authLastSignInAt: authUser && authUser.metadata && authUser.metadata.lastSignInTime || ''
