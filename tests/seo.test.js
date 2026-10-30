@@ -36,7 +36,7 @@ test('robots.txt names the AI crawlers and lets them read the public site', () =
     assert.ok(!grp.rules.some(([d, v]) => d === 'disallow' && (v === '/' || v === '')), grp.agents[0] + ' is not blocked from everything');
     for (const p of ['/admin', '/posv2/', '/GM', '/KDS']) assert.ok(grp.rules.some(([d, v]) => d === 'disallow' && v === p), p + ' is private for ' + grp.agents[0]);
   }
-  assert.match(read('robots.txt'), /^Sitemap: https:\/\/www\.ceylonrylabs\.io\/sitemap\.xml$/m);
+  assert.match(read('robots.txt'), /^Sitemap: https:\/\/ceylonrylabs\.io\/sitemap\.xml$/m);
 });
 
 test('sitemap lists only pages that exist and are not blocked', () => {
