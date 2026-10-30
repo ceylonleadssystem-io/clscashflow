@@ -912,9 +912,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/domain/cart.js": {
-    "mtime": 1793332431.1134949,
-    "seen": 1793332679.380926,
-    "ast_hash": "257ebf05136f1681f12ed9d038ab9ff6",
+    "mtime": 1793332741.2930713,
+    "seen": 1793332867.775542,
+    "ast_hash": "25758f6300fc1d8f34df651dfd764bff",
     "semantic_hash": ""
   },
   "pos-react/src/domain/catalog.js": {
@@ -1248,9 +1248,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/pos/printing.js": {
-    "mtime": 1793331000.9413238,
-    "seen": 1793331039.337963,
-    "ast_hash": "b2ed7449f1fb9e5025755aa02eefe12b",
+    "mtime": 1793332758.9716544,
+    "seen": 1793332867.7755961,
+    "ast_hash": "2cac9d6da5fc0a64c3658c4cf3a3e327",
     "semantic_hash": ""
   },
   "pos-react/src/services/pos/sales.js": {
@@ -1260,9 +1260,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/pos/settings.js": {
-    "mtime": 1793332464.7598054,
-    "seen": 1793332679.380981,
-    "ast_hash": "33384dcc8f7e62d795fc428b2079b0b3",
+    "mtime": 1793332751.6979496,
+    "seen": 1793332867.775597,
+    "ast_hash": "4f0430a29b49080b04cfec6455200600",
     "semantic_hash": ""
   },
   "pos-react/src/services/pos/staff.js": {
@@ -1278,9 +1278,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/printing/documents.js": {
-    "mtime": 1793332585.7205248,
-    "seen": 1793332679.380983,
-    "ast_hash": "4c617d65ed62098d201dc6d954840e45",
+    "mtime": 1793332779.1698182,
+    "seen": 1793332867.775599,
+    "ast_hash": "1da43597bf045dbeef7ec5463515b2a4",
     "semantic_hash": ""
   },
   "pos-react/src/services/printing/imageTools.js": {
@@ -2238,9 +2238,9 @@
     "semantic_hash": ""
   },
   "pos-react/docs/user-guide.md": {
-    "mtime": 1793332654.2168446,
-    "seen": 1793332679.381129,
-    "ast_hash": "cbda80180f966f32cb6216de430a7601",
+    "mtime": 1793332847.672373,
+    "seen": 1793332867.77575,
+    "ast_hash": "dc10255ca9513f61610b222bd6e83d71",
     "semantic_hash": ""
   },
   "pos-react/index.html": {
@@ -3006,9 +3006,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SettingsHome.jsx": {
-    "mtime": 1793332490.8636754,
-    "seen": 1793332679.3810592,
-    "ast_hash": "ff008a1563369125400b086240615738",
+    "mtime": 1793332779.1715007,
+    "seen": 1793332867.77568,
+    "ast_hash": "36f9e15ed88b2b698ff887bd11c7bb71",
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SystemOptionsPages.jsx": {
@@ -3024,9 +3024,9 @@
     "semantic_hash": ""
   },
   "docs/settings-build-plan.md": {
-    "mtime": 1793332672.366369,
-    "seen": 1793332679.381115,
-    "ast_hash": "599d7ca1fd0112804e2dda4dafa6a746",
+    "mtime": 1793332847.672164,
+    "seen": 1793332867.775736,
+    "ast_hash": "4415bbe5207a40d356e230ea680692a3",
     "semantic_hash": ""
   },
   "llms.txt": {
@@ -3132,9 +3132,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/domain/menuAdmin.js": {
-    "mtime": 1793332457.8085067,
-    "seen": 1793332679.380934,
-    "ast_hash": "f1f170c07a6d4a3b0e86e9ed0dcb179f",
+    "mtime": 1793332741.2894733,
+    "seen": 1793332867.77555,
+    "ast_hash": "ca480ded0c5c3a8995a3932c4763f1a1",
     "semantic_hash": ""
   },
   "pos-react/src/hooks/useMenuInEffect.js": {
@@ -3150,21 +3150,21 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/MenuAdminPages.jsx": {
-    "mtime": 1793332490.8625984,
-    "seen": 1793332679.3810592,
-    "ast_hash": "4ba07967f0d70ceb0f7ce8f8ff5a334f",
+    "mtime": 1793332779.1708236,
+    "seen": 1793332867.77568,
+    "ast_hash": "9020c65f645b801ffcc227ce1d76539d",
     "semantic_hash": ""
   },
   "pos-react/src/domain/taxes.js": {
-    "mtime": 1793332416.1415355,
-    "seen": 1793332679.380942,
-    "ast_hash": "0b0af9554b97abf606f6af137ddb0375",
+    "mtime": 1793332751.6969466,
+    "seen": 1793332867.775558,
+    "ast_hash": "cfb49346a967af5f2d15ea8000ea79c3",
     "semantic_hash": ""
   },
   "pos-react/src/tests/taxes.test.js": {
-    "mtime": 1793332602.7924254,
-    "seen": 1793332679.381033,
-    "ast_hash": "8a3ed4a713855bea2d9a0755c124a18d",
+    "mtime": 1793332802.911456,
+    "seen": 1793332867.7756531,
+    "ast_hash": "43f72abad764257370f6a627a17835c2",
     "semantic_hash": ""
   }
 }

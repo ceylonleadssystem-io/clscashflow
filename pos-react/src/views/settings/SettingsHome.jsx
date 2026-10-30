@@ -21,7 +21,7 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 	const groups = [
 		{ title: "System Options", items: SYSTEM_PAGES.map((p) => ({ key: p.key, label: p.title })) },
 		...(can("users.view") ? [{ title: "Users", items: [{ key: "users", label: "Users" }, { key: "jobs", label: "Jobs" }] }] : []),
-		...(can("menu.view") ? [{ title: "Menu Admin", items: [{ key: "salesCategories", label: "Sales Categories" }, { key: "availability", label: "Availability" }, { key: "taxes", label: "Taxes" }] }] : []),
+		...(can("menu.view") ? [{ title: "Menu Admin", items: [{ key: "salesCategories", label: "Sales Categories" }, { key: "availability", label: "Availability" }, { key: "taxes", label: "Taxes" }, { key: "items", label: "Items" }] }] : []),
 		{ title: "Device Manager", items: [{ key: "printers", label: "Printers" }] },
 		{ title: "More settings", items: legacyTabs.map((t) => ({ key: "legacy:" + t.id, label: t.label })) },
 	];

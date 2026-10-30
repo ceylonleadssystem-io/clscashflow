@@ -91,6 +91,15 @@ a tax group applies each member to the same amount (not compounded) and lists th
   "Takeaway" means the Takeaway order type only (delivery apps count as other channels); custom keypad items and the Order Entry custom-item tax rows are not built.
 - Not yet verified: card or cash rounding rules beyond the cent, tax on gift cards (none), a second terminal picking up published taxes.
 
+## Delivered (slice 7): Items (per-item overrides)
+- **Menu Admin > Items** (`settings.itemSettings`, drafts and Publish like the other pages): a list of items by category with search, and a drawer per item for **Tax** (follow the category, no tax, or one of your taxes),
+  **Takeaway tax** (only when "Takeaway tax" is on in Taxes), **Prep ticket name** and **Receipt name**. The drawer shows the price with tax (read only). Only items with an override are stored; clearing every field removes it.
+  A tax used by an item cannot be removed.
+- **At the till:** an item's own tax beats its category's and the default; the prep ticket name is what the kitchen printer and Kitchen Display show; the receipt name is what receipts (printed, e-mailed text and WhatsApp) show.
+  A reprinted receipt uses the names published now.
+- Deviation: name, price, code, stock, photos, categories, stations and modifier assignment are still edited in Products & Services (live), not on drafts. Moving that editing behind Publish would change the working
+  catalogue screens and stock handling; the new page links to it. No show-on-POS/Online chips (Online is not built), no "Duplicate item".
+
 ## Next slices, in the spec's order
-1. Menu Admin remainder: Categories, Modifiers (groups, then global) and Items on drafts (Items brings the per-item and takeaway-per-item tax fields).
+1. Menu Admin remainder: Modifiers (min/max selections, assignment tree, global modifiers with Add / Extra / Side / No prefixes) and a Categories page (description, delete approval); both need POS behaviour built first.
 2. Wire the "needs behaviour" rows above as their dependencies land (Taxes, Availability, order numbers), and more permission keys as the POS checks them.

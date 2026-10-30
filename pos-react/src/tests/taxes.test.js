@@ -152,3 +152,57 @@ describe("refunds with tax", () => {
 		expect(saleFigures(after)).toMatchObject({ item: 2000, refunds: 1000, tax: 180, net: 1000, gross: 1180 });
 	});
 });
+
+describe("item overrides", () => {
+	const rules = cleanTaxRules({ defaultTaxId: "vat", takeawayOn: true });
+	const withP = (productId, extra = {}) => ({ ...item(100), productId, ...extra });
+	it("an item's own tax beats the category and default; none means no tax", () => {
+		const items = { a: { taxId: "levy" }, b: { taxId: "none" }, c: { takeawayTaxId: "levy" } };
+		const rowsFor = (cart, channel = "Dine-in") => calculateTaxes({ cart, taxes, rules, items, channel }).rows.map((r) => [r.id, r.amount]);
+		expect(rowsFor([withP("a")])).toEqual([["levy", 2.5]]);
+		expect(rowsFor([withP("b")])).toEqual([]);
+		expect(rowsFor([withP("c")])).toEqual([["vat", 18]]); // takeaway-only override ignored on a dine-in order
+		expect(rowsFor([withP("c")], "Takeaway")).toEqual([["levy", 2.5]]);
+		expect(rowsFor([withP("zzz")])).toEqual([["vat", 18]]);
+	});
+	it("counts items as a use of a tax", () => {
+		expect(taxUses("levy", taxes, cleanTaxRules(), [{ id: "a", taxId: "levy" }, { id: "b", takeawayTaxId: "levy" }])).toEqual(["the group VAT + Levy", "2 items"]);
+	});
+});
+
+describe("item settings in Menu Admin", () => {
+	it("are drafts, publish, and drive the till", async () => {
+		const { prepName, receiptName, draftChanges } = await import("../domain/menuAdmin");
+		const { receiptLayout } = await import("../services/printing/documents");
+		const h = await createHarness();
+		await h.svc.settings.saveMenuEntity("taxes", { name: "VAT", rate: 18 });
+		const vatId = h.data().settings.menuDraft.taxes[0].id;
+		await h.svc.settings.patchSettings({ kitchenStations: [{ id: "k", name: "Kitchen", type: "printer", printer: { kind: "none" } }] });
+		await addProduct(h, { name: "Masala Tea", price: "250", cost: "100" });
+		const p = h.data().products[0];
+		expect(await h.svc.settings.saveMenuEntity("itemSettings", { id: "ghost", taxId: vatId })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("itemSettings", { id: p.id, taxId: "nope" })).toBeUndefined();
+		expect(await h.svc.settings.saveMenuEntity("itemSettings", { id: p.id, taxId: vatId, prepTicketName: "MSL TEA", receiptName: "Masala Tea (hot)" })).toBe(true);
+		expect(draftChanges(h.data().settings).some((c) => c.page === "itemSettings" && c.kind === "added")).toBe(true);
+		expect(prepName(h.data().settings, { productId: p.id, name: "Masala Tea" })).toBe("Masala Tea"); // not published yet
+		await h.svc.settings.deleteMenuEntity("taxes", vatId);
+		expect(h.lastAlert()).toMatch(/1 item/);
+		await h.svc.settings.publishMenu();
+		const s = h.data().settings;
+		expect(prepName(s, { productId: p.id, name: "Masala Tea" })).toBe("MSL TEA");
+		expect(receiptName(s, { productId: p.id, name: "Masala Tea" })).toBe("Masala Tea (hot)");
+		expect(cartTotalsFor(s, p)).toBe(295); // no default tax set: only the item's own tax applies
+		await openShift(h);
+		await h.svc.sales.completeSale({ cart: [line(p, 1)], discount: noDiscount, payment: "Card" });
+		const sale = h.data().sales[0];
+		expect(sale.total).toBe(295);
+		expect(receiptLayout(sale, { settings: s }).main.map((l) => l.text).join("\n")).toMatch(/Masala Tea \(hot\)/);
+		await h.svc.printing.sendToKitchen({ id: "o1", orderNumber: "9", lines: [{ productId: p.id, name: "Masala Tea", qty: 1 }] });
+		expect(h.data().kitchenTickets.at(-1).lines[0].name).toBe("MSL TEA");
+		// clearing every field removes the override
+		await h.svc.settings.saveMenuEntity("itemSettings", { id: p.id });
+		await h.svc.settings.publishMenu();
+		expect(h.data().settings.itemSettings).toEqual([]);
+	});
+});
+const cartTotalsFor = (s, p) => cartTotals([{ ...item(p.price), productId: p.id }], noDiscount, s, false).total;

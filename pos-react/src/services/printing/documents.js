@@ -4,6 +4,7 @@
  */
 import { DEFAULT_BUSINESS_NAME, DEFAULT_RECEIPT_FOOTER } from "../../config/constants";
 import { esc, money } from "../../domain/format";
+import { receiptName } from "../../domain/menuAdmin";
 import { receiptDate } from "../../domain/sales";
 
 /**
@@ -92,7 +93,7 @@ export function receiptMessage(sale, { settings = {}, customer = null } = {}) {
 	const lines = (sale.lines || [])
 		.map(
 			(l) =>
-				`${l.qty} x ${l.name}${(l.modifiers || []).length ? " (" + l.modifiers.map((m) => m.optionName).join(", ") + ")" : ""} — ${money(l.price * l.qty)}`,
+				`${l.qty} x ${receiptName(settings, l)}${(l.modifiers || []).length ? " (" + l.modifiers.map((m) => m.optionName).join(", ") + ")" : ""} — ${money(l.price * l.qty)}`,
 		)
 		.join("\n");
 	const address = settings.address ? "\n" + settings.address : "";
@@ -162,7 +163,7 @@ export function receiptLayout(sale, { settings = {}, location = null } = {}) {
 	main.push(left((sale.receipt || "RECEIPT") + "  " + receiptDate(sale)));
 	main.push(left(rule));
 	(sale.lines || []).forEach((line) => {
-		const [first, ...rest] = wrapLine(line.code === "TAX" ? line.name : line.qty + " x " + line.name, 29); // a tax is a charge, not an item
+		const [first, ...rest] = wrapLine(line.code === "TAX" ? line.name : line.qty + " x " + receiptName(settings, line), 29); // a tax is a charge, not an item
 		main.push(left(padRight(first, 30) + padLeft(money(line.price * line.qty).replace("LKR ", ""), 16)));
 		rest.forEach((r) => main.push(left("  " + r)));
 		if (line.description) wrapLine(line.description, width - 2).forEach((r) => main.push(left("  " + r)));

@@ -15,6 +15,7 @@ import { kdsLink } from "../../KDS/link";
 import { kitchenMode, newId, stamp } from "./common";
 import { kitchenStations, routeKitchenLines } from "../../domain/kitchenStations";
 import { receiptPlan, ticketPlan } from "../../domain/devices";
+import { prepName } from "../../domain/menuAdmin";
 
 const log = createLogger("printing");
 
@@ -119,7 +120,8 @@ async function queueTicket(ctx, order, lines, destination, station, systemPrints
 			...(station ? { stationId: station.id, station: station.name } : {}),
 			status,
 			createdAt: new Date().toISOString(),
-			lines: JSON.parse(JSON.stringify(lines || [])),
+			// the kitchen sees each item's prep ticket name (Menu Admin, Items) when it has one
+			lines: JSON.parse(JSON.stringify(lines || [])).map((l) => ({ ...l, name: prepName(ctx.data().settings, l) })),
 		},
 		ctx.session(),
 	);

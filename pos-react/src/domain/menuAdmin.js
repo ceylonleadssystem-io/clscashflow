@@ -4,6 +4,8 @@
  * list (settings[key]) in one write. A key missing from menuDraft has no draft. Published lists:
  *   settings.salesCategories    [{ id, name, itemIds, status }]            reporting buckets for Reports > Menu > Sales Category
  *   settings.availabilityMenus  [{ id, name, hours:[{days,start,end}], categories:[name], status }]   which categories the till shows when
+ *   settings.taxes / settings.taxRules   see taxes.js
+ *   settings.itemSettings       [{ id: productId, name, taxId, takeawayTaxId, prepTicketName, receiptName }]   per-item overrides; only items that have one
  * Categories are referred to by name, as everywhere else in this POS.
  */
 import { categoryKey } from "./catalog";
@@ -13,6 +15,7 @@ export const PAGES = {
 	availabilityMenus: { label: "Menu", plural: "Menus" },
 	taxes: { label: "Tax", plural: "Taxes" },
 	taxRules: { label: "Tax rules", plural: "Tax rules" },
+	itemSettings: { label: "Item", plural: "Items" },
 };
 export const PAGE_KEYS = Object.keys(PAGES);
 export const SALES_DEFAULTS = ["Food", "Beverage", "Alcohol", "Retail", "Other"];
@@ -138,6 +141,7 @@ export function overlappingMenus(menu, others = []) {
 const FIELD_LABELS = {
 	name: "Name", status: "Status", itemIds: "Items", hours: "Hours", categories: "Categories",
 	isGroup: "Tax group", rate: "Rate (%)", memberTaxIds: "Taxes in group",
+	taxId: "Tax", takeawayTaxId: "Takeaway tax", prepTicketName: "Prep ticket name", receiptName: "Receipt name",
 	defaultTaxId: "Default tax", takeawayOn: "Takeaway tax", serviceTaxOn: "Tax on service charge", serviceTaxId: "Service charge tax", categoryTaxes: "Category taxes",
 };
 const brief = (field, v) => {
@@ -180,3 +184,15 @@ export function nextDrafts(settings = {}, key, next) {
 	else drafts[key] = next;
 	return drafts;
 }
+
+// ------------------------------------------------------------------------------ item overrides ----
+/** One item's overrides as stored. taxId / takeawayTaxId: "" = follow the category, "none" = no tax, else a tax id. */
+export function cleanItemSetting(i = {}) {
+	return { id: String(i.id), name: text(i.name, 80), taxId: String(i.taxId || ""), takeawayTaxId: String(i.takeawayTaxId || ""), prepTicketName: text(i.prepTicketName, 60), receiptName: text(i.receiptName, 60) };
+}
+export const itemSettingBlank = (i) => !i.taxId && !i.takeawayTaxId && !i.prepTicketName && !i.receiptName;
+/** The published overrides by product id. */
+export const itemSettingsById = (settings = {}) => Object.fromEntries(publishedOf(settings, "itemSettings").map((i) => [i.id, i]));
+/** The name to show for an item on a kitchen ticket / receipt: its override, else the name on the line. */
+export const prepName = (settings, line) => itemSettingsById(settings)[line.productId]?.prepTicketName || line.name;
+export const receiptName = (settings, line) => itemSettingsById(settings)[line.productId]?.receiptName || line.name;

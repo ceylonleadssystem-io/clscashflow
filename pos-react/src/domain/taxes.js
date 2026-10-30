@@ -62,12 +62,14 @@ export function taxError(t, others = []) {
 }
 
 /** Where a tax is used, as short phrases ([] when nowhere): a group's member, the default, a category or the service charge. */
-export function taxUses(id, taxes = [], rules = {}) {
+export function taxUses(id, taxes = [], rules = {}, items = []) {
 	const uses = taxes.filter((t) => t.isGroup && t.memberTaxIds.includes(id)).map((t) => "the group " + t.name);
 	if (rules.defaultTaxId === id) uses.push("the default tax");
 	if (rules.serviceTaxOn && rules.serviceTaxId === id) uses.push("the service charge");
 	const cats = Object.values(rules.categoryTaxes || {}).filter((c) => c.tax === id || c.takeaway === id).length;
 	if (cats) uses.push(`${cats} categor${cats === 1 ? "y" : "ies"}`);
+	const its = items.filter((i) => i.taxId === id || i.takeawayTaxId === id).length;
+	if (its) uses.push(`${its} item${its === 1 ? "" : "s"}`);
 	return uses;
 }
 
@@ -79,16 +81,21 @@ export function partsOf(id, taxes = []) {
 	return t.memberTaxIds.map((m) => taxes.find((x) => x.id === m && x.status === "active" && !x.isGroup)).filter(Boolean).map((x) => ({ id: x.id, name: x.name, rate: x.rate }));
 }
 
-const taxIdFor = (line, rules, takeaway) => {
+const taxIdFor = (line, rules, takeaway, items = {}) => {
+	const o = items[line.productId]; // an item's own tax: "none" means no tax (no tax has that id, so nothing applies)
+	if (o) {
+		if (takeaway && rules.takeawayOn && o.takeawayTaxId) return o.takeawayTaxId;
+		if (o.taxId) return o.taxId;
+	}
 	const c = rules.categoryTaxes[categoryKey(line.category)];
 	return (takeaway && rules.takeawayOn && c?.takeaway) || c?.tax || rules.defaultTaxId;
 };
 
 /**
  * The tax on an order: { amount, rows: [{ id, name, rate, base, amount }] } with one row per single tax.
- * `discount` and `service` are the order's discount and service charge amounts; `channel` is the order type.
+ * `discount` and `service` are the order's discount and service charge amounts; `channel` is the order type; `items` are the item overrides by product id.
  */
-export function calculateTaxes({ cart = [], discount = 0, service = 0, channel = "", taxes = [], rules = cleanTaxRules() }) {
+export function calculateTaxes({ cart = [], discount = 0, service = 0, channel = "", taxes = [], rules = cleanTaxRules(), items = {} }) {
 	const active = taxes.filter((t) => t.status === "active");
 	if (!active.length) return { amount: 0, rows: [] };
 	const takeaway = channel === "Takeaway";
@@ -106,7 +113,7 @@ export function calculateTaxes({ cart = [], discount = 0, service = 0, channel =
 	for (const l of lines) {
 		const value = (+l.price || 0) * (+l.qty || 0);
 		const base = gross ? value - (discount * value) / gross : value;
-		if (base > 0) add(partsOf(taxIdFor(l, rules, takeaway), active), base);
+		if (base > 0) add(partsOf(taxIdFor(l, rules, takeaway, items), active), base);
 	}
 	if (service > 0 && rules.serviceTaxOn && rules.serviceTaxId) add(partsOf(rules.serviceTaxId, active), service);
 	const out = [...rows.values()].filter((r) => r.amount > 0 || r.base > 0);

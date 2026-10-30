@@ -8,7 +8,7 @@ import { POS_TYPE_PRESETS } from "../../config/presets";
 import { hasCapability } from "../../config/capabilities";
 import { cleanStations, kitchenStations } from "../../domain/kitchenStations";
 import { cleanTax, cleanTaxRules, taxError, taxUses } from "../../domain/taxes";
-import { PAGES as MENU_PAGES, PAGE_KEYS as MENU_KEYS, SALES_DEFAULTS, assignItems, cleanMenu, cleanSalesCategory, draftChanges, menuError, nextDrafts, salesCategoryError, workingOf } from "../../domain/menuAdmin";
+import { PAGES as MENU_PAGES, PAGE_KEYS as MENU_KEYS, SALES_DEFAULTS, assignItems, cleanItemSetting, cleanMenu, itemSettingBlank, cleanSalesCategory, draftChanges, menuError, nextDrafts, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { copyPrinters, deviceNameError, devicesOf, normalizePrinter, printerError, printersOf, receiptPrinterId } from "../../domain/devices";
 import { PERMISSION_KEYS, accessFromKeys, accessOf, jobError, jobsOf } from "../../domain/access";
 import { MAIN_FLOOR, floorLayout, floorLayoutKey, floorsFor, floorsKey } from "../../domain/tables";
@@ -465,6 +465,17 @@ export async function saveMenuEntity(ctx, key, form) {
 	} else if (key === "taxes") {
 		clean = cleanTax({ ...form, id });
 		error = taxError(clean, others);
+	} else if (key === "itemSettings") {
+		// overrides of an existing item; clearing every field removes the entry
+		const product = products.find((p) => String(p.id) === String(form.id));
+		if (!product) return void (await ctx.ui.alert("That item no longer exists."));
+		clean = cleanItemSetting({ ...form, id: String(product.id), name: product.name });
+		const known = new Set(workingOf(settings, "taxes").map((t) => t.id));
+		if ([clean.taxId, clean.takeawayTaxId].some((t) => t && t !== "none" && !known.has(t))) return void (await ctx.ui.alert("The chosen tax no longer exists. Choose it again."));
+		const rest = all.filter((e) => e.id !== clean.id);
+		await writeDraft(ctx, key, itemSettingBlank(clean) ? rest : [...rest, clean]);
+		ctx.ui.notice(DRAFT_NOTE);
+		return true;
 	} else if (key === "taxRules") {
 		clean = cleanTaxRules(form);
 		const known = new Set(workingOf(settings, "taxes").map((t) => t.id));
@@ -490,7 +501,7 @@ export async function deleteMenuEntity(ctx, key, id) {
 	const e = all.find((x) => x.id === id);
 	if (!e) return false;
 	if (key === "taxes") {
-		const uses = taxUses(id, all, workingOf(ctx.data().settings, "taxRules")[0] || {});
+		const uses = taxUses(id, all, workingOf(ctx.data().settings, "taxRules")[0] || {}, workingOf(ctx.data().settings, "itemSettings"));
 		if (uses.length) return void (await ctx.ui.alert(`${e.name} is used by ${uses.join(", ")}. Change those first, or set it to inactive.`));
 	}
 	if (key === "salesCategories" && e.itemIds.length) return void (await ctx.ui.alert(`${e.name} still holds ${e.itemIds.length} item${e.itemIds.length === 1 ? "" : "s"}. Move them to another sales category first, or set it to inactive once it is empty.`));

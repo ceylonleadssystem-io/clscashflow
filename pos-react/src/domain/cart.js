@@ -2,6 +2,7 @@
  * Pure cart maths for checkout: modifier handling and validation, adding/editing/merging order lines,
  * quantity changes, discount and service-charge calculation, order totals and equal bill splitting.
  */
+import { itemSettingsById } from "./menuAdmin";
 import { calculateTaxes, rulesOf } from "./taxes";
 import { PLATFORM_CHANNELS } from "../config/constants";
 
@@ -124,7 +125,7 @@ export function cartTotals(cart, discount, settings, serviceChargeSupported, cha
 	const subtotal = chargeableSubtotal(cart);
 	const discountValue = discountAmount(cart, discount);
 	const service = serviceChargeAmount(cart, discount, settings, serviceChargeSupported);
-	const tax = calculateTaxes({ cart, discount: discountValue, service, channel, taxes: settings?.taxes, rules: rulesOf(settings) });
+	const tax = calculateTaxes({ cart, discount: discountValue, service, channel, taxes: settings?.taxes, rules: rulesOf(settings), items: itemSettingsById(settings) });
 	return {
 		count: cart.filter(isChargeable).reduce((a, l) => a + l.qty, 0),
 		subtotal,

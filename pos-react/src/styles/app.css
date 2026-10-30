@@ -863,6 +863,10 @@ html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 .sk-schedule .sk-inline .input{width:auto}
 .sk-tax-preview{margin:12px 0;padding:10px 12px;border-radius:10px;background:var(--ui-soft,#f2f4f6);font-weight:600}
 .sk-cat-tax .sk-row:first-child{border-top:1px solid var(--ui-line,#e4e8eb)}
+.sk-item-list{list-style:none;margin:0;padding:0 12px 8px}
+.sk-item-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:8px 0;border-top:1px solid var(--ui-line,#e4e8eb)}
+.sk-item-list li>.muted{grid-column:1}.sk-item-list li>.btn{grid-column:2;grid-row:1 / span 2;min-height:40px}
+.sk-item-name{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sk-empty{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px 4px}
 .sk-empty p{margin:0}
 .sk-history{list-style:none;margin:0;padding:0;display:grid;gap:12px}

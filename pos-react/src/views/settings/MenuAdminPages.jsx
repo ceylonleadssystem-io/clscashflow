@@ -7,9 +7,9 @@ import { AssignmentTree } from "../../components/settings/kit/AssignmentTree";
 import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
 import { NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
 import { categoryKey, visibleProductCategories } from "../../domain/catalog";
-import { WEEKDAYS, cleanMenu, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
+import { WEEKDAYS, cleanItemSetting, cleanMenu, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { money } from "../../domain/format";
-import { cleanTax, cleanTaxRules, previewTax, taxError } from "../../domain/taxes";
+import { cleanTax, cleanTaxRules, previewTax, round2, taxError } from "../../domain/taxes";
 import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 
@@ -395,4 +395,123 @@ export function Taxes() {
 	);
 }
 
-export const MENU_ADMIN_COMPONENTS = { salesCategories: SalesCategories, availability: Availability, taxes: Taxes };
+export function Items() {
+	const { settings, products } = useData();
+	const { svc, go, canView } = usePos();
+	const [q, setQ] = useState("");
+	const [edit, setEdit] = useState(null);
+	const overrides = useMemo(() => new Map(workingOf(settings, "itemSettings").map((i) => [i.id, i])), [settings]);
+	const taxes = workingOf(settings, "taxes");
+	const rules = cleanTaxRules(workingOf(settings, "taxRules")[0] || {});
+	const salesOf = useMemo(() => new Map(workingOf(settings, "salesCategories").flatMap((c) => c.itemIds.map((i) => [i, c.name]))), [settings]);
+	const taxName = (id) => (id === "none" ? "No tax" : taxes.find((t) => t.id === id)?.name || "");
+	// the tax an item gets today (its own, else its category's, else the default) for the list
+	const effective = (p) => {
+		const o = overrides.get(String(p.id));
+		const c = rules.categoryTaxes[categoryKey(p.category)];
+		return taxName(o?.taxId || c?.tax || rules.defaultTaxId) || "None";
+	};
+	const groups = useMemo(() => {
+		const term = q.trim().toLowerCase();
+		const by = new Map();
+		for (const p of products) {
+			if (term && !(p.name + " " + (p.code || "")).toLowerCase().includes(term)) continue;
+			const k = p.category || "Uncategorised";
+			if (!by.has(k)) by.set(k, []);
+			by.get(k).push(p);
+		}
+		return [...by.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+	}, [products, q]);
+	const options = [{ value: "none", label: "No tax" }, ...taxes.filter((t) => t.status === "active").map((t) => ({ value: t.id, label: t.name }))];
+	const tax = edit ? taxes.find((t) => t.id === (edit.taxId || rules.categoryTaxes[categoryKey(edit.product.category)]?.tax || rules.defaultTaxId)) : null;
+	const withTax = tax && tax.status === "active" ? previewTax(tax, taxes, +edit.product.price || 0) : null;
+	const open = (p) => setEdit({ product: p, ...cleanItemSetting({ ...(overrides.get(String(p.id)) || {}), id: String(p.id) }) });
+	const close = () => setEdit(null);
+	const save = async () => {
+		if (await svc.settings.saveMenuEntity("itemSettings", edit)) close();
+	};
+	const name = (n) => (n.length > 24 ? n.slice(0, 24) + "…" : n);
+	return (
+		<>
+			<PageHeader
+				title="Items"
+				description="Per-item tax and the names used on kitchen tickets and receipts. Name, price, stock and photos are edited in Products & Services."
+				actions={
+					<>
+						<DraftBadge show={hasDraft(settings, "itemSettings")} />
+						{canView("products") && (
+							<button type="button" className="btn out" onClick={() => go("products")}>
+								Open Products & Services
+							</button>
+						)}
+					</>
+				}
+			/>
+			<SectionCard>
+				<input className="input" type="search" placeholder="Search items" aria-label="Search items" value={q} onChange={(e) => setQ(e.target.value)} />
+				{!products.length && <EmptyState title="No items yet">Add items in Products & Services first.</EmptyState>}
+				{products.length > 0 && !groups.length && <p className="muted">No items match.</p>}
+				{groups.map(([cat, list]) => (
+					<details key={cat} className="sk-tree-group" open={!!q}>
+						<summary>
+							<span>{cat}</span>
+							<span className="muted">{list.length}</span>
+						</summary>
+						<ul className="sk-item-list">
+							{list.map((p) => {
+								const o = overrides.get(String(p.id));
+								return (
+									<li key={p.id} data-item={p.id}>
+										<span className="sk-item-name">
+											<strong>{name(p.name)}</strong>
+											{o && <span className="sk-badge">Customised</span>}
+										</span>
+										<span className="muted">
+											{money(p.price)} · Tax: {effective(p)} · {salesOf.get(String(p.id)) || "No sales category"}
+										</span>
+										<button type="button" className="btn out" onClick={() => open(p)}>
+											Edit
+										</button>
+									</li>
+								);
+							})}
+						</ul>
+					</details>
+				))}
+			</SectionCard>
+			<DetailDrawer
+				open={!!edit}
+				wide
+				title={edit?.product.name || "Item"}
+				subtitle={edit ? edit.product.category + " · " + money(edit.product.price) : ""}
+				onClose={close}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={close}>
+							Cancel
+						</button>
+						<button type="button" className="btn gold" id="save-item" onClick={save}>
+							Save draft
+						</button>
+					</>
+				}
+			>
+				{edit && (
+					<>
+						<SelectRow id="it-tax" label="Tax" help="Leave on the category tax to follow Taxes, Tax by category." value={edit.taxId} options={[{ value: "", label: "Follow the category" }, ...options]} onChange={(taxId) => setEdit((x) => ({ ...x, taxId }))} />
+						{rules.takeawayOn && <SelectRow id="it-take" label="Takeaway tax" help="Used on takeaway orders. Blank uses the tax above." value={edit.takeawayTaxId} options={[{ value: "", label: "Same as the tax above" }, ...options]} onChange={(takeawayTaxId) => setEdit((x) => ({ ...x, takeawayTaxId }))} />}
+						{withTax && (
+							<SettingRow label="Price with tax" help="Worked out from the tax above. Read only." wide>
+								<strong>{money(round2(withTax.total))}</strong>
+							</SettingRow>
+						)}
+						<TextRow id="it-prep" label="Prep ticket name" help="The name on kitchen tickets and the kitchen screen. Blank uses the item name." value={edit.prepTicketName} max={60} onChange={(prepTicketName) => setEdit((x) => ({ ...x, prepTicketName }))} />
+						<TextRow id="it-receipt" label="Receipt name" help="The name on receipts. Blank uses the item name." value={edit.receiptName} max={60} onChange={(receiptName) => setEdit((x) => ({ ...x, receiptName }))} />
+					</>
+				)}
+			</DetailDrawer>
+		</>
+	);
+}
+
+export const MENU_ADMIN_COMPONENTS = { salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: Items };
