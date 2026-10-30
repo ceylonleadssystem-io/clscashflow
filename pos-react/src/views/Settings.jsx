@@ -55,7 +55,7 @@ export function Settings({ only = null }) {
 	const asked = requestedSettingsTab();
 	const [tab, setTab] = useState(() => (only && !only.includes(asked) ? only[0] : asked.startsWith("page:") ? "" : asked) || "business");
 	// "legacy" shows the tab content below; any other value is a page of the sidebar (views/settings/)
-	const [page, setPage] = useState(() => (asked.startsWith("page:") && !only ? asked.slice(5) : "legacy"));
+	const [page, setPage] = useState(() => (asked.startsWith("page:") && !only ? asked.slice(5) : !only && !asked && can("settings.system.edit") ? "home" : "legacy"));
 	// Ceylo's fix buttons and the moved pages can ask for a tab or page while Settings is already open
 	useEffect(() => onSettingsTab((t) => (t.startsWith("page:") ? setPage(t.slice(5)) : (setTab(t), setPage("legacy")))), []);
 	const [form, setForm] = useState(() => formFrom(settings));

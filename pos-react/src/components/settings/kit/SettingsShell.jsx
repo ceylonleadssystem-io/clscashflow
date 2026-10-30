@@ -24,7 +24,7 @@ export function SaveBar({ count, onDiscard, onSave, saving, disabled }) {
 }
 
 /** groups: [{ title, items: [{ key, label }] }]; `guard()` returns true when leaving the current page is fine (no unsaved changes). */
-export function SettingsShell({ groups, current, onSelect, guard, children, bottom }) {
+export function SettingsShell({ groups, current, onSelect, guard, children, bottom, back }) {
 	const ui = useUi();
 	const go = async (key) => {
 		if (key === current) return;
@@ -35,6 +35,11 @@ export function SettingsShell({ groups, current, onSelect, guard, children, bott
 	return (
 		<div className="sk-shell">
 			<nav className="sk-side" aria-label="Settings sections">
+				{back && (
+					<button type="button" className="sk-back" id="settings-back" onClick={async () => (!guard || guard() || (await ui.confirm("You have unsaved changes. Leave without saving?"))) && back.onClick()}>
+						← {back.label}
+					</button>
+				)}
 				{groups.map((g) => (
 					<div key={g.title} className="sk-side-group">
 						<div className="sk-side-title">{g.title}</div>
@@ -47,6 +52,11 @@ export function SettingsShell({ groups, current, onSelect, guard, children, bott
 				))}
 			</nav>
 			<div className="sk-side-select">
+				{back && (
+					<button type="button" className="sk-back" onClick={async () => (!guard || guard() || (await ui.confirm("You have unsaved changes. Leave without saving?"))) && back.onClick()}>
+						← {back.label}
+					</button>
+				)}
 				<label htmlFor="sk-page-select" className="sr-only">
 					Settings section
 				</label>

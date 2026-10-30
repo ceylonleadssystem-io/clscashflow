@@ -115,6 +115,8 @@ whether this device prints at all (off = log only), a **backup printer** and a *
 **Copy setup from** another device saves retyping. A device you have not set up keeps using Receipt Printing and the Stations page.
 
 ## Where things are in Settings
+Settings opens on four boxes: System Options, Users, Menu Admin and Device Manager. Open one to see its pages; "All settings" brings you back. Business Profile is the first page under System Options.
+
 System Options: Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Party Payments, Zones, **Service Charge**, **Appearance** and **Customer Feedback**. Menu Admin: Items, Categories, Modifiers, Availability, Taxes, Sales Categories
 (Items and Modifiers also hold the full item and group editors). Device Manager: **Printers** (when to print, each device's printers, USB devices) and **Stations**; receipt socials are under Receipts and the order types under Order Entry. The business type is chosen once during setup; Ceylonry support changes it afterwards.
 
