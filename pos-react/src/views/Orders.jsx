@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { money } from "../domain/format";
 import { modifierLabel } from "../domain/menuAdmin";
 import { orderTotal } from "../domain/orders";
+import { orderProgress, readyToCollect } from "../domain/kitchenReady";
 import { customerName, userName } from "../domain/names";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
@@ -28,6 +29,8 @@ export function Orders() {
 	const sent = open.filter((o) => o.kitchenSentAt).length;
 	const total = open.reduce((a, o) => a + orderTotal(o), 0);
 	const showKitchen = kitchen && tickets;
+	const kdsOn = useFeature("checkout.kds");
+	const waiting = useMemo(() => (kdsOn ? readyToCollect(data.kitchenTickets) : []), [kdsOn, data.kitchenTickets]);
 	return (
 		<section className="view active" id="view-orders">
 			<div className="grid4" id="order-queue-kpis">
@@ -36,6 +39,30 @@ export function Orders() {
 				<Kpi label={showKitchen ? "Not Yet Sent" : "Awaiting Payment"} value={showKitchen ? open.length - sent : open.length} />
 				<Kpi label="Open Value" value={money(total)} />
 			</div>
+			{waiting.length > 0 && (
+				<Panel style={{ marginTop: 16 }} title={"Ready to serve (" + waiting.length + ")"} subtitle="Finished in the kitchen: collect these and tap Collected">
+					<div className="modal-body ready-list" role="status" aria-live="polite">
+						{waiting.map(({ ticket, items }) => (
+							<div className="ready-card" key={ticket.id}>
+								<div>
+									<strong>{ticket.reference || ticket.orderNumber}</strong>
+									{ticket.station && <span className="badge">{ticket.station}</span>}
+									<ul>
+										{items.map(({ line, index }) => (
+											<li key={index}>
+												{line.qty} × {line.name}
+											</li>
+										))}
+									</ul>
+								</div>
+								<button type="button" className="btn gold" onClick={() => svc.printing.markTicketServed(ticket.id, items.map((x) => x.index))}>
+									Collected
+								</button>
+							</div>
+						))}
+					</div>
+				</Panel>
+			)}
 			<Panel
 				style={{ marginTop: 16 }}
 				title="Open Orders"
@@ -91,9 +118,17 @@ export function Orders() {
 									<td>{money(orderTotal(o))}</td>
 									<td>
 										{showKitchen ? (
-											<span className="badge" style={o.kitchenSentAt ? {} : { background: "#fff2d7", color: "#9a6411" }}>
-												{o.kitchenSentAt ? "Sent " + new Date(o.kitchenSentAt).toLocaleTimeString() : "Not sent"}
-											</span>
+											<>
+												<span className="badge" style={o.kitchenSentAt ? {} : { background: "#fff2d7", color: "#9a6411" }}>
+													{o.kitchenSentAt ? "Sent " + new Date(o.kitchenSentAt).toLocaleTimeString() : "Not sent"}
+												</span>
+												{kdsOn &&
+													orderProgress(data.kitchenTickets, o.id).map((p) => (
+														<div key={p.id} className="muted">
+															{p.station}: {p.ready}/{p.total} ready
+														</div>
+													))}
+											</>
 										) : (
 											<span className="badge">Saved</span>
 										)}

@@ -3,6 +3,7 @@
  * up / down), StatusBadge, EmptyState and AuditTrailDrawer.
  */
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useData } from "../../../store/DataProvider";
 
 /** Right-hand panel. Escape or the backdrop closes it; focus moves to it on open and returns afterwards. */
@@ -23,7 +24,8 @@ export function DetailDrawer({ open, title, subtitle, onClose, children, footer,
 		};
 	}, [open]);
 	if (!open) return null;
-	return (
+	// rendered on document.body: inside the scrolling Settings page (full screen) it was clipped and its buttons sat under the Publish bar
+	return createPortal(
 		<div className="sk-drawer-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
 			<aside className={"sk-drawer" + (wide ? " sk-drawer-wide" : "")} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={ref}>
 				<header>
@@ -38,7 +40,8 @@ export function DetailDrawer({ open, title, subtitle, onClose, children, footer,
 				<div className="sk-drawer-body">{children}</div>
 				{footer && <footer>{footer}</footer>}
 			</aside>
-		</div>
+		</div>,
+		document.body,
 	);
 }
 

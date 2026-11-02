@@ -87,7 +87,7 @@ function createLink(id) {
 				return;
 			}
 			if (msg.type === "ack") writeJson(OUT_KEY, outbox().filter((o) => o.ticket.id !== msg.id));
-			else if (msg.type === "status") running?.onStatus?.(msg.id, msg.status);
+			else if (msg.type === "status") running?.onStatus?.(msg.id, msg.status, msg.readyLines);
 		};
 		channel.onclose = () => {
 			if (dc === channel) {
@@ -208,7 +208,7 @@ export const kdsLink = {
 		notify();
 		if (running) links.forEach((l) => l.tick());
 	},
-	/** Starts reconnecting to the paired screens in the background. `onStatus(ticketId, status)` receives the kitchen's progress. */
+	/** Starts reconnecting to the paired screens in the background. `onStatus(ticketId, status, readyLines)` receives the kitchen's progress. */
 	start(handlers) {
 		running = handlers;
 		clearInterval(timer);

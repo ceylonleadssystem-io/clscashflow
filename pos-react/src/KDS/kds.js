@@ -32,6 +32,15 @@ export const recentDone = (tickets, limit = 10) =>
 		.sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)))
 		.slice(0, limit);
 
+/** The lines of a ticket that are food (not discount or service charge lines), with their index in `t.lines`. */
+export const prepLines = (t) => (t.lines || []).map((line, index) => ({ line, index })).filter(({ line }) => !line.isDiscount && !line.isServiceCharge);
+
+/** Indexes of the lines the kitchen marked ready. A ticket that is ready or done without a list (older tickets) has every line ready. */
+export const readyIndexes = (t) => (Array.isArray(t.readyLines) ? t.readyLines : kdsStatus(t) === "ready" || t.status === "done" ? prepLines(t).map((x) => x.index) : []);
+
+/** Indexes of the ready lines a waiter has not collected yet. */
+export const toCollect = (t) => readyIndexes(t).filter((i) => !(t.servedLines || []).includes(i));
+
 export const ageMinutes = (t, now = Date.now()) => Math.max(0, Math.floor((now - new Date(t.createdAt).getTime()) / 60000) || 0);
 
 /** ok under `warn` minutes, warn until `late`, then late. */

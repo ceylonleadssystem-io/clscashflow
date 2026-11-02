@@ -20,3 +20,8 @@
 .kds-conn{font-weight:700;font-size:14px;align-self:center}
 .kds-conn.on{color:#168653}.kds-conn.off{color:#c0392b}
 .kds-actions{flex-wrap:wrap}
+.kds-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.kds-item-text{min-width:0}
+.kds-item.ready .kds-item-text{opacity:.55;text-decoration:line-through}
+.kds-item-ready{flex:0 0 auto;min-height:44px;padding:6px 12px}
+.kds-item.ready .kds-item-ready{background:#12794b;border-color:#12794b;color:#fff}
