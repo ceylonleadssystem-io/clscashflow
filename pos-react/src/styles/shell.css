@@ -810,6 +810,10 @@
 				min-height: 360px;
 				overflow: hidden;
 			}
+			/* the tab bar is hidden (sidebar layout): without this the Save button took the 1fr row and filled the page (BUG 0017) */
+			#view-settings.active > .settings-tabbed.no-tabs {
+				grid-template-rows: minmax(0, 1fr) auto;
+			}
 			body.full #view-settings.active > .settings-tabbed {
 				height: 100%;
 				min-height: 0;
