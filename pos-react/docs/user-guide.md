@@ -50,6 +50,9 @@ still saved.
 **Save as open order** keeps a bill (table/channel) for later; **Send to kitchen** prints a kitchen ticket.
 Open it from **Order Queue**, add items and pay. Voiding an open order asks for a reason.
 
+## Working offline
+The POS keeps working without a connection: sales, open orders, stock and settings are saved on the device and sync when it is back online (the sync indicator shows "Offline · saved on this device"). If the POS is closed and reopened offline it opens with the account that last signed in online on this device, for up to 14 days since then; after that, or after signing out, one online sign-in is needed. Background admin work (billing widgets, onboarding e-mail, support check-ins, account status checks) is skipped while offline and resumes when the connection returns. Things that need the internet by nature, such as e-mailing a receipt, uploading photos to cloud storage or the Ceylo assistant, wait until you are online; photos stay on the device meanwhile.
+
 ## Sales, refunds and voids
 **Sales** lists completed sales. Choose **Refund** (full, or partial by item and quantity) or **Void**. A reason
 is mandatory. Stock is restored, and cash refunds need you to be clocked in. A void by an owner/admin removes the
