@@ -209,6 +209,14 @@ export async function testStation(ctx, station) {
 	else ctx.ui.notice(station.name + " has no printer. Choose one to print its tickets.");
 }
 
+/** The waiter collected these ready items of a ticket: they leave the "ready to serve" list. */
+export async function markTicketServed(ctx, ticketId, indexes) {
+	const t = (ctx.data().kitchenTickets || []).find((x) => x.id === ticketId);
+	if (!t) return;
+	const servedLines = [...new Set([...(t.servedLines || []), ...indexes])];
+	await ctx.store.write((tx) => tx.put(T.kitchenTickets, { ...t, servedLines, updatedAt: new Date().toISOString() }));
+}
+
 const kdsNotice = () =>
 	kdsLink.state().connected
 		? "Ticket sent to the Kitchen Display."

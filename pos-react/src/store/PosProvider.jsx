@@ -19,6 +19,8 @@ import { ensureProductInventory } from "../domain/inventory";
 import { makeCtx, markDeleted } from "../services/pos/common";
 import { bindServices } from "../services/pos";
 import { kdsLink } from "../KDS/link";
+import { readyIndexes } from "../KDS/kds";
+import { readyAlert, readyBeep } from "../domain/kitchenReady";
 import { kdsSettingsOf } from "../domain/kdsSettings";
 import { kitchenStations } from "../domain/kitchenStations";
 import { userLocationIds, activeLocations } from "../services/pos/locations";
@@ -177,13 +179,21 @@ export function PosProvider({ children }) {
 		if (!kdsOn) return undefined;
 		kdsLink.start({
 			getHello: () => ({ business: dataRef.current.settings?.business || "", kds: kdsSettingsOf(dataRef.current.settings) }),
-			onStatus: (id, status) => {
+			onStatus: (id, status, readyLines) => {
 				const t = (dataRef.current.kitchenTickets || []).find((x) => x.id === id);
-				if (t && t.status !== status) store.write((tx) => tx.put(T.kitchenTickets, { ...t, status })).catch(() => {});
+				if (!t) return;
+				const ready = Array.isArray(readyLines) ? readyLines : readyIndexes({ ...t, status });
+				const alert = readyAlert(t, ready);
+				if (t.status === status && JSON.stringify(readyIndexes(t)) === JSON.stringify(ready)) return;
+				store.write((tx) => tx.put(T.kitchenTickets, { ...t, status, readyLines: ready, updatedAt: new Date().toISOString() })).catch(() => {});
+				if (alert) {
+					ui.notice(alert); // tells the waiter right away; the Order Queue lists what is waiting
+					readyBeep();
+				}
 			},
 		});
 		return () => kdsLink.stop();
-	}, [kdsOn, store, dataRef]);
+	}, [kdsOn, store, dataRef, ui]);
 	// Settings > System Options > Clock In / Out: check once a minute whether anyone is due to be clocked out automatically
 	useEffect(() => {
 		if (!currentUser || support || assist) return undefined;

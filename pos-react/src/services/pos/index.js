@@ -83,6 +83,7 @@ export function bindServices(ctx) {
 			printTestKot: printing.printTestKot,
 			testStation: printing.testStation,
 			sendToKitchen: printing.sendToKitchen,
+			markTicketServed: printing.markTicketServed,
 		}),
 		settings: bind(ctx, {
 			saveSettings: settings.saveSettings,

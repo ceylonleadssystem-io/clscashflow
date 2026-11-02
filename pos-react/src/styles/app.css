@@ -978,3 +978,10 @@ html body #view-checkout .product-copy strong{display:-webkit-box;-webkit-box-or
 html body #view-checkout .product-copy small.muted{display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html body #view-checkout .product-copy .price{display:block;flex:0 0 auto;max-width:100%;line-height:1.2;white-space:nowrap}
 html body #view-checkout .product-copy .stock-available{flex:0 0 auto}
+
+/* Order Queue: items the kitchen finished, waiting for a waiter (BUG/feature #111) */
+.ready-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.ready-card{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 14px;border:2px solid #12794b;border-radius:12px;background:var(--ui-surface,#fff)}
+.ready-card ul{margin:6px 0 0;padding-left:18px}
+.ready-card .badge{margin-left:8px}
+.ready-card .btn{min-height:44px;flex:0 0 auto}

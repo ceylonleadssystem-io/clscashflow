@@ -108,6 +108,9 @@ tabs are under **More settings**. Changes are kept as a draft (a bar shows how m
 their default hourly rate. The rate on a person's first job prices their hours in **Reports > Payroll** and **Sales vs Labor** (labor cost and labor %).
 Owners and admins always have every permission, and you can only give a permission you hold yourself.
 
+## Items ready to serve (restaurant with Kitchen Displays)
+On a Kitchen Display each item has a **Ready** button; the ticket moves to Ready when its last item is marked. The POS then shows a notice with a sound ("Table 5 · Kitchen ready to collect: 2 × Burger"), and the Order Queue lists the ready items under **Ready to serve**. Tap **Collected** once they are picked up. An order with food from several stations (kitchen, bar) is tracked per station: the Kitchen column of the Order Queue shows "Kitchen: 1/2 ready", "Bar: 1/1 ready". Stations that only print tickets do not report back.
+
 ## Printers by device (Settings > Device Manager)
 Each register or order pad appears in **Printers** the first time someone signs in on it. Pick a device on the left to see its printers: a **Receipt printer** and any
 kitchen printers you add, each serving a station. Open a printer to choose the connection (USB or the system print dialog), the station, the number of receipt copies,

@@ -4,7 +4,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { KDS_DEFAULTS, cleanKds } from "../domain/kdsSettings";
-import { KDS_COLUMNS, ageLabel, ageMinutes, kdsStatus, kdsTickets, nextStatus, prevStatus, recentDone, urgency } from "./kds";
+import { KDS_COLUMNS, ageLabel, ageMinutes, kdsStatus, kdsTickets, nextStatus, prevStatus, prepLines, readyIndexes, recentDone, urgency } from "./kds";
 import { readJson, writeJson } from "./net";
 import { hostKds } from "./peer";
 import "./kds.css";
@@ -70,9 +70,17 @@ export function KdsApp() {
 
 	const open = useMemo(() => kdsTickets(tickets, ""), [tickets]);
 	const done = useMemo(() => recentDone(tickets, cfg.recallCount), [tickets, cfg.recallCount]);
-	const move = (t, status) => {
-		setTickets((list) => list.map((x) => (x.id === t.id ? { ...x, status, updatedAt: new Date().toISOString() } : x)));
-		host.current?.send({ type: "status", id: t.id, status });
+	// readyLines: the items of the ticket that are finished; the POS tells the waiter when they change
+	const update = (t, status, readyLines) => {
+		setTickets((list) => list.map((x) => (x.id === t.id ? { ...x, status, readyLines, updatedAt: new Date().toISOString() } : x)));
+		host.current?.send({ type: "status", id: t.id, status, readyLines });
+	};
+	const move = (t, status) => update(t, status, status === "ready" ? prepLines(t).map((x) => x.index) : status === "new" ? [] : readyIndexes(t));
+	// marking the last item ready makes the ticket ready; un-marking one on a ready ticket puts it back to preparing
+	const toggleLine = (t, index) => {
+		const cur = new Set(readyIndexes(t));
+		if (!cur.delete(index)) cur.add(index);
+		update(t, prepLines(t).every((x) => cur.has(x.index)) ? "ready" : "preparing", [...cur]);
 	};
 	const unpair = () => {
 		if (window.confirm("Disconnect this screen from its POS? You will need a new pairing code.")) host.current?.unpair();
@@ -94,6 +102,7 @@ export function KdsApp() {
 		const next = nextStatus(status);
 		const back = prevStatus(status);
 		const col = KDS_COLUMNS.find((c) => c.status === status);
+		const readySet = new Set(readyIndexes(t));
 		return (
 			<article key={t.id} className={"kds-card " + (status === "ready" ? "" : urgency(mins, cfg.warnMinutes, cfg.lateMinutes))} aria-label={"Ticket " + t.orderNumber}>
 				<div className="kds-head">
@@ -102,10 +111,9 @@ export function KdsApp() {
 				</div>
 				{t.station && t.station !== "Kitchen Display" && <div className="kds-station">{t.station}</div>}
 				{t.reference && <div className="kds-ref">{t.reference}</div>}
-				{(t.lines || [])
-					.filter((l) => !l.isDiscount && !l.isServiceCharge)
-					.map((l, i) => (
-						<div className="kds-item" key={i}>
+				{prepLines(t).map(({ line: l, index }) => (
+					<div className={"kds-item" + (readySet.has(index) ? " ready" : "")} key={index}>
+						<div className="kds-item-text">
 							{l.qty} × {l.name}
 							{(l.modifiers || []).map((m, j) => (
 								<span key={j}>
@@ -113,7 +121,11 @@ export function KdsApp() {
 								</span>
 							))}
 						</div>
-					))}
+						<button type="button" className="btn out kds-item-ready" aria-pressed={readySet.has(index)} aria-label={(readySet.has(index) ? "Mark not ready: " : "Mark ready: ") + l.name} onClick={() => toggleLine(t, index)}>
+							{readySet.has(index) ? "✓ Ready" : "Ready"}
+						</button>
+					</div>
+				))}
 				<div className="kds-actions">
 					{back && (
 						<button className="btn out" onClick={() => move(t, back)} aria-label="Move back one step">
