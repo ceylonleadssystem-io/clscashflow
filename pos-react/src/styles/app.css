@@ -158,6 +158,8 @@
 .form-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
 .form-grid .field.full{grid-column:1/-1}
 .modal-box{max-width:min(100%,900px);max-height:calc(100dvh - 24px);overflow:auto}
+/* dialogs sit above the sticky header (45) and the Settings Publish bar (30); only tablet widths had this, desktop was 20 and the buttons were covered (BUG 0021) */
+html body .modal{z-index:1000}
 .modal-foot{flex-wrap:wrap}
 .tools,.table-actions,.shift-actions{flex-wrap:wrap}
 .payment-bar-row{grid-template-columns:minmax(70px,120px) 1fr auto}
