@@ -10,8 +10,14 @@ function siteOrigin(value) {
   try { return new URL(String(value || '')).origin; } catch (_) { return ''; }
 }
 
+// The administrator portal is also served from admin.<site host> (netlify.toml); its requests come from that origin.
+function adminOrigin(site) {
+  try { const u = new URL(site); return u.protocol + '//admin.' + u.host; } catch (_) { return ''; }
+}
+
 function allowedOrigins() {
   const list = new Set([
+    adminOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     siteOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     siteOrigin(process.env.URL),
     siteOrigin(process.env.DEPLOY_PRIME_URL),

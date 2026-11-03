@@ -3,6 +3,14 @@
   publish = "."
   functions = "netlify/functions"
 
+# Administrator portal on its own address: admin.ceylonrylabs.io shows the Ceylonry administration portal (/posv2/admin).
+# Needs the admin.ceylonrylabs.io domain added to this Netlify site and a DNS CNAME for it. Must stay first (first match wins).
+[[redirects]]
+  from = "https://admin.ceylonrylabs.io/"
+  to = "/pos-react/dist/admin.html"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/mrs-gamage-story"
   to = "/mrs-gamage-story.html"

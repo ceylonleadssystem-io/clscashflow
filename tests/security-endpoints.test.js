@@ -53,3 +53,13 @@ test('ceylonry admin signs in with a server-issued Appwrite session token', () =
   assert.match(appwriteCompatSource, /account\.createSession\(userId,secret\)/);
   assert.match(adminSigninSource, /api\.createToken\(user\.\$id, 64, 900\)/);
 });
+
+test('the administrator portal address is an allowed origin and the root of that host shows the portal', () => {
+  const { allowedOrigins, originAllowed } = require('../netlify/lib/security');
+  assert.ok(allowedOrigins().has('https://admin.ceylonrylabs.io'));
+  assert.equal(originAllowed({ headers: { origin: 'https://admin.ceylonrylabs.io' } }), true);
+  assert.equal(originAllowed({ headers: { origin: 'https://admin.evil.example' } }), false);
+  const toml = fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8');
+  assert.match(toml, /from = "https:\/\/admin\.ceylonrylabs\.io\/"\s+to = "\/pos-react\/dist\/admin\.html"\s+status = 200/);
+  assert.ok(toml.indexOf('admin.ceylonrylabs.io') < toml.indexOf('/mrs-gamage-story'));
+});
