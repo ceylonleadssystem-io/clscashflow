@@ -3,7 +3,7 @@
  * Rendered inside SystemOptionsProvider so the draft survives moving between System Options pages.
  */
 import { SYSTEM_PAGES } from "../../domain/systemOptions";
-import { SaveBar, SettingsShell } from "../../components/settings/kit/SettingsShell";
+import { SaveBar, SettingsShell, TopRow } from "../../components/settings/kit/SettingsShell";
 import { SystemOptionsProvider, useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
 import { Overview, PAGE_COMPONENTS as SYSTEM_COMPONENTS } from "./SystemOptionsPages";
 import { DEVICE_COMPONENTS } from "./DevicePages";
@@ -102,7 +102,8 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 			current={current}
 			onSelect={select}
 			guard={() => !draft.dirty}
-			bottom={page in MENU_ADMIN_COMPONENTS ? <PublishBar /> : page !== "legacy" && <SaveBar count={draft.changes.length} onDiscard={draft.discard} onSave={draft.save} saving={draft.saving} />}
+			top={page in MENU_ADMIN_COMPONENTS ? <PublishBar /> : null}
+			bottom={page in MENU_ADMIN_COMPONENTS ? null : page !== "legacy" && <SaveBar count={draft.changes.length} onDiscard={draft.discard} onSave={draft.save} saving={draft.saving} />}
 		>
 			{page === "legacy" ? (
 				legacyView
@@ -132,10 +133,15 @@ function PortalPageBody({ page, onOpen }) {
 	const menu = page in MENU_ADMIN_COMPONENTS;
 	return (
 		<section className="view active sk-main" id="view-portal-page" data-system-options={page}>
+			{menu && (
+				<TopRow>
+					<PublishBar />
+				</TopRow>
+			)}
 			<div className="sk-main-body" data-page={page}>
 				{page === "overview" ? <Overview onOpen={onOpen} /> : Page ? <Page /> : null}
 			</div>
-			{menu ? <PublishBar /> : <SaveBar count={draft.changes.length} onDiscard={draft.discard} onSave={draft.save} saving={draft.saving} />}
+			{!menu && <SaveBar count={draft.changes.length} onDiscard={draft.discard} onSave={draft.save} saving={draft.saving} />}
 		</section>
 	);
 }

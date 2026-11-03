@@ -127,7 +127,7 @@ System Options: Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Par
 (Items and Modifiers also hold the full item and group editors). Device Manager: **Printers** (when to print, each device's printers, USB devices) and **Stations**; receipt socials are under Receipts and the order types under Order Entry. The business type is chosen once during setup; Ceylonry support changes it afterwards.
 
 ## Menu Admin (Settings)
-Menu Admin pages save **drafts**: nothing changes on the register until you press **Publish** in the bar at the bottom ("N unpublished changes", with **Review** to see each change and **Discard all**).
+Menu Admin pages save **drafts**: nothing changes on the register until you press **Publish** in the bar at the top right of the page ("N unpublished changes", with **Review** to see each change and **Discard all**).
 - **Sales Categories**: reporting groups (Food, Beverage and so on) that you fill with items. Once published, Reports, Menu, Sales Category uses them; items with none show as Unassigned.
 - **Availability**: menus such as Breakfast and Dinner, each with days, hours and the categories to show. The register shows the categories of every menu running now; when none runs it shows the
   Default menu from System Options, Order Entry (or everything). Overlapping menus both show.

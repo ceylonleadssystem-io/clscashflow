@@ -3,6 +3,7 @@
  * POS at once (see domain/menuAdmin.js).
  */
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { AssignmentTree } from "../../components/settings/kit/AssignmentTree";
 import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
 import { ConditionalGroup, NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextAreaRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
@@ -1066,15 +1067,21 @@ export function ModifiersAdmin() {
 /** A page with two views: the Menu Admin drafts, and the full live editor that Products & Services and Modifiers used to be. */
 function TwoViews({ first, second, a, b, note }) {
 	const [tab, setTab] = useState("a");
+	// the tabs go in the row above the page, opposite Review / Publish; without that row (no Publish bar) they stay in the page
+	const [slot, setSlot] = useState(null);
+	useEffect(() => setSlot(document.getElementById("sk-toprow-left")), []);
+	const tabs = (
+		<div className="sk-tabs" role="tablist">
+			{[["a", first], ["b", second]].map(([k, label]) => (
+				<button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "active" : ""} onClick={() => setTab(k)}>
+					{label}
+				</button>
+			))}
+		</div>
+	);
 	return (
 		<>
-			<div className="sk-tabs" role="tablist">
-				{[["a", first], ["b", second]].map(([k, label]) => (
-					<button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? "active" : ""} onClick={() => setTab(k)}>
-						{label}
-					</button>
-				))}
-			</div>
+			{slot ? createPortal(tabs, slot) : tabs}
 			{tab === "b" && <p className="muted">{note}</p>}
 			{tab === "a" ? a : b}
 		</>

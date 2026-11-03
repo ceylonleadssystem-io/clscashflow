@@ -858,6 +858,14 @@ html body.nav-rail:not(.mobile-checkout) .side .side-foot{margin-top:auto}
 .sk-device-list button:focus-visible{outline:2px solid var(--ui-accent,#ff4d0a);outline-offset:2px}
 .sk-device-main{min-width:0;display:grid;gap:16px}
 @media (max-width:760px){.sk-devices{grid-template-columns:1fr}.sk-device-list{flex-direction:row;overflow-x:auto;padding-bottom:4px}.sk-device-list button{flex:0 0 auto;min-width:150px}}
+/* Review / Publish sit at the top right of the Menu Admin pages; any page tabs sit on the left of the same row (BUG 0019: the bottom bar covered content) */
+.sk-toprow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:0 0 6px;background:var(--ui-canvas)}
+.sk-toprow-left{flex:1 1 auto;min-width:0}
+.sk-toprow-left:empty{display:none}
+.sk-toprow>.sk-publishbar{margin-left:auto}
+body.full .sk-toprow{position:sticky;top:0;z-index:30}
+.sk-publishbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:12px}
+.sk-publishbar .sk-list-actions{display:inline-flex;gap:8px}
 .sk-publishbar span:first-child{font-weight:600}
 .sk-publishbar:not(.dirty) span:first-child{font-weight:400;color:var(--ui-muted,#68717a)}
 .sk-change{padding:10px 0;border-top:1px solid var(--ui-line,#e4e8eb)}.sk-change:first-child{border-top:0}.sk-change p{margin:4px 0 0}
