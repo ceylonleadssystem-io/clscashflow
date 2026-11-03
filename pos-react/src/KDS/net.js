@@ -17,7 +17,7 @@ export const newCode = () => String(crypto.getRandomValues(new Uint32Array(1))[0
 export async function pairApi(action, body) {
 	const res = await fetch(URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, ...body }) });
 	const json = await res.json().catch(() => ({}));
-	if (!res.ok || json.ok === false) throw new Error(json.error || "Could not reach the pairing service.");
+	if (!res.ok || json.ok === false) throw Object.assign(new Error(json.error || "Could not reach the pairing service."), { status: res.status });
 	return json;
 }
 

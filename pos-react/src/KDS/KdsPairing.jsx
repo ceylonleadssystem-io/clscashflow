@@ -68,7 +68,8 @@ export function KdsScreens({ stations, onManage }) {
 			<strong>Kitchen Displays (KDS)</strong>
 			<p className="muted">
 				Open <b>/KDS</b> on each kitchen screen and connect it to the same Wi-Fi as this device, then pair it with the code it shows. Each
-				Kitchen Display station gets its own screen and only its own items.
+				Kitchen Display station gets its own screen and only its own items. Pair each screen once from any register: every register of
+				the business then connects to it.
 			</p>
 			{screens.map((s) => (
 				<div className="kds-screen" key={s.id}>
