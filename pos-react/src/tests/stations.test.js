@@ -74,3 +74,22 @@ describe("sending an order to several stations", () => {
 		expect([kdsLink.station("k1").pending(), kdsLink.station("k2").pending()]).toEqual([1, 1]);
 	});
 });
+
+describe("Kitchen Display pairings shared by every register", () => {
+	beforeEach(() => ["pos.kds.pairs", "pos.kds.pairId"].forEach((k) => localStorage.removeItem(k)));
+	it("uses the business pairings, moves this device's old pairings into them, and follows an unpair made elsewhere", () => {
+		localStorage.setItem("pos.kds.pairs", JSON.stringify({ b: "pair-b" }));
+		const saved = [];
+		kdsLink.share({ a: "pair-a" }, (next) => saved.push(next));
+		kdsLink.sync(["a", "b"]);
+		expect(saved).toEqual([{ a: "pair-a", b: "pair-b" }]);
+		expect(localStorage.getItem("pos.kds.pairs")).toBeNull();
+		expect([kdsLink.station("a").state().paired, kdsLink.station("b").state().paired]).toEqual([true, true]);
+		kdsLink.share({ a: "pair-a" }, (next) => saved.push(next)); // b unpaired on another register
+		expect(kdsLink.station("b").state().paired).toBe(false);
+		kdsLink.station("a").unpair();
+		expect(saved.at(-1)).toEqual({});
+		kdsLink.share(null, null);
+		kdsLink.sync([]);
+	});
+});

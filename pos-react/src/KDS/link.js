@@ -3,7 +3,9 @@
  * the KDS page is entered once on the POS, then the POS keeps a direct WebRTC data channel to that screen over the local Wi-Fi and
  * sends that station's prep tickets through it. Tickets wait in an outbox per station (this device's storage) until the screen
  * acknowledges them, so a dropped Wi-Fi never loses an order. When a screen marks a ticket preparing / ready / done the status comes
- * back here and is saved on the ticket.
+ * back here and is saved on the ticket. *
+ * The pairings live in the business settings (kdsPairs), so every register of the business connects to every paired screen, not
+ * just the one that entered the code.
  */
 import { LAN_RTC, pairApi, readJson, waitIce, writeJson } from "./net";
 
@@ -23,12 +25,16 @@ const notify = () => {
 	listeners.forEach((fn) => fn(s));
 };
 
-const pairs = () => readJson(PAIRS_KEY, {});
+// shared = the business-wide pairings from settings and the function that saves them; without it (tests) this device's storage is used
+const shared = { pairs: {}, save: null };
+const pairs = () => (shared.save ? shared.pairs : readJson(PAIRS_KEY, {}));
 const setPair = (id, pairId) => {
 	const next = { ...pairs() };
 	if (pairId) next[id] = pairId;
 	else delete next[id];
-	writeJson(PAIRS_KEY, next);
+	if (!shared.save) return writeJson(PAIRS_KEY, next);
+	shared.pairs = next;
+	Promise.resolve(shared.save(next)).catch(() => {});
 };
 
 // the pairing made before stations existed belongs to the first KDS station that starts
@@ -138,7 +144,7 @@ function createLink(id) {
 			try {
 				await answer(pairId);
 			} catch (e) {
-				set({ note: e.message });
+				if (e.status !== 409) set({ note: e.message }); // 409: another register took this offer; the screen offers again right away
 			} finally {
 				busy = false;
 			}
@@ -175,6 +181,12 @@ function createLink(id) {
 			close();
 			if (state.connected) set({ connected: false });
 		},
+		/** Follows a pairing change made on another register (paired there, or unpaired: then this link closes). */
+		refresh() {
+			const paired = !!pairs()[id];
+			if (!paired && state.connected) close();
+			if (paired !== state.paired) set({ paired, ...(paired ? {} : { connected: false }) });
+		},
 	};
 }
 
@@ -200,6 +212,24 @@ export const kdsLink = {
 	},
 	/** The link of one KDS station (created on first use). */
 	station: linkFor,
+	/**
+	 * Uses the business-wide pairings `map` (settings.kdsPairs) saved by `save(next)`. Pairings this device made before they were
+	 * shared are added to them once.
+	 */
+	share(map, save) {
+		shared.pairs = { ...(map || {}) };
+		shared.save = save;
+		const mine = readJson(PAIRS_KEY, null);
+		if (mine) {
+			localStorage.removeItem(PAIRS_KEY);
+			const merged = { ...mine, ...shared.pairs };
+			if (JSON.stringify(merged) !== JSON.stringify(shared.pairs)) {
+				shared.pairs = merged;
+				Promise.resolve(save(merged)).catch(() => {});
+			}
+		}
+		links.forEach((l) => l.refresh());
+	},
 	/** Keeps one link per KDS station; links of removed stations are closed (their pairing is kept in case it comes back). */
 	sync(ids) {
 		const keep = new Set(ids.map(String));

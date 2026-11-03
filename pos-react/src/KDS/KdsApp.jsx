@@ -46,7 +46,7 @@ export function KdsApp() {
 	useEffect(() => {
 		const h = hostKds({
 			onState: setLink,
-			onMessage: (msg) => {
+			onMessage: (msg, reply) => {
 				if (msg.type === "hello") {
 					setBusiness(msg.business || "");
 					if (msg.kds) {
@@ -56,7 +56,7 @@ export function KdsApp() {
 					}
 				}
 				if (msg.type !== "ticket" || !msg.ticket?.id) return;
-				h.send({ type: "ack", id: msg.ticket.id });
+				reply({ type: "ack", id: msg.ticket.id }); // only the register that sent it clears its outbox
 				setTickets((list) => {
 					if (list.some((t) => t.id === msg.ticket.id)) return list;
 					if (soundRef.current) beep();
@@ -83,7 +83,7 @@ export function KdsApp() {
 		update(t, prepLines(t).every((x) => cur.has(x.index)) ? "ready" : "preparing", [...cur]);
 	};
 	const unpair = () => {
-		if (window.confirm("Disconnect this screen from its POS? You will need a new pairing code.")) host.current?.unpair();
+		if (window.confirm("Disconnect this screen from every register? You will need a new pairing code.")) host.current?.unpair();
 	};
 
 	if (link.phase === "pairing")
@@ -150,7 +150,7 @@ export function KdsApp() {
 				</strong>
 				<div className="kds-actions">
 					<span className={"kds-conn " + (link.phase === "connected" ? "on" : "off")} role="status">
-						{link.phase === "connected" ? "● Connected to POS" : "○ POS not connected, reconnecting…"}
+						{link.phase === "connected" ? `● Connected to ${link.registers > 1 ? link.registers + " registers" : "POS"}` : "○ POS not connected, reconnecting…"}
 					</span>
 					<button className="btn out" onClick={() => setSound((s) => !s)} aria-pressed={sound}>
 						{sound ? "🔔 Sound on" : "🔕 Sound off"}

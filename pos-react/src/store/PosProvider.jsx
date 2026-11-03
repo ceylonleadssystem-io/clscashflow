@@ -211,9 +211,13 @@ export function PosProvider({ children }) {
 	}, [currentUser?.id, data.ready, support, assist, svc]); // eslint-disable-line react-hooks/exhaustive-deps
 	// one link per Kitchen Display station, each paired with its own kitchen screen
 	const kdsIds = kdsOn ? kitchenStations(settings, true).filter((st) => st.type === "kds").map((st) => st.id).join("|") : "";
+	// the pairings are business settings, so every register connects to every paired screen
+	const kdsPairs = JSON.stringify(settings.kdsPairs || {});
 	useEffect(() => {
-		if (kdsOn) kdsLink.sync(kdsIds ? kdsIds.split("|") : []);
-	}, [kdsOn, kdsIds]);
+		if (!kdsOn) return;
+		kdsLink.share(JSON.parse(kdsPairs), (next) => store.write((tx) => tx.setSetting("kdsPairs", next)));
+		kdsLink.sync(kdsIds ? kdsIds.split("|") : []);
+	}, [kdsOn, kdsIds, kdsPairs, store]);
 
 	// --------------------------------------------------------- navigation ---
 	const go = useCallback(
