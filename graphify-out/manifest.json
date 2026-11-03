@@ -2856,9 +2856,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/layout/PortalShell.jsx": {
-    "mtime": 1793353171.3878436,
-    "seen": 1793353665.206135,
-    "ast_hash": "66bf6f63fdfd1bc78f9bc5a9fc4a9b66",
+    "mtime": 1793353711.1149242,
+    "seen": 1793635510.444004,
+    "ast_hash": "3dd0611518745b96452c21f8f95dedab",
     "semantic_hash": ""
   },
   "pos-react/src/components/layout/ReportNav.jsx": {
@@ -2868,9 +2868,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/config/portal.js": {
-    "mtime": 1793353583.6244717,
-    "seen": 1793353665.2061539,
-    "ast_hash": "7fff1a353794ccbcffb8f236aa02c2f0",
+    "mtime": 1793353711.1145275,
+    "seen": 1793635510.444025,
+    "ast_hash": "838e502338bcf8ec69fb78d825c82515",
     "semantic_hash": ""
   },
   "pos-react/src/config/shop.js": {
@@ -2886,9 +2886,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/portal.test.js": {
-    "mtime": 1793353610.0669706,
-    "seen": 1793353665.2062862,
-    "ast_hash": "879a20ef4359445e9be9b53787a35fcc",
+    "mtime": 1793353711.1162012,
+    "seen": 1793635510.444149,
+    "ast_hash": "c4f011856eb394784ee9dd654ad1b2bd",
     "semantic_hash": ""
   },
   "pos-react/src/views/Shop.jsx": {
@@ -3006,9 +3006,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SettingsHome.jsx": {
-    "mtime": 1793353583.6241696,
-    "seen": 1793353665.2063339,
-    "ast_hash": "b6728c1e563f682f4dae16ac718d7393",
+    "mtime": 1793353695.9693305,
+    "seen": 1793635510.4441888,
+    "ast_hash": "67ceaed583cdda6e4b9d1794f9c6e010",
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/SystemOptionsPages.jsx": {
@@ -3042,9 +3042,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/settings/kit/entities.jsx": {
-    "mtime": 1793331444.8363185,
-    "seen": 1793331479.219607,
-    "ast_hash": "984861d9d03ec2ef110fb7ed76df0b7c",
+    "mtime": 1793635488.9772384,
+    "seen": 1793635510.4440162,
+    "ast_hash": "0f2003afcc8f87831c095c5ca0198e6a",
     "semantic_hash": ""
   },
   "pos-react/src/domain/payroll.js": {
@@ -3321,6 +3321,12 @@
     "mtime": 1793353635.5374646,
     "seen": 1793353665.206303,
     "ast_hash": "67bdda94ede483b3c64ddc7d46a6bd1e",
+    "semantic_hash": ""
+  },
+  "pos-react/src/tests/jsxImports.test.js": {
+    "mtime": 1793353711.0888333,
+    "seen": 1793635510.444144,
+    "ast_hash": "d4dcdabb8ae0c0ee7a27cb0cd410a652",
     "semantic_hash": ""
   }
 }
