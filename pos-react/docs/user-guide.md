@@ -50,6 +50,9 @@ still saved.
 **Save as open order** keeps a bill (table/channel) for later; **Send to kitchen** prints a kitchen ticket.
 Open it from **Order Queue**, add items and pay. Voiding an open order asks for a reason.
 
+## Working offline
+The POS keeps working without a connection: sales, open orders, stock and settings are saved on the device and sync when it is back online (the sync indicator shows "Offline · saved on this device"). If the POS is closed and reopened offline it opens with the account that last signed in online on this device, for up to 14 days since then; after that, or after signing out, one online sign-in is needed. Background admin work (billing widgets, onboarding e-mail, support check-ins, account status checks) is skipped while offline and resumes when the connection returns. Things that need the internet by nature, such as e-mailing a receipt, uploading photos to cloud storage or the Ceylo assistant, wait until you are online; photos stay on the device meanwhile.
+
 ## Sales, refunds and voids
 **Sales** lists completed sales. Choose **Refund** (full, or partial by item and quantity) or **Void**. A reason
 is mandatory. Stock is restored, and cash refunds need you to be clocked in. A void by an owner/admin removes the
@@ -124,7 +127,7 @@ System Options: Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Par
 (Items and Modifiers also hold the full item and group editors). Device Manager: **Printers** (when to print, each device's printers, USB devices) and **Stations**; receipt socials are under Receipts and the order types under Order Entry. The business type is chosen once during setup; Ceylonry support changes it afterwards.
 
 ## Menu Admin (Settings)
-Menu Admin pages save **drafts**: nothing changes on the register until you press **Publish** in the bar at the bottom ("N unpublished changes", with **Review** to see each change and **Discard all**).
+Menu Admin pages save **drafts**: nothing changes on the register until you press **Publish** in the bar at the top right of the page ("N unpublished changes", with **Review** to see each change and **Discard all**).
 - **Sales Categories**: reporting groups (Food, Beverage and so on) that you fill with items. Once published, Reports, Menu, Sales Category uses them; items with none show as Unassigned.
 - **Availability**: menus such as Breakfast and Dinner, each with days, hours and the categories to show. The register shows the categories of every menu running now; when none runs it shows the
   Default menu from System Options, Order Entry (or everything). Overlapping menus both show.

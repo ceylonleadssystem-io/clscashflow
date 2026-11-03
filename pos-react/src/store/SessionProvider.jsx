@@ -124,10 +124,11 @@ export function SessionProvider({ children }) {
 					const allowed = accessAllowed(profile);
 					setBilling({ profile, allowed, warning: billingWarning(profile) });
 					cloud.start();
-					loadPlatformScript().then(() => patchReceiptSubmission(fb));
+					if (navigator.onLine) loadPlatformScript().then(() => patchReceiptSubmission(fb)); // billing widgets and receipt e-mail need the connection; offline they are skipped
 					sendOnboardingEmails(user, ctx.profile);
 					if (!allowed) {
 						try {
+							if (!navigator.onLine) throw new Error("offline");
 							await ctx.userRef.set(
 								{
 									posSubscriptionStatus: "payment-required",
@@ -190,7 +191,7 @@ export function SessionProvider({ children }) {
 		if (assist) return undefined;
 		const unsub = auth.onChange((user) => {
 			const approved = sessionStorage.getItem(STORAGE.loginUid) || "";
-			if (user && (auth.kind === "local" || approved === user.uid)) {
+			if (user && (auth.kind === "local" || approved === user.uid || user.offlineResume)) {
 				activate(user);
 				return;
 			}

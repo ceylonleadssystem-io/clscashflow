@@ -22,6 +22,32 @@ const log = createLogger("appwrite");
  */
 let installed = null;
 
+const KEPT_USER = "ceylonry-pos-offline-user";
+const KEPT_DAYS = 14;
+const rememberUser = (u) => {
+	try {
+		localStorage.setItem(KEPT_USER, JSON.stringify({ $id: u.$id, email: u.email || "", name: u.name || "", at: Date.now() }));
+	} catch {
+		/* storage full or blocked: offline start is then unavailable, nothing else changes */
+	}
+};
+const forgetUser = () => {
+	try {
+		localStorage.removeItem(KEPT_USER);
+	} catch {
+		/* nothing stored */
+	}
+};
+/** The account last confirmed online on this device, while it is younger than KEPT_DAYS; otherwise null. */
+export function rememberedUser(now = Date.now()) {
+	try {
+		const u = JSON.parse(localStorage.getItem(KEPT_USER) || "null");
+		return u?.$id && now - u.at < KEPT_DAYS * 86400000 ? u : null;
+	} catch {
+		return null;
+	}
+}
+
 export function getAppwriteCompat() {
 	if (installed) return installed;
 
@@ -55,10 +81,20 @@ export function getAppwriteCompat() {
 				}
 			: null;
 
+	// Offline start: with no connection `account.get()` cannot answer, so the POS used to fall back to the sign-in page, which also needs the
+	// connection. The account that was last confirmed online is kept on this device for a while and used instead (the same trust as the
+	// browser's own session cookie). It is dropped when the server says the session is gone (401) or on sign-out.
 	const loadUser = async () => {
 		try {
-			return userShape(await account.get());
-		} catch {
+			const user = await account.get();
+			rememberUser(user);
+			return userShape(user);
+		} catch (e) {
+			if (e?.code === 401) forgetUser();
+			else if (!navigator.onLine || !e?.code) {
+				const kept = rememberedUser();
+				if (kept) return { ...userShape(kept), offlineResume: true };
+			}
 			return null;
 		}
 	};
@@ -82,6 +118,15 @@ export function getAppwriteCompat() {
 	const init = loadUser().then((u) => {
 		currentUser = u;
 		emit();
+	});
+
+	// back online after an offline start: use the real account (no sign-in change); a session that ended meanwhile signs out with the usual message
+	window.addEventListener("online", async () => {
+		if (!currentUser?.offlineResume) return;
+		const real = await loadUser();
+		if (real?.offlineResume) return;
+		currentUser = real;
+		if (!real) emit();
 	});
 
 	const authApi = {
@@ -120,6 +165,7 @@ export function getAppwriteCompat() {
 			return { user: currentUser };
 		},
 		async signOut() {
+			forgetUser();
 			try {
 				await account.deleteSession("current");
 			} catch (e) {

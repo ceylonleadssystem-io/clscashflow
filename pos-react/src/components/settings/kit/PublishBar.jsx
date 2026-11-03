@@ -1,5 +1,5 @@
 /**
- * Bottom bar of the Menu Admin pages: "N unpublished changes · Review · Publish". Review lists every draft change (what, and before to after).
+ * Bar at the top right of the Menu Admin pages (opposite the page tabs): "N unpublished changes · Review · Publish". Review lists every draft change (what, and before to after).
  * Nothing changes on the POS until Publish.
  */
 import { useState } from "react";
@@ -24,7 +24,7 @@ export function PublishBar() {
 	};
 	return (
 		<>
-			<div className={"sk-savebar sk-publishbar" + (changes.length ? " dirty" : "")} role="region" aria-label="Publish menu">
+			<div className={"sk-publishbar" + (changes.length ? " dirty" : "")} role="region" aria-label="Publish menu">
 				<span aria-live="polite">{changes.length ? `${changes.length} unpublished change${changes.length === 1 ? "" : "s"}` : "Menu is up to date"}</span>
 				<span className="sk-list-actions">
 					<button type="button" className="btn out" disabled={!changes.length} onClick={() => setReview(true)}>

@@ -23,8 +23,18 @@ export function SaveBar({ count, onDiscard, onSave, saving, disabled }) {
 	);
 }
 
+/** The row above the page: the page's own tabs on the left (a page can move its tabs into #sk-toprow-left) and `children` (Review / Publish) on the right. */
+export function TopRow({ children }) {
+	return (
+		<div className="sk-toprow">
+			<div id="sk-toprow-left" className="sk-toprow-left" />
+			{children}
+		</div>
+	);
+}
+
 /** groups: [{ title, items: [{ key, label }] }]; `guard()` returns true when leaving the current page is fine (no unsaved changes). */
-export function SettingsShell({ groups, current, onSelect, guard, children, bottom, back }) {
+export function SettingsShell({ groups, current, onSelect, guard, children, bottom, back, top }) {
 	const ui = useUi();
 	const go = async (key) => {
 		if (key === current) return;
@@ -73,6 +83,7 @@ export function SettingsShell({ groups, current, onSelect, guard, children, bott
 				</select>
 			</div>
 			<div className="sk-main">
+				{top && <TopRow>{top}</TopRow>}
 				<div className="sk-main-body" data-page={current} data-group={all.find((i) => i.key === current)?.group}>
 					{children}
 				</div>
