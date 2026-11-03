@@ -971,8 +971,10 @@ html body .side #nav .report-subnav button,html body.nav-rail .side #nav:is(.por
 
 /* BUG 0023: a long product name (two lines) or a long category and code pushed the price below the card's bottom edge, where it was clipped.
    The text block now gives way instead: the name is limited to two lines, the category and code to one, and the price (and stock line) never shrink. */
-html body #view-checkout .product-copy{min-height:0;overflow:hidden}
-html body #view-checkout .product-copy>span:first-child{display:block;min-height:0;min-width:0;overflow:hidden}
+/* BUG 0023 (again): the text must never collapse; when a card is too short the photo gives way (down to 44px), not the name and price */
+html body #view-checkout .products .product .product-img,html body #view-checkout .products .product .product-placeholder{flex:0 1 auto!important;min-height:44px!important}
+html body #view-checkout .products .product .product-copy{flex:0 0 auto!important;min-height:0;overflow:visible}
+html body #view-checkout .product-copy>span:first-child{display:block;min-width:0}
 html body #view-checkout .product-copy br{display:none}
 html body #view-checkout .product-copy strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;line-height:1.25}
 html body #view-checkout .product-copy small.muted{display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
