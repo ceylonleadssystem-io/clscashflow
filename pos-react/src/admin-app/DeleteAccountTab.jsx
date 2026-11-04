@@ -16,7 +16,8 @@ export function DeleteAccountTab({ account, ui, onDeleted }) {
 	const [typed, setTyped] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [report, setReport] = useState(null);
-	const business = account.business || "";
+	// what to type: the name the server expects (it comes with the check), never a locally guessed one
+	const business = check?.confirm ?? account.business ?? "";
 
 	const runCheck = async () => {
 		setBusy(true);
@@ -34,7 +35,7 @@ export function DeleteAccountTab({ account, ui, onDeleted }) {
 	const remove = async () => {
 		setBusy(true);
 		try {
-			const r = await adminApi({ action: "deleteAccount", userId: account.id, keepPayments, confirmBusiness: typed, confirmedReview: true, confirmedFinal: true });
+			const r = await adminApi({ action: "deleteAccount", userId: account.id, keepPayments, confirmBusiness: typed.trim(), confirmedReview: true, confirmedFinal: true });
 			setReport(r.result);
 			ui.notice(r.result.clean ? "Account deleted." : "Account deleted with leftovers: see the report.");
 		} catch (e) {
@@ -101,10 +102,10 @@ export function DeleteAccountTab({ account, ui, onDeleted }) {
 						{reviewed && (
 							<div style={{ marginTop: 12 }}>
 								<div className="field" style={{ maxWidth: 420 }}>
-									<label htmlFor="delete-business">Type the business name “{business}” to continue</label>
+									<label htmlFor="delete-business">Type “{business}” to continue</label>
 									<input className="input" id="delete-business" autoComplete="off" value={typed} onChange={(e) => setTyped(e.target.value)} />
 								</div>
-								<button className="btn danger" type="button" id="delete-confirm-2" style={{ marginTop: 10 }} disabled={busy || typed !== business} onClick={remove}>
+								<button className="btn danger" type="button" id="delete-confirm-2" style={{ marginTop: 10 }} disabled={busy || typed.trim() !== business} onClick={remove}>
 									3. Permanently delete this account
 								</button>
 							</div>

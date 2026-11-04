@@ -31,6 +31,18 @@ function imageIdsOf(payload) {
   return [...ids];
 }
 
+// The business name shown for an account: the profile's, else the one inside the POS settings. The admin portal list, the pre-delete check
+// and the delete confirmation all use this one rule, so the name the administrator types is always the name the server expects.
+function businessLabel(profile, payload) {
+  profile = profile || {};
+  return String(profile.posBusinessName || profile.bizName || (payload && payload.settings && payload.settings.business) || '').trim();
+}
+
+// What the administrator types to confirm a delete: the business name, or the word DELETE for an account that has none.
+function confirmWord(profile, payload) {
+  return businessLabel(profile, payload) || 'DELETE';
+}
+
 function createPurger(deps) {
   async function inventory(uid, options) {
     options = options || {};
@@ -66,7 +78,7 @@ function createPurger(deps) {
     return {
       uid,
       exists: !!profile || stores.some(function(s) { return s.rows; }),
-      business: String(profileData.posBusinessName || profileData.bizName || (payload && payload.settings && payload.settings.business) || ''),
+      business: businessLabel(profileData, payload),
       stores: stores.map(function(s) { return { name: s.name, rows: s.rows, byKind: s.byKind }; }),
       rowIds: stores.map(function(s) { return { name: s.name, ids: s.ids }; }),
       counts: {
@@ -177,4 +189,4 @@ function realDeps(lib, env) {
   };
 }
 
-module.exports = { createPurger, realDeps, kindOf, imageIdsOf };
+module.exports = { createPurger, realDeps, kindOf, imageIdsOf, businessLabel, confirmWord };

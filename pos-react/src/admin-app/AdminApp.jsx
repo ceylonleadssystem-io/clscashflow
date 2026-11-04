@@ -11,6 +11,8 @@ import { AccountDetail } from "./AccountDetail";
 import { OverallAnalytics } from "./OverallAnalytics";
 import { ChurnPanel, FunnelPanel, HeatmapPanel, KitchenPanel, LossPanel, TypesPanel } from "./InsightPanels";
 import { SubscriptionManagement } from "./SubscriptionManagement";
+import { NewAccountPanel } from "./NewAccountPanel";
+import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
 import { STATUSES, SUBSCRIPTIONS, appsOf, lastUsedOf, statusOf, subscriptionOf } from "./status";
@@ -37,6 +39,8 @@ export function AdminApp() {
 	const [fStatus, setFStatus] = useState("");
 	const [fSub, setFSub] = useState("");
 	const feedback = useAdminFeedback();
+	const ui = useUi();
+	const [creating, setCreating] = useState(false);
 
 	// Restore a still-valid administrator session (kept in sessionStorage for this tab only).
 	useEffect(() => {
@@ -175,6 +179,12 @@ export function AdminApp() {
 					)}
 					{mainTab === "accounts" && (
 						<div role="tabpanel" aria-labelledby="admin-tab-accounts">
+					<div className="tools" style={{ marginBottom: 12, justifyContent: "flex-end" }}>
+						<button type="button" className="btn gold" id="new-account-open" aria-expanded={creating} onClick={() => setCreating((v) => !v)}>
+							+ New POS account
+						</button>
+					</div>
+					{creating && <NewAccountPanel ui={ui} onClose={() => setCreating(false)} onCreated={load} />}
 					<section className="admin-toolbar" style={{ gridTemplateColumns: "1fr auto auto" }}>
 						<input className="input" placeholder="Search business, e-mail or name…" value={q} onChange={(e) => setQ(e.target.value)} />
 						<select className="input" aria-label="Filter by status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
