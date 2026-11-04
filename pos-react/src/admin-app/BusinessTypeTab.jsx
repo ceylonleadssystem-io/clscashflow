@@ -5,7 +5,8 @@ import { useState } from "react";
 import { ADMIN_BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS } from "../config/presets";
 import { businessTypeLocked } from "../domain/businessType";
 
-const label = (t) => (t === "cafe" ? "Café / Bakery" : POS_TYPE_PRESETS[t]?.label || t);
+export const businessTypeLabel = (t) => (t === "cafe" ? "Café / Bakery" : POS_TYPE_PRESETS[t]?.label || t);
+const label = businessTypeLabel;
 
 export function BusinessTypeTab({ settings, save, saving, ui }) {
 	const current = settings.businessType || "";

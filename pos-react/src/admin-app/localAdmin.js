@@ -106,6 +106,7 @@ export async function localAdminApi(body) {
 		return { ok: true, check: { business: account.business, keepPayments: body.keepPayments === true, stores: [], warnings: [{ code: "local", text: "Local development mode: nothing can be deleted from here." }], counts: { staffUsers: c.users.length, locations: c.locations.length, products: c.products.length, customers: c.customers.length, sales: c.sales.length, invoices: invoices().length, paymentRecords: 0, images: 0, databaseRows: 0 } } };
 	}
 	if (action === "deleteAccount") throw new Error("Deleting an account is not available in local development mode.");
+	if (action === "createAccount") throw new Error("Creating an account is not available in local development mode (it uses one local database).");
 	if (action === "listInvoices") return { ok: true, invoices: invoices() };
 	if (action === "saveInvoice") {
 		const inv = body.invoice;

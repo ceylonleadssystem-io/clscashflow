@@ -4,7 +4,8 @@ const { isAdminEmail, verifyToken } = require('../lib/admin-auth');
 const { getAdmin, audit } = require('../lib/admin-store');
 const log = require('../lib/log').createLogger('pos-admin-data');
 const lib = require('../lib/appwrite');
-const { createPurger, realDeps } = require('../lib/account-purge');
+const { createPurger, realDeps, businessLabel, confirmWord } = require('../lib/account-purge');
+const { cleanNewAccount, buildNewAccount, BUSINESS_TYPES } = require('../lib/new-account');
 const configMerge = require('../lib/config-merge');
 const { appsUsed } = require('../lib/apps-used');
 
@@ -137,8 +138,8 @@ const SETTING_SANITIZERS = {
     return { enabled: v.enabled === true, rate: clampNum(v.rate, 0, 100) };
   },
   businessCategory: function(v) { return typeof v === 'string' ? clean(v, 40) : undefined; },
-  // chosen once by the business at setup; afterwards only changed here. The list matches pos-react/src/config/presets.js BUSINESS_TYPE_OPTIONS.
-  businessType: function(v) { return ['restaurant', 'cafe', 'retail', 'hardware', 'grocery', 'salon', 'pharmacy', 'services', 'other'].indexOf(v) >= 0 ? v : undefined; },
+  // chosen once by the business at setup; afterwards only changed here. The list (lib/new-account.js) matches pos-react/src/config/presets.js ADMIN_BUSINESS_TYPE_OPTIONS.
+  businessType: function(v) { return BUSINESS_TYPES.indexOf(v) >= 0 ? v : undefined; },
   businessTypeLocked: function(v) { return v === true ? true : undefined; },
   // The plan assigned to this business: how many users and locations it may have and which features are forced off. null removes it.
   subscription: function(v) { return v === null ? { enforced: false } : cleanSubscription(v); }
@@ -330,7 +331,7 @@ async function handle(event) {
           id: row.id,
           // a profile created without contact details still shows the sign-in's name and email (BUG 015)
           name: row.data.name || row.data.displayName || (authUser && authUser.displayName) || '', email: row.data.email || (authUser && authUser.email) || '', phone: row.data.posMobile || row.data.mobile || row.data.phone || '',
-          business: row.data.posBusinessName || row.data.bizName || (payload.settings || {}).business || '',
+          business: businessLabel(row.data, payload),
           product: row.data.product || 'pos', setupStatus: row.data.posSetupStatus || ((payload.products || []).length ? 'configured' : 'not-started'),
           businessType: clean((payload.settings || {}).businessType, 20), analytics: salesRollup(payload.sales, payload), apps: appsUsed(payload.settings), products: (payload.products || []).length, categories: (payload.categories || []).length,
           updatedAt: workspace.wrapper && workspace.wrapper.updatedAt || '', payment: paymentState(row.data), isTestAccount: accountStatus(row.data) === 'test', status: accountStatus(row.data), subscriptionType: clean(row.data.posBillingCycle) === 'annual' ? 'annual' : 'monthly', paused: row.data.posAccountPaused === true,
@@ -355,6 +356,33 @@ async function handle(event) {
       }
       const snap = await ref.get();
       return response(200, { ok: true, founders: snap.exists ? cleanFounders((snap.data() || {}).founders) : [] });
+    }
+
+    // A new POS account made by the administrator: the sign-in, the profile and an empty POS with the business type already chosen.
+    if (action === 'createAccount') {
+      const values = cleanNewAccount(body);
+      if (values.error) return response(400, { ok: false, error: values.error });
+      let created;
+      try {
+        created = await lib.users().create({ userId: lib.newId().replace(/_/g, ''), email: values.email, password: values.password, name: values.name });
+      } catch (error) {
+        if (error && error.code === 409) return response(409, { ok: false, error: 'An account with this e-mail address already exists.' });
+        throw error;
+      }
+      const newUid = created.$id;
+      try {
+        const built = buildNewAccount(values, newUid, ADMIN_EMAIL);
+        await db.collection('users').doc(newUid).set(built.profile);
+        const nowIso = new Date().toISOString();
+        await db.collection('users/' + newUid + '/pos').doc('main').set({ ownerUid: newUid, payload: built.workspace, createdAt: nowIso, updatedAt: nowIso });
+      } catch (error) {
+        // nothing half-made is left behind: without the profile the sign-in is of no use, and the same e-mail can be tried again
+        await db.collection('users').doc(newUid).delete().catch(function() {});
+        await lib.users().delete(newUid).catch(function() {});
+        throw error;
+      }
+      log.info('pos account created', { uid: newUid, businessType: values.businessType, passwordGenerated: values.generated });
+      return response(200, { ok: true, account: { id: newUid, email: values.email, business: values.business, name: values.name }, password: values.generated ? values.password : '', generated: values.generated, ownerPin: '1234' });
     }
 
     const uid = clean(body.userId || params.userId, 100);
@@ -430,11 +458,11 @@ async function handle(event) {
       const keepPayments = body.keepPayments === true;
       if (action === 'previewDeleteAccount') {
         const found = await purger.inventory(uid, { keepPayments });
-        return response(200, { ok: true, check: { business: found.business, stores: found.stores, counts: found.counts, warnings: found.warnings, keepPayments } });
+        return response(200, { ok: true, check: { business: found.business, confirm: confirmWord(profile, workspace.payload), stores: found.stores, counts: found.counts, warnings: found.warnings, keepPayments } });
       }
       // Two separate confirmations (review, then final) plus the business name; the server checks all three.
       if (body.confirmedReview !== true || body.confirmedFinal !== true) return response(400, { ok: false, error: 'Both confirmations are required.' });
-      if (body.confirmBusiness !== clean(profile.posBusinessName || profile.bizName || '', 160)) return response(400, { ok: false, error: 'Business confirmation does not match.' });
+      if (String(body.confirmBusiness == null ? '' : body.confirmBusiness).trim() !== confirmWord(profile, workspace.payload)) return response(400, { ok: false, error: 'Business confirmation does not match. Type exactly: ' + confirmWord(profile, workspace.payload) });
       // restorable copy of the profile and workspace, kept before anything is deleted
       const backupId = 'pos-account-' + uid + '-' + Date.now();
       await db.collection('accountDeletionBackups').doc(backupId).set({ uid, deletedAtUtc: new Date().toISOString(), deletedBy: ADMIN_EMAIL, profile, workspace: workspace.payload, source: 'pos-admin' });
@@ -573,6 +601,8 @@ async function handle(event) {
       // Admin dashboard: feature switches (business + per location) and the first-login welcome message.
       // Written with per-key timestamps so the POS cloud merge accepts them as the newest value.
       const incoming = body.settings && typeof body.settings === 'object' ? body.settings : {};
+      // an unknown business type used to be dropped silently while the portal said it was saved
+      if (Object.prototype.hasOwnProperty.call(incoming, 'businessType') && SETTING_SANITIZERS.businessType(incoming.businessType) === undefined) return response(400, { ok: false, error: 'That business type is not supported.' });
       const allowedKeys = ['features', 'locationFeatures', 'welcome', 'plan'].concat(Object.keys(SETTING_SANITIZERS));
       const now = new Date().toISOString();
       const payload = Object.assign({}, workspace.payload);

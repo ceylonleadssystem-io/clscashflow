@@ -43,6 +43,7 @@ export function AccountDetail({ account, accounts = [], onBack, onChanged }) {
 		setData(res);
 		const inv = await adminApi({ action: "listInvoices", userId: account.id }).catch(() => ({ invoices: [] }));
 		setInvoices(inv.invoices || []);
+		return res;
 	}, [account.id]);
 	useEffect(() => {
 		reload().catch((e) => ui.alert(e.message));
@@ -56,8 +57,10 @@ export function AccountDetail({ account, accounts = [], onBack, onChanged }) {
 		setSaving(true);
 		try {
 			await adminApi({ action: "saveSettings", userId: account.id, settings: patch, summary });
+			const fresh = await reload();
+			// read back what the server stored: a value it did not accept must not look like a success
+			if (patch.businessType && fresh?.workspace?.settings?.businessType !== patch.businessType) throw new Error("The business type was not saved. The server did not accept it.");
 			ui.notice("Saved. The POS picks this up on its next sync.");
-			await reload();
 		} catch (e) {
 			await ui.alert(e.message);
 		} finally {

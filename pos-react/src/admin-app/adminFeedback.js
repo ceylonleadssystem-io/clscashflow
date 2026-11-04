@@ -51,6 +51,8 @@ export function successText(body) {
 			return "Menu imported";
 		case "saveConfig":
 			return "Changes sent to the client";
+		case "createAccount":
+			return "Account created";
 		case "deleteAccount":
 			return "Account deleted";
 		default:
