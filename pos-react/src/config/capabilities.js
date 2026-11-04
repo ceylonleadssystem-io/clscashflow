@@ -17,7 +17,7 @@ export const CAPABILITIES = {
 	grocery: ["barcodeLabels"],
 	salon: ["serviceCharge", "industryTools", "appointments", "memberships", "commissions"],
 	services: ["serviceCharge", "industryTools", "appointments", "memberships", "commissions"],
-	automobile: ["serviceCharge", "detailing"],
+	automobile: ["detailing"],
 	pharmacy: ["barcodeLabels", "industryTools", "prescriptions", "medicineBatches", "commissions"],
 	other: [],
 };

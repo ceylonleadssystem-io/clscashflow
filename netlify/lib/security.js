@@ -15,9 +15,15 @@ function adminOrigin(site) {
   try { const u = new URL(site); return u.protocol + '//admin.' + u.host; } catch (_) { return ''; }
 }
 
+// Automobile (car detailing) is served from automobile.<site host> as well.
+function automobileOrigin(site) {
+  try { const u = new URL(site); return u.protocol + '//automobile.' + u.host; } catch (_) { return ''; }
+}
+
 function allowedOrigins() {
   const list = new Set([
     adminOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
+    automobileOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     siteOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     siteOrigin(process.env.URL),
     siteOrigin(process.env.DEPLOY_PRIME_URL),
