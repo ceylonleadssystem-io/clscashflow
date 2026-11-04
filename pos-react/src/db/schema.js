@@ -5,7 +5,7 @@ import { appSchema, tableSchema } from "@nozbe/watermelondb";
 import { TABLE_LIST } from "./tables";
 
 /** Bump when a column/table is added and add the step to migrations.js */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 const TYPE = { string: "string", number: "number", boolean: "boolean", json: "string" };
 

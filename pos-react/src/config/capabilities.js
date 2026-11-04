@@ -6,6 +6,7 @@
  *   industryTools  the Business Tools page
  *   appointments / memberships / prescriptions / medicineBatches / commissions   the Business Tools modules (views/businessTools/)
  *   barcodeLabels  shops that always need the label printer
+ *   detailing      the Detailing page (bookings, jobs, vehicles, packages, invoices) of the Automobile type
  * Which of these a business really gets is still narrowed by its feature switches (config/features.js).
  */
 export const CAPABILITIES = {
@@ -16,6 +17,7 @@ export const CAPABILITIES = {
 	grocery: ["barcodeLabels"],
 	salon: ["serviceCharge", "industryTools", "appointments", "memberships", "commissions"],
 	services: ["serviceCharge", "industryTools", "appointments", "memberships", "commissions"],
+	automobile: ["serviceCharge", "detailing"],
 	pharmacy: ["barcodeLabels", "industryTools", "prescriptions", "medicineBatches", "commissions"],
 	other: [],
 };
