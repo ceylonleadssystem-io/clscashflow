@@ -11,6 +11,7 @@ import * as printing from "./printing";
 import * as settings from "./settings";
 import * as locations from "./locations";
 import * as industry from "./industry";
+import * as detailing from "./detailing";
 
 /**
  * Binds every action service to a context (store, data, session, features, ui)
@@ -136,6 +137,17 @@ export function bindServices(ctx) {
 			removeRecord: industry.removeRecord,
 			setCommissionRate: industry.setCommissionRate,
 			recordCommissionPayment: industry.recordCommissionPayment,
+		}),
+		detailing: bind(ctx, {
+			saveVehicle: detailing.saveVehicle,
+			savePackage: detailing.savePackage,
+			saveJob: detailing.saveJob,
+			advanceJob: detailing.advanceJob,
+			togglePause: detailing.togglePause,
+			saveInspection: detailing.saveInspection,
+			createInvoice: detailing.createInvoice,
+			recordPayment: detailing.recordPayment,
+			removeRecord: detailing.removeRecord,
 		}),
 	};
 }

@@ -67,6 +67,12 @@ export const POS_TYPE_PRESETS = {
 		kot: false,
 		note: "Standard checkout supporting services and products, customer history, discounts and split payments.",
 	},
+	automobile: {
+		label: "Automobile (Detailing)",
+		categories: ["Exterior", "Interior", "Full Detail", "Ceramic & Protection", "Add-ons"],
+		kot: false,
+		note: "Car detailing: bookings, job cards, vehicles, service packages and invoices, with the usual customers, inventory, staff and reports.",
+	},
 	other: {
 		label: "Other",
 		categories: [],
@@ -87,6 +93,9 @@ export const BUSINESS_TYPE_OPTIONS = [
 	"services",
 	"other",
 ];
+
+/** The admin portal can also set the Automobile type; businesses cannot pick it themselves during setup. */
+export const ADMIN_BUSINESS_TYPE_OPTIONS = [...BUSINESS_TYPE_OPTIONS.slice(0, -1), "automobile", "other"];
 
 // kept for existing imports; they are derived from config/capabilities.js, which is where a business type's abilities are defined
 export const KITCHEN_TYPES = typesWith("kitchen");

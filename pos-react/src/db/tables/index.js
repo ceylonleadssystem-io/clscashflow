@@ -8,6 +8,7 @@ import * as staff from "./staff";
 import * as inventory from "./inventory";
 import * as business from "./business";
 import * as industry from "./industry";
+import * as detailing from "./detailing";
 
 /** Every table spec, keyed by JS name. */
 export const T = {
@@ -18,6 +19,7 @@ export const T = {
 	...inventory,
 	...business,
 	...industry,
+	...detailing,
 };
 
 export const TABLE_LIST = Object.values(T);

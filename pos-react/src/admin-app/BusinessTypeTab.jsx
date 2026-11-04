@@ -2,7 +2,7 @@
  * Admin portal: the business type of an account. A business picks it once during setup; from then on it can be changed only here.
  */
 import { useState } from "react";
-import { BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS } from "../config/presets";
+import { ADMIN_BUSINESS_TYPE_OPTIONS, POS_TYPE_PRESETS } from "../config/presets";
 import { businessTypeLocked } from "../domain/businessType";
 
 const label = (t) => (t === "cafe" ? "Café / Bakery" : POS_TYPE_PRESETS[t]?.label || t);
@@ -29,7 +29,7 @@ export function BusinessTypeTab({ settings, save, saving, ui }) {
 				<div className="field" style={{ maxWidth: 360 }}>
 					<label htmlFor="admin-business-type">Business type</label>
 					<select id="admin-business-type" className="input" value={type} onChange={(e) => setType(e.target.value)}>
-						{BUSINESS_TYPE_OPTIONS.map((t) => (
+						{ADMIN_BUSINESS_TYPE_OPTIONS.map((t) => (
 							<option key={t} value={t}>
 								{label(t)}
 							</option>

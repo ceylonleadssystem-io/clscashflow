@@ -110,6 +110,7 @@ export function PosProvider({ children }) {
 			if (v === "tables" && !kitchen) return false;
 			if (v === "stations" && !kitchen) return false;
 			if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
+			if (v === "detailing" && !hasCapability(settings.businessType, "detailing")) return false;
 			if (v === "checkout" && locationId === "all") return false;
 			const flag = VIEW_FEATURE[v];
 			return flag ? !!enabled[flag] : true;
@@ -127,6 +128,7 @@ export function PosProvider({ children }) {
 		if (v === "tables" && !kitchen) return false;
 		if (v === "stations" && !kitchen) return false;
 		if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
+		if (v === "detailing" && !hasCapability(settings.businessType, "detailing")) return false;
 		const flag = VIEW_FEATURE[v];
 		return flag ? !!enabled[flag] : true;
 	}
