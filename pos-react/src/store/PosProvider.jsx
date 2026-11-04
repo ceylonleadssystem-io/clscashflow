@@ -274,7 +274,9 @@ export function PosProvider({ children }) {
 			setLocationId(chosen);
 			sessionRef.current = { ...sessionRef.current, userId: user.id, user, locationId: chosen };
 			if (multi) svc.locations.auditLogin(chosen);
-			const first = (ROLE_VIEWS[user.role] || ["staff"]).find((v) => canView2(user, v)) || "settings";
+			const roleFirst = (ROLE_VIEWS[user.role] || ["staff"]).find((v) => canView2(user, v)) || "settings";
+			// a car detailing business opens on its Detailing page
+			const first = hasCapability(d.settings.businessType, "detailing") && canView2(user, "detailing") ? "detailing" : roleFirst;
 			// Settings > System Options > Sign In: the screen staff land on, when their role may open it
 			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], d.settings) : (ROLE_VIEWS[user.role] || []).includes(v)) && canView2(user, v), first));
 			if (user.role === "owner" && !d.settings.onboardingComplete && !d.settings.onboardingDismissed && enabled["settings.posSetupWizard"])
