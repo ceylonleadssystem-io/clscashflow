@@ -41,6 +41,9 @@ export const MERGE_ARRAYS = [
 	"prescriptions",
 	"medicineBatches",
 	"commissionPayments",
+	"vehicles",
+	"detailPackages",
+	"detailJobs",
 	"kitchenTickets",
 ];
 

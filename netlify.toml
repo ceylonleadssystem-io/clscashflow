@@ -11,6 +11,39 @@
   status = 200
   force = true
 
+# Automobile (car detailing) on its own address: automobile.ceylonrylabs.io and [base URL]/Automobile open the POS app
+# (same business login). A business whose type is set to Automobile in the admin portal gets the detailing pages.
+# Needs the automobile.ceylonrylabs.io domain added to this Netlify site and a DNS CNAME for it.
+[[redirects]]
+  from = "https://automobile.ceylonrylabs.io/"
+  to = "/pos-react/dist/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/automobile"
+  to = "/Automobile"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/automobile/"
+  to = "/Automobile"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/Automobile"
+  to = "/pos-react/dist/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/Automobile/"
+  to = "/pos-react/dist/index.html"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/mrs-gamage-story"
   to = "/mrs-gamage-story.html"

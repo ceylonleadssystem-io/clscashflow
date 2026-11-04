@@ -20,6 +20,7 @@ const Receipts = page(() => import("./Receipts"), "Receipts");
 const Reports = page(() => import("./Reports"), "Reports");
 const Inventory = page(() => import("./Inventory"), "Inventory");
 const Industry = page(() => import("./Industry"), "Industry");
+const Detailing = page(() => import("./Detailing"), "Detailing");
 const Staff = page(() => import("./Staff"), "Staff");
 const Settings = page(() => import("./Settings"), "Settings");
 
@@ -38,6 +39,7 @@ const VIEWS = {
 	reports: Reports,
 	inventory: Inventory,
 	industry: Industry,
+	detailing: Detailing,
 	staff: Staff,
 	settings: Settings,
 };
