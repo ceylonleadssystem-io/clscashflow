@@ -21,6 +21,9 @@ items below may be missing for your account.
 If the account is disabled for non-payment, the payment screen replaces the POS (within a minute for devices
 that are already signed in).
 
+## Which POS opens after sign-in
+After the business e-mail and password are accepted, the POS checks the business type (set by the Ceylonry team) before opening. A car detailing (Automobile) business belongs on `automobile.ceylonrylabs.io`; every other type belongs on the main POS (`ceylonrylabs.io/posv2/`). If the business signed in on the other address it is moved to the right one automatically, without signing in again (the sign-in is carried over by a one-time token that lasts a minute). A business that has not chosen its type yet stays where it is. After the staff PIN, an Automobile business opens on its Detailing page. Local development, previews and the admin address never redirect.
+
 ## Starting a shift
 **Staff & Shifts → Clock In & Open Register** (also offered automatically after sign-in):
 1. Enter the opening cash.

@@ -24,6 +24,8 @@ import { freshAccountDb, normalizeAccountDb } from "../services/sync/account";
 import { T } from "../db/tables";
 import { assistActive, assistInfo, assistStore, prepareAssist } from "../services/assist";
 import { adminApi } from "../admin-app/adminApi";
+import { posRedirect } from "../domain/posRoute";
+import { handOff } from "../services/handoff";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("session");
@@ -120,6 +122,13 @@ export function SessionProvider({ children }) {
 					});
 					log.info("boot timing", { profileMs, attachMs: Math.round(performance.now() - startedAt) - profileMs });
 					if (restoredCatalogue) setRestoredNotice(true);
+					// the business type decides which POS address the business belongs on: move there now, before the POS opens (no second sign-in)
+					const snapshot = await store.readSnapshot();
+					const elsewhere = posRedirect(snapshot.settings || {}, location);
+					if (elsewhere) {
+						await handOff(user, elsewhere);
+						return;
+					}
 					sessionStorage.setItem(STORAGE.businessAuth, "1");
 					const allowed = accessAllowed(profile);
 					setBilling({ profile, allowed, warning: billingWarning(profile) });

@@ -24,6 +24,7 @@ export const env = {
 	homeUrl: e.VITE_HOME_URL || "/index.html",
 	onboardingUrl: e.VITE_ONBOARDING_URL || "/pos-onboarding.html",
 	adminLoginUrl: e.VITE_ADMIN_LOGIN_URL || "/.netlify/functions/pos-admin-login",
+	handoffUrl: e.VITE_HANDOFF_FUNCTION_URL || "/.netlify/functions/pos-handoff",
 	adminFunctionUrl: e.VITE_ADMIN_FUNCTION_URL || "/.netlify/functions/pos-admin-data",
 	sendInvoiceUrl: e.VITE_SEND_INVOICE_URL || "/.netlify/functions/send-invoice",
 	adminEmails: (e.VITE_ADMIN_EMAILS || e.VITE_DEVELOPER_EMAIL || "devteam@ceylonrylabs.io").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean),
