@@ -25,7 +25,6 @@ export const ROLE_VIEWS = {
 		"reports",
 		"inventory",
 		"industry",
-		"detailing",
 		"staff",
 		"settings",
 	],
@@ -43,12 +42,11 @@ export const ROLE_VIEWS = {
 		"receipts",
 		"inventory",
 		"industry",
-		"detailing",
 		"staff",
 		"settings",
 	],
-	accountant: ["dashboard", "sales", "receipts", "reports", "inventory", "industry", "detailing", "staff", "settings"],
-	cashier: ["checkout", "orders", "tables", "receipts", "customers", "detailing", "staff", "settings"],
+	accountant: ["dashboard", "sales", "receipts", "reports", "inventory", "industry", "staff", "settings"],
+	cashier: ["checkout", "orders", "tables", "receipts", "customers", "staff", "settings"],
 };
 ROLE_VIEWS.admin = ROLE_VIEWS.owner.slice();
 
@@ -76,7 +74,6 @@ export const VIEW_TITLES = {
 		"Business Tools",
 		"Appointments, memberships, commissions and pharmacy records",
 	],
-	detailing: ["Detailing", "Bookings, job cards, vehicles, packages and invoices"],
 	staff: ["Staff & Shifts", "Attendance, breaks, access and cash reconciliation"],
 	settings: ["Settings", "Business, printing and support preferences"],
 };
@@ -89,7 +86,6 @@ export const NAV_ITEMS = [
 	{ view: "checkout", label: "▣ Checkout" },
 	{ view: "orders", label: "☰ Order Queue" },
 	{ view: "tables", label: "▦ Table Layout" },
-	{ view: "detailing", label: "✧ Detailing" },
 	{ view: "receipts", label: "⎙ Receipts & Refunds" },
 	// Products & Services, Modifiers and Stations now live in Settings (Menu Admin and Device Manager): see SETTINGS_PAGE_OF_VIEW
 	{ view: "inventory", label: "▥ Inventory & Stock", group: "Inventory" },

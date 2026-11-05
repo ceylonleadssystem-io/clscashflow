@@ -18,7 +18,8 @@ import { AssistBar, AssistMissing } from "./components/layout/AssistBar";
 import { assistActive, assistRequested } from "./services/assist";
 import { Shell } from "./components/layout/Shell";
 import { PortalShell } from "./components/layout/PortalShell";
-import { isPortalPath } from "./config/portal";
+import { AutomobileShell } from "./components/layout/AutomobileShell";
+import { isPortalPath, isAutomobilePath } from "./config/portal";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GearLoader } from "./components/ui/GearLoader";
 
@@ -107,6 +108,7 @@ function Gate() {
 		);
 	if (hash === "#/count" && !support) return <StockCount />;
 	if (isPortalPath()) return <PortalShell />;
+	if (isAutomobilePath()) return <AutomobileShell />;
 	return (
 		<>
 			<Shell />

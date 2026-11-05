@@ -59,6 +59,9 @@ export const PORTAL_SECTIONS = [
 /** True when the page was opened at /admin (and not the Ceylonry staff portal at /posv2/admin). */
 export const isPortalPath = (pathname = typeof location === "undefined" ? "" : location.pathname) => /^\/admin\/?$/.test(pathname);
 
+/** True on the Automobile (car detailing) system: the automobile.* host or the /Automobile path. */
+export const isAutomobilePath = (loc = typeof location === "undefined" ? null : location) => !!loc && (/^automobile\./i.test(loc.hostname || "") || /^\/automobile\/?$/i.test(loc.pathname || ""));
+
 /** Sections this user may open. `canView` is the POS page check, `can` the permission check; a section with several permissions needs any one. */
 export function visiblePortalSections({ canView = () => true, can = () => true } = {}) {
 	return PORTAL_SECTIONS.filter((s) => !(s.hideWhen && can(s.hideWhen)) && (!s.permission || [].concat(s.permission).some((k) => can(k))) && s.needs.every((v) => canView(v)));
