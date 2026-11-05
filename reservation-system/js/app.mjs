@@ -4,7 +4,7 @@
  */
 import {
 	ACTIVE, SOURCES, seatingMap, bookingsMap, STATUSES, addDays, billTotals, billsFor, buildReport, csv, dateStr, endMin, fill, fromMin, guestStats, isFree, nowMin, phoneKey,
-	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf, MAIN_FLOOR, layoutError, normalizeTable,
+	samePhone, serviceAt, slotsFor, suggestTables, toMin, waPhone, waitMinutes, conflicts, monthOf, MAIN_FLOOR, tableState, layoutError, normalizeTable,
 } from "./logic.mjs";
 import * as S from "./store.mjs";
 import { effectiveLocation, floorsOf, gmStatus, openCheck, pushCustomers, pushLayout, pushSeating, readPos, tablesFor, toPosCustomer } from "./pos.mjs";
@@ -18,7 +18,7 @@ const VIEWS = [["bookings", "Bookings"], ["calendar", "Calendar"], ["floor", "Fl
 const REASONS = ["Guest cancelled", "Change of plans", "Weather", "Duplicate booking", "Venue closed", "Other"];
 const OCCASIONS = ["", "Birthday", "Anniversary", "Business", "Date night", "Celebration"];
 
-const ui = { view: "bookings", date: dateStr(), floorTime: fromMin(nowMin()), q: "", from: addDays(dateStr(), -29), to: dateStr(), tab: "all", gq: "", floor: MAIN_FLOOR };
+const ui = { view: "bookings", date: dateStr(), floorTime: "" /* "" = follow the clock */, q: "", from: addDays(dateStr(), -29), to: dateStr(), tab: "all", gq: "", floor: MAIN_FLOOR };
 let pos = { found: false, business: "", locations: [], settings: {}, customers: [], openOrders: [], sales: [], users: [] };
 let posStamp = "";
 let allowed = null; // null = the POS switches have not been read yet
@@ -484,14 +484,8 @@ function viewCalendar() {
 const noTables = () => `<p class="empty">No tables yet. ${cfg().layoutFrom === "pos" ? "Draw your floor in the POS Tables screen, or add tables here with Edit tables." : "Add tables with Edit tables."} <button class="sm pri" data-act="edit-layout">Edit tables</button></p>`;
 
 function viewFloor() {
-	const fl = floors(), cur = fl.find((f) => f.id === ui.floor) || fl[0], t = tables().filter((x) => (x.floor || MAIN_FLOOR) === cur.id), all = S.reservations(), at = ui.floorTime, p = (x) => `${x}%`;
-	const state = (tb) => {
-		const now = conflicts(tb.id, ui.date, at, 1, all);
-		const cur = now.find((r) => r.status === "seated") || now.find((r) => r.status === "arrived") || now[0];
-		if (cur) return { cls: cur.status === "seated" ? "seated" : cur.status === "arrived" ? "arrived" : "reserved", r: cur };
-		const soon = conflicts(tb.id, ui.date, at, 60, all)[0];
-		return soon ? { cls: "reserved", r: soon } : { cls: "", r: null };
-	};
+	const fl = floors(), cur = fl.find((f) => f.id === ui.floor) || fl[0], t = tables().filter((x) => (x.floor || MAIN_FLOOR) === cur.id), all = S.reservations(), at = ui.floorTime || fromMin(nowMin()), p = (x) => `${x}%`;
+	const state = (tb) => tableState(tb.id, ui.date, at, all);
 	const unseated = resOn(ui.date).filter((r) => r.status === "arrived");
 	return `${dateBar(`<label>At <input type="time" id="ftime" value="${at}" style="width:auto"></label><button data-act="fnow">Now</button><button data-act="edit-layout">Edit tables</button>`)}
 	${fl.length > 1 ? `<div class="chips" role="tablist" aria-label="Floors" style="margin-bottom:8px">${fl.map((f) => `<button role="tab" aria-selected="${f.id === cur.id}" class="sm ${f.id === cur.id ? "pri" : ""}" data-act="floor:${esc(f.id)}">${esc(f.name)}</button>`).join("")}</div>` : ""}
@@ -641,7 +635,7 @@ const ACTIONS = {
 	"guest-del": (_, id) => confirm("Delete this guest? Their bookings stay.") && (S.put("guest", { ...S.guests().find((g) => g.id === id), deleted: true }), dlg().close()),
 	"new-booking-for": (_, id) => { const g = S.guests().find((x) => x.id === id); dlg().close(); bookingDialog(null, { name: g.name, phone: g.phone, email: g.email }); },
 	table: (_, id) => tableDialog(tableById()[id]),
-	fnow: () => go({ floorTime: fromMin(nowMin()), date: dateStr() }),
+	fnow: () => go({ floorTime: "", date: dateStr() }),
 	floor: (id) => go({ floor: id }),
 	"edit-layout": () => layoutDialog(),
 	"wait-new": () => waitDialog(),
@@ -741,6 +735,8 @@ async function start() {
 
 S.store.onChange(render);
 S.store.onChange(queueSeating);
+// the live Floor view follows the clock: parties move in and out of their time windows
+setInterval(() => S.store.mode && ui.view === "floor" && !ui.floorTime && render(), 60000);
 (async () => {
 	const auth = window.clsBackend?.auth();
 	if (!auth) return void ($("#app").innerHTML = signInView());

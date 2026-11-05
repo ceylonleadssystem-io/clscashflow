@@ -166,3 +166,23 @@ test('BUG 011: GM sends each table its bookings for the given days (not cancelle
   assert.deepEqual(Object.keys(map).sort(), ['t4', 't5']);
   assert.deepEqual(map.t4, [{ name: 'Test', party: 8, date: '2026-10-13', time: '19:00', duration: 120, status: 'booked', resId: 'a' }]);
 });
+
+test('BUG 0024: floor colour follows the booking status (arrived, seated) and clears when completed', async () => {
+  const L = await load();
+  const today = '2026-10-13', at = (h, m = 0) => new Date(2026, 9, 13, h, m).toISOString();
+  const b = (o) => res(Object.assign({ date: today, time: '19:00', tableIds: ['t1'] }, o));
+  const st = (r, time, date = today) => L.tableState('t1', date, time, r, today).cls;
+  assert.equal(st([], '19:00'), '');
+  assert.equal(st([b({ status: 'booked' })], '18:30'), 'reserved'); // within the hour before
+  assert.equal(st([b({ status: 'confirmed' })], '19:10'), 'reserved');
+  assert.equal(st([b({ status: 'arrived', arrivedAt: at(18, 40) })], '18:45'), 'arrived'); // came early: not just "reserved"
+  assert.equal(st([b({ status: 'seated', seatedAt: at(18, 30), arrivedAt: at(18, 30) })], '18:35'), 'seated');
+  assert.equal(st([b({ status: 'seated', seatedAt: at(19, 5) })], '21:15'), 'seated'); // stayed past the booked 90 minutes
+  assert.equal(st([b({ status: 'seated', seatedAt: at(19, 5) })], '18:30'), 'reserved'); // looking back before they came
+  assert.equal(st([b({ status: 'completed', seatedAt: at(19, 5), completedAt: at(20, 0) })], '19:30'), '');
+  assert.equal(st([b({ status: 'cancelled' })], '19:00'), '');
+  assert.equal(st([b({ status: 'arrived', arrivedAt: at(19, 0) }), b({ id: 'x', status: 'seated', seatedAt: at(19, 1) })], '19:05'), 'seated'); // seated wins
+  // another day: the booking window decides
+  assert.equal(st([b({ date: '2026-10-12', status: 'seated' })], '19:30', '2026-10-12'), 'seated');
+  assert.equal(st([b({ date: '2026-10-12', status: 'seated' })], '22:00', '2026-10-12'), '');
+});
