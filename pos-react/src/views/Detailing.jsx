@@ -25,11 +25,12 @@ const NEXT_LABEL = { Confirmed: "Confirm", Assigned: "Assign", Travelling: "Star
 const when = (iso) => (iso ? new Date(iso).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—");
 const localNow = () => today() + "T09:00";
 
-export function Detailing() {
+export function Detailing({ tab: forced }) {
 	const data = useData();
 	const { svc, currentUser } = usePos();
 	const manager = ["owner", "manager", "admin"].includes(currentUser?.role);
-	const [tab, setTab] = useState("overview");
+	const [tabState, setTab] = useState("overview");
+	const tab = forced || tabState; // the Automobile shell picks the page from its own sidebar
 	const [modal, setModal] = useState(null); // { kind, id?, jobId? }
 	const [q, setQ] = useState("");
 	const cname = (id) => customerName(data.customers, id);
@@ -109,13 +110,17 @@ export function Detailing() {
 
 	return (
 		<section className="view active" id="view-detailing">
-			<div className="tools" role="tablist" style={{ marginBottom: 14, flexWrap: "wrap" }}>
-				{TABS.map(([id, label]) => (
-					<button key={id} role="tab" aria-selected={tab === id} className={"btn " + (tab === id ? "gold" : "out")} onClick={() => setTab(id)}>
-						{label}
-					</button>
-				))}
-			</div>
+			{!forced && (
+				<div className="tools" role="tablist" style={{ marginBottom: 14, flexWrap: "wrap" }}>
+					{TABS.map(([id, label]) => (
+						<button key={id} role="tab" aria-selected={tab === id} className={"btn " + (tab === id ? "gold" : "out")} onClick={() => setTab(id)}>
+							{label}
+						</button>
+					))}
+				</div>
+			)}
+
+			{tab === "reports" && <DetailingReports data={data} cname={cname} tech={tech} />}
 
 			{tab === "overview" && (
 				<>
@@ -379,6 +384,66 @@ export function Detailing() {
 
 			<DetailingModals modal={modal} onClose={() => setModal(null)} setModal={setModal} manager={manager} />
 		</section>
+	);
+}
+
+/** Revenue and job counts by package and by technician, from the paid and invoiced jobs. */
+function DetailingReports({ data, tech }) {
+	const done = data.detailJobs.filter((j) => ["Completed", "Invoiced"].includes(j.status));
+	const group = (keyOf) => {
+		const m = new Map();
+		done.forEach((j) => {
+			const k = keyOf(j);
+			const r = m.get(k) || { jobs: 0, revenue: 0 };
+			r.jobs += 1;
+			r.revenue += jobPaid(j);
+			m.set(k, r);
+		});
+		return [...m.entries()].sort((a, b) => b[1].revenue - a[1].revenue);
+	};
+	const table = (title, rows) => (
+		<div className="panel" style={{ marginTop: 16 }}>
+			<div className="panel-head">
+				<div className="panel-title">{title}</div>
+			</div>
+			<div className="table-wrap">
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Jobs</th>
+							<th>Payments received</th>
+						</tr>
+					</thead>
+					<tbody>
+						{rows.map(([k, r]) => (
+							<tr key={k}>
+								<td>{k}</td>
+								<td>{r.jobs}</td>
+								<td>{money(r.revenue)}</td>
+							</tr>
+						))}
+						{!rows.length && (
+							<tr>
+								<td colSpan="3">No completed jobs yet.</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
+	return (
+		<>
+			<div className="grid4">
+				<Kpi label="Completed jobs" value={done.length} />
+				<Kpi label="Payments received" value={money(done.reduce((a, j) => a + jobPaid(j), 0))} />
+				<Kpi label="Invoiced" value={money(done.filter((j) => j.invoiceNumber).reduce((a, j) => a + jobTotal(j), 0))} />
+				<Kpi label="Cancelled bookings" value={data.detailJobs.filter((j) => j.status === "Cancelled").length} />
+			</div>
+			{table("By package", group((j) => j.packageName))}
+			{table("By technician", group((j) => tech(j.technicianId)))}
+		</>
 	);
 }
 

@@ -6,6 +6,8 @@ const adminRoute = (req, _res, next) => {
 	if (/^\/(posv2\/)?kds\/?(\?.*)?$/i.test(req.url || "")) req.url = "/kds.html";
 	// the business admin portal (/admin) is the POS app itself; it shows the portal when the path is /admin
 	if (/^\/admin\/?(\?.*)?$/.test(req.url || "")) req.url = "/index.html";
+	// the Automobile (detailing) system is the POS app itself; it shows the detailing pages when the path is /Automobile
+	if (/^\/automobile\/?(\?.*)?$/i.test(req.url || "")) req.url = "/index.html";
 	next();
 };
 
