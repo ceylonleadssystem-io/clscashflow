@@ -1007,3 +1007,8 @@ html body.full .sk-main #view-products.active>.panel,
 html body.full .sk-main #view-modifiers.active>.panel{overflow:visible!important}
 html body.full .sk-main #view-products.active .table-wrap,
 html body.full .sk-main #view-modifiers.active .table-wrap{max-height:none!important}
+
+/* BUG 0019 (root cause): in full screen the working area (.content) is exactly as tall as the window and clips what does not fit. The Settings
+   pages sit several levels inside it (shell, main, body), so their own height:100% never limited them and nothing scrolled: about 700px of Menu
+   Admin, Items and Catalogue tools was out of reach. The working area scrolls whenever it holds the Settings shell. */
+body.full .content:has(.sk-shell){overflow-y:auto}
