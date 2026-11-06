@@ -204,3 +204,13 @@ export function carryCategoryRename(settings = {}, oldName, next) {
 	if (list(settings.menuDraft?.categorySettings).some((c) => c.id === oldKey)) patch.menuDraft = { ...(patch.menuDraft || settings.menuDraft), categorySettings: rules(settings.menuDraft.categorySettings) };
 	return patch;
 }
+
+/** The Items list filter: search text (name, code, category, subcategory, type), category and type ("Product" / "Service"; "all" for no filter). */
+export function filterItems(products, { q = "", category = "all", type = "all" } = {}) {
+	const term = String(q).trim().toLowerCase();
+	return (products || []).filter((p) => {
+		if (category !== "all" && p.category !== category) return false;
+		if (type !== "all" && (p.type || "Product") !== type) return false;
+		return !term || [p.name, p.code, p.category, p.subcategory, p.type].join(" ").toLowerCase().includes(term);
+	});
+}
