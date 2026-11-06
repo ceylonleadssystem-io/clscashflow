@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildReport, metricCards, saleFigures, sumFigures } from "../domain/reportBuilders";
 import { formatCell, reportCsv, sortRows } from "../domain/reportFormat";
-import { REPORT_GROUPS, firstSub, visibleGroups } from "../domain/reportsCatalog";
+import { REPORT_GROUPS, firstSub, kitchenReportsOn, visibleGroups } from "../domain/reportsCatalog";
+import { CAPABILITIES } from "../config/capabilities";
 import { applyReportFilters } from "../hooks/useReportContext";
 
 const line = (name, price, qty, extra = {}) => ({ name, price, qty, category: "Food", ...extra });
@@ -126,6 +127,14 @@ describe("catalogue, filters and formatting", () => {
 		expect(keys({ role: "owner", modules: {} })).not.toEqual(expect.arrayContaining(["payments", "loyalty", "kitchen", "multi-location"]));
 		expect(keys({ role: "owner", modules: { kitchen: true, locations: 2 } })).toEqual(expect.arrayContaining(["kitchen", "multi-location", "payroll"]));
 		expect(keys({ role: "accountant", modules: {} })).not.toContain("payroll");
+	});
+	it("Kitchen Operations is only for businesses with a kitchen (restaurants and cafés/bakeries), whatever the feature switch says", () => {
+		for (const type of Object.keys(CAPABILITIES)) {
+			const shown = visibleGroups({ role: "owner", modules: { kitchen: kitchenReportsOn(true, type) } }).some((g) => g.key === "kitchen");
+			expect(shown, type).toBe(type === "restaurant" || type === "cafe");
+		}
+		expect(kitchenReportsOn(false, "restaurant")).toBe(false);
+		expect(kitchenReportsOn(true, "")).toBe(false);
 	});
 	it("filters narrow sales and time entries", () => {
 		const f = applyReportFilters([sale("1"), sale("2", { staffId: "u2", payment: "Card" })], [{ userId: "u1" }, { userId: "u2" }], [{ type: "employee", value: "u2" }]);

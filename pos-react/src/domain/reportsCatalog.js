@@ -3,6 +3,8 @@
  * the sub-reports of each group, and which groups a role / location setup may see. Pure data plus `visibleGroups`.
  * Keys follow the Ceylonry POS Reports specification (route keys like sales/order-type).
  */
+import { hasCapability } from "../config/capabilities";
+
 export const REPORT_GROUPS = [
 	{ key: "dashboard", title: "Dashboard", icon: "▦", blurb: "Sales, customers and profit at a glance.", subs: [] },
 	{
@@ -123,6 +125,9 @@ export const subOf = (group, sub) => groupOf(group)?.subs.find((s) => s.key === 
 /** Roles that may open Payroll (Payments is hidden anyway until a card processor is connected). */
 const MANAGER_ONLY = ["payroll", "payments"];
 const PAYROLL_ROLES = ["owner", "admin", "manager"];
+
+/** Kitchen Operations is for businesses with a kitchen (restaurants, cafés and bakeries) that use kitchen tickets; never for any other type. */
+export const kitchenReportsOn = (ticketsOn, businessType) => !!ticketsOn && hasCapability(businessType, "kitchen");
 
 /**
  * The groups this user sees. `modules` says what the business has switched on:

@@ -87,6 +87,18 @@ export function FeedbackPage() {
 	);
 }
 
-export const StationsPage = () => <Stations />;
+// Stations are for businesses with a kitchen; for any other type the page says so (it is also left out of the Device Manager list)
+export function StationsPage() {
+	const { settings } = useData();
+	if (hasCapability(settings.businessType, "kitchen")) return <Stations />;
+	return (
+		<>
+			<PageHeader title="Stations" />
+			<SectionCard>
+				<div className="muted">Kitchen stations are for restaurants, cafés and bakeries. This business type does not use them.</div>
+			</SectionCard>
+		</>
+	);
+}
 export const CatalogueEditor = () => <Products />;
 export const ModifierGroupEditor = () => <Modifiers />;

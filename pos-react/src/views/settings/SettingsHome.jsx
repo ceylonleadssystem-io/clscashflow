@@ -54,8 +54,9 @@ export function settingsGroups({ can, serviceChargeOn, kitchen, legacyTabs }) {
 		...(can("menu.view") ? [{ title: "Menu Admin", blurb: "What you sell: items, categories, modifiers, availability, taxes and sales categories.", items: MENU_ADMIN_NAV }] : []),
 		{
 			title: "Device Manager",
-			blurb: "The equipment: printers, kitchen screens, stations and the health of this device.",
-			items: [{ key: "printers", label: "Printers" }, ...(kitchen ? [{ key: "kds", label: "KDS" }] : []), ...(can("menu.view") ? [{ key: "stations", label: "Stations" }] : []), { key: "health", label: "Health" }],
+			blurb: kitchen ? "The equipment: printers, kitchen screens, stations and the health of this device." : "The equipment: printers and the health of this device.",
+			// kitchen screens and stations are only for businesses with a kitchen
+			items: [{ key: "printers", label: "Printers" }, ...(kitchen ? [{ key: "kds", label: "KDS" }] : []), ...(kitchen && can("menu.view") ? [{ key: "stations", label: "Stations" }] : []), { key: "health", label: "Health" }],
 		},
 	];
 }

@@ -23,4 +23,10 @@ describe("settings grid", () => {
 		expect(keys(g[0])).not.toContain("serviceCharge");
 		expect(keys(g[1])).toEqual(["printers", "health"]);
 	});
+	it("hides kitchen screens and stations for a business without a kitchen, even when the person may edit the menu", () => {
+		const g = settingsGroups({ can: all, serviceChargeOn: false, kitchen: false, legacyTabs: tabs });
+		const device = g.find((x) => x.title === "Device Manager");
+		expect(keys(device)).toEqual(["printers", "health"]);
+		expect(device.blurb).not.toMatch(/kitchen|station/i);
+	});
 });
