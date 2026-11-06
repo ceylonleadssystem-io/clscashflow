@@ -104,6 +104,30 @@ export function waitMinutes(tables, reservations, { date, party, now, duration =
 	return best;
 }
 
+/**
+ * Floor colour of one table at a minute of a day: { cls: "" (free) | "reserved" | "arrived" | "seated", r: the booking or null }.
+ * On today a party that has arrived or is seated holds its table from the moment it actually came in (arrivedAt / seatedAt),
+ * whatever its booking time, until it is completed, so an early or late party is never shown as just "reserved".
+ * Otherwise the booking window decides, and a booking starting within the next hour shows the table as reserved.
+ */
+export function tableState(tableId, date, at, reservations, today = dateStr()) {
+	const mine = reservations.filter((r) => r.date === date && (r.tableIds || []).includes(tableId));
+	if (date === today) {
+		const since = (r) => {
+			const stamps = [r.arrivedAt, r.seatedAt].filter(Boolean).map((v) => new Date(v)).filter((d) => !isNaN(d) && dateStr(d) === date).map((d) => nowMin(d));
+			return Math.min(toMin(r.time), ...stamps);
+		};
+		const inHouse = mine.filter((r) => (r.status === "seated" || r.status === "arrived") && toMin(at) >= since(r));
+		const cur = inHouse.find((r) => r.status === "seated") || inHouse[0];
+		if (cur) return { cls: cur.status, r: cur };
+	}
+	const now = conflicts(tableId, date, at, 1, reservations);
+	const cur = now.find((r) => r.status === "seated") || now.find((r) => r.status === "arrived") || now[0];
+	if (cur) return { cls: cur.status === "seated" ? "seated" : cur.status === "arrived" ? "arrived" : "reserved", r: cur };
+	const soon = conflicts(tableId, date, at, 60, reservations)[0];
+	return soon ? { cls: "reserved", r: soon } : { cls: "", r: null };
+}
+
 /** Service whose window contains this time, else the first. */
 export const serviceAt = (services, time) => services.find((s) => toMin(time) >= toMin(s.start) && toMin(time) <= toMin(s.end)) || services[0];
 

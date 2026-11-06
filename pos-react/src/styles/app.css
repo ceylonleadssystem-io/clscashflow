@@ -997,3 +997,13 @@ html body #view-checkout .product-copy .stock-available{flex:0 0 auto}
 .ready-card ul{margin:6px 0 0;padding-left:18px}
 .ready-card .badge{margin-left:8px}
 .ready-card .btn{min-height:44px;flex:0 0 auto}
+
+/* BUG 0019: Catalogue tools and the Group editor show the Products and Modifiers screens inside a Settings page that already scrolls.
+   In full screen those screens were made scroll boxes of their own (their panel hid the overflow and the table was capped at the window height),
+   so the end of the product list was cut off and the mouse wheel stopped inside the table. Inside Settings only the page scrolls. */
+html body.full .sk-main #view-products.active,
+html body.full .sk-main #view-modifiers.active{height:auto!important;overflow:visible!important;padding-right:0!important}
+html body.full .sk-main #view-products.active>.panel,
+html body.full .sk-main #view-modifiers.active>.panel{overflow:visible!important}
+html body.full .sk-main #view-products.active .table-wrap,
+html body.full .sk-main #view-modifiers.active .table-wrap{max-height:none!important}
