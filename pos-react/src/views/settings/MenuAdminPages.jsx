@@ -7,9 +7,9 @@ import { createPortal } from "react-dom";
 import { AssignmentTree } from "../../components/settings/kit/AssignmentTree";
 import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
 import { ConditionalGroup, NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextAreaRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
-import { categoryKey, productCategories, visibleProductCategories } from "../../domain/catalog";
+import { categoryKey, productCategories, subcategoriesFor, visibleProductCategories } from "../../domain/catalog";
 import { DEFAULT_GRACE, cleanCategorySetting } from "../../domain/deleteApproval";
-import { UNCATEGORIZED, cleanGroupEdit, draftNewItems, subcategoryError, workingSubcategories, effectiveCategory, draftList, groupEditError, itemEditError, remainingNames, withItemEdit, workingCategories, workingGroups } from "../../domain/catalogDraft";
+import { UNCATEGORIZED, cleanGroupEdit, draftNewItems, filterItems, subcategoryError, workingSubcategories, effectiveCategory, draftList, groupEditError, itemEditError, remainingNames, withItemEdit, workingCategories, workingGroups } from "../../domain/catalogDraft";
 import { WEEKDAYS, DEFAULT_PREFIXES, cleanGlobalModifier, cleanItemSetting, cleanLimit, cleanMenu, cleanPrefixes, globalModifierError, limitError, cleanSalesCategory, hasDraft, hoursSummary, menuError, overlappingMenus, salesCategoryError, workingOf } from "../../domain/menuAdmin";
 import { money } from "../../domain/format";
 import { cleanTax, cleanTaxRules, previewTax, round2, taxError } from "../../domain/taxes";
@@ -17,7 +17,10 @@ import { compressProductImage } from "../../services/printing/imageTools";
 import { kitchenStations } from "../../domain/kitchenStations";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
-import { CatalogueEditor, ModifierGroupEditor } from "./MovedPages";
+import { ModifierGroupEditor } from "./MovedPages";
+import { CatalogueImportModal } from "../../modals/CatalogueImportModal";
+import { useCheckout } from "../../store/CheckoutProvider";
+import { useModals } from "../../store/ModalsProvider";
 import { usePos } from "../../store/PosProvider";
 
 const newMenu = () => ({ id: "", name: "", status: "active", hours: [{ days: [1, 2, 3, 4, 5], start: "07:00", end: "11:00" }], categories: [] });
@@ -405,7 +408,7 @@ export function Taxes() {
 
 export function CategoriesAdmin() {
 	const { settings, categories, products, subcategories } = useData();
-	const { svc, go, canView } = usePos();
+	const { svc } = usePos();
 	const [edit, setEdit] = useState(null); // { row, name, description, deleteApprovalOn, graceSeconds }
 	const [removing, setRemoving] = useState(null); // { row, moveTo }
 	const subsOn = useFeature("catalogue.subcategories");
@@ -417,6 +420,15 @@ export function CategoriesAdmin() {
 	const taxes = workingOf(settings, "taxes");
 	const taxRules = cleanTaxRules(workingOf(settings, "taxRules")[0] || {});
 	const count = (r) => products.filter((p) => categoryKey(p.category) === categoryKey(r.original || r.name)).length;
+	// the POS category manager's search and filter (names, subcategories; with items / empty)
+	const [search, setSearch] = useState("");
+	const [usage, setUsage] = useState("all");
+	const shown = rows.filter((r) => {
+		const n = count(r);
+		const term = search.trim().toLowerCase();
+		const used = usage === "all" || (usage === "with-products" && n > 0) || (usage === "empty" && n === 0);
+		return used && (!term || r.name.toLowerCase().includes(term) || subcategoriesFor(subcategories, r.original || r.name).some((s) => s.name.toLowerCase().includes(term)));
+	});
 	const taxOf = (r) => taxes.find((t) => t.id === (taxRules.categoryTaxes[categoryKey(r.original || r.name)]?.tax || taxRules.defaultTaxId))?.name || "None";
 	const others = (r) => rows.filter((x) => x !== r);
 	const nameClash = edit && rows.some((x) => x.key !== edit.row.key && x.state !== "removed" && categoryKey(x.name) === categoryKey(edit.name));
@@ -448,11 +460,6 @@ export function CategoriesAdmin() {
 				actions={
 					<>
 						<DraftBadge show={edits.length > 0 || hasDraft(settings, "categorySettings")} />
-						{canView("products") && (
-							<button type="button" className="btn out" onClick={() => go("products")}>
-								Open Products & Services
-							</button>
-						)}
 						<button type="button" className="btn gold" id="add-category" onClick={() => setEdit({ row: { state: "added", key: "", original: "", name: "" }, name: "", description: "", deleteApprovalOn: false, graceSeconds: DEFAULT_GRACE })}>
 							Add category
 						</button>
@@ -460,11 +467,23 @@ export function CategoriesAdmin() {
 				}
 			/>
 			<SectionCard>
+				{rows.length > 0 && (
+					<div className="sk-filters sk-filters-2">
+						<input className="input" type="search" placeholder="Search categories or subcategories" aria-label="Search categories" value={search} onChange={(e) => setSearch(e.target.value)} />
+						<select className="input" aria-label="Filter categories" value={usage} onChange={(e) => setUsage(e.target.value)}>
+							<option value="all">All categories</option>
+							<option value="with-products">With items</option>
+							<option value="empty">Empty categories</option>
+						</select>
+					</div>
+				)}
 				{!rows.length ? (
-					<EmptyState title="No categories yet">Add one, or create items in Products & Services.</EmptyState>
+					<EmptyState title="No categories yet">Add one, or add items on the Items page.</EmptyState>
+				) : !shown.length ? (
+					<p className="muted">No categories match.</p>
 				) : (
 					<ul className="sk-list">
-						{rows.map((r) => {
+						{shown.map((r) => {
 							const c = rules.get(categoryKey(r.original || r.name));
 							return (
 								<li key={r.key + r.name} className="sk-list-row" data-category={r.name} style={r.state === "removed" ? { opacity: 0.6 } : undefined}>
@@ -596,8 +615,15 @@ export function Items() {
 	const { settings, products: liveProducts, categories: categoriesLive, modifiers, subcategories } = useData();
 	const kdsOn = useFeature("checkout.kds");
 	const products = useMemo(() => [...liveProducts.map((p) => withItemEdit(p, draftList(settings, "itemEdits"))), ...draftNewItems(draftList(settings, "itemEdits"))], [liveProducts, settings]);
-	const { svc, go, canView } = usePos();
+	const { svc } = usePos();
+	const { openProduct, openBarcode } = useModals();
+	const { removeProductFromCart } = useCheckout();
+	const importOn = useFeature("catalogue.import");
+	const barcodesOn = useFeature("catalogue.barcodeLabels");
+	const [importOpen, setImportOpen] = useState(false);
 	const [q, setQ] = useState("");
+	const [categoryFilter, setCategoryFilter] = useState("all");
+	const [typeFilter, setTypeFilter] = useState("all");
 	const [edit, setEdit] = useState(null);
 	const overrides = useMemo(() => new Map(workingOf(settings, "itemSettings").map((i) => [i.id, i])), [settings]);
 	const taxes = workingOf(settings, "taxes");
@@ -611,16 +637,14 @@ export function Items() {
 		return taxName(o?.taxId || c?.tax || rules.defaultTaxId) || "None";
 	};
 	const groups = useMemo(() => {
-		const term = q.trim().toLowerCase();
 		const by = new Map();
-		for (const p of products) {
-			if (term && !(p.name + " " + (p.code || "")).toLowerCase().includes(term)) continue;
+		for (const p of filterItems(products, { q, category: categoryFilter, type: typeFilter })) {
 			const k = p.category || "Uncategorised";
 			if (!by.has(k)) by.set(k, []);
 			by.get(k).push(p);
 		}
 		return [...by.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-	}, [products, q]);
+	}, [products, q, categoryFilter, typeFilter]);
 	const options = [{ value: "none", label: "No tax" }, ...taxes.filter((t) => t.status === "active").map((t) => ({ value: t.id, label: t.name }))];
 	const tax = edit ? taxes.find((t) => t.id === (edit.taxId || rules.categoryTaxes[categoryKey(edit.product.category)]?.tax || rules.defaultTaxId)) : null;
 	const withTax = tax && tax.status === "active" ? previewTax(tax, taxes, +edit.product.price || 0) : null;
@@ -648,28 +672,47 @@ export function Items() {
 	const toggleIn = (k, id) => setEdit((x) => ({ ...x, details: { ...x.details, [k]: x.details[k].includes(id) ? x.details[k].filter((i) => i !== id) : [...x.details[k], id] } }));
 	const setDetail = (k) => (v) => setEdit((x) => ({ ...x, details: { ...x.details, [k]: v } }));
 	const name = (n) => (n.length > 24 ? n.slice(0, 24) + "…" : n);
+	// live actions of the POS catalogue (they act on the register's items straight away, not as drafts)
+	const del = async (id) => {
+		if (await svc.catalog.deleteProduct(id)) removeProductFromCart(id);
+	};
 	return (
 		<>
 			<PageHeader
 				title="Items"
-				description="Add items and edit their details, stations, modifier groups, own tax and the names used on kitchen tickets and receipts. Photos and stock counts are edited in Products & Services."
+				description="Add items and edit their details, photo, stations, modifier groups, own tax and the names used on kitchen tickets and receipts. Edit saves a draft that goes live when you publish. Details and stock, Print barcode, Delete and Import items change the register's items straight away."
 				actions={
 					<>
 						<DraftBadge show={hasDraft(settings, "itemSettings") || itemEdits.length > 0} />
+						{importOn && (
+							<button type="button" className="btn out" id="import-items" onClick={() => setImportOpen(true)}>
+								Import items
+							</button>
+						)}
 						<button type="button" className="btn gold" id="add-item" onClick={addNew}>
 							Add item
 						</button>
-						{canView("products") && (
-							<button type="button" className="btn out" onClick={() => go("products")}>
-								Open Products & Services
-							</button>
-						)}
 					</>
 				}
 			/>
 			<SectionCard>
-				<input className="input" type="search" placeholder="Search items" aria-label="Search items" value={q} onChange={(e) => setQ(e.target.value)} />
-				{!products.length && <EmptyState title="No items yet">Add items in Products & Services first.</EmptyState>}
+				<div className="sk-filters">
+					<input className="input" type="search" placeholder="Search name, code or category" aria-label="Search items" value={q} onChange={(e) => setQ(e.target.value)} />
+					<select className="input" aria-label="Filter by category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+						<option value="all">All categories</option>
+						{catNames.map((n) => (
+							<option key={n} value={n}>
+								{n}
+							</option>
+						))}
+					</select>
+					<select className="input" aria-label="Filter by type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+						<option value="all">Products & services</option>
+						<option value="Product">Products only</option>
+						<option value="Service">Services only</option>
+					</select>
+				</div>
+				{!products.length && <EmptyState title="No items yet">Use Add item, or Import items, to create the first ones.</EmptyState>}
 				{products.length > 0 && !groups.length && <p className="muted">No items match.</p>}
 				{groups.map(([cat, list]) => (
 					<details key={cat} className="sk-tree-group" open={!!q}>
@@ -690,9 +733,26 @@ export function Items() {
 										<span className="muted">
 											{money(p.price)} · Tax: {effective(p)} · {salesOf.get(String(p.id)) || "No sales category"}
 										</span>
-										<button type="button" className="btn out" onClick={() => open(p)}>
-											Edit
-										</button>
+										<span className="sk-list-actions">
+											<button type="button" className="btn out" onClick={() => open(p)}>
+												Edit
+											</button>
+											{!p.isDraft && (
+												<>
+													<button type="button" className="btn out" onClick={() => openProduct(p.id)} title="Stock, unit, supplier, recipe and photo position. Saved straight away.">
+														Details and stock
+													</button>
+													{barcodesOn && (
+														<button type="button" className="btn out" data-product-barcode={p.id} onClick={() => openBarcode(p.id)}>
+															Print barcode
+														</button>
+													)}
+													<button type="button" className="btn danger" onClick={() => del(p.id)}>
+														Delete
+													</button>
+												</>
+											)}
+										</span>
 									</li>
 								);
 							})}
@@ -719,7 +779,7 @@ export function Items() {
 			>
 				{edit && (
 					<>
-						<SectionCard title="Details" description="Applied to the live item when you publish. Photos and stock counts are edited in Products & Services.">
+						<SectionCard title="Details" description="Applied to the live item when you publish. Stock, unit, supplier and recipe are under Details and stock on the item's row.">
 							<TextRow id="it-name" label="Name" value={edit.details.name} max={80} onChange={setDetail("name")} />
 							<NumberRow id="it-price" label="Selling price" value={edit.details.price} min={0} step={0.01} onChange={(v) => setDetail("price")(v === "" ? "" : String(v))} />
 							<NumberRow id="it-cost" label="Cost price" value={edit.details.cost} min={0} step={0.01} onChange={(v) => setDetail("cost")(v === "" ? "" : String(v))} />
@@ -782,6 +842,7 @@ export function Items() {
 					</>
 				)}
 			</DetailDrawer>
+			<CatalogueImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 		</>
 	);
 }
@@ -1087,9 +1148,7 @@ function TwoViews({ first, second, a, b, note }) {
 		</>
 	);
 }
-export const ItemsPage = () => (
-	<TwoViews first="Items" second="Catalogue tools" a={<Items />} b={<CatalogueEditor />} note="The full item list and editor: photos, stock counts, barcodes and labels, import and export, delete. Changes here save straight away and are not drafts." />
-);
+export const ItemsPage = Items;
 export const ModifiersPage = () => (
 	<TwoViews first="Limits and global modifiers" second="Group editor" a={<ModifiersAdmin />} b={<ModifierGroupEditor />} note="The full modifier group editor. Changes here save straight away and are not drafts." />
 );

@@ -1007,3 +1007,15 @@ html body.full .sk-main #view-products.active>.panel,
 html body.full .sk-main #view-modifiers.active>.panel{overflow:visible!important}
 html body.full .sk-main #view-products.active .table-wrap,
 html body.full .sk-main #view-modifiers.active .table-wrap{max-height:none!important}
+
+/* BUG 0019 (root cause): in full screen the working area (.content) is exactly as tall as the window and clips what does not fit. The Settings
+   pages sit several levels inside it (shell, main, body), so their own height:100% never limited them and nothing scrolled: about 700px of Menu
+   Admin, Items and Catalogue tools was out of reach. The working area scrolls whenever it holds the Settings shell. */
+body.full .content:has(.sk-shell){overflow-y:auto}
+
+/* Items and Categories: the POS catalogue's search and filters, and the row actions (Edit, Details and stock, Print barcode, Delete) */
+.sk-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px) minmax(150px,220px);gap:8px;margin-bottom:8px}
+.sk-filters-2{grid-template-columns:minmax(0,1fr) minmax(150px,220px)}
+.sk-item-list li>.sk-list-actions{grid-column:2;grid-row:1 / span 2;flex-wrap:wrap;justify-content:flex-end}
+.sk-item-list li>.sk-list-actions .btn{min-height:40px}
+@media(max-width:700px){.sk-filters,.sk-filters-2{grid-template-columns:1fr}.sk-item-list li{grid-template-columns:minmax(0,1fr)}.sk-item-list li>.sk-list-actions{grid-column:1;grid-row:auto;justify-content:flex-start;margin-left:0}}

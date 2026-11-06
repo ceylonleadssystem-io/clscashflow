@@ -4,7 +4,7 @@
   functions = "netlify/functions"
 
 # Administrator portal on its own address: admin.ceylonrylabs.io shows the Ceylonry administration portal (/posv2/admin).
-# Needs the admin.ceylonrylabs.io domain added to this Netlify site and a DNS CNAME for it. Must stay first (first match wins).
+# Needs the admin.ceylonrylabs.io domain added to this Netlify site, a DNS CNAME for it, and a Web platform for it in the Appwrite project. Must stay first (first match wins).
 [[redirects]]
   from = "https://admin.ceylonrylabs.io/"
   to = "/pos-react/dist/admin.html"
@@ -13,7 +13,8 @@
 
 # Automobile (car detailing) on its own address: automobile.ceylonrylabs.io and [base URL]/Automobile open the POS app
 # (same business login). A business whose type is set to Automobile in the admin portal gets the detailing pages.
-# Needs the automobile.ceylonrylabs.io domain added to this Netlify site and a DNS CNAME for it.
+# Needs the automobile.ceylonrylabs.io domain added to this Netlify site, a DNS CNAME for it, and the same hostname registered as a Web platform
+# in the Appwrite project (otherwise sign-in on that address fails with "Failed to fetch": Appwrite refuses the unknown origin).
 [[redirects]]
   from = "https://automobile.ceylonrylabs.io/"
   to = "/pos-react/dist/index.html"
