@@ -5,7 +5,7 @@
 // empty POS with an owner user, with the business type already chosen and locked (the business can no longer change it).
 
 const TRIAL_DAYS = 15; // the same length pos-onboarding.html gives a self-service trial
-const BUSINESS_TYPES = ['restaurant', 'cafe', 'retail', 'hardware', 'grocery', 'salon', 'pharmacy', 'services', 'automobile', 'other'];
+const BUSINESS_TYPES = ['restaurant', 'cafe', 'retail', 'hardware', 'grocery', 'salon', 'pharmacy', 'services', 'automobile', 'ogf', 'other'];
 const EMAIL = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
 const DAY = 86400000;
 

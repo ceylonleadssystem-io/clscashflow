@@ -31,4 +31,5 @@ test('requests from other sites are refused, and the automobile address is allow
   caller = { id: 'user-2' };
   assert.equal((await call({ authorization: 'Bearer jwt', origin: 'https://evil.example' })).statusCode, 403);
   assert.equal((await call({ authorization: 'Bearer jwt', origin: 'https://automobile.ceylonrylabs.io' })).statusCode, 200);
+  assert.equal((await call({ authorization: 'Bearer jwt', origin: 'https://ogf.ceylonrylabs.io' })).statusCode, 200);
 });

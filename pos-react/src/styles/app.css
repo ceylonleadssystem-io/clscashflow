@@ -1019,3 +1019,9 @@ body.full .content:has(.sk-shell){overflow-y:auto}
 .sk-item-list li>.sk-list-actions{grid-column:2;grid-row:1 / span 2;flex-wrap:wrap;justify-content:flex-end}
 .sk-item-list li>.sk-list-actions .btn{min-height:40px}
 @media(max-width:700px){.sk-filters,.sk-filters-2{grid-template-columns:1fr}.sk-item-list li{grid-template-columns:minmax(0,1fr)}.sk-item-list li>.sk-list-actions{grid-column:1;grid-row:auto;justify-content:flex-start;margin-left:0}}
+
+/* Settings > System Options > Sales push (OGF only) */
+.sk-advanced{margin-top:8px}.sk-advanced summary{cursor:pointer;min-height:40px;display:flex;align-items:center;color:var(--ui-muted,#68717a)}
+.sk-paymap{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}.sk-paymap label{display:grid;gap:4px}.sk-paymap label span{font-size:.85rem;color:var(--ui-muted,#68717a)}
+.sk-problems{margin:0 0 10px;padding-left:20px;display:grid;gap:4px;color:#a5362b}
+.sk-json{margin:0;max-height:60vh;overflow:auto;padding:12px;border:1px solid var(--ui-line,#e4e8eb);border-radius:10px;background:var(--ui-soft,#f2f4f6);font-size:12px;line-height:1.45;white-space:pre}

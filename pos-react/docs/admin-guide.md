@@ -27,6 +27,9 @@ The administration portal is a separate page from the POS and has its own sign-i
 ## Account list
 Search by business, owner or e-mail. Open an account to manage it.
 
+## Restaurant (OGF) businesses
+Set the business type to **Restaurant (OGF)** (when creating the account, or on the account's Business type tab). It behaves like a restaurant, lives at `ogf.ceylonrylabs.io` and gets Settings > System Options > Sales push (OGF only), which sends the sales to One Galle Face. The address needs the `ogf.ceylonrylabs.io` domain added to the Netlify site (Domain management), its DNS record (Netlify DNS does this), and a Web platform for that hostname in the Appwrite project, or sign-in on it fails with "Failed to fetch". See `docs/ogf-sales-push.md`.
+
 ## New POS account
 **Account management > + New POS account** creates a business for a customer: business name, owner's name, sign-in e-mail, optional mobile, business type and an optional password (a blank password is generated). The account starts on the free trial with an empty POS, the business type already chosen and locked, and the owner PIN 1234. The password and PIN are shown once on the next screen with a Copy button; give them to the owner. An e-mail that already has an account is refused. If the documents cannot be written, the new sign-in is removed again so the e-mail can be tried again.
 
