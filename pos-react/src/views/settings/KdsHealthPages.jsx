@@ -161,14 +161,14 @@ export function HealthPage() {
 	const kds = kdsLink.state();
 	const kdsStations = kitchenStations(settings, useFeature("checkout.kds")).filter((s) => s.type === "kds");
 	const usbReceipt = !!settings.usbPrinter?.vendorId;
-	const usbLabel = !!settings.barcodePrinter?.vendorId;
+	const usbLabel = !!(settings.barcodePrinter?.vendorId || settings.barcodePrinter?.bridge);
 	const usbScanner = !!settings.usbScanner?.vendorId;
 	const kitchenTickets = data.kitchenTickets || [];
 	const failedTickets = kitchenTickets.filter((t) => t.status === "printer-unavailable").length;
 	const cloud = authKind === "appwrite";
 	const printers = [
 		{ name: "USB receipt printer", expected: usbReceipt, connected: receiptPrinter.connected },
-		{ name: "USB label printer", expected: usbLabel, connected: labelPrinter.status.connected },
+		{ name: settings.barcodePrinter?.bridge ? "Label printer (print helper)" : "USB label printer", expected: usbLabel, connected: labelPrinter.status.connected },
 		{ name: "USB barcode scanner", expected: usbScanner, connected: barcodeScanner.status.connected },
 	];
 	const issues = useMemo(

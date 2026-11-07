@@ -3,6 +3,7 @@
  * restore/calibrate/print, plus the on-screen label preview and the browser-print (Android Print) label HTML.
  */
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
+import { sendRaw } from "./printBridge";
 import { localPrintPreview, showLabelPreview } from "./localPrintPreview";
 import { barcodeSvg, cleanBarcode, code128Units, drawCode128, sizedBarcode } from "./barcode";
 import { esc, money } from "../../domain/format";
@@ -260,6 +261,7 @@ class LabelPrinter {
 		this.device = null;
 		this.endpoint = 0;
 		this.name = "";
+		this.bridge = ""; // name of the Windows printer used through the print helper (services/printing/printBridge.js); "" = direct USB
 		this.status = { message: "Barcode label printer not detected.", connected: false };
 		this.emitter = createEmitter();
 		this.onRemember = null;
@@ -286,20 +288,33 @@ class LabelPrinter {
 		return typeof navigator !== "undefined" && !!navigator.usb;
 	}
 	get connected() {
-		return !!(this.device && this.device.opened);
+		return !!(this.bridge || (this.device && this.device.opened));
 	}
-	/** Name of the connected USB label printer ("" when none). */
+	/** Name of the connected label printer ("" when none): the Windows printer name through the print helper, else the USB device. */
 	get deviceName() {
+		if (this.bridge) return this.bridge;
 		return this.connected ? this.device.productName || this.name || "USB barcode label printer" : "";
 	}
 	async _claim(device) {
 		const out = await claimUsbOutput(device, "USB label printer");
+		this.bridge = "";
 		this.device = device;
 		this.endpoint = out.endpointNumber;
 		this.name = device.productName || "USB barcode label printer";
 		this.onRemember?.({ vendorId: device.vendorId, productId: device.productId, productName: this.name, serialNumber: device.serialNumber || "" });
 		log.info("USB label printer connected", { device: this.name, vendorId: device.vendorId, productId: device.productId });
 		this._set(this.name + " connected for barcode labels.", true);
+	}
+	/** Use a Windows printer through the print helper instead of direct USB. The choice is remembered like a USB printer. */
+	connectHelper(printerName) {
+		this.bridge = String(printerName || "").trim();
+		this.device = null;
+		this.name = this.bridge;
+		if (!this.bridge) return false;
+		this.onRemember?.({ bridge: this.bridge, productName: this.bridge });
+		log.info("label printer set to the print helper", { printer: this.bridge });
+		this._set(this.bridge + " connected for barcode labels through the print helper.", true);
+		return true;
 	}
 	async connect() {
 		if (!this.supported) throw new Error("USB barcode label detection needs Chrome with WebUSB support.");
@@ -316,6 +331,14 @@ class LabelPrinter {
 		}
 	}
 	async restore(saved = {}) {
+		// a printer chosen through the print helper needs no USB permission; the helper itself is reached when a label is printed
+		if (saved.bridge) {
+			this.bridge = String(saved.bridge);
+			this.device = null;
+			this.name = this.bridge;
+			this._set(this.bridge + " set for barcode labels through the print helper.", true);
+			return true;
+		}
 		if (!this.supported) return false;
 		try {
 			const devices = await navigator.usb.getDevices();
@@ -333,13 +356,23 @@ class LabelPrinter {
 		if (!this.connected && !(await this.restore(saved)))
 			throw new Error("USB barcode printer is not connected. Tap Detect USB Label Printer first.");
 	}
+	/** Gives printer commands to the printer: through the print helper when one is chosen, else over USB in 4 KB chunks. */
+	async _send(bytes, what) {
+		if (this.bridge) return sendRaw(this.bridge, bytes);
+		try {
+			await transferChunks(this.device, this.endpoint, bytes);
+		} catch (error) {
+			log.error(what + " rejected by printer", error, { device: this.name, bytes: bytes.length });
+			throw new Error("The USB barcode printer stopped accepting label data.");
+		}
+	}
 	/** Teach the printer the label length and gap of the loaded roll (use the real size/gap of the labels). */
 	async calibrate(saved, stock) {
 		await this._ensure(saved);
 		const s = resolveLabelStock(stock);
 		const cmd = new TextEncoder().encode(tsplSetup(s.width, s.height, s.gap) + "GAPDETECT\r\n");
-		const result = await this.device.transferOut(this.endpoint, cmd);
-		if (result.status !== "ok") throw new Error("The label printer did not accept calibration.");
+		if (this.bridge) await this._send(cmd, "calibration");
+		else if ((await this.device.transferOut(this.endpoint, cmd)).status !== "ok") throw new Error("The label printer did not accept calibration.");
 		log.info("label printer calibrated", { device: this.name, width: s.width, height: s.height, gap: s.gap });
 		this._set(`${this.name} calibrated for ${s.width} × ${s.height} mm labels with a ${s.gap} mm gap.`, true);
 	}
@@ -348,14 +381,9 @@ class LabelPrinter {
 		if (localPrintPreview()) return void showLabelPreview({ title: "Label · " + (product.name || "Item"), bytes: tsplBitmapBytes(product, copies, size, opts), size, copies });
 		await this._ensure(saved);
 		const bytes = tsplBitmapBytes(product, copies, size, opts);
-		// Sent in 4 KB chunks like the receipt printer: one 6 KB bulk transfer is rejected or truncated by some printers.
-		try {
-			await transferChunks(this.device, this.endpoint, bytes);
-		} catch (error) {
-			log.error("label print rejected by printer", error, { device: this.name, bytes: bytes.length });
-			throw new Error("The USB barcode printer stopped accepting label data.");
-		}
-		log.info("labels sent to USB printer", { device: this.name, copies: Number(copies) || 1, bytes: bytes.length, size: size.join("x"), gapMm: Number(opts?.gapMm ?? opts) || 3, offsetX: opts?.offsetX || 0, offsetY: opts?.offsetY || 0 });
+		// Over USB it is sent in 4 KB chunks like the receipt printer: one 6 KB bulk transfer is rejected or truncated by some printers.
+		await this._send(bytes, "label print");
+		log.info("labels sent to the label printer", { device: this.name, copies: Number(copies) || 1, bytes: bytes.length, size: size.join("x"), gapMm: Number(opts?.gapMm ?? opts) || 3, offsetX: opts?.offsetX || 0, offsetY: opts?.offsetY || 0 });
 		this._set(this.name + " ready for barcode labels.", true);
 	}
 	/** Print one alignment test label (see tsplAlignmentBytes). */
@@ -365,12 +393,7 @@ class LabelPrinter {
 		// local test mode: no printer needed, show the calibration label that would be printed
 		if (localPrintPreview()) return void showLabelPreview({ title: "Calibration label", bytes, size: [String(st.width), String(st.height)] });
 		await this._ensure(saved);
-		try {
-			await transferChunks(this.device, this.endpoint, bytes);
-		} catch (error) {
-			log.error("alignment label rejected by printer", error, { device: this.name });
-			throw new Error("The USB barcode printer stopped accepting label data.");
-		}
+		await this._send(bytes, "alignment label");
 		log.info("alignment test label sent", { device: this.name, offsetX: st.offsetX, offsetY: st.offsetY });
 	}
 }
