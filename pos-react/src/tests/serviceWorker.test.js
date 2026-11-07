@@ -30,6 +30,15 @@ describe("service worker strategies", () => {
 		expect(pageKey(new URL("https://pos.test/posv2/admin"))).toBe("/posv2/admin");
 		expect(pageKey(new URL("https://pos.test/posv2/admin/"))).toBe("/posv2/admin/");
 	});
+	it("on an address whose root is the POS, only the POS pages are app pages; /KDS, /GM and the website load from the network", () => {
+		expect(pick("https://pos.test/", { mode: "navigate" })).toBe("page");
+		expect(pick("https://pos.test/admin", { mode: "navigate" })).toBe("page");
+		expect(pick("https://pos.test/Automobile", { mode: "navigate" })).toBe("page");
+		for (const path of ["/KDS", "/GM", "/cashflow/signin.html", "/index.html", "/privacy.html"]) expect(pick("https://pos.test" + path, { mode: "navigate" }), path).toBe("skip");
+		expect(pageKey(new URL("https://pos.test/"))).toBe("./index.html");
+		// files used by the POS page still follow the file rules wherever the page is
+		expect(pick("https://pos.test/posv2/assets/index-6bGuUAP8.css")).toBe("hashed");
+	});
 	it("uses a new cache name so the previous cache-first copies are dropped", () => {
 		expect(CACHE).toBe("ceylonry-pos-react-v2");
 		expect(typeof handlers.activate).toBe("function");

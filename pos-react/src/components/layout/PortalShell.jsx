@@ -134,7 +134,7 @@ export function PortalShell() {
 					)}
 					<div className="side-foot">
 						<strong id="side-business">{settings.business || "My Business"}</strong>
-						<a className="btn out" id="portal-open-pos" style={{ marginTop: 10, width: "100%", display: "block", textAlign: "center" }} href="/posv2/">
+						<a className="btn out" id="portal-open-pos" style={{ marginTop: 10, width: "100%", display: "block", textAlign: "center" }} href="https://pos.ceylonrylabs.io/">
 							Open POS
 						</a>
 						<button className="btn out" style={{ marginTop: 7, width: "100%" }} onClick={staffLogout}>

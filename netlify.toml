@@ -3,12 +3,34 @@
   publish = "."
   functions = "netlify/functions"
 
-# Administrator portal on its own address: admin.ceylonrylabs.io shows the Ceylonry administration portal (/posv2/admin).
+# Administrator portal: it lives only at admin.ceylonrylabs.io (the old ceylonrylabs.io/posv2/admin is gone and redirects here).
 # Needs the admin.ceylonrylabs.io domain added to this Netlify site, a DNS CNAME for it, and a Web platform for it in the Appwrite project. Must stay first (first match wins).
 [[redirects]]
   from = "https://admin.ceylonrylabs.io/"
   to = "/pos-react/dist/admin.html"
   status = 200
+  force = true
+
+# The POS on its own address: pos.ceylonrylabs.io opens the POS app (same business login) for every business type except the ones with an address
+# of their own below. Needs the pos.ceylonrylabs.io domain added to this Netlify site, a DNS CNAME for it, and the same hostname registered as a Web
+# platform in the Appwrite project (otherwise sign-in fails with "Failed to fetch").
+[[redirects]]
+  from = "https://pos.ceylonrylabs.io/"
+  to = "/pos-react/dist/index.html"
+  status = 200
+  force = true
+
+# The old POS address ceylonrylabs.io/posv2/ moves to pos.ceylonrylabs.io (main address only: the other addresses still load the POS files from /posv2/assets/).
+[[redirects]]
+  from = "https://ceylonrylabs.io/posv2"
+  to = "https://pos.ceylonrylabs.io/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://ceylonrylabs.io/posv2/"
+  to = "https://pos.ceylonrylabs.io/"
+  status = 301
   force = true
 
 # Automobile (car detailing) on its own address: automobile.ceylonrylabs.io and [base URL]/Automobile open the POS app
@@ -208,12 +230,12 @@
 # shortcuts open the React POS.
 [[redirects]]
   from = "/pos-system/*"
-  to = "/posv2/"
+  to = "https://pos.ceylonrylabs.io/"
   status = 302
   force = true
 
 # Business admin portal (/admin): the same app and business login as the POS, showing only account management.
-# (The Ceylonry staff portal stays at /posv2/admin.)
+# (The Ceylonry staff portal is at admin.ceylonrylabs.io.)
 [[redirects]]
   from = "/admin"
   to = "/pos-react/dist/index.html"
@@ -226,17 +248,30 @@
   status = 200
   force = true
 
-# POS administration portal. Must stay above the generic /posv2/* rule (first match wins).
+# The POS administration portal is only served at admin.ceylonrylabs.io: its old paths (and the file itself) redirect there.
+# Must stay above the generic /posv2/* rule (first match wins).
 [[redirects]]
   from = "/posv2/admin"
-  to = "/pos-react/dist/admin.html"
-  status = 200
+  to = "https://admin.ceylonrylabs.io/"
+  status = 301
   force = true
 
 [[redirects]]
   from = "/posv2/admin/"
-  to = "/pos-react/dist/admin.html"
-  status = 200
+  to = "https://admin.ceylonrylabs.io/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/posv2/admin.html"
+  to = "https://admin.ceylonrylabs.io/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/pos-react/dist/admin.html"
+  to = "https://admin.ceylonrylabs.io/"
+  status = 301
   force = true
 
 # Canonical addresses: /GM (Guest Manager) and /KDS (Kitchen Display). Other spellings and the file paths redirect to them.
@@ -399,7 +434,8 @@
     Content-Type = "application/manifest+json"
     Cache-Control = "public, max-age=300, must-revalidate"
 
-# The POS is served under /posv2/: its manifest and service worker need the same headers there.
+# The POS files are served under /posv2/ (the POS pages themselves are at pos.ceylonrylabs.io and the other POS addresses): the manifest and the
+# service worker need these headers. The service worker lives in /posv2/ but controls the whole of an address whose root is the POS, so it is allowed scope "/".
 [[headers]]
   for = "/posv2/manifest.webmanifest"
   [headers.values]
@@ -410,6 +446,7 @@
   for = "/posv2/sw.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+    Service-Worker-Allowed = "/"
 
 # A short browser cache makes switching Solo, Studio, and Business feel
 # immediate without leaving users on stale HTML after an update.

@@ -12,6 +12,8 @@ import { mountEditor } from "./editor.mjs";
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+// the POS of the address Guest Manager is on (pos., automobile. and ogf. serve the POS at their root); anywhere else the main POS address
+const posUrl = () => (/^(pos|automobile|ogf)\./i.test(location.hostname) ? "/" : "https://pos.ceylonrylabs.io/");
 const money = (n) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const prettyDate = (d) => new Date(d + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
 const VIEWS = [["bookings", "Bookings"], ["calendar", "Calendar"], ["floor", "Floor"], ["waitlist", "Waitlist"], ["guests", "Guests"], ["messages", "Messages"], ["reports", "Reports"], ["handover", "Handover"], ["settings", "Settings"]];
@@ -590,7 +592,7 @@ function lockedView() {
 	const msg = allowed === false
 		? `<p>Guest Manager is not switched on for this account.</p><p class="mute">${esc(gmWhy)}</p>`
 		: `<p class="err">Could not check this account's features. Check the connection and try again.</p>${posError ? `<p class="mute">Reason: ${esc(posError)}</p>` : ""}`;
-	return `<div class="card signin"><h1>Guest Manager</h1>${msg}<button class="pri" data-act="recheck">Check again</button><a href="/posv2/">Back to the POS</a></div>`;
+	return `<div class="card signin"><h1>Guest Manager</h1>${msg}<button class="pri" data-act="recheck">Check again</button><a href="${posUrl()}">Back to the POS</a></div>`;
 }
 
 function render() {
@@ -603,7 +605,7 @@ function render() {
 		if (S.store.mode === "cloud" && allowed !== true) return void (root.innerHTML = lockedView());
 		const body = { bookings: viewBookings, calendar: viewCalendar, floor: viewFloor, waitlist: viewWaitlist, guests: viewGuests, messages: viewMessages, reports: viewReports, handover: viewHandover, settings: viewSettings }[ui.view]();
 		const st = S.store.status;
-		root.innerHTML = `<header class="top"><div><h1>Guest Manager <small class="sub">${esc(business())}</small></h1></div><div class="chips"><span class="pill ${S.store.mode === "cloud" ? "ok" : "warn"}">${S.store.mode === "cloud" ? "Synced" : "This device only"}</span><span class="pill ${pos.found ? "ok" : ""}">POS ${pos.found ? "linked" : "not linked"}</span>${st !== "ok" ? `<span class="pill ${st === "offline" ? "bad" : "info"}">${st === "offline" ? "Offline: will retry" : "Saving…"}</span>` : ""}${S.store.mode === "cloud" ? `<a href="/posv2/">POS</a>` : ""}</div></header>
+		root.innerHTML = `<header class="top"><div><h1>Guest Manager <small class="sub">${esc(business())}</small></h1></div><div class="chips"><span class="pill ${S.store.mode === "cloud" ? "ok" : "warn"}">${S.store.mode === "cloud" ? "Synced" : "This device only"}</span><span class="pill ${pos.found ? "ok" : ""}">POS ${pos.found ? "linked" : "not linked"}</span>${st !== "ok" ? `<span class="pill ${st === "offline" ? "bad" : "info"}">${st === "offline" ? "Offline: will retry" : "Saving…"}</span>` : ""}${S.store.mode === "cloud" ? `<a href="${posUrl()}">POS</a>` : ""}</div></header>
 		<nav aria-label="Sections">${VIEWS.map(([k, l]) => `<button data-act="view:${k}" ${ui.view === k ? 'aria-current="page"' : ""}>${l}</button>`).join("")}</nav><main>${body}</main>`;
 		if (focus) {
 			const el = document.getElementById(focus);

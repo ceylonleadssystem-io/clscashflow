@@ -14,7 +14,7 @@ The repository root `package.json` runs `npm run build` on Netlify:
 `vite.config.js` sets `base` to `VITE_BASE_PATH` or `/posv2/`, so assets are requested from `/posv2/assets/…`.
 `dist/` is git-ignored and built on every deploy.
 
-Pages: `/posv2/` (POS) and `/posv2/admin.html` (administration).
+Pages: `pos.ceylonrylabs.io` (POS; `/posv2/` serves its files and the old ceylonrylabs.io/posv2/ redirects to the POS address) and `admin.ceylonrylabs.io` (administration).
 
 ## Environment variables
 Build-time `VITE_*` values are listed in [`.env.example`](../.env.example); changing one needs a new deploy.
@@ -27,7 +27,7 @@ Netlify checklist for production: `VITE_AUTH_PROVIDER=appwrite`, `VITE_ADMIN_EMA
 ## Releasing
 1. `npm test` and `npm run build` in `pos-react/`.
 2. Push the branch, open a PR to `main`, merge → Netlify deploys.
-3. After deploy open `/posv2/` and `/posv2/admin.html` and sign in.
+3. After deploy open `https://pos.ceylonrylabs.io/` and `https://admin.ceylonrylabs.io/` and sign in.
 
 ## Troubleshooting
 | Symptom | Cause / fix |

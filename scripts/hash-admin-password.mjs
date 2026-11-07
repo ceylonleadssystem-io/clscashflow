@@ -123,4 +123,4 @@ rl.close();
 
 console.log(`\nSaved: ${existing ? "updated" : "created"} administrator ${email}.`);
 console.log(generated ? `\nPassword (shown once, save it in your password manager):\n${password}\n` : "\nSign in with the password you typed.\n");
-console.log("Sign in at /posv2/admin. The API key was not stored; you can remove it from Appwrite if it was created only for this.");
+console.log("Sign in at https://admin.ceylonrylabs.io/. The API key was not stored; you can remove it from Appwrite if it was created only for this.");

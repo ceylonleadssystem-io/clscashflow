@@ -9,13 +9,17 @@ const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./assets/favicon
 // Vite file names end in an 8 character content hash
 const isHashed = (pathname) => /-[A-Za-z0-9_-]{8}\.(?:js|css)$/.test(pathname);
 
+// The worker can control a whole address (pos., automobile., ogf.: their root page is the POS), where /KDS, /GM and the website pages also live. Only the
+// POS pages are app pages: everything else loads from the network as it always did and never replaces the stored POS page.
+const isPosPage = (pathname) => pathname === "/" || /^\/(posv2|admin|automobile)(\/|$)/i.test(pathname);
+
 /** Which strategy a request gets: "skip" | "page" | "hashed" | "revalidate". Pure, so it can be tested. */
 function strategyFor(url, req, origin) {
 	if (req.method !== "GET") return "skip";
 	if (url.pathname.startsWith("/.netlify/")) return "skip"; // never cache API calls
 	const cdn = url.href.startsWith("https://cdn.jsdelivr.net/npm/xlsx@");
 	if (url.origin !== origin && !cdn) return "skip";
-	if (req.mode === "navigate") return "page";
+	if (req.mode === "navigate") return isPosPage(url.pathname) ? "page" : "skip";
 	return isHashed(url.pathname) ? "hashed" : "revalidate";
 }
 

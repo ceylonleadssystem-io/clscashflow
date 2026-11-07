@@ -1,6 +1,6 @@
 'use strict';
 
-// Sign-in for the POS administration portal (/posv2/admin).
+// Sign-in for the POS administration portal (admin.ceylonrylabs.io).
 // Accounts live only in the separate admin database. There is deliberately no sign-up,
 // invite or password-reset endpoint: administrators are added by creating a record.
 

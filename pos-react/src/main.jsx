@@ -6,6 +6,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./styles/index.css";
+import { servesPosAtRoot } from "./domain/posRoute";
 import { installGlobalLogging } from "./utils/logger";
 
 installGlobalLogging();
@@ -19,6 +20,8 @@ createRoot(document.getElementById("root")).render(
 // Offline app shell (same idea as the legacy sw.js)
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
 	window.addEventListener("load", () => {
-		navigator.serviceWorker.register(import.meta.env.BASE_URL + "sw.js", { updateViaCache: "none" }).catch((e) => console.warn("POS offline support could not start.", e));
+		// on the addresses whose root page is the POS (pos., automobile., ogf.) the worker must control the whole address, not just /posv2/
+		const scope = servesPosAtRoot(location.hostname) ? "/" : undefined;
+		navigator.serviceWorker.register(import.meta.env.BASE_URL + "sw.js", { updateViaCache: "none", scope }).catch((e) => console.warn("POS offline support could not start.", e));
 	});
 }

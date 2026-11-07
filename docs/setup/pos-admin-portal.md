@@ -1,6 +1,6 @@
 # POS administration portal
 
-URL: `https://<main domain>/posv2/admin` (also reachable at `/posv2/admin.html`). Never framed, cached or indexed.
+URL: `https://admin.<main domain>/` (for the live site https://admin.ceylonrylabs.io/). The old `/posv2/admin` and `/posv2/admin.html` paths redirect there. The admin address needs its own domain alias in Netlify and a Web platform in Appwrite. Never framed, cached or indexed.
 
 ## How it is separated from clients
 - Administrator accounts live in their own Appwrite database, `pos_admin` (`APPWRITE_ADMIN_DATABASE_ID` to override), not in the client database (`ceylonry` / `app_documents`) and not in Appwrite Auth. Admins and POS clients share no users, sessions or collections.
