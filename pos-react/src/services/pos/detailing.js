@@ -132,13 +132,13 @@ export async function togglePause(ctx, id) {
 }
 
 /** Inspection notes and the customer's sign-off name, needed before the work starts. */
-export async function saveInspection(ctx, id, { inspection, signedBy }) {
+export async function saveInspection(ctx, id, { inspection, signedBy, signature }) {
 	if (!guard(ctx)) return false;
 	const job = find(ctx, "detailJobs", id);
 	if (!job) return false;
 	if (["Completed", "Invoiced", "Cancelled"].includes(job.status)) return void (await ctx.ui.alert("This job is closed."));
-	if (!inspection.trim() || !signedBy.trim()) return void (await ctx.ui.alert("Enter the inspection notes and the name of the customer who signs off."));
-	await put(ctx, T.detailJobs, { ...job, inspection: inspection.trim(), signedBy: signedBy.trim() });
+	if (!inspection.trim() || !signedBy.trim() || !signature) return void (await ctx.ui.alert("Enter the inspection notes, the name of the customer who signs off and capture their signature."));
+	await put(ctx, T.detailJobs, { ...job, inspection: inspection.trim(), signedBy: signedBy.trim(), signature }); // signature is kept in the row's extra column
 	return true;
 }
 
