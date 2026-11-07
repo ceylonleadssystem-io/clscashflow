@@ -5,7 +5,7 @@ import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 
 /**
- * Size of the label roll loaded in the USB label printer (30 × 20, 38 × 25, 50 × 25 or 60 × 40 mm, 3 mm gap), saved in
+ * Size of the label roll loaded in the USB label printer (30 × 15, 30 × 20, 38 × 25, 50 × 25 or 60 × 40 mm, 3 mm gap), saved in
  * settings.labelStock and used for every print job and calibration, plus the button that opens the guided alignment
  * wizard (which saves the shift). A wrong size makes the printer feed a blank label between prints; a wrong shift crops
  * one edge of the barcode or leaves it off-centre.

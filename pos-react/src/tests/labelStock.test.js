@@ -7,9 +7,10 @@ describe("label stock", () => {
 		expect(resolveLabelStock(undefined)).toMatchObject(DEFAULT_LABEL_STOCK);
 		expect(resolveLabelStock({})).toMatchObject({ width: 30, height: 20, gap: 3, offsetX: 0, offsetY: 0, marginMm: null });
 	});
-	it("supports only 30x20, 50x25, 60x40 and 38x25 with a fixed 3 mm gap", async () => {
+	it("supports only 30x20, 50x25, 60x40, 38x25 and 30x15 with a fixed 3 mm gap", async () => {
 		const { LABEL_SIZES } = await import("../services/printing/labelPrinter");
-		expect(LABEL_SIZES).toEqual(["30x20", "50x25", "60x40", "38x25"]);
+		expect(LABEL_SIZES).toEqual(["30x20", "50x25", "60x40", "38x25", "30x15"]);
+		expect(resolveLabelStock({ width: 30, height: 15, gap: 5 })).toMatchObject({ width: 30, height: 15, gap: 3 });
 		expect(resolveLabelStock({ width: 50, height: 25, gap: 2 })).toMatchObject({ width: 50, height: 25, gap: 3 });
 		expect(resolveLabelStock({ width: 60, height: 40 })).toMatchObject({ width: 60, height: 40 });
 		expect(resolveLabelStock({ width: 38, height: 25, gap: 5 })).toMatchObject({ width: 38, height: 25, gap: 3 });
@@ -44,6 +45,21 @@ describe("label layouts fit every offered size", () => {
 					if (r.sizeY != null) expect(r.sizeY + l.sizeFont).toBeLessThanOrEqual(r.barcodeY);
 				}
 		}
+	});
+	it("30x15 has no description line and keeps the barcode readable", async () => {
+		const { labelBitmapLayout, labelRows } = await import("../services/printing/labelPrinter");
+		const l = labelBitmapLayout(30, 15);
+		expect(l.descFont).toBe(0);
+		expect(l.barcodeMin).toBeGreaterThanOrEqual(36); // at least 4.5 mm of bars
+		expect(labelRows(l, 120, { desc: false, size: false }).barcodeH).toBeGreaterThanOrEqual(64);
+	});
+	it("browser printing uses the label size for the page and drops the description on a 15 mm label", async () => {
+		const { barcodeLabelsHtml } = await import("../services/printing/labelPrinter");
+		const p = { name: "Cap", code: "CAP-1", price: 1200, description: "Blue cotton" };
+		const short = barcodeLabelsHtml(p, 1, ["30", "15"]);
+		expect(short).toContain("@page{size:30mm 15mm");
+		expect(short).toContain(".copy-description,.copy-size{display:none}");
+		expect(barcodeLabelsHtml(p, 1, ["30", "20"])).not.toContain(".copy-description,.copy-size{display:none}");
 	});
 	it("30x20 has no description line; 38x25, 50x25 and 60x40 do", async () => {
 		const { labelBitmapLayout } = await import("../services/printing/labelPrinter");
