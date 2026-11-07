@@ -19,7 +19,7 @@ const log = createLogger("printing");
  */
 export const DEFAULT_LABEL_STOCK = { width: 30, height: 20, gap: 3 };
 /** The only paper sizes supported (width x height, mm). The gap between labels is always 3 mm. */
-export const LABEL_SIZES = ["30x20", "50x25", "60x40", "38x25"];
+export const LABEL_SIZES = ["30x20", "50x25", "60x40", "38x25", "30x15"];
 
 /** Clamp/normalise a saved stock setting. A saved size that is not one of LABEL_SIZES snaps to the nearest one. */
 export function resolveLabelStock(saved) {
@@ -82,6 +82,9 @@ export function labelBitmapLayout(width, height) {
 	// 38 x 25 mm (304 x 200 dots)
 	if (width >= 38)
 		return L({ margin: 22, nameFont: 22, descFont: 13, sizeFont: 14, priceFont: 22, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
+	// 30 x 15 mm (240 x 120 dots): the shortest label; name, barcode and price only (no description), tight margins so all three fit
+	if (height <= 15)
+		return L({ margin: 24, nameFont: 12, descFont: 0, sizeFont: 11, priceFont: 12, top: 4, lineGap: 2, barcodeMax: 70, barcodeMin: 36, priceGap: 4, bottomPad: 6 });
 	// 30 x 20 mm (240 x 160 dots): name, barcode and price must all fit above the gap; no description line
 	return L({ margin: 24, nameFont: 14, descFont: 0, sizeFont: 12, priceFont: 14, top: 4, lineGap: 2, barcodeMax: 84, barcodeMin: 40, priceGap: 6, bottomPad: 14 });
 }
@@ -421,9 +424,12 @@ export function barcodeLabelsHtml(product, copies, size) {
 			description || "Scan this label at checkout",
 		)}</span>${sizeLabel ? `<strong class="copy-size">Size: ${esc(sizeLabel)}</strong>` : ""}<div class="copy-barcode">${barcodeSvg(sizedBarcode(product.code, sizeLabel))}</div><b class="copy-price">${money(product.price)}</b></div>`;
 	const labels = runs.flatMap((r) => Array.from({ length: r.copies }, () => `<section>${one(r.sizeLabel)}</section>`)).join("");
+	// a label 15 mm tall or less has room for the name, a short barcode and the price only
+	const short = Number(size[1]) <= 15;
+	const compact = short ? ".copy-description,.copy-size{display:none}.copy{gap:.2mm}.copy-name,.copy-price{font-size:8pt}.copy-barcode{margin:0}svg{max-height:6mm}" : "";
 	return `<!doctype html><html><head><style>@page{size:${size[0]}mm ${size[1]}mm;margin:1mm}*{box-sizing:border-box}body{margin:0;font-family:Arial;color:#000}section{width:${
 		Number(size[0]) - 2
 	}mm;height:${
 		Number(size[1]) - 2
-	}mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;overflow:hidden}.copy{width:100%;display:grid;justify-items:center;gap:.45mm}.copy-name,.copy-price{display:block;font-size:10pt;font-weight:900;line-height:1}.copy-description{display:block;max-width:96%;font-size:7.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-size{display:block;font-size:8pt;font-weight:900;line-height:1}.copy-barcode{width:100%;display:grid;place-items:center;margin:.2mm 0}svg{display:block;width:95%;height:auto;max-height:14mm;margin:0 auto}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
+	}mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;overflow:hidden}.copy{width:100%;display:grid;justify-items:center;gap:.45mm}.copy-name,.copy-price{display:block;font-size:10pt;font-weight:900;line-height:1}.copy-description{display:block;max-width:96%;font-size:7.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-size{display:block;font-size:8pt;font-weight:900;line-height:1}.copy-barcode{width:100%;display:grid;place-items:center;margin:.2mm 0}svg{display:block;width:95%;height:auto;max-height:14mm;margin:0 auto}${compact}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
 }
