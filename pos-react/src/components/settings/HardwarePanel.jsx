@@ -10,6 +10,7 @@ import { useUi } from "../../store/UiProvider";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { labelPrinter } from "../../services/printing/labelPrinter";
 import { LabelStockPicker } from "./LabelStockPicker";
+import { PrintHelperPicker } from "./PrintHelperPicker";
 import { barcodeScanner, findScannedProduct } from "../../services/printing/scanner";
 
 const AZURE = "Azure Swim tablet printer: USB 1046:20497 · 80 mm ESC/POS";
@@ -41,6 +42,7 @@ export function HardwarePanel() {
 	const [printer, setPrinter] = useState(receiptPrinter.status);
 	const [labels, setLabels] = useState(labelPrinter.status);
 	const [scan, setScan] = useState(barcodeScanner.status);
+	const [helperOpen, setHelperOpen] = useState(false);
 	const [testOpen, setTestOpen] = useState(false);
 	const [testValue, setTestValue] = useState("");
 	const settings = data.settings;
@@ -95,10 +97,13 @@ export function HardwarePanel() {
 				<div className="hw-section" id="hw-label-printer">
 					<div>
 						<strong>USB barcode label printer</strong>
-						<div className="plan-settings-note">Saved USB label printers reconnect automatically after the first browser permission approval.</div>
+						<div className="plan-settings-note">Saved USB label printers reconnect automatically after the first browser permission approval. If Windows keeps the printer for its own driver (the browser says "Access denied"), use Connect via Print Helper.</div>
 					</div>
 					<div className="hw-actions">
 						<ConnectButton className="btn out" name={labelPrinter.deviceName} label="Connect Label Printer" onClick={() => attempt(() => labelPrinter.connect(), "Could not connect the USB barcode printer.")} />
+						<button className="btn out" type="button" id="connect-print-helper" onClick={() => setHelperOpen(true)}>
+							Connect via Print Helper
+						</button>
 						<button
 							className="btn out"
 							type="button"
@@ -120,6 +125,16 @@ export function HardwarePanel() {
 					</div>
 				</div>
 			)}
+			<PrintHelperPicker
+				open={helperOpen}
+				current={labelPrinter.bridge}
+				onClose={() => setHelperOpen(false)}
+				onPick={(name) => {
+					labelPrinter.connectHelper(name);
+					setHelperOpen(false);
+					ui.notice(name + " will print barcode labels through the print helper. Press Calibrate Label Gap, then print a test label.");
+				}}
+			/>
 			{scanner && (
 				<div className="hw-section" id="hw-scanner">
 					<div>
