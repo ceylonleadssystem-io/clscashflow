@@ -1,6 +1,7 @@
 /**
  * Which POS address a business belongs on. The live site has two: the main POS (ceylonrylabs.io/posv2/, used by restaurants, shops, salons and
- * the other types) and the Automobile (car detailing) POS (automobile.ceylonrylabs.io, also ceylonrylabs.io/Automobile). Both are the same app
+ * the other types), the Automobile (car detailing) POS (automobile.ceylonrylabs.io, also ceylonrylabs.io/Automobile) and the Restaurant (OGF) POS
+ * (ogf.ceylonrylabs.io). All are the same app
  * and the same login; the business type, chosen by the Ceylonry team, decides which address the business should use. After the business
  * signs in, the session moves to the right address (services/handoff.js). Anywhere else (local development, previews, the admin address)
  * nothing is redirected.
@@ -11,18 +12,20 @@ export const POS_BASE_HOST = "ceylonrylabs.io";
 export const POS_URLS = {
 	main: "https://" + POS_BASE_HOST + "/posv2/",
 	automobile: "https://automobile." + POS_BASE_HOST + "/",
+	ogf: "https://ogf." + POS_BASE_HOST + "/",
 };
 
-/** "automobile" or "main" for a business whose type has been chosen; "" while the business has not chosen one yet. */
+/** "automobile", "ogf" or "main" for a business whose type has been chosen; "" while the business has not chosen one yet. */
 export function addressForType(settings = {}) {
 	if (!settings.businessType || !businessTypeLocked(settings)) return "";
-	return settings.businessType === "automobile" ? "automobile" : "main";
+	return settings.businessType === "automobile" ? "automobile" : settings.businessType === "ogf" ? "ogf" : "main";
 }
 
-/** The POS address this page is on: "automobile", "main", or "" for anything that is not one of the two live addresses. */
+/** The POS address this page is on: "automobile", "ogf", "main", or "" for anything that is not one of the live addresses. */
 export function addressOfPage({ hostname = "", pathname = "" } = {}) {
 	const host = String(hostname).toLowerCase();
 	if (host === "automobile." + POS_BASE_HOST) return "automobile";
+	if (host === "ogf." + POS_BASE_HOST) return "ogf";
 	if (host !== POS_BASE_HOST && host !== "www." + POS_BASE_HOST) return "";
 	if (/^\/automobile\/?$/i.test(pathname)) return "automobile";
 	return /^\/posv2(\/|$)/i.test(pathname) ? "main" : "";

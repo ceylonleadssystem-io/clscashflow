@@ -131,7 +131,7 @@ describe("catalogue, filters and formatting", () => {
 	it("Kitchen Operations is only for businesses with a kitchen (restaurants and cafés/bakeries), whatever the feature switch says", () => {
 		for (const type of Object.keys(CAPABILITIES)) {
 			const shown = visibleGroups({ role: "owner", modules: { kitchen: kitchenReportsOn(true, type) } }).some((g) => g.key === "kitchen");
-			expect(shown, type).toBe(type === "restaurant" || type === "cafe");
+			expect(shown, type).toBe(["restaurant", "cafe", "ogf"].includes(type));
 		}
 		expect(kitchenReportsOn(false, "restaurant")).toBe(false);
 		expect(kitchenReportsOn(true, "")).toBe(false);

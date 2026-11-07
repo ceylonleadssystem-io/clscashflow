@@ -4,10 +4,12 @@ import { addressForType, addressOfPage, posRedirect, POS_URLS } from "../domain/
 const chosen = (businessType) => ({ businessType, businessTypeLocked: true });
 const MAIN = { hostname: "ceylonrylabs.io", pathname: "/posv2/" };
 const AUTO = { hostname: "automobile.ceylonrylabs.io", pathname: "/" };
+const OGF = { hostname: "ogf.ceylonrylabs.io", pathname: "/" };
 
 describe("which POS address a business belongs on", () => {
-	it("sends Automobile to its own address and every other chosen type to the main POS", () => {
+	it("sends Automobile and Restaurant (OGF) to their own addresses and every other chosen type to the main POS", () => {
 		expect(addressForType(chosen("automobile"))).toBe("automobile");
+		expect(addressForType(chosen("ogf"))).toBe("ogf");
 		for (const t of ["restaurant", "cafe", "retail", "hardware", "grocery", "salon", "pharmacy", "services", "other"]) expect(addressForType(chosen(t))).toBe("main");
 	});
 	it("decides nothing while the business has not chosen its type", () => {
@@ -17,6 +19,7 @@ describe("which POS address a business belongs on", () => {
 	});
 	it("knows the live POS addresses and nothing else", () => {
 		expect(addressOfPage(AUTO)).toBe("automobile");
+		expect(addressOfPage(OGF)).toBe("ogf");
 		expect(addressOfPage({ hostname: "ceylonrylabs.io", pathname: "/Automobile" })).toBe("automobile");
 		expect(addressOfPage({ hostname: "www.ceylonrylabs.io", pathname: "/automobile/" })).toBe("automobile");
 		expect(addressOfPage(MAIN)).toBe("main");
@@ -25,6 +28,11 @@ describe("which POS address a business belongs on", () => {
 	it("moves a business only when it is on the wrong live address", () => {
 		expect(posRedirect(chosen("automobile"), MAIN)).toBe(POS_URLS.automobile);
 		expect(posRedirect(chosen("restaurant"), AUTO)).toBe(POS_URLS.main);
+		expect(posRedirect(chosen("ogf"), MAIN)).toBe(POS_URLS.ogf);
+		expect(posRedirect(chosen("ogf"), AUTO)).toBe(POS_URLS.ogf);
+		expect(posRedirect(chosen("ogf"), OGF)).toBe("");
+		expect(posRedirect(chosen("restaurant"), OGF)).toBe(POS_URLS.main);
+		expect(posRedirect(chosen("automobile"), OGF)).toBe(POS_URLS.automobile);
 		expect(posRedirect(chosen("automobile"), AUTO)).toBe("");
 		expect(posRedirect(chosen("restaurant"), MAIN)).toBe("");
 		expect(posRedirect(chosen("automobile"), { hostname: "ceylonrylabs.io", pathname: "/Automobile" })).toBe("");

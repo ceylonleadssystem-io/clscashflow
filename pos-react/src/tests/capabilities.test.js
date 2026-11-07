@@ -12,8 +12,9 @@ describe("capabilities", () => {
 		for (const p of FEATURE_PRESETS) expect(CAPABILITIES[p.posType], p.id).toBeDefined();
 	});
 	it("keep the behaviour the old business-type lists had", () => {
-		expect(KITCHEN_TYPES).toEqual(["restaurant", "cafe"]);
-		expect(SERVICE_CHARGE_TYPES).toEqual(["restaurant", "cafe", "salon", "services"]);
+		expect(KITCHEN_TYPES).toEqual(["restaurant", "cafe", "ogf"]); // Restaurant (OGF) is a restaurant with the sales push on top
+		expect(SERVICE_CHARGE_TYPES).toEqual(["restaurant", "cafe", "ogf", "salon", "services"]);
+		expect(typesWith("salesPush")).toEqual(["ogf"]);
 		expect(INDUSTRY_TYPES).toEqual(["salon", "services", "pharmacy"]);
 		expect(typesWith("barcodeLabels").sort()).toEqual(["grocery", "hardware", "pharmacy", "retail"]);
 		expect(kitchenMode({ businessType: "cafe" })).toBe(true);

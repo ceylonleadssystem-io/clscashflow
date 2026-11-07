@@ -20,8 +20,14 @@ function automobileOrigin(site) {
   try { const u = new URL(site); return u.protocol + '//automobile.' + u.host; } catch (_) { return ''; }
 }
 
+// The Restaurant (OGF) POS is served from ogf.<site host>.
+function ogfOrigin(site) {
+  try { const u = new URL(site); return u.protocol + '//ogf.' + u.host; } catch (_) { return ''; }
+}
+
 function allowedOrigins() {
   const list = new Set([
+    ogfOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     adminOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     automobileOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     siteOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),

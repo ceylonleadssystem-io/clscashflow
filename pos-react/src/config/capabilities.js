@@ -6,12 +6,14 @@
  *   industryTools  the Business Tools page
  *   appointments / memberships / prescriptions / medicineBatches / commissions   the Business Tools modules (views/businessTools/)
  *   barcodeLabels  shops that always need the label printer
+ *   salesPush      the OGF sales push (Settings > System Options > Sales push): receipts are sent to the mall's cloud every hour
  *   detailing      the Detailing page (bookings, jobs, vehicles, packages, invoices) of the Automobile type
  * Which of these a business really gets is still narrowed by its feature switches (config/features.js).
  */
 export const CAPABILITIES = {
 	restaurant: ["kitchen", "serviceCharge"],
 	cafe: ["kitchen", "serviceCharge"],
+	ogf: ["kitchen", "serviceCharge", "salesPush"], // a restaurant in One Galle Face: everything a restaurant has, plus the sales push
 	retail: ["barcodeLabels"],
 	hardware: ["barcodeLabels"],
 	grocery: ["barcodeLabels"],
