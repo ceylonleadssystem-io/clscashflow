@@ -54,7 +54,7 @@ export function BarcodeModalHost() {
 		if (!total) return void (await ui.alert("Enter how many labels to print for at least one size."));
 		printHtmlInFrame(barcodeLabelsHtml(safe, runs, size), "Barcode label print job");
 		closeBarcode();
-		ui.notice(`${total} barcode label${total === 1 ? "" : "s"} sent to Android Print. Select the connected barcode printer.`);
+		ui.notice(`${total} barcode label${total === 1 ? "" : "s"} sent to the browser print dialog. Choose the barcode printer there.`);
 	};
 	const printUsb = async () => {
 		if (!total) return void (await ui.alert("Enter how many labels to print for at least one size."));
@@ -64,6 +64,7 @@ export function BarcodeModalHost() {
 			closeBarcode();
 			ui.notice(`${total} ${stock.width} × ${stock.height} mm barcode label${total === 1 ? "" : "s"} sent to the USB label printer using item code ${safe.code}.`);
 		} catch (e) {
+			if (e.usbKind === "denied") return void ((await ui.confirm("Barcode labels were not printed. " + e.message + "\n\nPrint these labels through the browser print dialog now?")) && printBrowser());
 			await ui.alert("Barcode labels were not printed. " + (e.message || "Reconnect the USB barcode printer and try again."));
 		}
 	};
@@ -71,6 +72,7 @@ export function BarcodeModalHost() {
 		try {
 			await labelPrinter.connect();
 		} catch (e) {
+			if (e.usbKind === "denied") return void ((await ui.confirm("Could not connect the USB barcode printer. " + e.message + "\n\nPrint these labels through the browser print dialog now?")) && printBrowser());
 			await ui.alert("Could not connect the USB barcode printer. " + (e.message || ""));
 		}
 	};

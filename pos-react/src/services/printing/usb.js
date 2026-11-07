@@ -21,7 +21,35 @@ export function findUsbOutput(device) {
 }
 
 /** Opens the device and claims its bulk-OUT interface. Returns the endpoint info. */
+const onWindows = () => typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent || "");
+
+/**
+ * The browser's own USB errors ("Access denied", "Unable to claim interface") say nothing a shop owner can act on. This turns them into what
+ * to do about it. `error.usbKind` is "denied" or "busy" for those two; any other error is returned unchanged.
+ */
+export function explainUsbError(error, label = "USB device", windows = onWindows()) {
+	const text = String((error && error.message) || error || "");
+	const name = (error && error.name) || "";
+	const denied = name === "SecurityError" || /access denied/i.test(text);
+	const busy = !denied && (name === "NetworkError" || /unable to claim|already in use|in use by/i.test(text));
+	if (!denied && !busy) return error;
+	const message = busy
+		? `Another program or browser tab is already using this ${label}. Close it (other POS tabs, label or printer software), unplug and replug the printer, and try again.`
+		: windows
+			? `Windows is already using this ${label} with its own printer driver, so the browser is not allowed to open it ("Access denied").\n\nTwo ways to fix it:\n1. Print through the Windows driver: install the printer's Windows driver, then use the browser print option and choose the printer there.\n2. Let the POS talk to the printer directly: switch the printer's driver to WinUSB with the free tool Zadig (Options > List All Devices > select the printer > WinUSB > Replace Driver), then unplug and replug the printer.\n\nAlso close other tabs or programs that use the printer.`
+			: `The system or another program is already using this ${label}, so the browser is not allowed to open it ("Access denied"). Close other tabs or programs that use it, unplug and replug the printer, and try again. You can also print through the browser print option.`;
+	return Object.assign(new Error(message), { usbKind: busy ? "busy" : "denied", cause: error });
+}
+
 export async function claimUsbOutput(device, label = "USB device") {
+	try {
+		return await claimOutput(device, label);
+	} catch (error) {
+		throw explainUsbError(error, label);
+	}
+}
+
+async function claimOutput(device, label) {
 	if (!device.opened) await device.open();
 	let output = findUsbOutput(device);
 	if (!output) {
