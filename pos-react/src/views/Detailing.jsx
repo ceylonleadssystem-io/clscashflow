@@ -3,12 +3,13 @@
  * All records live in the POS database (vehicles, detail_packages, detail_jobs) next to the customers, staff, inventory
  * and sales the rest of the POS already uses. Actions are in services/pos/detailing.js.
  */
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Kpi, Modal, ModalBody } from "../components/ui";
-import { money, today } from "../domain/format";
+import { money, today, whatsappPhone } from "../domain/format";
 import { customerName } from "../domain/names";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
+import { useUi } from "../store/UiProvider";
 import { JOB_FLOW, jobPaid, jobTotal } from "../services/pos/detailing";
 
 const TABS = [
@@ -24,10 +25,27 @@ const CLOSED = ["Completed", "Invoiced", "Cancelled"];
 const NEXT_LABEL = { Confirmed: "Confirm", Assigned: "Assign", Travelling: "Start travel", Arrived: "Mark arrived", "In Progress": "Start job", "Quality Check": "Quality check", Completed: "Complete job" };
 const when = (iso) => (iso ? new Date(iso).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "—");
 const localNow = () => today() + "T09:00";
+const FILTERS = [
+	["all", "All"],
+	["today", "Today"],
+	["upcoming", "Upcoming"],
+	["progress", "In progress"],
+	["done", "Completed"],
+];
+/** Customer message for the job's stage (booking confirmation, technician on the way, service complete, invoice ready). */
+const messageFor = (j, business) => {
+	const what = `${j.packageName} on ${when(j.scheduledAt)}`;
+	if (["Travelling", "Arrived"].includes(j.status)) return `Your technician is on the way for your ${what}. ${business}`;
+	if (j.status === "In Progress" || j.status === "Quality Check") return `Your vehicle service has started (${j.packageName}). ${business}`;
+	if (j.status === "Invoiced") return `Your invoice ${j.invoiceNumber} for ${money(jobTotal(j))} is ready. Thank you for choosing us. ${business}`;
+	if (j.status === "Completed") return `Your vehicle service is complete. Thank you for choosing us. ${business}`;
+	return `Your appointment is confirmed: ${what}. ${business}`;
+};
 
 export function Detailing({ tab: forced }) {
 	const data = useData();
 	const { svc, currentUser } = usePos();
+	const ui = useUi();
 	const manager = ["owner", "manager", "admin"].includes(currentUser?.role);
 	const [tabState, setTab] = useState("overview");
 	const tab = forced || tabState; // the Automobile shell picks the page from its own sidebar
@@ -38,7 +56,26 @@ export function Detailing({ tab: forced }) {
 	const vlabel = (id) => (veh(id) ? `${veh(id).registration} · ${[veh(id).make, veh(id).model].filter(Boolean).join(" ")}` : "Vehicle removed");
 	const tech = (id) => data.users.find((u) => u.id === id)?.name || "Unassigned";
 	const match = (...parts) => !q.trim() || parts.join(" ").toLowerCase().includes(q.trim().toLowerCase());
-	const jobs = useMemo(() => [...data.detailJobs].sort((a, b) => (a.scheduledAt || "").localeCompare(b.scheduledAt || "")), [data.detailJobs]);
+	const [filter, setFilter] = useState("all");
+	const [day, setDay] = useState("");
+	// technicians (the cashier role) see only the jobs assigned to them; owners, managers and accountants see everything
+	const mine = !["owner", "manager", "admin", "accountant"].includes(currentUser?.role);
+	const visible = useMemo(() => (mine ? data.detailJobs.filter((j) => j.technicianId === currentUser?.id) : data.detailJobs), [data.detailJobs, mine, currentUser?.id]);
+	const jobs = useMemo(() => [...visible].sort((a, b) => (a.scheduledAt || "").localeCompare(b.scheduledAt || "")), [visible]);
+	const shown = jobs.filter((j) => {
+		const d = (j.scheduledAt || "").slice(0, 10);
+		if (day && d !== day) return false;
+		if (filter === "today") return d === today() && j.status !== "Cancelled";
+		if (filter === "upcoming") return d > today() && !CLOSED.includes(j.status);
+		if (filter === "progress") return ["Travelling", "Arrived", "In Progress", "Quality Check"].includes(j.status);
+		if (filter === "done") return ["Completed", "Invoiced"].includes(j.status);
+		return true;
+	});
+	const message = (j) => {
+		const phone = whatsappPhone(data.customers.find((c) => c.id === j.customerId)?.phone);
+		if (!phone) return ui.notice("The customer has no valid phone number.");
+		window.open(`https://wa.me/${phone}?text=${encodeURIComponent(messageFor(j, data.settings.business || ""))}`, "_blank", "noopener");
+	};
 
 	const stats = useMemo(() => {
 		const day = today();
@@ -79,7 +116,12 @@ export function Detailing({ tab: forced }) {
 						{NEXT_LABEL[next] || next}
 					</button>
 				)}
-				{j.status === "Completed" && (
+				{j.status !== "Cancelled" && (
+					<button className="btn out" title="Open a WhatsApp message for the customer" onClick={() => message(j)}>
+						Message
+					</button>
+				)}
+				{j.status === "Completed" && manager && (
 					<button className="btn gold" onClick={() => svc.detailing.createInvoice(j.id)}>
 						Create invoice
 					</button>
@@ -147,6 +189,23 @@ export function Detailing({ tab: forced }) {
 							<p>{stats.low.length ? "Low on stock: " + stats.low.map((i) => i.name).join(", ") : "No supplies are running low."}</p>
 						</div>
 					</div>
+					<WeekRevenue jobs={visible} />
+					<div className="panel" style={{ marginTop: 16 }}>
+						<div className="panel-head">
+							<div className="panel-title">Recent activity</div>
+						</div>
+						<div className="modal-body">
+							{[...visible]
+								.sort((a, b) => (b.updatedAt || b.createdAt || "").localeCompare(a.updatedAt || a.createdAt || ""))
+								.slice(0, 6)
+								.map((j) => (
+									<p key={j.id}>
+										<strong>{j.packageName}</strong> for {cname(j.customerId)} ({vlabel(j.vehicleId)}): {j.paused ? "Paused" : j.status}
+									</p>
+								))}
+							{!visible.length && <p className="muted">No activity yet.</p>}
+						</div>
+					</div>
 					<div className="panel" style={{ marginTop: 16 }}>
 						<div className="panel-head">
 							<div className="panel-title">Upcoming jobs</div>
@@ -187,10 +246,20 @@ export function Detailing({ tab: forced }) {
 						</div>
 						<div className="tools">
 							<input className="input" type="search" placeholder="Search bookings" aria-label="Search bookings" value={q} onChange={(e) => setQ(e.target.value)} />
-							<button className="btn" onClick={() => setModal({ kind: "job" })}>
-								+ Booking
-							</button>
+							<input className="input" type="date" aria-label="Calendar date" value={day} onChange={(e) => setDay(e.target.value)} />
+							{!mine && (
+								<button className="btn" onClick={() => setModal({ kind: "job" })}>
+									+ Booking
+								</button>
+							)}
 						</div>
+					</div>
+					<div className="tools" role="group" aria-label="Show jobs" style={{ padding: "0 18px 12px", flexWrap: "wrap" }}>
+						{FILTERS.map(([id, label]) => (
+							<button key={id} type="button" aria-pressed={filter === id} className={"btn " + (filter === id ? "gold" : "out")} onClick={() => setFilter(id)}>
+								{label}
+							</button>
+						))}
 					</div>
 					<div className="table-wrap">
 						<table>
@@ -206,10 +275,10 @@ export function Detailing({ tab: forced }) {
 								</tr>
 							</thead>
 							<tbody>
-								{jobRows(jobs.filter((j) => match(cname(j.customerId), vlabel(j.vehicleId), j.packageName, j.status, j.invoiceNumber)))}
-								{!jobs.length && (
+								{jobRows(shown.filter((j) => match(cname(j.customerId), vlabel(j.vehicleId), j.packageName, j.status, j.invoiceNumber)))}
+								{!shown.length && (
 									<tr>
-										<td colSpan="7">No bookings yet.</td>
+										<td colSpan="7">{jobs.length ? "No jobs match this view." : mine ? "No jobs are assigned to you." : "No bookings yet."}</td>
 									</tr>
 								)}
 							</tbody>
@@ -255,9 +324,14 @@ export function Detailing({ tab: forced }) {
 											<td>{v.category}</td>
 											<td>{data.detailJobs.filter((j) => j.vehicleId === v.id && ["Completed", "Invoiced"].includes(j.status)).length}</td>
 											<td>
-												<button className="btn out" onClick={() => setModal({ kind: "vehicle", id: v.id })}>
-													Edit
-												</button>
+												<div className="tools">
+													<button className="btn out" onClick={() => setModal({ kind: "history", id: v.id })}>
+														History
+													</button>
+													<button className="btn out" onClick={() => setModal({ kind: "vehicle", id: v.id })}>
+														Edit
+													</button>
+												</div>
 											</td>
 										</tr>
 									))}
@@ -387,6 +461,81 @@ export function Detailing({ tab: forced }) {
 	);
 }
 
+/** Payments received in the last 7 days, one bar per day. */
+function WeekRevenue({ jobs }) {
+	const days = Array.from({ length: 7 }, (_, i) => {
+		const d = new Date();
+		d.setDate(d.getDate() - (6 - i));
+		return d.toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+	});
+	const totals = days.map((d) => jobs.reduce((a, j) => a + (j.payments || []).filter((p) => new Date(p.at).toLocaleDateString("en-CA") === d).reduce((s, p) => s + (Number(p.amount) || 0), 0), 0));
+	const max = Math.max(1, ...totals);
+	return (
+		<div className="panel" style={{ marginTop: 16 }}>
+			<div className="panel-head">
+				<div>
+					<div className="panel-title">Revenue overview</div>
+					<div className="muted">Payments received, last 7 days</div>
+				</div>
+			</div>
+			<div className="modal-body" role="img" aria-label={"Payments by day: " + totals.map((t, i) => `${days[i]} ${money(t)}`).join(", ")} style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 140 }}>
+				{totals.map((t, i) => (
+					<div key={days[i]} style={{ flex: 1, textAlign: "center", fontSize: 11 }}>
+						<div title={money(t)} style={{ height: Math.max(3, (t / max) * 90), background: "var(--ui-accent, #c9a24b)", borderRadius: 3 }} />
+						{days[i].slice(5)}
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+/** Canvas the customer signs on with a finger or mouse; reports a PNG data URL (empty string when cleared). */
+function SignaturePad({ value, onChange }) {
+	const ref = useRef(null);
+	const drawing = useRef(false);
+	const point = (e) => {
+		const r = ref.current.getBoundingClientRect();
+		return [((e.clientX - r.left) * ref.current.width) / r.width, ((e.clientY - r.top) * ref.current.height) / r.height];
+	};
+	const down = (e) => {
+		drawing.current = true;
+		ref.current.setPointerCapture?.(e.pointerId);
+		const c = ref.current.getContext("2d");
+		c.lineWidth = 2.5;
+		c.lineCap = "round";
+		c.strokeStyle = "#111";
+		c.beginPath();
+		c.moveTo(...point(e));
+	};
+	const move = (e) => {
+		if (!drawing.current) return;
+		const c = ref.current.getContext("2d");
+		c.lineTo(...point(e));
+		c.stroke();
+	};
+	const up = () => {
+		if (!drawing.current) return;
+		drawing.current = false;
+		onChange(ref.current.toDataURL("image/png"));
+	};
+	const clear = () => {
+		ref.current.getContext("2d").clearRect(0, 0, ref.current.width, ref.current.height);
+		onChange("");
+	};
+	return (
+		<div>
+			<canvas ref={ref} width="600" height="180" aria-label="Customer signature" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} style={{ width: "100%", maxWidth: 600, height: 150, border: "1px dashed var(--ui-line, #bbb)", borderRadius: 6, background: "#fff", touchAction: "none" }} />
+			<div className="tools" style={{ marginTop: 6 }}>
+				<button type="button" className="btn out" onClick={clear}>
+					Clear
+				</button>
+				<span className="muted">{value ? "Signature captured" : "Sign here"}</span>
+			</div>
+		</div>
+	);
+}
+
 /** Revenue and job counts by package and by technician, from the paid and invoiced jobs. */
 function DetailingReports({ data, tech }) {
 	const done = data.detailJobs.filter((j) => ["Completed", "Invoiced"].includes(j.status));
@@ -470,6 +619,43 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 		if (blank) setF(old ? { ...blank, ...old, ...(kind === "pay" ? { method: "Cash", amount: String(jobTotal(old) - jobPaid(old)) } : {}) } : blank);
 	}
 	if (!kind) return null;
+	if (kind === "history") {
+		const v = data.vehicles.find((x) => x.id === modal.id);
+		const past = data.detailJobs.filter((j) => j.vehicleId === modal.id).sort((a, b) => (b.scheduledAt || "").localeCompare(a.scheduledAt || ""));
+		return (
+			<Modal id="detailing-history-modal" open title="Vehicle service history" subtitle={v ? `${v.registration} · ${[v.make, v.model].filter(Boolean).join(" ")}` : ""} onClose={onClose}>
+				<ModalBody>
+					<div className="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>When</th>
+									<th>Package</th>
+									<th>Status</th>
+									<th>Total</th>
+								</tr>
+							</thead>
+							<tbody>
+								{past.map((j) => (
+									<tr key={j.id}>
+										<td>{when(j.scheduledAt)}</td>
+										<td>{j.packageName}</td>
+										<td>{j.status}</td>
+										<td>{money(jobTotal(j))}</td>
+									</tr>
+								))}
+								{!past.length && (
+									<tr>
+										<td colSpan="4">No services recorded for this vehicle yet.</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				</ModalBody>
+			</Modal>
+		);
+	}
 	const set = (k) => (e) => setF((v) => ({ ...v, [k]: e.target.value }));
 	const field = (label, node, full) => (
 		<div className={"field" + (full ? " full" : "")}>
@@ -602,6 +788,7 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 						<>
 							{field("Inspection notes * (existing marks, scratches, condition)", <textarea className="input" rows="4" value={f.inspection || ""} onChange={set("inspection")} />, true)}
 							{field("Customer signs off as *", input("signedBy"), true)}
+							{field("Customer signature * (sign with a finger or mouse)", <SignaturePad value={f.signature} onChange={(s) => setF((v) => ({ ...v, signature: s }))} />, true)}
 						</>
 					)}
 					{kind === "pay" && (

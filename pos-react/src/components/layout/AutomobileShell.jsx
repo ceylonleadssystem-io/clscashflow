@@ -15,6 +15,10 @@ const page = (load, name) => lazy(() => load().then((m) => ({ default: m[name] }
 const Detailing = page(() => import("../../views/Detailing"), "Detailing");
 const Customers = page(() => import("../../views/Customers"), "Customers");
 const Inventory = page(() => import("../../views/Inventory"), "Inventory");
+const Staff = page(() => import("../../views/Staff"), "Staff");
+const Timesheets = page(() => import("../../views/Timesheets"), "Timesheets");
+const Settings = page(() => import("../../views/Settings"), "Settings");
+const BusinessSettings = () => <Settings only={["business"]} />;
 
 /** Sidebar entries: `tab` is a Detailing tab, `view` one of the shared POS pages (customers, inventory). */
 const ITEMS = [
@@ -23,10 +27,15 @@ const ITEMS = [
 	{ id: "customers", view: Customers, label: "Customers", title: "Customers", sub: "Keep customer details, vehicles and service history together." },
 	{ id: "vehicles", tab: "vehicles", label: "Vehicles", title: "Vehicles", sub: "Find a vehicle and view its details or past services." },
 	{ id: "packages", tab: "packages", label: "Services & Packages", title: "Services & Packages", sub: "Set your service prices, duration and supplies." },
+	{ id: "employees", view: Staff, label: "Employees", title: "Employees", sub: "See your team, assigned jobs and access." },
+	{ id: "timesheets", view: Timesheets, label: "Timesheets", title: "Timesheets", sub: "Clock in, manage breaks and review working hours." },
 	{ id: "inventory", view: Inventory, label: "Inventory", title: "Inventory", sub: "Check supplies, receive stock and review movements." },
 	{ id: "invoices", tab: "invoices", label: "Invoices", title: "Invoices", sub: "Open an invoice to review charges and record payment." },
 	{ id: "reports", tab: "reports", label: "Reports", title: "Reports", sub: "Revenue, jobs and team performance." },
+	{ id: "settings", view: BusinessSettings, label: "Settings", title: "Settings", sub: "Manage business details and your interface." },
 ];
+/** Pages each role opens: technicians (the cashier role) only their own work and timesheet, accountants only money pages. */
+const ROLE_ITEMS = { cashier: ["jobs", "timesheets"], accountant: ["invoices", "reports"] };
 
 export function AutomobileShell() {
 	const { currentUser, staffLogout, setView } = usePos();
@@ -36,7 +45,8 @@ export function AutomobileShell() {
 	const [id, setId] = useState("overview");
 	const [rail, setRail] = useState(false);
 	const enabled = hasCapability(settings.businessType, "detailing");
-	const current = ITEMS.find((i) => i.id === id) || ITEMS[0];
+	const items = ITEMS.filter((i) => !ROLE_ITEMS[currentUser?.role] || ROLE_ITEMS[currentUser.role].includes(i.id));
+	const current = items.find((i) => i.id === id) || items[0];
 	const View = current.view;
 
 	useEffect(() => {
@@ -45,8 +55,8 @@ export function AutomobileShell() {
 	}, []);
 	// the shared POS pages read the active view from PosProvider: keep it on the matching page
 	useEffect(() => {
-		if (enabled) setView(id === "customers" ? "customers" : id === "inventory" ? "inventory" : "settings");
-	}, [id, enabled, setView]);
+		if (enabled) setView(["customers", "inventory"].includes(current.id) ? current.id : current.id === "employees" ? "staff" : "settings");
+	}, [current.id, enabled, setView]);
 
 	return (
 		<>
@@ -66,8 +76,8 @@ export function AutomobileShell() {
 							<span>Show Navigation</span>
 						</button>
 						{enabled &&
-							ITEMS.map((i) => (
-								<button key={i.id} type="button" data-auto={i.id} className={id === i.id ? "active" : ""} title={i.label} onClick={() => { setId(i.id); setRail(false); }}>
+							items.map((i) => (
+								<button key={i.id} type="button" data-auto={i.id} className={current.id === i.id ? "active" : ""} title={i.label} onClick={() => { setId(i.id); setRail(false); }}>
 									<span className="nav-icon" aria-hidden="true">{i.label[0]}</span>
 									<span>{i.label}</span>
 								</button>
