@@ -21,6 +21,10 @@
   status = 200
   force = true
 
+# Sales push for Restaurant (OGF) businesses: checks every 15 minutes and sends when a business's interval (default 60 minutes) is due.
+[functions."ogf-push-scheduled"]
+  schedule = "*/15 * * * *"
+
 # Restaurant (OGF) on its own address: ogf.ceylonrylabs.io opens the POS app (same business login). A business whose type is set to Restaurant (OGF) in
 # the admin portal belongs here and gets the Sales push settings. Needs the ogf.ceylonrylabs.io domain added to this Netlify site, a DNS CNAME for it, and the
 # same hostname registered as a Web platform in the Appwrite project (otherwise sign-in fails with "Failed to fetch").
