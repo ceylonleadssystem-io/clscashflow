@@ -20,6 +20,11 @@ function automobileOrigin(site) {
   try { const u = new URL(site); return u.protocol + '//automobile.' + u.host; } catch (_) { return ''; }
 }
 
+// The main POS is served from pos.<site host>.
+function posOrigin(site) {
+  try { const u = new URL(site); return u.protocol + '//pos.' + u.host; } catch (_) { return ''; }
+}
+
 // The Restaurant (OGF) POS is served from ogf.<site host>.
 function ogfOrigin(site) {
   try { const u = new URL(site); return u.protocol + '//ogf.' + u.host; } catch (_) { return ''; }
@@ -27,6 +32,7 @@ function ogfOrigin(site) {
 
 function allowedOrigins() {
   const list = new Set([
+    posOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     ogfOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     adminOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
     automobileOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),

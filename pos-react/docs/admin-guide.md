@@ -4,7 +4,7 @@ The administration portal is a separate page from the POS and has its own sign-i
 
 | Environment | URL |
 | --- | --- |
-| Production | `https://ceylonrylabs.io/posv2/admin.html` |
+| Production | `https://admin.ceylonrylabs.io/` (the old ceylonrylabs.io/posv2/admin redirects there) |
 | Local dev | `http://localhost:5173/admin.html` |
 
 ## Signing in

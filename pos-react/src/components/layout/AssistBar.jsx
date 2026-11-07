@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { adminApi } from "../../admin-app/adminApi";
+import { env } from "../../config/env";
 import { describeConfig, isEmptyConfig } from "../../domain/assistConfig";
 import { assistInfo, endAssist, markSent, pendingConfig } from "../../services/assist";
 import { useUi } from "../../store/UiProvider";
@@ -42,7 +43,7 @@ export function AssistBar() {
 		if (!ok) return;
 		await endAssist(info);
 		window.close();
-		location.href = "/posv2/admin"; // when the browser will not close a tab it did not open
+		location.href = env.supportPortalUrl; // when the browser will not close a tab it did not open
 	};
 
 	return (
@@ -67,7 +68,7 @@ export function AssistMissing({ message }) {
 			<div className="account-card">
 				<h2>Open this from the admin portal</h2>
 				<p className="muted">{message || "The assist copy of a client's POS can only be opened with the “Open client's POS” button in the administration portal, while you are signed in there."}</p>
-				<a className="btn gold" href="/posv2/admin">
+				<a className="btn gold" href={env.supportPortalUrl}>
 					Go to the admin portal
 				</a>
 			</div>

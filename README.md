@@ -15,8 +15,8 @@ Live site: <https://ceylonrylabs.io>
 | Product | What it is | Address | Code |
 |---|---|---|---|
 | **CashFlow** | Invoicing, expenses and cash flow dashboards for freelancers, studios and businesses (Solo, Studio and Business plans), with team access and online payments | `/cashflow/…` (internal use; the CashFlow homepage is `cashflow-home.html`, not linked publicly) | `cashflow-home.html`, `cashflow/`, `assets/` |
-| **POS** | Full point of sale: checkout, tables, orders, inventory, customers, staff and cash shifts, reports, receipts and barcode printing. Works offline and syncs to the cloud | [ceylonrylabs.io/posv2/](ceylonrylabs.io/posv2/) | `pos-react/` |
-| **POS Admin portal** | For Ceylonry staff only: every account, its plan and subscription, feature switches, invoices, diagnostics, account deletion. Lists which products each account uses | [admin](ceylonrylabs.io/posv2/admin) | `pos-react/src/admin-app/`, `netlify/functions/pos-admin-*.js` |
+| **POS** | Full point of sale: checkout, tables, orders, inventory, customers, staff and cash shifts, reports, receipts and barcode printing. Works offline and syncs to the cloud | [pos.ceylonrylabs.io](https://pos.ceylonrylabs.io/) | `pos-react/` |
+| **POS Admin portal** | For Ceylonry staff only: every account, its plan and subscription, feature switches, invoices, diagnostics, account deletion. Lists which products each account uses | [admin.ceylonrylabs.io](https://admin.ceylonrylabs.io/) | `pos-react/src/admin-app/`, `netlify/functions/pos-admin-*.js` |
 | **KDS** (Kitchen Display) | A kitchen screen that receives prep tickets from the POS over the local Wi-Fi (WebRTC) and tracks new / preparing / ready | [KDS](ceylonrylabs.io/KDS) | `pos-react/src/KDS/`, `netlify/functions/kds-pair.js` |
 | **GM** (Guest Manager) | Table reservations, walk-ins, waitlist, guest profiles and loyalty, WhatsApp/email messages, floor plan, calendar, shift handover and reports. Uses the POS table layout and customers | [GM](ceylonrylabs.io/GM) | `reservation-system/` |
 
@@ -26,8 +26,8 @@ How they fit together:
 flowchart LR
   subgraph Browser
     CF[CashFlow pages<br/>/cashflow]
-    POS[POS React app<br/>/posv2]
-    ADM[Admin portal<br/>/posv2/admin]
+    POS[POS React app<br/>pos.ceylonrylabs.io]
+    ADM[Admin portal<br/>admin.ceylonrylabs.io]
     KDS[KDS<br/>/KDS]
     GM[Guest Manager<br/>/GM]
   end
@@ -186,7 +186,7 @@ npx netlify-cli dev                # http://localhost:8888  (serves the site, re
 
 In a second terminal, put `VITE_AUTH_PROVIDER=appwrite` in `pos-react/.env.local` (it overrides the local default; `VITE_FUNCTIONS_PROXY` already points to `http://localhost:8888`), then `npm run dev`. Use a **test account**, never a customer's.
 
-With `netlify dev` running you can open `/GM`, `/KDS`, `/posv2/`, `/posv2/admin` and `/cashflow/signin.html` exactly as in production.
+With `netlify dev` running you can open `/GM`, `/KDS`, `/posv2/` and `/cashflow/signin.html`. In production the POS is at pos.ceylonrylabs.io and the administration portal at admin.ceylonrylabs.io (locally the admin portal is at `/posv2/admin`).
 
 ### 4.3 Guest Manager only (no backend)
 

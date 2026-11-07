@@ -56,7 +56,7 @@ export const PORTAL_SECTIONS = [
 	{ key: "shop", view: "shop", title: "Shop", icon: "shop", blurb: "One stop to buy POS hardware: printers, scanners, drawers and screens.", needs: [] },
 ];
 
-/** True when the page was opened at /admin (and not the Ceylonry staff portal at /posv2/admin). */
+/** True when the page was opened at /admin (and not the Ceylonry staff portal at admin.ceylonrylabs.io). */
 export const isPortalPath = (pathname = typeof location === "undefined" ? "" : location.pathname) => /^\/admin\/?$/.test(pathname);
 
 /** True on the Automobile (car detailing) system: the automobile.* host or the /Automobile path. */

@@ -90,7 +90,7 @@ secrets here** (the Appwrite API key and SMTP passwords stay in Netlify).
 | `VITE_ONBOARDING_EMAIL_URL` | `/.netlify/functions/pos-onboarding-email` | Welcome e-mails after first sign-in |
 | `VITE_PLATFORM_SCRIPT_URL` | `/assets/platform.js` | Shared platform script (see §4) |
 | `VITE_DEVELOPER_EMAIL` | `devteam@ceylonrylabs.io` | This account is redirected to the developer portal after sign-in |
-| `VITE_SUPPORT_PORTAL_URL` | `/posv2/admin` | "Open Admin Portal" / "Exit Support Session" target |
+| `VITE_SUPPORT_PORTAL_URL` | `https://admin.ceylonrylabs.io/` (local development: `/posv2/admin`) | "Open Admin Portal" / "Exit Support Session" target |
 | `VITE_HOME_URL` / `VITE_ONBOARDING_URL` | `/index.html` / `/pos-onboarding.html` | Links on the sign-in gate |
 | `VITE_EJS_KEY` / `VITE_EJS_SERVICE` / `VITE_EJS_RECEIPT_TEMPLATE` | legacy EmailJS ids | Defaults for receipt e-mails (per-business override in settings) |
 | `VITE_CATALOGUE_IMAGES_URL` | *(empty)* | Optional bundle defining `window.CLS_AZURE_SWIM_IMAGES` |
@@ -110,11 +110,11 @@ secrets here** (the Appwrite API key and SMTP passwords stay in Netlify).
 | **SheetJS (xlsx)** | `https://cdn.jsdelivr.net/npm/xlsx@0.18.5/...` | Lazy-loaded for catalogue import and stock-count upload (`services/xlsx.js`). |
 | **Catalogue template** | `public/assets/Ceylonry-POS-Catalogue-Template.xlsx` | Originally copied from the legacy POS (archived as posv1). |
 | **Azure Swim catalogue photos** | `assets/azure-swim-products.js` (15 MB, **not copied**) | Optional: host it and set `VITE_CATALOGUE_IMAGES_URL`; empty product images are filled for businesses named "Azure Swim". |
-| **Developer/support portal** | `/posv2/admin` (`src/admin-app`) | Separate administration app, linked from Settings. Read-only support sessions (`?support=1`) are honoured by the React app (audit + write-lock). |
+| **Developer/support portal** | `admin.ceylonrylabs.io` (`src/admin-app`; locally `/posv2/admin`) | Separate administration app, linked from Settings. Read-only support sessions (`?support=1`) are honoured by the React app (audit + write-lock). |
 | **Hardware** | Chrome/Android: WebUSB (ESC/POS receipt printer, TSPL label printer), WebHID/keyboard-wedge barcode scanner | `services/printing/*`. Requires HTTPS and a user gesture the first time. |
 | **Landing/onboarding pages** | `index.html`, `pos-onboarding.html`, `/cashflow/reset-password.html` of the main site | Linked from the gates; password-reset e-mails point to `/cashflow/reset-password.html`. |
 
-Deployment: the site serves `dist/` at `/posv2/` through the Netlify rewrite in `netlify.toml`. `public/sw.js` is the React shell's own service worker (the root `sw.js` belongs to the main site).
+Deployment: the site serves `dist/` through the Netlify rewrites in `netlify.toml`: the POS pages at `pos.ceylonrylabs.io` (and the Automobile and OGF addresses), the files under `/posv2/`, the administration portal at `admin.ceylonrylabs.io`. `public/sw.js` is the React shell's own service worker (the root `sw.js` belongs to the main site).
 
 ---
 

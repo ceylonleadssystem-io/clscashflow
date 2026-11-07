@@ -20,7 +20,7 @@ export const env = {
 	developerEmail: (
 		e.VITE_DEVELOPER_EMAIL || "devteam@ceylonrylabs.io"
 	).toLowerCase(),
-	supportPortalUrl: e.VITE_SUPPORT_PORTAL_URL || "/posv2/admin",
+	supportPortalUrl: e.VITE_SUPPORT_PORTAL_URL || "https://admin.ceylonrylabs.io/", // the administration portal lives at its own address; local development sets /posv2/admin in .env.development
 	homeUrl: e.VITE_HOME_URL || "/index.html",
 	onboardingUrl: e.VITE_ONBOARDING_URL || "/pos-onboarding.html",
 	adminLoginUrl: e.VITE_ADMIN_LOGIN_URL || "/.netlify/functions/pos-admin-login",

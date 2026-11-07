@@ -22,7 +22,7 @@ If the account is disabled for non-payment, the payment screen replaces the POS 
 that are already signed in).
 
 ## Which POS opens after sign-in
-After the business e-mail and password are accepted, the POS checks the business type (set by the Ceylonry team) before opening. A car detailing (Automobile) business belongs on `automobile.ceylonrylabs.io`; every other type belongs on the main POS (`ceylonrylabs.io/posv2/`). If the business signed in on the other address it is moved to the right one automatically, without signing in again (the sign-in is carried over by a one-time token that lasts a minute). A business that has not chosen its type yet stays where it is. After the staff PIN, an Automobile business opens on its Detailing page. Local development, previews and the admin address never redirect.
+After the business e-mail and password are accepted, the POS checks the business type (set by the Ceylonry team) before opening. A car detailing (Automobile) business belongs on `automobile.ceylonrylabs.io`; every other type belongs on the main POS (`pos.ceylonrylabs.io`). If the business signed in on the other address it is moved to the right one automatically, without signing in again (the sign-in is carried over by a one-time token that lasts a minute). A business that has not chosen its type yet stays where it is. After the staff PIN, an Automobile business opens on its Detailing page. Local development, previews and the admin address never redirect.
 
 ## Starting a shift
 **Staff & Shifts → Clock In & Open Register** (also offered automatically after sign-in):
@@ -98,7 +98,7 @@ Open `yoursite/admin`, sign in with the same business login and your staff PIN, 
 POS features. Boxes: **Location Info** (business name, address, logo, locations), **Reports**, **Menu Admin** (products
 and modifiers), **User Admin**, **Timesheets** (clock-in, clock-out and break hours with CSV export) and **Shop**
 (hardware categories that open a quote email). What each person sees follows their role. Opening Reports swaps the
-left navigation for the report list with a Back to home button. The Ceylonry staff portal remains at `/posv2/admin`.
+left navigation for the report list with a Back to home button. The Ceylonry staff portal is at `admin.ceylonrylabs.io`.
 
 ## System Options (Settings)
 Settings has a sidebar. **System Options** holds Order Entry, Receipts, Sign In, Clock In / Out, Payroll, 3rd Party Payments and Zones; the older
