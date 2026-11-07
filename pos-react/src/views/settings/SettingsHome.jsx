@@ -9,6 +9,7 @@ import { Overview, PAGE_COMPONENTS as SYSTEM_COMPONENTS } from "./SystemOptionsP
 import { DEVICE_COMPONENTS } from "./DevicePages";
 import { Timesheets } from "../Timesheets";
 import { AppearancePage, FeedbackPage, ServiceChargePage, StationsPage } from "./MovedPages";
+import { SalesPushPage } from "./SalesPushPage";
 import { hasCapability } from "../../config/capabilities";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
@@ -18,7 +19,7 @@ import { PublishBar } from "../../components/settings/kit/PublishBar";
 import { Jobs, Users } from "./UsersPages";
 import { usePos } from "../../store/PosProvider";
 
-export const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, timesheets: Timesheets, serviceCharge: ServiceChargePage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, kds: KdsPage, health: HealthPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
+export const PAGE_COMPONENTS = { ...SYSTEM_COMPONENTS, users: Users, jobs: Jobs, timesheets: Timesheets, serviceCharge: ServiceChargePage, ogfPush: SalesPushPage, appearance: AppearancePage, feedback: FeedbackPage, stations: StationsPage, kds: KdsPage, health: HealthPage, ...DEVICE_COMPONENTS, ...MENU_ADMIN_COMPONENTS };
 
 /** The Menu Admin pages in the order the menu is built: items, categories, modifiers, availability, taxes, sales categories. */
 export const MENU_ADMIN_NAV = [
@@ -34,7 +35,7 @@ export const MENU_ADMIN_NAV = [
  * The four areas of Settings and the pages in each, for the grid and the sidebar. `legacyTabs` are the older tabs that still exist
  * (Business Profile, Operations, Plan & Support live under System Options). Areas the person has no permission for are left out.
  */
-export function settingsGroups({ can, serviceChargeOn, kitchen, legacyTabs }) {
+export function settingsGroups({ can, serviceChargeOn, kitchen, legacyTabs, salesPush = false }) {
 	const legacy = (id) => legacyTabs.filter((t) => t.id === id).map((t) => ({ key: "legacy:" + t.id, label: t.label }));
 	return [
 		{
@@ -44,6 +45,7 @@ export function settingsGroups({ can, serviceChargeOn, kitchen, legacyTabs }) {
 				...legacy("business"),
 				...SYSTEM_PAGES.map((p) => ({ key: p.key, label: p.title })),
 				...(serviceChargeOn ? [{ key: "serviceCharge", label: "Service Charge" }] : []),
+				...(salesPush ? [{ key: "ogfPush", label: "Sales push (OGF only)" }] : []), // Restaurant (OGF) only
 				{ key: "appearance", label: "Appearance" },
 				{ key: "feedback", label: "Customer Feedback" },
 				...legacy("operations"),
@@ -67,7 +69,7 @@ export function SettingsHome({ page, setPage, legacyTabs, tab, setTab, legacyVie
 	const current = page === "legacy" ? "legacy:" + tab : page;
 	const { settings } = useData();
 	const serviceChargeOn = useFeature("checkout.serviceCharge") && hasCapability(settings.businessType, "serviceCharge");
-	const groups = settingsGroups({ can, serviceChargeOn, kitchen: hasCapability(settings.businessType, "kitchen"), legacyTabs });
+	const groups = settingsGroups({ can, serviceChargeOn, kitchen: hasCapability(settings.businessType, "kitchen"), legacyTabs, salesPush: hasCapability(settings.businessType, "salesPush") });
 	const select = (key) => {
 		if (key.startsWith("legacy:")) {
 			setTab(key.slice(7));
