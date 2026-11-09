@@ -108,11 +108,6 @@ function guard(event, options) {
   return null;
 }
 
-// Strip CR/LF and angle/quote characters so values can never inject mail headers.
-function headerSafe(value, max) {
-  return String(value == null ? '' : value).replace(/[\r\n\u2028\u2029<>"]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 200);
-}
-
 function validEmail(value) {
   const v = String(value || '').trim();
   return v.length <= 254 && /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(v);
@@ -126,11 +121,4 @@ function trustedLink(value) {
   } catch (_) { return ''; }
 }
 
-function passwordMatches(plain, expectedHex) {
-  const crypto = require('crypto');
-  const a = crypto.createHash('sha256').update(String(plain || '')).digest();
-  const b = Buffer.from(String(expectedHex || ''), 'hex');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-
-module.exports = { guard, reply, corsHeaders, originAllowed, allowedOrigins, rateLimited, clientIp, headerSafe, validEmail, trustedLink, passwordMatches, siteOrigin };
+module.exports = { guard, reply, corsHeaders, originAllowed, allowedOrigins, rateLimited, clientIp, validEmail, trustedLink, siteOrigin };

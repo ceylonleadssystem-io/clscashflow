@@ -174,7 +174,7 @@ export function paymentGroup(name) {
 	if (name === "Bank Transfer" || name === "Online Payment") return "Bank or online";
 	return STANDARD_PAYMENTS.includes(name) ? "Other" : "3rd party";
 }
-export const TYPE_LABELS = { restaurant: "Restaurant", ogf: "Restaurant (OGF)", cafe: "Café / Bakery", retail: "Retail", hardware: "Hardware", grocery: "Grocery", salon: "Salon", pharmacy: "Pharmacy", services: "Services", other: "Other" };
+export const TYPE_LABELS = { restaurant: "Restaurant", ogf: "Restaurant (OGF)", automobile: "Automobile", cafe: "Café / Bakery", retail: "Retail", hardware: "Hardware", grocery: "Grocery", salon: "Salon", pharmacy: "Pharmacy", services: "Services", other: "Other" };
 
 /** By business type: businesses, orders, average order, items per order, and the share of sales by payment group and by order type. */
 export function byBusinessType(accounts = []) {

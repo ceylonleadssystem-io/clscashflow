@@ -4,7 +4,6 @@
  */
 import { itemSettingsById } from "./menuAdmin";
 import { calculateTaxes, rulesOf } from "./taxes";
-import { PLATFORM_CHANNELS } from "../config/constants";
 
 /** Cart maths and modifier logic (final behaviour of the legacy checkout). */
 
@@ -138,8 +137,6 @@ export function cartTotals(cart, discount, settings, serviceChargeSupported, cha
 }
 
 export const EMPTY_DISCOUNT = { type: "percent", value: 0 };
-
-export const isPlatformChannel = (channel) => PLATFORM_CHANNELS.includes(channel);
 
 /**
  * Equal split that puts the rounding remainder on the last share. */

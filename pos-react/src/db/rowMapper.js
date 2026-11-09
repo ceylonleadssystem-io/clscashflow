@@ -47,10 +47,6 @@ export function plainToRaw(spec, plain) {
 	return raw;
 }
 
-export function seqOf(raw) {
-	return Number(raw.seq) || 0;
-}
-
 /** Sorted exactly like the legacy arrays (unshift = newest first). */
 export function sortBySeq(spec, rows) {
 	const sorted = rows.slice().sort((a, b) => a.seq - b.seq);

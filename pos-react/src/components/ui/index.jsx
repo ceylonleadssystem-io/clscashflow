@@ -1,11 +1,8 @@
 /**
- * Shared UI building blocks: Modal, Panel, Field, Kpi card, Badge, TableWrap, NumberInput (with
- * thousands separators), Switch, and the useDismiss and useForm hooks.
+ * Shared UI building blocks: Modal, Panel, Field, Kpi card, NumberInput (with thousands separators) and Switch.
  */
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { groupedValue } from "../../domain/format";
-
-/** Small presentational building blocks that reproduce the legacy markup/classes. */
 
 export function Modal({ id, open, title, subtitle, onClose, children, footer, className = "", boxClassName = "", boxStyle, closable = true }) {
 	if (!open) return null;
@@ -82,38 +79,6 @@ export const Kpi = ({ label, value, note, tone, style }) => (
 
 export const Empty = ({ children }) => <div className="empty">{children}</div>;
 
-export const Badge = ({ children, style }) => (
-	<span className="badge" style={style}>
-		{children}
-	</span>
-);
-
-export function TableWrap({ head, children, empty, colSpan, hidden }) {
-	const hasRows = Array.isArray(children) ? children.length > 0 : !!children;
-	return (
-		<div className="table-wrap" hidden={hidden}>
-			<table>
-				<thead>
-					<tr>
-						{head.map((h, i) => (
-							<th key={i}>{h}</th>
-						))}
-					</tr>
-				</thead>
-				<tbody>
-					{hasRows ? (
-						children
-					) : (
-						<tr>
-							<td colSpan={colSpan || head.length}>{empty}</td>
-						</tr>
-					)}
-				</tbody>
-			</table>
-		</div>
-	);
-}
-
 /**
  * Text input that shows thousands separators ("1,234.50") while keeping the
  * raw number accessible through onChange(rawString).
@@ -158,27 +123,3 @@ export function Switch({ checked, onChange, disabled, label }) {
 		</button>
 	);
 }
-
-/** Closes on Escape and outside click. */
-export function useDismiss(ref, onDismiss, active = true) {
-	useEffect(() => {
-		if (!active) return undefined;
-		const onKey = (e) => e.key === "Escape" && onDismiss();
-		const onClick = (e) => ref.current && !ref.current.contains(e.target) && onDismiss();
-		document.addEventListener("keydown", onKey);
-		document.addEventListener("mousedown", onClick);
-		return () => {
-			document.removeEventListener("keydown", onKey);
-			document.removeEventListener("mousedown", onClick);
-		};
-	}, [ref, onDismiss, active]);
-}
-
-export function useForm(initial) {
-	const [values, setValues] = useState(initial);
-	const set = (key) => (e) => setValues((v) => ({ ...v, [key]: e && e.target ? (e.target.type === "checkbox" ? e.target.checked : e.target.value) : e }));
-	const patch = (p) => setValues((v) => ({ ...v, ...p }));
-	return { values, set, patch, setValues };
-}
-
-export const useRefCallback = () => useRef(null);

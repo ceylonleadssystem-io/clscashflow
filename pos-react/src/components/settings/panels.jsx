@@ -150,7 +150,7 @@ export function PosTypePanel({ form, onApplyPreset }) {
 				<div className="field">
 					<label>Business / POS type</label>
 					<div id="set-business-type" style={{ fontWeight: 700 }}>
-						{form.businessType === "cafe" ? "Café / Bakery" : preset.label}
+						{preset.label}
 					</div>
 				</div>
 				<div className="plan-settings-note" id="business-type-note" style={{ marginTop: 8 }}>

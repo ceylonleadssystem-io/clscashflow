@@ -102,6 +102,5 @@ export const NAV_ITEMS = [
 export const SETTINGS_PAGE_OF_VIEW = { products: "items", modifiers: "modifiers", stations: "stations" };
 
 export const FULL_SETTINGS_ROLES = ["owner", "manager", "admin"];
-export const MANAGER_ROLES = ["owner", "manager"];
 export const REPORTING_ROLES = ["owner", "admin", "manager", "accountant"];
 export const OWNER_ROLES = ["owner", "admin"];
