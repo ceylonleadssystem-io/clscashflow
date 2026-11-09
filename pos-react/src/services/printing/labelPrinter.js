@@ -5,7 +5,7 @@
 import { claimUsbOutput, createEmitter, transferChunks } from "./usb";
 import { sendRaw } from "./printBridge";
 import { localPrintPreview, showLabelPreview } from "./localPrintPreview";
-import { barcodeSvg, cleanBarcode, code128Units, drawCode128, sizedBarcode } from "./barcode";
+import { cleanBarcode, code128Units, drawCode128, sizedBarcode } from "./barcode";
 import { esc, money } from "../../domain/format";
 import { createLogger } from "../../utils/logger";
 
@@ -121,17 +121,22 @@ function fitText(ctx, text, maxWidth, font) {
 	return text + "...";
 }
 
-/** Bitmap TSPL job: name, description, size, Code 128 barcode, price rendered on a canvas at 203 dpi. `opts` = gap (mm) or {gapMm, offsetX, offsetY, marginMm}. */
-export function tsplBitmapBytes(product, copies, size, opts) {
+/**
+ * The label as it is printed: name, description, size, Code 128 barcode and price drawn on a canvas at the printer's 203 dpi (one canvas pixel =
+ * one printer dot). `scale` draws the same label bigger (every dot becomes scale x scale pixels) for the preview, the browser print and the PNG,
+ * so they all show exactly what the printer prints. `opts` = gap (mm) or {gapMm, offsetX, offsetY, marginMm}.
+ */
+export function drawLabelCanvas(product, size, opts, scale = 1) {
 	const o = typeof opts === "object" && opts ? opts : { gapMm: opts };
 	const width = Number(size[0]) || 30;
 	const height = Number(size[1]) || 25;
 	const dotsW = Math.round(width * 8);
 	const dotsH = Math.round(height * 8);
 	const canvas = document.createElement("canvas");
-	canvas.width = dotsW;
-	canvas.height = dotsH;
+	canvas.width = dotsW * scale;
+	canvas.height = dotsH * scale;
 	const ctx = canvas.getContext("2d");
+	ctx.scale(scale, scale);
 	const layout = labelBitmapLayout(width, height);
 	const name = String(product.name || "Item");
 	const description = layout.descFont ? String(product.description || product.subcategory || product.category || "") : "";
@@ -158,6 +163,12 @@ export function tsplBitmapBytes(product, copies, size, opts) {
 	drawCode128(ctx, product.code, g.barcodeX, rows.barcodeY + g.dy, g.barcodeW, rows.barcodeH, layout.darken);
 	ctx.font = "900 " + layout.priceFont + "px Arial";
 	ctx.fillText(fitText(ctx, price, textW, ctx.font), g.cx, rows.priceY + g.dy);
+	return { canvas, dotsW, dotsH, width, height, o, layout };
+}
+
+/** Bitmap TSPL job for the label printer: the drawn label (scale 1) converted to printer dots. */
+export function tsplBitmapBytes(product, copies, size, opts) {
+	const { canvas, dotsW, dotsH, width, height, o, layout } = drawLabelCanvas(product, size, opts, 1);
 	return tsplFromCanvas(canvas, dotsW, dotsH, width, height, copies, o.gapMm || layout.gapMm || 3);
 }
 
@@ -403,33 +414,95 @@ class LabelPrinter {
 
 export const labelPrinter = new LabelPrinter();
 
-/** Screen preview of one label (`product.sizeLabel` adds the "Size: M" line). */
-export function barcodeLabelCopy(product) {
-	const description = product.description || product.subcategory || product.category || "";
-	const size = product.sizeLabel ? `<strong class="label-size">Size: ${esc(product.sizeLabel)}</strong>` : "";
-	return `<div class="barcode-label-copy"><strong class="label-name">${esc(product.name || "Item")}</strong><span class="label-description">${esc(
-		description || "Scan this label at checkout",
-	)}</span>${size}<div class="label-barcode">${barcodeSvg(product.code)}</div><strong class="label-price">${money(product.price)}</strong></div>`;
+/** Pixels per printer dot in the preview, the browser print and the PNG. The printer has 8 dots per mm (203.2 dpi), so x4 is 32 pixels per mm (812.8 dpi): sharp on any printer. */
+export const LABEL_PNG_SCALE = 4;
+export const LABEL_PNG_DPI = 8 * 25.4 * LABEL_PNG_SCALE;
+
+/** The label exactly as the printer prints it, as a PNG address (data URL). */
+export function labelImage(product, size, opts, scale = LABEL_PNG_SCALE) {
+	return drawLabelCanvas(product, size, opts, scale).canvas.toDataURL("image/png");
+}
+
+/** Screen preview of one label: the picture of the label the printer prints (`product.sizeLabel` adds the "Size: M" line). */
+export function barcodeLabelCopy(product, size = ["30", "20"]) {
+	return `<img class="label-preview-image" alt="${esc("Label for " + (product.name || "item") + ", barcode " + product.code)}" src="${labelImage(product, size, {}, 3)}">`;
 }
 
 /**
- * Full HTML document for "Android Print". `copies` is a number, or a list of { sizeLabel, copies } to print several
- * sizes of the same item in one job (each size prints its own barcode, "<item code>-<size>").
+ * Full HTML document for the browser print ("Android Print"): one page per label, each page the same picture the printer prints. `copies` is a
+ * number, or a list of { sizeLabel, copies } to print several sizes of the same item in one job (each size prints its own barcode, "<item code>-<size>").
+ * `imageFor` makes the picture (a test can hand in a stand-in).
  */
-export function barcodeLabelsHtml(product, copies, size) {
-	const description = product.description || product.subcategory || product.category || "";
+export function barcodeLabelsHtml(product, copies, size, imageFor = labelImage) {
 	const runs = Array.isArray(copies) ? copies : [{ sizeLabel: product.sizeLabel || "", copies }];
-	const one = (sizeLabel) =>
-		`<div class="copy"><strong class="copy-name">${esc(product.name || "Item")}</strong><span class="copy-description">${esc(
-			description || "Scan this label at checkout",
-		)}</span>${sizeLabel ? `<strong class="copy-size">Size: ${esc(sizeLabel)}</strong>` : ""}<div class="copy-barcode">${barcodeSvg(sizedBarcode(product.code, sizeLabel))}</div><b class="copy-price">${money(product.price)}</b></div>`;
-	const labels = runs.flatMap((r) => Array.from({ length: r.copies }, () => `<section>${one(r.sizeLabel)}</section>`)).join("");
-	// a label 15 mm tall or less has room for the name, a short barcode and the price only
-	const short = Number(size[1]) <= 15;
-	const compact = short ? ".copy-description,.copy-size{display:none}.copy{gap:.2mm}.copy-name,.copy-price{font-size:8pt}.copy-barcode{margin:0}svg{max-height:6mm}" : "";
-	return `<!doctype html><html><head><style>@page{size:${size[0]}mm ${size[1]}mm;margin:1mm}*{box-sizing:border-box}body{margin:0;font-family:Arial;color:#000}section{width:${
-		Number(size[0]) - 2
-	}mm;height:${
-		Number(size[1]) - 2
-	}mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;overflow:hidden}.copy{width:100%;display:grid;justify-items:center;gap:.45mm}.copy-name,.copy-price{display:block;font-size:10pt;font-weight:900;line-height:1}.copy-description{display:block;max-width:96%;font-size:7.5pt;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.copy-size{display:block;font-size:8pt;font-weight:900;line-height:1}.copy-barcode{width:100%;display:grid;place-items:center;margin:.2mm 0}svg{display:block;width:95%;height:auto;max-height:14mm;margin:0 auto}${compact}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
+	const pictures = new Map();
+	const picture = (sizeLabel) => {
+		if (!pictures.has(sizeLabel)) pictures.set(sizeLabel, imageFor({ ...product, code: sizedBarcode(product.code, sizeLabel), sizeLabel }, size, {}));
+		return pictures.get(sizeLabel);
+	};
+	const labels = runs.flatMap((r) => Array.from({ length: r.copies }, () => `<section><img alt="" src="${picture(r.sizeLabel)}"></section>`)).join("");
+	const [w, h] = [Number(size[0]), Number(size[1])];
+	return `<!doctype html><html><head><style>@page{size:${w}mm ${h}mm;margin:0}*{box-sizing:border-box}body{margin:0}section{width:${w}mm;height:${h}mm;page-break-after:always;overflow:hidden}img{display:block;width:${w}mm;height:${h}mm;image-rendering:pixelated}</style></head><body>${labels}<script>onload=()=>print()</script></body></html>`;
+}
+
+/** The PNG file name of a label: the item name (and the size for an item with sizes), without characters a file name cannot hold. */
+export function labelFileName(name, sizeLabel = "") {
+	const clean = (v) => String(v || "").replace(/[\\/:*?"<>|\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").replace(/^[\s.]+|[\s.]+$/g, "").slice(0, 100).trim();
+	const base = clean(name) || "label";
+	const size = clean(sizeLabel);
+	return (size ? base + " - " + size : base) + ".png";
+}
+
+const crcTable = (() => {
+	const t = new Uint32Array(256);
+	for (let n = 0; n < 256; n++) {
+		let c = n;
+		for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+		t[n] = c >>> 0;
+	}
+	return t;
+})();
+const crc32 = (bytes) => {
+	let c = 0xffffffff;
+	for (const b of bytes) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
+	return (c ^ 0xffffffff) >>> 0;
+};
+
+/** Adds the picture's resolution (dpi) to PNG bytes, so printing software prints the label at its real size (30 mm stays 30 mm). */
+export function pngWithDpi(png, dpi) {
+	const perMeter = Math.round(dpi / 0.0254);
+	const chunk = new Uint8Array(21); // length(4) + "pHYs"(4) + data(9) + crc(4)
+	const view = new DataView(chunk.buffer);
+	view.setUint32(0, 9);
+	chunk.set([0x70, 0x48, 0x59, 0x73], 4);
+	view.setUint32(8, perMeter);
+	view.setUint32(12, perMeter);
+	chunk[16] = 1; // unit: metre
+	view.setUint32(17, crc32(chunk.subarray(4, 17)));
+	const at = 33; // 8-byte signature + the 25-byte IHDR chunk
+	const out = new Uint8Array(png.length + chunk.length);
+	out.set(png.subarray(0, at), 0);
+	out.set(chunk, at);
+	out.set(png.subarray(at), at + chunk.length);
+	return out;
+}
+
+/** The label as a print-ready PNG file (812 dpi, real size). */
+export async function labelPngBlob(product, size, opts) {
+	const { canvas } = drawLabelCanvas(product, size, opts, LABEL_PNG_SCALE);
+	const blob = await new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("The browser could not make the picture."))), "image/png"));
+	return new Blob([pngWithDpi(new Uint8Array(await blob.arrayBuffer()), LABEL_PNG_DPI)], { type: "image/png" });
+}
+
+/** Downloads the label as a PNG named after the item, so the client can print it from any program. */
+export async function downloadLabelPng(product, size, opts) {
+	const url = URL.createObjectURL(await labelPngBlob(product, size, opts));
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = labelFileName(product.name, product.sizeLabel);
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+	setTimeout(() => URL.revokeObjectURL(url), 10000);
+	return a.download;
 }
