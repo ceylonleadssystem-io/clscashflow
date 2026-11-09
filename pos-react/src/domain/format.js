@@ -2,8 +2,7 @@
  * Formatting and small parsing helpers: LKR money, dates (local business date), phone/WhatsApp numbers,
  * number parsing and grouping, ids, CSV building and download, and HTML escaping for print documents.
  */
-/** Formatting + small parsing helpers (ported from the legacy globals). */
-
+import { EMAIL_RE } from "./validators";
 export const money = (n) =>
 	"LKR " +
 	Number(n || 0).toLocaleString(undefined, {
@@ -36,7 +35,7 @@ export function whatsappPhone(value) {
 	return digits;
 }
 
-export const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+export const isEmail = (value) => EMAIL_RE.test(value);
 
 /** Parses "1,234.50" style input; NaN when invalid. */
 export function parseNumber(value) {

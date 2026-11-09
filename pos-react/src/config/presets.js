@@ -4,7 +4,6 @@
  */
 import { hasCapability, typesWith } from "./capabilities";
 
-/** POS business-type presets (categories, kitchen workflow, guidance). */
 export const POS_TYPE_PRESETS = {
 	restaurant: {
 		label: "Restaurant",
