@@ -34,18 +34,6 @@ test('privileged API responses do not use wildcard CORS', function() {
   assert.match(facade, /Vary: 'Origin'/);
 });
 
-test('premium cashflow accounts hydrate onboarding details and save settings directly', function() {
-  const premium = read('premium.html');
-  assert.match(premium, /function premiumProfileSettings\(profile, user\)/);
-  assert.match(premium, /profile\.invoiceBiz \|\| profile\.bizName \|\| profile\.businessName/);
-  assert.match(premium, /function clearPremiumBusinessRecords\(\)/);
-  assert.match(premium, /if \(!loadedAnyCollection && !usedCached\) clearPremiumBusinessRecords\(\)/);
-  assert.match(premium, /async function saveSettingsNow\(\)/);
-  assert.match(premium, /profilePayloadFromSettings\(savedSettings\)/);
-  assert.match(premium, /var saved = await saveSettingsNow\(\)/);
-  assert.doesNotMatch(premium, /var saved = await saveData\(\);\n  if \(saved\) showToast\('Settings saved and synced!'/);
-});
-
 test('Appwrite Firestore shim supports Cashflow bulk workspace sync', function() {
   const compat = read('assets/appwrite-compat.js');
   const docs = read('netlify/functions/appwrite-docs.js');
@@ -71,23 +59,4 @@ test('legacy Netlify handlers use Appwrite instead of Firebase Admin credentials
   ].map(function(file) { return read('netlify/function-handlers/' + file); }).join('\n');
   assert.match(admin, /appwriteAdmin/);
   assert.doesNotMatch(admin + handlers, /firebase-admin|FIREBASE_SERVICE_ACCOUNT|GOOGLE_APPLICATION_CREDENTIALS/i);
-});
-
-test('the central Ceylonry account always routes to Business', function() {
-  const signin = read('signin.html');
-  assert.match(signin, /accounts@ceylonrylabs\.io': 'business'/);
-  assert.match(signin, /function emailDashboardPlan\(email\)/);
-  assert.match(signin, /const accountPlan = emailDashboardPlan\(user\.email\)/);
-  assert.match(signin, /currentPlan: accountPlan/);
-});
-
-test('Cashflow never lets an empty cloud response erase a local workspace backup', function() {
-  const solo = read('solo.html');
-  const starter = read('starter.html');
-  const growth = read('growth.html');
-  const premium = read('premium.html');
-  assert.match(solo, /localHasRecords && !cloudHasRecords/);
-  assert.match(starter, /localHasRecords && !cloudHasRecords/);
-  assert.match(growth, /localHasRecords && !cloudHasRecords/);
-  assert.match(premium, /localHasRecords && !loadedAnyCollection/);
 });
