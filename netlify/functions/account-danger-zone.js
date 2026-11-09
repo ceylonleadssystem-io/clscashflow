@@ -7,7 +7,8 @@ const {
   queryDocuments,
   deleteDocument,
   users,
-  clean
+  clean,
+  ADMIN_EMAIL
 } = require('../lib/appwrite');
 const log = require('../lib/log').createLogger('account-danger-zone');
 
@@ -134,7 +135,7 @@ exports.handler = async function handler(event) {
     const isTeamMember = ownerUid !== user.id;
     const email = clean(user.email || profile.email || '', 240).toLowerCase();
 
-    if (email === 'devteam@ceylonrylabs.io' || profile.adminAccess === true || profile.role === 'platform_admin') {
+    if (email === ADMIN_EMAIL || profile.adminAccess === true || profile.role === 'platform_admin') {
       log.warn('danger zone denied', { status: 400, reason: 'platform-admin', uid: user.id, action });
       return response(400, { ok: false, error: 'Platform admin accounts cannot use this self-service danger zone.' });
     }
