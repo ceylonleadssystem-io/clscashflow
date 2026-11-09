@@ -89,18 +89,15 @@ exports.handler = async function handler(event) {
     '<div style="font-family:Arial,Helvetica,sans-serif;background:#F5F0E8;padding:32px">' +
       '<div style="max-width:580px;margin:0 auto;background:#fff;border:1px solid #E3D9C4">' +
 
-        // Header
         '<div style="background:#1a1714;padding:24px 32px;color:#fff">' +
           '<div style="font-size:22px;font-weight:300;letter-spacing:.5px">Ceylonry<span style="color:#C9A84C">Labs</span>.io</div>' +
           '<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:4px">CashFlow System</div>' +
         '</div>' +
 
-        // Body
         '<div style="padding:32px;color:#1a1714;font-size:15px;line-height:1.7">' +
           '<p style="margin:0 0 10px">Hi <strong>' + esc(greetingName) + '</strong>,</p>' +
           '<p style="margin:0 0 20px;color:#6B6258">Welcome aboard! Your CLS CashFlow account is ready. Here are your login details — save this email.</p>' +
 
-          // Login box
           '<div style="background:#FAF7F2;border:1px solid #E3D9C4;border-left:3px solid #1a1714;padding:20px 24px;margin-bottom:24px">' +
             '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:12px">Your Login Details</div>' +
             '<table style="width:100%;border-collapse:collapse;font-size:14px">' +
@@ -109,7 +106,6 @@ exports.handler = async function handler(event) {
             '</table>' +
           '</div>' +
 
-          // Trial box
           '<div style="background:#FAF7F2;border:1px solid #E3D9C4;border-left:3px solid #B8922A;padding:20px 24px;margin-bottom:24px">' +
             '<div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#B8922A;font-weight:600;margin-bottom:12px">Your Plan & Trial</div>' +
             '<p style="margin:0 0 8px;font-size:14px"><strong>' + esc(planLabel) + ' Plan</strong></p>' +
@@ -120,19 +116,16 @@ exports.handler = async function handler(event) {
             '<p style="margin:10px 0 0;font-size:12px;color:#6B6258">Accepted by: <strong style="color:#1a1714">' + esc(acceptedName) + '</strong><br>Terms version: ' + esc(termsVersion) + '</p>' +
           '</div>' +
 
-          // CTA button
           '<p style="text-align:center;margin:0 0 28px">' +
             '<a href="' + esc(loginUrl) + '" style="display:inline-block;background:#1a1714;color:#fff;text-decoration:none;padding:14px 32px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600">Sign In to Your Dashboard →</a>' +
           '</p>' +
 
-          // What happens next
           '<div style="font-size:13px;color:#6B6258;border-top:1px solid #E3D9C4;padding-top:20px">' +
             '<strong style="color:#1a1714;display:block;margin-bottom:8px">What happens after your trial?</strong>' +
             'When your 15-day trial ends, the system will show our bank details. Transfer the monthly amount and upload the payment slip to continue. Your data stays safely stored.' +
           '</div>' +
         '</div>' +
 
-        // Footer
         '<div style="background:#F5F0E8;padding:16px 32px;color:#A8A29A;font-size:11px;text-align:center">' +
           'Sent by CeylonryLabs.io · If you did not create this account, please ignore this email.' +
         '</div>' +

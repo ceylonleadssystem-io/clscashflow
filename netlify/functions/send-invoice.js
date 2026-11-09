@@ -69,7 +69,6 @@ exports.handler = async function handler(event) {
   const html =
   '<div style="font-family:Arial,Helvetica,sans-serif;background:#f5f3ee;padding:24px 0">'
   + '<div style="max-width:640px;margin:0 auto;background:#ffffff;border:1px solid #ececec">'
-  // header band
   + '<div style="background:' + accent + ';padding:28px 32px;color:#ffffff">'
   +   '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
   +     '<td style="vertical-align:top"><div style="font-size:22px;font-weight:700">' + biz + '</div>'
@@ -80,19 +79,16 @@ exports.handler = async function handler(event) {
   +       '<div style="font-size:13px;opacity:.9;margin-top:4px">' + documentNumber + '</div></td>'
   +   '</tr></table>'
   + '</div>'
-  // intro / reminder
   + '<div style="padding:28px 32px 8px">'
   +   '<p style="font-size:15px;color:#15110d;margin:0 0 14px">Dear ' + esc(d.clientName || 'Customer') + ',</p>'
   +   '<p style="font-size:14px;color:#4a463f;line-height:1.7;margin:0 0 6px">Please find your ' + esc(documentLabel.toLowerCase()) + ' from <strong>' + biz + '</strong> below. '
   +   (documentLabel === 'Invoice' ? 'Kindly arrange payment by the due date shown. If you have already paid, please disregard this reminder.' : (documentLabel === 'Receipt' ? 'Your payment has been received successfully.' : 'Please review the details before the validity date shown.')) + '</p>'
   + '</div>'
-  // meta
   + '<div style="padding:8px 32px 0"><table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;color:#6f685e">'
   +   '<tr><td style="padding:3px 0">Invoice Date: <strong style="color:#15110d">' + esc(d.date || '') + '</strong></td>'
   +       '<td style="padding:3px 0;text-align:right">' + (documentLabel === 'Invoice' ? 'Due Date' : (documentLabel === 'Receipt' ? 'Payment Date' : 'Valid Until')) + ': <strong style="color:#15110d">' + esc(d.due || d.date || '') + '</strong></td></tr>'
   +   '<tr><td style="padding:3px 0">Terms: <strong style="color:#15110d">' + esc(d.terms || 'Net 30') + '</strong></td><td></td></tr>'
   + '</table></div>'
-  // line items
   + '<div style="padding:18px 32px 0"><table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">'
   +   '<thead><tr style="background:' + accent + ';color:#ffffff">'
   +     '<th style="padding:10px 12px;text-align:left;font-size:11px;letter-spacing:1px">DESCRIPTION</th>'
@@ -100,7 +96,6 @@ exports.handler = async function handler(event) {
   +     '<th style="padding:10px 12px;text-align:right;font-size:11px;letter-spacing:1px">UNIT PRICE</th>'
   +     '<th style="padding:10px 12px;text-align:right;font-size:11px;letter-spacing:1px">AMOUNT</th>'
   +   '</tr></thead><tbody>' + rows + '</tbody></table></div>'
-  // totals
   + '<div style="padding:14px 32px 0"><table width="100%" cellpadding="0" cellspacing="0"><tr><td></td>'
   +   '<td style="width:280px"><table width="100%" cellpadding="0" cellspacing="0">' + totalsInner + '</table>'
   +     '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;background:' + accent + '"><tr>'
@@ -108,7 +103,6 @@ exports.handler = async function handler(event) {
   +       '<td style="padding:14px 16px;color:#ffffff;font-size:18px;font-weight:700;text-align:right">' + cur + ' ' + money(d.amount) + '</td>'
   +     '</tr></table>'
   +   '</td></tr></table></div>'
-  // notes + footer
   + '<div style="padding:22px 32px 8px"><div style="font-size:11px;letter-spacing:1px;color:' + accent + ';font-weight:700;margin-bottom:6px">NOTES</div>'
   +   '<div style="font-size:13px;color:#6f685e;line-height:1.6">' + esc(d.notes || 'Thank you for your business.') + '</div></div>'
   + '<div style="padding:18px 32px 26px;border-top:1px solid #f3f1ec;margin-top:14px;text-align:center;font-size:12px;color:#b3ada3">'
