@@ -1,23 +1,6 @@
 /**
- * Barcode helpers for product labels: Code 39 and Code 128 encoders, cleaning/generating codes, an SVG
- * Code 39 for previews and browser print, and a canvas drawer for bitmap label printing.
+ * Barcode helpers for product labels: Code 128 encoder, cleaning/generating codes, and a canvas drawer for bitmap label printing.
  */
-import { esc } from "../../domain/format";
-
-/** Code 39 + Code 128 encoders used for product barcode labels. */
-
-export const CODE39 = {
-	0: "nnnwwnwnn", 1: "wnnwnnnnw", 2: "nnwwnnnnw", 3: "wnwwnnnnn", 4: "nnnwwnnnw",
-	5: "wnnwwnnnn", 6: "nnwwwnnnn", 7: "nnnwnnwnw", 8: "wnnwnnwnn", 9: "nnwwnnwnn",
-	A: "wnnnnwnnw", B: "nnwnnwnnw", C: "wnwnnwnnn", D: "nnnnwwnnw", E: "wnnnwwnnn",
-	F: "nnwnwwnnn", G: "nnnnnwwnw", H: "wnnnnwwnn", I: "nnwnnwwnn", J: "nnnnwwwnn",
-	K: "wnnnnnnww", L: "nnwnnnnww", M: "wnwnnnnwn", N: "nnnnwnnww", O: "wnnnwnnwn",
-	P: "nnwnwnnwn", Q: "nnnnnnwww", R: "wnnnnnwwn", S: "nnwnnnwwn", T: "nnnnwnwwn",
-	U: "wwnnnnnnw", V: "nwwnnnnnw", W: "wwwnnnnnn", X: "nwnnwnnnw", Y: "wwnnwnnnn",
-	Z: "nwwnwnnnn", "-": "nwnnnnwnw", ".": "wwnnnnwnn", " ": "nwwnnnwnn", $: "nwnwnwnnn",
-	"/": "nwnwnnnwn", "+": "nwnnnwnwn", "%": "nnnwnwnwn", "*": "nwnnwnwnn",
-};
-
 export const CODE128 = [
 	"212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
 	"221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
@@ -56,25 +39,6 @@ export function uniqueBarcode(existingCodes = []) {
 		code = "AS-" + String(bytes[0] % 100000000).padStart(8, "0");
 	} while (existingCodes.includes(code));
 	return code;
-}
-
-/** Code 39 as an SVG string (on-screen preview and browser print). */
-export function barcodeSvg(value) {
-	const code = "*" + cleanBarcode(value) + "*";
-	let x = 8;
-	const rects = [];
-	for (let c = 0; c < code.length; c++) {
-		const pattern = CODE39[code[c]] || CODE39["-"];
-		for (let i = 0; i < pattern.length; i++) {
-			const width = pattern[i] === "w" ? 6 : 2;
-			if (i % 2 === 0) rects.push(`<rect x="${x}" y="4" width="${width}" height="96"/>`);
-			x += width;
-		}
-		x += 3;
-	}
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${x + 8} 106" role="img" aria-label="Barcode ${esc(
-		value,
-	)}"><g fill="#000">${rects.join("")}</g></svg>`;
 }
 
 export function code128Values(value) {

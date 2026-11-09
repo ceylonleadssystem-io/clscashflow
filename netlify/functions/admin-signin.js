@@ -1,9 +1,8 @@
 const crypto = require('crypto');
-const { users, upsertDocument, headers, newId } = require('../lib/appwrite');
+const { users, upsertDocument, headers, newId, ADMIN_EMAIL } = require('../lib/appwrite');
 const { originAllowed, rateLimited, clientIp } = require('../lib/security');
 const log = require('../lib/log').createLogger('admin-signin');
 
-const ADMIN_EMAIL = 'devteam@ceylonrylabs.io';
 // Set ADMIN_PASSWORD_SHA256 in the Netlify environment and rotate the password.
 // The literal below is only a legacy fallback so the portal keeps working until then.
 const LEGACY_ADMIN_PASSWORD_SHA256 = '3a210a10d833215c3af0e59a9f172e7e0aa33f455b40aa1338177fd4baf30de7';

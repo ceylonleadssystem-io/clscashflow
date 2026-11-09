@@ -101,37 +101,27 @@ export function PosProvider({ children }) {
 	const viewAllowed = useCallback((user, v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], settings) : (ROLE_VIEWS[user.role] || []).includes(v)), [settings]);
 	/** Does the signed-in person hold this permission key (see domain/access.js)? */
 	const can = useCallback((key) => canDo(currentUser, key, settings), [currentUser, settings]);
-	const canView = useCallback(
-		(v) => {
-			if (!currentUser) return false;
-			if (!viewAllowed(currentUser, v)) return false;
-			// the Order Queue belongs to kitchen presets, but saved orders of any preset stay reachable
-			if (v === "orders" && !kitchen && !hasOpenOrders) return false;
-			if (v === "tables" && !kitchen) return false;
-			if (v === "stations" && !kitchen) return false;
-			if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
-			if (v === "detailing" && !hasCapability(settings.businessType, "detailing")) return false;
-			if (v === "checkout" && locationId === "all") return false;
-			const flag = VIEW_FEATURE[v];
-			return flag ? !!enabled[flag] : true;
-		},
-		[currentUser, viewAllowed, kitchen, hasOpenOrders, settings.businessType, enabled, locationId],
-	);
-
-	const firstView = useCallback(
-		(user) => (ROLE_VIEWS[user.role] || ["staff"]).find((v) => canView2(user, v)) || "settings",
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[enabled, kitchen, settings.businessType],
-	);
-	function canView2(user, v) {
+	// Does this page exist for this business (kitchen, industry tools, detailing, feature switches)? Independent of who is signed in.
+	const pageOpen = (v) => {
+		// the Order Queue belongs to kitchen presets, but saved orders of any preset stay reachable
 		if (v === "orders" && !kitchen && !hasOpenOrders) return false;
-		if (v === "tables" && !kitchen) return false;
-		if (v === "stations" && !kitchen) return false;
+		if ((v === "tables" || v === "stations") && !kitchen) return false;
 		if (v === "industry" && !hasCapability(settings.businessType, "industryTools")) return false;
 		if (v === "detailing" && !hasCapability(settings.businessType, "detailing")) return false;
 		const flag = VIEW_FEATURE[v];
 		return flag ? !!enabled[flag] : true;
-	}
+	};
+	const canView = useCallback(
+		(v) => !!currentUser && viewAllowed(currentUser, v) && !(v === "checkout" && locationId === "all") && pageOpen(v),
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[currentUser, viewAllowed, kitchen, hasOpenOrders, settings.businessType, enabled, locationId],
+	);
+
+	const firstView = useCallback(
+		(user) => (ROLE_VIEWS[user.role] || ["staff"]).find((v) => pageOpen(v)) || "settings",
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[enabled, kitchen, settings.businessType],
+	);
 
 	// ----------------------------------------------------------- services ---
 	const sessionRef = useRef({});
@@ -274,11 +264,11 @@ export function PosProvider({ children }) {
 			setLocationId(chosen);
 			sessionRef.current = { ...sessionRef.current, userId: user.id, user, locationId: chosen };
 			if (multi) svc.locations.auditLogin(chosen);
-			const roleFirst = (ROLE_VIEWS[user.role] || ["staff"]).find((v) => canView2(user, v)) || "settings";
+			const roleFirst = (ROLE_VIEWS[user.role] || ["staff"]).find((v) => pageOpen(v)) || "settings";
 			// a car detailing business opens on its Detailing page
-			const first = hasCapability(d.settings.businessType, "detailing") && canView2(user, "detailing") ? "detailing" : roleFirst;
+			const first = hasCapability(d.settings.businessType, "detailing") && pageOpen("detailing") ? "detailing" : roleFirst;
 			// Settings > System Options > Sign In: the screen staff land on, when their role may open it
-			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], d.settings) : (ROLE_VIEWS[user.role] || []).includes(v)) && canView2(user, v), first));
+			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], d.settings) : (ROLE_VIEWS[user.role] || []).includes(v)) && pageOpen(v), first));
 			if (user.role === "owner" && !d.settings.onboardingComplete && !d.settings.onboardingDismissed && enabled["settings.posSetupWizard"])
 				setTimeout(() => setSetupOpen(true), 250);
 			if (enabled["staff.shiftPrompt"]) setTimeout(() => setShiftStart(user), 80);

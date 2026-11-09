@@ -5,7 +5,7 @@
  * Sales, customers, staff and stock levels never do.
  */
 
-import { ORDER_CHANNELS } from "../config/constants";
+import { DEFAULT_RECEIPT_FOOTER, ORDER_CHANNELS } from "../config/constants";
 
 export const ROW_TYPES = ["products", "modifiers", "subcategories", "locations"];
 export const DELETE_TYPES = ["products", "modifiers", "subcategories"];
@@ -14,7 +14,7 @@ export const BLOCKED_SETTINGS = /^(ownerAuth|subscription|features|locationFeatu
 
 // Saving the Settings page writes every field, including ones the business never set. A value that was never set and equals the empty or
 // default value is not a change, so it is not sent (and cannot overwrite what the client sets in the meantime).
-const DEFAULTS = { printerType: "system", receiptFooter: "Thank you for your purchase", posUsers: 1, orderChannels: ORDER_CHANNELS };
+const DEFAULTS = { printerType: "system", receiptFooter: DEFAULT_RECEIPT_FOOTER, posUsers: 1, orderChannels: ORDER_CHANNELS };
 const isEmptyValue = (v) => v === "" || v === false || v === 0 || v === null || (Array.isArray(v) && !v.length) || (v && typeof v === "object" && !Array.isArray(v) && Object.values(v).every(isEmptyValue));
 const unchangedDefault = (key, old, value) => old === undefined && (isEmptyValue(value) || (key in DEFAULTS && same(value, DEFAULTS[key])));
 

@@ -1,7 +1,7 @@
-const { siteOrigin } = require('../lib/security');
+const { siteOrigin, siteUrl } = require('../lib/security');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const { appwriteAdmin } = require('../lib/appwrite');
+const { appwriteAdmin, ADMIN_EMAIL } = require('../lib/appwrite');
 
 async function getAdmin() {
   try {
@@ -18,7 +18,7 @@ function headers() {
     'Netlify-CDN-Cache-Control': 'no-store',
     'Pragma': 'no-cache',
     'Expires': '0',
-    'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
+    'Access-Control-Allow-Origin': siteOrigin(siteUrl()),
     Vary: 'Origin',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
@@ -75,7 +75,7 @@ async function verifyAdmin(admin, event) {
 
   const decoded = await admin.auth().verifyIdToken(match[1]);
   const email = String(decoded.email || '').trim().toLowerCase();
-  if (email !== 'devteam@ceylonrylabs.io') {
+  if (email !== ADMIN_EMAIL) {
     const err = new Error('This account is not allowed to read admin data.');
     err.statusCode = 403;
     throw err;
@@ -873,7 +873,7 @@ exports.handler = async function handler(event) {
         const userRef = db.collection('users').doc(id);
         const snap = await userRef.get();
         const profile = snap.exists ? (snap.data() || {}) : {};
-        if (String(profile.email || '').toLowerCase() === 'devteam@ceylonrylabs.io' || isInternalAdmin(profile)) {
+        if (String(profile.email || '').toLowerCase() === ADMIN_EMAIL || isInternalAdmin(profile)) {
           return { statusCode: 400, headers: headers(), body: JSON.stringify({ ok: false, error: 'Platform admin account cannot be deleted from this panel.' }) };
         }
         await userRef.set(userUpdateForAction(admin, 'deleteUser'), { merge: true });

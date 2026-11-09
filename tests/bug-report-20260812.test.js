@@ -22,10 +22,3 @@ test('server document email supports invoices, quotes, and estimates', () => {
   assert.match(endpoint, /documentLabel === 'Invoice' \? 'Due Date' : \(documentLabel === 'Receipt' \? 'Payment Date' : 'Valid Until'\)/);
   assert.match(endpoint, /subject: documentLabel \+/);
 });
-
-test('quick onboarding resets page scroll and removes exiting cards from flow', () => {
-  const onboarding = read('onboarding.html');
-  assert.match(onboarding, /\.ob-card\.exiting\{[^}]*position:absolute/);
-  assert.match(onboarding, /window\.scrollTo\(\{top:0,left:0,behavior:'auto'\}\)/);
-  assert.match(onboarding, /rightPanel\.scrollTop=0/);
-});

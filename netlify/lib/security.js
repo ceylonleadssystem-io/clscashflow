@@ -10,33 +10,19 @@ function siteOrigin(value) {
   try { return new URL(String(value || '')).origin; } catch (_) { return ''; }
 }
 
-// The administrator portal is also served from admin.<site host> (netlify.toml); its requests come from that origin.
-function adminOrigin(site) {
-  try { const u = new URL(site); return u.protocol + '//admin.' + u.host; } catch (_) { return ''; }
+// The portals are served from <subdomain>.<site host> (netlify.toml); their requests come from those origins.
+const PORTAL_SUBDOMAINS = ['pos', 'ogf', 'admin', 'automobile'];
+
+function subOrigin(site, sub) {
+  try { const u = new URL(site); return u.protocol + '//' + sub + '.' + u.host; } catch (_) { return ''; }
 }
 
-// Automobile (car detailing) is served from automobile.<site host> as well.
-function automobileOrigin(site) {
-  try { const u = new URL(site); return u.protocol + '//automobile.' + u.host; } catch (_) { return ''; }
-}
-
-// The main POS is served from pos.<site host>.
-function posOrigin(site) {
-  try { const u = new URL(site); return u.protocol + '//pos.' + u.host; } catch (_) { return ''; }
-}
-
-// The Restaurant (OGF) POS is served from ogf.<site host>.
-function ogfOrigin(site) {
-  try { const u = new URL(site); return u.protocol + '//ogf.' + u.host; } catch (_) { return ''; }
-}
+function siteUrl() { return process.env.PUBLIC_SITE_URL || DEFAULT_SITE; }
 
 function allowedOrigins() {
   const list = new Set([
-    posOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
-    ogfOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
-    adminOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
-    automobileOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
-    siteOrigin(process.env.PUBLIC_SITE_URL || DEFAULT_SITE),
+    ...PORTAL_SUBDOMAINS.map(function(sub) { return subOrigin(siteUrl(), sub); }),
+    siteOrigin(siteUrl()),
     siteOrigin(process.env.URL),
     siteOrigin(process.env.DEPLOY_PRIME_URL),
     siteOrigin(process.env.DEPLOY_URL)
@@ -108,11 +94,6 @@ function guard(event, options) {
   return null;
 }
 
-// Strip CR/LF and angle/quote characters so values can never inject mail headers.
-function headerSafe(value, max) {
-  return String(value == null ? '' : value).replace(/[\r\n\u2028\u2029<>"]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 200);
-}
-
 function validEmail(value) {
   const v = String(value || '').trim();
   return v.length <= 254 && /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(v);
@@ -126,11 +107,4 @@ function trustedLink(value) {
   } catch (_) { return ''; }
 }
 
-function passwordMatches(plain, expectedHex) {
-  const crypto = require('crypto');
-  const a = crypto.createHash('sha256').update(String(plain || '')).digest();
-  const b = Buffer.from(String(expectedHex || ''), 'hex');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-
-module.exports = { guard, reply, corsHeaders, originAllowed, allowedOrigins, rateLimited, clientIp, headerSafe, validEmail, trustedLink, passwordMatches, siteOrigin };
+module.exports = { guard, reply, corsHeaders, originAllowed, allowedOrigins, rateLimited, clientIp, validEmail, trustedLink, siteOrigin, siteUrl };

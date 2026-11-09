@@ -15,13 +15,11 @@ import { NewAccountPanel } from "./NewAccountPanel";
 import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
-import { STATUSES, SUBSCRIPTIONS, appsOf, lastUsedOf, statusOf, subscriptionOf } from "./status";
+import { STATUSES, SUBSCRIPTIONS, appsOf, fmtDay, lastUsedOf, statusOf, subscriptionOf } from "./status";
 import { adminFeedback, useAdminFeedback } from "./adminFeedback";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("admin");
-
-const fmtDate = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
 
 /** Administration portal: separate login + accounts list + per-account dashboard. */
 export function AdminApp() {
@@ -240,8 +238,8 @@ export function AdminApp() {
 											<td>
 												<span className="badge">{a.payment?.status || "trial"}</span>
 											</td>
-											<td>{fmtDate(a.payment?.paid ? a.payment?.nextPaymentDue : a.payment?.trialEnd)}</td>
-											<td>{fmtDate(lastUsedOf(a))}</td>
+											<td>{fmtDay(a.payment?.paid ? a.payment?.nextPaymentDue : a.payment?.trialEnd)}</td>
+											<td>{fmtDay(lastUsedOf(a))}</td>
 											<td>
 												<span className="badge" style={a.paused ? { background: "#fde9e7", color: "#a5362b" } : { background: "#e7f6ee", color: "#168653" }}>
 													{a.paused ? "Disabled" : "Active"}

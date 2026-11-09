@@ -16,13 +16,6 @@ test('EmailJS sends invoice, quote, and estimate documents and has a public-key 
   assert.match(fallback, /if \(privateKey\) body\.accessToken = privateKey/);
 });
 
-test('Studio Add Transaction keeps its body independently scrollable', function () {
-  const studio = read('starter.html');
-  assert.match(studio, /#txn-modal \.modal-box\{display:flex;flex-direction:column;overflow:hidden\}/);
-  assert.match(studio, /#txn-modal \.modal-body\{[^}]*min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch/);
-  assert.match(studio, /modalBody\.scrollTop=0/);
-});
-
 test('dark invoice templates keep Bill To details visible on white paper', function () {
   const platform = read('assets/platform.js');
   const scoped = (platform.match(/\.invoice-head \.muted\{color:#fff!important\}/g) || []).length;

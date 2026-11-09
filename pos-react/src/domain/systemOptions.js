@@ -6,7 +6,7 @@
  * older Receipt Printing tab and the printed receipts stay in step.
  * Only settings the POS acts on are listed here; each added setting needs its behaviour wired first, so no switch is ever a dead switch.
  */
-import { ORDER_CHANNELS } from "../config/constants";
+import { DEFAULT_RECEIPT_FOOTER, ORDER_CHANNELS } from "../config/constants";
 
 export const SYSTEM_PAGES = [
 	{ key: "overview", title: "Overview", description: "Every System Options page, and ready-made starting points." },
@@ -42,7 +42,7 @@ export const FIELDS = {
 		defaultMenu: { scope: "location", default: "" }, // an Availability menu id; "" = all items
 	},
 	receipts: {
-		footer: { scope: "org", default: "Thank you for your purchase", max: 200 },
+		footer: { scope: "org", default: DEFAULT_RECEIPT_FOOTER, max: 200 },
 	},
 	signIn: {
 		defaultView: { scope: "location", default: "auto" },

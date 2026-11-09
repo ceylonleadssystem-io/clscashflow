@@ -2,7 +2,7 @@
  * The Settings form: the business settings the older tabs and the moved pages (Service Charge, Appearance, Customer Feedback,
  * Receipts & Printing) edit together and save with saveSettings.
  */
-import { ORDER_CHANNELS } from "../config/constants";
+import { DEFAULT_RECEIPT_FOOTER, ORDER_CHANNELS } from "../config/constants";
 
 export const formFrom = (s) => ({
 	business: s.business || "",
@@ -17,7 +17,7 @@ export const formFrom = (s) => ({
 	autoPrint: !!s.autoPrint,
 	autoPrintKot: !!s.autoPrintKot,
 	kotPrinter: s.kotPrinter || "",
-	receiptFooter: s.receiptFooter || "Thank you for your purchase",
+	receiptFooter: s.receiptFooter || DEFAULT_RECEIPT_FOOTER,
 	supportEnabled: !!s.supportEnabled,
 	serviceChargeEnabled: !!s.serviceChargeEnabled,
 	serviceChargeRate: Math.max(0, Math.min(100, +s.serviceChargeRate || 0)),

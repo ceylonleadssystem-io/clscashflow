@@ -164,8 +164,3 @@ export function getAuthService() {
 	if (!instance) instance = env.authProvider === "local" ? new LocalAuthProvider() : new AppwriteAuthProvider();
 	return instance;
 }
-
-/** Test seam. */
-export function setAuthService(service) {
-	instance = service;
-}
