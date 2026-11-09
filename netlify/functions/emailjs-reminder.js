@@ -1,8 +1,8 @@
-const { guard, siteOrigin } = require('../lib/security');
+const { guard, siteOrigin, siteUrl } = require('../lib/security');
 const EMAILJS_API_URL = 'https://api.emailjs.com/api/v1.0/email/send';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
+  'Access-Control-Allow-Origin': siteOrigin(siteUrl()),
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'

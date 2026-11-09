@@ -1,4 +1,4 @@
-const { siteOrigin } = require('../lib/security');
+const { siteOrigin, siteUrl } = require('../lib/security');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { appwriteAdmin } = require('../lib/appwrite');
@@ -18,7 +18,7 @@ function headers() {
     'Netlify-CDN-Cache-Control': 'no-store',
     'Pragma': 'no-cache',
     'Expires': '0',
-    'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
+    'Access-Control-Allow-Origin': siteOrigin(siteUrl()),
     Vary: 'Origin',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'

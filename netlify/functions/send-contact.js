@@ -1,9 +1,9 @@
-const { guard, siteOrigin } = require('../lib/security');
+const { guard, siteOrigin, siteUrl } = require('../lib/security');
 const nodemailer = require('nodemailer');
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': siteOrigin(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io'),
+  'Access-Control-Allow-Origin': siteOrigin(siteUrl()),
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
