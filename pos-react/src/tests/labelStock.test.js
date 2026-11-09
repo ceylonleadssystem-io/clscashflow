@@ -53,13 +53,19 @@ describe("label layouts fit every offered size", () => {
 		expect(l.barcodeMin).toBeGreaterThanOrEqual(36); // at least 4.5 mm of bars
 		expect(labelRows(l, 120, { desc: false, size: false }).barcodeH).toBeGreaterThanOrEqual(64);
 	});
-	it("browser printing uses the label size for the page and drops the description on a 15 mm label", async () => {
+	it("browser printing prints the same picture as the printer, one page per label, at the label's real size", async () => {
 		const { barcodeLabelsHtml } = await import("../services/printing/labelPrinter");
-		const p = { name: "Cap", code: "CAP-1", price: 1200, description: "Blue cotton" };
-		const short = barcodeLabelsHtml(p, 1, ["30", "15"]);
-		expect(short).toContain("@page{size:30mm 15mm");
-		expect(short).toContain(".copy-description,.copy-size{display:none}");
-		expect(barcodeLabelsHtml(p, 1, ["30", "20"])).not.toContain(".copy-description,.copy-size{display:none}");
+		const made = [];
+		const imageFor = (product, size) => (made.push({ code: product.code, sizeLabel: product.sizeLabel, size }), "data:image/png;base64,PIC" + made.length);
+		const p = { name: "Cap", code: "CAP-1", price: 1200 };
+		const html = barcodeLabelsHtml(p, [{ sizeLabel: "M", copies: 2 }, { sizeLabel: "L", copies: 1 }], ["30", "15"], imageFor);
+		expect(html).toContain("@page{size:30mm 15mm;margin:0}");
+		expect(html).toContain("width:30mm;height:15mm");
+		expect(html.match(/<section>/g)).toHaveLength(3);
+		// each size is drawn once with its own barcode ("<item code>-<size>")
+		expect(made.map((m) => m.code)).toEqual(["CAP-1-M", "CAP-1-L"]);
+		expect(html.match(/PIC1/g)).toHaveLength(2);
+		expect(barcodeLabelsHtml(p, 1, ["30", "20"], imageFor).match(/<section>/g)).toHaveLength(1);
 	});
 	it("30x20 has no description line; 38x25, 50x25 and 60x40 do", async () => {
 		const { labelBitmapLayout } = await import("../services/printing/labelPrinter");
@@ -128,5 +134,47 @@ describe("local print preview", () => {
 	it("is off outside the local dev environment (tests, production)", async () => {
 		const { localPrintPreview } = await import("../services/printing/localPrintPreview");
 		expect(localPrintPreview()).toBe(false);
+	});
+});
+
+describe("label PNG download", () => {
+	it("names the file after the item, without characters a file name cannot hold", async () => {
+		const { labelFileName } = await import("../services/printing/labelPrinter");
+		expect(labelFileName("Wide Leg Trouser")).toBe("Wide Leg Trouser.png");
+		expect(labelFileName("Wide Leg Trouser", "M")).toBe("Wide Leg Trouser - M.png");
+		expect(labelFileName('Cheese/Ham: "Large" <hot>?')).toBe("Cheese Ham Large hot.png");
+		expect(labelFileName("  ..Tea \\\\ Cup  ")).toBe("Tea Cup.png");
+		expect(labelFileName("Half-Price Tee 5%")).toBe("Half-Price Tee 5%.png");
+		expect(labelFileName("")).toBe("label.png");
+		expect(labelFileName("x".repeat(300)).length).toBe(104);
+		expect(labelFileName("සුදු කමිසය")).toBe("සුදු කමිසය.png");
+	});
+	it("adds the resolution right after the PNG header so printing software keeps the real size", async () => {
+		const { pngWithDpi, LABEL_PNG_DPI } = await import("../services/printing/labelPrinter");
+		// a minimal valid PNG: signature, IHDR (1 x 1), IEND
+		const sig = [137, 80, 78, 71, 13, 10, 26, 10];
+		const ihdr = [0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0, 0, 0, 0x3a, 0x7e, 0x9b, 0x55];
+		const iend = [0, 0, 0, 0, 73, 69, 78, 68, 0xae, 0x42, 0x60, 0x82];
+		const png = new Uint8Array([...sig, ...ihdr, ...iend]);
+		const out = pngWithDpi(png, LABEL_PNG_DPI);
+		expect(out.length).toBe(png.length + 21);
+		expect([...out.slice(0, 33)]).toEqual([...sig, ...ihdr]);
+		const chunk = out.slice(33, 54);
+		const view = new DataView(chunk.buffer);
+		expect(new TextDecoder().decode(chunk.slice(4, 8))).toBe("pHYs");
+		const perMeter = Math.round(LABEL_PNG_DPI / 0.0254);
+		expect(view.getUint32(8)).toBe(perMeter);
+		expect(view.getUint32(12)).toBe(perMeter);
+		expect(chunk[16]).toBe(1);
+		// 30 mm at that resolution is 960 pixels: the size of the downloaded picture
+		expect(Math.round((30 / 1000) * perMeter)).toBe(960);
+		// the checksum matches the chunk (CRC-32 of type + data)
+		let c = 0xffffffff;
+		for (const b of chunk.slice(4, 17)) {
+			c ^= b;
+			for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+		}
+		expect(view.getUint32(17)).toBe((c ^ 0xffffffff) >>> 0);
+		expect([...out.slice(54)]).toEqual(iend);
 	});
 });

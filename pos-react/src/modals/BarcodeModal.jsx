@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { cleanBarcode, sizedBarcode, uniqueBarcode } from "../services/printing/barcode";
 import { productSizeGroup } from "../domain/catalog";
-import { barcodeLabelCopy, barcodeLabelsHtml, labelPrinter, resolveLabelStock } from "../services/printing/labelPrinter";
+import { barcodeLabelCopy, barcodeLabelsHtml, downloadLabelPng, labelPrinter, resolveLabelStock } from "../services/printing/labelPrinter";
 import { LabelStockPicker } from "../components/settings/LabelStockPicker";
 import { printHtmlInFrame } from "../services/printing/printDocument";
 import { useData } from "../store/DataProvider";
@@ -68,6 +68,17 @@ export function BarcodeModalHost() {
 			await ui.alert("Barcode labels were not printed. " + (e.message || "Reconnect the USB barcode printer and try again."));
 		}
 	};
+	// the label as a print-ready PNG named after the item (an item with sizes gets one file per size chosen, "Item - M.png")
+	const downloadPng = async () => {
+		const list = total ? runs : [{ sizeLabel: sizes[0] || "" }];
+		try {
+			const names = [];
+			for (const run of list) names.push(await downloadLabelPng({ ...safe, code: sizedBarcode(safe.code, run.sizeLabel), sizeLabel: run.sizeLabel }, size, {}));
+			ui.notice(`Downloaded ${names.join(", ")}. It is one label at its real size; print it as many times as you need.`);
+		} catch (e) {
+			await ui.alert("The label picture could not be downloaded. " + (e.message || ""));
+		}
+	};
 	const detect = async () => {
 		try {
 			await labelPrinter.connect();
@@ -94,6 +105,9 @@ export function BarcodeModalHost() {
 					<button className="btn out" onClick={closeBarcode}>
 						Cancel
 					</button>
+					<button className="btn out" id="barcode-download-png" onClick={downloadPng}>
+						Download PNG
+					</button>
 					<button className="btn out" onClick={printBrowser}>
 						Android Print
 					</button>
@@ -106,7 +120,7 @@ export function BarcodeModalHost() {
 			}
 		>
 			<ModalBody>
-				<div className="barcode-preview" id="barcode-preview" dangerouslySetInnerHTML={{ __html: barcodeLabelCopy(((sz) => ({ ...safe, code: sizedBarcode(safe.code, sz), sizeLabel: sz }))((runs[0] || { sizeLabel: sizes[0] || "" }).sizeLabel)) }} />
+				<div className="barcode-preview" id="barcode-preview" dangerouslySetInnerHTML={{ __html: barcodeLabelCopy(((sz) => ({ ...safe, code: sizedBarcode(safe.code, sz), sizeLabel: sz }))((runs[0] || { sizeLabel: sizes[0] || "" }).sizeLabel), size) }} />
 				<div className="form-grid" style={{ marginTop: 12 }}>
 					{sizes.length ? (
 						sizes.map((sz) => (
