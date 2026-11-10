@@ -104,3 +104,5 @@ export const SETTINGS_PAGE_OF_VIEW = { products: "items", modifiers: "modifiers"
 export const FULL_SETTINGS_ROLES = ["owner", "manager", "admin"];
 export const REPORTING_ROLES = ["owner", "admin", "manager", "accountant"];
 export const OWNER_ROLES = ["owner", "admin"];
+/** Owner-level: the owner and an admin (all branches, user management, permanent deletes). */
+export const isOwnerRole = (role) => OWNER_ROLES.includes(role);

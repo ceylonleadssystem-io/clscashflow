@@ -3,7 +3,7 @@
  * and the shift and register history.
  */
 import { useState } from "react";
-import { OWNER_ROLES } from "../config/roles";
+import { OWNER_ROLES, isOwnerRole } from "../config/roles";
 import { activeTimeEntry, currentCashShift, expectedCash, isOnBreak } from "../domain/sales";
 import { money } from "../domain/format";
 import { Panel } from "../components/ui";
@@ -165,7 +165,7 @@ export function UserManagement() {
 						<tbody id="user-table">
 							{data.users.map((u) => {
 								const last = data.timeEntries.find((e) => e.userId === u.id);
-								const all = u.locationAccess === "all" || u.role === "owner" || u.role === "admin";
+								const all = u.locationAccess === "all" || isOwnerRole(u.role);
 								return (
 									<tr key={u.id}>
 										<td>

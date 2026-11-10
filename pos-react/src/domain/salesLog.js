@@ -3,9 +3,10 @@
  * cashier refunds or voids, and the audit text that keeps a permanently deleted sale readable afterwards.
  */
 import { userName } from "./names";
+import { FULL_SETTINGS_ROLES } from "../config/roles";
 
 /** Roles whose PIN may approve a refund or void started by someone else. */
-export const APPROVER_ROLES = ["owner", "manager", "admin"];
+export const APPROVER_ROLES = FULL_SETTINGS_ROLES;
 
 /** The active owner / manager / admin whose PIN this is, or null. */
 export function findApprover(users, pin, isApprover = (u) => APPROVER_ROLES.includes(u.role)) {

@@ -19,26 +19,27 @@ const activeLocationId = (ctx) => {
 	return loc && loc !== "all" ? loc : ctx.data().locations[0]?.id || "";
 };
 
-export async function saveInventoryItem(ctx, form) {
+/** The stock item, its opening/correction movement and the product it tracks, built from a stock form; null when the values are not valid. */
+function buildStockItem(ctx, form) {
 	const d = ctx.data();
 	const s = ctx.session();
 	const name = form.name.trim();
 	const qty = Number(form.qty);
 	const reorder = Number(form.reorder);
 	const cost = Number(form.cost);
-	if (!name || !(qty >= 0) || !(reorder >= 0) || !(cost >= 0)) return void (await ctx.ui.alert("Enter a valid item name and stock values."));
+	if (!name || !(qty >= 0) || !(reorder >= 0) || !(cost >= 0)) return null;
 	const existing = d.inventory.find((i) => i.id === form.id);
 	const loc = activeLocationId(ctx);
 	const before = existing ? locationStock(existing, loc) : 0;
 	let item = {
 		...(existing || { id: newId("i"), createdAt: nowIso(), locationQuantities: {} }),
 		name,
-		sku: form.sku.trim() || "STK-" + String(Date.now()).slice(-5),
+		sku: (form.sku || "").trim() || "STK-" + String(Date.now()).slice(-5),
 		type: form.type,
 		unit: form.unit,
 		reorder,
 		cost,
-		supplier: form.supplier.trim(),
+		supplier: (form.supplier || "").trim(),
 		...(form.productId ? { productId: form.productId, autoProductStock: true } : {}),
 	};
 	let movement = null;
@@ -53,14 +54,52 @@ export async function saveInventoryItem(ctx, form) {
 			if (item.locationQuantities[l.id] == null) item.locationQuantities = { ...item.locationQuantities, [l.id]: 0 };
 		});
 	}
+	const product = form.productId && d.products.find((p) => p.id === form.productId);
+	return { item, movement, product, existing, loc };
+}
+
+export async function saveInventoryItem(ctx, form) {
+	const built = buildStockItem(ctx, form);
+	if (!built) return void (await ctx.ui.alert("Enter a valid item name and stock values."));
+	const { item, movement, product, existing, loc } = built;
 	await ctx.store.write((tx) => {
 		tx.put(T.inventoryItems, item);
 		if (movement) tx.put(T.stockMovements, movement);
-		const product = form.productId && d.products.find((p) => p.id === form.productId);
 		if (product) tx.put(T.products, { ...product, trackStock: true });
 	});
 	log.info(existing ? "stock item updated" : "stock item created", { itemId: item.id, location: loc, adjusted: !!movement });
 	return item;
+}
+
+/**
+ * Adds several new stock items at once (the bulk "Set product stock" and "Add ingredients" windows): each row is a stock form
+ * ({ name, sku, type, unit, qty, reorder, cost, productId? }). Nothing is saved when any row is not valid or an ingredient name already
+ * exists in stock; one notice says how many were added.
+ */
+export async function addStockBatch(ctx, rows) {
+	const d = ctx.data();
+	const taken = new Set(d.inventory.map((i) => i.name.trim().toLowerCase()));
+	const built = [];
+	for (const [n, row] of rows.entries()) {
+		const label = String(row.name || "").trim() || "Row " + (n + 1);
+		const b = buildStockItem(ctx, { ...row, id: "", sku: row.sku || "STK-" + String(Date.now()).slice(-5) + "-" + (n + 1) });
+		if (!b) return void (await ctx.ui.alert(`${label}: enter a name and valid quantity, reorder level and cost.`));
+		const key = b.item.name.toLowerCase();
+		if (!row.productId && taken.has(key)) return void (await ctx.ui.alert(`${b.item.name} is already in stock. Use Add Stock to receive more of it.`));
+		taken.add(key);
+		built.push(b);
+	}
+	if (!built.length) return void (await ctx.ui.alert("Enter at least one item."));
+	await ctx.store.write((tx) => {
+		for (const { item, movement, product } of built) {
+			tx.put(T.inventoryItems, item);
+			if (movement) tx.put(T.stockMovements, movement);
+			if (product) tx.put(T.products, { ...product, trackStock: true });
+		}
+	});
+	log.info("stock items added in bulk", { count: built.length });
+	ctx.ui.notice(`${built.length} stock item${built.length === 1 ? "" : "s"} added.`);
+	return true;
 }
 
 export async function adjustStock(ctx, itemId, amount, reason, note) {

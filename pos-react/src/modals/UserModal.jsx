@@ -7,6 +7,7 @@ import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
 import { activeLocations } from "../services/pos/locations";
+import { isOwnerRole } from "../config/roles";
 
 const blank = () => ({ id: "", name: "", pin: "", role: "cashier", active: true, clockInBehaviour: "prompt", registerBehaviour: "prompt", locationAccess: "selected", locationIds: [] });
 
@@ -27,7 +28,7 @@ export function UserModal({ id, open, onClose }) {
 	const save = async () => {
 		if (await svc.staff.saveUser({ ...f, active: f.active === true || f.active === "true" })) onClose();
 	};
-	const all = f.locationAccess === "all" || f.role === "owner" || f.role === "admin";
+	const all = f.locationAccess === "all" || isOwnerRole(f.role);
 	return (
 		<Modal
 			id="user-modal"

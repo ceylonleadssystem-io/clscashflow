@@ -6,11 +6,12 @@
 import { T } from "../../db/tables";
 import { money, nowIso, today } from "../../domain/format";
 import { applyStockChange, movementRow, newId, stamp } from "./common";
+import { FULL_SETTINGS_ROLES } from "../../config/roles";
 
 /** Order of a job: each step moves to the next one. Cancelled can be reached from any step before In Progress. */
 export const JOB_FLOW = ["Booked", "Confirmed", "Assigned", "Travelling", "Arrived", "In Progress", "Quality Check", "Completed", "Invoiced"];
 
-const MANAGERS = ["owner", "manager", "admin"];
+const MANAGERS = FULL_SETTINGS_ROLES;
 const guard = (ctx, roles = ["owner", "manager", "admin", "cashier"]) => {
 	if (roles.includes(ctx.session().user?.role)) return true;
 	ctx.ui.notice("You do not have access to change detailing records.");

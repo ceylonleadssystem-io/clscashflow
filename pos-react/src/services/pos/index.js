@@ -56,6 +56,7 @@ export function bindServices(ctx) {
 		}),
 		inventory: bind(ctx, {
 			saveInventoryItem: inventory.saveInventoryItem,
+			addStockBatch: inventory.addStockBatch,
 			adjustStock: inventory.adjustStock,
 			deleteInventoryItem: inventory.deleteInventoryItem,
 			saveBranchStockCounts: inventory.saveBranchStockCounts,

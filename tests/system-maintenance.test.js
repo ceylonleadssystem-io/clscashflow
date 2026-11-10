@@ -1,9 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const path = require('node:path');
 const { pagePath } = require('./support/pages.cjs');
 
-function read(path) { return fs.readFileSync(pagePath(path), 'utf8'); }
+function read(file) { return fs.readFileSync(pagePath(file), 'utf8'); }
 
 test('destructive account operations create an Appwrite backup before deleting records', function() {
   const handler = read('netlify/functions/account-danger-zone.js');
@@ -46,17 +47,10 @@ test('Appwrite Firestore shim supports Cashflow bulk workspace sync', function()
   assert.match(docs, /async function replaceCollection/);
 });
 
-test('legacy Netlify handlers use Appwrite instead of Firebase Admin credentials', function() {
-  const admin = read('netlify/function-handlers/appwrite-admin.cjs');
-  const handlers = [
-    'admin-data.cjs',
-    'payable-create-checkout.cjs',
-    'payable-webhook.cjs',
-    'send-story-submission.cjs',
-    'stripe-webhook.cjs',
-    'submit-ticket.cjs',
-    'track-visit.cjs'
-  ].map(function(file) { return read('netlify/function-handlers/' + file); }).join('\n');
-  assert.match(admin, /appwriteAdmin/);
-  assert.doesNotMatch(admin + handlers, /firebase-admin|FIREBASE_SERVICE_ACCOUNT|GOOGLE_APPLICATION_CREDENTIALS/i);
+test('no Netlify function or library uses Firebase Admin credentials', function() {
+  const dirs = ['netlify/functions', 'netlify/lib'];
+  const sources = dirs.flatMap(function(dir) {
+    return fs.readdirSync(path.join(__dirname, '..', dir)).filter(function(file) { return /\.(js|mjs|cjs)$/.test(file); }).map(function(file) { return read(dir + '/' + file); });
+  }).join('\n');
+  assert.doesNotMatch(sources, /firebase-admin|FIREBASE_SERVICE_ACCOUNT|GOOGLE_APPLICATION_CREDENTIALS/i);
 });

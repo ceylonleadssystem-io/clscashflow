@@ -11,6 +11,7 @@ import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
 import { useUi } from "../store/UiProvider";
 import { JOB_FLOW, jobPaid, jobTotal } from "../services/pos/detailing";
+import { FULL_SETTINGS_ROLES } from "../config/roles";
 
 const TABS = [
 	["overview", "Overview"],
@@ -46,7 +47,7 @@ export function Detailing({ tab: forced }) {
 	const data = useData();
 	const { svc, currentUser } = usePos();
 	const ui = useUi();
-	const manager = ["owner", "manager", "admin"].includes(currentUser?.role);
+	const manager = FULL_SETTINGS_ROLES.includes(currentUser?.role);
 	const [tabState, setTab] = useState("overview");
 	const tab = forced || tabState; // the Automobile shell picks the page from its own sidebar
 	const [modal, setModal] = useState(null); // { kind, id?, jobId? }

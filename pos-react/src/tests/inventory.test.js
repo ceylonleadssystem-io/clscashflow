@@ -143,4 +143,39 @@ describe("inventory workflow", () => {
 			expect(h.lastAlert()).toMatch(/Choose a CSV/);
 		});
 	});
+
+	describe("adding stock in bulk", () => {
+		const row = (o = {}) => ({ name: "Flour", sku: "", type: "Ingredient", unit: "kg", qty: "20", reorder: "5", cost: "150", ...o });
+
+		it("adds several ingredients at once, each with opening stock and a movement", async () => {
+			expect(await h.svc.inventory.addStockBatch([row(), row({ name: "Salt", qty: "3" })])).toBe(true);
+			const stock = h.data().inventory;
+			expect(stock.map((i) => [i.name, i.qty]).sort()).toEqual([["Flour", 20], ["Salt", 3]]);
+			expect(new Set(stock.map((i) => i.sku)).size).toBe(2);
+			expect(h.data().stockMovements.filter((m) => m.reason === "Opening stock")).toHaveLength(2);
+		});
+
+		it("saves nothing when one row is not valid, or an ingredient name is already in stock", async () => {
+			await h.svc.inventory.addStockBatch([row(), row({ name: "Bad", qty: "-1" })]);
+			expect(h.lastAlert()).toMatch(/Bad/);
+			expect(h.data().inventory).toHaveLength(0);
+			await h.svc.inventory.saveInventoryItem(item({ name: "Sugar" }));
+			await h.svc.inventory.addStockBatch([row({ name: "sugar" })]);
+			expect(h.lastAlert()).toMatch(/already in stock/);
+			expect(h.data().inventory).toHaveLength(1);
+		});
+
+		it("gives existing products their quantities and starts tracking them", async () => {
+			const p = await addProduct(h, { name: "Cola", price: 200, cost: 120, code: "COLA-1" });
+			await h.svc.inventory.addStockBatch([{ productId: p.id, name: p.name, sku: "COLA-1", type: "Sellable Product", unit: "each", qty: "24", reorder: "6", cost: "120" }]);
+			const row = h.data().inventory.find((i) => i.productId === p.id);
+			expect(row).toMatchObject({ qty: 24, reorder: 6, sku: "COLA-1" });
+			expect(h.data().products.find((x) => x.id === p.id).trackStock).toBe(true);
+		});
+
+		it("asks for at least one item", async () => {
+			await h.svc.inventory.addStockBatch([]);
+			expect(h.lastAlert()).toMatch(/at least one/);
+		});
+	});
 });

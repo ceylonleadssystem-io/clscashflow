@@ -11,14 +11,13 @@ import { hasCapability } from "../../config/capabilities";
  *
  * Every service function receives a `ctx` built by `makeCtx()`:
  *   ctx.store            PosStore (WatermelonDB facade, atomic multi-table writes)
- *   ctx.repos            repositories (queries / single-entity saves)
  *   ctx.data()           latest plain snapshot (legacy `db` shape)
  *   ctx.session()        { userId, user, locationId, sessionId, deviceId, businessId }
  *   ctx.features()       resolved feature flags
  *   ctx.ui               { notice, alert, confirm, prompt }
  */
-export function makeCtx({ store, getData, getSession, getFeatures, ui, repos }) {
-	return { store, repos, data: getData, session: getSession, features: getFeatures, ui };
+export function makeCtx({ store, getData, getSession, getFeatures, ui }) {
+	return { store, data: getData, session: getSession, features: getFeatures, ui };
 }
 
 let idCounter = 0;

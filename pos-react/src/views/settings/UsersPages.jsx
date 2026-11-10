@@ -13,6 +13,7 @@ import { activeLocations } from "../../services/pos/locations";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
+import { isOwnerRole } from "../../config/roles";
 
 const ROLE_LABEL = { owner: "Owner", admin: "Admin", manager: "Manager", accountant: "Accountant", cashier: "Cashier" };
 const TABS = [
@@ -42,8 +43,8 @@ function UserDetail({ id, onBack }) {
 	}, [id]);
 	if (!form) return null;
 	const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
-	const all = form.role === "owner" || form.role === "admin";
-	const mayAssign = (r) => ["owner", "admin"].includes(currentUser?.role) || !["owner", "admin"].includes(r);
+	const all = isOwnerRole(form.role);
+	const mayAssign = (r) => isOwnerRole(currentUser?.role) || !isOwnerRole(r);
 	const roles = PRESET_ROLES.filter((r) => mayAssign(r) || r === form.role);
 	const changeRole = (role) => {
 		setForm((f) => ({ ...f, role }));

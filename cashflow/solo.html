@@ -6830,8 +6830,8 @@
 						currentPlan: "studio",
 						lastPlan: "studio",
 						requestedPlan: "studio",
-						planPrice: 60000,
-						planMonthlyPrice: 5500,
+						planPrice: 83000,
+						planMonthlyPrice: 7500,
 						billingCycle: "monthly",
 						upgradedFrom: "solo",
 						upgradedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
@@ -11471,19 +11471,19 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
 				const plan = (profile && profile.plan) || "solo";
 				const prices = {
 					solo: 36000,
-					studio: 60000,
-					business: 94800,
-					starter: 60000,
-					growth: 94800,
-					premium: 94800,
+					studio: 83000,
+					business: 180000,
+					starter: 83000,
+					growth: 180000,
+					premium: 180000,
 				};
 				const monthlyPrices = {
 					solo: 3500,
-					studio: 5500,
-					business: 8500,
-					starter: 5500,
-					growth: 8500,
-					premium: 8500,
+					studio: 7500,
+					business: 15500,
+					starter: 7500,
+					growth: 15500,
+					premium: 15500,
 				};
 				const price = prices[plan] || 36000;
 				const monthlyPrice = monthlyPrices[plan] || 3500;

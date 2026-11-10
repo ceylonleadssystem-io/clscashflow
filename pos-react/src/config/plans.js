@@ -10,6 +10,7 @@ export const PLANS = [
 		icon: "🏪",
 		tagline: "Perfect for small businesses getting started.",
 		price: 5500,
+		annual: 62000,
 		term: "/ month",
 		features: [
 			"Up to 2 users",
@@ -28,6 +29,7 @@ export const PLANS = [
 		icon: "📊",
 		tagline: "Ideal for growing businesses with more locations and customer engagement.",
 		price: 7500,
+		annual: 83000,
 		term: "/ month",
 		popular: true,
 		features: [
@@ -47,6 +49,7 @@ export const PLANS = [
 		icon: "👑",
 		tagline: "For larger businesses that need more flexibility and advanced features.",
 		price: 15500,
+		annual: 180000,
 		term: "/ month",
 		features: [
 			"Unlimited users",

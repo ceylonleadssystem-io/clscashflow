@@ -76,6 +76,7 @@ test('createAccount makes the sign-in, the profile and an empty POS with the bus
   assert.equal(profile.posBusinessName, 'Lotus Cafe');
   assert.equal(profile.posPaid, false);
   assert.ok(Date.parse(profile.posTrialEnd) > Date.now());
+  assert.equal(Math.round((Date.parse(profile.posTrialEnd) - Date.parse(profile.posTrialStart)) / 86400000), 7);
   const main = docs.get('users/' + id + '/pos/main');
   assert.equal(main.ownerUid, id);
   assert.equal(main.payload.settings.businessType, 'cafe');

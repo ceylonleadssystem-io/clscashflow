@@ -1664,7 +1664,7 @@
 					if (now - visitMs(v) <= 10 * 60 * 1000) liveIds[id] = true;
 				});
 				var monthKey = new Date().toISOString().slice(0, 7),
-					prices = { solo: 3500, studio: 5500, business: 8500 },
+					prices = { solo: 3500, studio: 7500, business: 15500 },
 					monthlyRevenue = 0,
 					monthlyPayments = 0,
 					activeMrr = 0;
@@ -3344,7 +3344,7 @@
 								requested = (msg.match(
 									/Requested plan:\s*(Solo|Studio|Business)/i,
 								) || [])[1],
-								prices = { solo: 3500, studio: 5500, business: 8500 },
+								prices = { solo: 3500, studio: 7500, business: 15500 },
 								change = "";
 							if (current && requested) {
 								var diff =

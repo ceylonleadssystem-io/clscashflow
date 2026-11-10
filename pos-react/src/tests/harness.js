@@ -5,7 +5,6 @@
 import { vi } from "vitest";
 import { createDatabase } from "../db/database";
 import { PosStore } from "../db/PosStore";
-import { createRepositories } from "../db/repositories";
 import { resolveFeatures } from "../config/features";
 import { freshAccountDb } from "../services/sync/account";
 import { payloadToSnapshot } from "../services/sync/payload";
@@ -41,7 +40,7 @@ export async function createHarness({ role = "owner", features = {}, settings = 
 		businessId: "uid1",
 	};
 	const flags = resolveFeatures(features).enabled;
-	const ctx = makeCtx({ store, getData: () => cache, getSession: () => session, getFeatures: () => flags, ui, repos: createRepositories(store) });
+	const ctx = makeCtx({ store, getData: () => cache, getSession: () => session, getFeatures: () => flags, ui });
 	const refresh = async () => (cache = await store.readSnapshot());
 	const raw = bindServices(ctx);
 	const svc = Object.fromEntries(
