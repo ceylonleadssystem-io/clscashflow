@@ -173,6 +173,24 @@ describe("inventory workflow", () => {
 			expect(h.data().products.find((x) => x.id === p.id).trackStock).toBe(true);
 		});
 
+		it("links an ingredient to the item it is used in, so a sale reduces the ingredient count", async () => {
+			const p = await addProduct(h, { name: "Milk Tea", price: 300, cost: 90 });
+			await h.svc.inventory.addStockBatch([row({ name: "Tea leaves", unit: "kg", qty: "5", usedIn: p.id, perUnit: "0.02" }), row({ name: "Milk", unit: "L", qty: "10", usedIn: p.id, perUnit: "0.2" })]);
+			const recipe = h.data().products.find((x) => x.id === p.id).recipe;
+			expect(recipe.map((r) => r.qty).sort()).toEqual([0.02, 0.2]);
+			expect(recipe.every((r) => h.data().inventory.some((i) => i.id === r.itemId))).toBe(true);
+		});
+
+		it("needs an amount for a linked ingredient and keeps the item's existing recipe", async () => {
+			const p = await addProduct(h, { name: "Soup", price: 400, cost: 100 });
+			await h.svc.inventory.addStockBatch([row({ name: "Stock cube", usedIn: p.id, perUnit: "" })]);
+			expect(h.lastAlert()).toMatch(/how much of it one Soup uses/);
+			expect(h.data().inventory).toHaveLength(0);
+			await h.svc.inventory.addStockBatch([row({ name: "Carrot", usedIn: p.id, perUnit: "1" })]);
+			await h.svc.inventory.addStockBatch([row({ name: "Leek", usedIn: p.id, perUnit: "2" })]);
+			expect(h.data().products.find((x) => x.id === p.id).recipe).toHaveLength(2);
+		});
+
 		it("asks for at least one item", async () => {
 			await h.svc.inventory.addStockBatch([]);
 			expect(h.lastAlert()).toMatch(/at least one/);

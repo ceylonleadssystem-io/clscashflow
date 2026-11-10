@@ -105,6 +105,14 @@ describe("checkout workflow", () => {
 		expect(h.lastAlert()).toMatch(/Not enough Milk/);
 	});
 
+	it("an ingredient added in bulk and linked to an item goes down when that item is sold", async () => {
+		const latte = await addProduct(h, { name: "Iced Latte", price: 450, cost: 120 });
+		await h.svc.inventory.addStockBatch([{ name: "Oat milk", sku: "", type: "Ingredient", unit: "ml", qty: "1000", reorder: "100", cost: "1", usedIn: latte.id, perUnit: "150" }]);
+		await h.svc.sales.completeSale({ cart: [line(h.data().products.find((x) => x.id === latte.id), 3)], discount: noDiscount, payment: "Card" });
+		expect(h.data().inventory.find((i) => i.name === "Oat milk").qty).toBe(550);
+		expect(h.data().stockMovements.some((m) => m.reason === "Sale recipe usage" && m.change === -450)).toBe(true);
+	});
+
 	it("emails the order itself (not a payment-received message)", async () => {
 		const res = await h.svc.sales.completeSale({ cart: [line(tea)], discount: noDiscount, payment: "Card", wantsEmail: true, receiptEmail: "buyer@test.lk" });
 		expect(sendOrderEmail).toHaveBeenCalledOnce();
