@@ -1,5 +1,5 @@
 /**
- * Ingredients of one item (a product with its own stock count): what one sale of it uses. Each line picks an ingredient from the stock, or
+ * Ingredients of one item (a product): what one sale of it uses. Each line picks an ingredient from the stock, or
  * creates a new one, and says how much one item uses. Selling the item reduces the item's own stock and each ingredient by that amount.
  */
 import { useEffect, useMemo, useState } from "react";
@@ -13,12 +13,11 @@ const NEW = "__new__";
 const num = (v) => String(v ?? "").replace(/,/g, "");
 const blankLine = () => ({ itemId: "", perUnit: "", name: "", unit: "g", qty: "", reorder: "", cost: "" });
 
-export function ItemIngredientsModal({ stockId, open, onClose }) {
+export function ItemIngredientsModal({ productId, open, onClose }) {
 	const data = useData();
 	const { svc } = usePos();
 	const recipesOn = useFeature("inventory.recipes");
-	const stock = data.inventory.find((i) => i.id === stockId);
-	const product = stock && data.products.find((p) => p.id === stock.productId);
+	const product = data.products.find((p) => p.id === productId);
 	const [lines, setLines] = useState([]);
 	const [busy, setBusy] = useState(false);
 	const ingredients = useMemo(() => data.inventory.filter((i) => !i.productId).sort((a, b) => a.name.localeCompare(b.name)), [data.inventory]);

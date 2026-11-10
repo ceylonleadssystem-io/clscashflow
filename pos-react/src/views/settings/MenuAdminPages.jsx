@@ -19,6 +19,7 @@ import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
 import { ModifierGroupEditor } from "./MovedPages";
 import { CatalogueImportModal } from "../../modals/CatalogueImportModal";
+import { ItemIngredientsModal } from "../../modals/ItemIngredientsModal";
 import { useCheckout } from "../../store/CheckoutProvider";
 import { useModals } from "../../store/ModalsProvider";
 import { usePos } from "../../store/PosProvider";
@@ -620,6 +621,8 @@ export function Items() {
 	const { removeProductFromCart } = useCheckout();
 	const importOn = useFeature("catalogue.import");
 	const barcodesOn = useFeature("catalogue.barcodeLabels");
+	const recipesOn = useFeature("inventory.recipes");
+	const [ingredientsOf, setIngredientsOf] = useState(null); // product id of the item whose ingredients are being edited
 	const [importOpen, setImportOpen] = useState(false);
 	const [q, setQ] = useState("");
 	const [categoryFilter, setCategoryFilter] = useState("all");
@@ -680,7 +683,7 @@ export function Items() {
 		<>
 			<PageHeader
 				title="Items"
-				description="Add items and edit their details, photo, stations, modifier groups, own tax and the names used on kitchen tickets and receipts. Edit saves a draft that goes live when you publish. Details and stock, Print barcode, Delete and Import items change the register's items straight away."
+				description="Add items and edit their details, photo, stations, modifier groups, own tax and the names used on kitchen tickets and receipts. Edit saves a draft that goes live when you publish. Details and stock, Ingredients, Print barcode, Delete and Import items change the register's items straight away."
 				actions={
 					<>
 						<DraftBadge show={hasDraft(settings, "itemSettings") || itemEdits.length > 0} />
@@ -742,6 +745,11 @@ export function Items() {
 													<button type="button" className="btn out" onClick={() => openProduct(p.id)} title="Stock, unit, supplier, recipe and photo position. Saved straight away.">
 														Details and stock
 													</button>
+													{recipesOn && String(p.type).toLowerCase() !== "service" && (
+														<button type="button" className="btn out" data-product-ingredients={p.id} onClick={() => setIngredientsOf(p.id)} title="What one sale of this item uses from the stock. Saved straight away.">
+															Ingredients
+														</button>
+													)}
 													{barcodesOn && (
 														<button type="button" className="btn out" data-product-barcode={p.id} onClick={() => openBarcode(p.id)}>
 															Print barcode
@@ -760,6 +768,7 @@ export function Items() {
 					</details>
 				))}
 			</SectionCard>
+			<ItemIngredientsModal productId={ingredientsOf} open={ingredientsOf !== null} onClose={() => setIngredientsOf(null)} />
 			<DetailDrawer
 				open={!!edit}
 				wide
@@ -779,7 +788,7 @@ export function Items() {
 			>
 				{edit && (
 					<>
-						<SectionCard title="Details" description="Applied to the live item when you publish. Stock, unit, supplier and recipe are under Details and stock on the item's row.">
+						<SectionCard title="Details" description="Applied to the live item when you publish. Stock, unit and supplier are under Details and stock, and what one sale uses is under Ingredients, on the item's row.">
 							<TextRow id="it-name" label="Name" value={edit.details.name} max={80} onChange={setDetail("name")} />
 							<NumberRow id="it-price" label="Selling price" value={edit.details.price} min={0} step={0.01} onChange={(v) => setDetail("price")(v === "" ? "" : String(v))} />
 							<NumberRow id="it-cost" label="Cost price" value={edit.details.cost} min={0} step={0.01} onChange={(v) => setDetail("cost")(v === "" ? "" : String(v))} />

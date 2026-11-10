@@ -42,7 +42,7 @@ export function Inventory() {
 	const [file, setFile] = useState(null);
 	const [qrOpen, setQrOpen] = useState(false);
 	const [bulkStock, setBulkStock] = useState(null); // null | "products" | "ingredients"
-	const [ingredientsOf, setIngredientsOf] = useState(null); // stock id of the item whose ingredients are being edited
+	const [ingredientsOf, setIngredientsOf] = useState(null); // product id of the item whose ingredients are being edited
 
 	const canEdit = FULL_SETTINGS_ROLES.includes(role);
 	const allMode = branchStock && locationId === "all" && isOwnerRole(role);
@@ -226,7 +226,7 @@ export function Inventory() {
 											<td>
 												<div className="tools">
 													{recipes && recipeOf(i) && (
-														<button className="btn out" onClick={() => setIngredientsOf(i.id)}>
+														<button className="btn out" onClick={() => setIngredientsOf(i.productId)}>
 															Ingredients
 														</button>
 													)}
@@ -279,7 +279,7 @@ export function Inventory() {
 											{canEdit && (
 												<div className="tools">
 													{recipes && recipeOf(i) && (
-														<button className="btn out" onClick={() => setIngredientsOf(i.id)}>
+														<button className="btn out" onClick={() => setIngredientsOf(i.productId)}>
 															Ingredients
 														</button>
 													)}
@@ -368,7 +368,7 @@ export function Inventory() {
 			</div>
 			<StockCountQrModal open={qrOpen} onClose={() => setQrOpen(false)} />
 			<BulkStockModal mode={bulkStock || "products"} open={bulkStock !== null} onClose={() => setBulkStock(null)} />
-			<ItemIngredientsModal stockId={ingredientsOf} open={ingredientsOf !== null} onClose={() => setIngredientsOf(null)} />
+			<ItemIngredientsModal productId={ingredientsOf} open={ingredientsOf !== null} onClose={() => setIngredientsOf(null)} />
 			<InventoryItemModal id={item} open={item !== null} onClose={() => setItem(null)} />
 			<StockAdjustModal id={adjust} open={adjust !== null} onClose={() => setAdjust(null)} />
 			<BranchStockModal id={branch} open={branch !== null} onClose={() => setBranch(null)} />
