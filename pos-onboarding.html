@@ -563,7 +563,7 @@
 							: new Date(),
 						end = prior.posTrialEnd
 							? new Date(prior.posTrialEnd)
-							: new Date(start.getTime() + 15 * 86400000),
+							: new Date(start.getTime() + 7 * 86400000),
 						isCashflow = !!(prior.plan && prior.plan !== "pos");
 					await ref.set(
 						{

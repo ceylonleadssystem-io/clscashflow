@@ -475,7 +475,7 @@ export function BillingPanel() {
 					<div>
 						<div className="panel-title">Billing</div>
 						<div className="muted">
-							{paid ? "Your paid subscription is active." : "Your first payment becomes due when the 15-day trial ends."}
+							{paid ? "Your paid subscription is active." : "Your first payment becomes due when the 7-day trial ends."}
 							{due ? " " + (paid ? "Next payment due: " : "Trial ends: ") + new Date(due).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) + "." : ""}
 						</div>
 					</div>

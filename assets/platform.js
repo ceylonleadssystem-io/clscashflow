@@ -70,6 +70,13 @@
     return new Date().toISOString();
   }
 
+  // The trial length the account really has (its dates), else the product's default: POS 7 days, CashFlow 15 days.
+  function trialDays(profile, plan) {
+    var start = Date.parse(profile && (profile.trialStart || profile.posTrialStart));
+    var end = Date.parse(profile && (profile.trialEnd || profile.posTrialEnd));
+    return start && end && end > start ? Math.round((end - start) / 86400000) : (plan === 'pos' ? 7 : 15);
+  }
+
   function afterFirstPaint(fn, delay) {
     var run = function() {
       if ('requestIdleCallback' in window) {
@@ -1697,8 +1704,8 @@
     var user = getAuthUser();
     var trialEnd = profile.trialEnd ? new Date(profile.trialEnd) : null;
     var trialText = trialEnd && !isNaN(trialEnd.getTime())
-      ? 'Your 15-day free trial ended on ' + trialEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
-      : 'Your 15-day free trial has ended.';
+      ? 'Your ' + trialDays(profile, plan) + '-day free trial ended on ' + trialEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
+      : 'Your ' + trialDays(profile, plan) + '-day free trial has ended.';
 
     var ov = document.createElement('div');
     ov.id = 'cls-paywall';
@@ -1877,7 +1884,7 @@
         '<button type="button" class="cls-trial-close" aria-label="Close">×</button>' +
         '<div class="cls-trial-kicker">Day 5 check-in</div>' +
         '<h2 id="cls-trial-day5-title" class="cls-trial-title">Are you happy with the system?</h2>' +
-        '<div class="cls-trial-copy">If so, shall we proceed to the paid version? Your 15-day trial remains active, but activating now keeps your account uninterrupted after the trial.</div>' +
+        '<div class="cls-trial-copy">If so, shall we proceed to the paid version? Your ' + trialDays(profile, plan) + '-day trial remains active, but activating now keeps your account uninterrupted after the trial.</div>' +
         '<div class="cls-trial-price"><span>' + escapeHtml(details.name) + ' monthly package</span><strong>' + escapeHtml(money(details.monthlyPrice || 0)) + '<span style="font-family:inherit;font-size:.9rem;color:#6B6258"> / mo</span></strong></div>' +
         '<div class="cls-trial-actions">' +
           '<button type="button" class="cls-trial-primary" data-trial-pay-monthly>Pay next month in advance</button>' +
@@ -2112,7 +2119,7 @@
         '<span class="cls-trial-dot"></span>' +
         '<span><strong>' + (opts.planName || 'Free') + ' trial</strong></span>' +
         '<span id="cls-trial-clock">Calculating...</span>' +
-        '<span class="cls-trial-muted">left in your 15-day trial</span>' +
+        '<span class="cls-trial-muted">left in your ' + trialDays(profile, opts.plan) + '-day trial</span>' +
       '</div>' +
       '<button type="button" id="cls-trial-action">' + (opts.actionText || 'View plan') + '</button>';
     var dashboardView = document.getElementById('view-dashboard');
@@ -2324,7 +2331,7 @@
 	    var periodEnd = profile.subscriptionCurrentPeriodEnd ? new Date(profile.subscriptionCurrentPeriodEnd) : null;
 	    var periodCopy = periodEnd && !isNaN(periodEnd.getTime())
 	      ? 'Next ' + (selectedCycle === 'annual' ? 'annual renewal' : 'monthly payment') + ' due: ' + periodEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '.'
-	      : (paid ? 'Your paid subscription is active.' : 'Your first payment becomes due when the 15-day trial ends. Choose a monthly or annual prepaid cycle.');
+	      : (paid ? 'Your paid subscription is active.' : 'Your first payment becomes due when the ' + trialDays(profile, plan) + '-day trial ends. Choose a monthly or annual prepaid cycle.');
 	    var actionHtml = '<button type="button" class="cls-billing-monthly" data-billing-submit'+(canPay?'':' disabled')+'>'+(canPay?'Pay by bank transfer':'Payment opens when trial ends')+'</button>'+(nextPlan?'<button type="button" class="cls-billing-pay" data-billing-request="'+escapeHtml(nextPlan)+'">Switch trial to '+escapeHtml(nextDetails.name)+'</button>':'');
 	    var wrap = document.createElement('div');
 	    wrap.id = BILLING_ID;
