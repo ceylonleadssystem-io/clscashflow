@@ -6,7 +6,7 @@
  * Jobs live in settings.jobs = [{ id, title, code, rate, color, active }]; settings.userAccess[userId].jobs = [{ jobId, rate }].
  */
 import { APPROVER_ROLES } from "./salesLog";
-import { FULL_SETTINGS_ROLES, ROLES, ROLE_VIEWS } from "../config/roles";
+import { FULL_SETTINGS_ROLES, ROLES, ROLE_VIEWS, isOwnerRole } from "../config/roles";
 
 export const PERMISSIONS = [
 	{ group: "Back office", key: "reports.pos", label: "View reports", tip: "Opens the Reports page and the reports in the admin portal." },
@@ -27,7 +27,7 @@ export const PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
 
 const viewKey = { "reports.pos": "reports", "menu.view": "products", "inventory.view": "inventory", "pos.order.create": "checkout" };
 const roleHas = (role, key) => {
-	if (role === "owner" || role === "admin") return true;
+	if (isOwnerRole(role)) return true;
 	if (viewKey[key]) return (ROLE_VIEWS[role] || []).includes(viewKey[key]);
 	if (key === "settings.system.edit") return FULL_SETTINGS_ROLES.includes(role);
 	if (key === "users.view" || key === "users.edit" || key === "time.edit_entries") return role === "manager";
@@ -45,7 +45,7 @@ export const accessOf = (settings = {}, userId) => ({ grant: [], revoke: [], job
 /** Does this person hold the permission? Owners and admins always hold every one. */
 export function can(user, key, settings = {}) {
 	if (!user) return false;
-	if (user.role === "owner" || user.role === "admin") return true;
+	if (isOwnerRole(user.role)) return true;
 	const a = accessOf(settings, user.id);
 	if (a.revoke.includes(key)) return false;
 	return roleHas(user.role, key) || a.grant.includes(key);

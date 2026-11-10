@@ -26,6 +26,7 @@ import { orderEmailHtml, orderEmailSubject, orderEmailVariables } from "../print
 import { applyStockChange, audit, kitchenMode, markDeleted, movementRow, newId, serviceChargeSupported, stamp } from "./common";
 import { createLogger } from "../../utils/logger";
 import { printKotForSale, printReceipt, queueKitchenTicket, shareReceiptWhatsApp } from "./printing";
+import { isOwnerRole } from "../../config/roles";
 
 const log = createLogger("sales");
 
@@ -301,7 +302,7 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 		return void (await ctx.ui.alert("This sale has already been fully reversed."));
 	const register = currentCashShift(d.cashShifts, s.userId);
 	const isSplitCash = sale.payment === "Split" && (sale.payments || []).some((p) => p.method === "Cash");
-	const bypassHistoricalCash = sale.payment === "Cash" && !register && ["owner", "admin"].includes(s.user?.role);
+	const bypassHistoricalCash = sale.payment === "Cash" && !register && isOwnerRole(s.user?.role);
 	if (sale.payment === "Cash" && !register && !bypassHistoricalCash)
 		return void (await ctx.ui.alert("Clock in to open your cash register before reversing a cash sale."));
 	if (isSplitCash && !register)
@@ -322,7 +323,7 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 		refundType,
 		refundLines,
 	});
-	const autoPurge = type === "void" && ["owner", "admin"].includes(s.user?.role) && f["sales.permanentDelete"];
+	const autoPurge = type === "void" && isOwnerRole(s.user?.role) && f["sales.permanentDelete"];
 	await ctx.store.write(async (tx) => {
 		// restore stock for recipes and sellable products by the reversed quantities
 		const items = new Map(d.inventory.map((i) => [i.id, i]));
@@ -388,7 +389,7 @@ export async function reverseSale(ctx, { saleId, type, reason, refundType = "ful
 export async function deleteSalePermanently(ctx, id, skipConfirm = false) {
 	const s = ctx.session();
 	const d = ctx.data();
-	if (!["owner", "admin"].includes(s.user?.role))
+	if (!isOwnerRole(s.user?.role))
 		return void ctx.ui.notice("Only the owner or an admin can permanently delete sales.");
 	const sale = d.sales.find((x) => String(x.id) === String(id));
 	if (!sale) return void ctx.ui.notice("This sale has already been deleted.");

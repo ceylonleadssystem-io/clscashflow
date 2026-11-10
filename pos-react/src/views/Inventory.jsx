@@ -16,6 +16,7 @@ import { StockCountQrModal } from "../modals/StockCountQrModal";
 import { InventoryItemModal, StockAdjustModal, BranchStockModal, BulkBranchStockModal } from "../modals/InventoryModals";
 import { useDeferredLocationOpen } from "../hooks/useLocationSwitcher";
 import { useUi } from "../store/UiProvider";
+import { FULL_SETTINGS_ROLES, isOwnerRole } from "../config/roles";
 
 const statusStyle = (status) =>
 	status === "In stock" || status === "OK" ? {} : status === "Low stock" || status === "Low" ? { background: "#fff2d7", color: "#9a6411" } : { background: "#fde9e7", color: "#a5362b" };
@@ -37,8 +38,8 @@ export function Inventory() {
 	const [file, setFile] = useState(null);
 	const [qrOpen, setQrOpen] = useState(false);
 
-	const canEdit = ["owner", "manager", "admin"].includes(role);
-	const allMode = branchStock && locationId === "all" && ["owner", "admin"].includes(role);
+	const canEdit = FULL_SETTINGS_ROLES.includes(role);
+	const allMode = branchStock && locationId === "all" && isOwnerRole(role);
 	const locations = activeLocations(data);
 	const items = useMemo(() => {
 		const s = q.toLowerCase();

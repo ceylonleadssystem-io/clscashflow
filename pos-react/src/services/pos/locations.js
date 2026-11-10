@@ -7,6 +7,7 @@ import { nowIso } from "../../domain/format";
 import { locationLimitError, subscriptionOf } from "../../config/subscription";
 import { createLogger } from "../../utils/logger";
 import { audit } from "./common";
+import { isOwnerRole } from "../../config/roles";
 
 const log = createLogger("locations");
 
@@ -17,7 +18,7 @@ export const activeLocations = (data) => data.locations.filter((l) => l.active !
 export function userLocationIds(user, data) {
 	if (!user) return [];
 	const active = activeLocations(data);
-	if (user.locationAccess === "all" || user.role === "owner" || user.role === "admin") return active.map((l) => l.id);
+	if (user.locationAccess === "all" || isOwnerRole(user.role)) return active.map((l) => l.id);
 	return (Array.isArray(user.locationIds) ? user.locationIds : []).filter((id) => active.some((l) => l.id === id));
 }
 

@@ -12,6 +12,7 @@ import { can } from "../../domain/access";
 import { AUDIT_ACTION, auditDetails, diffEntry, entryError, entryLocked } from "../../domain/timesheetEdit";
 import { audit, markDeleted, newId, stamp } from "./common";
 import { patchSettings } from "./settings";
+import { isOwnerRole } from "../../config/roles";
 
 const log = createLogger("staff");
 
@@ -122,7 +123,7 @@ export async function saveUser(ctx, form) {
 		return void (await ctx.ui.alert("Choose at least one location for this user."));
 	const existing = d.users.find((u) => u.id === id);
 	// only an owner or admin can give the owner or admin role
-	if (["owner", "admin"].includes(role) && !["owner", "admin"].includes(ctx.session().user?.role) && existing?.role !== role)
+	if (isOwnerRole(role) && !isOwnerRole(ctx.session().user?.role) && existing?.role !== role)
 		return void (await ctx.ui.alert("Only an owner or admin can give the owner or admin role."));
 	// the plan assigned in the admin portal limits how many users can be active
 	if (active !== false && (!existing || existing.active === false)) {
@@ -156,7 +157,7 @@ export async function deleteUser(ctx, id) {
 	const s = ctx.session();
 	const d = ctx.data();
 	const actor = s.user;
-	if (!actor || !["owner", "admin"].includes(actor.role)) return void ctx.ui.notice("Only the owner or an admin can delete users.");
+	if (!actor || !isOwnerRole(actor.role)) return void ctx.ui.notice("Only the owner or an admin can delete users.");
 	const user = d.users.find((u) => String(u.id) === String(id));
 	if (!user) return;
 	if (user.id === s.userId) return void (await ctx.ui.alert("You cannot delete the user currently signed in."));

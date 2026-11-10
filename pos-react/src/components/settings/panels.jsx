@@ -25,6 +25,7 @@ import { subscriptionOf, usageOf } from "../../config/subscription";
 import { ALWAYS_LIVE_KEY } from "../../services/cloud.service";
 import { HardwarePanel } from "./HardwarePanel";
 import { KitchenStations } from "./KitchenStations";
+import { FULL_SETTINGS_ROLES } from "../../config/roles";
 
 /** Individual Settings panels. Each takes the shared `form` state from Settings.jsx. */
 
@@ -327,7 +328,7 @@ export function PrintingPanel({ form, set, setForm }) {
 	const socialsOn = useFeature("settings.receiptSocials");
 	const channelsOn = useFeature("checkout.orderChannels");
 	const tickets = useFeature("checkout.kitchenTickets");
-	const fullSettings = ["owner", "manager", "admin"].includes(currentUser?.role);
+	const fullSettings = FULL_SETTINGS_ROLES.includes(currentUser?.role);
 	const foodService = hasCapability(form.businessType, "kitchen");
 	const qr = data.settings.receiptSocialQr;
 	const preview = ["instagram", "facebook", "tiktok", "website"].map((k) => form.socials[k]?.trim()).filter(Boolean).join(" · ");
