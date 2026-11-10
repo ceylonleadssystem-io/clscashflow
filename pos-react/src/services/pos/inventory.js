@@ -73,15 +73,13 @@ export async function saveInventoryItem(ctx, form) {
 
 /**
  * Adds several new stock items at once (the bulk "Set product stock" and "Add ingredients" windows): each row is a stock form
- * ({ name, sku, type, unit, qty, reorder, cost, productId?, usedIn?, perUnit? }): `productId` is the product a stock row counts, `usedIn` the item
- * whose recipe gets this ingredient and `perUnit` how much one of that item uses. Nothing is saved when any row is not valid or an ingredient name already
- * exists in stock; one notice says how many were added.
+ * ({ name, sku, type, unit, qty, reorder, cost, productId? }); `productId` is the product a stock row counts. Nothing is saved when any
+ * row is not valid or an ingredient name already exists in stock; one notice says how many were added.
  */
 export async function addStockBatch(ctx, rows) {
 	const d = ctx.data();
 	const taken = new Set(d.inventory.map((i) => i.name.trim().toLowerCase()));
 	const built = [];
-	const recipes = new Map(); // product id -> its recipe with the new ingredients added
 	for (const [n, row] of rows.entries()) {
 		const label = String(row.name || "").trim() || "Row " + (n + 1);
 		const b = buildStockItem(ctx, { ...row, id: "", sku: row.sku || "STK-" + String(Date.now()).slice(-5) + "-" + (n + 1) });
@@ -90,13 +88,6 @@ export async function addStockBatch(ctx, rows) {
 		if (!row.productId && taken.has(key)) return void (await ctx.ui.alert(`${b.item.name} is already in stock. Use Add Stock to receive more of it.`));
 		taken.add(key);
 		built.push(b);
-		if (row.usedIn) {
-			const product = d.products.find((p) => p.id === row.usedIn);
-			const per = Number(row.perUnit);
-			if (!product) return void (await ctx.ui.alert(`${label}: the item it is used in no longer exists.`));
-			if (!(per > 0)) return void (await ctx.ui.alert(`${label}: enter how much of it one ${product.name} uses.`));
-			recipes.set(product.id, [...(recipes.get(product.id) || product.recipe || []), { itemId: b.item.id, qty: per }]);
-		}
 	}
 	if (!built.length) return void (await ctx.ui.alert("Enter at least one item."));
 	await ctx.store.write((tx) => {
@@ -105,10 +96,49 @@ export async function addStockBatch(ctx, rows) {
 			if (movement) tx.put(T.stockMovements, movement);
 			if (product) tx.put(T.products, { ...product, trackStock: true });
 		}
-		for (const [productId, recipe] of recipes) tx.put(T.products, { ...d.products.find((p) => p.id === productId), recipe });
 	});
-	log.info("stock items added in bulk", { count: built.length, recipes: recipes.size });
-	ctx.ui.notice(`${built.length} stock item${built.length === 1 ? "" : "s"} added${recipes.size ? ` and linked to ${recipes.size} item recipe${recipes.size === 1 ? "" : "s"}` : ""}.`);
+	log.info("stock items added in bulk", { count: built.length });
+	ctx.ui.notice(`${built.length} stock item${built.length === 1 ? "" : "s"} added.`);
+	return true;
+}
+
+/**
+ * The ingredients of one item (a product with its own stock count): what one sale of it uses. `lines` are { itemId, perUnit } for an ingredient
+ * already in stock, or { newItem: { name, unit, qty, reorder, cost }, perUnit } for one to create now. Selling the item reduces its own stock count
+ * and each ingredient by perUnit x the quantity sold. Nothing is saved when a line is not valid.
+ */
+export async function saveItemIngredients(ctx, productId, lines) {
+	const d = ctx.data();
+	const product = d.products.find((p) => p.id === productId);
+	if (!product) return void (await ctx.ui.alert("That item no longer exists."));
+	const taken = new Set(d.inventory.map((i) => i.name.trim().toLowerCase()));
+	const created = [];
+	const recipe = [];
+	for (const [n, line] of lines.entries()) {
+		const per = Number(line.perUnit);
+		let itemId = line.itemId;
+		if (line.newItem) {
+			const b = buildStockItem(ctx, { ...line.newItem, id: "", sku: "", type: "Ingredient" });
+			if (!b) return void (await ctx.ui.alert(`Ingredient ${n + 1}: enter a name and valid quantity, reorder level and cost.`));
+			if (taken.has(b.item.name.toLowerCase())) return void (await ctx.ui.alert(`${b.item.name} is already in stock. Choose it from the list instead.`));
+			taken.add(b.item.name.toLowerCase());
+			created.push(b);
+			itemId = b.item.id;
+		} else if (!d.inventory.some((i) => i.id === itemId && !i.productId)) return void (await ctx.ui.alert(`Ingredient ${n + 1}: choose an ingredient.`));
+		const label = line.newItem ? line.newItem.name.trim() : d.inventory.find((i) => i.id === itemId).name;
+		if (!(per > 0)) return void (await ctx.ui.alert(`${label}: enter how much one ${product.name} uses.`));
+		if (recipe.some((r) => r.itemId === itemId)) return void (await ctx.ui.alert(`${label} is listed twice.`));
+		recipe.push({ itemId, qty: per });
+	}
+	await ctx.store.write((tx) => {
+		for (const { item, movement } of created) {
+			tx.put(T.inventoryItems, item);
+			if (movement) tx.put(T.stockMovements, movement);
+		}
+		tx.put(T.products, { ...product, recipe });
+	});
+	log.info("item ingredients saved", { productId, ingredients: recipe.length, created: created.length });
+	ctx.ui.notice(`${product.name}: ${recipe.length ? recipe.length + " ingredient" + (recipe.length === 1 ? "" : "s") + " saved." : "ingredients cleared."}`);
 	return true;
 }
 

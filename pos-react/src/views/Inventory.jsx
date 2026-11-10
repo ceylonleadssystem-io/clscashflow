@@ -14,6 +14,7 @@ import { lowStockWhatsAppUrl } from "../services/pos/inventory";
 import { activeLocations, locationLabel } from "../services/pos/locations";
 import { StockCountQrModal } from "../modals/StockCountQrModal";
 import { BulkStockModal } from "../modals/BulkStockModal";
+import { ItemIngredientsModal } from "../modals/ItemIngredientsModal";
 import { InventoryItemModal, StockAdjustModal, BranchStockModal, BulkBranchStockModal } from "../modals/InventoryModals";
 import { useDeferredLocationOpen } from "../hooks/useLocationSwitcher";
 import { useUi } from "../store/UiProvider";
@@ -30,6 +31,8 @@ export function Inventory() {
 	const multi = useFeature("business.locations");
 	const branchStock = useFeature("business.branchStock");
 	const tools = useFeature("inventory.stockTools");
+	const recipes = useFeature("inventory.recipes");
+	const recipeOf = (i) => (i.productId ? data.products.find((p) => p.id === i.productId)?.recipe || [] : null); // an item with its own stock count has an ingredient list
 	const openLocations = useDeferredLocationOpen();
 	const [q, setQ] = useState("");
 	const [item, setItem] = useState(null); // null | "" | id
@@ -39,6 +42,7 @@ export function Inventory() {
 	const [file, setFile] = useState(null);
 	const [qrOpen, setQrOpen] = useState(false);
 	const [bulkStock, setBulkStock] = useState(null); // null | "products" | "ingredients"
+	const [ingredientsOf, setIngredientsOf] = useState(null); // stock id of the item whose ingredients are being edited
 
 	const canEdit = FULL_SETTINGS_ROLES.includes(role);
 	const allMode = branchStock && locationId === "all" && isOwnerRole(role);
@@ -221,6 +225,11 @@ export function Inventory() {
 											<td>{money(locations.reduce((s, l) => s + (Number(i.locationQuantities?.[l.id]) || 0) * (Number(i.cost) || 0), 0))}</td>
 											<td>
 												<div className="tools">
+													{recipes && recipeOf(i) && (
+														<button className="btn out" onClick={() => setIngredientsOf(i.id)}>
+															Ingredients
+														</button>
+													)}
 													<button className="btn out" onClick={() => setBranch(i.id)}>
 														Set Branch Stock
 													</button>
@@ -243,6 +252,12 @@ export function Inventory() {
 													<span className="muted">{i.supplier}</span>
 												</>
 											)}
+											{recipes && recipeOf(i) && (
+												<>
+													<br />
+													<span className="muted">{recipeOf(i).length ? recipeOf(i).length + " ingredient" + (recipeOf(i).length === 1 ? "" : "s") : "No ingredients set"}</span>
+												</>
+											)}
 										</td>
 										<td>{i.type}</td>
 										<td>
@@ -263,6 +278,11 @@ export function Inventory() {
 										<td>
 											{canEdit && (
 												<div className="tools">
+													{recipes && recipeOf(i) && (
+														<button className="btn out" onClick={() => setIngredientsOf(i.id)}>
+															Ingredients
+														</button>
+													)}
 													<button className="btn out" onClick={() => setAdjust(i.id)}>
 														Adjust
 													</button>
@@ -348,6 +368,7 @@ export function Inventory() {
 			</div>
 			<StockCountQrModal open={qrOpen} onClose={() => setQrOpen(false)} />
 			<BulkStockModal mode={bulkStock || "products"} open={bulkStock !== null} onClose={() => setBulkStock(null)} />
+			<ItemIngredientsModal stockId={ingredientsOf} open={ingredientsOf !== null} onClose={() => setIngredientsOf(null)} />
 			<InventoryItemModal id={item} open={item !== null} onClose={() => setItem(null)} />
 			<StockAdjustModal id={adjust} open={adjust !== null} onClose={() => setAdjust(null)} />
 			<BranchStockModal id={branch} open={branch !== null} onClose={() => setBranch(null)} />
