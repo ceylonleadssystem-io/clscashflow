@@ -82,6 +82,28 @@ export const withItemEdit = (product, edits) => {
 	return e ? { ...product, ...e.changes } : product;
 };
 
+/**
+ * The item drafts after one modifier group is put on exactly the chosen items (and taken off the others), for the "Assign to items"
+ * list under Modifiers. `products` are the live items; new items still waiting to be published are in `edits` and handled too.
+ * Only the modifier groups of an item change; everything else it had in its draft is kept.
+ */
+export function assignGroupEdits(edits, products, groupId, selectedIds) {
+	const chosen = new Set(list(selectedIds).map(String));
+	const swap = (ids, on) => (on ? (ids.includes(groupId) ? ids : [...ids, groupId]) : ids.filter((i) => i !== groupId));
+	let next = list(edits).map((e) => (e.isNew && swap(list(e.changes?.modifierIds).map(String), chosen.has(e.id)).join() !== list(e.changes?.modifierIds).map(String).join() ? { ...e, changes: { ...e.changes, modifierIds: swap(list(e.changes?.modifierIds).map(String), chosen.has(e.id)) } } : e));
+	for (const product of list(products)) {
+		const w = withItemEdit(product, next);
+		const ids = list(w.modifierIds).map(String);
+		const modifierIds = swap(ids, chosen.has(String(product.id)));
+		if (modifierIds.join() === ids.join()) continue;
+		const changes = itemChanges(product, { ...w, modifierIds });
+		const rest = next.filter((e) => e.id !== String(product.id));
+		const was = Object.fromEntries(Object.keys(changes).map((f) => [f, f === "image" ? !!product.image : product[f]]));
+		next = Object.keys(changes).length ? [...rest, { id: String(product.id), name: changes.name || product.name, original: product.name, changes, was }] : rest;
+	}
+	return next;
+}
+
 // ----------------------------------------------------------------------------------- groups ----
 export function cleanGroupEdit(g = {}) {
 	return {

@@ -872,7 +872,17 @@ export function ModifiersAdmin() {
 	const [newPrefix, setNewPrefix] = useState("");
 	useEffect(() => setPrefixes(savedPrefixes), [savedPrefixes]);
 	const prefixDirty = JSON.stringify(prefixes) !== JSON.stringify(savedPrefixes);
-	const assigned = (g) => products.filter((p) => (p.modifierIds || []).includes(g.id)).length;
+	const allItems = useMemo(() => {
+		const itemEdits = draftList(settings, "itemEdits");
+		return [...products.map((p) => withItemEdit(p, itemEdits)), ...draftNewItems(itemEdits)].sort((a, b) => a.name.localeCompare(b.name));
+	}, [products, settings]);
+	const assigned = (g) => allItems.filter((p) => (p.modifierIds || []).map(String).includes(g.id)).length;
+	const [assign, setAssign] = useState(null); // { group, chosen: ids of the items that will have the group, q }
+	const shown = assign ? filterItems(allItems, { q: assign.q, category: "all", type: "all" }) : [];
+	const toggleChosen = (ids, on) => setAssign((a) => ({ ...a, chosen: on ? [...new Set([...a.chosen, ...ids])] : a.chosen.filter((i) => !ids.includes(i)) }));
+	const saveAssign = async () => {
+		if (await svc.settings.assignGroupToItems(assign.group.id, assign.chosen)) setAssign(null);
+	};
 	const rule = (g) => {
 		const l = limits.get(g.id);
 		if (g.mode !== "multiple") return "Choose one";
@@ -951,6 +961,9 @@ export function ModifiersAdmin() {
 											</button>
 										) : (
 											<>
+												<button type="button" className="btn out" data-assign-group={g.id} onClick={() => setAssign({ group: g, q: "", chosen: allItems.filter((p) => (p.modifierIds || []).map(String).includes(g.id)).map((p) => String(p.id)) })}>
+													Assign to items
+												</button>
 												<button type="button" className="btn out" onClick={() => setGroup({ id: g.id, name: g.name, mode: g.mode, required: g.required !== false, options: g.options.map((o) => ({ name: o.name, price: +o.price || 0 })) })}>
 													Edit
 												</button>
@@ -1024,6 +1037,53 @@ export function ModifiersAdmin() {
 					</SectionCard>
 				</>
 			)}
+			<DetailDrawer
+				open={!!assign}
+				wide
+				title={assign ? "Assign " + assign.group.name + " to items" : ""}
+				subtitle="Tick the items that should offer this group. Applied when you publish."
+				onClose={() => setAssign(null)}
+				footer={
+					<>
+						<button type="button" className="btn out" onClick={() => setAssign(null)}>
+							Cancel
+						</button>
+						<button type="button" className="btn gold" id="save-assign" onClick={saveAssign}>
+							Save draft
+						</button>
+					</>
+				}
+			>
+				{assign && (
+					<>
+						<input className="input" id="assign-search" type="search" aria-label="Search items" placeholder="Search items" value={assign.q} onChange={(e) => setAssign((a) => ({ ...a, q: e.target.value }))} />
+						<div className="tools" style={{ margin: "8px 0" }}>
+							<button type="button" className="btn out" id="assign-all" onClick={() => toggleChosen(shown.map((p) => String(p.id)), true)}>
+								Select all shown
+							</button>
+							<button type="button" className="btn out" id="assign-none" onClick={() => toggleChosen(shown.map((p) => String(p.id)), false)}>
+								Clear shown
+							</button>
+							<span className="muted">{assign.chosen.length} of {allItems.length} items selected</span>
+						</div>
+						{!shown.length ? (
+							<EmptyState title="No items found">Try a different search.</EmptyState>
+						) : (
+							<ul className="sk-list">
+								{shown.map((p) => (
+									<li key={p.id} className="sk-list-row">
+										<label className="sk-list-main" style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer", minHeight: 44 }}>
+											<input type="checkbox" checked={assign.chosen.includes(String(p.id))} onChange={(e) => toggleChosen([String(p.id)], e.target.checked)} />
+											<strong>{p.name}</strong>
+											<span className="muted">{p.category || "Uncategorised"}</span>
+										</label>
+									</li>
+								))}
+							</ul>
+						)}
+					</>
+				)}
+			</DetailDrawer>
 			<DetailDrawer
 				open={!!group}
 				wide
