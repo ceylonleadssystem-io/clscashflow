@@ -1032,4 +1032,5 @@ body.full .content:has(.sk-shell){overflow-y:auto}
 /* assignment tree: subcategory level, and a grey box (with a dash) for a category or subcategory that is only partly ticked */
 .sk-tree-group .sk-tree-sub{margin:4px 12px 8px 22px}
 .sk-tree-sub summary{font-weight:500}
-.sk-tree input[type=checkbox]:indeterminate{accent-color:#9aa0a6}
+.sk-tree input[type=checkbox]:indeterminate{accent-color:#6b7280}
+.sk-tree li label{min-height:44px}
