@@ -51,7 +51,7 @@ function buildNewAccount(values, uid, adminEmail, now) {
   const profile = {
     name: values.name, email: values.email, bizName: values.business, posBusinessName: values.business, posMobile: values.mobile,
     role: 'owner', customerType: 'customer',
-    posEnabled: true, posPlan: 'pos', posPlanName: 'Ceylonry POS', posMonthlyPrice: 3500, posAnnualPrice: 42000, posIncludedUsers: 5, posAdditionalUserPrice: 500,
+    posEnabled: true, posPlan: 'pos',
     posTrialStart: iso, posTrialEnd: trialEnd, posPaid: false, posSubscriptionStatus: 'trial', posPaymentReminderStatus: 'scheduled',
     posOnboardingComplete: true,
     product: 'pos', plan: 'pos', currentPlan: 'pos', trialStart: iso, trialEnd, paid: false, subscriptionStatus: 'trial',

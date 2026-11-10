@@ -2836,13 +2836,6 @@
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + token
     },
-    pos: {
-      name: 'POS',
-      price: 42000,
-      monthlyPrice: 3500,
-      monthlyPayLink: '',
-      annualPayLink: ''
-    },
       body: JSON.stringify({
         action: flow.action,
         plan: planFromPath() || rememberedPlan(),

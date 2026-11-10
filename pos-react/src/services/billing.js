@@ -2,6 +2,8 @@
  * Subscription and trial rules: builds the access profile, decides whether access is allowed, checks POS
  * entitlement, and produces the trial/payment-due warning text.
  */
+import { PLANS } from "../config/plans";
+
 const DAY = 86400000;
 const PAID_STATUSES = ["active", "manual-paid", "payment-submitted", "receipt-submitted"];
 
@@ -13,8 +15,8 @@ export function posAccessProfile(profile, user) {
 		bizName: profile.posBusinessName || profile.bizName || "",
 		plan: "pos",
 		currentPlan: "pos",
-		planMonthlyPrice: 5500, // POS Starter monthly price (config/plans.js)
-		planPrice: 42000,
+		planMonthlyPrice: PLANS[0].price, // POS Starter (config/plans.js)
+		planPrice: PLANS[0].annual,
 		billingCycle: profile.posBillingCycle || "monthly",
 		trialStart: profile.posTrialStart || profile.trialStart,
 		trialEnd: profile.posTrialEnd || profile.trialEnd,
