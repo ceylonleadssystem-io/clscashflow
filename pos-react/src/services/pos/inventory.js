@@ -103,41 +103,24 @@ export async function addStockBatch(ctx, rows) {
 }
 
 /**
- * The ingredients of one item (a product with its own stock count): what one sale of it uses. `lines` are { itemId, perUnit } for an ingredient
- * already in stock, or { newItem: { name, unit, qty, reorder, cost }, perUnit } for one to create now. Selling the item reduces its own stock count
- * and each ingredient by perUnit x the quantity sold. Nothing is saved when a line is not valid.
+ * The ingredients of one item (a product): what one sale of it uses. `lines` are { itemId, perUnit } for ingredients already in stock. Selling the
+ * item reduces its own stock count (when it has one) and each ingredient by perUnit x the quantity sold. Nothing is saved when a line is not valid.
  */
 export async function saveItemIngredients(ctx, productId, lines) {
 	const d = ctx.data();
 	const product = d.products.find((p) => p.id === productId);
 	if (!product) return void (await ctx.ui.alert("That item no longer exists."));
-	const taken = new Set(d.inventory.map((i) => i.name.trim().toLowerCase()));
-	const created = [];
 	const recipe = [];
 	for (const [n, line] of lines.entries()) {
+		const ingredient = d.inventory.find((i) => i.id === line.itemId && !i.productId);
+		if (!ingredient) return void (await ctx.ui.alert(`Ingredient ${n + 1}: choose an item from the stock.`));
 		const per = Number(line.perUnit);
-		let itemId = line.itemId;
-		if (line.newItem) {
-			const b = buildStockItem(ctx, { ...line.newItem, id: "", sku: "", type: "Ingredient" });
-			if (!b) return void (await ctx.ui.alert(`Ingredient ${n + 1}: enter a name and valid quantity, reorder level and cost.`));
-			if (taken.has(b.item.name.toLowerCase())) return void (await ctx.ui.alert(`${b.item.name} is already in stock. Choose it from the list instead.`));
-			taken.add(b.item.name.toLowerCase());
-			created.push(b);
-			itemId = b.item.id;
-		} else if (!d.inventory.some((i) => i.id === itemId && !i.productId)) return void (await ctx.ui.alert(`Ingredient ${n + 1}: choose an ingredient.`));
-		const label = line.newItem ? line.newItem.name.trim() : d.inventory.find((i) => i.id === itemId).name;
-		if (!(per > 0)) return void (await ctx.ui.alert(`${label}: enter how much one ${product.name} uses.`));
-		if (recipe.some((r) => r.itemId === itemId)) return void (await ctx.ui.alert(`${label} is listed twice.`));
-		recipe.push({ itemId, qty: per });
+		if (!(per > 0)) return void (await ctx.ui.alert(`${ingredient.name}: enter how much one ${product.name} uses.`));
+		if (recipe.some((r) => r.itemId === ingredient.id)) return void (await ctx.ui.alert(`${ingredient.name} is listed twice.`));
+		recipe.push({ itemId: ingredient.id, qty: per });
 	}
-	await ctx.store.write((tx) => {
-		for (const { item, movement } of created) {
-			tx.put(T.inventoryItems, item);
-			if (movement) tx.put(T.stockMovements, movement);
-		}
-		tx.put(T.products, { ...product, recipe });
-	});
-	log.info("item ingredients saved", { productId, ingredients: recipe.length, created: created.length });
+	await ctx.store.write((tx) => tx.put(T.products, { ...product, recipe }));
+	log.info("item ingredients saved", { productId, ingredients: recipe.length });
 	ctx.ui.notice(`${product.name}: ${recipe.length ? recipe.length + " ingredient" + (recipe.length === 1 ? "" : "s") + " saved." : "ingredients cleared."}`);
 	return true;
 }

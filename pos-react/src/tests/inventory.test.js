@@ -173,27 +173,25 @@ describe("inventory workflow", () => {
 			expect(h.data().products.find((x) => x.id === p.id).trackStock).toBe(true);
 		});
 
-		it("saves the ingredients of an item, creating new ones and keeping the amount each sale uses", async () => {
+		it("saves the ingredients of an item with the amount one sale uses", async () => {
 			const p = await addProduct(h, { name: "Latte", price: 850, cost: 200 });
 			const milk = await h.svc.inventory.saveInventoryItem(item({ name: "Fresh milk", unit: "ml", qty: "2000" }));
-			expect(await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: milk.id, perUnit: "220" }, { newItem: { name: "Coffee beans", unit: "g", qty: "900", reorder: "100", cost: "3" }, perUnit: "18" }])).toBe(true);
-			const recipe = h.data().products.find((x) => x.id === p.id).recipe;
-			expect(recipe).toHaveLength(2);
-			expect(recipe.find((r) => r.itemId === milk.id).qty).toBe(220);
-			const beans = h.data().inventory.find((i) => i.name === "Coffee beans");
-			expect(beans).toMatchObject({ qty: 900, type: "Ingredient", unit: "g" });
-			expect(recipe.find((r) => r.itemId === beans.id).qty).toBe(18);
+			const beans = await h.svc.inventory.saveInventoryItem(item({ name: "Coffee beans", unit: "g", qty: "900" }));
+			expect(await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: milk.id, perUnit: "220" }, { itemId: beans.id, perUnit: "18" }])).toBe(true);
+			expect(h.data().products.find((x) => x.id === p.id).recipe).toEqual([{ itemId: milk.id, qty: 220 }, { itemId: beans.id, qty: 18 }]);
+			await h.svc.inventory.saveItemIngredients(p.id, []);
+			expect(h.data().products.find((x) => x.id === p.id).recipe).toEqual([]);
 		});
 
-		it("rejects an ingredient without an amount, a repeated one, or a new one whose name is taken", async () => {
+		it("rejects an ingredient that is not in stock, has no amount, or is listed twice", async () => {
 			const p = await addProduct(h, { name: "Mocha", price: 900, cost: 200 });
 			const milk = await h.svc.inventory.saveInventoryItem(item({ name: "Fresh milk", unit: "ml", qty: "2000" }));
+			await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: "", perUnit: "5" }]);
+			expect(h.lastAlert()).toMatch(/choose an item/);
 			await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: milk.id, perUnit: "" }]);
 			expect(h.lastAlert()).toMatch(/how much one Mocha uses/);
 			await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: milk.id, perUnit: "1" }, { itemId: milk.id, perUnit: "2" }]);
 			expect(h.lastAlert()).toMatch(/listed twice/);
-			await h.svc.inventory.saveItemIngredients(p.id, [{ newItem: { name: "fresh milk", unit: "ml", qty: "1", reorder: "0", cost: "0" }, perUnit: "5" }]);
-			expect(h.lastAlert()).toMatch(/already in stock/);
 			expect(h.data().products.find((x) => x.id === p.id).recipe || []).toHaveLength(0);
 		});
 

@@ -109,10 +109,9 @@ describe("checkout workflow", () => {
 		const latte = await addProduct(h, { name: "Café Latte", price: 850, cost: 200 });
 		const own = h.data().inventory.find((i) => i.productId === latte.id) || (await h.svc.inventory.saveInventoryItem({ name: "Café Latte", sku: "", type: "Sellable Product", unit: "each", qty: "0", reorder: "0", cost: "200", supplier: "", productId: latte.id }));
 		await h.svc.inventory.adjustStock(own.id, 20, "Stock received", "");
-		await h.svc.inventory.saveItemIngredients(latte.id, [
-			{ newItem: { name: "Ground coffee", unit: "g", qty: "1000", reorder: "100", cost: "3" }, perUnit: "18" },
-			{ newItem: { name: "Fresh milk", unit: "ml", qty: "5000", reorder: "500", cost: "1" }, perUnit: "220" },
-		]);
+		const coffee = await h.svc.inventory.saveInventoryItem({ name: "Ground coffee", sku: "", type: "Ingredient", unit: "g", qty: "1000", reorder: "100", cost: "3", supplier: "" });
+		const milk = await h.svc.inventory.saveInventoryItem({ name: "Fresh milk", sku: "", type: "Ingredient", unit: "ml", qty: "5000", reorder: "500", cost: "1", supplier: "" });
+		await h.svc.inventory.saveItemIngredients(latte.id, [{ itemId: coffee.id, perUnit: "18" }, { itemId: milk.id, perUnit: "220" }]);
 		await h.svc.sales.completeSale({ cart: [line(h.data().products.find((x) => x.id === latte.id), 3)], discount: noDiscount, payment: "Card" });
 		const qty = (name) => h.data().inventory.find((i) => i.name === name).qty;
 		expect(h.data().inventory.find((i) => i.id === own.id).qty).toBe(17);
