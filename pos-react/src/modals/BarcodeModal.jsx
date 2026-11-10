@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Modal, ModalBody } from "../components/ui";
 import { cleanBarcode, sizedBarcode, uniqueBarcode } from "../services/printing/barcode";
 import { productSizeGroup } from "../domain/catalog";
+import { productSizeItem, productStockItem } from "../domain/inventory";
 import { barcodeLabelCopy, barcodeLabelsHtml, downloadLabelPng, labelPrinter, resolveLabelStock } from "../services/printing/labelPrinter";
 import { LabelStockPicker } from "../components/settings/LabelStockPicker";
 import { printHtmlInFrame } from "../services/printing/printDocument";
@@ -39,7 +40,12 @@ export function BarcodeModalHost() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [barcodeProductId]);
 	if (!product) return null;
-	const safe = { ...product, code: cleanBarcode(product.code || "") };
+	// the stock number (SKU) of the item, and of each size when the sizes are stocked separately; printed under the barcode when there is one
+	const stockSku = productStockItem(data.inventory, product.id)?.sku || "";
+	const sizeNames = (productSizeGroup(product, data.modifiers)?.options || []).map((o) => o.name);
+	const skuBySize = Object.fromEntries(sizeNames.map((sz) => [sz, productSizeItem(data.inventory, product.id, sz)?.sku || stockSku]));
+	const safe = { ...product, code: cleanBarcode(product.code || ""), sku: stockSku, skuBySize };
+	const labelOf = (run) => ({ ...safe, code: sizedBarcode(safe.code, run.sizeLabel), sizeLabel: run.sizeLabel, sku: safe.skuBySize[run.sizeLabel] ?? safe.sku });
 	const n = Math.max(1, Math.min(100, Number(copies) || 1));
 	// The item's Size group gives the label sizes; each size prints its own barcode ("<item code>-<size>") so a scan knows the size.
 	const sizeGroup = productSizeGroup(product, data.modifiers);
@@ -60,7 +66,7 @@ export function BarcodeModalHost() {
 		if (!total) return void (await ui.alert("Enter how many labels to print for at least one size."));
 		try {
 			for (const run of runs)
-				await labelPrinter.print({ ...safe, code: sizedBarcode(safe.code, run.sizeLabel), sizeLabel: run.sizeLabel }, run.copies, size, data.settings.barcodePrinter || {}, { gapMm: stock.gap, offsetX: stock.offsetX, offsetY: stock.offsetY, marginMm: stock.marginMm });
+				await labelPrinter.print(labelOf(run), run.copies, size, data.settings.barcodePrinter || {}, { gapMm: stock.gap, offsetX: stock.offsetX, offsetY: stock.offsetY, marginMm: stock.marginMm });
 			closeBarcode();
 			ui.notice(`${total} ${stock.width} × ${stock.height} mm barcode label${total === 1 ? "" : "s"} sent to the USB label printer using item code ${safe.code}.`);
 		} catch (e) {
@@ -73,7 +79,7 @@ export function BarcodeModalHost() {
 		const list = total ? runs : [{ sizeLabel: sizes[0] || "" }];
 		try {
 			const names = [];
-			for (const run of list) names.push(await downloadLabelPng({ ...safe, code: sizedBarcode(safe.code, run.sizeLabel), sizeLabel: run.sizeLabel }, size, {}));
+			for (const run of list) names.push(await downloadLabelPng(labelOf(run), size, {}));
 			ui.notice(`Downloaded ${names.join(", ")}. It is one label at its real size; print it as many times as you need.`);
 		} catch (e) {
 			await ui.alert("The label picture could not be downloaded. " + (e.message || ""));
@@ -120,7 +126,7 @@ export function BarcodeModalHost() {
 			}
 		>
 			<ModalBody>
-				<div className="barcode-preview" id="barcode-preview" dangerouslySetInnerHTML={{ __html: barcodeLabelCopy(((sz) => ({ ...safe, code: sizedBarcode(safe.code, sz), sizeLabel: sz }))((runs[0] || { sizeLabel: sizes[0] || "" }).sizeLabel), size) }} />
+				<div className="barcode-preview" id="barcode-preview" dangerouslySetInnerHTML={{ __html: barcodeLabelCopy(labelOf(runs[0] || { sizeLabel: sizes[0] || "" }), size) }} />
 				<div className="form-grid" style={{ marginTop: 12 }}>
 					{sizes.length ? (
 						sizes.map((sz) => (
