@@ -6,7 +6,6 @@ const log = require('../lib/log').createLogger('submit-subscription-receipt');
 const MAX_FILE_BYTES = 3000000;
 // CashFlow plans (solo/studio/business pages). Unchanged: CashFlow pricing is separate from POS pricing.
 const PLANS = {
-  Starter: { name: 'Starter', monthly: 5500, annual: 62000 },
   studio: { name: 'Studio', monthly: 7500, annual: 83000 },
   business: { name: 'Business', monthly: 15500, annual: 180000 },
 };

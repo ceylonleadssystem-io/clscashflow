@@ -5501,7 +5501,7 @@
 										</button>
 									</div>
 									<div style="padding: 1rem">
-										<strong>Studio Plan · up to 5 users</strong> — LKR 5,500/mo
+										<strong>Studio Plan · up to 5 users</strong> — LKR 7,500/mo
 										package value &nbsp;<span
 											style="
 												background: var(--gold);
@@ -8637,8 +8637,8 @@
 						currentPlan: "business",
 						lastPlan: "business",
 						requestedPlan: "business",
-						planPrice: 94800,
-						planMonthlyPrice: 8500,
+						planPrice: 180000,
+						planMonthlyPrice: 15500,
 						billingCycle: "monthly",
 						upgradedFrom: "studio",
 						upgradedAt: clsBackend.firestore.FieldValue.serverTimestamp(),
@@ -16438,22 +16438,22 @@ td .ln{font-weight:600;color:#15110d;white-space:pre-line}
 				const plan = (profile && profile.plan) || "studio";
 				const prices = {
 					solo: 36000,
-					studio: 60000,
-					business: 94800,
-					starter: 60000,
-					growth: 94800,
-					premium: 94800,
+					studio: 83000,
+					business: 180000,
+					starter: 83000,
+					growth: 180000,
+					premium: 180000,
 				};
 				const monthlyPrices = {
 					solo: 3500,
-					studio: 5500,
-					business: 8500,
-					starter: 5500,
-					growth: 8500,
-					premium: 8500,
+					studio: 7500,
+					business: 15500,
+					starter: 7500,
+					growth: 15500,
+					premium: 15500,
 				};
-				const price = prices[plan] || 5500;
-				const monthlyPrice = monthlyPrices[plan] || 5500;
+				const price = prices[plan] || 7500;
+				const monthlyPrice = monthlyPrices[plan] || 7500;
 				const planName = plan.charAt(0).toUpperCase() + plan.slice(1);
 				const waMsg = encodeURIComponent(
 					"Hi CeylonryLabs! I'd like to activate my " +

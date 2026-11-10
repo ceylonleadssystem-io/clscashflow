@@ -30,8 +30,8 @@
       name: 'Studio',
       userLimit: 5,
       userLabel: 'Up to 5 users',
-      monthlyPrice: 5500,
-      price: 60000,
+      monthlyPrice: 7500,
+      price: 83000,
       file: '/cashflow/starter.html',
       monthlyPayLink: '', annualPayLink: ''
     },
@@ -39,8 +39,8 @@
       name: 'Business',
       userLimit: Infinity,
       userLabel: 'Unlimited users',
-      monthlyPrice: 8500,
-      price: 94800,
+      monthlyPrice: 15500,
+      price: 180000,
       file: '/cashflow/growth.html',
       monthlyPayLink: '', annualPayLink: ''
     },

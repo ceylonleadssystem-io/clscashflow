@@ -178,7 +178,7 @@ function paymentAmount(data) {
   const direct = Number(data.amountLkr || data.amount || data.monthlyAmount || data.planMonthlyPrice);
   if (Number.isFinite(direct) && direct > 0) return direct;
   const plan = String(data.plan || data.currentPlan || '').toLowerCase();
-  return plan === 'business' ? 8500 : plan === 'studio' ? 5500 : plan === 'solo' ? 3500 : 0;
+  return plan === 'business' ? 15500 : plan === 'studio' ? 7500 : plan === 'solo' ? 3500 : 0;
 }
 
 function isInternalOrTestUser(row) {
@@ -320,15 +320,15 @@ const PLAN_DETAILS = {
   },
   studio: {
     name: 'Studio',
-    price: 60000,
-    monthlyPrice: 5500,
+    price: 83000,
+    monthlyPrice: 7500,
     monthlyPayLink: '',
     annualPayLink: ''
   },
   business: {
     name: 'Business',
-    price: 94800,
-    monthlyPrice: 8500,
+    price: 180000,
+    monthlyPrice: 15500,
     monthlyPayLink: '',
     annualPayLink: ''
   }
@@ -546,8 +546,8 @@ function userUpdateForAction(admin, updateType) {
       currentPlan: 'studio',
       lastPlan: 'studio',
       requestedPlan: 'studio',
-      planPrice: 60000,
-      planMonthlyPrice: 5500,
+      planPrice: 83000,
+      planMonthlyPrice: 7500,
       billingCycle: 'monthly',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
@@ -560,8 +560,8 @@ function userUpdateForAction(admin, updateType) {
       currentPlan: 'business',
       lastPlan: 'business',
       requestedPlan: 'business',
-      planPrice: 94800,
-      planMonthlyPrice: 8500,
+      planPrice: 180000,
+      planMonthlyPrice: 15500,
       billingCycle: 'monthly',
       planChangedBy: 'platform_admin',
       planChangedAt: stamp,
@@ -824,7 +824,7 @@ exports.handler = async function handler(event) {
         if(!ticketId||!email||!target)return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Ticket, email, and target plan are required.'})};
         const snap=await db.collection('users').where('email','==',email).limit(1).get();let userRow=null;snap.forEach(function(doc){userRow={id:doc.id,data:doc.data()||{}};});
         if(!userRow)return {statusCode:404,headers:headers(),body:JSON.stringify({ok:false,error:'No user matches this ticket email.'})};
-        const current=normalizePlan(userRow.data.currentPlan||userRow.data.plan),prices={solo:3500,studio:5500,business:8500},ranks={solo:1,studio:2,business:3};
+        const current=normalizePlan(userRow.data.currentPlan||userRow.data.plan),prices={solo:3500,studio:7500,business:15500},ranks={solo:1,studio:2,business:3};
         if(!current||ranks[target]<=ranks[current])return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Only an upgrade to a higher plan can be applied from an upgrade request.'})};
         const difference=Math.max(0,(prices[target]||0)-(prices[current]||0)),differencePaid=Number(body.differencePaid);
         if(!Number.isFinite(differencePaid)||differencePaid<difference)return {statusCode:400,headers:headers(),body:JSON.stringify({ok:false,error:'Confirm payment of the full LKR '+difference.toLocaleString('en-LK')+' upgrade difference before changing the system.',difference})};

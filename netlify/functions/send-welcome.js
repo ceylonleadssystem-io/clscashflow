@@ -56,7 +56,7 @@ exports.handler = async function handler(event) {
   });
 
   const planLabels = { solo: 'Solo', studio: 'Studio', business: 'Business' };
-  const monthlyPrices = { solo: '3,500', studio: '5,500', business: '8,500' };
+  const monthlyPrices = { solo: '3,500', studio: '7,500', business: '15,500' };
   const planLabel  = planLabels[plan] || planLabels.solo;
   const monthlyPrice = monthlyPrices[plan] || monthlyPrices.solo;
   const siteUrl = String(process.env.PUBLIC_SITE_URL || 'https://ceylonrylabs.io').replace(/\/$/, '');

@@ -17,3 +17,17 @@ test('POS tier prices are the same in the pricing sheet, the billing widget and 
   assert.deepEqual(widget, sheet);
   assert.deepEqual(server, sheet);
 });
+
+const { PLANS } = require('../netlify/functions/submit-subscription-receipt')._test;
+
+// CashFlow Studio and Business: the billing widget, the admin data function and the receipt check state the same prices.
+test('CashFlow Studio and Business prices are the same in the billing widget, the admin data and the receipt check', () => {
+  const widget = read('assets/platform.js');
+  const admin = read('netlify/functions/admin-data.js');
+  for (const [key, name] of [['studio', 'Studio'], ['business', 'Business']]) {
+    const w = new RegExp("name: '" + name + "',[\\s\\S]*?monthlyPrice: (\\d+),\\s*price: (\\d+)").exec(widget);
+    assert.deepEqual([+w[1], +w[2]], [PLANS[key].monthly, PLANS[key].annual], name + ' in assets/platform.js');
+    assert.ok(admin.includes('plan === ' + "'" + key + "' ? " + PLANS[key].monthly), name + ' monthly price in admin-data.js');
+    assert.ok(new RegExp('price: ' + PLANS[key].annual + ',\\s*monthlyPrice: ' + PLANS[key].monthly).test(admin), name + ' price table in admin-data.js');
+  }
+});
