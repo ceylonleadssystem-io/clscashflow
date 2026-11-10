@@ -1028,3 +1028,9 @@ body.full .content:has(.sk-shell){overflow-y:auto}
 
 /* Barcode window: the preview is the picture of the label the printer prints (not a re-drawn copy) */
 .barcode-preview .label-preview-image{display:block;width:auto;max-width:100%;max-height:260px;margin:0 auto;border:1px solid #cfcfcf;image-rendering:pixelated;background:#fff}
+
+/* assignment tree: subcategory level, and a grey box (with a dash) for a category or subcategory that is only partly ticked */
+.sk-tree-group .sk-tree-sub{margin:4px 12px 8px 22px}
+.sk-tree-sub summary{font-weight:500}
+.sk-tree input[type=checkbox]:indeterminate{accent-color:#6b7280}
+.sk-tree li label{min-height:44px}
