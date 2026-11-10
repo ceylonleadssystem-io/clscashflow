@@ -105,12 +105,18 @@ describe("checkout workflow", () => {
 		expect(h.lastAlert()).toMatch(/Not enough Milk/);
 	});
 
-	it("an ingredient added in bulk and linked to an item goes down when that item is sold", async () => {
-		const latte = await addProduct(h, { name: "Iced Latte", price: 450, cost: 120 });
-		await h.svc.inventory.addStockBatch([{ name: "Oat milk", sku: "", type: "Ingredient", unit: "ml", qty: "1000", reorder: "100", cost: "1", usedIn: latte.id, perUnit: "150" }]);
+	it("selling an item reduces its own stock count and each of its ingredients by what one item uses", async () => {
+		const latte = await addProduct(h, { name: "Café Latte", price: 850, cost: 200 });
+		const own = h.data().inventory.find((i) => i.productId === latte.id) || (await h.svc.inventory.saveInventoryItem({ name: "Café Latte", sku: "", type: "Sellable Product", unit: "each", qty: "0", reorder: "0", cost: "200", supplier: "", productId: latte.id }));
+		await h.svc.inventory.adjustStock(own.id, 20, "Stock received", "");
+		const coffee = await h.svc.inventory.saveInventoryItem({ name: "Ground coffee", sku: "", type: "Ingredient", unit: "g", qty: "1000", reorder: "100", cost: "3", supplier: "" });
+		const milk = await h.svc.inventory.saveInventoryItem({ name: "Fresh milk", sku: "", type: "Ingredient", unit: "ml", qty: "5000", reorder: "500", cost: "1", supplier: "" });
+		await h.svc.inventory.saveItemIngredients(latte.id, [{ itemId: coffee.id, perUnit: "18" }, { itemId: milk.id, perUnit: "220" }]);
 		await h.svc.sales.completeSale({ cart: [line(h.data().products.find((x) => x.id === latte.id), 3)], discount: noDiscount, payment: "Card" });
-		expect(h.data().inventory.find((i) => i.name === "Oat milk").qty).toBe(550);
-		expect(h.data().stockMovements.some((m) => m.reason === "Sale recipe usage" && m.change === -450)).toBe(true);
+		const qty = (name) => h.data().inventory.find((i) => i.name === name).qty;
+		expect(h.data().inventory.find((i) => i.id === own.id).qty).toBe(17);
+		expect(qty("Ground coffee")).toBe(946);
+		expect(qty("Fresh milk")).toBe(4340);
 	});
 
 	it("emails the order itself (not a payment-received message)", async () => {

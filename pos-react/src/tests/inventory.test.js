@@ -173,22 +173,26 @@ describe("inventory workflow", () => {
 			expect(h.data().products.find((x) => x.id === p.id).trackStock).toBe(true);
 		});
 
-		it("links an ingredient to the item it is used in, so a sale reduces the ingredient count", async () => {
-			const p = await addProduct(h, { name: "Milk Tea", price: 300, cost: 90 });
-			await h.svc.inventory.addStockBatch([row({ name: "Tea leaves", unit: "kg", qty: "5", usedIn: p.id, perUnit: "0.02" }), row({ name: "Milk", unit: "L", qty: "10", usedIn: p.id, perUnit: "0.2" })]);
-			const recipe = h.data().products.find((x) => x.id === p.id).recipe;
-			expect(recipe.map((r) => r.qty).sort()).toEqual([0.02, 0.2]);
-			expect(recipe.every((r) => h.data().inventory.some((i) => i.id === r.itemId))).toBe(true);
+		it("saves the ingredients of an item with the amount one sale uses", async () => {
+			const p = await addProduct(h, { name: "Latte", price: 850, cost: 200 });
+			const milk = await h.svc.inventory.saveInventoryItem(item({ name: "Fresh milk", unit: "ml", qty: "2000" }));
+			const beans = await h.svc.inventory.saveInventoryItem(item({ name: "Coffee beans", unit: "g", qty: "900" }));
+			expect(await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: milk.id, perUnit: "220" }, { itemId: beans.id, perUnit: "18" }])).toBe(true);
+			expect(h.data().products.find((x) => x.id === p.id).recipe).toEqual([{ itemId: milk.id, qty: 220 }, { itemId: beans.id, qty: 18 }]);
+			await h.svc.inventory.saveItemIngredients(p.id, []);
+			expect(h.data().products.find((x) => x.id === p.id).recipe).toEqual([]);
 		});
 
-		it("needs an amount for a linked ingredient and keeps the item's existing recipe", async () => {
-			const p = await addProduct(h, { name: "Soup", price: 400, cost: 100 });
-			await h.svc.inventory.addStockBatch([row({ name: "Stock cube", usedIn: p.id, perUnit: "" })]);
-			expect(h.lastAlert()).toMatch(/how much of it one Soup uses/);
-			expect(h.data().inventory).toHaveLength(0);
-			await h.svc.inventory.addStockBatch([row({ name: "Carrot", usedIn: p.id, perUnit: "1" })]);
-			await h.svc.inventory.addStockBatch([row({ name: "Leek", usedIn: p.id, perUnit: "2" })]);
-			expect(h.data().products.find((x) => x.id === p.id).recipe).toHaveLength(2);
+		it("rejects an ingredient that is not in stock, has no amount, or is listed twice", async () => {
+			const p = await addProduct(h, { name: "Mocha", price: 900, cost: 200 });
+			const milk = await h.svc.inventory.saveInventoryItem(item({ name: "Fresh milk", unit: "ml", qty: "2000" }));
+			await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: "", perUnit: "5" }]);
+			expect(h.lastAlert()).toMatch(/choose an item/);
+			await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: milk.id, perUnit: "" }]);
+			expect(h.lastAlert()).toMatch(/how much one Mocha uses/);
+			await h.svc.inventory.saveItemIngredients(p.id, [{ itemId: milk.id, perUnit: "1" }, { itemId: milk.id, perUnit: "2" }]);
+			expect(h.lastAlert()).toMatch(/listed twice/);
+			expect(h.data().products.find((x) => x.id === p.id).recipe || []).toHaveLength(0);
 		});
 
 		it("asks for at least one item", async () => {
