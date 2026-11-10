@@ -878,8 +878,19 @@ export function ModifiersAdmin() {
 	}, [products, settings]);
 	const assigned = (g) => allItems.filter((p) => (p.modifierIds || []).map(String).includes(g.id)).length;
 	const [assign, setAssign] = useState(null); // { group, chosen: ids of the items that will have the group, q }
-	const shown = assign ? filterItems(allItems, { q: assign.q, category: "all", type: "all" }) : [];
-	const toggleChosen = (ids, on) => setAssign((a) => ({ ...a, chosen: on ? [...new Set([...a.chosen, ...ids])] : a.chosen.filter((i) => !ids.includes(i)) }));
+	// the items as a tree for the Assign window: category > subcategory (when the item has one) > item
+	const assignTree = useMemo(() => {
+		const cats = new Map();
+		for (const p of allItems) {
+			const cat = p.category || "Uncategorised";
+			if (!cats.has(cat)) cats.set(cat, { key: cat, name: cat, items: [], subs: new Map() });
+			const c = cats.get(cat);
+			const item = { id: String(p.id), name: p.name };
+			if (!p.subcategory) c.items.push(item);
+			else (c.subs.has(p.subcategory) ? c.subs.get(p.subcategory) : c.subs.set(p.subcategory, { key: cat + "/" + p.subcategory, name: p.subcategory, items: [] }).get(p.subcategory)).items.push(item);
+		}
+		return [...cats.values()].sort((a, b) => a.name.localeCompare(b.name)).map((c) => ({ key: c.key, name: c.name, items: c.items, subgroups: [...c.subs.values()].sort((a, b) => a.name.localeCompare(b.name)) }));
+	}, [allItems]);
 	const saveAssign = async () => {
 		if (await svc.settings.assignGroupToItems(assign.group.id, assign.chosen)) setAssign(null);
 	};
@@ -1041,7 +1052,7 @@ export function ModifiersAdmin() {
 				open={!!assign}
 				wide
 				title={assign ? "Assign " + assign.group.name + " to items" : ""}
-				subtitle="Tick the items that should offer this group. Applied when you publish."
+				subtitle="Tick a category, a subcategory or single items. Applied when you publish."
 				onClose={() => setAssign(null)}
 				footer={
 					<>
@@ -1056,31 +1067,10 @@ export function ModifiersAdmin() {
 			>
 				{assign && (
 					<>
-						<input className="input" id="assign-search" type="search" aria-label="Search items" placeholder="Search items" value={assign.q} onChange={(e) => setAssign((a) => ({ ...a, q: e.target.value }))} />
-						<div className="tools" style={{ margin: "8px 0" }}>
-							<button type="button" className="btn out" id="assign-all" onClick={() => toggleChosen(shown.map((p) => String(p.id)), true)}>
-								Select all shown
-							</button>
-							<button type="button" className="btn out" id="assign-none" onClick={() => toggleChosen(shown.map((p) => String(p.id)), false)}>
-								Clear shown
-							</button>
-							<span className="muted">{assign.chosen.length} of {allItems.length} items selected</span>
-						</div>
-						{!shown.length ? (
-							<EmptyState title="No items found">Try a different search.</EmptyState>
-						) : (
-							<ul className="sk-list">
-								{shown.map((p) => (
-									<li key={p.id} className="sk-list-row">
-										<label className="sk-list-main" style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer", minHeight: 44 }}>
-											<input type="checkbox" checked={assign.chosen.includes(String(p.id))} onChange={(e) => toggleChosen([String(p.id)], e.target.checked)} />
-											<strong>{p.name}</strong>
-											<span className="muted">{p.category || "Uncategorised"}</span>
-										</label>
-									</li>
-								))}
-							</ul>
-						)}
+						<p className="muted">
+							{assign.chosen.length} of {allItems.length} items selected
+						</p>
+						<AssignmentTree groups={assignTree} selected={new Set(assign.chosen)} onChange={(set) => setAssign((a) => ({ ...a, chosen: [...set] }))} />
 					</>
 				)}
 			</DetailDrawer>
