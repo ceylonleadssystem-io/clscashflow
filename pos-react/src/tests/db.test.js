@@ -1,6 +1,6 @@
 /**
  * Tests for the database layer: PosStore ordering and lossless extra data, sale persistence with cloud payload
- * round trips, removals, and the repositories.
+ * round trips and removals.
  */
 import { describe, it, expect } from "vitest";
 import { createDatabase } from "../db/database";
@@ -60,24 +60,5 @@ describe("PosStore (WatermelonDB)", () => {
 		await store.write((tx) => tx.removeSale("s9"));
 		expect((await store.readSnapshot()).sales).toHaveLength(0);
 		expect(await store.all(T.saleLines)).toHaveLength(0);
-	});
-});
-
-import { createRepositories } from "../db/repositories";
-
-describe("repositories", () => {
-	it("query by indexed column and expose domain finders", async () => {
-		const store = newStore("repo1");
-		const repos = createRepositories(store);
-		await repos.products.save({ id: "p1", name: "Burger", code: "BRG-1", category: "Food", price: 100, cost: 50 });
-		await repos.customers.save({ id: "c1", name: "Ann", phone: "077 123 4567" });
-		await repos.settings.set("business", "Cafe");
-		await repos.sales.save({ id: "s1", date: "2026-10-01", customerId: "c1", total: 10, lines: [{ name: "x", qty: 1, price: 10 }] });
-		expect((await repos.products.findByCode("BRG-1")).name).toBe("Burger");
-		expect((await repos.products.byCategory("Food")).length).toBe(1);
-		expect((await repos.customers.findByPhone("0771234567")).id).toBe("c1");
-		expect(await repos.settings.get("business")).toBe("Cafe");
-		expect((await repos.sales.inRange("2026-10-01", "2026-10-31"))[0].lines).toHaveLength(1);
-		expect(await repos.products.count()).toBe(1);
 	});
 });

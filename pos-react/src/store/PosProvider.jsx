@@ -26,7 +26,7 @@ import { kitchenStations } from "../domain/kitchenStations";
 import { userLocationIds, activeLocations } from "../services/pos/locations";
 import { mainLocation } from "../services/sync/account";
 import { SUPPORT_USER, supportModeActive } from "../services/support";
-import { useData, useDataRef, useRepositories, useStore } from "./DataProvider";
+import { useData, useDataRef, useStore } from "./DataProvider";
 import { useFeatures } from "./FeatureProvider";
 import { useSession } from "./SessionProvider";
 import { resolveWelcome } from "../config/welcome";
@@ -53,7 +53,6 @@ const getOrCreate = (storage, key, make) => {
 
 export function PosProvider({ children }) {
 	const store = useStore();
-	const repos = useRepositories();
 	const data = useData();
 	const dataRef = useDataRef();
 	const { enabled } = useFeatures();
@@ -159,9 +158,8 @@ export function PosProvider({ children }) {
 				getSession: () => sessionRef.current,
 				getFeatures: () => featuresRef.current,
 				ui,
-				repos,
 			}),
-		[guardedStore, dataRef, ui, repos],
+		[guardedStore, dataRef, ui],
 	);
 	const svc = useMemo(() => bindServices(ctx), [ctx]);
 

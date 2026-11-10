@@ -48,13 +48,12 @@ pos-react/
 └─ src/
    ├─ main.jsx · App.jsx       provider tree + gates
    ├─ config/                  env, constants, roles, POS presets, FEATURE REGISTRY
-   ├─ db/                      WatermelonDB: schema, models, repositories, PosStore
+   ├─ db/                      WatermelonDB: schema, models, PosStore
    │   ├─ tables/*             one declarative spec per table  (→ schema + model + mapper)
    │   ├─ defineTable.js       spec → Model class with typed accessors
    │   ├─ schema.js · migrations.js · database.js · models/
    │   ├─ rowMapper.js         raw row ⇄ plain legacy object (+ lossless `extra` column)
-   │   ├─ PosStore.js          observe(), atomic write(tx), replaceAll(), readSnapshot()
-   │   └─ repositories/        BaseRepository + domain repositories
+   │   └─ PosStore.js          observe(), atomic write(tx), replaceAll(), readSnapshot()
    ├─ domain/                  PURE business logic (cart, refunds, cash, analytics, inventory, catalogue…)
    ├─ services/
    │   ├─ pos/                 action services (sales, catalog, customers, inventory, staff, settings, printing, locations, industry)
@@ -71,7 +70,7 @@ pos-react/
    └─ tests/                   vitest
 ```
 
-Layering rule: `views/components → store (hooks) → services/pos → db (PosStore/repositories)`;
+Layering rule: `views/components → store (hooks) → services/pos → db (PosStore)`;
 `domain/` is pure and used by services and views; only `services/*` touch the network, USB or `window`.
 
 ---
@@ -143,10 +142,6 @@ Deployment: the site serves `dist/` through the Netlify rewrites in `netlify.tom
 * **`PosStore`**: `observe(cb)` pushes a live plain snapshot (same shape as the legacy `db` object) to React;
   `write(tx => …)` is an atomic multi-table unit of work (one `database.write` + `batch`) that also maintains
   `updatedAt` for cloud merging; `replaceAll()` applies a merged cloud payload, writing only changed rows.
-* **Repositories** (`src/db/repositories`): `BaseRepository` (`all`, `byId`, `where`, `save`, `remove`,
-  `observe`, `count`) and domain repositories (`ProductRepository.findByCode`, `CustomerRepository.findByPhone`,
-  `SaleRepository.inRange/lines`, `CashShiftRepository.openFor`, `SettingsRepository.get/set`, …), available
-  through `useRepositories()` / `ctx.repos`.
 * **Migrations**: `src/db/migrations.js` (add a step + bump `SCHEMA_VERSION` when a column is added).
 * **Legacy data**: on first start a legacy `localStorage` blob (`ceylonry-pos-v1[-<uid>]`) is imported; the
   cloud document is merged with the same rules as the original (per-row last-writer-wins, tombstones,
