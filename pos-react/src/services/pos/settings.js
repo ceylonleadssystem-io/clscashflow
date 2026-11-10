@@ -22,7 +22,7 @@ import { audit, newId, supportAuditEntry, unmarkDeletedCategory } from "./common
 import { addCommonModifiers, applyCatalogDrafts } from "./catalog";
 import { APPLY_KEYS } from "../../domain/menuAdmin";
 import { categoryKey, productCategories } from "../../domain/catalog";
-import { newItemFields, subcategoryEntries, subcategoryError, effectiveCategory, categoryEditError, cleanCategoryEdit, cleanGroupEdit, draftList, groupEditError, itemChanges, itemEditError, remainingNames, workingCategories, workingGroups } from "../../domain/catalogDraft";
+import { assignGroupEdits, newItemFields, subcategoryEntries, subcategoryError, effectiveCategory, categoryEditError, cleanCategoryEdit, cleanGroupEdit, draftList, groupEditError, itemChanges, itemEditError, remainingNames, workingCategories, workingGroups } from "../../domain/catalogDraft";
 import { categorySettingBlank, cleanCategorySetting } from "../../domain/deleteApproval";
 import { createLogger } from "../../utils/logger";
 
@@ -465,6 +465,14 @@ export async function copyDevicePrinters(ctx, fromId, toId) {
 
 const writeDraft = (ctx, key, next) => patchSettings(ctx, { menuDraft: nextDrafts(ctx.data().settings, key, next) });
 const DRAFT_NOTE = "Saved as a draft. Publish the menu to put it on the POS.";
+
+/** Puts one modifier group on exactly the chosen items (as one draft change). Returns true when saved. */
+export async function assignGroupToItems(ctx, groupId, itemIds) {
+	const { settings, products } = ctx.data();
+	await writeDraft(ctx, "itemEdits", assignGroupEdits(draftList(settings, "itemEdits"), products, String(groupId), itemIds));
+	ctx.ui.notice(DRAFT_NOTE);
+	return true;
+}
 
 /** Adds or edits a sales category or availability menu as a draft. Returns true when saved. */
 export async function saveMenuEntity(ctx, key, form) {

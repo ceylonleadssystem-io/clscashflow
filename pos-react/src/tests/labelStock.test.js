@@ -1,6 +1,6 @@
 /** Label printing: the size/gap sent to the printer must follow the configured stock (mismatch = blank labels). */
 import { describe, expect, it } from "vitest";
-import { DEFAULT_LABEL_STOCK, resolveLabelStock, tsplSetup } from "../services/printing/labelPrinter";
+import { DEFAULT_LABEL_STOCK, labelBitmapLayout, labelRows, resolveLabelStock, tsplSetup } from "../services/printing/labelPrinter";
 
 describe("label stock", () => {
 	it("defaults to 30 x 20 mm with a 3 mm gap", () => {
@@ -176,5 +176,19 @@ describe("label PNG download", () => {
 		}
 		expect(view.getUint32(17)).toBe((c ^ 0xffffffff) >>> 0);
 		expect([...out.slice(54)]).toEqual(iend);
+	});
+});
+
+describe("SKU under the barcode", () => {
+	it("makes room for the SKU line on every label size and keeps the price below it", () => {
+		for (const [w, h] of [[60, 40], [50, 25], [38, 25], [30, 20], [30, 15]]) {
+			const layout = labelBitmapLayout(w, h);
+			const without = labelRows(layout, h * 8, {});
+			const withSku = labelRows(layout, h * 8, { sku: true });
+			expect(without.skuY).toBeNull();
+			expect(withSku.skuY).toBeGreaterThanOrEqual(withSku.barcodeY + withSku.barcodeH);
+			expect(withSku.priceY).toBeGreaterThanOrEqual(withSku.skuY + layout.skuFont);
+			expect(withSku.priceY + layout.priceFont).toBeLessThanOrEqual(h * 8);
+		}
 	});
 });

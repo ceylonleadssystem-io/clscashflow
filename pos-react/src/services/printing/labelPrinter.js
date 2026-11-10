@@ -75,25 +75,25 @@ export function labelBitmapLayout(width, height) {
 	const L = (o) => ({ darken: true, gapMm: 3, ...o });
 	// 60 x 40 mm (480 x 320 dots): name, description, size, barcode, price (the retail artwork)
 	if (width >= 60 && height >= 40)
-		return L({ margin: 28, nameFont: 40, descFont: 22, sizeFont: 22, priceFont: 40, top: 8, lineGap: 4, barcodeMax: 130, barcodeMin: 60, priceGap: 8, bottomPad: 14 });
+		return L({ margin: 28, nameFont: 40, descFont: 22, sizeFont: 22, skuFont: 18, priceFont: 40, top: 8, lineGap: 4, barcodeMax: 130, barcodeMin: 60, priceGap: 8, bottomPad: 14 });
 	// 50 x 25 mm (400 x 200 dots)
 	if (width >= 50)
-		return L({ margin: 24, nameFont: 26, descFont: 15, sizeFont: 16, priceFont: 26, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
+		return L({ margin: 24, nameFont: 26, descFont: 15, sizeFont: 16, skuFont: 13, priceFont: 26, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
 	// 38 x 25 mm (304 x 200 dots)
 	if (width >= 38)
-		return L({ margin: 22, nameFont: 22, descFont: 13, sizeFont: 14, priceFont: 22, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
+		return L({ margin: 22, nameFont: 22, descFont: 13, sizeFont: 14, skuFont: 12, priceFont: 22, top: 4, lineGap: 3, barcodeMax: 100, barcodeMin: 40, priceGap: 5, bottomPad: 10 });
 	// 30 x 15 mm (240 x 120 dots): the shortest label; name, barcode and price only (no description), tight margins so all three fit
 	if (height <= 15)
-		return L({ margin: 24, nameFont: 12, descFont: 0, sizeFont: 11, priceFont: 12, top: 4, lineGap: 2, barcodeMax: 70, barcodeMin: 36, priceGap: 4, bottomPad: 6 });
+		return L({ margin: 24, nameFont: 12, descFont: 0, sizeFont: 11, skuFont: 10, priceFont: 12, top: 4, lineGap: 2, barcodeMax: 70, barcodeMin: 36, priceGap: 4, bottomPad: 6 });
 	// 30 x 20 mm (240 x 160 dots): name, barcode and price must all fit above the gap; no description line
-	return L({ margin: 24, nameFont: 14, descFont: 0, sizeFont: 12, priceFont: 14, top: 4, lineGap: 2, barcodeMax: 84, barcodeMin: 40, priceGap: 6, bottomPad: 14 });
+	return L({ margin: 24, nameFont: 14, descFont: 0, sizeFont: 12, skuFont: 11, priceFont: 14, top: 4, lineGap: 2, barcodeMax: 84, barcodeMin: 40, priceGap: 6, bottomPad: 14 });
 }
 
 /**
  * Vertical positions (dots) of the label rows: name, then the description and size lines when present, the barcode
  * (as tall as the room left allows, between barcodeMin and barcodeMax) and the price right under it. Pure so it can be tested.
  */
-export function labelRows(layout, dotsH, { desc = false, size = false } = {}) {
+export function labelRows(layout, dotsH, { desc = false, size = false, sku = false } = {}) {
 	let y = layout.top;
 	const nameY = y;
 	y += layout.nameFont + layout.lineGap;
@@ -108,9 +108,11 @@ export function labelRows(layout, dotsH, { desc = false, size = false } = {}) {
 		y += layout.sizeFont + layout.lineGap;
 	}
 	const barcodeY = y;
-	const room = dotsH - layout.bottomPad - layout.priceFont - layout.priceGap - barcodeY;
+	const skuRoom = sku && layout.skuFont ? layout.skuFont + layout.lineGap : 0;
+	const room = dotsH - layout.bottomPad - layout.priceFont - layout.priceGap - skuRoom - barcodeY;
 	const barcodeH = Math.max(layout.barcodeMin, Math.min(layout.barcodeMax, room));
-	return { nameY, descY, sizeY, barcodeY, barcodeH, priceY: barcodeY + barcodeH + layout.priceGap };
+	const skuY = skuRoom ? barcodeY + barcodeH + layout.lineGap : null;
+	return { nameY, descY, sizeY, barcodeY, barcodeH, skuY, priceY: barcodeY + barcodeH + skuRoom + layout.priceGap };
 }
 
 function fitText(ctx, text, maxWidth, font) {
@@ -122,7 +124,7 @@ function fitText(ctx, text, maxWidth, font) {
 }
 
 /**
- * The label as it is printed: name, description, size, Code 128 barcode and price drawn on a canvas at the printer's 203 dpi (one canvas pixel =
+ * The label as it is printed: name, description, size, Code 128 barcode, the item's SKU (when it has one) and price drawn on a canvas at the printer's 203 dpi (one canvas pixel =
  * one printer dot). `scale` draws the same label bigger (every dot becomes scale x scale pixels) for the preview, the browser print and the PNG,
  * so they all show exactly what the printer prints. `opts` = gap (mm) or {gapMm, offsetX, offsetY, marginMm}.
  */
@@ -141,7 +143,8 @@ export function drawLabelCanvas(product, size, opts, scale = 1) {
 	const name = String(product.name || "Item");
 	const description = layout.descFont ? String(product.description || product.subcategory || product.category || "") : "";
 	const sizeText = product.sizeLabel && layout.sizeFont ? "Size: " + product.sizeLabel : "";
-	const rows = labelRows(layout, dotsH, { desc: !!description, size: !!sizeText });
+	const skuText = product.sku && layout.skuFont ? "SKU: " + String(product.sku) : "";
+	const rows = labelRows(layout, dotsH, { desc: !!description, size: !!sizeText, sku: !!skuText });
 	const g = labelGeometry(dotsW, layout, o, code128Units(product.code));
 	const price = money(product.price);
 	const textW = g.right - g.left;
@@ -161,6 +164,10 @@ export function drawLabelCanvas(product, size, opts, scale = 1) {
 		ctx.fillText(fitText(ctx, sizeText, textW, ctx.font), g.cx, rows.sizeY + g.dy);
 	}
 	drawCode128(ctx, product.code, g.barcodeX, rows.barcodeY + g.dy, g.barcodeW, rows.barcodeH, layout.darken);
+	if (skuText) {
+		ctx.font = "400 " + layout.skuFont + "px Arial";
+		ctx.fillText(fitText(ctx, skuText, textW, ctx.font), g.cx, rows.skuY + g.dy);
+	}
 	ctx.font = "900 " + layout.priceFont + "px Arial";
 	ctx.fillText(fitText(ctx, price, textW, ctx.font), g.cx, rows.priceY + g.dy);
 	return { canvas, dotsW, dotsH, width, height, o, layout };
@@ -437,7 +444,7 @@ export function barcodeLabelsHtml(product, copies, size, imageFor = labelImage) 
 	const runs = Array.isArray(copies) ? copies : [{ sizeLabel: product.sizeLabel || "", copies }];
 	const pictures = new Map();
 	const picture = (sizeLabel) => {
-		if (!pictures.has(sizeLabel)) pictures.set(sizeLabel, imageFor({ ...product, code: sizedBarcode(product.code, sizeLabel), sizeLabel }, size, {}));
+		if (!pictures.has(sizeLabel)) pictures.set(sizeLabel, imageFor({ ...product, code: sizedBarcode(product.code, sizeLabel), sizeLabel, sku: product.skuBySize?.[sizeLabel] ?? product.sku }, size, {}));
 		return pictures.get(sizeLabel);
 	};
 	const labels = runs.flatMap((r) => Array.from({ length: r.copies }, () => `<section><img alt="" src="${picture(r.sizeLabel)}"></section>`)).join("");

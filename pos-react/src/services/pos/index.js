@@ -109,6 +109,7 @@ export function bindServices(ctx) {
 			deleteDevicePrinter: settings.deleteDevicePrinter,
 			copyDevicePrinters: settings.copyDevicePrinters,
 			saveMenuEntity: settings.saveMenuEntity,
+			assignGroupToItems: settings.assignGroupToItems,
 			deleteMenuEntity: settings.deleteMenuEntity,
 			reorderMenuEntities: settings.reorderMenuEntities,
 			addStandardSalesCategories: settings.addStandardSalesCategories,
