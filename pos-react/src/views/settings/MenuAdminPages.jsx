@@ -856,9 +856,9 @@ export function Items() {
 	);
 }
 
-export function ModifiersAdmin() {
+export function ModifiersAdmin({ openEditor }) {
 	const { settings, modifiers, products } = useData();
-	const { svc, go, canView } = usePos();
+	const { svc } = usePos();
 	const [tab, setTab] = useState("groups");
 	const [group, setGroup] = useState(null); // a modifier group being added or edited as a draft
 	const [groupTouched, setGroupTouched] = useState(false);
@@ -952,10 +952,10 @@ export function ModifiersAdmin() {
 			</div>
 			{tab === "groups" ? (
 				<SectionCard description="Add a group here, put it on items with Assign to items, and set how many options staff must or may pick.">
-					{canView("modifiers") && (
+					{openEditor && (
 						<p>
-							<button type="button" className="sk-link" onClick={() => go("modifiers")}>
-								Open Modifier Groups
+							<button type="button" className="sk-link" onClick={openEditor}>
+								Open the Group editor
 							</button>
 						</p>
 					)}
@@ -1184,7 +1184,7 @@ export function ModifiersAdmin() {
 	);
 }
 
-/** A page with two views: the Menu Admin drafts, and the full live editor that Products & Services and Modifiers used to be. */
+/** A page with two views: the Menu Admin drafts, and the full live editor that Products & Services and Modifiers used to be. `a` may be a function that is given a way to switch to the second view. */
 function TwoViews({ first, second, a, b, note }) {
 	const [tab, setTab] = useState("a");
 	// the tabs go in the row above the page, opposite Review / Publish; without that row (no Publish bar) they stay in the page
@@ -1203,13 +1203,13 @@ function TwoViews({ first, second, a, b, note }) {
 		<>
 			{slot ? createPortal(tabs, slot) : tabs}
 			{tab === "b" && <p className="muted">{note}</p>}
-			{tab === "a" ? a : b}
+			{tab === "a" ? (typeof a === "function" ? a(() => setTab("b")) : a) : b}
 		</>
 	);
 }
 export const ItemsPage = Items;
 export const ModifiersPage = () => (
-	<TwoViews first="Limits and global modifiers" second="Group editor" a={<ModifiersAdmin />} b={<ModifierGroupEditor />} note="The full modifier group editor. Changes here save straight away and are not drafts." />
+	<TwoViews first="Limits and global modifiers" second="Group editor" a={(openEditor) => <ModifiersAdmin openEditor={openEditor} />} b={<ModifierGroupEditor />} note="The full modifier group editor. Changes here save straight away and are not drafts." />
 );
 
 export const MENU_ADMIN_COMPONENTS = { categories: CategoriesAdmin, modifiers: ModifiersPage, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: ItemsPage };
