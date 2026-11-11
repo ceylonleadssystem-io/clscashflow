@@ -13,6 +13,7 @@ import { resolveOptions } from "../domain/systemOptions";
 import { serviceChargeSupported } from "../services/pos/common";
 import { useData } from "./DataProvider";
 import { useFeatures } from "./FeatureProvider";
+import { useBranchMenu } from "../hooks/useBranchMenu";
 import { usePos } from "./PosProvider";
 import { useUi } from "./UiProvider";
 import { createLogger } from "../utils/logger";
@@ -29,6 +30,7 @@ export function CheckoutProvider({ children }) {
 	const data = useData();
 	const { enabled } = useFeatures();
 	const { svc, locationId, go, kitchen, can } = usePos();
+	const branchMenu = useBranchMenu();
 	const ui = useUi();
 
 	const [cart, setCart] = useState([]);
@@ -115,10 +117,11 @@ export function CheckoutProvider({ children }) {
 		(id) => {
 			const product = data.products.find((p) => p.id === id);
 			if (!product) return;
+			if (!branchMenu.allows(product)) return ui.notice(`${product.name} is not sold at this location.`);
 			if (productModifiers(product, data.modifiers).length) return setPicker({ productId: id, lineKey: "" });
 			addConfigured(product, []);
 		},
-		[data.products, data.modifiers, addConfigured],
+		[data.products, data.modifiers, addConfigured, branchMenu, ui],
 	);
 
 	/**
@@ -130,6 +133,7 @@ export function CheckoutProvider({ children }) {
 		(id, size = "") => {
 			const product = data.products.find((p) => p.id === id);
 			if (!product) return undefined;
+			if (!branchMenu.allows(product)) return void ui.notice(`${product.name} is not sold at this location.`);
 			const group = size ? productSizeGroup(product, data.modifiers) : null;
 			const option = group?.options.find((o) => o.name === size);
 			if (group && option)
@@ -137,7 +141,7 @@ export function CheckoutProvider({ children }) {
 			if (hasSizedStock(data.inventory, product.id)) return void setPicker({ productId: id, lineKey: "" });
 			return addConfigured(product, []);
 		},
-		[data.products, data.modifiers, data.inventory, addConfigured],
+		[data.products, data.modifiers, data.inventory, addConfigured, branchMenu, ui],
 	);
 
 	const changeLineQty = useCallback(

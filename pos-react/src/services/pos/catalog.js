@@ -7,6 +7,7 @@ import { nowIso } from "../../domain/format";
 import { categoryKey, productCategories } from "../../domain/catalog";
 import { carryCategoryRename } from "../../domain/catalogDraft";
 import { ensureProductInventory, productSizeItem } from "../../domain/inventory";
+import { activeLocationIds, cleanLocationIds, newItemLocationIds } from "../../domain/menuLocation";
 import { sizeSlug } from "../printing/barcode";
 import { storeImage } from "../imageStorage";
 import { commonModifierPresets } from "../../config/presets";
@@ -72,6 +73,8 @@ export async function saveProduct(ctx, form) {
 		modifierRules: form.modifierRules || {},
 		recipe: form.recipe || [],
 		stationIds: form.stationIds === undefined ? (existing || {}).stationIds || [] : form.stationIds.map(String),
+		// the locations that sell it (empty = all); a new item added while signed in to one branch belongs to that branch only
+		locationIds: cleanLocationIds(form.locationIds === undefined ? (existing ? existing.locationIds : newItemLocationIds(ctx.session().locationId, activeLocationIds(d.locations))) : form.locationIds, activeLocationIds(d.locations)),
 	};
 	const hasStockRow = d.inventory.some((i) => String(i.productId || "") === String(product.id));
 	if (rawStock !== undefined && !hasStockRow) {
@@ -337,6 +340,7 @@ export async function importCatalogue(ctx, rows, mode) {
 			const product = {
 				...(existing || {
 					id: "p-import-" + Date.now() + "-" + index,
+					locationIds: newItemLocationIds(ctx.session().locationId, activeLocationIds(d.locations)), // imported while signed in to one branch: that branch's items
 					modifierIds: [],
 					image: "",
 					imageFit: "cover",
