@@ -1,0 +1,377 @@
+# Migration plan: from Netlify and Appwrite to our own server (Peek Hosting VPS)
+
+Status: plan, nothing migrated yet. Written 11 November 2026.
+
+## 1. Goal and decisions already made
+
+| Decision | Choice |
+| --- | --- |
+| Rule | No Netlify and no Appwrite dependency at all when finished. Every function and every computation moves. |
+| Hosting | Peek Hosting, Linux KVM VPS with root access (not shared, business, enterprise or reseller plans: they are cPanel plans with no root, no PostgreSQL and no long-running Node service). |
+| Starting size | 4 vCore / 8 GB RAM / 100 GB / 3 TB (listed at $30 a month, $25 a month if billed yearly). Growth path in section 9. |
+| Scale to plan for | 50 to 100 businesses now, up to 5,000 later. |
+| Who runs it | The team, with Claude's help, so everything is scripted and documented. |
+| Rewrite | A full rewrite of the backend is acceptable. We still do it in stages and run both systems side by side first, so customers are never cut off. |
+| Budget | Balanced: daily backups kept off the server, good uptime, no standby server at the start. |
+
+What is allowed to stay (these are not Netlify or Appwrite): the outside SMTP mail service, EmailJS, Stripe (the `payable-*` routes are switched off; `stripe-webhook` still exists and should be reviewed for removal), and the Anthropic API for Ceylo.
+
+## 2. What exists today (inventory)
+
+### 2.1 What Netlify does for us
+
+| Netlify feature | What we use it for | Replacement |
+| --- | --- | --- |
+| Static hosting | The POS app (`pos-react/dist`), the admin portal, the CashFlow pages, the landing pages | Caddy web server serving files from disk |
+| Domain aliases | `pos.`, `admin.`, `automobile.`, `ogf.` and the root domain, plus legacy `/posv2` paths | Caddy site blocks |
+| Redirects and rewrites | 66 rules in `netlify.toml` (host rewrites, 301 redirects, old paths) | Caddyfile |
+| Header rules | 22 rules (cache, service worker scope `Service-Worker-Allowed`, security headers) | Caddyfile |
+| Functions | 36 functions in `netlify/functions` (full list in Appendix A) | One Node.js service |
+| Scheduled function | `ogf-push-scheduled`, every 15 minutes | A scheduler inside the Node service, or a systemd timer |
+| HTTPS certificates, wildcard | Certificates for all the hostnames | Caddy (automatic Let's Encrypt) |
+| DNS | Netlify DNS for `ceylonrylabs.io` | A new DNS host (Peek DNS or another free DNS host). Must keep the mail records, see 5.7 |
+| Build and deploy | Build on push (`npm run build`) | A deploy script or a CI job that uploads the built files |
+
+### 2.2 What Appwrite does for us
+
+| Appwrite feature | How it is used | Where in the code |
+| --- | --- | --- |
+| Accounts and sessions | E-mail and password sign-in, sessions, 15 minute JWTs for the functions, password recovery, one-time handoff tokens between POS addresses, Google sign-in call in the compatibility layer | `pos-react/src/services/appwrite/appwriteCompat.js`, `auth.service.js`, `assets/platform.js`, the CashFlow pages |
+| Users API (server side) | Create, list, delete and update users from the admin portal | `netlify/lib/appwrite.js` (`users`), `admin-data.js`, `pos-admin-data.js`, `pos-handoff.js` |
+| Document database | One document store addressed by path, for example `users/{uid}/pos/main`. Three databases: main (`ceylonry`), POS (`pos`), Guest Manager (`gm`), plus an admin database. Large documents are split into compressed pieces to fit Appwrite limits | `netlify/lib/appwrite.js`, `netlify/functions/appwrite-docs.js` |
+| File storage | The images bucket (product photos, logos, QR codes) | `netlify/functions/appwrite-files.js`, `pos-react/src/services/imageStorage.js` |
+| Browser SDK | `assets/appwrite-sdk.js` (4,143 lines), loaded by every static page that signs in | The CashFlow pages, `pos-onboarding.html`, the reservation system |
+| Server SDK | `node-appwrite` | `netlify/lib/appwrite.js` and the functions that use it |
+
+Appwrite is **not** used for realtime updates (no realtime calls were found), which keeps this simpler.
+
+### 2.3 The seams that make this manageable
+
+The code already isolates Appwrite in three places. The migration replaces these three, not 36 functions and 20 pages one by one:
+
+1. **Server data seam**: `netlify/lib/appwrite.js` (330 lines). The functions call `getDocument`, `upsertDocument`, `queryDocuments`, `deleteDocument`, `listStamps`, `users.*` and a Firestore-style shim. We keep these names and put PostgreSQL behind them.
+2. **Client seam**: `appwriteCompat.js` exposes an older `clsBackend` style (`auth()` and `firestore()`). The pages talk to that, not to Appwrite directly. We write a new implementation with the same shape and a new small browser file replaces `assets/appwrite-sdk.js`.
+3. **Functions seam**: each function is `handler(event)` returning `{ statusCode, headers, body }`. A thin adapter turns an HTTP request into that `event`, so the function bodies move almost unchanged.
+
+## 3. Target architecture
+
+```
+Internet
+   |
+Caddy (HTTPS, redirects, static files)            <- replaces Netlify hosting, redirects, headers, certificates
+   |-- /*.html, /pos-react/dist, /assets ...        files on disk
+   |-- /.netlify/functions/*  (kept as /api/*)      -> Node service on 127.0.0.1
+Node.js service (systemd, 2 processes)            <- replaces Netlify Functions
+   |-- function adapter: the 36 handlers
+   |-- auth service (sign-in, sessions, JWT, recovery)   <- replaces Appwrite accounts
+   |-- scheduler (OGF sales push every 15 minutes)
+PostgreSQL 16                                     <- replaces Appwrite databases
+   |-- documents, users, sessions, files metadata, signalling rows
+Files on disk (or MinIO later)                    <- replaces Appwrite storage
+Backups: nightly dump + continuous log shipping to storage off this server
+```
+
+Choices and reasons:
+
+* **Caddy** over Nginx: automatic HTTPS and a short config. Wildcard certificates need a DNS plugin, so we use one certificate per hostname (only five hostnames), which needs no plugin.
+* **Node.js 20+**: the functions are already Node (CommonJS), so they run as they are.
+* **PostgreSQL with JSONB**: documents keep their shape. A single `documents` table keyed by `(store, path)` keeps today's path model, so the POS app's save and load logic does not change. No more splitting documents into pieces.
+* **Own auth, not a library of unknown size**: the needs are small (password sign-in, sessions, recovery, handoff tokens, admin creation). Passwords use argon2id.
+* **Files on disk first**: simple, backed up with the rest. Move to MinIO or similar only if file volume grows.
+
+## 4. Principles
+
+1. **Nothing big-bang.** Build and test the new stack on a staging address while production stays on Netlify and Appwrite.
+2. **Keep the interfaces.** Same function URLs (under `/api`), same document paths, same `clsBackend` shape. The less the apps change, the less can break.
+3. **Everything scripted.** Server setup, deploys, backups and migration are scripts in the repo, so the server can be rebuilt from scratch.
+4. **Rehearse the data move** at least twice on a copy before the real cutover.
+5. **Keep a way back** for two to four weeks after cutover (Appwrite and Netlify stay, read-only, until the new system has proven itself).
+6. **The POS is offline-first**, so a short maintenance window is acceptable: sales are kept on the device and sync when the server is back.
+
+## 5. Phases
+
+Effort figures are planning estimates for one developer working with Claude, not measured. They assume the Peek checks in Phase 0 come back fine.
+
+### Phase 0: Confirm before buying (1 to 2 days)
+
+Ask Peek, in writing, and write the answers into this document:
+
+* The exact data centre location, and whether a Sri Lanka or nearer location exists (the listing says USA).
+* Backups and snapshots on the VPS (not stated on the page), and the price.
+* IPv6, and whether Docker is allowed.
+* Whether outbound mail ports (587, 465) are open, and whether inbound/outbound port 25 is blocked.
+* Whether root access is on the plan we choose, and which Linux versions are offered.
+* What "99.99% uptime" means in their terms (refund? credit?).
+* DNS: whether Peek can host DNS for `ceylonrylabs.io`, including wildcard and TXT records.
+
+Also decide on our side:
+
+* **Where is the domain registered and who controls DNS today?** (Netlify DNS is in use. Moving it needs the registrar login.)
+* **Is Google sign-in used by customers?** The compatibility layer has a Google call. If it is used, we need to build it (Phase 4).
+* **Can Appwrite give us the password hashes?** Appwrite's server API normally returns each user's hash and hash settings. Confirm on one test user. If not, every customer resets their password once.
+* **Measure the data**: number of users, number and total size of documents, number and size of image files, in each Appwrite database.
+* **Order the VPS with the 30-day money-back guarantee**, and run the proof of concept (Phase 1 and a load test) inside that window.
+
+Exit: written answers from Peek, data measurements, the DNS and Google sign-in decisions.
+
+### Phase 1: Server and tooling (2 to 3 days)
+
+* Order the 4 vCore / 8 GB VPS (Ubuntu LTS). Create a non-root admin user, SSH keys only, root login off, firewall (only 22, 80, 443), fail2ban, automatic security updates, time sync.
+* Install Caddy, PostgreSQL 16, Node.js 20 LTS, and set up systemd services.
+* Create `staging.ceylonrylabs.io` (and `*-staging` hostnames) pointing at the server.
+* Write the setup as a script in `deploy/` (idempotent), so the server can be rebuilt.
+* Set up backups from day one (see section 8) and test one restore.
+* Uptime monitoring from outside, and disk, memory and database alerts.
+
+Exit: staging site reachable over HTTPS, a backup restored successfully.
+
+### Phase 2: Backend service skeleton (3 to 4 days)
+
+* Create the Node service (move `netlify/` to `server/`, keep git history). One HTTP server with a route table mapping each of the 36 function names to its handler.
+* **Function adapter**: turns the request into the Lambda-style `event` (method, headers, query, body, path) and the returned object into the response. Handlers stay as they are.
+* Keep the URL shape so the apps need no change: `/.netlify/functions/<name>` is served as `/api/<name>`, and the apps' configured function URLs (`pos-react/src/config/env.js`) change from one base value. During the side-by-side period Caddy also answers the old path.
+* Port the shared pieces that depend on Netlify: `CONTEXT`, `URL`, `DEPLOY_URL`, `NETLIFY_DEV` environment variables in `netlify/lib/security.js`, and the 15 minute schedule.
+* Environment variables: put them in a root-only file. Inventory is in Appendix B.
+* Rate limiting is in memory today. With one long-running process it works properly; use two processes only after moving the counters to PostgreSQL.
+* Health and ready endpoints (`health.js`, `ready.js`) updated to check PostgreSQL instead of Appwrite.
+
+Exit: functions that do not touch Appwrite (mail, contact, health, invoice mail, payslip) run on staging with the existing tests passing.
+
+### Phase 3: Data layer (5 to 8 days)
+
+Design (all in PostgreSQL):
+
+* `documents(store, path, data jsonb, owner_uid, created_at, updated_at, deleted_at)`, primary key `(store, path)`. `store` is `main`, `pos`, `gm` or `admin`. This reproduces today's routing (`isPosPath`, `isGmPath`, `storeFor`).
+* A small table for the signalling rows (`kds-store.js`, `diagnostics-store.js`) with an expiry time, replacing the "setup collection" scripts.
+* Indexes on `(store, path text_pattern_ops)` for prefix listing, and on `owner_uid`.
+
+Work:
+
+* New `server/lib/store.js` implementing the functions the code already calls: `getDocument`, `getDocumentStamp`, `listStamps`, `queryDocuments`, `upsertDocument`, `deleteDocument`, `newId`, and the Firestore-style shim (`appwriteAdmin().firestore()`) that `admin-data.js` and `pos-admin-data.js` use. Equality-only filters stay equality-only.
+* Keep the permission rules `canRead`, `canWrite`, `sanitizeProfileWrite`. They are about who may touch which path, not about Appwrite.
+* Drop the chunking and compression (`APPWRITE_COMPRESS`, the corrupt-chunk repair `isCorrupt`) and the POS-to-own-database fallback (`APPWRITE_POS_FALLBACK`). Real rows have no size limit problem.
+* Fix a bug that moves with the shim: `admin-data.js` pages through `listUsers(1000, pageToken)`, but the shim's `listUsers` takes only a maximum and never returns a page token, so the CashFlow admin user list stops at 1,000 users. The new user listing must page properly. This matters at 5,000 accounts.
+* Tests: the existing node tests mock the Appwrite layer. Point them at a test PostgreSQL (a throwaway database per test run) and keep their assertions.
+
+Exit: the function tests that touch documents pass against PostgreSQL.
+
+### Phase 4: Authentication (6 to 10 days)
+
+Build in the Node service:
+
+* **Tables**: `users(id, email unique lowercased, password_hash, name, labels, status, created_at, last_sign_in_at)`, `sessions(id, user_id, refresh_hash, expires_at, device, ip)`, `one_time_tokens(token_hash, user_id, purpose, expires_at)`.
+* **Sign-in**: e-mail and password (argon2id), rate limit and lockout, returns a 15 minute JWT plus a refresh token in an HttpOnly cookie. This replaces `createEmailPasswordSession`, `createJWT`, `account.get` and `deleteSession`. It also removes today's limitation that Appwrite allows one active session per client (the "BUG 013" workaround in `appwriteCompat.js`).
+* **Verification of tokens in the functions**: replace `getUserFromEvent` (which calls Appwrite) with local JWT verification. This is faster and needs no outside call per request.
+* **Password recovery**: signed one-time link sent by the existing SMTP code to `/cashflow/reset-password.html` (the page already exists).
+* **Account creation**: sign-up from `pos-onboarding.html` and the admin portal "New POS account".
+* **Admin functions**: the places that use Appwrite's Users API: create, list (with paging), delete, update, set labels, and the admin sign-in in `admin-signin.js` (which today uses an Appwrite user). The separate POS admin login (`pos-admin-login.js`, scrypt) already works without Appwrite's users.
+* **Handoff between POS addresses**: `pos-handoff.js` uses `users.createToken` and the client uses `createSession(userId, secret)`. Replace with the one-time token table.
+* **Google sign-in**: only if Phase 0 says it is in use.
+* **Existing passwords**: migrate the hashes with their algorithm settings, and let the sign-in code verify the old format and re-hash with argon2id at first sign-in. If the hashes cannot be exported, send everyone a reset link at cutover.
+* Security review of this phase specifically (token lifetime, cookie flags, brute force, enumeration, recovery abuse).
+
+Exit: sign-in, refresh, sign-out, recovery, create user, delete user and the handoff all pass tests, and an independent review has no open findings.
+
+### Phase 5: Files (2 to 3 days)
+
+* Store images under a data directory, served by Caddy or the Node service. Keep `appwrite-files.js` behaviour (upload, size limit, type check), renamed `files.js`.
+* Image links stored inside documents point at Appwrite URLs today. The data migration (Phase 8) rewrites them to the new address. `pos-react/src/services/imageStorage.js` and its migration test are updated.
+* Include the images folder in backups.
+
+### Phase 6: Apps (8 to 12 days)
+
+* **POS app** (`pos-react`): add a new backend implementation of the compatibility layer (`services/appwrite/appwriteCompat.js`, `auth.service.js`, `cloud.service.js`, `imageStorage.js`, `platform.service.js`). Rename it away from "Appwrite" (the folder, the `isAppwrite()` helper, the `VITE_AUTH_PROVIDER=appwrite` value) at the end of this phase. Keep the local test provider.
+* **Browser file**: a new small `assets/backend-client.js` (a few hundred lines) that provides `window.clsBackend` with the same methods the pages use, replacing the 4,143 line `assets/appwrite-sdk.js`.
+* **Static pages that sign in**: the CashFlow pages (`signin`, `onboarding`, `solo`, `starter`, `starter_3`, `growth`, `premium`, `team`, `accept-invite`, `reset-password`, `success`, `upgrade`, `payable-return`, `ceylonry-admin`), `pos-onboarding.html`, `assets/platform.js` (3,823 lines, 28 backend calls), and the reservation system. If the new client keeps the same method names, these need script-tag and small error-message changes only. Plan time for testing each page by hand, since they are large files.
+* **Remove Appwrite wording** in messages (for example the rate-limit message in `auth.service.js`).
+* **Admin portal** (`pos-react/src/admin-app`): points at the new function URLs through the existing config.
+* **Service worker**: unchanged, but test that the cache is replaced cleanly on the new origin.
+
+Exit: the full test suites pass, and a manual run-through of each page works on staging.
+
+### Phase 7: Static hosting and deploy (2 to 3 days)
+
+* Translate `netlify.toml` into a Caddyfile: the five host rewrites to `index.html` or `admin.html`, the 301s from `/posv2` and old paths, the cache headers, `Service-Worker-Allowed`, and security headers. Write a test that parses the old `netlify.toml` and checks each rule against the Caddyfile (the existing `tests/pos-address.test.js` checks are a starting point).
+* Build step: the same `npm run build`, run locally or in CI, then upload `pos-react/dist` and the static pages with a script. Keep the previous release folder so a deploy can be rolled back in seconds (a `releases/` folder and a `current` symlink).
+* Certificates: one per hostname, automatic.
+
+### Phase 8: Data migration tooling (4 to 6 days)
+
+Write `scripts/migrate-from-appwrite.mjs` (temporary, deleted at the end):
+
+1. **Export users** from Appwrite (with password hashes if possible, labels, status, created and last-sign-in dates).
+2. **Export documents** from all four databases, reassemble the split pieces, decompress, and write full documents.
+3. **Export files** from the images bucket and rewrite image links inside documents.
+4. **Import** into PostgreSQL in one transaction per store, idempotent, so it can be re-run.
+5. **Verify**: counts per store and per business, a checksum per document, and a sample compare of 100 random businesses through the apps.
+6. **Delta run**: a fast second pass that copies only what changed since the first run (using the `updatedAt` stamps), used on cutover night.
+
+Rehearse the full run at least twice against a copy and time it. The time of the final delta run decides the length of the maintenance window.
+
+### Phase 9: Proving it (5 to 8 days)
+
+* **Staging with real data**: a copy of production data on staging, with internal accounts.
+* **Load test**: simulate sync traffic. Start at 100 businesses, then 500, 1,000, 5,000 simulated businesses with realistic patterns (idle most of the time, bursts at opening and closing). Record request rate, database CPU, memory and response times. This replaces guessing with numbers and tells us when to upgrade (section 9).
+* **Failure drills**: restart the server, kill the database, fill the disk (alert fires), restore from backup onto a fresh server and time it.
+* **Security**: dependency audit, a port scan, headers, a review of the auth phase and of each function that takes input.
+* **Parity check**: every Netlify function has a matching route and a passing test (Appendix A is the checklist).
+
+Exit: go/no-go checklist (section 7) is all ticked.
+
+### Phase 10: Cutover (1 to 2 days of work, plus preparation)
+
+Preparation (a week before):
+
+* Lower the DNS TTL to 5 minutes.
+* Tell customers about a short planned maintenance window (the POS keeps selling offline). Tell them they must sign in once again.
+* Final rehearsal with the real delta run.
+
+Cutover night (a quiet time in Sri Lanka):
+
+1. Put the old site into maintenance (Netlify and Appwrite stay up but writes are blocked by a flag in the functions).
+2. Run the final delta migration and the verification.
+3. Switch DNS to the new server. All hostnames at once.
+4. Smoke tests: sign in on each address, open a POS, make a test sale, sync, admin portal create and delete test account, send an e-mail, check the 15 minute schedule fired.
+5. Open to customers. Watch logs and error rates for the first day.
+
+Rollback: if the smoke tests fail before opening, point DNS back and lift maintenance (data on the old side is untouched). After opening, rollback means losing the writes made on the new side, so decide quickly, within the first hours.
+
+After cutover: keep Netlify and Appwrite read-only for 2 to 4 weeks as the safety net.
+
+### Phase 11: Decommission and clean-up (2 days)
+
+* After the safety period: take a final full export of Appwrite (users, documents, files) and keep it in the backup storage.
+* Delete the Appwrite project, remove the site from Netlify, and cancel the plans.
+* In the repository: remove `node-appwrite`, `appwrite` and `node-fetch-native-with-agent` from `package.json`; delete `assets/appwrite-sdk.js`, `netlify.toml`, `scripts/setup-*-db.mjs`, `scripts/migrate-pos-to-own-database.js`, and the migration script; remove Netlify and Appwrite from the docs, the README files, the comments and the tests that mention them; remove the Appwrite and Netlify origins from `security.js`.
+* Run `graphify update .`.
+* Final search of the repository for the words `appwrite`, `netlify` and `.netlify`, and for the Appwrite project id and endpoint. Zero results is the finish line.
+
+## 6. Risks and how they are handled
+
+| Risk | Effect | Handling |
+| --- | --- | --- |
+| Peek servers are in the USA | Slower sync (round trip likely 250 to 350 ms) | POS is offline-first and syncs in the background. Measure in Phase 9. If it hurts, ask Peek about other locations or consider a second host later. |
+| Password hashes cannot be exported | Every customer must reset their password | Detect in Phase 0. Prepare the reset e-mail and tell customers in advance. |
+| Data corruption in the move | Lost or damaged business data | Two or more rehearsals, per-document checksums, the old system kept untouched and read-only for weeks, a full export archived. |
+| Our own auth has a flaw | Account takeover | Standard well-reviewed parts (argon2id, JWT), rate limits, independent security review in Phase 4 and 9. |
+| Mail stops working after DNS moves | Lost invoices, welcome and reset e-mails | Copy every MX, SPF, DKIM and DMARC record exactly before changing the nameservers. Send test mail from each function after the move. |
+| Single server failure | Downtime | Nightly dump plus continuous log shipping off the server, a tested restore script, and a short restore runbook (target: back within about an hour). Add a standby when the business needs it (section 9). |
+| Disk full or database growth | Outage | Disk alerts at 70 percent and 85 percent, retention rules, move files to a bigger disk or MinIO. |
+| Appwrite and Netlify behave differently from our assumptions | Surprises late in the project | Phase 3 and 4 tests are written against current behaviour first, and the old system stays alive during the whole build. |
+| Customers cached the old app | Mix of old and new code after cutover | Same hostnames and a new service worker cache name. The first load after cutover fetches the new build. Test in Phase 9. |
+| Peek page details are inconsistent (hardware, backups, locations) | Wrong sizing | Phase 0 written confirmation and the 30-day money-back window. |
+
+## 7. Go/no-go checklist for cutover
+
+- [ ] All 36 functions have a route and a passing test (Appendix A).
+- [ ] Sign-in, recovery, handoff, admin create and delete all pass on staging with real data.
+- [ ] Two full data rehearsals matched on counts and checksums.
+- [ ] A backup was restored on a clean server and the apps worked on it.
+- [ ] Load test passed at the planned size with a safety margin of at least 2 times.
+- [ ] Mail records verified and test mail received from every mail-sending function.
+- [ ] Rollback steps rehearsed and written down.
+- [ ] Customers informed and a support person on call during the window.
+- [ ] DNS TTL lowered at least 24 hours earlier.
+
+## 8. Operations after the move
+
+* **Backups**: nightly `pg_dump` kept 14 days, continuous write-ahead log shipping for point-in-time recovery, the images folder synced nightly. Stored **off** this server (a different provider or a second small server), encrypted. A restore drill every month, with the time recorded.
+* **Monitoring**: external uptime check on each hostname and on `/api/health`, alerts for disk, memory, CPU, database connections, failed schedule runs and error rate. Logs rotated and kept 30 days.
+* **Updates**: automatic security updates for the OS, a monthly window for Node, PostgreSQL and Caddy.
+* **Secrets**: a root-only environment file and a documented rotation procedure for the JWT signing key, SMTP and API keys.
+* **Runbooks** in `docs/operations/`: restart, restore, deploy, roll back a deploy, rotate secrets, add a server.
+
+## 9. Capacity and the path to 5,000 businesses
+
+These sizes are estimates to be confirmed by the Phase 9 load test.
+
+| Stage | Businesses | Suggested Peek plan | Monthly list price | Notes |
+| --- | --- | --- | --- | --- |
+| Start | 50 to 100 | VPS 4 vCore / 8 GB / 100 GB | $30 ($25 yearly) | Everything on one server, plus off-server backup storage |
+| Growing | up to about 500 | VPS 8 vCore / 16 GB / 200 GB | $55 | Add connection pooling (PgBouncer) |
+| Large | about 500 to 2,000 | Two VPS: app and database | about $55 + $55 to $75 | Database on its own server, tuned, with a replica for backups |
+| Very large | 2,000 to 5,000 | Dedicated server for the database (listed plans from $130 to $280) plus the VPS for the app | $185 and up | Uses the dedicated plan's SSD storage and RAM. Check current hardware (some listed CPUs are old). Setup takes 24 to 48 hours. |
+
+Things that make the system lighter as it grows: the POS already syncs only changed data and backs off when idle, documents are served by path (cheap lookups), and static files are cached by browsers and by Caddy.
+
+Total monthly cost at the start: the VPS ($25 to $30) plus off-server backup storage (a few dollars), with DNS, certificates and mail unchanged. This is below the combined cost of a paid Netlify and Appwrite setup once usage grows, and the Netlify functions returned a usage-exceeded error when checked on 10 November 2026.
+
+## 10. Rough timeline
+
+Planning estimate, one developer with Claude, phases partly overlapping:
+
+| Weeks | Work |
+| --- | --- |
+| 1 | Phase 0 and 1 (confirm with Peek, server up, backups working) |
+| 2 to 3 | Phases 2, 3 (service skeleton, PostgreSQL data layer) |
+| 3 to 5 | Phases 4, 5 (authentication, files) |
+| 5 to 7 | Phases 6, 7 (apps, static hosting) |
+| 6 to 8 | Phase 8 (migration tooling and rehearsals) |
+| 8 to 9 | Phase 9 (load test, drills, security, parity) |
+| 10 | Phase 10 (cutover) |
+| 12 to 14 | Phase 11 (decommission, after the safety period) |
+
+About 10 weeks to cutover and about 14 weeks to being fully free of both services. Authentication, the apps phase and the data rehearsals are the parts most likely to run over.
+
+## 11. Open questions
+
+1. Peek's answers from Phase 0 (location, backups, ports, Docker, DNS).
+2. Where is the domain registered, and who holds the login?
+3. Is Google sign-in in real use?
+4. Can Appwrite export password hashes for all users?
+5. How much data is there today (users, documents, files)?
+6. Which outside backup storage will we use (a second provider or a second small server)?
+7. Which Sri Lankan time window is quietest for the cutover?
+8. Who is the second person for security review and on-call during cutover?
+
+## Appendix A: the 36 functions and what each depends on
+
+Mark each as ported and tested during Phases 2 to 4. "Data" means it reads or writes documents or users through `netlify/lib/appwrite.js`; "Mail" means it sends e-mail through SMTP (no change needed except the environment variables).
+
+| Function | Data | Mail | Other notes |
+| --- | --- | --- | --- |
+| account-danger-zone | yes | | Backs up then deletes an account's data |
+| admin-data | yes | yes | CashFlow admin: plans, invoices, users, billing. Uses the Firestore-style shim and user paging |
+| admin-signin | yes | | Admin sign-in through an Appwrite user. Move to own auth |
+| appwrite-docs | yes | | The document API the apps call. Rename to `docs` |
+| appwrite-files | yes | | Image upload. Rename to `files`, disk storage |
+| ceylo-ai-key | yes | | Stores each business's AI key (encrypted with `CEYLO_KEY_SECRET`) |
+| ceylo-ask | yes | | Calls the Anthropic API |
+| emailjs-reminder | | | EmailJS call, no data |
+| growth-partner-code | yes | | Partner codes |
+| hardware-order | | yes | |
+| health | | | Update to check PostgreSQL |
+| invoice-share | yes | | Public invoice links |
+| kds-pair | yes | | Kitchen Display pairing rows with expiry |
+| ogf-push | yes | | Sales push settings and manual send |
+| ogf-push-scheduled | yes | | Runs every 15 minutes: move to the scheduler |
+| payable-create-checkout | | | Switched off (503) |
+| payable-status | | | Switched off (410) |
+| payable-webhook | | | Switched off (410) |
+| pos-admin-data | yes | | POS admin portal: accounts, create, delete, business type, menu import |
+| pos-admin-diagnostics | yes | | Diagnostics signalling |
+| pos-admin-login | yes | | Admin login (scrypt, already independent of Appwrite users) |
+| pos-diagnostics | yes | | Diagnostics signalling |
+| pos-handoff | yes | | One-time token between POS addresses. Rebuild on the token table |
+| pos-onboarding-email | yes | yes | |
+| public-invoice | yes | | Public invoice view |
+| ready | yes | | Admin-only readiness check. Update to PostgreSQL |
+| send-contact | | yes | |
+| send-invite | | yes | |
+| send-invoice | | yes | |
+| send-payslip | | yes | |
+| send-story-submission | yes | yes | |
+| send-welcome | | yes | CashFlow welcome e-mail |
+| stripe-webhook | yes | | Stripe payment hook. Decide whether it is still used before porting |
+| submit-subscription-receipt | yes | yes | Checks payment slips against the plan prices |
+| submit-ticket | yes | yes | Support tickets |
+| track-visit | yes | | Visit counter |
+
+## Appendix B: environment variables to carry over
+
+* **Mail**: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_REPLY_TO`, `POS_SMTP_FROM`, `POS_INTERNAL_SMTP_FROM`, `SUPPORT_TO`, `STORY_SUBMISSION_TO`, `BUSINESS_OWNER_EMAIL`
+* **Site**: `PUBLIC_SITE_URL`, `EXTRA_ALLOWED_ORIGINS`
+* **Security**: `POS_ADMIN_TOKEN_SECRET`, `ADMIN_PASSWORD_SHA256`, `ADMIN_EMAIL`, `CEYLO_KEY_SECRET`
+* **Outside services that stay**: `ANTHROPIC_API_KEY`, `EMAILJS_*` (5 values), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+* **To be removed**: every `APPWRITE_*` variable (endpoint, project, API key, database and collection ids, routing and compression switches) and the Netlify ones (`URL`, `DEPLOY_URL`, `DEPLOY_PRIME_URL`, `CONTEXT`, `NETLIFY_DEV`)
+* **New**: `DATABASE_URL`, `JWT_SIGNING_KEY`, `DATA_DIR` (files), `BACKUP_*` settings
