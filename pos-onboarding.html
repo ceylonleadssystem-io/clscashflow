@@ -39,7 +39,7 @@
 					field = document.createElement("div");
 				field.className = "field full";
 				field.innerHTML =
-					'<label for="mobile">Mobile number <span class="required-mark" aria-hidden="true">*</span></label><input type="tel" id="mobile" type="tel" required autocomplete="tel" inputmode="tel" placeholder="07X XXX XXXX" aria-required="true">';
+					'<label for="mobile">Mobile number <span class="required-mark" aria-hidden="true">*</span></label><input type="tel" id="mobile" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+94 77 123 4567" aria-required="true">';
 				business.closest(".field").after(field);
 				[
 					["first", "First name"],
@@ -672,11 +672,16 @@
 				var BUSINESS_RE = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}\s&'.,()\/\-]*$/u;
 				var EMAIL_RE = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
 
-				/* Sri Lankan mobile: 07X XXX XXXX, +94 7X XXX XXXX or 94 7X XXX XXXX -> 07XXXXXXXX */
+				/* Mobile number, any country. Sri Lankan numbers (07X XXX XXXX, +94 7X XXX XXXX or 94 7X XXX XXXX) are still stored as 07XXXXXXXX.
+				   Every other country is entered with its country code (+ or 00 first) and kept as +<digits>, 8 to 15 digits (E.164 length). */
 				function normaliseMobile(value) {
-					var d = String(value || "").replace(/[\s\-()]/g, "");
-					if (/^\+?94/.test(d)) d = "0" + d.replace(/^\+?94/, "");
-					return /^07[01245678]\d{7}$/.test(d) ? d : "";
+					var raw = String(value || "").trim();
+					var d = raw.replace(/[\s\-()]/g, "");
+					var sl = /^\+?94/.test(d) ? "0" + d.replace(/^\+?94/, "") : d;
+					if (/^07[01245678]\d{7}$/.test(sl)) return sl;
+					var international = /^\+/.test(d) ? d.slice(1) : /^00/.test(d) ? d.slice(2) : "";
+					if (/^[1-9]\d{7,14}$/.test(international)) return "+" + international;
+					return "";
 				}
 
 				var rules = {
@@ -703,7 +708,7 @@
 					},
 					mobile: function (v) {
 						if (!v) return "Enter your mobile number.";
-						if (!normaliseMobile(v)) return "Enter a valid Sri Lankan mobile number, e.g. 077 123 4567 or +94 77 123 4567.";
+						if (!normaliseMobile(v)) return "Enter a valid mobile number with the country code, e.g. +94 77 123 4567 or +44 7911 123456 (a Sri Lankan number can also start with 07).";
 						return "";
 					},
 					email: function (v) {
