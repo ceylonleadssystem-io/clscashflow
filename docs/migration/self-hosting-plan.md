@@ -161,13 +161,13 @@ Effort figures are planning estimates for one developer working with Claude, not
 
 Ask Peek, in writing, and write the answers into this document:
 
-* The exact data centre location, and whether a Sri Lanka or nearer location exists (the listing says USA).
-* Backups and snapshots on the VPS (not stated on the page), and the price.
-* IPv6, and whether Docker is allowed.
-* Whether outbound mail ports (587, 465) are open, and whether inbound/outbound port 25 is blocked.
+* ~~The exact data centre location.~~ **Answered:** USA, North Carolina. No nearer location was offered. Expect a round trip of roughly 250 to 350 ms from Sri Lanka (to be measured in Phase 9).
+* ~~Backups and snapshots on the VPS.~~ **Answered:** Peek keeps **two snapshots, weekly**, each a complete image of the server (OS and everything). That is useful for rebuilding the machine, but a week of data is too much to lose, so it does **not** replace our own nightly and continuous off-server backups (section 8). Price: none stated (included).
+* ~~IPv6 and Docker.~~ **Answered:** both reported as allowed ("yes those are allowed"). Docker is optional for us. Confirm the IPv6 address block when the VPS is created; it is not required.
+* ~~Whether outbound mail ports are open.~~ **Answered:** no port restrictions. Peek's warning: the server's IP can be put on spam lists because of e-mail activity, so **secure the IP well for e-mail sending** (see the new risk row and Phase 2 items).
 * ~~Whether root access is on the plan we choose, and which Linux versions are offered.~~ **Answered 11 November 2026 by Peek support (chat):** root access is provided, the VPS is installed within about 5 minutes, and the offered systems include **Ubuntu 26 and AlmaLinux 10** ("anything available"). Still to confirm in writing: that Ubuntu is **26.04 LTS**, and whether **24.04 LTS** is also available.
 * What "99.99% uptime" means in their terms (refund? credit?).
-* DNS: whether Peek can host DNS for `ceylonrylabs.io`, including wildcard and TXT records.
+* DNS: whether Peek can host DNS for `ceylonrylabs.io`, including wildcard and TXT records. **No answer yet** (the message was read, not answered). Recommendation: keep DNS at a provider separate from the server host, so DNS stays reachable and can be repointed if the server is down. Ask only if we want Peek to host it.
 
 Also decide on our side:
 
@@ -206,6 +206,7 @@ Exit: staging site reachable over HTTPS, a backup restored successfully.
 * **Port the 36 functions into the modules** in Appendix A. For each: move the rules into the module service, write the route, port its existing test, and check the response matches the old one. Start with the ones that do not touch Appwrite (mail, contact, health, invoice mail, payslip), then the data-bound ones as Phases 3 and 4 land.
 * **Replace Netlify-only pieces**: the `CONTEXT`, `URL`, `DEPLOY_URL`, `NETLIFY_DEV` variables in `security.js` become explicit settings, and the schedule moves to `server/src/jobs`.
 * **Environment variables**: a root-only file, validated at start-up (the service refuses to start if one is missing). Inventory is in Appendix B.
+* **Mail safety**: all outgoing mail goes through one `mail` module that sends only through the authenticated external SMTP service, with fixed recipients on public forms, a per-IP and a per-address limit, and a daily cap. No function sends mail to an address a visitor typed unless that is the purpose (invites, receipts) and it is rate limited.
 * **Rate limiting** is in memory today. With one long-running process it works; move the counters to PostgreSQL before running a second process.
 * **Health and ready** endpoints check PostgreSQL instead of Appwrite.
 * **Shared package**: start `shared/` with the plan prices, trial length, business types and the request and response shapes of each module. Add the parity tests (for example the price test already in `tests/pos-prices.test.js`) against it.
@@ -326,11 +327,12 @@ After cutover: keep Netlify and Appwrite read-only for 2 to 4 weeks as the safet
 
 | Risk | Effect | Handling |
 | --- | --- | --- |
-| Peek servers are in the USA | Slower sync (round trip likely 250 to 350 ms) | POS is offline-first and syncs in the background. Measure in Phase 9. If it hurts, ask Peek about other locations or consider a second host later. |
+| Peek's server is in the USA (North Carolina, confirmed) | Slower sync (round trip likely 250 to 350 ms) | POS is offline-first and syncs in the background. Measure in Phase 9. If it hurts, ask Peek about other locations or consider a second host later. |
 | Password hashes cannot be exported | Every customer must reset their password | Detect in Phase 0. Prepare the reset e-mail and tell customers in advance. |
 | Data corruption in the move | Lost or damaged business data | Two or more rehearsals, per-document checksums, the old system kept untouched and read-only for weeks, a full export archived. |
 | Our own auth has a flaw | Account takeover | Standard well-reviewed parts (argon2id, JWT), rate limits, independent security review in Phase 4 and 9. |
 | Mail stops working after DNS moves | Lost invoices, welcome and reset e-mails | Copy every MX, SPF, DKIM and DMARC record exactly before changing the nameservers. Send test mail from each function after the move. |
+| The server's IP gets on spam lists because of e-mail activity (Peek's warning) | Invoices, welcome and reset e-mails land in spam or are rejected, and the IP may be blocked | Do not send mail directly from the VPS: keep sending through the existing authenticated SMTP service, so the VPS IP never appears as the sender. Keep SPF, DKIM and DMARC correct on the domain. Make sure no form (contact, support ticket, invites, hardware order) can be used to send mail to addresses the visitor chooses, and keep the per-IP rate limits and add a spam check on the public forms. If we ever send from the VPS: reverse DNS (PTR) set by Peek, a dedicated sender address, bounce and complaint handling, a daily send limit, and monitoring of IP reputation. |
 | Single server failure | Downtime | Nightly dump plus continuous log shipping off the server, a tested restore script, and a short restore runbook (target: back within about an hour). Add a standby when the business needs it (section 9). |
 | Disk full or database growth | Outage | Disk alerts at 70 percent and 85 percent, retention rules, move files to a bigger disk or MinIO. |
 | Appwrite and Netlify behave differently from our assumptions | Surprises late in the project | Phase 3 and 4 tests are written against current behaviour first, and the old system stays alive during the whole build. |
@@ -352,7 +354,7 @@ After cutover: keep Netlify and Appwrite read-only for 2 to 4 weeks as the safet
 
 ## 8. Operations after the move
 
-* **Backups**: nightly `pg_dump` kept 14 days, continuous write-ahead log shipping for point-in-time recovery, the images folder synced nightly. Stored **off** this server (a different provider or a second small server), encrypted. A restore drill every month, with the time recorded.
+* **Backups**: Peek's two weekly full-server snapshots are kept as an extra way to rebuild the machine, but they are not the backup plan. Ours is: nightly `pg_dump` kept 14 days, continuous write-ahead log shipping for point-in-time recovery, the images folder synced nightly. Stored **off** this server (a different provider or a second small server), encrypted. A restore drill every month, with the time recorded.
 * **Monitoring**: external uptime check on each hostname and on `/api/health`, alerts for disk, memory, CPU, database connections, failed schedule runs and error rate. Logs rotated and kept 30 days.
 * **Updates**: automatic security updates for the OS, a monthly window for Node, PostgreSQL and Caddy.
 * **Secrets**: a root-only environment file and a documented rotation procedure for the JWT signing key, SMTP and API keys.
@@ -393,7 +395,7 @@ About 12 weeks to cutover and about 16 weeks to being fully free of both service
 
 ## 11. Open questions
 
-1. Peek's answers from Phase 0 (location, backups, ports, Docker, DNS).
+1. Peek's remaining answers: DNS hosting, what the 99.99% uptime means (refund or credit), and the IPv6 block.
 2. Where is the domain registered, and who holds the login?
 3. Is Google sign-in in real use?
 4. Can Appwrite export password hashes for all users?
