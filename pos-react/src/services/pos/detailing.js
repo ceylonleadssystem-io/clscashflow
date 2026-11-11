@@ -21,6 +21,8 @@ const find = (ctx, key, id) => ctx.data()[key].find((x) => x.id === id);
 const put = (ctx, table, row) => ctx.store.write((tx) => tx.put(table, row));
 
 export const jobTotal = (job) => Math.max(0, (Number(job.price) || 0) - (Number(job.discount) || 0));
+/** Technicians on a job: several can work on one vehicle. `technicianIds` is kept in the row's extra column; `technicianId` stays the first one for older code. */
+export const jobTechs = (job) => (Array.isArray(job.technicianIds) && job.technicianIds.length ? job.technicianIds : job.technicianId ? [job.technicianId] : []);
 export const jobPaid = (job) => (job.payments || []).reduce((a, p) => a + (Number(p.amount) || 0), 0);
 
 export async function saveVehicle(ctx, f) {
@@ -61,10 +63,11 @@ export async function saveJob(ctx, f) {
 	if (discount < 0 || discount > price) return void (await ctx.ui.alert("The discount cannot be more than the price."));
 	// once money was recorded, the package and discount stay as invoiced
 	if (existing && (existing.payments || []).length && (existing.packageId !== pkg.id || discount !== (Number(existing.discount) || 0))) return void (await ctx.ui.alert("Payments are recorded for this job, so its package and discount cannot change."));
-	if (!closed && f.technicianId && clash(d, f, pkg)) return void (await ctx.ui.alert("That technician already has a job at this time."));
+	const techs = [...new Set(f.technicianIds || (f.technicianId ? [f.technicianId] : []))].filter(Boolean);
+	if (!closed) for (const t of techs) if (clash(d, { ...f, technicianId: t }, pkg)) return void (await ctx.ui.alert(`${d.users.find((u) => u.id === t)?.name || "A technician"} already has a job at this time.`));
 	let status = existing?.status || "Booked";
-	if (f.technicianId && ["Booked", "Confirmed"].includes(status)) status = "Assigned";
-	const row = { ...(existing || { id: newId("job"), createdAt: nowIso(), payments: [] }), customerId: f.customerId, vehicleId: f.vehicleId, packageId: pkg.id, packageName: pkg.name, price, discount, scheduledAt: f.scheduledAt, address: f.address.trim(), technicianId: f.technicianId || "", notes: f.notes.trim(), status };
+	if (techs.length && ["Booked", "Confirmed"].includes(status)) status = "Assigned";
+	const row = { ...(existing || { id: newId("job"), createdAt: nowIso(), payments: [] }), customerId: f.customerId, vehicleId: f.vehicleId, packageId: pkg.id, packageName: pkg.name, price, discount, scheduledAt: f.scheduledAt, address: f.address.trim(), technicianId: techs[0] || "", technicianIds: techs, notes: f.notes.trim(), status };
 	await put(ctx, T.detailJobs, stamp(row, ctx.session()));
 	return row;
 }
@@ -74,7 +77,7 @@ function clash(d, f, pkg) {
 	const start = Date.parse(f.scheduledAt);
 	const end = start + (pkg.durationMin || 60) * 60000;
 	return d.detailJobs.some((j) => {
-		if (j.id === f.id || j.technicianId !== f.technicianId || ["Completed", "Invoiced", "Cancelled"].includes(j.status)) return false;
+		if (j.id === f.id || !jobTechs(j).includes(f.technicianId) || ["Completed", "Invoiced", "Cancelled"].includes(j.status)) return false;
 		const s = Date.parse(j.scheduledAt);
 		const minutes = d.detailPackages.find((p) => p.id === j.packageId)?.durationMin || 60;
 		return s < end && start < s + minutes * 60000;
@@ -95,7 +98,7 @@ export async function advanceJob(ctx, id, to) {
 	const from = JOB_FLOW.indexOf(job.status);
 	if (to !== JOB_FLOW[from + 1] || to === "Invoiced") return void (await ctx.ui.alert("Follow the job workflow in order."));
 	if (job.paused) return void (await ctx.ui.alert("Resume the job first."));
-	if (["Assigned", "Travelling"].includes(to) && !job.technicianId) return void (await ctx.ui.alert("Assign a technician first."));
+	if (["Assigned", "Travelling"].includes(to) && !jobTechs(job).length) return void (await ctx.ui.alert("Assign a technician first."));
 	if (to === "In Progress" && (!job.inspection || !job.signedBy)) return void (await ctx.ui.alert("Record the inspection and the customer sign-off first."));
 	const next = { ...job, status: to };
 	if (to === "In Progress") next.startedAt = nowIso();
