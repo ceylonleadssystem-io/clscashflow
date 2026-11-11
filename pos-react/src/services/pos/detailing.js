@@ -51,13 +51,17 @@ export async function saveJob(ctx, f) {
 	const existing = find(ctx, "detailJobs", f.id);
 	const pkg = find(ctx, "detailPackages", f.packageId);
 	if (!f.customerId || !f.vehicleId || !pkg || !f.scheduledAt) return void (await ctx.ui.alert("Select the customer, vehicle, package and appointment time."));
-	if (existing && ["Completed", "Invoiced", "Cancelled"].includes(existing.status)) return void (await ctx.ui.alert("This job is closed."));
+	// completed, invoiced and cancelled jobs stay editable for owners and managers (the client asked to correct past records)
+	const closed = !!existing && ["Completed", "Invoiced", "Cancelled"].includes(existing.status);
+	if (closed && !MANAGERS.includes(ctx.session().user?.role)) return void (await ctx.ui.alert("Only an owner or manager can edit a closed job."));
 	const veh = find(ctx, "vehicles", f.vehicleId);
 	if (!veh || veh.customerId !== f.customerId) return void (await ctx.ui.alert("The vehicle does not belong to the selected customer."));
 	const discount = Number(f.discount) || 0;
 	const price = existing && existing.packageId === pkg.id ? Number(existing.price) : pkg.price;
 	if (discount < 0 || discount > price) return void (await ctx.ui.alert("The discount cannot be more than the price."));
-	if (f.technicianId && clash(d, f, pkg)) return void (await ctx.ui.alert("That technician already has a job at this time."));
+	// once money was recorded, the package and discount stay as invoiced
+	if (existing && (existing.payments || []).length && (existing.packageId !== pkg.id || discount !== (Number(existing.discount) || 0))) return void (await ctx.ui.alert("Payments are recorded for this job, so its package and discount cannot change."));
+	if (!closed && f.technicianId && clash(d, f, pkg)) return void (await ctx.ui.alert("That technician already has a job at this time."));
 	let status = existing?.status || "Booked";
 	if (f.technicianId && ["Booked", "Confirmed"].includes(status)) status = "Assigned";
 	const row = { ...(existing || { id: newId("job"), createdAt: nowIso(), payments: [] }), customerId: f.customerId, vehicleId: f.vehicleId, packageId: pkg.id, packageName: pkg.name, price, discount, scheduledAt: f.scheduledAt, address: f.address.trim(), technicianId: f.technicianId || "", notes: f.notes.trim(), status };
@@ -207,10 +211,22 @@ const TABLE = { vehicles: T.vehicles, detailPackages: T.detailPackages, detailJo
 export async function removeRecord(ctx, collection, id) {
 	if (!guard(ctx, MANAGERS)) return false;
 	const d = ctx.data();
-	if (collection === "vehicles" && d.detailJobs.some((j) => j.vehicleId === id)) return void (await ctx.ui.alert("This vehicle has jobs. Cancel the jobs instead of deleting the vehicle."));
 	if (collection === "detailPackages" && d.detailJobs.some((j) => j.packageId === id)) return void (await ctx.ui.alert("This package is used by jobs. Switch it to inactive instead of deleting it."));
-	if (collection === "detailJobs" && ["Invoiced", "Completed"].includes(find(ctx, "detailJobs", id)?.status)) return void (await ctx.ui.alert("Completed and invoiced jobs are kept for the records."));
-	if (!(await ctx.ui.confirm("Delete this record?"))) return false;
-	await ctx.store.write((tx) => tx.remove(TABLE[collection], id));
+	// a vehicle with past jobs is deleted together with them (the client asked to remove old records)
+	const jobs = collection === "vehicles" ? d.detailJobs.filter((j) => j.vehicleId === id) : collection === "detailJobs" ? [find(ctx, "detailJobs", id)].filter(Boolean) : [];
+	const paid = jobs.filter((j) => j.saleId);
+	const text =
+		collection === "vehicles" && jobs.length
+			? `Delete this vehicle and its ${jobs.length} job(s)?`
+			: "Delete this record?";
+	const warn = paid.length ? ` The ${paid.length} paid invoice(s) are also removed from Sales History and Reports.` : "";
+	if (!(await ctx.ui.confirm(text + warn + " This cannot be undone."))) return false;
+	await ctx.store.write((tx) => {
+		jobs.forEach((j) => {
+			if (j.saleId) tx.removeSale(j.saleId);
+			if (collection === "vehicles") tx.remove(T.detailJobs, j.id);
+		});
+		tx.remove(TABLE[collection], id);
+	});
 	return true;
 }

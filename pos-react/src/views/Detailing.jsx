@@ -97,7 +97,7 @@ export function Detailing({ tab: forced }) {
 		const next = JOB_FLOW[JOB_FLOW.indexOf(j.status) + 1];
 		return (
 			<div className="tools">
-				{!CLOSED.includes(j.status) && (
+				{(!CLOSED.includes(j.status) || manager) && (
 					<button className="btn out" onClick={() => setModal({ kind: "job", id: j.id })}>
 						Edit
 					</button>
@@ -634,6 +634,7 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 									<th>Package</th>
 									<th>Status</th>
 									<th>Total</th>
+									<th></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -643,11 +644,23 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 										<td>{j.packageName}</td>
 										<td>{j.status}</td>
 										<td>{money(jobTotal(j))}</td>
+										<td>
+											{manager && (
+												<div className="tools">
+													<button className="btn out" onClick={() => setModal({ kind: "job", id: j.id })}>
+														Edit
+													</button>
+													<button className="btn danger" onClick={() => svc.detailing.removeRecord("detailJobs", j.id)}>
+														Delete
+													</button>
+												</div>
+											)}
+										</td>
 									</tr>
 								))}
 								{!past.length && (
 									<tr>
-										<td colSpan="4">No services recorded for this vehicle yet.</td>
+										<td colSpan="5">No services recorded for this vehicle yet.</td>
 									</tr>
 								)}
 							</tbody>
