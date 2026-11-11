@@ -76,7 +76,7 @@ Backups: nightly dump + continuous log shipping to storage off this server
 Choices and reasons:
 
 * **Caddy** over Nginx: automatic HTTPS and a short config. Wildcard certificates need a DNS plugin, so we use one certificate per hostname (only five hostnames), which needs no plugin.
-* **Node.js 20+**: the functions are already Node (CommonJS), so they run as they are.
+* **Node.js, current LTS** (Node 24 at the time of writing; use whichever is the active LTS when the server is built). Node 20, which `package.json` currently allows, reached end of life in April 2026, so the backend must not be built on it. The functions are already Node, so their logic carries over.
 * **PostgreSQL with JSONB**: documents keep their shape. A single `documents` table keyed by `(store, path)` keeps today's path model, so the POS app's save and load logic does not change. No more splitting documents into pieces.
 * **Own auth, not a library of unknown size**: the needs are small (password sign-in, sessions, recovery, handoff tokens, admin creation). Passwords use argon2id.
 * **Files on disk first**: simple, backed up with the rest. Move to MinIO or similar only if file volume grows.
@@ -165,7 +165,7 @@ Ask Peek, in writing, and write the answers into this document:
 * Backups and snapshots on the VPS (not stated on the page), and the price.
 * IPv6, and whether Docker is allowed.
 * Whether outbound mail ports (587, 465) are open, and whether inbound/outbound port 25 is blocked.
-* Whether root access is on the plan we choose, and which Linux versions are offered.
+* ~~Whether root access is on the plan we choose, and which Linux versions are offered.~~ **Answered 11 November 2026 by Peek support (chat):** root access is provided, the VPS is installed within about 5 minutes, and the offered systems include **Ubuntu 26 and AlmaLinux 10** ("anything available"). Still to confirm in writing: that Ubuntu is **26.04 LTS**, and whether **24.04 LTS** is also available.
 * What "99.99% uptime" means in their terms (refund? credit?).
 * DNS: whether Peek can host DNS for `ceylonrylabs.io`, including wildcard and TXT records.
 
@@ -181,8 +181,16 @@ Exit: written answers from Peek, data measurements, the DNS and Google sign-in d
 
 ### Phase 1: Server and tooling (2 to 3 days)
 
-* Order the 4 vCore / 8 GB VPS (Ubuntu LTS). Create a non-root admin user, SSH keys only, root login off, firewall (only 22, 80, 443), fail2ban, automatic security updates, time sync.
-* Install Caddy, PostgreSQL 16, Node.js 20 LTS, and set up systemd services.
+**Operating system decision: Ubuntu 26.04 LTS.** Peek offers Ubuntu 26 and AlmaLinux 10. Both are suitable; Ubuntu is the better match because:
+
+* It is a long-term-support release (standard support to 2031), so we build the server once and keep it.
+* Caddy, PostgreSQL and Node.js all publish official packages for it, and most guides and tools assume it, which helps when Claude and the team write the setup scripts.
+* AlmaLinux 10 is a good choice for teams that already use Red Hat tools. It adds SELinux and `dnf` habits we would have to learn for no gain here.
+
+If Peek confirms that 24.04 LTS (supported to 2029) is also offered, it is the more settled choice and equally fine. Pick the newest LTS only if the scripts are tested on it in staging first. Whichever is chosen, the setup scripts in `deploy/` are the record, so the OS can be changed by rebuilding.
+
+* Order the 4 vCore / 8 GB VPS with **Ubuntu 26.04 LTS** (decision below). Create a non-root admin user, SSH keys only, root login off, firewall (only 22, 80, 443), fail2ban, automatic security updates, time sync.
+* Install Caddy, the current PostgreSQL major version from the official PostgreSQL repository (so we control the version and upgrades), and the current Node.js LTS from the NodeSource or official packages, and set up systemd services.
 * Create `staging.ceylonrylabs.io` (and `*-staging` hostnames) pointing at the server.
 * Write the setup as a script in `deploy/` (idempotent), so the server can be rebuilt.
 * Set up backups from day one (see section 8) and test one restore.
