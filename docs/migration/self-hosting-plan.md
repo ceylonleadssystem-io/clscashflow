@@ -1,6 +1,6 @@
 # Migration plan: from Netlify and Appwrite to our own server (Peek Hosting VPS)
 
-Status: plan, nothing migrated yet. Written 11 November 2026.
+Status: plan, nothing migrated yet. Written 11 November 2026, updated the same day with the PostgreSQL decision and the modular backend structure.
 
 ## 1. Goal and decisions already made
 
@@ -12,6 +12,8 @@ Status: plan, nothing migrated yet. Written 11 November 2026.
 | Scale to plan for | 50 to 100 businesses now, up to 5,000 later. |
 | Who runs it | The team, with Claude's help, so everything is scripted and documented. |
 | Rewrite | A full rewrite of the backend is acceptable. We still do it in stages and run both systems side by side first, so customers are never cut off. |
+| Stack | A purpose-built "PERN-style" stack: **React** for everything users see, **Node.js** for a single backend split into modules, **PostgreSQL** for data. The frontend only shows and collects; all server-side work lives in the backend. |
+| Database | **PostgreSQL**, not MongoDB. Reasons in section 3.2. |
 | Budget | Balanced: daily backups kept off the server, good uptime, no standby server at the start. |
 
 What is allowed to stay (these are not Netlify or Appwrite): the outside SMTP mail service, EmailJS, Stripe (the `payable-*` routes are switched off; `stripe-webhook` still exists and should be reviewed for removal), and the Anthropic API for Ceylo.
@@ -79,6 +81,69 @@ Choices and reasons:
 * **Own auth, not a library of unknown size**: the needs are small (password sign-in, sessions, recovery, handoff tokens, admin creation). Passwords use argon2id.
 * **Files on disk first**: simple, backed up with the rest. Move to MinIO or similar only if file volume grows.
 
+### 3.1 Frontend and backend, kept separate
+
+One repository, separate parts with clear rules about who may call whom:
+
+```
+apps/
+  pos/        React POS app (today pos-react, index.html)
+  admin/      React admin portal (today pos-react/src/admin-app, admin.html)
+  site/       the static pages: landing, CashFlow pages, onboarding, reservation system
+server/       Node.js backend (one service, many modules)
+  src/
+    modules/
+      auth/        sign-in, sessions, tokens, recovery, one-time handoff, admin login
+      accounts/    create, list, update, delete accounts; business type; trial and plan state
+      sync/        the document store the POS and CashFlow apps save to (path based)
+      files/       image upload and serving
+      billing/     plans and prices, payment slips, subscription state, Stripe hook
+      invoices/    invoice sharing and public invoice view
+      mail/        every outgoing e-mail (welcome, invites, invoices, payslips, tickets, contact)
+      kds/         Kitchen Display pairing
+      diagnostics/ POS and admin diagnostics signalling
+      ogf/         Restaurant (OGF) sales push and its 15 minute job
+      ceylo/       the AI key store and the AI request
+      support/     tickets, contact, hardware orders
+      analytics/   visit tracking
+      system/      health and readiness
+    db/            connection, migrations, query helpers
+    http/          routing, CORS, rate limiting, error handling
+    jobs/          the scheduler
+shared/       code both sides use: data shapes, validation, plan prices, business types, the route list
+deploy/       server setup, Caddyfile, backup and restore scripts
+```
+
+Rules:
+
+* The **frontends never talk to the database** and never contain server logic. They call the API and show the result. Offline storage on the device stays in the frontend, because the POS must work without a connection.
+* Each **backend module** has its own routes, service (the rules), data access and tests, and may call another module only through that module's service. No module reads another module's tables directly.
+* **`shared/`** holds what must never differ between the two sides: plan prices (today the same numbers sit in the pricing sheet, the billing widget and the slip checker), the business type list, the trial length, and the shape of each request and response. A test fails if the two sides drift apart.
+* The backend and `shared/` are written in **TypeScript** (recommended: the request and response shapes are checked when building, which is the main protection against the two sides breaking each other). The existing JavaScript React code can move over without conversion and be converted gradually.
+* One backend service, **not many small services**: simpler to run, deploy and debug for a small team on one server. Modules can be split out later if a part needs its own server.
+
+### 3.2 Why PostgreSQL and not MongoDB
+
+The usual "MERN" stack uses MongoDB. For this app PostgreSQL is the better fit:
+
+| Point | MongoDB | PostgreSQL |
+| --- | --- | --- |
+| Large documents | A document is capped at 16 MB. The POS saves a whole business as one document (`users/{uid}/pos/main`, with sales history inside). A busy shop can pass 16 MB, so we would be splitting and compressing documents again, as we do in Appwrite today. | The JSON type has no practical cap at this size. Documents stay whole. |
+| Table-shaped data | Possible, but totals, joins and exact money maths are weaker. | Accounts, plans, invoices, payments and admin reports are table-shaped and need exact totals and transactions. |
+| One system | Would be a second database to run if we also want tables. | Holds both the documents and the tables in one place. |
+| Running it on one VPS | A separate server process with its own memory appetite. | One process, well known, easy to back up (dump plus log shipping). |
+| Licence | Server Side Public Licence (more restrictive for self-hosting). | Permissive open-source licence. |
+
+The path-based document model is kept (`documents(store, path, data)`), so the POS and CashFlow apps keep saving the same way. Over time the heaviest parts of the business document (sales history) can be moved to their own tables so each sync sends only what changed. That is an optimisation for later, not a requirement for the move.
+
+### 3.3 What changes compared with a straight copy of the functions
+
+The first version of this plan wrapped the 36 Netlify functions in an adapter. This version builds proper modules instead:
+
+* The old function URLs keep working during the transition through a small route-alias table, then the aliases are removed.
+* The function bodies are moved into module services and rewritten against the new data layer, not kept as they are.
+* It costs more time up front (see the timeline) and leaves no Netlify-shaped code behind.
+
 ## 4. Principles
 
 1. **Nothing big-bang.** Build and test the new stack on a staging address while production stays on Netlify and Appwrite.
@@ -125,17 +190,19 @@ Exit: written answers from Peek, data measurements, the DNS and Google sign-in d
 
 Exit: staging site reachable over HTTPS, a backup restored successfully.
 
-### Phase 2: Backend service skeleton (3 to 4 days)
+### Phase 2: Repository structure and backend modules (8 to 12 days)
 
-* Create the Node service (move `netlify/` to `server/`, keep git history). One HTTP server with a route table mapping each of the 36 function names to its handler.
-* **Function adapter**: turns the request into the Lambda-style `event` (method, headers, query, body, path) and the returned object into the response. Handlers stay as they are.
-* Keep the URL shape so the apps need no change: `/.netlify/functions/<name>` is served as `/api/<name>`, and the apps' configured function URLs (`pos-react/src/config/env.js`) change from one base value. During the side-by-side period Caddy also answers the old path.
-* Port the shared pieces that depend on Netlify: `CONTEXT`, `URL`, `DEPLOY_URL`, `NETLIFY_DEV` environment variables in `netlify/lib/security.js`, and the 15 minute schedule.
-* Environment variables: put them in a root-only file. Inventory is in Appendix B.
-* Rate limiting is in memory today. With one long-running process it works properly; use two processes only after moving the counters to PostgreSQL.
-* Health and ready endpoints (`health.js`, `ready.js`) updated to check PostgreSQL instead of Appwrite.
+* **Restructure the repository** into the layout in section 3.1: create `server/` and `shared/` (move `netlify/` to `server/` with git history kept), leave the frontends where they are for now. The frontend split into `apps/` happens in Phase 6.
+* **Backend skeleton**: a Node.js service in TypeScript with an HTTP framework (Fastify or Express), request validation, one error format, CORS from `shared/`, and structured logs. Routes are under `/api/<module>/...`.
+* **Route aliases**: while the apps still call `/.netlify/functions/<name>`, a table maps each old name to its new route. The apps' function URL settings (`pos-react/src/config/env.js`) switch to `/api` in Phase 6, and the aliases are then deleted.
+* **Port the 36 functions into the modules** in Appendix A. For each: move the rules into the module service, write the route, port its existing test, and check the response matches the old one. Start with the ones that do not touch Appwrite (mail, contact, health, invoice mail, payslip), then the data-bound ones as Phases 3 and 4 land.
+* **Replace Netlify-only pieces**: the `CONTEXT`, `URL`, `DEPLOY_URL`, `NETLIFY_DEV` variables in `security.js` become explicit settings, and the schedule moves to `server/src/jobs`.
+* **Environment variables**: a root-only file, validated at start-up (the service refuses to start if one is missing). Inventory is in Appendix B.
+* **Rate limiting** is in memory today. With one long-running process it works; move the counters to PostgreSQL before running a second process.
+* **Health and ready** endpoints check PostgreSQL instead of Appwrite.
+* **Shared package**: start `shared/` with the plan prices, trial length, business types and the request and response shapes of each module. Add the parity tests (for example the price test already in `tests/pos-prices.test.js`) against it.
 
-Exit: functions that do not touch Appwrite (mail, contact, health, invoice mail, payslip) run on staging with the existing tests passing.
+Exit: all functions that do not need Appwrite run as modules on staging with their tests passing, the alias table covers every function, and `shared/` is imported by the server.
 
 ### Phase 3: Data layer (5 to 8 days)
 
@@ -147,7 +214,7 @@ Design (all in PostgreSQL):
 
 Work:
 
-* New `server/lib/store.js` implementing the functions the code already calls: `getDocument`, `getDocumentStamp`, `listStamps`, `queryDocuments`, `upsertDocument`, `deleteDocument`, `newId`, and the Firestore-style shim (`appwriteAdmin().firestore()`) that `admin-data.js` and `pos-admin-data.js` use. Equality-only filters stay equality-only.
+* New `server/src/db` and the `sync` module implementing the functions the code already calls: `getDocument`, `getDocumentStamp`, `listStamps`, `queryDocuments`, `upsertDocument`, `deleteDocument`, `newId`, and the Firestore-style shim (`appwriteAdmin().firestore()`) that `admin-data.js` and `pos-admin-data.js` use. Equality-only filters stay equality-only.
 * Keep the permission rules `canRead`, `canWrite`, `sanitizeProfileWrite`. They are about who may touch which path, not about Appwrite.
 * Drop the chunking and compression (`APPWRITE_COMPRESS`, the corrupt-chunk repair `isCorrupt`) and the POS-to-own-database fallback (`APPWRITE_POS_FALLBACK`). Real rows have no size limit problem.
 * Fix a bug that moves with the shim: `admin-data.js` pages through `listUsers(1000, pageToken)`, but the shim's `listUsers` takes only a maximum and never returns a page token, so the CashFlow admin user list stops at 1,000 users. The new user listing must page properly. This matters at 5,000 accounts.
@@ -180,7 +247,8 @@ Exit: sign-in, refresh, sign-out, recovery, create user, delete user and the han
 
 ### Phase 6: Apps (8 to 12 days)
 
-* **POS app** (`pos-react`): add a new backend implementation of the compatibility layer (`services/appwrite/appwriteCompat.js`, `auth.service.js`, `cloud.service.js`, `imageStorage.js`, `platform.service.js`). Rename it away from "Appwrite" (the folder, the `isAppwrite()` helper, the `VITE_AUTH_PROVIDER=appwrite` value) at the end of this phase. Keep the local test provider.
+* **Split the frontend** into `apps/pos`, `apps/admin` and `apps/site` as in section 3.1 (the admin portal is already a separate entry, `admin.html`, and a separate folder, `admin-app`). Code both apps use (the data layer, the design styles, sign-in) goes into one shared frontend package so there are no copies. Do this before the backend client work so it is done once.
+* **POS app** (`apps/pos`, today `pos-react`): add a new backend implementation of the compatibility layer (`services/appwrite/appwriteCompat.js`, `auth.service.js`, `cloud.service.js`, `imageStorage.js`, `platform.service.js`). Rename it away from "Appwrite" (the folder, the `isAppwrite()` helper, the `VITE_AUTH_PROVIDER=appwrite` value) at the end of this phase. Keep the local test provider.
 * **Browser file**: a new small `assets/backend-client.js` (a few hundred lines) that provides `window.clsBackend` with the same methods the pages use, replacing the 4,143 line `assets/appwrite-sdk.js`.
 * **Static pages that sign in**: the CashFlow pages (`signin`, `onboarding`, `solo`, `starter`, `starter_3`, `growth`, `premium`, `team`, `accept-invite`, `reset-password`, `success`, `upgrade`, `payable-return`, `ceylonry-admin`), `pos-onboarding.html`, `assets/platform.js` (3,823 lines, 28 backend calls), and the reservation system. If the new client keeps the same method names, these need script-tag and small error-message changes only. Plan time for testing each page by hand, since they are large files.
 * **Remove Appwrite wording** in messages (for example the rate-limit message in `auth.service.js`).
@@ -242,7 +310,7 @@ After cutover: keep Netlify and Appwrite read-only for 2 to 4 weeks as the safet
 
 * After the safety period: take a final full export of Appwrite (users, documents, files) and keep it in the backup storage.
 * Delete the Appwrite project, remove the site from Netlify, and cancel the plans.
-* In the repository: remove `node-appwrite`, `appwrite` and `node-fetch-native-with-agent` from `package.json`; delete `assets/appwrite-sdk.js`, `netlify.toml`, `scripts/setup-*-db.mjs`, `scripts/migrate-pos-to-own-database.js`, and the migration script; remove Netlify and Appwrite from the docs, the README files, the comments and the tests that mention them; remove the Appwrite and Netlify origins from `security.js`.
+* In the repository: remove `node-appwrite`, `appwrite` and `node-fetch-native-with-agent` from `package.json`; delete `assets/appwrite-sdk.js`, `netlify.toml`, the route-alias table, `scripts/setup-*-db.mjs`, `scripts/migrate-pos-to-own-database.js`, and the migration script; remove Netlify and Appwrite from the docs, the README files, the comments and the tests that mention them; remove the Appwrite and Netlify origins from `security.js`.
 * Run `graphify update .`.
 * Final search of the repository for the words `appwrite`, `netlify` and `.netlify`, and for the Appwrite project id and endpoint. Zero results is the finish line.
 
@@ -259,6 +327,7 @@ After cutover: keep Netlify and Appwrite read-only for 2 to 4 weeks as the safet
 | Disk full or database growth | Outage | Disk alerts at 70 percent and 85 percent, retention rules, move files to a bigger disk or MinIO. |
 | Appwrite and Netlify behave differently from our assumptions | Surprises late in the project | Phase 3 and 4 tests are written against current behaviour first, and the old system stays alive during the whole build. |
 | Customers cached the old app | Mix of old and new code after cutover | Same hostnames and a new service worker cache name. The first load after cutover fetches the new build. Test in Phase 9. |
+| The modular rewrite takes longer than wrapping the old functions | Later cutover | Port module by module with the alias table, so each finished module is usable and tested on its own. The timeline below already includes it. |
 | Peek page details are inconsistent (hardware, backups, locations) | Wrong sizing | Phase 0 written confirmation and the 30-day money-back window. |
 
 ## 7. Go/no-go checklist for cutover
@@ -303,15 +372,16 @@ Planning estimate, one developer with Claude, phases partly overlapping:
 | Weeks | Work |
 | --- | --- |
 | 1 | Phase 0 and 1 (confirm with Peek, server up, backups working) |
-| 2 to 3 | Phases 2, 3 (service skeleton, PostgreSQL data layer) |
-| 3 to 5 | Phases 4, 5 (authentication, files) |
-| 5 to 7 | Phases 6, 7 (apps, static hosting) |
-| 6 to 8 | Phase 8 (migration tooling and rehearsals) |
-| 8 to 9 | Phase 9 (load test, drills, security, parity) |
-| 10 | Phase 10 (cutover) |
-| 12 to 14 | Phase 11 (decommission, after the safety period) |
+| 2 to 4 | Phase 2 (repository structure, backend modules), with Phase 3 starting alongside |
+| 3 to 5 | Phase 3 (PostgreSQL data layer) |
+| 4 to 7 | Phases 4 and 5 (authentication, files) |
+| 6 to 9 | Phases 6 and 7 (frontend split, apps on the new backend, static hosting) |
+| 8 to 10 | Phase 8 (migration tooling and rehearsals) |
+| 10 to 11 | Phase 9 (load test, drills, security, parity) |
+| 12 | Phase 10 (cutover) |
+| 14 to 16 | Phase 11 (decommission, after the safety period) |
 
-About 10 weeks to cutover and about 14 weeks to being fully free of both services. Authentication, the apps phase and the data rehearsals are the parts most likely to run over.
+About 12 weeks to cutover and about 16 weeks to being fully free of both services. The module rewrite, authentication, the apps phase and the data rehearsals are the parts most likely to run over.
 
 ## 11. Open questions
 
@@ -323,49 +393,50 @@ About 10 weeks to cutover and about 14 weeks to being fully free of both service
 6. Which outside backup storage will we use (a second provider or a second small server)?
 7. Which Sri Lankan time window is quietest for the cutover?
 8. Who is the second person for security review and on-call during cutover?
+9. TypeScript for the backend and `shared/` is recommended. Confirm, or choose plain JavaScript (the types are then not checked when building).
 
-## Appendix A: the 36 functions and what each depends on
+## Appendix A: the 36 functions, where each goes, and what it depends on
 
-Mark each as ported and tested during Phases 2 to 4. "Data" means it reads or writes documents or users through `netlify/lib/appwrite.js`; "Mail" means it sends e-mail through SMTP (no change needed except the environment variables).
+Mark each as ported and tested during Phases 2 to 4. "Data" means it reads or writes documents or users through `netlify/lib/appwrite.js`; "Mail" means it sends e-mail through SMTP (only the environment variables change).
 
-| Function | Data | Mail | Other notes |
-| --- | --- | --- | --- |
-| account-danger-zone | yes | | Backs up then deletes an account's data |
-| admin-data | yes | yes | CashFlow admin: plans, invoices, users, billing. Uses the Firestore-style shim and user paging |
-| admin-signin | yes | | Admin sign-in through an Appwrite user. Move to own auth |
-| appwrite-docs | yes | | The document API the apps call. Rename to `docs` |
-| appwrite-files | yes | | Image upload. Rename to `files`, disk storage |
-| ceylo-ai-key | yes | | Stores each business's AI key (encrypted with `CEYLO_KEY_SECRET`) |
-| ceylo-ask | yes | | Calls the Anthropic API |
-| emailjs-reminder | | | EmailJS call, no data |
-| growth-partner-code | yes | | Partner codes |
-| hardware-order | | yes | |
-| health | | | Update to check PostgreSQL |
-| invoice-share | yes | | Public invoice links |
-| kds-pair | yes | | Kitchen Display pairing rows with expiry |
-| ogf-push | yes | | Sales push settings and manual send |
-| ogf-push-scheduled | yes | | Runs every 15 minutes: move to the scheduler |
-| payable-create-checkout | | | Switched off (503) |
-| payable-status | | | Switched off (410) |
-| payable-webhook | | | Switched off (410) |
-| pos-admin-data | yes | | POS admin portal: accounts, create, delete, business type, menu import |
-| pos-admin-diagnostics | yes | | Diagnostics signalling |
-| pos-admin-login | yes | | Admin login (scrypt, already independent of Appwrite users) |
-| pos-diagnostics | yes | | Diagnostics signalling |
-| pos-handoff | yes | | One-time token between POS addresses. Rebuild on the token table |
-| pos-onboarding-email | yes | yes | |
-| public-invoice | yes | | Public invoice view |
-| ready | yes | | Admin-only readiness check. Update to PostgreSQL |
-| send-contact | | yes | |
-| send-invite | | yes | |
-| send-invoice | | yes | |
-| send-payslip | | yes | |
-| send-story-submission | yes | yes | |
-| send-welcome | | yes | CashFlow welcome e-mail |
-| stripe-webhook | yes | | Stripe payment hook. Decide whether it is still used before porting |
-| submit-subscription-receipt | yes | yes | Checks payment slips against the plan prices |
-| submit-ticket | yes | yes | Support tickets |
-| track-visit | yes | | Visit counter |
+| Function | Target module | Data | Mail | Notes |
+| --- | --- | --- | --- | --- |
+| account-danger-zone | accounts | yes | | Backs up then deletes an account's data |
+| admin-data | accounts and billing (CashFlow admin) | yes | yes | Plans, invoices, users, billing. Uses the Firestore-style shim and user paging (fix the 1,000 user cap) |
+| admin-signin | auth | yes | | Admin sign-in through an Appwrite user. Move to own auth |
+| appwrite-docs | sync | yes | | The document API the apps call |
+| appwrite-files | files | yes | | Image upload, disk storage |
+| ceylo-ai-key | ceylo | yes | | Stores each business's AI key (encrypted with `CEYLO_KEY_SECRET`) |
+| ceylo-ask | ceylo | yes | | Calls the Anthropic API |
+| emailjs-reminder | mail | | | EmailJS call, no data |
+| growth-partner-code | support | yes | | Partner codes |
+| hardware-order | support | | yes | |
+| health | system | | | Check PostgreSQL |
+| invoice-share | invoices | yes | | Public invoice links |
+| kds-pair | kds | yes | | Kitchen Display pairing rows with expiry |
+| ogf-push | ogf | yes | | Sales push settings and manual send |
+| ogf-push-scheduled | ogf (job) | yes | | Runs every 15 minutes: move to `jobs` |
+| payable-create-checkout | billing | | | Switched off (503): drop, do not port |
+| payable-status | billing | | | Switched off (410): drop |
+| payable-webhook | billing | | | Switched off (410): drop |
+| pos-admin-data | accounts | yes | | POS admin portal: accounts, create, delete, business type, menu import |
+| pos-admin-diagnostics | diagnostics | yes | | Diagnostics signalling |
+| pos-admin-login | auth | yes | | Admin login (scrypt, already independent of Appwrite users) |
+| pos-diagnostics | diagnostics | yes | | Diagnostics signalling |
+| pos-handoff | auth | yes | | One-time token between POS addresses. Rebuild on the token table |
+| pos-onboarding-email | accounts and mail | yes | yes | |
+| public-invoice | invoices | yes | | Public invoice view |
+| ready | system | yes | | Admin-only readiness check, PostgreSQL |
+| send-contact | mail | | yes | |
+| send-invite | mail | | yes | |
+| send-invoice | mail | | yes | |
+| send-payslip | mail | | yes | |
+| send-story-submission | mail | yes | yes | |
+| send-welcome | mail | | yes | CashFlow welcome e-mail |
+| stripe-webhook | billing | yes | | Stripe payment hook. Decide whether it is still used before porting |
+| submit-subscription-receipt | billing | yes | yes | Checks payment slips against the plan prices (uses `shared/` prices) |
+| submit-ticket | support | yes | yes | Support tickets |
+| track-visit | analytics | yes | | Visit counter |
 
 ## Appendix B: environment variables to carry over
 
