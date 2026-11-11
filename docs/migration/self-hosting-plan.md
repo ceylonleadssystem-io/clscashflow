@@ -14,9 +14,10 @@ Status: plan, nothing migrated yet. Written 11 November 2026, updated the same d
 | Rewrite | A full rewrite of the backend is acceptable. We still do it in stages and run both systems side by side first, so customers are never cut off. |
 | Stack | A purpose-built "PERN-style" stack: **React** for everything users see, **Node.js** for a single backend split into modules, **PostgreSQL** for data. The frontend only shows and collects; all server-side work lives in the backend. |
 | Database | **PostgreSQL**, not MongoDB. Reasons in section 3.2. |
+| E-mail | One backend `mail` module with our own templates (no template limit) sends everything, including customer receipts and invoices that the apps send through EmailJS today. It sends through an authenticated outside SMTP or transactional e-mail service, never directly from the VPS's own IP (Peek's spam warning). EmailJS is removed. |
 | Budget | Balanced: daily backups kept off the server, good uptime, no standby server at the start. |
 
-What is allowed to stay (these are not Netlify or Appwrite): the outside SMTP mail service, EmailJS, Stripe (the `payable-*` routes are switched off; `stripe-webhook` still exists and should be reviewed for removal), and the Anthropic API for Ceylo.
+What is allowed to stay (these are not Netlify or Appwrite): an outside authenticated e-mail sending service (SMTP today, possibly a transactional e-mail provider later, see Phase 5), Stripe (the `payable-*` routes are switched off; `stripe-webhook` still exists and should be reviewed for removal), and the Anthropic API for Ceylo. **EmailJS is removed** (its two-template limit is the reason): all e-mail templates move into our own code.
 
 ## 2. What exists today (inventory)
 
@@ -99,7 +100,7 @@ server/       Node.js backend (one service, many modules)
       files/       image upload and serving
       billing/     plans and prices, payment slips, subscription state, Stripe hook
       invoices/    invoice sharing and public invoice view
-      mail/        every outgoing e-mail (welcome, invites, invoices, payslips, tickets, contact)
+      mail/        every outgoing e-mail: welcome, invites, invoices, payslips, tickets, contact, and the customer receipts and invoice e-mails the apps send today through EmailJS. Templates live in mail/templates; a PostgreSQL outbox queues, retries and records every send
       kds/         Kitchen Display pairing
       diagnostics/ POS and admin diagnostics signalling
       ogf/         Restaurant (OGF) sales push and its 15 minute job
@@ -206,6 +207,7 @@ Exit: staging site reachable over HTTPS, a backup restored successfully.
 * **Port the 36 functions into the modules** in Appendix A. For each: move the rules into the module service, write the route, port its existing test, and check the response matches the old one. Start with the ones that do not touch Appwrite (mail, contact, health, invoice mail, payslip), then the data-bound ones as Phases 3 and 4 land.
 * **Replace Netlify-only pieces**: the `CONTEXT`, `URL`, `DEPLOY_URL`, `NETLIFY_DEV` variables in `security.js` become explicit settings, and the schedule moves to `server/src/jobs`.
 * **Environment variables**: a root-only file, validated at start-up (the service refuses to start if one is missing). Inventory is in Appendix B.
+* **Mail module** (see Phase 5 for the design): routes for receipts and invoices, the template engine, the outbox and the provider settings.
 * **Mail safety**: all outgoing mail goes through one `mail` module that sends only through the authenticated external SMTP service, with fixed recipients on public forms, a per-IP and a per-address limit, and a daily cap. No function sends mail to an address a visitor typed unless that is the purpose (invites, receipts) and it is rate limited.
 * **Rate limiting** is in memory today. With one long-running process it works; move the counters to PostgreSQL before running a second process.
 * **Health and ready** endpoints check PostgreSQL instead of Appwrite.
@@ -248,11 +250,28 @@ Build in the Node service:
 
 Exit: sign-in, refresh, sign-out, recovery, create user, delete user and the handoff all pass tests, and an independent review has no open findings.
 
-### Phase 5: Files (2 to 3 days)
+### Phase 5: Files and e-mail (5 to 7 days)
+
+#### 5a. Files
 
 * Store images under a data directory, served by Caddy or the Node service. Keep `appwrite-files.js` behaviour (upload, size limit, type check), renamed `files.js`.
 * Image links stored inside documents point at Appwrite URLs today. The data migration (Phase 8) rewrites them to the new address. `pos-react/src/services/imageStorage.js` and its migration test are updated.
 * Include the images folder in backups.
+
+#### 5b. E-mail (replaces EmailJS)
+
+Today the POS app sends customer receipts and Automobile invoice e-mails from the browser through EmailJS (`services/platform.service.js`, `orderEmail.js`), the billing widget in `assets/platform.js` sends document and payment-receipt e-mails the same way, and `emailjs-reminder` is a small function around it. EmailJS limits us to two templates. Everything else already sends from the Node functions with SMTP and has no such limit.
+
+* **One mail module** sends all e-mail. The apps no longer talk to any e-mail service: they call authenticated routes such as `POST /api/mail/receipt` and `POST /api/mail/invoice` with the sale or invoice reference, and the server builds and sends the message.
+* **Templates in our code**: `server/src/modules/mail/templates`, one file per e-mail (receipt, order, invoice, quote, payslip, welcome, invite, reminder, ticket, contact). Unlimited, versioned in git, tested. The existing `email-templates/emailjs-invoice-template.html` and the HTML now built in `orderEmail.js` become the first templates. A test renders every template with sample data and checks the required fields, links and escaping.
+* **Sender identity**: sent from a Ceylonry address on our domain (so SPF, DKIM and DMARC pass), with the **shop's own address as Reply-To** and the shop's name in the display name, so customer replies reach the business. Confirm with the team whether shops expect the mail to appear to come from them (see open questions).
+* **Outbox in PostgreSQL**: every message is saved first, then sent by a worker, with retries and a final status. This replaces `receiptSentAt` guesswork: the POS can show "sent", "failed" or "queued". A shop with no connection simply queues the request on the device and the POS sends it when back online.
+* **Limits and abuse control**: a per-business daily cap, a per-IP limit on public routes, recipients only where the route's purpose allows it (the customer of that sale or invoice), and no free-text recipient on public forms. Retained from the mail-safety rules in Phase 2.
+* **Provider**: the module sends through authenticated SMTP, so the provider can be changed by settings only. Start with the current SMTP service. Before the planned growth (hundreds of shops each sending receipts), move to a transactional e-mail service (for example Amazon SES, Postmark or Brevo): it is inexpensive, built for reputation and bounce handling, and the same SMTP code works. Decide with the Phase 9 volume numbers.
+* **Bounces and complaints**: record them against the address, stop sending to addresses that bounce hard, and show the shop a clear message.
+* **DNS**: SPF, DKIM and DMARC records for the chosen provider added **before** cutover (this also protects the move of DNS, see the mail risk).
+* **Staging safety**: staging sends only to a catch-all test mailbox, never to real customer addresses, so copied production data cannot e-mail customers by mistake.
+* **Tests**: the existing mail function tests are ported; add tests for the outbox (queued, sent, failed, retried), the daily cap, the Reply-To rule, and that no route accepts an arbitrary recipient.
 
 ### Phase 6: Apps (8 to 12 days)
 
@@ -260,6 +279,7 @@ Exit: sign-in, refresh, sign-out, recovery, create user, delete user and the han
 * **POS app** (`apps/pos`, today `pos-react`): add a new backend implementation of the compatibility layer (`services/appwrite/appwriteCompat.js`, `auth.service.js`, `cloud.service.js`, `imageStorage.js`, `platform.service.js`). Rename it away from "Appwrite" (the folder, the `isAppwrite()` helper, the `VITE_AUTH_PROVIDER=appwrite` value) at the end of this phase. Keep the local test provider.
 * **Browser file**: a new small `assets/backend-client.js` (a few hundred lines) that provides `window.clsBackend` with the same methods the pages use, replacing the 4,143 line `assets/appwrite-sdk.js`.
 * **Static pages that sign in**: the CashFlow pages (`signin`, `onboarding`, `solo`, `starter`, `starter_3`, `growth`, `premium`, `team`, `accept-invite`, `reset-password`, `success`, `upgrade`, `payable-return`, `ceylonry-admin`), `pos-onboarding.html`, `assets/platform.js` (3,823 lines, 28 backend calls), and the reservation system. If the new client keeps the same method names, these need script-tag and small error-message changes only. Plan time for testing each page by hand, since they are large files.
+* **E-mail from the apps**: `sendOrderEmail` in `platform.service.js` and the document and receipt e-mail calls in `assets/platform.js` (`clsSendDocumentEmail`, `clsSendPaymentReceiptEmail`) call the new mail routes. Remove the EmailJS script loading, the `VITE_EJS_*` settings and the hard-coded EmailJS key, service and template ids in `config/env.js`.
 * **Remove Appwrite wording** in messages (for example the rate-limit message in `auth.service.js`).
 * **Admin portal** (`pos-react/src/admin-app`): points at the new function URLs through the existing config.
 * **Service worker**: unchanged, but test that the cache is replaced cleanly on the new origin.
@@ -320,6 +340,7 @@ After cutover: keep Netlify and Appwrite read-only for 2 to 4 weeks as the safet
 * After the safety period: take a final full export of Appwrite (users, documents, files) and keep it in the backup storage.
 * Delete the Appwrite project, remove the site from Netlify, and cancel the plans.
 * In the repository: remove `node-appwrite`, `appwrite` and `node-fetch-native-with-agent` from `package.json`; delete `assets/appwrite-sdk.js`, `netlify.toml`, the route-alias table, `scripts/setup-*-db.mjs`, `scripts/migrate-pos-to-own-database.js`, and the migration script; remove Netlify and Appwrite from the docs, the README files, the comments and the tests that mention them; remove the Appwrite and Netlify origins from `security.js`.
+* Remove EmailJS: the `emailjs-reminder` function, `email-templates/emailjs-invoice-template.html` once its content is in the new templates, the `EMAILJS_*` variables, the `ejs*` settings in `pos-react/src/config/env.js`, and the tests that mention it. Close the EmailJS account.
 * Run `graphify update .`.
 * Final search of the repository for the words `appwrite`, `netlify` and `.netlify`, and for the Appwrite project id and endpoint. Zero results is the finish line.
 
@@ -337,6 +358,7 @@ After cutover: keep Netlify and Appwrite read-only for 2 to 4 weeks as the safet
 | Disk full or database growth | Outage | Disk alerts at 70 percent and 85 percent, retention rules, move files to a bigger disk or MinIO. |
 | Appwrite and Netlify behave differently from our assumptions | Surprises late in the project | Phase 3 and 4 tests are written against current behaviour first, and the old system stays alive during the whole build. |
 | Customers cached the old app | Mix of old and new code after cutover | Same hostnames and a new service worker cache name. The first load after cutover fetches the new build. Test in Phase 9. |
+| E-mail volume or reputation problems after receipts move to the backend | Receipts and invoices delayed, in spam, or rejected | Outbox with retries, per-business caps, bounce handling, SPF/DKIM/DMARC before cutover, and a move to a transactional e-mail provider when volume grows. Monitor delivery rate from the first day. |
 | The modular rewrite takes longer than wrapping the old functions | Later cutover | Port module by module with the alias table, so each finished module is usable and tested on its own. The timeline below already includes it. |
 | Peek page details are inconsistent (hardware, backups, locations) | Wrong sizing | Phase 0 written confirmation and the 30-day money-back window. |
 
@@ -384,14 +406,14 @@ Planning estimate, one developer with Claude, phases partly overlapping:
 | 1 | Phase 0 and 1 (confirm with Peek, server up, backups working) |
 | 2 to 4 | Phase 2 (repository structure, backend modules), with Phase 3 starting alongside |
 | 3 to 5 | Phase 3 (PostgreSQL data layer) |
-| 4 to 7 | Phases 4 and 5 (authentication, files) |
+| 4 to 7 | Phases 4 and 5 (authentication, files and e-mail) |
 | 6 to 9 | Phases 6 and 7 (frontend split, apps on the new backend, static hosting) |
 | 8 to 10 | Phase 8 (migration tooling and rehearsals) |
 | 10 to 11 | Phase 9 (load test, drills, security, parity) |
 | 12 | Phase 10 (cutover) |
 | 14 to 16 | Phase 11 (decommission, after the safety period) |
 
-About 12 weeks to cutover and about 16 weeks to being fully free of both services. The module rewrite, authentication, the apps phase and the data rehearsals are the parts most likely to run over.
+About 12 to 13 weeks to cutover and about 16 to 17 weeks to being fully free of both services. The module rewrite, authentication, the apps phase and the data rehearsals are the parts most likely to run over.
 
 ## 11. Open questions
 
@@ -404,6 +426,8 @@ About 12 weeks to cutover and about 16 weeks to being fully free of both service
 7. Which Sri Lankan time window is quietest for the cutover?
 8. Who is the second person for security review and on-call during cutover?
 9. TypeScript for the backend and `shared/` is recommended. Confirm, or choose plain JavaScript (the types are then not checked when building).
+10. E-mail: keep the current SMTP service for the start, or move straight to a transactional provider (SES, Postmark or Brevo)? Expected receipts per day decides it.
+11. Sender policy: should receipts appear to come from a Ceylonry address with the shop as Reply-To (recommended), or must the shop's own address be the sender (needs each shop to verify its domain)?
 
 ## Appendix A: the 36 functions, where each goes, and what it depends on
 
@@ -418,7 +442,7 @@ Mark each as ported and tested during Phases 2 to 4. "Data" means it reads or wr
 | appwrite-files | files | yes | | Image upload, disk storage |
 | ceylo-ai-key | ceylo | yes | | Stores each business's AI key (encrypted with `CEYLO_KEY_SECRET`) |
 | ceylo-ask | ceylo | yes | | Calls the Anthropic API |
-| emailjs-reminder | mail | | | EmailJS call, no data |
+| emailjs-reminder | mail | | | Replaced by a reminder template in the mail module. EmailJS is removed |
 | growth-partner-code | support | yes | | Partner codes |
 | hardware-order | support | | yes | |
 | health | system | | | Check PostgreSQL |
@@ -453,6 +477,6 @@ Mark each as ported and tested during Phases 2 to 4. "Data" means it reads or wr
 * **Mail**: `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `SMTP_REPLY_TO`, `POS_SMTP_FROM`, `POS_INTERNAL_SMTP_FROM`, `SUPPORT_TO`, `STORY_SUBMISSION_TO`, `BUSINESS_OWNER_EMAIL`
 * **Site**: `PUBLIC_SITE_URL`, `EXTRA_ALLOWED_ORIGINS`
 * **Security**: `POS_ADMIN_TOKEN_SECRET`, `ADMIN_PASSWORD_SHA256`, `ADMIN_EMAIL`, `CEYLO_KEY_SECRET`
-* **Outside services that stay**: `ANTHROPIC_API_KEY`, `EMAILJS_*` (5 values), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-* **To be removed**: every `APPWRITE_*` variable (endpoint, project, API key, database and collection ids, routing and compression switches) and the Netlify ones (`URL`, `DEPLOY_URL`, `DEPLOY_PRIME_URL`, `CONTEXT`, `NETLIFY_DEV`)
-* **New**: `DATABASE_URL`, `JWT_SIGNING_KEY`, `DATA_DIR` (files), `BACKUP_*` settings
+* **Outside services that stay**: `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+* **To be removed**: the `EMAILJS_*` variables (5 values), every `APPWRITE_*` variable (endpoint, project, API key, database and collection ids, routing and compression switches) and the Netlify ones (`URL`, `DEPLOY_URL`, `DEPLOY_PRIME_URL`, `CONTEXT`, `NETLIFY_DEV`)
+* **New**: `MAIL_DAILY_CAP_PER_BUSINESS`, `MAIL_FROM_ADDRESS`, `MAIL_STAGING_CATCHALL`, `DATABASE_URL`, `JWT_SIGNING_KEY`, `DATA_DIR` (files), `BACKUP_*` settings
