@@ -11,7 +11,7 @@ import { FULL_SETTINGS_ROLES, ROLES, ROLE_VIEWS, isOwnerRole } from "../config/r
 export const PERMISSIONS = [
 	{ group: "Back office", key: "reports.pos", label: "View reports", tip: "Opens the Reports page and the reports in the admin portal." },
 	{ group: "Back office", key: "settings.system.edit", label: "Change settings", tip: "System Options, location info, users and jobs." },
-	{ group: "Menu", key: "menu.view", label: "Menu: items, modifiers and stations", tip: "Opens Products & Services, Modifiers and Stations." },
+	{ group: "Menu", key: "menu.view", label: "Menu: items, modifiers and stations", tip: "Opens Menu Admin (items, modifiers) and Stations." },
 	{ group: "Menu", key: "inventory.view", label: "Inventory and stock", tip: "Opens Inventory & Stock." },
 	{ group: "Users", key: "users.view", label: "See users and timesheets", tip: "Lists users and shows timesheets." },
 	{ group: "Users", key: "time.edit_entries", label: "Edit timesheets", tip: "Correct or add a shift in the last month. Older shifts are locked for everyone." },

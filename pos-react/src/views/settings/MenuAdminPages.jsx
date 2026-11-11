@@ -951,7 +951,7 @@ export function ModifiersAdmin() {
 				))}
 			</div>
 			{tab === "groups" ? (
-				<SectionCard description="Groups are created and assigned to items in the Modifier Groups and Products screens. Here you set how many options staff must or may pick.">
+				<SectionCard description="Add a group here, put it on items with Assign to items, and set how many options staff must or may pick.">
 					{canView("modifiers") && (
 						<p>
 							<button type="button" className="sk-link" onClick={() => go("modifiers")}>
@@ -1087,7 +1087,7 @@ export function ModifiersAdmin() {
 				open={!!group}
 				wide
 				title={group?.id ? "Edit modifier group" : "Add modifier group"}
-				subtitle="Applied to the live group when you publish. Assign groups to items in Products & Services."
+				subtitle="Applied to the live group when you publish. Put the group on items with Assign to items on its row."
 				onClose={() => (setGroup(null), setGroupTouched(false))}
 				footer={
 					<>
