@@ -23,6 +23,7 @@ export function posAccessProfile(profile, user) {
 		paid: profile.posPaid === true,
 		subscriptionStatus: profile.posSubscriptionStatus || "trial",
 		accountPaused: profile.posAccountPaused === true,
+		isTestAccount: isTestAccount(profile),
 		paymentRequestToken: profile.posPaymentRequestToken || "",
 		lastPaymentSlipAt: profile.posLastPaymentSlipAt || "",
 		nextPaymentDue: profile.posNextPaymentDue || "",
@@ -30,12 +31,16 @@ export function posAccessProfile(profile, user) {
 	};
 }
 
+/** An account an administrator marked Test (a demo account): it is never asked for payment. */
+const isTestAccount = (p) => p?.posIsTestAccount === true || String(p?.posAccountStatus || "").toLowerCase() === "test";
+
 export function accessAllowed(p, now = Date.now()) {
 	const status = String(p.subscriptionStatus || "").toLowerCase();
 	const paid = p.paid === true || PAID_STATUSES.includes(status);
 	const trialEnd = Date.parse(p.trialEnd || "");
 	const paymentDue = Date.parse(p.nextPaymentDue || "");
 	if (p.accountPaused === true || status === "paused") return false;
+	if (p.isTestAccount === true) return true;
 	if (!paid) return !trialEnd || now < trialEnd;
 	return !paymentDue || now <= paymentDue + DAY;
 }
@@ -54,6 +59,7 @@ export function profileHasPosAccess(profile) {
 
 /** Banner warning text shown above the content (trial / payment due). */
 export function billingWarning(p, now = Date.now()) {
+	if (p.isTestAccount === true) return "";
 	const paid = p.paid === true || ["active", "manual-paid"].includes(String(p.subscriptionStatus || "").toLowerCase());
 	const due = Date.parse(paid ? p.nextPaymentDue : p.trialEnd);
 	if (!due) return "";

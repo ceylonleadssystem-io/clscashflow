@@ -277,6 +277,12 @@
     return profile.paid === true || status === 'active' || status === 'manual-paid';
   }
 
+  // An account an administrator marked Test (a demo account) is never asked for payment, whatever its trial or payment dates say.
+  function isTestAccount(profile) {
+    profile = profile || {};
+    return profile.isTestAccount === true || profile.posIsTestAccount === true || String(profile.accountStatus || profile.posAccountStatus || '').toLowerCase() === 'test';
+  }
+
   function paidLockedPlan(profile) {
     if (!isProfilePaidRecord(profile)) return '';
     return normalizePlan(profile.lockedPlan)
@@ -1411,7 +1417,7 @@
     opts = opts || {};
     if (!isPortalPath() || document.getElementById('cls-paywall')) return false;
     if (window.clsIsAccountPaused && window.clsIsAccountPaused(profile)) return false;
-    if (isProfilePaidRecord(profile)) return false;
+    if (isProfilePaidRecord(profile) || isTestAccount(profile)) return false;
     var due = dateMs(profile.nextPaymentDue || profile.subscriptionCurrentPeriodEnd || profile.trialEnd || profile.trialEndsAt);
     if (!due || Date.now() < due) return false;
     window.clsRenderSubscriptionPaywall(profile, { plan: opts.plan || planFromPath() || bestPlan(profile) });
@@ -1607,7 +1613,7 @@
     var user = getAuthUser();
     var db = getFirestore(opts.db);
     if (!user || !user.uid || !db) return null;
-    if (!opts.force && (window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile))) return null;
+    if (!opts.force && (window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile) || isTestAccount(profile))) return null;
 
     var trialEnd = profile.trialEnd ? new Date(profile.trialEnd) : null;
     if (!opts.force && (!trialEnd || isNaN(trialEnd.getTime()) || Date.now() <= trialEnd.getTime())) return null;
@@ -1864,7 +1870,7 @@
       }, 1200);
       return;
     }
-    if (window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile)) return;
+    if (window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile) || isTestAccount(profile)) return;
     var start = trialStartForPrompt(profile);
     var trialEndMs = dateMs(profile.trialEnd || profile.trialEndsAt);
     if (!start) return;
@@ -2110,7 +2116,7 @@
 
     var profile = opts.profile || {};
     var end = opts.trialEnd ? new Date(opts.trialEnd) : new Date(profile.trialEnd || Date.now());
-    if (!end || isNaN(end.getTime()) || window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile)) return;
+    if (!end || isNaN(end.getTime()) || window.clsIsProfilePaid(profile) || window.clsIsAccountPaused(profile) || isTestAccount(profile)) return;
 
     var bar = document.createElement('div');
     bar.id = 'cls-trial-countdown';

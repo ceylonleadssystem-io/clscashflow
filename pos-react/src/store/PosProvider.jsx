@@ -269,7 +269,8 @@ export function PosProvider({ children }) {
 			setView(landingView(resolveOptions(d.settings, "signIn", chosen), (v) => (VIEW_PERMISSION[v] ? canDo(user, VIEW_PERMISSION[v], d.settings) : (ROLE_VIEWS[user.role] || []).includes(v)) && pageOpen(v), first));
 			if (user.role === "owner" && !d.settings.onboardingComplete && !d.settings.onboardingDismissed && enabled["settings.posSetupWizard"])
 				setTimeout(() => setSetupOpen(true), 250);
-			if (enabled["staff.shiftPrompt"]) setTimeout(() => setShiftStart(user), 80);
+			// a car detailing business never offers or starts the clock on sign-in: working hours are recorded only when a person clocks in themselves
+			if (enabled["staff.shiftPrompt"] && !hasCapability(d.settings.businessType, "detailing")) setTimeout(() => setShiftStart(user), 80);
 			const welcome = resolveWelcome(d.settings);
 			if (welcome.enabled && user.welcomeSeenVersion !== welcome.version) setWelcomeUser({ id: user.id, name: user.name, firstTime: true });
 			return "";

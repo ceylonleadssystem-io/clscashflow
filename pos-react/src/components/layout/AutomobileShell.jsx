@@ -64,6 +64,7 @@ export function AutomobileShell() {
 	const notice = useNotice();
 	const [id, setId] = useState("overview");
 	const [rail, setRail] = useState(false);
+	const logo = settings.logo;
 	const enabled = hasCapability(settings.businessType, "detailing");
 	const items = ITEMS.filter((i) => !ROLE_ITEMS[currentUser?.role] || ROLE_ITEMS[currentUser.role].includes(i.id));
 	const current = items.find((i) => i.id === id) || items[0];
@@ -81,7 +82,9 @@ export function AutomobileShell() {
 	return (
 		<>
 			<div className="app portal automobile">
-				<aside className={"side" + (rail ? " rail-open" : "")}>
+				<aside className={"side" + (logo ? " has-business-logo" : "") + (rail ? " rail-open" : "")}>
+					{/* the business logo, as in the POS sidebar: it follows Settings > Business Logo */}
+					{logo && <img id="side-business-logo" className="side-business-logo" alt={(settings.business || "") + " logo"} src={logo} />}
 					<div className="brand" aria-label="Powered by Ceylonry POS">
 						Ceylonry<span>Detailing</span>
 						<small className="plan">Car detailing edition</small>

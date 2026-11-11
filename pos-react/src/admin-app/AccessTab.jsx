@@ -54,7 +54,7 @@ export function AccessTab({ account, profile, settings, save, saving, onChanged,
 				<div className="panel-head">
 					<div>
 						<div className="panel-title">Account status</div>
-						<div className="muted">Label and reporting bucket only; billing is not changed.</div>
+						<div className="muted">Test accounts (demos) are never asked for payment, and stay out of the reporting figures. Billing dates are not changed.</div>
 					</div>
 					<span className="badge" style={statusOf(account).style}>{statusOf(account).label}</span>
 				</div>

@@ -10,7 +10,10 @@ import { customerName } from "../domain/names";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
 import { useUi } from "../store/UiProvider";
-import { JOB_FLOW, jobPaid, jobTotal } from "../services/pos/detailing";
+import { JOB_FLOW, jobPaid, jobTechs, jobTotal } from "../services/pos/detailing";
+import { downloadInvoicePdf, invoiceEmailSale, invoiceEmailSubject, invoiceModel, shareInvoiceWhatsApp } from "../services/printing/invoicePdf";
+import { orderEmailHtml, orderEmailVariables } from "../services/printing/orderEmail";
+import { sendOrderEmail } from "../services/platform.service";
 import { FULL_SETTINGS_ROLES } from "../config/roles";
 
 const TABS = [
@@ -56,12 +59,13 @@ export function Detailing({ tab: forced }) {
 	const veh = (id) => data.vehicles.find((v) => v.id === id);
 	const vlabel = (id) => (veh(id) ? `${veh(id).registration} · ${[veh(id).make, veh(id).model].filter(Boolean).join(" ")}` : "Vehicle removed");
 	const tech = (id) => data.users.find((u) => u.id === id)?.name || "Unassigned";
+	const techNames = (j) => jobTechs(j).map(tech).join(", ") || "Unassigned"; // every technician on the job
 	const match = (...parts) => !q.trim() || parts.join(" ").toLowerCase().includes(q.trim().toLowerCase());
 	const [filter, setFilter] = useState("all");
 	const [day, setDay] = useState("");
 	// technicians (the cashier role) see only the jobs assigned to them; owners, managers and accountants see everything
 	const mine = !["owner", "manager", "admin", "accountant"].includes(currentUser?.role);
-	const visible = useMemo(() => (mine ? data.detailJobs.filter((j) => j.technicianId === currentUser?.id) : data.detailJobs), [data.detailJobs, mine, currentUser?.id]);
+	const visible = useMemo(() => (mine ? data.detailJobs.filter((j) => jobTechs(j).includes(currentUser?.id)) : data.detailJobs), [data.detailJobs, mine, currentUser?.id]);
 	const jobs = useMemo(() => [...visible].sort((a, b) => (a.scheduledAt || "").localeCompare(b.scheduledAt || "")), [visible]);
 	const shown = jobs.filter((j) => {
 		const d = (j.scheduledAt || "").slice(0, 10);
@@ -76,6 +80,33 @@ export function Detailing({ tab: forced }) {
 		const phone = whatsappPhone(data.customers.find((c) => c.id === j.customerId)?.phone);
 		if (!phone) return ui.notice("The customer has no valid phone number.");
 		window.open(`https://wa.me/${phone}?text=${encodeURIComponent(messageFor(j, data.settings.business || ""))}`, "_blank", "noopener");
+	};
+
+	// invoice sharing: PDF download, WhatsApp and e-mail (EmailJS, the same sender the POS uses for order e-mails)
+	const [sharing, setSharing] = useState(""); // "<job id>:<action>" while one is running
+	const share = async (j, action) => {
+		const m = invoiceModel(j, data);
+		setSharing(j.id + ":" + action);
+		try {
+			if (action === "pdf") {
+				await downloadInvoicePdf(m);
+				ui.notice("Invoice PDF downloaded.");
+			} else if (action === "whatsapp") {
+				const res = await shareInvoiceWhatsApp(m);
+				if (res === "no-phone") ui.notice("The customer has no valid phone number.");
+				else if (res === "chat") ui.notice("PDF downloaded. Attach it in the WhatsApp chat that opened.");
+			} else {
+				if (!m.customer.email) return ui.notice("The customer has no email address. Add one on the Customers page.");
+				const sale = invoiceEmailSale(m);
+				const opts = { settings: data.settings, customerName: m.customer.name };
+				await sendOrderEmail({ to: m.customer.email, subject: invoiceEmailSubject(m), html: orderEmailHtml(sale, opts), variables: orderEmailVariables(sale, opts), customerName: m.customer.name, settings: data.settings });
+				ui.notice("Invoice emailed to " + m.customer.email + ".");
+			}
+		} catch (e) {
+			ui.notice(action === "email" ? "The invoice email could not be sent. Check the EmailJS settings." : "The invoice PDF could not be created.");
+		} finally {
+			setSharing("");
+		}
 	};
 
 	const stats = useMemo(() => {
@@ -97,7 +128,7 @@ export function Detailing({ tab: forced }) {
 		const next = JOB_FLOW[JOB_FLOW.indexOf(j.status) + 1];
 		return (
 			<div className="tools">
-				{!CLOSED.includes(j.status) && (
+				{(!CLOSED.includes(j.status) || manager) && (
 					<button className="btn out" onClick={() => setModal({ kind: "job", id: j.id })}>
 						Edit
 					</button>
@@ -143,7 +174,7 @@ export function Detailing({ tab: forced }) {
 				<td>{cname(j.customerId)}</td>
 				<td>{vlabel(j.vehicleId)}</td>
 				<td>{j.packageName}</td>
-				<td>{tech(j.technicianId)}</td>
+				<td>{techNames(j)}</td>
 				<td>
 					<span className="badge">{j.paused ? "Paused" : j.status}</span>
 				</td>
@@ -186,7 +217,7 @@ export function Detailing({ tab: forced }) {
 							</div>
 						</div>
 						<div className="modal-body">
-							<p>{jobs.filter((j) => ["Booked", "Confirmed"].includes(j.status) && !j.technicianId).length} booking(s) waiting for a technician.</p>
+							<p>{jobs.filter((j) => ["Booked", "Confirmed"].includes(j.status) && !jobTechs(j).length).length} booking(s) waiting for a technician.</p>
 							<p>{stats.low.length ? "Low on stock: " + stats.low.map((i) => i.name).join(", ") : "No supplies are running low."}</p>
 						</div>
 					</div>
@@ -437,11 +468,18 @@ export function Detailing({ tab: forced }) {
 												<td>{money(jobPaid(j))}</td>
 												<td>{bal > 0.005 ? money(bal) : <span className="badge">Paid</span>}</td>
 												<td>
-													{bal > 0.005 && (
-														<button className="btn gold" onClick={() => setModal({ kind: "pay", id: j.id })}>
-															Record payment
-														</button>
-													)}
+													<div className="tools">
+														{bal > 0.005 && (
+															<button className="btn gold" onClick={() => setModal({ kind: "pay", id: j.id })}>
+																Record payment
+															</button>
+														)}
+														{[["pdf", "Download PDF"], ["whatsapp", "WhatsApp"], ["email", "Email"]].map(([a, label]) => (
+															<button key={a} className="btn out" disabled={!!sharing} onClick={() => share(j, a)}>
+																{sharing === j.id + ":" + a ? "Working…" : label}
+															</button>
+														))}
+													</div>
 												</td>
 											</tr>
 										);
@@ -543,11 +581,12 @@ function DetailingReports({ data, tech }) {
 	const group = (keyOf) => {
 		const m = new Map();
 		done.forEach((j) => {
-			const k = keyOf(j);
-			const r = m.get(k) || { jobs: 0, revenue: 0 };
-			r.jobs += 1;
-			r.revenue += jobPaid(j);
-			m.set(k, r);
+			[].concat(keyOf(j)).forEach((k) => {
+				const r = m.get(k) || { jobs: 0, revenue: 0 };
+				r.jobs += 1;
+				r.revenue += jobPaid(j);
+				m.set(k, r);
+			});
 		});
 		return [...m.entries()].sort((a, b) => b[1].revenue - a[1].revenue);
 	};
@@ -592,7 +631,7 @@ function DetailingReports({ data, tech }) {
 				<Kpi label="Cancelled bookings" value={data.detailJobs.filter((j) => j.status === "Cancelled").length} />
 			</div>
 			{table("By package", group((j) => j.packageName))}
-			{table("By technician", group((j) => tech(j.technicianId)))}
+			{table("By technician (each technician on a job is credited with it)", group((j) => (jobTechs(j).length ? jobTechs(j).map(tech) : "Unassigned")))}
 		</>
 	);
 }
@@ -610,14 +649,14 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 		setSeed(key);
 		const old = modal?.id ? { job: data.detailJobs, vehicle: data.vehicles, package: data.detailPackages, inspect: data.detailJobs, pay: data.detailJobs }[kind]?.find((x) => x.id === modal.id) : null;
 		const blank = {
-			job: { customerId: modal?.customerId || "", vehicleId: "", packageId: "", scheduledAt: localNow(), address: "", technicianId: "", notes: "", discount: "" },
+			job: { customerId: modal?.customerId || "", vehicleId: "", packageId: "", scheduledAt: localNow(), address: "", technicianIds: [], notes: "", discount: "" },
 			vehicle: { customerId: modal?.customerId || "", registration: "", make: "", model: "", year: "", colour: "", category: "Sedan", notes: "" },
 			package: { name: "", category: "Sedan", price: "", durationMin: 60, description: "", supplies: [], active: true },
 			customer: { name: "", phone: "" },
 			inspect: { inspection: "", signedBy: "" },
 			pay: { method: "Cash", amount: "" },
 		}[kind];
-		if (blank) setF(old ? { ...blank, ...old, ...(kind === "pay" ? { method: "Cash", amount: String(jobTotal(old) - jobPaid(old)) } : {}) } : blank);
+		if (blank) setF(old ? { ...blank, ...old, ...(kind === "job" ? { technicianIds: jobTechs(old) } : {}), ...(kind === "pay" ? { method: "Cash", amount: String(jobTotal(old) - jobPaid(old)) } : {}) } : blank);
 	}
 	if (!kind) return null;
 	if (kind === "history") {
@@ -634,6 +673,7 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 									<th>Package</th>
 									<th>Status</th>
 									<th>Total</th>
+									<th></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -643,11 +683,23 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 										<td>{j.packageName}</td>
 										<td>{j.status}</td>
 										<td>{money(jobTotal(j))}</td>
+										<td>
+											{manager && (
+												<div className="tools">
+													<button className="btn out" onClick={() => setModal({ kind: "job", id: j.id })}>
+														Edit
+													</button>
+													<button className="btn danger" onClick={() => svc.detailing.removeRecord("detailJobs", j.id)}>
+														Delete
+													</button>
+												</div>
+											)}
+										</td>
 									</tr>
 								))}
 								{!past.length && (
 									<tr>
-										<td colSpan="4">No services recorded for this vehicle yet.</td>
+										<td colSpan="5">No services recorded for this vehicle yet.</td>
 									</tr>
 								)}
 							</tbody>
@@ -728,7 +780,19 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 								<button type="button" className="btn out" style={{ marginTop: 6 }} disabled={!f.customerId} onClick={() => setModal({ kind: "vehicle", customerId: f.customerId })}>+ New vehicle</button></>)}
 							{field("Package *", select("packageId", <><option value="">Select package</option>{opts(packages, (p) => `${p.name} · ${money(p.price)}`)}</>))}
 							{field("Date & time *", input("scheduledAt", "datetime-local"))}
-							{field("Technician", select("technicianId", <><option value="">Unassigned</option>{opts(data.users.filter((u) => u.active !== false), (u) => u.name)}</>))}
+							{field(
+								"Technicians (tick everyone working on this vehicle)",
+								<div role="group" aria-label="Technicians" style={{ display: "grid", gap: 6 }}>
+									{data.users.filter((u) => u.active !== false).map((u) => (
+										<label key={u.id} style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 32 }}>
+											<input type="checkbox" checked={(f.technicianIds || []).includes(u.id)} onChange={(e) => setF((v) => ({ ...v, technicianIds: e.target.checked ? [...(v.technicianIds || []), u.id] : (v.technicianIds || []).filter((x) => x !== u.id) }))} />
+											{u.name}
+										</label>
+									))}
+									{!data.users.some((u) => u.active !== false) && <span className="muted">No users yet. Add employees first.</span>}
+								</div>,
+								true,
+							)}
 							{field("Discount", input("discount", "number", { min: 0, step: "0.01" }))}
 							{field("Service address", input("address"), true)}
 							{field("Notes", <textarea className="input" rows="2" value={f.notes || ""} onChange={set("notes")} />, true)}
