@@ -49,11 +49,11 @@ Appwrite is **not** used for realtime updates (no realtime calls were found), wh
 
 ### 2.3 The seams that make this manageable
 
-The code already isolates Appwrite in three places. The migration replaces these three, not 36 functions and 20 pages one by one:
+The code already isolates Appwrite in three places. Appwrite is replaced at the first two seams, not function by function and page by page. The third is where the code is reorganised into modules:
 
 1. **Server data seam**: `netlify/lib/appwrite.js` (330 lines). The functions call `getDocument`, `upsertDocument`, `queryDocuments`, `deleteDocument`, `listStamps`, `users.*` and a Firestore-style shim. We keep these names and put PostgreSQL behind them.
 2. **Client seam**: `appwriteCompat.js` exposes an older `clsBackend` style (`auth()` and `firestore()`). The pages talk to that, not to Appwrite directly. We write a new implementation with the same shape and a new small browser file replaces `assets/appwrite-sdk.js`.
-3. **Functions seam**: each function is `handler(event)` returning `{ statusCode, headers, body }`. A thin adapter turns an HTTP request into that `event`, so the function bodies move almost unchanged.
+3. **Functions**: each is `handler(event)` returning `{ statusCode, headers, body }`, with its rules in the function body. These are moved into backend modules (section 3.1), with an alias table keeping the old URLs working during the transition.
 
 ## 3. Target architecture
 
@@ -64,7 +64,7 @@ Caddy (HTTPS, redirects, static files)            <- replaces Netlify hosting, r
    |-- /*.html, /pos-react/dist, /assets ...        files on disk
    |-- /.netlify/functions/*  (kept as /api/*)      -> Node service on 127.0.0.1
 Node.js service (systemd, 2 processes)            <- replaces Netlify Functions
-   |-- function adapter: the 36 handlers
+   |-- modules: auth, accounts, sync, files, billing, invoices, mail, kds, ogf, ... (section 3.1)
    |-- auth service (sign-in, sessions, JWT, recovery)   <- replaces Appwrite accounts
    |-- scheduler (OGF sales push every 15 minutes)
 PostgreSQL 16                                     <- replaces Appwrite databases
