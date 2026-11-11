@@ -11,6 +11,9 @@ import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
 import { useUi } from "../store/UiProvider";
 import { JOB_FLOW, jobPaid, jobTechs, jobTotal } from "../services/pos/detailing";
+import { downloadInvoicePdf, invoiceEmailSale, invoiceEmailSubject, invoiceModel, shareInvoiceWhatsApp } from "../services/printing/invoicePdf";
+import { orderEmailHtml, orderEmailVariables } from "../services/printing/orderEmail";
+import { sendOrderEmail } from "../services/platform.service";
 import { FULL_SETTINGS_ROLES } from "../config/roles";
 
 const TABS = [
@@ -77,6 +80,33 @@ export function Detailing({ tab: forced }) {
 		const phone = whatsappPhone(data.customers.find((c) => c.id === j.customerId)?.phone);
 		if (!phone) return ui.notice("The customer has no valid phone number.");
 		window.open(`https://wa.me/${phone}?text=${encodeURIComponent(messageFor(j, data.settings.business || ""))}`, "_blank", "noopener");
+	};
+
+	// invoice sharing: PDF download, WhatsApp and e-mail (EmailJS, the same sender the POS uses for order e-mails)
+	const [sharing, setSharing] = useState(""); // "<job id>:<action>" while one is running
+	const share = async (j, action) => {
+		const m = invoiceModel(j, data);
+		setSharing(j.id + ":" + action);
+		try {
+			if (action === "pdf") {
+				await downloadInvoicePdf(m);
+				ui.notice("Invoice PDF downloaded.");
+			} else if (action === "whatsapp") {
+				const res = await shareInvoiceWhatsApp(m);
+				if (res === "no-phone") ui.notice("The customer has no valid phone number.");
+				else if (res === "chat") ui.notice("PDF downloaded. Attach it in the WhatsApp chat that opened.");
+			} else {
+				if (!m.customer.email) return ui.notice("The customer has no email address. Add one on the Customers page.");
+				const sale = invoiceEmailSale(m);
+				const opts = { settings: data.settings, customerName: m.customer.name };
+				await sendOrderEmail({ to: m.customer.email, subject: invoiceEmailSubject(m), html: orderEmailHtml(sale, opts), variables: orderEmailVariables(sale, opts), customerName: m.customer.name, settings: data.settings });
+				ui.notice("Invoice emailed to " + m.customer.email + ".");
+			}
+		} catch (e) {
+			ui.notice(action === "email" ? "The invoice email could not be sent. Check the EmailJS settings." : "The invoice PDF could not be created.");
+		} finally {
+			setSharing("");
+		}
 	};
 
 	const stats = useMemo(() => {
@@ -438,11 +468,18 @@ export function Detailing({ tab: forced }) {
 												<td>{money(jobPaid(j))}</td>
 												<td>{bal > 0.005 ? money(bal) : <span className="badge">Paid</span>}</td>
 												<td>
-													{bal > 0.005 && (
-														<button className="btn gold" onClick={() => setModal({ kind: "pay", id: j.id })}>
-															Record payment
-														</button>
-													)}
+													<div className="tools">
+														{bal > 0.005 && (
+															<button className="btn gold" onClick={() => setModal({ kind: "pay", id: j.id })}>
+																Record payment
+															</button>
+														)}
+														{[["pdf", "Download PDF"], ["whatsapp", "WhatsApp"], ["email", "Email"]].map(([a, label]) => (
+															<button key={a} className="btn out" disabled={!!sharing} onClick={() => share(j, a)}>
+																{sharing === j.id + ":" + a ? "Working…" : label}
+															</button>
+														))}
+													</div>
 												</td>
 											</tr>
 										);
