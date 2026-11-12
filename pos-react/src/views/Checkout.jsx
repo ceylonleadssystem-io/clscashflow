@@ -7,6 +7,7 @@ import { money } from "../domain/format";
 import { formatOrderNumber, nextSequence } from "../domain/orders";
 import { customerName } from "../domain/names";
 import { categoryKey, subcategoriesFor, visibleProductCategories } from "../domain/catalog";
+import { useBranchMenu } from "../hooks/useBranchMenu";
 import { useAllowedCategories } from "../hooks/useMenuInEffect";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
@@ -51,9 +52,11 @@ export function Checkout() {
 	const { settings } = data;
 	// the Availability menu in effect narrows the categories (null = no menu applies, everything shows)
 	const allowed = useAllowedCategories();
+	// only the items sold at the signed-in branch
+	const branchMenu = useBranchMenu();
 	const categories = useMemo(
-		() => ["All", ...visibleProductCategories(data.categories, data.products, data.subcategories, data.settings.userCategories || []).filter((name) => !allowed || allowed.has(categoryKey(name)))].sort((a, b) => a.localeCompare(b)),
-		[data.categories, data.products, data.subcategories, data.settings.userCategories, allowed],
+		() => ["All", ...visibleProductCategories(data.categories, branchMenu.products, data.subcategories, data.settings.userCategories || []).filter((name) => (!allowed || allowed.has(categoryKey(name))) && branchMenu.allowsCategory(name))].sort((a, b) => a.localeCompare(b)),
+		[data.categories, branchMenu, data.subcategories, data.settings.userCategories, allowed],
 	);
 	const category = categories.includes(c.category) ? c.category : "All";
 	const q = c.search.trim().toLowerCase();
@@ -65,13 +68,13 @@ export function Checkout() {
 	const sub = subs.some((x) => x.name === subPick) ? subPick : "";
 	const products = useMemo(
 		() =>
-			data.products.filter((p) => {
+			branchMenu.products.filter((p) => {
 				if (q) return (String(p.name || "") + " " + String(p.code || "") + " " + String(p.category || "")).toLowerCase().includes(q);
 				if (category !== "All" && p.category !== category) return false;
 				if (category === "All" && allowed && !allowed.has(categoryKey(p.category))) return false;
 				return !sub || p.subcategory === sub;
 			}),
-		[data.products, category, q, subs, sub, allowed],
+		[branchMenu.products, category, q, subs, sub, allowed],
 	);
 	const t = c.totals;
 	const [payMode, setPayMode] = useState(null); // "quick" | "full" | null

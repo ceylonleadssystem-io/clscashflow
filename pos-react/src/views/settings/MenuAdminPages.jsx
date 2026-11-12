@@ -5,6 +5,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { AssignmentTree } from "../../components/settings/kit/AssignmentTree";
+import { LocationChecks } from "../../components/settings/kit/LocationChecks";
+import { activeLocationIds, cleanLocationIds, itemsAt, newItemLocationIds, categoryAllowedAt } from "../../domain/menuLocation";
+import { activeLocations } from "../../services/pos/locations";
 import { DetailDrawer, EmptyState, SortableList, StatusBadge } from "../../components/settings/kit/entities";
 import { ConditionalGroup, NumberRow, PageHeader, SectionCard, SelectRow, SettingRow, TextAreaRow, TextRow, ToggleRow } from "../../components/settings/kit/rows";
 import { categoryKey, productCategories, subcategoriesFor, visibleProductCategories } from "../../domain/catalog";
@@ -408,9 +411,11 @@ export function Taxes() {
 
 
 export function CategoriesAdmin() {
-	const { settings, categories, products, subcategories } = useData();
-	const { svc } = usePos();
-	const [edit, setEdit] = useState(null); // { row, name, description, deleteApprovalOn, graceSeconds }
+	const { settings, categories, products, subcategories, locations } = useData();
+	const { svc, locationId } = usePos();
+	const branches = activeLocations({ locations });
+	const branchIds = activeLocationIds(locations);
+	const [edit, setEdit] = useState(null); // { row, name, description, deleteApprovalOn, graceSeconds, locationIds }
 	const [removing, setRemoving] = useState(null); // { row, moveTo }
 	const subsOn = useFeature("catalogue.subcategories");
 	const [touched, setTouched] = useState(false);
@@ -428,7 +433,7 @@ export function CategoriesAdmin() {
 		const n = count(r);
 		const term = search.trim().toLowerCase();
 		const used = usage === "all" || (usage === "with-products" && n > 0) || (usage === "empty" && n === 0);
-		return used && (!term || r.name.toLowerCase().includes(term) || subcategoriesFor(subcategories, r.original || r.name).some((s) => s.name.toLowerCase().includes(term)));
+		return used && categoryAllowedAt(settings, r.original || r.name, locationId, branchIds) && (!term || r.name.toLowerCase().includes(term) || subcategoriesFor(subcategories, r.original || r.name).some((s) => s.name.toLowerCase().includes(term)));
 	});
 	const taxOf = (r) => taxes.find((t) => t.id === (taxRules.categoryTaxes[categoryKey(r.original || r.name)]?.tax || taxRules.defaultTaxId))?.name || "None";
 	const others = (r) => rows.filter((x) => x !== r);
@@ -438,7 +443,7 @@ export function CategoriesAdmin() {
 	const open = (r) => {
 		const c = rules.get(categoryKey(r.original || r.name));
 		const subs = r.original ? workingSubcategories(subcategories, draftList(settings, "subcategoryEdits"), categoryKey(r.original)).filter((s) => s.state !== "removed").map((s) => ({ id: s.id, name: s.name })) : [];
-		setEdit({ row: r, subs, name: r.name, description: c?.description || "", deleteApprovalOn: !!c?.deleteApprovalOn, graceSeconds: c ? c.graceSeconds : DEFAULT_GRACE });
+		setEdit({ row: r, subs, name: r.name, description: c?.description || "", deleteApprovalOn: !!c?.deleteApprovalOn, graceSeconds: c ? c.graceSeconds : DEFAULT_GRACE, locationIds: cleanLocationIds(c?.locationIds, branchIds) });
 	};
 	const save = async () => {
 		setTouched(true);
@@ -448,7 +453,7 @@ export function CategoriesAdmin() {
 		if (r.original && (subsOn || edit.subs.length || draftList(settings, "subcategoryEdits").some((x) => x.group === categoryKey(r.original)))) {
 			if (!(await svc.settings.saveMenuEntity("subcategoryEdits", { group: categoryKey(r.original), parent: edit.name.trim(), wanted: edit.subs }))) return;
 		}
-		if (r.original) await svc.settings.saveMenuEntity("categorySettings", { name: r.original, description: edit.description, deleteApprovalOn: edit.deleteApprovalOn, graceSeconds: edit.graceSeconds });
+		if (r.original) await svc.settings.saveMenuEntity("categorySettings", { name: r.original, description: edit.description, deleteApprovalOn: edit.deleteApprovalOn, graceSeconds: edit.graceSeconds, locationIds: edit.locationIds });
 		close();
 	};
 	const undo = (r) => svc.settings.revertMenuEdit("categoryEdits", r.original ? categoryKey(r.original) : r.key);
@@ -461,12 +466,17 @@ export function CategoriesAdmin() {
 				actions={
 					<>
 						<DraftBadge show={edits.length > 0 || hasDraft(settings, "categorySettings")} />
-						<button type="button" className="btn gold" id="add-category" onClick={() => setEdit({ row: { state: "added", key: "", original: "", name: "" }, name: "", description: "", deleteApprovalOn: false, graceSeconds: DEFAULT_GRACE })}>
+						<button type="button" className="btn gold" id="add-category" onClick={() => setEdit({ row: { state: "added", key: "", original: "", name: "" }, name: "", description: "", deleteApprovalOn: false, graceSeconds: DEFAULT_GRACE, locationIds: [] })}>
 							Add category
 						</button>
 					</>
 				}
 			/>
+			{branches.length > 1 && locationId !== "all" && (
+				<p className="muted" id="branch-menu-note">
+					Showing what {branches.find((l) => l.id === locationId)?.name || "this branch"} sells. Choose All locations to see every branch.
+				</p>
+			)}
 			<SectionCard>
 				{rows.length > 0 && (
 					<div className="sk-filters sk-filters-2">
@@ -492,6 +502,7 @@ export function CategoriesAdmin() {
 										<div className="sk-list-line">
 											<strong>{r.name}</strong>
 											{stateBadge(r) && <span className="sk-badge">{stateBadge(r)}</span>}
+											{branches.length > 1 && cleanLocationIds(c?.locationIds, branchIds).length > 0 && <span className="sk-badge">{locationBadge(c.locationIds, branches)}</span>}
 											<span className="muted">
 												{count(r)} item{count(r) === 1 ? "" : "s"} · Tax: {taxOf(r)}
 												{c?.deleteApprovalOn ? ` · Manager approval to remove sent items after ${c.graceSeconds}s` : ""}
@@ -543,6 +554,11 @@ export function CategoriesAdmin() {
 						{edit.row.original ? (
 							<>
 								<TextAreaRow id="cat-desc" label="Description" help="Shown with the category online (Online is not built yet)." value={edit.description} max={300} onChange={(description) => setEdit((x) => ({ ...x, description }))} />
+								{branches.length > 1 && (
+									<SettingRow label="Shown at" help="Choose the branches that show this category and all its items on the register. Leave All locations to show it everywhere." wide>
+										<LocationChecks value={edit.locationIds} locations={branches} onChange={(locationIds) => setEdit((x) => ({ ...x, locationIds }))} />
+									</SettingRow>
+								)}
 								<ToggleRow id="cat-approval" label="Manager approval to remove sent items" help="Once an order has been sent to the kitchen, taking items of this category off it needs a manager's PIN after the grace period. People allowed to remove sent items without a manager are not asked." value={edit.deleteApprovalOn} onChange={(on) => setEdit((x) => ({ ...x, deleteApprovalOn: on }))} />
 								<ConditionalGroup show={edit.deleteApprovalOn}>
 									<NumberRow id="cat-grace" label="Grace period" help="Seconds after sending during which an item can still be taken off freely." value={edit.graceSeconds} min={0} max={3600} suffix="seconds" onChange={(graceSeconds) => setEdit((x) => ({ ...x, graceSeconds }))} />
@@ -612,11 +628,19 @@ export function CategoriesAdmin() {
 	);
 }
 
+/** The badge for an item or category limited to some branches: the branch name, or how many branches. */
+const locationBadge = (ids, branches) => {
+	const chosen = branches.filter((l) => cleanLocationIds(ids, branches.map((b) => String(b.id))).includes(String(l.id)));
+	return chosen.length === 1 ? chosen[0].name + " only" : chosen.length + " locations";
+};
+
 export function Items() {
-	const { settings, products: liveProducts, categories: categoriesLive, modifiers, subcategories } = useData();
+	const { settings, products: liveProducts, categories: categoriesLive, modifiers, subcategories, locations } = useData();
 	const kdsOn = useFeature("checkout.kds");
 	const products = useMemo(() => [...liveProducts.map((p) => withItemEdit(p, draftList(settings, "itemEdits"))), ...draftNewItems(draftList(settings, "itemEdits"))], [liveProducts, settings]);
-	const { svc } = usePos();
+	const { svc, locationId } = usePos();
+	const branches = activeLocations({ locations });
+	const branchIds = activeLocationIds(locations);
 	const { openProduct, openBarcode } = useModals();
 	const { removeProductFromCart } = useCheckout();
 	const importOn = useFeature("catalogue.import");
@@ -641,13 +665,13 @@ export function Items() {
 	};
 	const groups = useMemo(() => {
 		const by = new Map();
-		for (const p of filterItems(products, { q, category: categoryFilter, type: typeFilter })) {
+		for (const p of filterItems(itemsAt(products, settings, locationId, branchIds), { q, category: categoryFilter, type: typeFilter })) {
 			const k = p.category || "Uncategorised";
 			if (!by.has(k)) by.set(k, []);
 			by.get(k).push(p);
 		}
 		return [...by.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-	}, [products, q, categoryFilter, typeFilter]);
+	}, [products, q, categoryFilter, typeFilter, settings, locationId, branchIds.join()]); // eslint-disable-line react-hooks/exhaustive-deps
 	const options = [{ value: "none", label: "No tax" }, ...taxes.filter((t) => t.status === "active").map((t) => ({ value: t.id, label: t.name }))];
 	const tax = edit ? taxes.find((t) => t.id === (edit.taxId || rules.categoryTaxes[categoryKey(edit.product.category)]?.tax || rules.defaultTaxId)) : null;
 	const withTax = tax && tax.status === "active" ? previewTax(tax, taxes, +edit.product.price || 0) : null;
@@ -662,10 +686,10 @@ export function Items() {
 	};
 	const open = (p) => {
 		const w = withItemEdit(p, itemEdits);
-		const base = { name: w.name, price: String(w.price), cost: String(w.cost), category: effectiveCategory(catRows, w.category), subcategory: w.subcategory || "", code: w.code || "", description: w.description || "", image: w.image || "", stationIds: (w.stationIds || []).map(String), modifierIds: (w.modifierIds || []).map(String) };
+		const base = { name: w.name, price: String(w.price), cost: String(w.cost), category: effectiveCategory(catRows, w.category), subcategory: w.subcategory || "", code: w.code || "", description: w.description || "", image: w.image || "", stationIds: (w.stationIds || []).map(String), modifierIds: (w.modifierIds || []).map(String), locationIds: cleanLocationIds(w.locationIds, branchIds) };
 		setEdit({ product: w, isNew: !!p.isDraft, ...cleanItemSetting({ ...(overrides.get(String(p.id)) || {}), id: String(p.id) }), details: base });
 	};
-	const addNew = () => setEdit({ product: { id: "", name: "", price: 0, category: "" }, isNew: true, ...cleanItemSetting({ id: "" }), id: "", details: { name: "", price: "", cost: "", category: catNames[0] || "", subcategory: "", code: "", description: "", image: "", stationIds: [], modifierIds: [] } });
+	const addNew = () => setEdit({ product: { id: "", name: "", price: 0, category: "" }, isNew: true, ...cleanItemSetting({ id: "" }), id: "", details: { name: "", price: "", cost: "", category: catNames[0] || "", subcategory: "", code: "", description: "", image: "", stationIds: [], modifierIds: [], locationIds: newItemLocationIds(locationId, branchIds) } });
 	const close = () => setEdit(null);
 	const save = async () => {
 		const ok = await svc.settings.saveMenuEntity("itemEdits", { id: edit.id, isNew: edit.isNew, ...edit.details });
@@ -698,6 +722,11 @@ export function Items() {
 					</>
 				}
 			/>
+			{branches.length > 1 && locationId !== "all" && (
+				<p className="muted" id="branch-menu-note">
+					Showing what {branches.find((l) => l.id === locationId)?.name || "this branch"} sells. Choose All locations to see every branch.
+				</p>
+			)}
 			<SectionCard>
 				<div className="sk-filters">
 					<input className="input" type="search" placeholder="Search name, code or category" aria-label="Search items" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -732,6 +761,7 @@ export function Items() {
 											<strong>{name(p.name)}</strong>
 											{o && <span className="sk-badge">Customised</span>}
 											{p.isDraft ? <span className="sk-badge">New</span> : itemEdits.some((e) => e.id === String(p.id)) && <span className="sk-badge">Edited</span>}
+											{branches.length > 1 && cleanLocationIds(p.locationIds, branchIds).length > 0 && <span className="sk-badge">{locationBadge(p.locationIds, branches)}</span>}
 										</span>
 										<span className="muted">
 											{money(p.price)} · Tax: {effective(p)} · {salesOf.get(String(p.id)) || "No sales category"}
@@ -813,6 +843,13 @@ export function Items() {
 							</SettingRow>
 							<TextAreaRow id="it-desc" label="Description" value={edit.details.description} max={200} onChange={setDetail("description")} />
 						</SectionCard>
+						{branches.length > 1 && (
+							<SectionCard title="Locations">
+								<SettingRow label="Sold at" help="Choose the branches that sell this item. Leave All locations to sell it everywhere. An item added while signed in to one branch starts with that branch only." wide>
+									<LocationChecks value={edit.details.locationIds} locations={branches} onChange={setDetail("locationIds")} />
+								</SettingRow>
+							</SectionCard>
+						)}
 						<SectionCard title="Kitchen and modifiers">
 							<SettingRow label="Stations" help="Where this item's kitchen tickets go. With none chosen it goes to the first station." wide>
 								<div className="sk-checks">
@@ -856,9 +893,9 @@ export function Items() {
 	);
 }
 
-export function ModifiersAdmin() {
+export function ModifiersAdmin({ openEditor }) {
 	const { settings, modifiers, products } = useData();
-	const { svc, go, canView } = usePos();
+	const { svc } = usePos();
 	const [tab, setTab] = useState("groups");
 	const [group, setGroup] = useState(null); // a modifier group being added or edited as a draft
 	const [groupTouched, setGroupTouched] = useState(false);
@@ -951,11 +988,11 @@ export function ModifiersAdmin() {
 				))}
 			</div>
 			{tab === "groups" ? (
-				<SectionCard description="Groups are created and assigned to items in the Modifier Groups and Products screens. Here you set how many options staff must or may pick.">
-					{canView("modifiers") && (
+				<SectionCard description="Add a group here, put it on items with Assign to items, and set how many options staff must or may pick.">
+					{openEditor && (
 						<p>
-							<button type="button" className="sk-link" onClick={() => go("modifiers")}>
-								Open Modifier Groups
+							<button type="button" className="sk-link" onClick={openEditor}>
+								Open the Group editor
 							</button>
 						</p>
 					)}
@@ -1087,7 +1124,7 @@ export function ModifiersAdmin() {
 				open={!!group}
 				wide
 				title={group?.id ? "Edit modifier group" : "Add modifier group"}
-				subtitle="Applied to the live group when you publish. Assign groups to items in Products & Services."
+				subtitle="Applied to the live group when you publish. Put the group on items with Assign to items on its row."
 				onClose={() => (setGroup(null), setGroupTouched(false))}
 				footer={
 					<>
@@ -1184,7 +1221,7 @@ export function ModifiersAdmin() {
 	);
 }
 
-/** A page with two views: the Menu Admin drafts, and the full live editor that Products & Services and Modifiers used to be. */
+/** A page with two views: the Menu Admin drafts, and the full live editor that Products & Services and Modifiers used to be. `a` may be a function that is given a way to switch to the second view. */
 function TwoViews({ first, second, a, b, note }) {
 	const [tab, setTab] = useState("a");
 	// the tabs go in the row above the page, opposite Review / Publish; without that row (no Publish bar) they stay in the page
@@ -1203,13 +1240,13 @@ function TwoViews({ first, second, a, b, note }) {
 		<>
 			{slot ? createPortal(tabs, slot) : tabs}
 			{tab === "b" && <p className="muted">{note}</p>}
-			{tab === "a" ? a : b}
+			{tab === "a" ? (typeof a === "function" ? a(() => setTab("b")) : a) : b}
 		</>
 	);
 }
 export const ItemsPage = Items;
 export const ModifiersPage = () => (
-	<TwoViews first="Limits and global modifiers" second="Group editor" a={<ModifiersAdmin />} b={<ModifierGroupEditor />} note="The full modifier group editor. Changes here save straight away and are not drafts." />
+	<TwoViews first="Limits and global modifiers" second="Group editor" a={(openEditor) => <ModifiersAdmin openEditor={openEditor} />} b={<ModifierGroupEditor />} note="The full modifier group editor. Changes here save straight away and are not drafts." />
 );
 
 export const MENU_ADMIN_COMPONENTS = { categories: CategoriesAdmin, modifiers: ModifiersPage, salesCategories: SalesCategories, availability: Availability, taxes: Taxes, items: ItemsPage };

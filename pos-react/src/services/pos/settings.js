@@ -22,6 +22,7 @@ import { audit, newId, supportAuditEntry, unmarkDeletedCategory } from "./common
 import { addCommonModifiers, applyCatalogDrafts } from "./catalog";
 import { APPLY_KEYS } from "../../domain/menuAdmin";
 import { categoryKey, productCategories } from "../../domain/catalog";
+import { activeLocationIds, cleanLocationIds } from "../../domain/menuLocation";
 import { assignGroupEdits, newItemFields, subcategoryEntries, subcategoryError, effectiveCategory, categoryEditError, cleanCategoryEdit, cleanGroupEdit, draftList, groupEditError, itemChanges, itemEditError, remainingNames, workingCategories, workingGroups } from "../../domain/catalogDraft";
 import { categorySettingBlank, cleanCategorySetting } from "../../domain/deleteApproval";
 import { createLogger } from "../../utils/logger";
@@ -547,7 +548,7 @@ export async function saveMenuEntity(ctx, key, form) {
 			if (problem) return void (await ctx.ui.alert(problem));
 			const groups = new Set(workingGroups(d.modifiers, draftList(settings, "groupEdits")).filter((g) => g.state !== "removed").map((g) => g.id));
 			const stations = new Set(kitchenStations(settings, ctx.features()["checkout.kds"]).map((s) => s.id));
-			const changes = newItemFields({ ...form, modifierIds: (form.modifierIds || []).filter((i) => groups.has(i)), stationIds: (form.stationIds || []).filter((i) => stations.has(i)) });
+			const changes = newItemFields({ ...form, modifierIds: (form.modifierIds || []).filter((i) => groups.has(i)), stationIds: (form.stationIds || []).filter((i) => stations.has(i)), locationIds: cleanLocationIds(form.locationIds, activeLocationIds(d.locations)) });
 			const id = drafted?.id || form.id || newId("p");
 			await writeDraft(ctx, key, [...draftList(settings, "itemEdits").filter((x) => x.id !== id), { id, isNew: true, name: changes.name, original: "", changes }]);
 			ctx.ui.notice(DRAFT_NOTE);
@@ -556,7 +557,7 @@ export async function saveMenuEntity(ctx, key, form) {
 		if (!product) return void (await ctx.ui.alert("That item no longer exists."));
 		const problem = itemEditError(form, remainingNames(rows));
 		if (problem) return void (await ctx.ui.alert(problem));
-		const changes = itemChanges({ ...product, category: effectiveCategory(rows, product.category) }, form); // against the category it will have once published
+		const changes = itemChanges({ ...product, category: effectiveCategory(rows, product.category) }, form.locationIds === undefined ? form : { ...form, locationIds: cleanLocationIds(form.locationIds, activeLocationIds(d.locations)) }); // against the category it will have once published
 		const rest = draftList(settings, "itemEdits").filter((x) => x.id !== String(product.id));
 		await writeDraft(ctx, key, Object.keys(changes).length ? [...rest, { id: String(product.id), name: changes.name || product.name, original: product.name, changes, was: Object.fromEntries(Object.keys(changes).map((f) => [f, f === "image" ? !!product.image : product[f]])) }] : rest);
 		ctx.ui.notice(DRAFT_NOTE);

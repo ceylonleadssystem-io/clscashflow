@@ -11,7 +11,7 @@ import { FULL_SETTINGS_ROLES, ROLES, ROLE_VIEWS, isOwnerRole } from "../config/r
 export const PERMISSIONS = [
 	{ group: "Back office", key: "reports.pos", label: "View reports", tip: "Opens the Reports page and the reports in the admin portal." },
 	{ group: "Back office", key: "settings.system.edit", label: "Change settings", tip: "System Options, location info, users and jobs." },
-	{ group: "Menu", key: "menu.view", label: "Menu: items, modifiers and stations", tip: "Opens Products & Services, Modifiers and Stations." },
+	{ group: "Menu", key: "menu.view", label: "Menu: items, modifiers and stations", tip: "Opens Menu Admin (items, modifiers) and Stations." },
 	{ group: "Menu", key: "inventory.view", label: "Inventory and stock", tip: "Opens Inventory & Stock." },
 	{ group: "Users", key: "users.view", label: "See users and timesheets", tip: "Lists users and shows timesheets." },
 	{ group: "Users", key: "time.edit_entries", label: "Edit timesheets", tip: "Correct or add a shift in the last month. Older shifts are locked for everyone." },
@@ -28,6 +28,7 @@ export const PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
 const viewKey = { "reports.pos": "reports", "menu.view": "products", "inventory.view": "inventory", "pos.order.create": "checkout" };
 const roleHas = (role, key) => {
 	if (isOwnerRole(role)) return true;
+	if (role === "technician") return false; // a technician holds no back-office or checkout permission unless an owner grants it
 	if (viewKey[key]) return (ROLE_VIEWS[role] || []).includes(viewKey[key]);
 	if (key === "settings.system.edit") return FULL_SETTINGS_ROLES.includes(role);
 	if (key === "users.view" || key === "users.edit" || key === "time.edit_entries") return role === "manager";
@@ -38,7 +39,8 @@ const roleHas = (role, key) => {
 /** What a role gets with no personal changes: the keys it holds. */
 export const rolePreset = (role) => PERMISSION_KEYS.filter((k) => roleHas(role, k));
 /** Roles that can be chosen as a starting point ("Copy from"). */
-export const PRESET_ROLES = ROLES;
+// the Technician role belongs to the Automobile business type; it is not one of ROLES, so the standard job list and role copies are unchanged
+export const PRESET_ROLES = [...ROLES, "technician"];
 
 export const accessOf = (settings = {}, userId) => ({ grant: [], revoke: [], jobs: [], ...(settings.userAccess?.[userId] || {}) });
 

@@ -19,6 +19,7 @@ import { FULL_SETTINGS_ROLES } from "../config/roles";
 const TABS = [
 	["overview", "Overview"],
 	["jobs", "Bookings & Jobs"],
+	["technicians", "Technicians"],
 	["vehicles", "Vehicles"],
 	["packages", "Packages"],
 	["invoices", "Invoices"],
@@ -311,6 +312,59 @@ export function Detailing({ tab: forced }) {
 								{!shown.length && (
 									<tr>
 										<td colSpan="7">{jobs.length ? "No jobs match this view." : mine ? "No jobs are assigned to you." : "No bookings yet."}</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			)}
+
+			{tab === "technicians" && (
+				<div className="panel">
+					<div className="panel-head">
+						<div>
+							<div className="panel-title">Technicians</div>
+							<div className="muted">The people who do the work. Everyone added here can be ticked on a booking, several at once.</div>
+						</div>
+						<div className="tools">
+							<button className="btn" disabled={!manager} onClick={() => setModal({ kind: "technician" })}>
+								+ Technician
+							</button>
+						</div>
+					</div>
+					<div className="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Status</th>
+									<th>Open jobs</th>
+									<th>Completed jobs</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								{data.users
+									.filter((u) => u.role === "technician")
+									.map((u) => (
+										<tr key={u.id}>
+											<td>{u.name}</td>
+											<td>
+												<span className="badge">{u.active === false ? "Inactive" : "Active"}</span>
+											</td>
+											<td>{data.detailJobs.filter((j) => jobTechs(j).includes(u.id) && !CLOSED.includes(j.status)).length}</td>
+											<td>{data.detailJobs.filter((j) => jobTechs(j).includes(u.id) && ["Completed", "Invoiced"].includes(j.status)).length}</td>
+											<td>
+												<button className="btn out" disabled={!manager} onClick={() => setModal({ kind: "technician", id: u.id })}>
+													Edit
+												</button>
+											</td>
+										</tr>
+									))}
+								{!data.users.some((u) => u.role === "technician") && (
+									<tr>
+										<td colSpan="5">No technicians yet. Add the people who do the work, then assign them on bookings.</td>
 									</tr>
 								)}
 							</tbody>
@@ -647,12 +701,13 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 	// load the form once per opened dialog
 	if (key !== seed) {
 		setSeed(key);
-		const old = modal?.id ? { job: data.detailJobs, vehicle: data.vehicles, package: data.detailPackages, inspect: data.detailJobs, pay: data.detailJobs }[kind]?.find((x) => x.id === modal.id) : null;
+		const old = modal?.id ? { job: data.detailJobs, vehicle: data.vehicles, package: data.detailPackages, inspect: data.detailJobs, pay: data.detailJobs, technician: data.users }[kind]?.find((x) => x.id === modal.id) : null;
 		const blank = {
 			job: { customerId: modal?.customerId || "", vehicleId: "", packageId: "", scheduledAt: localNow(), address: "", technicianIds: [], notes: "", discount: "" },
 			vehicle: { customerId: modal?.customerId || "", registration: "", make: "", model: "", year: "", colour: "", category: "Sedan", notes: "" },
 			package: { name: "", category: "Sedan", price: "", durationMin: 60, description: "", supplies: [], active: true },
 			customer: { name: "", phone: "" },
+			technician: { name: "", pin: "", active: true },
 			inspect: { inspection: "", signedBy: "" },
 			pay: { method: "Cash", amount: "" },
 		}[kind];
@@ -727,7 +782,7 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 		const r = await fn();
 		if (r) after ? after(r) : onClose();
 	};
-	const TITLES = { job: "Booking", vehicle: "Vehicle", package: "Service package", customer: "New customer", inspect: "Inspection & sign-off", pay: "Record payment" };
+	const TITLES = { job: "Booking", vehicle: "Vehicle", package: "Service package", customer: "New customer", inspect: "Inspection & sign-off", pay: "Record payment", technician: "Technician" };
 	const SAVE = {
 		job: run(() => svc.detailing.saveJob(f)),
 		vehicle: run(() => svc.detailing.saveVehicle(f), (v) => (modal.customerId ? setModal({ kind: "job", customerId: v.customerId }) : onClose())),
@@ -735,6 +790,8 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 		customer: run(() => svc.customers.saveCustomer({ id: "", name: f.name || "", phone: f.phone || "", email: "", birthday: "", company: "", address: "", tags: "", notes: "", type: "regular" }), (c) => setModal({ kind: "job", customerId: c.id, id: "" })),
 		inspect: run(() => svc.detailing.saveInspection(modal.id, f)),
 		pay: run(() => svc.detailing.recordPayment(modal.id, f)),
+		// a technician is a user with the Technician role (a PIN to sign in, all locations, no automatic clock-in)
+		technician: run(() => svc.staff.saveUser({ id: modal.id || "", name: f.name || "", pin: f.pin || "", role: "technician", active: f.active !== false, clockInBehaviour: "manual", registerBehaviour: "manual", locationAccess: "all", locationIds: [] })),
 	}[kind];
 	const owned = data.vehicles.filter((v) => v.customerId === f.customerId);
 	const packages = data.detailPackages.filter((p) => p.active !== false || p.id === f.packageId);
@@ -742,6 +799,9 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 	const del = async () => {
 		if (await svc.detailing.removeRecord({ job: "detailJobs", vehicle: "vehicles", package: "detailPackages" }[kind], modal.id)) onClose();
 	};
+	// the booking offers the people with the Technician role; a business that has none yet still sees its active users, and anyone already on the job stays listed
+	const techUsers = data.users.filter((u) => u.role === "technician");
+	const pickable = (techUsers.length ? techUsers : data.users).filter((u) => u.active !== false || (f.technicianIds || []).includes(u.id));
 	const supplies = f.supplies || [];
 	const setSupply = (i, patch) => setF((v) => ({ ...v, supplies: supplies.map((s, n) => (n === i ? { ...s, ...patch } : s)) }));
 	return (
@@ -783,13 +843,13 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 							{field(
 								"Technicians (tick everyone working on this vehicle)",
 								<div role="group" aria-label="Technicians" style={{ display: "grid", gap: 6 }}>
-									{data.users.filter((u) => u.active !== false).map((u) => (
+									{pickable.map((u) => (
 										<label key={u.id} style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 32 }}>
 											<input type="checkbox" checked={(f.technicianIds || []).includes(u.id)} onChange={(e) => setF((v) => ({ ...v, technicianIds: e.target.checked ? [...(v.technicianIds || []), u.id] : (v.technicianIds || []).filter((x) => x !== u.id) }))} />
 											{u.name}
 										</label>
 									))}
-									{!data.users.some((u) => u.active !== false) && <span className="muted">No users yet. Add employees first.</span>}
+									{!pickable.length && <span className="muted">No technicians yet. Add them on the Technicians page.</span>}
 								</div>,
 								true,
 							)}
@@ -846,6 +906,19 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 									<button type="button" className="btn out" onClick={() => setF((v) => ({ ...v, supplies: [...supplies, { itemId: "", qty: 1 }] }))}>+ Add supply</button>
 								</>,
 								true,
+							)}
+						</>
+					)}
+					{kind === "technician" && (
+						<>
+							{field("Name *", input("name"))}
+							{field("PIN * (4 to 6 digits, used to sign in)", input("pin", "password", { inputMode: "numeric", maxLength: 6, autoComplete: "new-password" }))}
+							{field(
+								"Status",
+								<select className="input" value={String(f.active !== false)} onChange={(e) => setF((v) => ({ ...v, active: e.target.value === "true" }))}>
+									<option value="true">Active</option>
+									<option value="false">Inactive</option>
+								</select>,
 							)}
 						</>
 					)}

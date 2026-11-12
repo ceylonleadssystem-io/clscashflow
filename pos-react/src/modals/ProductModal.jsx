@@ -7,6 +7,9 @@ import { Modal, ModalBody, NumberInput } from "../components/ui";
 import { productCategories, productSizeGroup, subcategoriesFor } from "../domain/catalog";
 import { productSizeItem } from "../domain/inventory";
 import { kitchenStations } from "../domain/kitchenStations";
+import { activeLocationIds, cleanLocationIds, newItemLocationIds } from "../domain/menuLocation";
+import { LocationChecks } from "../components/settings/kit/LocationChecks";
+import { activeLocations } from "../services/pos/locations";
 import { useData } from "../store/DataProvider";
 import { useFeature } from "../store/FeatureProvider";
 import { useModals } from "../store/ModalsProvider";
@@ -34,6 +37,7 @@ const blank = () => ({
 	modifierRules: {},
 	recipe: [],
 	stationIds: [],
+	locationIds: [],
 });
 
 /** Add / edit a product or service (global host, opened from several screens). */
@@ -45,7 +49,9 @@ export function ProductModalHost() {
 
 function ProductModal({ id, open, onClose }) {
 	const data = useData();
-	const { svc, kitchen } = usePos();
+	const { svc, kitchen, locationId } = usePos();
+	const branches = activeLocations(data);
+	const branchIds = activeLocationIds(data.locations);
 	const { openBarcode } = useModals();
 	const subcats = useFeature("catalogue.subcategories");
 	const positioning = useFeature("catalogue.imagePositioning");
@@ -61,7 +67,7 @@ function ProductModal({ id, open, onClose }) {
 	useEffect(() => {
 		if (!open) return;
 		const p = data.products.find((x) => x.id === id);
-		if (!p) return setF(blank());
+		if (!p) return setF({ ...blank(), locationIds: newItemLocationIds(locationId, branchIds) });
 		setF({
 			...blank(),
 			...p,
@@ -79,6 +85,7 @@ function ProductModal({ id, open, onClose }) {
 			modifierRules: p.modifierRules || {},
 			recipe: p.recipe || [],
 			stationIds: (p.stationIds || []).map(String),
+			locationIds: cleanLocationIds(p.locationIds, branchIds),
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open, id]);
@@ -371,6 +378,13 @@ function ProductModal({ id, open, onClose }) {
 								))}
 							</div>
 						</fieldset>
+					)}
+					{branches.length > 1 && (
+						<div className="field full" id="p-locations">
+							<label>Sold at</label>
+							<div className="muted">Choose the branches that sell this item. An item added while signed in to one branch starts with that branch only.</div>
+							<LocationChecks value={f.locationIds || []} locations={branches} onChange={(locationIds) => setF((v) => ({ ...v, locationIds }))} />
+						</div>
 					)}
 					{recipes && (
 						<div className="field full">

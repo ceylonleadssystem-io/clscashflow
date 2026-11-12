@@ -15,7 +15,7 @@ import { useFeature } from "../../store/FeatureProvider";
 import { usePos } from "../../store/PosProvider";
 import { isOwnerRole } from "../../config/roles";
 
-const ROLE_LABEL = { owner: "Owner", admin: "Admin", manager: "Manager", accountant: "Accountant", cashier: "Cashier" };
+const ROLE_LABEL = { owner: "Owner", admin: "Admin", manager: "Manager", accountant: "Accountant", cashier: "Cashier", technician: "Technician" };
 const TABS = [
 	["general", "General"],
 	["permissions", "Permissions"],
@@ -45,7 +45,7 @@ function UserDetail({ id, onBack }) {
 	const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 	const all = isOwnerRole(form.role);
 	const mayAssign = (r) => isOwnerRole(currentUser?.role) || !isOwnerRole(r);
-	const roles = PRESET_ROLES.filter((r) => mayAssign(r) || r === form.role);
+	const roles = PRESET_ROLES.filter((r) => (mayAssign(r) && (r !== "technician" || data.settings.businessType === "automobile")) || r === form.role);
 	const changeRole = (role) => {
 		setForm((f) => ({ ...f, role }));
 		setKeys(rolePreset(role)); // a new role starts from its own permissions

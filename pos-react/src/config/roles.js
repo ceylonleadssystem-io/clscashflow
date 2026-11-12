@@ -48,6 +48,8 @@ export const ROLE_VIEWS = {
 	accountant: ["dashboard", "sales", "receipts", "reports", "inventory", "industry", "staff", "settings"],
 	cashier: ["checkout", "orders", "tables", "receipts", "customers", "staff", "settings"],
 };
+// technicians (Automobile) work from the detailing pages; the POS gives them only their own attendance and settings
+ROLE_VIEWS.technician = ["staff", "settings"];
 ROLE_VIEWS.admin = ROLE_VIEWS.owner.slice();
 
 export const VIEW_TITLES = {
