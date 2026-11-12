@@ -45,6 +45,7 @@ const ITEMS = [
 	{ id: "overview", tab: "overview", label: "Dashboard", title: "Dashboard", sub: "Your team is on the move. Keep the day running smoothly." },
 	{ id: "jobs", tab: "jobs", label: "Bookings & Jobs", title: "Bookings & Jobs", sub: "Follow every job, from booking to invoice." },
 	{ id: "customers", view: Customers, label: "Customers", title: "Customers", sub: "Keep customer details, vehicles and service history together." },
+	{ id: "technicians", tab: "technicians", label: "Technicians", title: "Technicians", sub: "Add the people who do the work; they appear when you assign a booking." },
 	{ id: "vehicles", tab: "vehicles", label: "Vehicles", title: "Vehicles", sub: "Find a vehicle and view its details or past services." },
 	{ id: "packages", tab: "packages", label: "Services & Packages", title: "Services & Packages", sub: "Set your service prices, duration and supplies." },
 	{ id: "employees", view: Staff, label: "Employees", title: "Employees", sub: "See your team, assigned jobs and access." },
@@ -55,7 +56,7 @@ const ITEMS = [
 	{ id: "settings", view: BusinessSettings, label: "Settings", title: "Settings", sub: "Manage business details and your interface." },
 ];
 /** Pages each role opens: technicians (the cashier role) only their own work and timesheet, accountants only money pages. */
-const ROLE_ITEMS = { cashier: ["jobs", "timesheets"], accountant: ["invoices", "reports"] };
+const ROLE_ITEMS = { technician: ["jobs", "timesheets"], cashier: ["jobs", "timesheets"], accountant: ["invoices", "reports"] };
 
 export function AutomobileShell() {
 	const { currentUser, staffLogout, setView } = usePos();

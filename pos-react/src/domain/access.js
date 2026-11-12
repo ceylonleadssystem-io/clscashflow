@@ -28,6 +28,7 @@ export const PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
 const viewKey = { "reports.pos": "reports", "menu.view": "products", "inventory.view": "inventory", "pos.order.create": "checkout" };
 const roleHas = (role, key) => {
 	if (isOwnerRole(role)) return true;
+	if (role === "technician") return false; // a technician holds no back-office or checkout permission unless an owner grants it
 	if (viewKey[key]) return (ROLE_VIEWS[role] || []).includes(viewKey[key]);
 	if (key === "settings.system.edit") return FULL_SETTINGS_ROLES.includes(role);
 	if (key === "users.view" || key === "users.edit" || key === "time.edit_entries") return role === "manager";
@@ -38,7 +39,8 @@ const roleHas = (role, key) => {
 /** What a role gets with no personal changes: the keys it holds. */
 export const rolePreset = (role) => PERMISSION_KEYS.filter((k) => roleHas(role, k));
 /** Roles that can be chosen as a starting point ("Copy from"). */
-export const PRESET_ROLES = ROLES;
+// the Technician role belongs to the Automobile business type; it is not one of ROLES, so the standard job list and role copies are unchanged
+export const PRESET_ROLES = [...ROLES, "technician"];
 
 export const accessOf = (settings = {}, userId) => ({ grant: [], revoke: [], jobs: [], ...(settings.userAccess?.[userId] || {}) });
 

@@ -59,6 +59,7 @@ export function UserModal({ id, open, onClose }) {
 					<div className="field">
 						<label>Access role</label>
 						<select className="input" id="u-role" value={f.role} onChange={set("role")}>
+							{(data.settings.businessType === "automobile" || f.role === "technician") && <option value="technician">Technician</option>}
 							<option value="cashier">Cashier</option>
 							<option value="manager">Manager</option>
 							<option value="accountant">Accountant</option>
