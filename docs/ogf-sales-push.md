@@ -41,6 +41,15 @@ The page offers a setting for each, with the default that follows the written sp
 9. **Server addresses, property code, logins, a test server, lease dates, fixed IP address needed?** None of these are in the documents.
 10. **Reward app:** not built; the Reward API specification has not been received.
 
+## OGF's Postman guide (what it adds)
+`docs/ogf-postman/` has a Postman collection for OGF's UAT test (login, sales, void, refund, return, exchange, and four negative tests) and how to run it.
+- The UAT server is `https://uat2-pos.imonitor.center` (the guide's screenshots say `uat-pos...`): login `POST /connect/token`, import
+  `POST /api/possale/importpossaleswithitems`, OAuth 2.0 client credentials with the credentials in the body, then a Bearer token. The POS already does exactly this
+  and its default paths are these. The client ID and secret come from OGF's information sheet.
+- Their working example body uses `"SalesType": "SALES"` (capitals) and both spellings of the discount field in one body, so the server probably accepts both. The POS
+  sends both spellings and `Sales`.
+- The token in the guide lasts 3000 seconds (the spec says 3600); the POS asks for a new token for every batch.
+
 ## Limits
 - The push runs on Netlify from the synced cloud copy, so a sale is sent after it has synced (a few seconds online, later after an offline period).
 - It only calls public `https` server names, never an address on a private network.

@@ -1,0 +1,1145 @@
+{
+  "info": {
+    "name": "OGF POS-02 UAT (Transaction With Item)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Tests of OGF's POS REST API as in their 'RestFul API Testing with Postman' guide and spec v2.4/2.5. Run the requests in order (or with the Runner). Import the environment too and fill in clientId, clientSecret, propertyCode and posInterfaceCode (given by OGF). The secret is never saved in this file."
+  },
+  "item": [
+    {
+      "name": "1. Get access token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('a Bearer token came back', () => { pm.expect(j.access_token).to.be.a('string').and.not.empty; pm.expect(String(j.token_type).toLowerCase()).to.eql('bearer'); });",
+              "pm.collectionVariables.set('accessToken', j.access_token);",
+              "console.log('Token expires in ' + j.expires_in + ' seconds');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials",
+              "type": "text"
+            },
+            {
+              "key": "client_id",
+              "value": "{{clientId}}",
+              "type": "text"
+            },
+            {
+              "key": "client_secret",
+              "value": "{{clientSecret}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/connect/token",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "connect",
+            "token"
+          ]
+        },
+        "description": "OAuth 2.0 client credentials with the client credentials sent in the body, as in OGF's Postman guide. The token is kept for the other requests."
+      }
+    },
+    {
+      "name": "2. Sales - cash, 2 items, 5% tax",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              "pm.collectionVariables.set('r1', 'TEST-R1-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{r1}}\",\n      \"NoOfItems\": 2,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 300.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        },\n        {\n          \"ItemDesc\": \"Orange\",\n          \"ItemAmt\": 200.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "The sample of the spec: Apple 300 + Orange 200, tax 5%, cash."
+      }
+    },
+    {
+      "name": "3. Sales - restaurant bill with discount, service charge and tax (card)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              "pm.collectionVariables.set('r2', 'TEST-R2-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{r2}}\",\n      \"NoOfItems\": 3,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 1732.5,\n      \"TotalSalesAmtAfterTax\": 2016.0,\n      \"SalesTaxRate\": 16.36,\n      \"ServiceChargeAmt\": 157.5,\n      \"PaymentAmt\": 2016.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Credit Card\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"2 x Latte (Oat)\",\n          \"ItemAmt\": 1000.0,\n          \"ItemDiscountAmt\": 100.0,\n          \"ItemDiscoumtAmt\": 100.0\n        },\n        {\n          \"ItemDesc\": \"Cake\",\n          \"ItemAmt\": 750.0,\n          \"ItemDiscountAmt\": 75.0,\n          \"ItemDiscoumtAmt\": 75.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "What the POS sends for a restaurant bill: items 1750, discount 175, service charge 157.50, tax 283.50, total 2016.00 (tax rate sent is the effective 16.36%)."
+      }
+    },
+    {
+      "name": "4. Sales - split payment (cash + credit card), two receipts in one batch",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              "pm.collectionVariables.set('r3a', 'TEST-R3A-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));",
+              "pm.collectionVariables.set('r3b', 'TEST-R3B-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (2)', () => { pm.expect(j.RecordsReceived).to.eql(2); pm.expect(j.RecordsImported).to.eql(2); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{r3a}}\",\n      \"NoOfItems\": 3,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 1732.5,\n      \"TotalSalesAmtAfterTax\": 2016.0,\n      \"SalesTaxRate\": 16.36,\n      \"ServiceChargeAmt\": 157.5,\n      \"PaymentAmt\": 2016.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash, Credit Card\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"2 x Latte (Oat)\",\n          \"ItemAmt\": 1000.0,\n          \"ItemDiscountAmt\": 100.0,\n          \"ItemDiscoumtAmt\": 100.0\n        },\n        {\n          \"ItemDesc\": \"Cake\",\n          \"ItemAmt\": 750.0,\n          \"ItemDiscountAmt\": 75.0,\n          \"ItemDiscoumtAmt\": 75.0\n        }\n      ]\n    },\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{r3b}}\",\n      \"NoOfItems\": 2,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 300.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        },\n        {\n          \"ItemDesc\": \"Orange\",\n          \"ItemAmt\": 200.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "Two different receipts in one batch; the payment methods comma separated."
+      }
+    },
+    {
+      "name": "5a. Sales - receipt that is voided next",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              "pm.collectionVariables.set('rv', 'TEST-RV-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{rv}}\",\n      \"NoOfItems\": 3,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 1732.5,\n      \"TotalSalesAmtAfterTax\": 2016.0,\n      \"SalesTaxRate\": 16.36,\n      \"ServiceChargeAmt\": 157.5,\n      \"PaymentAmt\": 2016.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Credit Card\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"2 x Latte (Oat)\",\n          \"ItemAmt\": 1000.0,\n          \"ItemDiscountAmt\": 100.0,\n          \"ItemDiscoumtAmt\": 100.0\n        },\n        {\n          \"ItemDesc\": \"Cake\",\n          \"ItemAmt\": 750.0,\n          \"ItemDiscountAmt\": 75.0,\n          \"ItemDiscoumtAmt\": 75.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "The receipt the next request voids."
+      }
+    },
+    {
+      "name": "5b. Void - same receipt number, later batch",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{rv}}\",\n      \"NoOfItems\": 3,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 1732.5,\n      \"TotalSalesAmtAfterTax\": 2016.0,\n      \"SalesTaxRate\": 16.36,\n      \"ServiceChargeAmt\": 157.5,\n      \"PaymentAmt\": 2016.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Credit Card\",\n      \"SalesType\": \"Void\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"2 x Latte (Oat)\",\n          \"ItemAmt\": 1000.0,\n          \"ItemDiscountAmt\": 100.0,\n          \"ItemDiscoumtAmt\": 100.0\n        },\n        {\n          \"ItemDesc\": \"Cake\",\n          \"ItemAmt\": 750.0,\n          \"ItemDiscountAmt\": 75.0,\n          \"ItemDiscoumtAmt\": 75.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "A void is its own record with the same receipt number and positive amounts, sent in a later batch than the sale."
+      }
+    },
+    {
+      "name": "6a. Sales - receipt that is partly refunded next",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              "pm.collectionVariables.set('rf', 'TEST-RF-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{rf}}\",\n      \"NoOfItems\": 3,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 1732.5,\n      \"TotalSalesAmtAfterTax\": 2016.0,\n      \"SalesTaxRate\": 16.36,\n      \"ServiceChargeAmt\": 157.5,\n      \"PaymentAmt\": 2016.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Credit Card\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"2 x Latte (Oat)\",\n          \"ItemAmt\": 1000.0,\n          \"ItemDiscountAmt\": 100.0,\n          \"ItemDiscoumtAmt\": 100.0\n        },\n        {\n          \"ItemDesc\": \"Cake\",\n          \"ItemAmt\": 750.0,\n          \"ItemDiscountAmt\": 75.0,\n          \"ItemDiscoumtAmt\": 75.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": ""
+      }
+    },
+    {
+      "name": "6b. Refund - one Latte back (576.00)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{rf}}\",\n      \"NoOfItems\": 1,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 495.0,\n      \"TotalSalesAmtAfterTax\": 576.0,\n      \"SalesTaxRate\": 16.36,\n      \"ServiceChargeAmt\": 45.0,\n      \"PaymentAmt\": 576.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Credit Card\",\n      \"SalesType\": \"Refund\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Latte (Oat)\",\n          \"ItemAmt\": 500.0,\n          \"ItemDiscountAmt\": 50.0,\n          \"ItemDiscoumtAmt\": 50.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "A refund of part of a sale: only the refunded items, the money returned as the amount."
+      }
+    },
+    {
+      "name": "7. Return (goods come back)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              "pm.collectionVariables.set('rr', 'TEST-RR-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{rr}}\",\n      \"NoOfItems\": 2,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Return\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 300.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        },\n        {\n          \"ItemDesc\": \"Orange\",\n          \"ItemAmt\": 200.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "Same as a refund but the goods are collected back. The POS sends partial refunds as Refund or Return (a setting)."
+      }
+    },
+    {
+      "name": "8. Exchange",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+              "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+              "const two = (n) => String(n).padStart(2, '0');",
+              "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "const set = (k, v) => pm.collectionVariables.set(k, v);",
+              "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+              "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+              "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+              "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+              "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+              "set('batchCode', batch); set('lastBatch', batch);",
+              "const tomorrow = new Date(mall.getTime() + 86400000);",
+              "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+              "pm.collectionVariables.set('rx', 'TEST-RX-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('ReturnStatus is Success', () => pm.expect(j.ReturnStatus).to.eql('Success'));",
+              "pm.test('every record was imported (1)', () => { pm.expect(j.RecordsReceived).to.eql(1); pm.expect(j.RecordsImported).to.eql(1); });",
+              "pm.test('the batch code is echoed back', () => pm.expect(j.BatchCode).to.eql(pm.collectionVariables.get('batchCode')));",
+              "pm.test('no error details', () => pm.expect(j.ErrorDetails || '').to.eql(''));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{rx}}\",\n      \"NoOfItems\": 2,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Exchange\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 300.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        },\n        {\n          \"ItemDesc\": \"Orange\",\n          \"ItemAmt\": 200.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "possale",
+            "importpossaleswithitems"
+          ]
+        },
+        "description": "In the spec's list of sales types. The POS does not create Exchange records yet: this is here to ask OGF how they expect one."
+      }
+    },
+    {
+      "name": "Negative tests (each should be refused by the mall)",
+      "item": [
+        {
+          "name": "N1. Duplicate receipt in one batch (should be refused)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+                  "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+                  "const two = (n) => String(n).padStart(2, '0');",
+                  "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "const set = (k, v) => pm.collectionVariables.set(k, v);",
+                  "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+                  "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+                  "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+                  "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+                  "set('batchCode', batch); set('lastBatch', batch);",
+                  "const tomorrow = new Date(mall.getTime() + 86400000);",
+                  "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+                  "pm.collectionVariables.set('n1', 'TEST-N1-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 (the mall answers, with the failure in the body)', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('the mall did NOT import everything (expected for this negative test)', () => pm.expect(j.RecordsImported).to.be.below(j.RecordsReceived));",
+                  "pm.test('the mall says which rows failed or why', () => pm.expect((j.DefectiveRowNos || '') + (j.ErrorDetails || '')).to.not.eql(''));",
+                  "console.log('Answer: ' + JSON.stringify(j));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{n1}}\",\n      \"NoOfItems\": 2,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 300.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        },\n        {\n          \"ItemDesc\": \"Orange\",\n          \"ItemAmt\": 200.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    },\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{n1}}\",\n      \"NoOfItems\": 2,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 300.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        },\n        {\n          \"ItemDesc\": \"Orange\",\n          \"ItemAmt\": 200.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "possale",
+                "importpossaleswithitems"
+              ]
+            },
+            "description": "OGF checks: no duplicate receipt in a batch."
+          }
+        },
+        {
+          "name": "N2. Receipt dated tomorrow (should be refused)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+                  "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+                  "const two = (n) => String(n).padStart(2, '0');",
+                  "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "const set = (k, v) => pm.collectionVariables.set(k, v);",
+                  "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+                  "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+                  "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+                  "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+                  "set('batchCode', batch); set('lastBatch', batch);",
+                  "const tomorrow = new Date(mall.getTime() + 86400000);",
+                  "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+                  "pm.collectionVariables.set('n2', 'TEST-N2-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 (the mall answers, with the failure in the body)', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('the mall did NOT import everything (expected for this negative test)', () => pm.expect(j.RecordsImported).to.be.below(j.RecordsReceived));",
+                  "pm.test('the mall says which rows failed or why', () => pm.expect((j.DefectiveRowNos || '') + (j.ErrorDetails || '')).to.not.eql(''));",
+                  "console.log('Answer: ' + JSON.stringify(j));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{futureDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{n2}}\",\n      \"NoOfItems\": 1,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 500.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "possale",
+                "importpossaleswithitems"
+              ]
+            },
+            "description": "OGF checks: transaction date not after the submission date."
+          }
+        },
+        {
+          "name": "N3. Wrong property code inside the record (should be refused)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+                  "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+                  "const two = (n) => String(n).padStart(2, '0');",
+                  "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "const set = (k, v) => pm.collectionVariables.set(k, v);",
+                  "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+                  "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+                  "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+                  "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+                  "set('batchCode', batch); set('lastBatch', batch);",
+                  "const tomorrow = new Date(mall.getTime() + 86400000);",
+                  "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+                  "pm.collectionVariables.set('n3', 'TEST-N3-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 (the mall answers, with the failure in the body)', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('the mall did NOT import everything (expected for this negative test)', () => pm.expect(j.RecordsImported).to.be.below(j.RecordsReceived));",
+                  "pm.test('the mall says which rows failed or why', () => pm.expect((j.DefectiveRowNos || '') + (j.ErrorDetails || '')).to.not.eql(''));",
+                  "console.log('Answer: ' + JSON.stringify(j));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"XXXX\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{n3}}\",\n      \"NoOfItems\": 1,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": 500.0,\n      \"TotalSalesAmtAfterTax\": 525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": 525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 500.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "possale",
+                "importpossaleswithitems"
+              ]
+            },
+            "description": "A record whose PropertyCode differs from the header is rejected."
+          }
+        },
+        {
+          "name": "N4. Negative amount (should be refused)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "// Mall time is Sri Lanka (UTC+5:30, no daylight saving). Everything here is generated fresh for each request.",
+                  "const mall = new Date(Date.now() + 5.5 * 3600 * 1000);",
+                  "const two = (n) => String(n).padStart(2, '0');",
+                  "const stamp = mall.getUTCFullYear() + two(mall.getUTCMonth() + 1) + two(mall.getUTCDate()) + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "const set = (k, v) => pm.collectionVariables.set(k, v);",
+                  "set('receiptDate', two(mall.getUTCDate()) + '/' + two(mall.getUTCMonth() + 1) + '/' + mall.getUTCFullYear());",
+                  "set('receiptTime', two(mall.getUTCHours()) + ':' + two(mall.getUTCMinutes()) + ':' + two(mall.getUTCSeconds()));",
+                  "// one batch number, one submission: ddmmyyyyhhmmss, and never the same twice in a row",
+                  "let batch = two(mall.getUTCDate()) + two(mall.getUTCMonth() + 1) + mall.getUTCFullYear() + two(mall.getUTCHours()) + two(mall.getUTCMinutes()) + two(mall.getUTCSeconds());",
+                  "if (batch === pm.collectionVariables.get('lastBatch')) { const d = new Date(mall.getTime() + 1000); batch = two(d.getUTCDate()) + two(d.getUTCMonth() + 1) + d.getUTCFullYear() + two(d.getUTCHours()) + two(d.getUTCMinutes()) + two(d.getUTCSeconds()); }",
+                  "set('batchCode', batch); set('lastBatch', batch);",
+                  "const tomorrow = new Date(mall.getTime() + 86400000);",
+                  "set('futureDate', two(tomorrow.getUTCDate()) + '/' + two(tomorrow.getUTCMonth() + 1) + '/' + tomorrow.getUTCFullYear());",
+                  "pm.collectionVariables.set('n4', 'TEST-N4-' + stamp + '' + '-' + (pm.collectionVariables.get('runNo') || '1'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 (the mall answers, with the failure in the body)', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('the mall did NOT import everything (expected for this negative test)', () => pm.expect(j.RecordsImported).to.be.below(j.RecordsReceived));",
+                  "pm.test('the mall says which rows failed or why', () => pm.expect((j.DefectiveRowNos || '') + (j.ErrorDetails || '')).to.not.eql(''));",
+                  "console.log('Answer: ' + JSON.stringify(j));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"AppCode\": \"POS-02\",\n  \"PropertyCode\": \"{{propertyCode}}\",\n  \"ClientID\": \"{{clientId}}\",\n  \"ClientSecret\": \"{{clientSecret}}\",\n  \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n  \"BatchCode\": \"{{batchCode}}\",\n  \"PosSales\": [\n    {\n      \"PropertyCode\": \"{{propertyCode}}\",\n      \"POSInterfaceCode\": \"{{posInterfaceCode}}\",\n      \"ReceiptDate\": \"{{receiptDate}}\",\n      \"ReceiptTime\": \"{{receiptTime}}\",\n      \"ReceiptNo\": \"{{n4}}\",\n      \"NoOfItems\": 1,\n      \"SalesCurrency\": \"LKR\",\n      \"TotalSalesAmtB4Tax\": -500.0,\n      \"TotalSalesAmtAfterTax\": -525.0,\n      \"SalesTaxRate\": 5.0,\n      \"ServiceChargeAmt\": 0,\n      \"PaymentAmt\": -525.0,\n      \"PaymentCurrency\": \"LKR\",\n      \"PaymentMethod\": \"Cash\",\n      \"SalesType\": \"Sales\",\n      \"Items\": [\n        {\n          \"ItemDesc\": \"Apple\",\n          \"ItemAmt\": 500.0,\n          \"ItemDiscountAmt\": 0.0,\n          \"ItemDiscoumtAmt\": 0.0\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/possale/importpossaleswithitems",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "possale",
+                "importpossaleswithitems"
+              ]
+            },
+            "description": "OGF checks: all amounts positive, even for voids and refunds."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "lastBatch",
+      "value": ""
+    }
+  ]
+}
