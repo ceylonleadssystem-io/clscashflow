@@ -1222,18 +1222,19 @@ class Component extends DCLogic {
       };
     });
     // Business covers 10 devices per location; every further 5 devices adds another Business plan on top.
-    // Pro has unlimited devices, so once the stacked Business plans would cost as much as Pro, Pro is the better fit.
+    // Pro has unlimited devices and takes over from PRO_FROM_DEVICES devices per location.
+    var PRO_FROM_DEVICES = 30;
     var needPro = proPicked.length > 0;
     var extra = Math.max(0, Math.ceil((devs - 10) / 5));
     var units = 1;
     var proByDevices = false;
     pl = needPro ? plans.c : plans.b;
     if (!needPro && extra > 0) {
-      if (plans.b[1] * (1 + extra) >= plans.c[1]) { pl = plans.c; needPro = true; proByDevices = true; }
+      if (devs >= PRO_FROM_DEVICES) { pl = plans.c; needPro = true; proByDevices = true; }
       else units = 1 + extra;
     }
     var pickedCount = featDefs.filter(function (d) { return !!picked[d[0]]; }).length;
-    var devNote = proByDevices ? ' With ' + devs + ' devices, Pro costs less than stacking Business plans.' : (units > 1 ? ' Business covers 10 devices, and the extra ' + (devs - 10) + ' devices add ' + extra + ' more Business plan' + (extra === 1 ? '' : 's') + ' on top.' : '');
+    var devNote = proByDevices ? ' At ' + devs + ' devices, Pro (unlimited devices) is the better fit.' : (units > 1 ? ' Business covers 10 devices, and the extra ' + (devs - 10) + ' devices add ' + extra + ' more Business plan' + (extra === 1 ? '' : 's') + ' on top.' : '');
     var calcWhy = (needPro
       ? (proPicked.length ? 'Pro includes ' + proPicked.join(', ') + ', with unlimited users and devices.' : 'Pro gives you unlimited users and devices.')
       : (pickedCount ? 'Business unlocks all ' + pickedCount + ' feature' + (pickedCount === 1 ? '' : 's') + ' you picked, on top of everything in the LKR 5,500 plan.' : 'Everything in the LKR 5,500 plan, plus barcodes, bookings, loyalty and multi-location for up to 10 devices.')) + devNote;
