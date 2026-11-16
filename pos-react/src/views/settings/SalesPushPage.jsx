@@ -132,7 +132,7 @@ export function SalesPushPage() {
 			</SectionCard>
 			<SectionCard title="Connection" description="Given to you by OGF's technical team.">
 				<TextRow id="op-prop" label="Property code" help="For example OGF1." value={form.propertyCode} max={8} onChange={set("propertyCode")} />
-				<TextRow id="op-test" label="Test server address" help="Starts with https://" placeholder="https://" value={form.testBaseUrl} max={300} onChange={set("testBaseUrl")} />
+				<TextRow id="op-test" label="Test server address" help="Starts with https://. OGF's UAT server, in their Postman guide: https://uat2-pos.imonitor.center (confirm it with OGF)." placeholder="https://uat2-pos.imonitor.center" value={form.testBaseUrl} max={300} onChange={set("testBaseUrl")} />
 				<TextRow id="op-live" label="Live server address" help="Starts with https://" placeholder="https://" value={form.liveBaseUrl} max={300} onChange={set("liveBaseUrl")} />
 				<details className="sk-advanced">
 					<summary>Paths (only if OGF gives different ones)</summary>

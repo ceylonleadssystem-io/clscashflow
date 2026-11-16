@@ -101,6 +101,11 @@
   status = 200
 
 [[redirects]]
+  from = "/m/:token"
+  to = "/cashflow/menu-public.html?token=:token"
+  status = 200
+
+[[redirects]]
   from = "/app"
   to = "/app/index.html"
   status = 200
@@ -412,6 +417,20 @@
 
 [[headers]]
   for = "/invoice/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Netlify-CDN-Cache-Control = "no-store"
+
+# The QR menu page must always show the latest published menu.
+[[headers]]
+  for = "/m/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Netlify-CDN-Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/cashflow/menu-public.html"
   [headers.values]
     Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
     Netlify-CDN-Cache-Control = "no-store"

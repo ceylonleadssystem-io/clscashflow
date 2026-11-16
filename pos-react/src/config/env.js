@@ -11,6 +11,7 @@ export const env = {
 	appwriteProjectId: e.VITE_APPWRITE_PROJECT_ID || "6a947d6e0012c551dfde",
 	docsFunctionUrl:
 		e.VITE_DOCS_FUNCTION_URL || "/.netlify/functions/appwrite-docs",
+	menuShareUrl: e.VITE_MENU_SHARE_URL || "/.netlify/functions/menu-share",
 	imagesFunctionUrl:
 		e.VITE_IMAGES_FUNCTION_URL || "/.netlify/functions/appwrite-files",
 	onboardingEmailUrl:

@@ -14,6 +14,13 @@ const ALLOWED_TOPICS = new Set([
   'Plans and pricing',
   'Technical support',
   'Start a project',
+  'Book a show-around / demo',
+  'Start a free trial',
+  'Hardware enquiry',
+  'Support for an existing Customer',
+  'Partner with us',
+  'Invest in us',
+  'More information',
   'Partnership',
   'Other'
 ]);
