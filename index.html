@@ -634,10 +634,12 @@ header .navlink:hover,header .navlink:focus-visible{background:#e9651b;color:#1b
 </div>
 <div>
 <p id="calc-dev" style="margin: 0 0 8px; font-family: Outfit, sans-serif; font-weight: 600; font-size: 15px">How many devices per location?</p>
-<div role="group" aria-labelledby="calc-dev" style="display: flex; flex-wrap: wrap; gap: 8px">
-<button type="button" onClick="{{ devB }}" aria-pressed="{{ devBPressed }}" style="{{ devBStyle }}">Up to 10 devices</button>
-<button type="button" onClick="{{ devC }}" aria-pressed="{{ devCPressed }}" style="{{ devCStyle }}">More than 10</button>
+<div role="group" aria-labelledby="calc-dev" style="display: inline-flex; align-items: center; gap: 6px; background: #f6f3ef; border-radius: 999px; padding: 5px">
+<button type="button" onClick="{{ devDown }}" aria-label="Fewer devices" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #ffffff; cursor: pointer; font-size: 22px; font-weight: 700; color: #1b1a18; font-family: inherit">−</button>
+<span aria-live="polite" style="min-width: 96px; text-align: center; font-family: Outfit, sans-serif; font-weight: 700; font-size: 20px; color: #e9651b">{{ devs }} devices</span>
+<button type="button" onClick="{{ devUp }}" aria-label="More devices" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #e9651b; cursor: pointer; font-size: 22px; font-weight: 700; color: #1b1a18; font-family: inherit">+</button>
 </div>
+<p style="margin: 8px 0 0; font-size: 13px; line-height: 1.4">Business covers 10 devices. Every extra 5 devices adds another plan on top.</p>
 </div>
 <div>
 <p id="calc-loc" style="margin: 0 0 8px; font-family: Outfit, sans-serif; font-weight: 600; font-size: 15px">How many locations?</p>
@@ -1173,13 +1175,12 @@ class Component extends DCLogic {
     var sel = { name: selInd.name, line: g.line, features: g.f.map(function (t) { return { t: t }; }) };
 
     var plans = { a: ['Starter', 5500, 58800], b: ['Business', 7500, 80400], c: ['Pro', 15500, 162000] };
-    var dev = this.state.dev || 'b';
+    var devs = this.state.devs || 10;
     var locs = this.state.locs || 1;
     var pl;
     function fmt(n) { return n.toLocaleString('en-US'); }
     var chipBase = 'cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; padding: 7px 12px; min-height: 38px; border-radius: 999px; color: #1b1a18; transition: background-color .2s ease, border-color .2s ease;';
-    function chip(k) { return chipBase + (dev === k ? ' background: #e9651b; border: 2px solid #e9651b;' : ' background: #ffffff; border: 2px solid #e6e1da;'); }
-    var featDefs = [['scan', 'Barcodes', 0], ['appt', 'Bookings', 0], ['loyal', 'Loyalty', 0], ['multi', 'Multi-location', 0], ['fb', 'Feedback tools', 1], ['roles', 'Staff roles', 1]];
+        var featDefs = [['scan', 'Barcodes', 0], ['appt', 'Bookings', 0], ['loyal', 'Loyalty', 0], ['multi', 'Multi-location', 0], ['fb', 'Feedback tools', 1], ['roles', 'Staff roles', 1]];
     var picked = this.state.feats || {};
     var proPicked = [];
     var featChips = featDefs.map(function (d) {
@@ -1191,12 +1192,22 @@ class Component extends DCLogic {
         style: chipBase + (on ? ' background: #e9651b; border: 2px solid #e9651b;' : ' background: #ffffff; border: 2px solid #e6e1da;') + ' display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 10px;'
       };
     });
-    var needPro = dev === 'c' || proPicked.length > 0;
+    // Business covers 10 devices per location; every further 5 devices adds another Business plan on top.
+    // Pro has unlimited devices, so once the stacked Business plans would cost as much as Pro, Pro is the better fit.
+    var needPro = proPicked.length > 0;
+    var extra = Math.max(0, Math.ceil((devs - 10) / 5));
+    var units = 1;
+    var proByDevices = false;
     pl = needPro ? plans.c : plans.b;
+    if (!needPro && extra > 0) {
+      if (plans.b[1] * (1 + extra) >= plans.c[1]) { pl = plans.c; needPro = true; proByDevices = true; }
+      else units = 1 + extra;
+    }
     var pickedCount = featDefs.filter(function (d) { return !!picked[d[0]]; }).length;
-    var calcWhy = needPro
+    var devNote = proByDevices ? ' With ' + devs + ' devices, Pro costs less than stacking Business plans.' : (units > 1 ? ' Business covers 10 devices, and the extra ' + (devs - 10) + ' devices add ' + extra + ' more Business plan' + (extra === 1 ? '' : 's') + ' on top.' : '');
+    var calcWhy = (needPro
       ? (proPicked.length ? 'Pro includes ' + proPicked.join(', ') + ', with unlimited users and devices.' : 'Pro gives you unlimited users and devices.')
-      : (pickedCount ? 'Business unlocks all ' + pickedCount + ' feature' + (pickedCount === 1 ? '' : 's') + ' you picked, on top of everything in the LKR 5,500 plan.' : 'Everything in the LKR 5,500 plan, plus barcodes, bookings, loyalty and multi-location for up to 10 devices.');
+      : (pickedCount ? 'Business unlocks all ' + pickedCount + ' feature' + (pickedCount === 1 ? '' : 's') + ' you picked, on top of everything in the LKR 5,500 plan.' : 'Everything in the LKR 5,500 plan, plus barcodes, bookings, loyalty and multi-location for up to 10 devices.')) + devNote;
     var isAnnual = !!this.state.annual;
     function priceCard(m, am, biz) {
       var a = am * 12;
@@ -1263,17 +1274,11 @@ class Component extends DCLogic {
           .catch(function () { try { window.open(url, '_blank'); } catch (err) {} })
           .then(function () { self.setState({ sent: true, sentName: first }); });
       },
-      devA: function () { self.setState({ dev: 'a' }); },
-      devB: function () { self.setState({ dev: 'b', touched: true }); },
-      devC: function () { self.setState({ dev: 'c', touched: true }); },
+      devs: String(devs),
+      devDown: function () { self.setState({ devs: Math.max(5, (self.state.devs || 10) - 5), touched: true }); },
+      devUp: function () { self.setState({ devs: Math.min(50, (self.state.devs || 10) + 5), touched: true }); },
       planTouched: !!this.state.touched,
       planWaiting: !this.state.touched,
-      devAPressed: dev === 'a' ? 'true' : 'false',
-      devBPressed: dev === 'b' ? 'true' : 'false',
-      devCPressed: dev === 'c' ? 'true' : 'false',
-      devAStyle: chip('a'),
-      devBStyle: chip('b'),
-      devCStyle: chip('c'),
       locs: String(locs),
       locDown: function () { self.setState({ locs: Math.max(1, (self.state.locs || 1) - 1), touched: true }); },
       locUp: function () { self.setState({ locs: Math.min(50, (self.state.locs || 1) + 1), touched: true }); },
@@ -1284,11 +1289,11 @@ class Component extends DCLogic {
       cp: priceCard(15500, 13500, false),
       featChips: featChips,
       calcWhy: calcWhy,
-      calcPlan: pl[0],
-      calcMonthly: fmt(pl[1] * locs),
-      calcAnnual: fmt(pl[2] * locs),
-      calcSave: fmt((pl[1] * 12 - pl[2]) * locs),
-      calcLocLabel: locs === 1 ? 'For 1 location' : 'For ' + locs + ' locations',
+      calcPlan: units > 1 ? pl[0] + ' × ' + units : pl[0],
+      calcMonthly: fmt(pl[1] * units * locs),
+      calcAnnual: fmt(pl[2] * units * locs),
+      calcSave: fmt((pl[1] * 12 - pl[2]) * units * locs),
+      calcLocLabel: (locs === 1 ? 'For 1 location' : 'For ' + locs + ' locations') + (needPro ? ', unlimited devices' : ', ' + devs + ' devices each'),
       showFinalCta: false,
       showProof: false,
       showPlanDetails: false,
