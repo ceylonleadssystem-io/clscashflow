@@ -1,0 +1,42 @@
+:rocket: *Ceylonry POS: new features and fixes*
+What changed, how it works and how to use it.
+
+*1. Item stock counts and ingredients*
+Each item has its own stock count and its own ingredient list. When an item is sold, its stock and every ingredient go down by the amounts you set (same idea as package supplies in Automobile Detailing).
+
+*Set item stock counts*
+1. Open *Inventory*
+2. Click *Set product stock*
+3. Enter the quantity for each product and save
+
+*Add ingredients to an item*
+1. Open *Inventory*, find the item row and click *Ingredients* (or go to *Menu Admin > Items*, open the item and use *Ingredients*)
+2. Pick each ingredient and enter the quantity used per unit sold
+3. Save. Use *Add ingredients* in Inventory to do many items at once
+
+:white_check_mark: Check: sell one unit and confirm the item stock and each ingredient dropped.
+
+*2. Branch-specific menus*
+Limit items and categories to certain locations. Empty = all locations. An item shows at a branch only when both the item and its category allow it.
+1. *Menu Admin > Categories*: set *Shown at*
+2. *Menu Admin > Items*: set *Sold at*
+3. Use the location filter and badges on the lists to review
+4. Publish the menu
+
+*3. Test and demo accounts*
+Test accounts no longer see "Payment required" after the trial (unless the account is paused). No steps needed.
+
+*4. Trial and prices*
+• POS free trial is 7 days everywhere
+• CashFlow prices match the server: 5500 / 7500 / 15500
+• Duplicate Netlify function copies removed
+
+*5. Modifier groups: assign by tree*
+In "Assign modifier group to items", pick from a Category > Subcategory > Items tree. Tick a category for everything under it, or tick single items, then save.
+
+*6. Fixes*
+• Clock In button alignment (#132)
+• Products and Services navigation button and the Modifiers link (#113)
+• Route ordered items to separate preparation stations (#110): re-checked, working, closed
+
+:information_source: Items with no ingredients behave as before. No existing data was changed.
