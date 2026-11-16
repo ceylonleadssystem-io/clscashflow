@@ -22,6 +22,7 @@ import { AutomobileShell } from "./components/layout/AutomobileShell";
 import { isPortalPath, isAutomobilePath } from "./config/portal";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GearLoader } from "./components/ui/GearLoader";
+import { usePublicMenuSync } from "./hooks/usePublicMenuSync";
 
 /**
  * Provider tree:
@@ -77,12 +78,19 @@ function Ready() {
 			<ModalsProvider>
 				<PosProvider>
 					<CheckoutProvider>
+						<PublicMenuSync />
 						<Gate />
 					</CheckoutProvider>
 				</PosProvider>
 			</ModalsProvider>
 		</FeatureProvider>
 	);
+}
+
+/** Sends the QR menu to its public link when the menu changes. */
+function PublicMenuSync() {
+	usePublicMenuSync();
+	return null;
 }
 
 function Gate() {
