@@ -726,7 +726,7 @@ header nav a[style*="min-height"],section a[style*="border-radius: 999px"][style
 <div><p style="margin: 0; font-size: 16px; font-weight: 700; letter-spacing: 0; color: #a8430a">Business</p><p style="margin: 6px 0 0; font-size: 15px; color: #1b1a18">Everything a growing shop, café or salon needs.</p></div>
 <div><p style="margin: 0; font-size: 14px; font-weight: 700; color: #1b1a18">LKR</p><p style="margin: 0; font-family: Outfit, sans-serif; font-weight: 700; font-size: 56px; line-height: 1; letter-spacing: -0.03em; color: #e9651b">{{ cb.price }}</p><p style="margin: 6px 0 0; font-size: 14px; color: #1b1a18">{{ cb.per }}</p><sc-if value="{{ isAnnualView }}" hint-placeholder-val="{{ true }}"><p class="cy-popin" style="{{ saveStyle }}"><span style="text-decoration: line-through; font-weight: 500">LKR {{ cb.was }}/mo</span><span>You save LKR {{ cb.save }} a year</span></p></sc-if></div>
 <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.4">
-<li style="display: flex; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9651b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Up to <strong style="color: #a8430a">10</strong> users · <strong style="color: #a8430a">10</strong> devices</span></li>
+<li style="display: flex; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9651b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Up to <strong style="color: #a8430a">10</strong> users · <strong style="color: #a8430a">5</strong> devices</span></li>
 <li style="display: flex; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9651b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Barcode scanning, generation &amp; label printing</span></li>
 <li style="display: flex; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9651b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Appointments, calendar &amp; bookings</span></li>
 <li style="display: flex; gap: 10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e9651b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg><span>Customer loyalty</span></li>
@@ -1074,7 +1074,7 @@ class Component extends DCLogic {
     function t(s, bold) { return { check: false, hasText: true, text: s, bold: bold }; }
     var raw = [
       ['Users', [t('2', true), t('10', true), t('Unlimited', true), t('Custom', true)]],
-      ['Devices', [t('2', true), t('10', true), t('Unlimited', true), t('Custom', true)]],
+      ['Devices', [t('2', true), t('5', true), t('Unlimited', true), t('Custom', true)]],
       ['Barcode scanning & scanners', [N, Y, Y, C]],
       ['Barcode generation', [N, Y, Y, C]],
       ['Barcode & label printing', [N, Y, Y, C]],
