@@ -668,7 +668,7 @@ header nav a[style*="min-height"],section a[style*="border-radius: 999px"][style
 <span aria-live="polite" style="min-width: 96px; text-align: center; font-family: Outfit, sans-serif; font-weight: 700; font-size: 20px; color: #e9651b">{{ devs }} devices</span>
 <button type="button" onClick="{{ devUp }}" aria-label="More devices" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #e9651b; cursor: pointer; font-size: 22px; font-weight: 700; color: #1b1a18; font-family: inherit">+</button>
 </div>
-<p style="margin: 8px 0 0; font-size: 13px; line-height: 1.4">Business covers 10 devices. Every extra 5 devices adds another plan on top.</p>
+<p style="margin: 8px 0 0; font-size: 13px; line-height: 1.4">Start at 5 devices. Every 5 more devices adds another plan on top.</p>
 </div>
 <div>
 <p id="calc-loc" style="margin: 0 0 8px; font-family: Outfit, sans-serif; font-weight: 600; font-size: 15px">How many locations?</p>
@@ -1204,7 +1204,7 @@ class Component extends DCLogic {
     var sel = { name: selInd.name, line: g.line, features: g.f.map(function (t) { return { t: t }; }) };
 
     var plans = { a: ['Starter', 5500, 58800], b: ['Business', 7500, 80400], c: ['Pro', 15500, 162000] };
-    var devs = this.state.devs || 10;
+    var devs = this.state.devs || 5;
     var locs = this.state.locs || 1;
     var pl;
     function fmt(n) { return n.toLocaleString('en-US'); }
@@ -1221,23 +1221,20 @@ class Component extends DCLogic {
         style: chipBase + (on ? ' background: #e9651b; border: 2px solid #e9651b;' : ' background: #ffffff; border: 2px solid #e6e1da;') + ' display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 6px 10px;'
       };
     });
-    // Business covers 10 devices per location; every further 5 devices adds another Business plan on top.
+    // Every 5 devices per location adds another Business plan on top (5 = 1 plan, 10 = 2 plans, ...).
     // Pro has unlimited devices and takes over from PRO_FROM_DEVICES devices per location.
     var PRO_FROM_DEVICES = 30;
     var needPro = proPicked.length > 0;
-    var extra = Math.max(0, Math.ceil((devs - 10) / 5));
-    var units = 1;
+    var units = Math.max(1, Math.round(devs / 5));
     var proByDevices = false;
     pl = needPro ? plans.c : plans.b;
-    if (!needPro && extra > 0) {
-      if (devs >= PRO_FROM_DEVICES) { pl = plans.c; needPro = true; proByDevices = true; }
-      else units = 1 + extra;
-    }
+    if (needPro) units = 1;
+    else if (devs >= PRO_FROM_DEVICES) { pl = plans.c; needPro = true; proByDevices = true; units = 1; }
     var pickedCount = featDefs.filter(function (d) { return !!picked[d[0]]; }).length;
-    var devNote = proByDevices ? ' At ' + devs + ' devices, Pro (unlimited devices) is the better fit.' : (units > 1 ? ' Business covers 10 devices, and the extra ' + (devs - 10) + ' devices add ' + extra + ' more Business plan' + (extra === 1 ? '' : 's') + ' on top.' : '');
+    var devNote = proByDevices ? ' At ' + devs + ' devices, Pro (unlimited devices) is the better fit.' : (units > 1 ? ' Every 5 devices adds another Business plan: ' + units + ' plans for ' + devs + ' devices.' : '');
     var calcWhy = (needPro
       ? (proPicked.length ? 'Pro includes ' + proPicked.join(', ') + ', with unlimited users and devices.' : 'Pro gives you unlimited users and devices.')
-      : (pickedCount ? 'Business unlocks all ' + pickedCount + ' feature' + (pickedCount === 1 ? '' : 's') + ' you picked, on top of everything in the LKR 5,500 plan.' : 'Everything in the LKR 5,500 plan, plus barcodes, bookings, loyalty and multi-location for up to 10 devices.')) + devNote;
+      : (pickedCount ? 'Business unlocks all ' + pickedCount + ' feature' + (pickedCount === 1 ? '' : 's') + ' you picked, on top of everything in the LKR 5,500 plan.' : 'Everything in the LKR 5,500 plan, plus barcodes, bookings, loyalty and multi-location.')) + devNote;
     var isAnnual = !!this.state.annual;
     function priceCard(m, am, biz) {
       var a = am * 12;
@@ -1305,8 +1302,8 @@ class Component extends DCLogic {
           .then(function () { self.setState({ sent: true, sentName: first }); });
       },
       devs: String(devs),
-      devDown: function () { self.setState({ devs: Math.max(5, (self.state.devs || 10) - 5), touched: true }); },
-      devUp: function () { self.setState({ devs: Math.min(50, (self.state.devs || 10) + 5), touched: true }); },
+      devDown: function () { self.setState({ devs: Math.max(5, (self.state.devs || 5) - 5), touched: true }); },
+      devUp: function () { self.setState({ devs: Math.min(50, (self.state.devs || 5) + 5), touched: true }); },
       planTouched: !!this.state.touched,
       planWaiting: !this.state.touched,
       locs: String(locs),
