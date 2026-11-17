@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "netlify/functions/send-contact.js": {
-    "mtime": 1794197472.8543935,
-    "seen": 1794197546.89923,
-    "ast_hash": "96c9f60398d9f3bf4bdf6cfc4852bfbe",
+    "mtime": 1794859312.0695143,
+    "seen": 1794859460.844196,
+    "ast_hash": "5cf2004250ee089b29f803cd4921ec0a",
     "semantic_hash": ""
   },
   "netlify/functions/send-invite.js": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/config/roles.js": {
-    "mtime": 1794298418.020482,
-    "seen": 1794500945.9157271,
-    "ast_hash": "54f43aca8cad82e4291be7d11bf15716",
+    "mtime": 1794501820.9232697,
+    "seen": 1794859460.8442812,
+    "ast_hash": "52282ea571514cf381228b32f9296fac",
     "semantic_hash": ""
   },
   "pos-react/src/config/subscription.js": {
@@ -1008,9 +1008,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/modals/UserModal.jsx": {
-    "mtime": 1794298418.0210643,
-    "seen": 1794500945.915791,
-    "ast_hash": "3f854753618fe6cac70b48adee63b128",
+    "mtime": 1794501820.923967,
+    "seen": 1794859460.844349,
+    "ast_hash": "efa276c8c66ff475c88ef5c895c2fe79",
     "semantic_hash": ""
   },
   "pos-react/src/modals/WelcomeModal.jsx": {
@@ -1980,14 +1980,14 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1794501263.8090577,
-    "seen": 1794501271.693609,
-    "ast_hash": "de39b28d588ec3e20aaa50c2feced43a",
+    "mtime": 1794859433.5445886,
+    "seen": 1794859460.844529,
+    "ast_hash": "af0fda042ed14611e50992b2dec2b178",
     "semantic_hash": ""
   },
   "mrs-gamage-story.html": {
-    "mtime": 1791904987.8254223,
-    "seen": 1792303007.454567,
+    "mtime": 1794859312.0704193,
+    "seen": 1794859460.8445299,
     "ast_hash": "80b55e2768866f38e5d614e6037ea6bc",
     "semantic_hash": ""
   },
@@ -2082,9 +2082,9 @@
     "semantic_hash": ""
   },
   "privacy.html": {
-    "mtime": 1791904987.8607726,
-    "seen": 1792303007.4545789,
-    "ast_hash": "d754f9ef04446019d5161f7932b3ddb9",
+    "mtime": 1794859312.0699236,
+    "seen": 1794859460.8445408,
+    "ast_hash": "dc6677f35c84ab3983d095275c96f30d",
     "semantic_hash": ""
   },
   "reservation-system/index.html": {
@@ -2100,9 +2100,9 @@
     "semantic_hash": ""
   },
   "terms.html": {
-    "mtime": 1791904987.8653767,
-    "seen": 1792303007.454581,
-    "ast_hash": "eea4993a0c397f7f22f6e904286794ad",
+    "mtime": 1794859312.0700946,
+    "seen": 1794859460.844544,
+    "ast_hash": "420c35940ed2ea3c04a49709de3fe21a",
     "semantic_hash": ""
   },
   "assets/Ayushka-weerasiinghe.jpg": {
@@ -2424,8 +2424,8 @@
     "semantic_hash": ""
   },
   ".claude/launch.json": {
-    "mtime": 1794500652.2401698,
-    "seen": 1794500945.9156091,
+    "mtime": 1794859444.3517518,
+    "seen": 1794859460.844162,
     "ast_hash": "e8757661914c64da7a186b5f15828a87",
     "semantic_hash": ""
   },
@@ -2898,9 +2898,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/domain/access.js": {
-    "mtime": 1794395493.4043715,
-    "seen": 1794500945.91574,
-    "ast_hash": "9bcd5b02f19fed54903c8916eca83cb8",
+    "mtime": 1794501820.9237065,
+    "seen": 1794859460.8442938,
+    "ast_hash": "dbd4ce19671bc6695e1218305011221d",
     "semantic_hash": ""
   },
   "pos-react/src/tests/access.test.js": {
@@ -2916,9 +2916,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/settings/UsersPages.jsx": {
-    "mtime": 1794298418.0242512,
-    "seen": 1794500945.9159,
-    "ast_hash": "7dd6e951c516c05e062f7f53792a8010",
+    "mtime": 1794501820.9242482,
+    "seen": 1794859460.844467,
+    "ast_hash": "f52a917aa0ca377e6f764c3131a10a38",
     "semantic_hash": ""
   },
   "pos-react/src/domain/devices.js": {
@@ -3192,9 +3192,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/views/Detailing.jsx": {
-    "mtime": 1794395265.446665,
-    "seen": 1794500945.915879,
-    "ast_hash": "e7abd32ae388aea569069a26929fd2b5",
+    "mtime": 1794501796.397798,
+    "seen": 1794859460.8444438,
+    "ast_hash": "332edc4f5b935a1ae25d4f658ef38137",
     "semantic_hash": ""
   },
   "tests/pos-admin-accounts.test.js": {
@@ -3210,9 +3210,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/components/layout/AutomobileShell.jsx": {
-    "mtime": 1794395449.2735443,
-    "seen": 1794500945.9157,
-    "ast_hash": "af76b3f73a516f61b45e6b5c56b2a664",
+    "mtime": 1794501780.879313,
+    "seen": 1794859460.8442528,
+    "ast_hash": "c978b61f87bfacec2ef9b62cf7583c16",
     "semantic_hash": ""
   },
   "pos-react/src/domain/posRoute.js": {
@@ -3459,6 +3459,48 @@
     "mtime": 1794491305.9523158,
     "seen": 1794500945.9159749,
     "ast_hash": "37aa0a448058854baa68fa07cfb4f1ae",
+    "semantic_hash": ""
+  },
+  "assets/ceylonry-site-runtime.js": {
+    "mtime": 1794859433.5266094,
+    "seen": 1794859460.844173,
+    "ast_hash": "1dcd93757bd05e23e82667afd59a6301",
+    "semantic_hash": ""
+  },
+  "assets/landing-motion.js": {
+    "mtime": 1794859433.5451305,
+    "seen": 1794859460.8441741,
+    "ast_hash": "8da8792567317fccd6be098a4e1cefbb",
+    "semantic_hash": ""
+  },
+  "assets/ceylonry-labs-mark.png": {
+    "mtime": 1794859433.5392442,
+    "seen": 1794859460.844553,
+    "ast_hash": "25fb93c8cbd2b50a7664f3f3d34172d3",
+    "semantic_hash": ""
+  },
+  "assets/ceylonry-pos-ad-poster.jpg": {
+    "mtime": 1794859433.5391285,
+    "seen": 1794859460.844554,
+    "ast_hash": "c53abaa3fcae3a17b018a47b0d48dbb7",
+    "semantic_hash": ""
+  },
+  "assets/ceylonry-site-logo-white.png": {
+    "mtime": 1794859433.5400534,
+    "seen": 1794859460.84456,
+    "ast_hash": "40be9d47a3fc28e8e8a774eb52b789c4",
+    "semantic_hash": ""
+  },
+  "assets/ceylonry-site-logo.png": {
+    "mtime": 1794859433.5268688,
+    "seen": 1794859460.8445609,
+    "ast_hash": "e50525ef2381d0561255400a84bf8120",
+    "semantic_hash": ""
+  },
+  "assets/ceylonry-pos-ad.mp4": {
+    "mtime": 1794859433.5385525,
+    "seen": 1794859460.8445811,
+    "ast_hash": "bb7dd68065d0e83ed4209ba1d93bffdc",
     "semantic_hash": ""
   }
 }
