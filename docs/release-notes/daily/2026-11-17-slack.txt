@@ -1,18 +1,18 @@
-:rocket: *Ceylonry POS website: 2026-11-17*
-All changes are on the public website. The POS app had no user-facing changes.
+:rocket: *Ceylonry POS release notes: 2026-11-17*
 
 *Features*
-• *New landing page:* before/after story, 20 industries, plan finder, 4-step onboarding, FAQ and contact, with scroll animations.
-• *Visual refresh:* tour video styled as a torn receipt, dashed receipt-line section breaks, softer buttons, tighter cards, a dark card for the popular plan, orange underline on nav links.
-
-*Plan finder: devices per location*
-Devices go up in steps of 5 (5 to 50). Each Business plan covers up to 5 devices, and every extra 5 devices adds another Business plan. From 30 devices per location it recommends Pro (unlimited devices). Prices scale with plans and locations.
-1. Go to *Plans & pricing* on the website
-2. Under *How many devices per location?* press + or − (starts at 5)
-3. Under *How many locations?* press + or −
-4. Read the recommended plan (e.g. "Business × 2"), its price and the reason below it
+• *QR menu (issue #158):* one fixed QR code per location opens your menu on a customer's phone (categories, items, descriptions, prices, photos). The code never changes; edits to items, prices or categories show up on the same code within a few seconds while the POS is open. Each location's code shows only items sold there.
+1. Go to *Settings > System Options > QR Menu*.
+2. Pick the *Location* (if you have several).
+3. Press *Create QR menu*.
+4. Press *Download QR code* and print it.
+5. Use *Copy link*, *Open menu*, *Send latest menu now* or *Turn off* as needed.
+• *New website:* before/after story, 20 industries, plan finder, 4-step onboarding, FAQ and contact, with scroll animations and a visual refresh.
+• *Plan finder:* choose devices per location (steps of 5, 5 to 50) and locations. Each Business plan covers up to 5 devices; every extra 5 adds a plan; Pro from 30 devices. Find it under *Plans & pricing* on the website.
 
 *Fixes*
-• Business plan card and comparison table now say up to 5 devices (was 10), matching the finder.
+• Business plan card and comparison table now say "up to 5 devices", matching the plan finder.
 
-_Based on the git history only; not checked on every device and browser._
+*Other*
+• Sales push: *Test server address* shows OGF's UAT address as a hint (confirm with OGF). OGF Postman collection and guide added for UAT testing.
+• Not verified: appearance on every device and browser. Based on git history only.
