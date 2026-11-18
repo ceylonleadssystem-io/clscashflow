@@ -188,7 +188,7 @@ export function catalogDraftChanges(settings = {}) {
 	}
 	for (const e of draftList(settings, "itemEdits")) {
 		const label = { name: "Name", price: "Price", cost: "Cost", category: "Category", subcategory: "Subcategory", code: "Code", description: "Description", stationIds: "Stations", modifierIds: "Modifier groups", locationIds: "Locations", image: "Photo" };
-		const show = (v, f) => (f === "image" ? (v ? "photo" : "none") : f === "locationIds" ? (v.length ? v.length + " location" + (v.length === 1 ? "" : "s") : "All locations") : Array.isArray(v) ? `${v.length} chosen` : String(v ?? ""));
+		const show = (v, f) => (f === "image" ? (v ? "photo" : "none") : f === "locationIds" ? (list(v).length ? list(v).length + " location" + (list(v).length === 1 ? "" : "s") : "All locations") : Array.isArray(v) ? `${v.length} chosen` : String(v ?? ""));
 		out.push({ page: "itemEdits", id: e.id, name: e.original || e.name, kind: e.isNew ? "added" : "edited", fields: e.isNew ? [{ field: "Price", before: "", after: String(e.changes.price) }, { field: "Category", before: "", after: e.changes.category }] : Object.entries(e.changes).map(([f, v]) => ({ field: label[f], before: show(e.was?.[f], f), after: show(v, f) })) });
 	}
 	for (const e of draftList(settings, "subcategoryEdits")) {

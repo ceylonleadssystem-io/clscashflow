@@ -446,3 +446,13 @@ describe("new items and subcategories on drafts", () => {
 		expect(live("Tea").image).toBe("");
 	});
 });
+
+describe("changing an item's location when the item has no saved location list", () => {
+	it("lists the change instead of crashing the Publish bar", () => {
+		const draft = (e) => ({ itemEdits: [{ id: "p1", original: "Tea", name: "Tea", changes: { locationIds: ["galle"] }, ...e }] });
+		const fields = (e) => draftChanges({ menuDraft: draft(e) })[0].fields;
+		expect(fields({ was: {} })).toEqual([{ field: "Locations", before: "All locations", after: "1 location" }]);
+		expect(fields({})).toEqual([{ field: "Locations", before: "All locations", after: "1 location" }]);
+		expect(fields({ was: { locationIds: ["main", "galle"] }, changes: { locationIds: [] } })).toEqual([{ field: "Locations", before: "2 locations", after: "All locations" }]);
+	});
+});
