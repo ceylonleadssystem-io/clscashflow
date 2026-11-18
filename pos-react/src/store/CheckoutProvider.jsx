@@ -7,7 +7,7 @@ import { ORDER_CHANNELS, STORAGE } from "../config/constants";
 import { addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
 import { productSizeGroup } from "../domain/catalog";
 import { removalNeedsApproval } from "../domain/deleteApproval";
-import { availableProductStock, cartQtyForProduct, hasSizedStock, stockSizeFor } from "../domain/inventory";
+import { availableProductStock, cartQtyForProduct, hasSizedStock, recipeShortfall, shortfallMessage, stockSizeFor } from "../domain/inventory";
 import { phoneKey } from "../domain/format";
 import { resolveOptions } from "../domain/systemOptions";
 import { serviceChargeSupported } from "../services/pos/common";
@@ -107,10 +107,17 @@ export function CheckoutProvider({ children }) {
 					return false;
 				}
 			}
+			if (!lineKey && enabled["inventory.recipes"]) {
+				const short = recipeShortfall(product, cart, data.products, data.inventory, 1);
+				if (short) {
+					ui.notice(shortfallMessage(product, short));
+					return false;
+				}
+			}
 			setCart((c) => addConfiguredLine(c, product, selections, lineKey));
 			return true;
 		},
-		[cart, enabled, data.inventory, locationId, ui],
+		[cart, enabled, data.inventory, data.products, locationId, ui],
 	);
 
 	const addProduct = useCallback(
@@ -153,6 +160,13 @@ export function CheckoutProvider({ children }) {
 				const available = availableProductStock(product, data.inventory, locationId, size || "");
 				if (Number.isFinite(available) && cartQtyForProduct(cart, line.productId, key, size) + line.qty + delta > available) {
 					ui.notice(`${line.name} has only ${available} in stock.`);
+					return;
+				}
+			}
+			if (line && delta > 0 && enabled["inventory.recipes"]) {
+				const short = recipeShortfall(data.products.find((p) => p.id === line.productId), cart, data.products, data.inventory, delta);
+				if (short) {
+					ui.notice(shortfallMessage(line, short));
 					return;
 				}
 			}

@@ -4,7 +4,7 @@
  */
 import { useMemo } from "react";
 import { money } from "../../domain/format";
-import { availableProductStock } from "../../domain/inventory";
+import { availableProductStock, recipeShortfall } from "../../domain/inventory";
 import { resolveOptions } from "../../domain/systemOptions";
 import { useData } from "../../store/DataProvider";
 import { useFeature } from "../../store/FeatureProvider";
@@ -14,7 +14,7 @@ import { usePos } from "../../store/PosProvider";
 /** Sellable product tiles for the active category / search. */
 export function ProductGrid({ products }) {
 	const data = useData();
-	const { addProduct } = useCheckout();
+	const { addProduct, cart } = useCheckout();
 	const { locationId } = usePos();
 	// Settings > System Options > Order Entry: prices on the buttons
 	const showPrices = resolveOptions(data.settings, "orderEntry", locationId).showPrices;
@@ -29,18 +29,32 @@ export function ProductGrid({ products }) {
 		return out;
 	}, [products, data.inventory, locationId, stockGuard]);
 
+	// items whose ingredients cannot cover one more of them (with what this order already uses) cannot be tapped
+	const recipes = useFeature("inventory.recipes");
+	const short = useMemo(() => {
+		if (!recipes) return {};
+		const out = {};
+		products.forEach((p) => {
+			const s = recipeShortfall(p, cart, data.products, data.inventory, 1);
+			if (s) out[p.id] = s.i.name;
+		});
+		return out;
+	}, [recipes, products, cart, data.products, data.inventory]);
+
 	return (
 		<div className="products" id="product-grid">
 			{products.map((p) => {
 				const available = stock[p.id];
 				const limited = available !== undefined;
+				const noIngredient = short[p.id];
 				return (
 					<button
 						type="button"
 						key={p.id}
-						className={"product" + (limited && available <= 0 ? " out-of-stock" : "")}
-						disabled={limited && available <= 0}
-						aria-disabled={limited ? String(available <= 0) : undefined}
+						className={"product" + ((limited && available <= 0) || noIngredient ? " out-of-stock" : "")}
+						disabled={(limited && available <= 0) || !!noIngredient}
+						aria-disabled={limited || noIngredient ? String((limited && available <= 0) || !!noIngredient) : undefined}
+						title={noIngredient ? "Not enough " + noIngredient : undefined}
 						data-stock={limited ? String(available) : undefined}
 						onClick={() => addProduct(p.id)}
 					>
@@ -66,7 +80,11 @@ export function ProductGrid({ products }) {
 								</small>
 							</span>
 							{showPrices && <span className="price">{money(p.price)}</span>}
-							{limited && <small className="muted stock-available">{available > 0 ? available + " in stock" : "Out of stock"}</small>}
+							{noIngredient ? (
+								<small className="muted stock-available">Not enough {noIngredient}</small>
+							) : (
+								limited && <small className="muted stock-available">{available > 0 ? available + " in stock" : "Out of stock"}</small>
+							)}
 						</span>
 					</button>
 				);

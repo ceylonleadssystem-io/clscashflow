@@ -36,6 +36,20 @@ export function firstShortIngredient(needs, inventory) {
 		.find((x) => x.i && x.i.qty < x.qty);
 }
 
+/**
+ * The first ingredient of this item that cannot cover `extra` more of it, counting what the order already uses (null when it can).
+ * Only this item's own ingredients are checked, so another line already short never blocks it. Same stock figure as the check at payment.
+ */
+export function recipeShortfall(product, cart, products, inventory, extra = 1) {
+	const ids = new Set((product?.recipe || []).map((r) => r.itemId));
+	if (!ids.size) return null;
+	const needs = saleStockNeeds([...cart, { productId: product.id, qty: extra }], products);
+	return firstShortIngredient(Object.fromEntries(Object.entries(needs).filter(([id]) => ids.has(id))), inventory) || null;
+}
+
+/** The message shown when an item cannot be added because an ingredient is short. */
+export const shortfallMessage = (product, short) => `${product.name} cannot be added: not enough ${short.i.name} (needs ${short.qty} ${short.i.unit}, ${short.i.qty} ${short.i.unit} available).`;
+
 export function stockMovement(item, change, reason, note = "", userId = "") {
 	return {
 		id: "sm" + Date.now() + Math.random(),
