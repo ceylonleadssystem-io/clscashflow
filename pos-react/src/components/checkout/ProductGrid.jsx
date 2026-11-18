@@ -1,6 +1,6 @@
 /**
  * Checkout product tiles for the active category or search, with images, prices and live stock
- * levels (out-of-stock items are disabled when the stock guard is on).
+ * levels. An item that is out of stock or short of ingredients is greyed out; tapping it asks a manager to approve selling it anyway.
  */
 import { useMemo } from "react";
 import { money } from "../../domain/format";
@@ -47,14 +47,14 @@ export function ProductGrid({ products }) {
 				const available = stock[p.id];
 				const limited = available !== undefined;
 				const noIngredient = short[p.id];
+				const low = (limited && available <= 0) || !!noIngredient; // tapping it asks a manager to approve (see CheckoutProvider)
 				return (
 					<button
 						type="button"
 						key={p.id}
-						className={"product" + ((limited && available <= 0) || noIngredient ? " out-of-stock" : "")}
-						disabled={(limited && available <= 0) || !!noIngredient}
-						aria-disabled={limited || noIngredient ? String((limited && available <= 0) || !!noIngredient) : undefined}
-						title={noIngredient ? "Not enough " + noIngredient : undefined}
+						className={"product" + (low ? " out-of-stock" : "")}
+						data-needs-approval={low ? "true" : undefined}
+						title={noIngredient ? "Not enough " + noIngredient + ". A manager can approve selling it." : low ? "Out of stock. A manager can approve selling it." : undefined}
 						data-stock={limited ? String(available) : undefined}
 						onClick={() => addProduct(p.id)}
 					>
@@ -81,9 +81,9 @@ export function ProductGrid({ products }) {
 							</span>
 							{showPrices && <span className="price">{money(p.price)}</span>}
 							{noIngredient ? (
-								<small className="muted stock-available">Not enough {noIngredient}</small>
+								<small className="muted stock-available">Not enough {noIngredient} · manager can approve</small>
 							) : (
-								limited && <small className="muted stock-available">{available > 0 ? available + " in stock" : "Out of stock"}</small>
+								limited && <small className="muted stock-available">{available > 0 ? available + " in stock" : "Out of stock · manager can approve"}</small>
 							)}
 						</span>
 					</button>

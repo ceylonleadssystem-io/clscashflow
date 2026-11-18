@@ -74,6 +74,7 @@ export function bindServices(ctx) {
 			saveOpenOrder: sales.saveOpenOrder,
 			resendOpenOrder: sales.resendOpenOrder,
 			approveItemRemoval: sales.approveItemRemoval,
+			stockOverride: sales.stockOverride,
 			voidOpenOrder: sales.voidOpenOrder,
 			transferOpenOrder: sales.transferOpenOrder,
 			mergeOpenOrders: sales.mergeOpenOrders,
