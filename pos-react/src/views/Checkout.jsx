@@ -45,6 +45,7 @@ export function Checkout() {
 	const { openProduct } = useModals();
 	const openOrders = useFeature("checkout.openOrders");
 	const kitchenTickets = useFeature("checkout.kitchenTickets");
+	const orderChannels = useFeature("checkout.orderChannels");
 	const discounts = useFeature("checkout.discounts") && can("pos.discount");
 	const splitBill = useFeature("checkout.splitBill");
 	const customerLookup = useFeature("checkout.customerLookup");
@@ -144,6 +145,16 @@ export function Checkout() {
 								<button className="btn gold" id="send-kitchen-btn" onClick={() => c.saveOrder(true)}>
 									Send to Kitchen
 								</button>
+							)}
+							{kitchen && orderChannels && (
+								// the order type is chosen here, before Quick Pay or Pay Now, so nobody has to open and cancel a payment to change it
+								<select className="input" id="order-type-select" aria-label="Order type" value={c.orderChannel} onChange={(e) => c.pickOrderChannel(e.target.value)}>
+									{(c.channels.includes(c.orderChannel) ? c.channels : [c.orderChannel, ...c.channels]).map((ch) => (
+										<option key={ch} value={ch}>
+											{ch}
+										</option>
+									))}
+								</select>
 							)}
 						</div>
 						<dl className="order-info" id="order-info">
