@@ -3,6 +3,7 @@
  * all in one database write), refunds and voids, permanent deletion, and open orders (save, resend to kitchen, void).
  */
 import { T } from "../../db/tables";
+import { ONLINE_CHANNELS } from "../../config/constants";
 import { nowIso, isEmail, money, today, whatsappPhone } from "../../domain/format";
 import { cartTotals, discountAmount, serviceChargeAmount } from "../../domain/cart";
 import {
@@ -67,8 +68,10 @@ export async function completeSale(ctx, input) {
 	const given = Number(String(input.cashTendered ?? "").replace(/,/g, ""));
 
 	// ---- guards, in the same order as the final legacy wrapper chain --------
+	// a line a manager approved at low stock (see stockOverride) is not stopped again here
+	const checked = cart.filter((l) => !l.stockOverride);
 	if (f["checkout.stockGuard"] && f["inventory.productStock"]) {
-		const issue = stockProblem(cart, d.products, d.inventory, s.locationId);
+		const issue = stockProblem(checked, d.products, d.inventory, s.locationId);
 		if (issue) {
 			const stock = availableProductStock(d.products.find((p) => p.id === issue.productId), d.inventory, s.locationId);
 			await ctx.ui.alert(`${issue.name} has only ${stock} in stock. Reduce the quantity before completing the sale.`);
@@ -97,7 +100,7 @@ export async function completeSale(ctx, input) {
 		await ctx.ui.alert("Clock in to open your cash register before accepting the cash portion of this split bill.");
 		return null;
 	}
-	const needs = saleStockNeeds(cart, d.products);
+	const needs = saleStockNeeds(checked, d.products);
 	const short = f["inventory.recipes"] ? firstShortIngredient(needs, d.inventory) : null;
 	if (short) {
 		await ctx.ui.alert(`Not enough ${short.i.name}. Required: ${short.qty} ${short.i.unit}; available: ${short.i.qty} ${short.i.unit}.`);
@@ -158,8 +161,8 @@ export async function completeSale(ctx, input) {
 			orderReference: input.orderReference || "",
 			discount: { ...discount, amount: discountValue, subtotal: totals.subtotal },
 			serviceCharge: { enabled: serviceAmount > 0, rate: serviceRate, amount: serviceAmount },
-			orderChannel: kitchen && f["checkout.orderChannels"] ? input.orderChannel || "Dine-in" : "Retail",
-			platformOrderId: kitchen ? input.platformOrderId || "" : "",
+			orderChannel: ONLINE_CHANNELS.includes(input.orderChannel) ? input.orderChannel : kitchen && f["checkout.orderChannels"] ? input.orderChannel || "Dine-in" : "Retail",
+			platformOrderId: kitchen || ONLINE_CHANNELS.includes(input.orderChannel) ? input.platformOrderId || "" : "",
 			locationName: loc.name,
 			committedAt: nowIso(),
 			printRequested: !!input.printAfter,
@@ -540,5 +543,20 @@ export async function approveItemRemoval(ctx, { pin, line, removed }) {
 	if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to take sent items off the order."));
 	await ctx.store.write((tx) => audit(tx, ctx.session(), "sent-item-removed", `${line.name} x${removed} (already sent to the kitchen) · approved by ${approver.name}`, ctx.session().locationId === "all" ? "" : ctx.session().locationId));
 	log.info("sent item removal approved", { item: line.name, removed, approver: approver.name });
+	return approver;
+}
+
+/**
+ * A manager lets an item go on the order although its stock or ingredients are short. Someone who holds the permission approves it
+ * themselves (no PIN); otherwise the PIN of a manager or owner is needed. Writes an audit entry and returns the approver
+ * (null, with a message, when there is none).
+ */
+export async function stockOverride(ctx, { pin, name, message }) {
+	const d = ctx.data();
+	const self = ctx.session().user;
+	const approver = pin === undefined ? (can(self, "pos.stock.override", d.settings) ? self : null) : findApprover(d.users, pin, (u) => can(u, "pos.stock.override", d.settings));
+	if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to sell this item while stock is low."));
+	await ctx.store.write((tx) => audit(tx, ctx.session(), "stock-override", `${name} sold with low stock (${message}) · approved by ${approver.name}`, ctx.session().locationId === "all" ? "" : ctx.session().locationId));
+	log.info("low stock sale approved", { item: name, approver: approver.name });
 	return approver;
 }

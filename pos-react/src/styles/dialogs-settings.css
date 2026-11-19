@@ -220,6 +220,9 @@
 				cursor: not-allowed;
 				transform: none !important;
 			}
+			.product[data-needs-approval] {
+				cursor: pointer;
+			}
 			.product .stock-available {
 				display: block;
 				margin-top: 4px;

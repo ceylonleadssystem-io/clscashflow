@@ -211,3 +211,49 @@ describe("open orders", () => {
 		expect(h.data().voidOrders[0].total).toBe(500);
 	});
 });
+
+describe("low stock approved by a manager (#163)", () => {
+	let h;
+	beforeEach(async () => {
+		h = await createHarness();
+		await openShift(h);
+	});
+	const milkAndLatte = async () => {
+		const milk = await h.svc.inventory.saveInventoryItem({ name: "Milk", sku: "", type: "Ingredient", unit: "ml", qty: "100", reorder: "10", cost: "1", supplier: "" });
+		const latte = await addProduct(h, { name: "Latte", recipe: [{ itemId: milk.id, qty: 200 }] });
+		return { milk, latte };
+	};
+
+	it("a line a manager approved is not stopped at payment, and the stock shows as short", async () => {
+		const { milk, latte } = await milkAndLatte();
+		expect(await h.svc.sales.completeSale({ cart: [line(latte, 1)], discount: noDiscount, payment: "Card" })).toBeNull();
+		const res = await h.svc.sales.completeSale({ cart: [{ ...line(latte, 1), stockOverride: "Owner" }], discount: noDiscount, payment: "Card" });
+		expect(res.sale).toBeTruthy();
+		expect(h.data().inventory.find((i) => i.id === milk.id).qty).toBe(-100);
+	});
+
+	it("an approved line does not excuse another line that is short", async () => {
+		const { latte } = await milkAndLatte();
+		const tracked = await addProduct(h, { name: "Bun", type: "Product", price: "100", stock: "1" });
+		const row = h.data().inventory.find((i) => i.productId === tracked.id);
+		expect(row).toBeTruthy();
+		expect(await h.svc.sales.completeSale({ cart: [{ ...line(latte, 1), stockOverride: "Owner" }, line(tracked, 3)], discount: noDiscount, payment: "Card" })).toBeNull();
+		expect(h.lastAlert()).toMatch(/only 1 in stock/);
+	});
+
+	it("the owner approves without a PIN, a manager's PIN approves, a wrong PIN does not, and every approval is logged", async () => {
+		expect((await h.svc.sales.stockOverride({ name: "Latte", message: "Latte has only 0 in stock." })).name).toBe("Owner");
+		expect((await h.svc.sales.stockOverride({ pin: "1234", name: "Latte", message: "x" })).name).toBe("Owner");
+		expect(await h.svc.sales.stockOverride({ pin: "9999", name: "Latte", message: "x" })).toBeUndefined();
+		expect(h.lastAlert()).toMatch(/PIN of a manager or owner/);
+		const logged = h.data().locationAudit.filter((a) => a.action === "stock-override");
+		expect(logged).toHaveLength(2);
+		expect(logged[0].details).toMatch(/Latte sold with low stock .* approved by Owner/);
+	});
+
+	it("a cashier cannot approve it without a manager's PIN", async () => {
+		const c = await createHarness({ role: "cashier" });
+		expect(await c.svc.sales.stockOverride({ name: "Latte", message: "x" })).toBeUndefined();
+		expect(c.lastAlert()).toMatch(/PIN of a manager or owner/);
+	});
+});

@@ -30,6 +30,7 @@ export const FEATURE_GROUPS = [
 	{ id: "settings", label: "Settings & platform", icon: "⚙" },
 	{ id: "shell", label: "Register shell", icon: "⛶" },
 	{ id: "industry", label: "Industry tools", icon: "✦" },
+	{ id: "online", label: "Online orders", icon: "🛒" },
 ];
 
 const f = (id, group, label, description, extra = {}) => ({
@@ -141,6 +142,9 @@ export const FEATURES = [
 	f("shell.sessionButtons", "shell", "Lock POS / Sign out buttons", "Session buttons in the top bar.", { core: true }),
 
 	// -------------------------------------------------------------- industry
+	// ---------------------------------------------------------------- online
+	f("online.shopify", "online", "Online orders (Shopify)", "Orders from the business's Shopify store arrive in the POS: the Online orders button and page, and Settings > System Options > Online Store to connect the store. Off until an admin turns it on for the business.", { default: false }),
+
 	f("industry.tools", "industry", "Business Tools", "Appointments, memberships, prescriptions, medicine batches and staff commissions (Salon / Services / Pharmacy). Hidden in the last release of the legacy POS, so it is OFF by default.", { default: false }),
 ];
 
@@ -217,4 +221,5 @@ export const VIEW_FEATURE = {
 	industry: "industry.tools",
 	staff: "view.staff",
 	settings: "view.settings",
+	online: "online.shopify",
 };

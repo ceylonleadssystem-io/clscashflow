@@ -1,6 +1,6 @@
 /**
- * Cloud sync indicator: a circular-arrows icon that turns while the POS syncs and stands still when it is synced (green),
- * and shows red when the device is offline or the last sync failed (tap to retry). Replaces the green "Syncing POS with cloud…" bar.
+ * Cloud sync indicator: shown only when something is wrong, in red, when the device is offline or the last sync failed (tap to retry).
+ * While the POS syncs normally nothing is shown (the "Syncing" / "Synced" button was removed from the top bar).
  */
 import { useSession } from "../../store/SessionProvider";
 
@@ -19,6 +19,7 @@ export function SyncIndicator({ variant = "row" }) {
 	if (authKind !== "appwrite") return null; // local mode has no cloud to sync with
 	const state = cloudStatus.state;
 	const tone = state === "offline" || state === "retry" ? "bad" : "good";
+	if (tone !== "bad") return null;
 	const spinning = state === "syncing";
 	const retry = state === "retry";
 	const label = retry ? "Cloud sync failed. Tap to retry." : cloudStatus.message;

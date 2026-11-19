@@ -22,6 +22,7 @@ const Inventory = page(() => import("./Inventory"), "Inventory");
 const Industry = page(() => import("./Industry"), "Industry");
 const Staff = page(() => import("./Staff"), "Staff");
 const Settings = page(() => import("./Settings"), "Settings");
+const OnlineOrders = page(() => import("./OnlineOrders"), "OnlineOrders");
 
 const VIEWS = {
 	dashboard: Dashboard,
@@ -40,6 +41,7 @@ const VIEWS = {
 	industry: Industry,
 	staff: Staff,
 	settings: Settings,
+	online: OnlineOrders,
 };
 
 /** Renders the screen chosen in the sidebar. */

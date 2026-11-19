@@ -3,11 +3,11 @@
  * category/search, and the checkout actions (add items, complete sale, void, hold as open order, recall, rewards).
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ORDER_CHANNELS, STORAGE } from "../config/constants";
-import { addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
+import { ONLINE_CHANNELS, ORDER_CHANNELS, STORAGE } from "../config/constants";
+import { modifierSignature, addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
 import { productSizeGroup } from "../domain/catalog";
 import { removalNeedsApproval } from "../domain/deleteApproval";
-import { availableProductStock, cartQtyForProduct, hasSizedStock, stockSizeFor } from "../domain/inventory";
+import { availableProductStock, cartQtyForProduct, hasSizedStock, recipeShortfall, shortfallMessage, stockSizeFor } from "../domain/inventory";
 import { phoneKey } from "../domain/format";
 import { resolveOptions } from "../domain/systemOptions";
 import { serviceChargeSupported } from "../services/pos/common";
@@ -55,6 +55,7 @@ export function CheckoutProvider({ children }) {
 	const [channelPicked, setChannelPicked] = useState(false); // the order type was chosen on this order (Order Entry: require order type)
 	const [picker, setPicker] = useState(null); // { productId, lineKey }
 	const [approval, setApproval] = useState(null); // { key, delta, line, removed }: a removal waiting for a manager
+	const [stockApproval, setStockApproval] = useState(null); // { name, message, apply(approverName) }: an item short of stock waiting for a manager
 	const [splitOpen, setSplitOpen] = useState(false);
 	const [customerModal, setCustomerModal] = useState(null); // { id, phone, source }
 	const busy = useRef(false);
@@ -87,7 +88,7 @@ export function CheckoutProvider({ children }) {
 		if (!cart.length && !openOrderId) setOrderChannel(defaultChannel);
 	}, [defaultChannel]); // eslint-disable-line react-hooks/exhaustive-deps
 	useEffect(() => {
-		if (!channels.includes(orderChannel)) setOrderChannel(defaultChannel);
+		if (!channels.includes(orderChannel) && !ONLINE_CHANNELS.includes(orderChannel)) setOrderChannel(defaultChannel); // an online order keeps its channel
 	}, [channels, orderChannel, defaultChannel]);
 
 	// a split that no longer matches the total is discarded (legacy behaviour)
@@ -96,21 +97,61 @@ export function CheckoutProvider({ children }) {
 	}, [totals.total, splitPayments]);
 
 	// ------------------------------------------------------------ cart ------
+	/** Marks the line a manager let through at low stock, so the payment check does not stop it again. */
+	const markOverride = (lines, key, by) => lines.map((l) => (l.key === key ? { ...l, stockOverride: by } : l));
+
+	/**
+	 * Why this cannot go on the order (short product stock or short ingredients), or "" when it can. `wanted` is how many of the item the
+	 * order would then hold (apart from the line `exceptKey`); `more` is how many more it would use ingredients for (0 = no ingredient check).
+	 */
+	const stockBlock = useCallback(
+		(product, size, exceptKey, wanted, more) => {
+			if (enabled["checkout.stockGuard"] && enabled["inventory.productStock"]) {
+				const available = availableProductStock(product, data.inventory, locationId, size || "");
+				if (Number.isFinite(available) && cartQtyForProduct(cart, product.id, exceptKey, size) + wanted > available) return `${product.name} has only ${available} in stock.`;
+			}
+			if (more > 0 && enabled["inventory.recipes"]) {
+				const short = recipeShortfall(product, cart, data.products, data.inventory, more);
+				if (short) return shortfallMessage(product, short);
+			}
+			return "";
+		},
+		[cart, enabled, data.inventory, data.products, locationId],
+	);
+
+	/** Lets the action through when someone who may approve low stock has said yes; otherwise asks for a manager's PIN. */
+	const needStockApproval = useCallback(
+		async (product, message, apply) => {
+			if (can("pos.stock.override")) {
+				const approver = await svc.sales.stockOverride({ name: product.name, message });
+				if (approver) apply(approver.name);
+				return;
+			}
+			setStockApproval({ name: product.name, message, apply });
+		},
+		[can, svc],
+	);
+
 	const addConfigured = useCallback(
 		(product, selections, lineKey = "") => {
 			const requested = lineKey ? cart.find((l) => l.key === lineKey)?.qty || 1 : 1;
-			if (enabled["checkout.stockGuard"] && enabled["inventory.productStock"]) {
-				const size = stockSizeFor(data.inventory, product.id, selections);
-				const available = availableProductStock(product, data.inventory, locationId, size || "");
-				if (Number.isFinite(available) && cartQtyForProduct(cart, product.id, lineKey, size) + requested > available) {
-					ui.notice(`${product.name} has only ${available} in stock.`);
-					return false;
-				}
+			const size = stockSizeFor(data.inventory, product.id, selections);
+			const message = stockBlock(product, size, lineKey, requested, lineKey ? 0 : 1);
+			const add = (by) => {
+				setCart((c) => {
+					const next = addConfiguredLine(c, product, selections, lineKey);
+					return by ? markOverride(next, lineKey || product.id + "|" + modifierSignature(selections), by) : next;
+				});
+				setPicker(null);
+			};
+			if (message) {
+				needStockApproval(product, message, add);
+				return false;
 			}
 			setCart((c) => addConfiguredLine(c, product, selections, lineKey));
 			return true;
 		},
-		[cart, enabled, data.inventory, locationId, ui],
+		[cart, data.inventory, stockBlock, needStockApproval],
 	);
 
 	const addProduct = useCallback(
@@ -147,12 +188,12 @@ export function CheckoutProvider({ children }) {
 	const changeLineQty = useCallback(
 		(key, delta) => {
 			const line = cart.find((l) => l.key === key);
-			if (line && delta > 0 && enabled["checkout.stockGuard"] && enabled["inventory.productStock"]) {
+			if (line && delta > 0) {
 				const product = data.products.find((p) => p.id === line.productId);
 				const size = stockSizeFor(data.inventory, line.productId, line.modifiers);
-				const available = availableProductStock(product, data.inventory, locationId, size || "");
-				if (Number.isFinite(available) && cartQtyForProduct(cart, line.productId, key, size) + line.qty + delta > available) {
-					ui.notice(`${line.name} has only ${available} in stock.`);
+				const message = stockBlock(product, size, key, line.qty + delta, delta);
+				if (message) {
+					needStockApproval(line, message, (by) => setCart((c) => markOverride(changeQty(c, key, delta), key, by)));
 					return;
 				}
 			}
@@ -163,7 +204,7 @@ export function CheckoutProvider({ children }) {
 			}
 			setCart((c) => changeQty(c, key, delta));
 		},
-		[cart, enabled, data, locationId, ui, can],
+		[cart, data, stockBlock, needStockApproval, can],
 	);
 	/** The manager's PIN for the pending removal: on success the quantity change goes through. */
 	const approveRemoval = useCallback(
@@ -176,6 +217,19 @@ export function CheckoutProvider({ children }) {
 			return true;
 		},
 		[approval, svc],
+	);
+
+	/** The manager's PIN for the pending low-stock item: on success the item goes on the order. */
+	const approveStock = useCallback(
+		async (pin) => {
+			if (!stockApproval) return false;
+			const approver = await svc.sales.stockOverride({ pin, name: stockApproval.name, message: stockApproval.message });
+			if (!approver) return false;
+			stockApproval.apply(approver.name);
+			setStockApproval(null);
+			return true;
+		},
+		[stockApproval, svc],
 	);
 
 	const removeProductFromCart = useCallback((productId) => setCart((c) => c.filter((l) => l.productId !== productId)), []);
@@ -322,8 +376,8 @@ export function CheckoutProvider({ children }) {
 				discount,
 				customerId,
 				reference: orderReference.trim(),
-				orderChannel: kitchen ? orderChannel : "Retail",
-				platformOrderId: kitchen ? platformOrderId.trim() : "",
+				orderChannel: kitchen || ONLINE_CHANNELS.includes(orderChannel) ? orderChannel : "Retail",
+				platformOrderId: kitchen || ONLINE_CHANNELS.includes(orderChannel) ? platformOrderId.trim() : "",
 				openOrderId,
 				sendKitchen,
 			});
@@ -347,12 +401,14 @@ export function CheckoutProvider({ children }) {
 			setDiscountOn(dv.value > 0);
 			setCustomerId(order.customerId || "");
 			setOrderReference(order.orderReference || "");
-			setOrderChannel(kitchen ? order.orderChannel || "Dine-in" : "Dine-in");
-			setPlatformOrderId(kitchen ? order.platformOrderId || "" : "");
+			const online = ONLINE_CHANNELS.includes(order.orderChannel); // kept for any kind of business
+			setOrderChannel(online || kitchen ? order.orderChannel || "Dine-in" : "Dine-in");
+			setPlatformOrderId(online || kitchen ? order.platformOrderId || "" : "");
+			if (online && (data.settings.thirdPartyPayments || []).some((t) => t.name === order.orderChannel && t.active !== false)) setPayment(order.orderChannel); // paid online: the payment type named after the store channel
 			go("checkout");
 			ui.notice("Open order " + order.orderNumber + " recalled. Complete payment when the guest is ready.");
 		},
-		[data.openOrders, ui, go, kitchen],
+		[data.openOrders, data.settings, ui, go, kitchen],
 	);
 
 	/** Recalls an open order and opens the split dialog for it. */
@@ -386,7 +442,7 @@ export function CheckoutProvider({ children }) {
 		phoneSearch, setPhoneSearch, findNote, findCustomerByPhone, clearCustomer, wantsEmail, toggleEmail, receiptEmail, setReceiptEmail,
 		wantsWhatsApp, setWantsWhatsApp, printAfter, setPrintAfter, cashTendered, setCashTendered, orderReference, setOrderReference,
 		orderChannel, setOrderChannel, pickOrderChannel: (v) => (setChannelPicked(true), setOrderChannel(v)), platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
-		picker, setPicker, approval, setApproval, approveRemoval, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
+		picker, setPicker, approval, setApproval, approveRemoval, stockApproval, setStockApproval, approveStock, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
 		addProduct, addScanned, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
 		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
 	};

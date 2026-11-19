@@ -506,6 +506,13 @@ html body.full:not(:has(#view-checkout.active)) .top{position:sticky!important;t
 .sync-indicator.spinning svg{animation:pos-sync-spin 1s linear infinite}
 @keyframes pos-sync-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.sync-indicator.spinning svg{animation-duration:3s}}
+/* Online orders cart button (OnlineOrdersButton.jsx): icon and word on big screens, icon only on small ones */
+.online-orders-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;min-width:40px;padding:0 12px;position:relative}
+.online-orders-btn.active{border-color:var(--gold,#b8860b)}
+.online-orders-btn svg{flex:none}
+.online-orders-btn .oo-text{font-size:calc(12px * var(--ui-fs, 1));font-weight:700}
+.online-orders-btn .oo-badge{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#c23b32;color:#fff;font-size:12px;line-height:20px;text-align:center}
+@media (max-width:1100px){.online-orders-btn .oo-text{display:none}.online-orders-btn{padding:0 10px}}
 .sync-indicator .sync-text{font-size:calc(12px * var(--ui-fs, 1));font-weight:700}
 /* big screens: one copy in the actions row (icon and short word); small screens: one copy beside the ... button (icon only) */
 .sync-indicator.sync-compact{display:none}

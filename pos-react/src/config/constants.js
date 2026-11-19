@@ -38,6 +38,8 @@ export const PAYMENT_ICONS = {
 
 export const ORDER_CHANNELS = ["Dine-in", "Takeaway", "PickMe", "Uber Eats"];
 export const PLATFORM_CHANNELS = ["PickMe", "Uber Eats"];
+/** Channels of orders that arrive from an online store (not rung up at the till); they appear under Online orders. */
+export const ONLINE_CHANNELS = ["Shopify"];
 
 export const STOCK_TYPES = [
 	"Ingredient",

@@ -17,6 +17,7 @@ import { WelcomeModal } from "../../modals/WelcomeModal";
 import { CheckoutModeGate } from "../../gates/CheckoutModeGate";
 import { CustomerModalHost } from "../../modals/CustomerModal";
 import { ItemApprovalModal } from "../../modals/ItemApprovalModal";
+import { StockApprovalModal } from "../../modals/StockApprovalModal";
 import { ModifierPickerModal } from "../../modals/ModifierPickerModal";
 import { useApplyDisplayPrefs } from "../../hooks/useDisplayPrefs";
 import { useBarcodeScanning } from "../../hooks/useBarcodeScanning";
@@ -63,6 +64,7 @@ export function Shell() {
 			<BarcodeModalHost />
 			<ModifierPickerModal />
 			<ItemApprovalModal />
+			<StockApprovalModal />
 			<LocationSwitcherModal open={locationsOpen} onClose={() => setLocationsOpen(false)} />
 			<PosSetupModal />
 			<ShiftStartModal />

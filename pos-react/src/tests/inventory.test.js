@@ -3,7 +3,7 @@
  * stock rows, branch stock counts and count-sheet import.
  */
 import { describe, it, expect, beforeEach } from "vitest";
-import { availableProductStock } from "../domain/inventory";
+import { availableProductStock, recipeShortfall, shortfallMessage } from "../domain/inventory";
 import { addProduct, createHarness, line, noDiscount } from "./harness";
 
 const item = (o = {}) => ({ name: "Sugar", sku: "", type: "Ingredient", unit: "kg", qty: "10", reorder: "2", cost: "180", supplier: "", ...o });
@@ -199,5 +199,35 @@ describe("inventory workflow", () => {
 			await h.svc.inventory.addStockBatch([]);
 			expect(h.lastAlert()).toMatch(/at least one/);
 		});
+	});
+});
+
+describe("ingredient check when an item is selected (#163)", () => {
+	const flour = { id: "i1", name: "Flour", unit: "kg", qty: 1 };
+	const milk = { id: "i2", name: "Milk", unit: "l", qty: 10 };
+	const bread = { id: "p1", name: "Bread", recipe: [{ itemId: "i1", qty: 0.6 }] };
+	const latte = { id: "p2", name: "Latte", recipe: [{ itemId: "i2", qty: 0.3 }] };
+	const tea = { id: "p3", name: "Tea" };
+	const products = [bread, latte, tea];
+	const inventory = [flour, milk];
+	const cartLine = (p, qty) => ({ ...p, productId: p.id, qty });
+
+	it("lets an item through when its ingredients cover it, and items with no recipe", () => {
+		expect(recipeShortfall(bread, [], products, inventory)).toBe(null);
+		expect(recipeShortfall(tea, [], products, inventory)).toBe(null);
+	});
+
+	it("blocks an item as soon as one more would use more than is in stock, counting what the order already has", () => {
+		expect(recipeShortfall(bread, [cartLine(bread, 1)], products, inventory)).toMatchObject({ i: { name: "Flour" }, qty: 1.2 });
+		expect(recipeShortfall(bread, [], products, [{ ...flour, qty: 0.5 }])).toMatchObject({ i: { name: "Flour" } });
+	});
+
+	it("is not blocked by another line that is already short", () => {
+		expect(recipeShortfall(latte, [cartLine(bread, 5)], products, inventory)).toBe(null);
+	});
+
+	it("says which ingredient is short", () => {
+		const short = recipeShortfall(bread, [cartLine(bread, 1)], products, inventory);
+		expect(shortfallMessage(bread, short)).toBe("Bread cannot be added: not enough Flour (needs 1.2 kg, 1 kg available).");
 	});
 });
