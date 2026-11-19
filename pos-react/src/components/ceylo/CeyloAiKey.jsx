@@ -12,9 +12,27 @@ import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 
 const PROVIDERS = [
-	{ id: "anthropic", label: "Claude (Anthropic)", model: "claude-opus-5-5", hint: "Loaded from your Claude account.", keyHint: "Starts with sk-ant-. Create it at console.anthropic.com." },
-	{ id: "openai", label: "ChatGPT (OpenAI)", model: "", hint: "Loaded from your OpenAI account.", keyHint: "Starts with sk-. Create it at platform.openai.com." },
-	{ id: "gemini", label: "Gemini (Google)", model: "", hint: "Loaded from your Google AI Studio account.", keyHint: "Create it at aistudio.google.com." },
+	{
+		id: "anthropic", label: "Claude (Anthropic)", model: "claude-opus-5-5", hint: "Loaded from your Claude account.", keyHint: "Starts with sk-ant-. Create it at console.anthropic.com.",
+		guide: {
+			site: "https://console.anthropic.com", siteLabel: "console.anthropic.com",
+			steps: ["Open the Claude Console and sign in, or create an account.", "Add credit under Plans & Billing. API usage is paid for separately from a Claude chat subscription.", "Open Settings, then API Keys, and choose Create Key.", "Name it (for example the business name) and create it.", "Copy the key now. It starts with sk-ant- and is shown only once."],
+		},
+	},
+	{
+		id: "openai", label: "ChatGPT (OpenAI)", model: "", hint: "Loaded from your OpenAI account.", keyHint: "Starts with sk-. Create it at platform.openai.com.",
+		guide: {
+			site: "https://platform.openai.com/api-keys", siteLabel: "platform.openai.com",
+			steps: ["Open the OpenAI Platform and sign in, or create an account.", "Add credit under Billing. API usage is paid for separately from a ChatGPT subscription.", "Open API keys and choose Create new secret key.", "Name it (for example the business name) and create it.", "Copy the key now. It starts with sk- and is shown only once."],
+		},
+	},
+	{
+		id: "gemini", label: "Gemini (Google)", model: "", hint: "Loaded from your Google AI Studio account.", keyHint: "Create it at aistudio.google.com.",
+		guide: {
+			site: "https://aistudio.google.com/apikey", siteLabel: "aistudio.google.com",
+			steps: ["Open Google AI Studio and sign in with a Google account.", "Choose Get API key.", "Choose Create API key and pick a Google Cloud project (or let it create one).", "Copy the key. Keep it private; it can be viewed again in AI Studio.", "The free tier has limits. Turn on billing for the project if Ceylo needs more."],
+		},
+	},
 ];
 
 export function CeyloAiKeyPanel() {
@@ -107,7 +125,8 @@ export function CeyloAiKeyPanel() {
 				) : !locations.length ? (
 					<p className="muted">Add a location first.</p>
 				) : (
-					<>
+					<div className="ceylo-ai-layout">
+						<div className="ceylo-ai-main">
 						{all && Object.keys(all).length > 0 && (
 							<ul className="plan-bullets" id="ceylo-ai-key-list" aria-label="Saved keys">
 								{Object.entries(all).map(([id, k]) => (
@@ -184,7 +203,20 @@ export function CeyloAiKeyPanel() {
 								)}
 							</div>
 						</form>
-					</>
+						</div>
+						<aside className="ceylo-ai-guide" id="ceylo-ai-guide" aria-labelledby="ceylo-ai-guide-title">
+							<h3 id="ceylo-ai-guide-title">How to get a {p.label} API key</h3>
+							<ol>
+								{p.guide.steps.map((step) => (
+									<li key={step}>{step}</li>
+								))}
+							</ol>
+							<a className="btn out" href={p.guide.site} target="_blank" rel="noreferrer noopener">
+								Open {p.guide.siteLabel}
+							</a>
+							<p className="muted">Then paste the key here. Screens on the provider's site can change; the key always comes from its API keys page. Usage is billed by the provider, and the key is stored encrypted and never shown again.</p>
+						</aside>
+					</div>
 				)}
 			</div>
 		</div>
