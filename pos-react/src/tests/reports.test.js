@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { dashboardData } from "../domain/analytics";
 import { buildReport, metricCards, saleFigures, sumFigures } from "../domain/reportBuilders";
 import { formatCell, reportCsv, sortRows } from "../domain/reportFormat";
 import { REPORT_GROUPS, firstSub, kitchenReportsOn, visibleGroups } from "../domain/reportsCatalog";
@@ -191,5 +192,25 @@ describe("online orders report", () => {
 		expect(subs({ online: true })).toContain("online-orders");
 		expect(subs({})).not.toContain("online-orders");
 		expect(subs({ online: false })).not.toContain("online-orders");
+	});
+});
+
+describe("service charge on the Dashboard (#167)", () => {
+	const sale = (id, lines, total) => ({ id, status: "completed", date: "2026-11-10", createdAt: "2026-11-10T10:00:00Z", total, cost: 0, payment: "Cash", lines });
+	const range = { from: "2026-11-01", to: "2026-11-30" };
+	const tea = { name: "Tea", qty: 2, price: 100 };
+	const service = (amount) => ({ name: "Service charge (10%)", qty: 1, price: amount, isServiceCharge: true });
+
+	it("totals the service charge on its own and keeps it out of the item list and unit count", () => {
+		const d = dashboardData([sale("a", [tea, service(20)], 220), sale("b", [{ name: "Tea", qty: 1, price: 100 }, service(10)], 110), sale("c", [tea], 200)], range);
+		expect(d.serviceCharge).toBe(30);
+		expect(d.items.map((i) => i.name)).toEqual(["Tea"]);
+		expect(d.items[0]).toMatchObject({ qty: 5, revenue: 500 });
+		expect(d.units).toBe(5);
+		expect(d.revenue).toBe(530); // sales totals are unchanged
+	});
+
+	it("is zero when no sale has a service charge", () => {
+		expect(dashboardData([sale("a", [tea], 200)], range).serviceCharge).toBe(0);
 	});
 });

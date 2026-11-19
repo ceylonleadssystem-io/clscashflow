@@ -24,6 +24,8 @@ export function Dashboard() {
 	const [range, setRange] = useState(defaultRange);
 	const [active, setActive] = useState("month");
 	const d = useMemo(() => dashboardData(sales, range), [sales, range]);
+	const serviceChargeOn = useFeature("checkout.serviceCharge");
+	const showService = serviceChargeOn || d.serviceCharge > 0; // shown where service charge is used, or whenever the range has some
 	const maxPayment = Math.max(1, ...Object.values(d.payments));
 
 	const setType = (type) => {
@@ -63,9 +65,10 @@ export function Dashboard() {
 					</div>
 				</div>
 			</div>
-			<div className="grid4" id="kpis">
+			<div className={"grid4" + (showService ? " kpis-five" : "")} id="kpis">
 				<Kpi label="Sales" value={d.sales.length} note="Completed transactions" />
 				<Kpi label="Revenue" value={money(d.revenue)} />
+				{showService && <Kpi label="Service Charge" value={money(d.serviceCharge)} note="Collected on sales, not an item" />}
 				<Kpi label="Gross Profit" value={money(d.profit)} tone="positive" note="Revenue less item cost" />
 				<Kpi label="Average Sale" value={money(d.average)} />
 			</div>

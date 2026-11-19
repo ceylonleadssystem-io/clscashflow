@@ -153,6 +153,7 @@
 .panel-head .tools,.panel-head .range-fields{flex-wrap:wrap}
 .dashboard-toolbar{flex-wrap:wrap;gap:12px}
 .grid4{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+.grid4.kpis-five{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))!important}
 .dashboard-two{grid-template-columns:repeat(auto-fit,minmax(min(100%,600px),1fr))}
 .cashflow-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
 .form-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}

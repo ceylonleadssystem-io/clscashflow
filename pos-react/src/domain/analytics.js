@@ -33,8 +33,10 @@ export function dashboardData(sales, { from, to }) {
 	const cost = list.reduce((a, s) => a + (+s.cost || 0), 0);
 	const profit = revenue - cost;
 	const itemMap = {};
+	let serviceCharge = 0; // the service charge is a line on the sale, but it is not an item: it is totalled on its own
 	list.forEach((s) =>
 		(s.lines || []).forEach((l) => {
+			if (l.isServiceCharge) return void (serviceCharge += (+l.price || 0) * (+l.qty || 0));
 			const name = l.name || "Item";
 			const x = itemMap[name] || (itemMap[name] = { name, qty: 0, revenue: 0 });
 			x.qty += +l.qty || 0;
@@ -51,6 +53,7 @@ export function dashboardData(sales, { from, to }) {
 		profit,
 		average: list.length ? revenue / list.length : 0,
 		items,
+		serviceCharge,
 		payments,
 		cash,
 		nonCash: revenue - cash,
