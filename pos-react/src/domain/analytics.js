@@ -36,8 +36,10 @@ export function dashboardData(sales, { from, to }) {
 	let serviceCharge = 0; // the service charge is a line on the sale, but it is not an item: it is totalled on its own
 	list.forEach((s) =>
 		(s.lines || []).forEach((l) => {
-			if (l.isServiceCharge) return void (serviceCharge += (+l.price || 0) * (+l.qty || 0));
-			if (l.isDiscount || l.code === "TAX") return; // discount and tax lines are not items either
+			// a tax line is built like a service charge line (isServiceCharge, code TAX): neither is an item, but only the real service charge is totalled
+			const tax = l.code === "TAX";
+			if (l.isServiceCharge || tax) return void (tax || (serviceCharge += (+l.price || 0) * (+l.qty || 0)));
+			if (l.isDiscount) return; // a discount is not an item either
 			const name = l.name || "Item";
 			const x = itemMap[name] || (itemMap[name] = { name, qty: 0, revenue: 0 });
 			x.qty += +l.qty || 0;

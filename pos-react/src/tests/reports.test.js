@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dashboardData } from "../domain/analytics";
+import { makeServiceLine, makeTaxLine } from "../domain/sales";
 import { buildReport, metricCards, saleFigures, sumFigures } from "../domain/reportBuilders";
 import { formatCell, reportCsv, sortRows } from "../domain/reportFormat";
 import { REPORT_GROUPS, firstSub, kitchenReportsOn, visibleGroups } from "../domain/reportsCatalog";
@@ -218,6 +219,14 @@ describe("service charge on the Dashboard (#167)", () => {
 		expect(d.items[0]).toMatchObject({ qty: 4, revenue: 400 });
 		expect(d.units).toBe(4);
 		expect(d.serviceCharge).toBe(20);
+	});
+
+	it("totals only the real service charge: tax lines, which are built like service lines, are not part of it", () => {
+		const vat = makeTaxLine({ id: "vat", name: "VAT", rate: 12, amount: 24, base: 200 });
+		const d = dashboardData([sale("a", [tea, vat, makeServiceLine(20, 10)], 244)], range);
+		expect(d.serviceCharge).toBe(20);
+		expect(d.items.map((i) => i.name)).toEqual(["Tea"]);
+		expect(d.units).toBe(2);
 	});
 
 	it("is zero when no sale has a service charge", () => {
