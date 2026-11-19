@@ -37,6 +37,7 @@ export function dashboardData(sales, { from, to }) {
 	list.forEach((s) =>
 		(s.lines || []).forEach((l) => {
 			if (l.isServiceCharge) return void (serviceCharge += (+l.price || 0) * (+l.qty || 0));
+			if (l.isDiscount || l.code === "TAX") return; // discount and tax lines are not items either
 			const name = l.name || "Item";
 			const x = itemMap[name] || (itemMap[name] = { name, qty: 0, revenue: 0 });
 			x.qty += +l.qty || 0;

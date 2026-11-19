@@ -210,6 +210,16 @@ describe("service charge on the Dashboard (#167)", () => {
 		expect(d.revenue).toBe(530); // sales totals are unchanged
 	});
 
+	it("keeps discount and tax lines out of Best-Selling Items and the unit count too", () => {
+		const discount = { name: "Discount (10%)", qty: 1, price: -20, isDiscount: true };
+		const vat = { name: "VAT (12%)", qty: 1, price: 24, code: "TAX" };
+		const d = dashboardData([sale("a", [tea, discount, vat, service(20)], 224), sale("b", [tea, vat], 224)], range);
+		expect(d.items.map((i) => i.name)).toEqual(["Tea"]);
+		expect(d.items[0]).toMatchObject({ qty: 4, revenue: 400 });
+		expect(d.units).toBe(4);
+		expect(d.serviceCharge).toBe(20);
+	});
+
 	it("is zero when no sale has a service charge", () => {
 		expect(dashboardData([sale("a", [tea], 200)], range).serviceCharge).toBe(0);
 	});
