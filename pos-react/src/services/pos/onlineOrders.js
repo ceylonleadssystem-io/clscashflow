@@ -8,6 +8,7 @@ import { nowIso } from "../../domain/format";
 import { formatOrderNumber, nextSequence } from "../../domain/orders";
 import { inboxToOpenOrder, openOrderIdOf } from "../../domain/shopifyOrder";
 import { thirdPartyList } from "../../domain/thirdPartyPayments";
+import { ensureOnlineCustomer } from "./customers";
 import { kitchenMode, newId, stamp } from "./common";
 import { queueKitchenTicket } from "./printing";
 import { createLogger } from "../../utils/logger";
@@ -90,7 +91,9 @@ export async function storeOnlineOrders(ctx, rows) {
 			}
 			continue;
 		}
-		fresh.push(stamp(inboxToOpenOrder(row, { products: d.products, number: formatOrderNumber(seq), staffId: s.userId, now: nowIso(), rate, autoKitchen }), s));
+		const who = row.order?.customer || {};
+		const customer = await ensureOnlineCustomer(ctx, { name: who.name, phone: who.phone, email: who.email, address: row.order?.delivery?.address, orderName: row.order?.name }); // the CRM customer, when Shopify shared enough to make one
+		fresh.push(stamp(inboxToOpenOrder(row, { products: d.products, inventory: ctx.data().inventory, number: formatOrderNumber(seq), staffId: s.userId, now: nowIso(), customerId: customer?.id || "", rate, autoKitchen }), s));
 		seq += 1;
 	}
 	if (!fresh.length) return [];

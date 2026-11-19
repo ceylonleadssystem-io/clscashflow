@@ -33,6 +33,11 @@ export function OnlineOrders() {
 								<span className="muted">{o.platformOrderId ? "#" + o.platformOrderId : ""}</span>
 								<span>{(o.lines || []).reduce((a, l) => a + (Number(l.qty) || 0), 0)} items</span>
 								<span>{money(orderTotal(o))}</span>
+								{(o.lines || []).some((l) => l.unmatched) && (
+									<span className="badge" title="No item or stock item has the SKU of these items, so their stock is not reduced">
+										{(o.lines || []).filter((l) => l.unmatched).length} not matched
+									</span>
+								)}
 								<span className="muted">{o.kitchenSentAt ? "Sent to kitchen" : "New"}</span>
 								<button type="button" className="btn gold" style={{ marginLeft: "auto" }} onClick={() => loadOpenOrder(o.id)}>
 									Open

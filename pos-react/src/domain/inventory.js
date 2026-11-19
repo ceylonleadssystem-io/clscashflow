@@ -80,6 +80,8 @@ export const hasSizedStock = (inventory, productId) => inventory.some((i) => Str
 
 /** The stock row a sale line draws from: its size's row, else the product's single row, else none (untracked). */
 export function stockRowForLine(rows, line) {
+	if (line.stockItemId) return rows.find((i) => i.id === line.stockItemId) || null; // an online order line matched to a stock item that counts no sellable item
+	if (!line.productId) return null; // a line that is no item of the menu (a delivery charge, an unmatched online item) never draws from a stock row that counts no item
 	const mine = rows.filter((i) => String(i.productId || "") === String(line.productId));
 	const size = lineSize(line);
 	return (size && mine.find((i) => i.sizeName === size)) || mine.find((i) => !i.sizeName) || null;

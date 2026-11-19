@@ -53,6 +53,7 @@ export function bindServices(ctx) {
 		customers: bind(ctx, {
 			saveCustomer: customers.saveCustomer,
 			ensureCustomer: customers.ensureCustomer,
+			ensureOnlineCustomer: customers.ensureOnlineCustomer,
 			requestFeedback: customers.requestFeedback,
 			sendCustomerWhatsApp: customers.sendCustomerWhatsApp,
 		}),

@@ -2,7 +2,7 @@
  * Pure analytics for the dashboard, reports and CRM: date ranges, revenue/cost/profit and best sellers,
  * per-item report rows (refund-aware), shift and staff-hour summaries, and customer insights (visits, spend, favourite item, birthdays, segment, feedback due).
  */
-import { VIP_SPEND } from "../config/constants";
+import { ONLINE_CHANNELS, VIP_SPEND } from "../config/constants";
 import { isActiveSale, refundableLines } from "./sales";
 import { localDateValue, today } from "./format";
 
@@ -192,6 +192,21 @@ export function feedbackDue(customer, sales, delayDays) {
 }
 
 /** Enriched customer rows used by the CRM screen. */
+/** Is this customer one that came from the online store (tagged "Shopify")? */
+export const isOnlineCustomer = (c) => /(^|,)\s*shopify\s*(,|$)/i.test(c?.tags || "");
+
+/** Paid online orders per customer id: { [customerId]: { orders, spent } }. */
+export function onlineOrdersByCustomer(sales) {
+	const out = {};
+	for (const s of sales) {
+		if (!s.customerId || !ONLINE_CHANNELS.includes(s.orderChannel) || !isActiveSale(s)) continue;
+		const g = out[s.customerId] || (out[s.customerId] = { orders: 0, spent: 0 });
+		g.orders += 1;
+		g.spent += +s.total || 0;
+	}
+	return out;
+}
+
 export function crmRows(customers, sales, settings) {
 	return customers.map((c) => {
 		const s = customerInsights(c, sales);

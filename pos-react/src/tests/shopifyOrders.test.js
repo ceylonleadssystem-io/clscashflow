@@ -148,3 +148,107 @@ describe("online orders in the POS", () => {
 		expect(res.sale).toMatchObject({ orderChannel: "Shopify", platformOrderId: "#1001", payment: "Shopify" });
 	});
 });
+
+import { matchSku } from "../domain/shopifyOrder";
+import { isOnlineCustomer, onlineOrdersByCustomer } from "../domain/analytics";
+import { stockRowForLine } from "../domain/inventory";
+import { ensureOnlineCustomer } from "../services/pos/customers";
+
+describe("matching a Shopify SKU to the items and the inventory", () => {
+	const products = [{ id: "p1", name: "Latte", code: "LAT-1", price: 550 }, { id: "p2", name: "Tee", code: "TEE", price: 3000 }];
+	const inventory = [
+		{ id: "i1", name: "Latte stock", sku: "LATTE-STOCK", productId: "p1", qty: 10 },
+		{ id: "i2", name: "Tee (Large)", sku: "TEE-L", productId: "p2", sizeName: "Large", qty: 4 },
+		{ id: "i3", name: "Gift wrap", sku: "WRAP-1", qty: 20 },
+	];
+
+	it("first by item code, then by the SKU of a stock item that counts an item, then by a stock item on its own", () => {
+		expect(matchSku("lat-1", products, inventory)).toEqual({ product: products[0], row: null });
+		expect(matchSku(" LATTE-STOCK ", products, inventory)).toEqual({ product: products[0], row: inventory[0] });
+		expect(matchSku("WRAP-1", products, inventory)).toEqual({ stock: inventory[2] });
+		expect(matchSku("NOPE", products, inventory)).toBe(null);
+		expect(matchSku("", products, inventory)).toBe(null);
+	});
+
+	it("turns each kind of match into the right line", () => {
+		const order = sanitizeOrder({ ...raw, line_items: [{ title: "Latte", sku: "LATTE-STOCK", quantity: 1, price: "600" }, { title: "Tee", sku: "TEE-L", quantity: 1, price: "3000" }, { title: "Wrap", sku: "WRAP-1", quantity: 2, price: "100" }, { title: "Mystery", sku: "X", quantity: 1, price: "10" }], total_shipping_price_set: undefined, shipping_lines: [] });
+		const lines = onlineLines(order, products, 1, inventory);
+		expect(lines[0]).toMatchObject({ productId: "p1", name: "Latte" });
+		expect(lines[1]).toMatchObject({ productId: "p2", modifiers: [{ groupName: "Size", optionName: "Large" }] });
+		expect(stockRowForLine(inventory, lines[1])).toBe(inventory[1]); // the Large row, not the whole item
+		expect(lines[2]).toMatchObject({ productId: "", stockItemId: "i3", name: "Gift wrap", qty: 2 });
+		expect(stockRowForLine(inventory, lines[2])).toBe(inventory[2]);
+		expect(lines[3]).toMatchObject({ unmatched: true, name: "Mystery" });
+		expect(stockRowForLine(inventory, lines[3])).toBe(null);
+	});
+});
+
+describe("online order stock", () => {
+	it("a line matched to a stock item on its own is taken from that stock when the order is paid, and put back when it is returned", async () => {
+		const h = await createHarness();
+		await openShift(h);
+		const wrap = await h.svc.inventory.saveInventoryItem({ name: "Gift wrap", sku: "WRAP-1", type: "Packaging", unit: "pcs", qty: "20", reorder: "2", cost: "10", supplier: "" });
+		await storeOnlineOrders(h.ctx, [{ id: "o5", order: sanitizeOrder({ ...raw, id: 5, total_shipping_price_set: undefined, shipping_lines: [], line_items: [{ title: "Wrap", sku: "WRAP-1", quantity: 2, price: "100" }] }) }]);
+		await h.refresh();
+		const open = h.data().openOrders[0];
+		expect(open.lines[0].stockItemId).toBe(wrap.id);
+		const res = await h.svc.sales.completeSale({ cart: open.lines, discount: noDiscount, payment: "Card", orderChannel: "Shopify", platformOrderId: open.platformOrderId });
+		expect(res.sale).toBeTruthy();
+		expect(h.data().inventory.find((i) => i.id === wrap.id).qty).toBe(18);
+		expect(h.data().stockMovements.some((m) => m.itemId === wrap.id && m.reason === "Product sold")).toBe(true);
+	});
+
+	it("a SKU on a stock item that counts an item sells that item and takes its stock", async () => {
+		const h = await createHarness();
+		await openShift(h);
+		const latte = await addProduct(h, { name: "Latte", code: "LAT-1", type: "Product", price: "550", stock: "10" });
+		const row = h.data().inventory.find((i) => i.productId === latte.id);
+		await h.svc.inventory.saveInventoryItem({ ...row, sku: "LATTE-STOCK", qty: String(row.qty) });
+		await storeOnlineOrders(h.ctx, [{ id: "o6", order: sanitizeOrder({ ...raw, id: 6, total_shipping_price_set: undefined, shipping_lines: [], line_items: [{ title: "Latte", sku: "LATTE-STOCK", quantity: 3, price: "550" }] }) }]);
+		await h.refresh();
+		const open = h.data().openOrders[0];
+		expect(open.lines[0].productId).toBe(latte.id);
+		await h.svc.sales.completeSale({ cart: open.lines, discount: noDiscount, payment: "Card", orderChannel: "Shopify" });
+		expect(h.data().inventory.find((i) => i.id === row.id).qty).toBe(7);
+	});
+});
+
+describe("Shopify customers in the CRM", () => {
+	const shopper = { name: "Nimal Perera", phone: "+94 77 123 4567", email: "n@x.lk", address: "12 Lake Rd, Galle", orderName: "#1001" };
+
+	it("creates a customer tagged Shopify with the delivery address, and the order carries it", async () => {
+		const h = await createHarness();
+		await storeOnlineOrders(h.ctx, [{ id: "o1", order: sanitizeOrder(raw) }]);
+		await h.refresh();
+		const c = h.data().customers.find((x) => x.name === "Nimal Perera");
+		expect(c).toMatchObject({ phone: "+94771234567", email: "n@x.lk", address: "12 Lake Rd, Galle, 80000", tags: "Shopify" });
+		expect(isOnlineCustomer(c)).toBe(true);
+		expect(h.data().openOrders[0].customerId).toBe(c.id);
+	});
+
+	it("reuses the customer with the same phone or e-mail, fills in what is missing and never overwrites", async () => {
+		const h = await createHarness();
+		const own = await h.svc.customers.saveCustomer({ name: "Nimal P", phone: "0771234567", email: "", birthday: "", company: "", address: "", tags: "VIP", notes: "", type: "vip", discountEligible: false, discountType: "percent", discountValue: 0 });
+		await h.refresh();
+		const got = await ensureOnlineCustomer(h.ctx, shopper);
+		await h.refresh();
+		expect(got.id).toBe(own.id);
+		expect(h.data().customers).toHaveLength(1);
+		expect(h.data().customers[0]).toMatchObject({ name: "Nimal P", email: "n@x.lk", address: "12 Lake Rd, Galle", tags: "VIP, Shopify" });
+		const again = await ensureOnlineCustomer(h.ctx, { ...shopper, phone: "", email: "N@X.LK", address: "Elsewhere" });
+		expect(again.id).toBe(own.id);
+		expect(again.address).toBe("12 Lake Rd, Galle");
+	});
+
+	it("makes a customer from an e-mail alone, and none when Shopify shared nothing", async () => {
+		const h = await createHarness();
+		expect(await ensureOnlineCustomer(h.ctx, { name: "Asha", phone: "", email: "a@x.lk" })).toMatchObject({ phone: "", email: "a@x.lk", tags: "Shopify" });
+		expect(await ensureOnlineCustomer(h.ctx, { name: "", phone: "", email: "" })).toBe(null);
+		expect(await ensureOnlineCustomer(h.ctx, { name: "No Contact", phone: "", email: "" })).toBe(null);
+	});
+
+	it("counts a customer's paid online orders for the CRM", () => {
+		const sales = [{ customerId: "c1", orderChannel: "Shopify", total: 1000, status: "completed" }, { customerId: "c1", orderChannel: "Shopify", total: 500, status: "completed" }, { customerId: "c1", orderChannel: "Dine-in", total: 99, status: "completed" }, { customerId: "c2", orderChannel: "Shopify", total: 70, status: "voided" }];
+		expect(onlineOrdersByCustomer(sales)).toEqual({ c1: { orders: 2, spent: 1500 } });
+	});
+});
