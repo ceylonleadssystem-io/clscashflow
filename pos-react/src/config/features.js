@@ -30,7 +30,7 @@ export const FEATURE_GROUPS = [
 	{ id: "settings", label: "Settings & platform", icon: "⚙" },
 	{ id: "shell", label: "Register shell", icon: "⛶" },
 	{ id: "industry", label: "Industry tools", icon: "✦" },
-	{ id: "online", label: "Online orders", icon: "🛒" },
+	{ id: "online", label: "Online orders & QR menu", icon: "🛒" },
 ];
 
 const f = (id, group, label, description, extra = {}) => ({
@@ -144,6 +144,7 @@ export const FEATURES = [
 	// -------------------------------------------------------------- industry
 	// ---------------------------------------------------------------- online
 	f("online.shopify", "online", "Online orders (Shopify)", "Orders from the business's Shopify store arrive in the POS: the Online orders button and page, and Settings > System Options > Online Store to connect the store. Off until an admin turns it on for the business.", { default: false }),
+	f("menu.qr", "online", "QR menu", "A QR code per location that opens the digital menu on a customer's phone: Settings > System Options > QR Menu. Off until an admin turns it on for the business. Turning it off stops the QR links from showing the menu.", { default: false }),
 
 	f("industry.tools", "industry", "Business Tools", "Appointments, memberships, prescriptions, medicine batches and staff commissions (Salon / Services / Pharmacy). Hidden in the last release of the legacy POS, so it is OFF by default.", { default: false }),
 ];

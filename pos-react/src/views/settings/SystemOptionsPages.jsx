@@ -15,8 +15,8 @@ import { OrderTypesCard, SocialsCard } from "../../components/settings/PrintingE
 import { useSystemOptions, useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
 import { LANDING_VIEWS, PRESETS, SYSTEM_PAGES, presetChanges, resolveOptions } from "../../domain/systemOptions";
 import { useData } from "../../store/DataProvider";
-import { QrMenuPage } from "./QrMenuPage";
 import { OnlineStorePage } from "./OnlineStorePage";
+import { QrMenuPage } from "./QrMenuPage";
 
 const LABELS = {
 	"orderEntry.defaultOrderType": "Default order type",
@@ -446,4 +446,4 @@ export function Zones() {
 	);
 }
 
-export const PAGE_COMPONENTS = { orderEntry: OrderEntry, receipts: Receipts, signIn: SignIn, clock: ClockInOut, payroll: Payroll, thirdParty: ThirdPartyPayments, zones: Zones, qrMenu: QrMenuPage, onlineStore: OnlineStorePage };
+export const PAGE_COMPONENTS = { orderEntry: OrderEntry, receipts: Receipts, signIn: SignIn, clock: ClockInOut, payroll: Payroll, thirdParty: ThirdPartyPayments, zones: Zones, qrMenu: QrMenuPage, onlineStore: OnlineStorePage, qrMenu: QrMenuPage };

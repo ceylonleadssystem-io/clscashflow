@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { dashboardData } from "../domain/analytics";
+import { makeServiceLine, makeTaxLine } from "../domain/sales";
 import { buildReport, metricCards, saleFigures, sumFigures } from "../domain/reportBuilders";
 import { formatCell, reportCsv, sortRows } from "../domain/reportFormat";
 import { REPORT_GROUPS, firstSub, kitchenReportsOn, visibleGroups } from "../domain/reportsCatalog";
@@ -150,5 +152,84 @@ describe("catalogue, filters and formatting", () => {
 		const r = buildReport("sales", "order-type", ctx([sale("1")]));
 		const csv = reportCsv("t", "s", r, r.rows);
 		expect(csv.at(-1)[0]).toBe("Total");
+	});
+});
+
+describe("online orders report", () => {
+	const online = (id, o = {}) => sale(id, { orderChannel: "Shopify", platformOrderId: "#10" + id, payment: "Shopify", orderReference: "Shopify #10" + id + " · Nimal Perera · +94771234567", ...o });
+	const list = [online("1"), online("2", { lines: [line("Tea", 100, 1)], date: "2026-10-29" }), online("3", { status: "voided" }), sale("4")];
+
+	it("lists each paid online order with its Shopify number, customer, items and payment, and leaves out other channels and voided sales", () => {
+		const r = buildReport("sales", "online-orders", ctx(list));
+		expect(r.rows).toHaveLength(2);
+		const first = r.rows.find((x) => x.order === "#101");
+		expect(first).toMatchObject({ store: "Shopify", customer: "Nimal Perera · +94771234567", items: 3, net: 500, payment: "Shopify", receipt: "R1" });
+		expect(r.totals).toMatchObject({ orders: 2, items: 4, net: 600 });
+	});
+
+	it("shows the online share of all sales", () => {
+		const r = buildReport("sales", "online-orders", ctx(list));
+		const by = Object.fromEntries(r.cards.map((c) => [c.label, c.value]));
+		expect(by["Online orders"]).toBe(2);
+		expect(by["Net sales"]).toBe(600);
+		expect(by["Average order"]).toBe(300);
+		expect(by["Share of all sales"]).toBeCloseTo((600 / 1100) * 100);
+	});
+
+	it("is empty, not broken, with no online orders", () => {
+		const r = buildReport("sales", "online-orders", ctx([sale("4")]));
+		expect(r.rows).toEqual([]);
+		expect(r.totals.orders).toBe(0);
+	});
+
+	it("keeps online orders out of In-Store Channels", () => {
+		const r = buildReport("sales", "in-store-channels", ctx(list));
+		expect(r.rows.map((x) => x.name).join()).not.toMatch(/Shopify/);
+		expect(r.totals.orders).toBe(1);
+	});
+
+	it("is in the Sales report list only where online orders are on", () => {
+		const subs = (modules) => visibleGroups({ role: "owner", modules }).find((g) => g.key === "sales").subs.map((s) => s.key);
+		expect(subs({ online: true })).toContain("online-orders");
+		expect(subs({})).not.toContain("online-orders");
+		expect(subs({ online: false })).not.toContain("online-orders");
+	});
+});
+
+describe("service charge on the Dashboard (#167)", () => {
+	const sale = (id, lines, total) => ({ id, status: "completed", date: "2026-11-10", createdAt: "2026-11-10T10:00:00Z", total, cost: 0, payment: "Cash", lines });
+	const range = { from: "2026-11-01", to: "2026-11-30" };
+	const tea = { name: "Tea", qty: 2, price: 100 };
+	const service = (amount) => ({ name: "Service charge (10%)", qty: 1, price: amount, isServiceCharge: true });
+
+	it("totals the service charge on its own and keeps it out of the item list and unit count", () => {
+		const d = dashboardData([sale("a", [tea, service(20)], 220), sale("b", [{ name: "Tea", qty: 1, price: 100 }, service(10)], 110), sale("c", [tea], 200)], range);
+		expect(d.serviceCharge).toBe(30);
+		expect(d.items.map((i) => i.name)).toEqual(["Tea"]);
+		expect(d.items[0]).toMatchObject({ qty: 5, revenue: 500 });
+		expect(d.units).toBe(5);
+		expect(d.revenue).toBe(530); // sales totals are unchanged
+	});
+
+	it("keeps discount and tax lines out of Best-Selling Items and the unit count too", () => {
+		const discount = { name: "Discount (10%)", qty: 1, price: -20, isDiscount: true };
+		const vat = { name: "VAT (12%)", qty: 1, price: 24, code: "TAX" };
+		const d = dashboardData([sale("a", [tea, discount, vat, service(20)], 224), sale("b", [tea, vat], 224)], range);
+		expect(d.items.map((i) => i.name)).toEqual(["Tea"]);
+		expect(d.items[0]).toMatchObject({ qty: 4, revenue: 400 });
+		expect(d.units).toBe(4);
+		expect(d.serviceCharge).toBe(20);
+	});
+
+	it("totals only the real service charge: tax lines, which are built like service lines, are not part of it", () => {
+		const vat = makeTaxLine({ id: "vat", name: "VAT", rate: 12, amount: 24, base: 200 });
+		const d = dashboardData([sale("a", [tea, vat, makeServiceLine(20, 10)], 244)], range);
+		expect(d.serviceCharge).toBe(20);
+		expect(d.items.map((i) => i.name)).toEqual(["Tea"]);
+		expect(d.units).toBe(2);
+	});
+
+	it("is zero when no sale has a service charge", () => {
+		expect(dashboardData([sale("a", [tea], 200)], range).serviceCharge).toBe(0);
 	});
 });

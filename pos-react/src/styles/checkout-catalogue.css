@@ -1175,6 +1175,12 @@
 				white-space: normal !important;
 				line-height: 1.2 !important;
 			}
+			#view-checkout #order-actions #order-type-select {
+				grid-column: auto !important;
+				min-width: 0 !important;
+				width: 100% !important;
+				min-height: 44px;
+			}
 			#view-checkout #cart-pagination {
 				display: none !important;
 			}

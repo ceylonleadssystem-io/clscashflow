@@ -53,6 +53,7 @@ export function bindServices(ctx) {
 		customers: bind(ctx, {
 			saveCustomer: customers.saveCustomer,
 			ensureCustomer: customers.ensureCustomer,
+			ensureOnlineCustomer: customers.ensureOnlineCustomer,
 			requestFeedback: customers.requestFeedback,
 			sendCustomerWhatsApp: customers.sendCustomerWhatsApp,
 		}),
@@ -141,6 +142,7 @@ export function bindServices(ctx) {
 			enable: publicMenu.enablePublicMenu,
 			disable: publicMenu.disablePublicMenu,
 			refresh: publicMenu.refreshPublicMenus,
+			suspend: publicMenu.suspendPublicMenus,
 		}),
 		locations: bind(ctx, {
 			saveLocation: locations.saveLocation,

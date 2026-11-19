@@ -1,7 +1,8 @@
 /**
  * Shopify order to POS open order (pure). The order arrives cut down by the server (netlify/lib/shopify.js sanitizeOrder).
- * Items are matched to POS items by SKU = item code; an item that does not match is kept as a plain line at Shopify's price, so no order is
- * ever lost. The open order id is fixed by the Shopify order id, so two devices taking the same order write the same row, never two.
+ * Items are matched by SKU: first an item whose code is the SKU, then a stock item (Inventory) whose SKU it is, which leads to the item it counts
+ * (a stock item that counts no item is drawn from directly, see stockRowForLine). An item that does not match is kept as a plain line at
+ * Shopify's price, so no order is ever lost. The open order id is fixed by the Shopify order id, so two devices taking the same order write the same row, never two.
  * Shopify's discount and delivery charge become a discount and a "Delivery" line; the POS works out tax with its own tax settings.
  * The POS counts in LKR. A store in another currency has an exchange rate (LKR per 1 unit of its currency) and every amount is converted with it.
  */
@@ -20,11 +21,31 @@ const code = (v) => String(v || "").trim().toUpperCase();
 
 export const openOrderIdOf = (inboxId) => "shp" + inboxId;
 
-export function onlineLines(order, products = [], rate = 1) {
+/**
+ * What a Shopify SKU stands for: { product, row } where `product` is the POS item to sell and `row` the stock row it came through (null when
+ * the item's code matched), or { stock } for a stock item that counts no item, or null.
+ */
+export function matchSku(sku, products = [], inventory = []) {
+	if (!code(sku)) return null;
+	const byCode = products.find((p) => code(p.code) === code(sku));
+	if (byCode) return { product: byCode, row: null };
+	const row = inventory.find((i) => code(i.sku) === code(sku));
+	if (!row) return null;
+	const product = row.productId ? products.find((p) => String(p.id) === String(row.productId)) : null;
+	return product ? { product, row } : { stock: row };
+}
+
+export function onlineLines(order, products = [], rate = 1, inventory = []) {
 	const money = (v) => round(v * rate);
 	const lines = (order.lines || []).map((l, i) => {
-		const product = l.sku ? products.find((p) => code(p.code) === code(l.sku)) : null;
-		if (product) return { ...product, productId: product.id, key: product.id + "|", basePrice: Number(product.price) || 0, price: money(l.price), modifiers: [], qty: l.qty };
+		const hit = matchSku(l.sku, products, inventory);
+		const product = hit?.product;
+		if (product) {
+			const size = hit.row?.sizeName; // the SKU belongs to one size of the item: the line carries that size so its own stock row is used
+			const modifiers = size ? [{ groupId: "size", groupName: "Size", optionName: size, price: 0 }] : [];
+			return { ...product, productId: product.id, key: product.id + "|" + modifiers.map((m) => m.groupId + ":" + m.optionName).join("|"), basePrice: Number(product.price) || 0, price: money(l.price), modifiers, qty: l.qty };
+		}
+		if (hit?.stock) return { id: "shp-" + order.id + "-" + i, productId: "", stockItemId: hit.stock.id, key: "shp-" + order.id + "-" + i, name: hit.stock.name || l.title, basePrice: money(l.price), price: money(l.price), modifiers: [], qty: l.qty };
 		const key = "shp-" + order.id + "-" + i;
 		return { id: key, productId: "", key, name: l.variant ? `${l.title} (${l.variant})` : l.title, basePrice: money(l.price), price: money(l.price), modifiers: [], qty: l.qty, unmatched: true };
 	});
@@ -33,7 +54,7 @@ export function onlineLines(order, products = [], rate = 1) {
 }
 
 /** The open order for one inbox row. `number` is the POS order number it gets. */
-export function inboxToOpenOrder(row, { products, number, staffId = "", now, rate = 1, autoKitchen = false }) {
+export function inboxToOpenOrder(row, { products, inventory = [], number, staffId = "", now, customerId = "", rate = 1, autoKitchen = false }) {
 	const o = row.order || {};
 	const who = [o.customer?.name, o.customer?.phone].filter(Boolean).join(" · ");
 	return {
@@ -44,11 +65,11 @@ export function inboxToOpenOrder(row, { products, number, staffId = "", now, rat
 		updatedAt: now,
 		status: "open",
 		staffId,
-		customerId: "",
+		customerId,
 		orderReference: ["Shopify " + o.name, who].filter(Boolean).join(" · "),
 		orderChannel: "Shopify",
 		platformOrderId: o.name || "",
-		lines: autoKitchen ? markSent(onlineLines(o, products, rate), now) : onlineLines(o, products, rate), // sent to the kitchen on arrival when the business chose that
+		lines: autoKitchen ? markSent(onlineLines(o, products, rate, inventory), now) : onlineLines(o, products, rate, inventory), // sent to the kitchen on arrival when the business chose that
 		discount: { type: "amount", value: round((o.discount || 0) * rate), amount: round((o.discount || 0) * rate) },
 		kitchenSentAt: autoKitchen ? now : "",
 		kitchenSendCount: autoKitchen ? 1 : 0,

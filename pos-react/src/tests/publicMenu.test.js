@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildMenuSnapshot, enabledKeys, linkKey, linkOf } from "../domain/publicMenu";
+import { FEATURES, FEATURE_MAP, defaultFeatureFlags } from "../config/features";
+import { FEATURE_PRESETS, presetFlags } from "../config/featurePresets";
+import { settingsGroups } from "../views/settings/SettingsHome";
 import menuShare from "../../../netlify/lib/menu-share.js";
 
 const { locationKey, sanitizeMenu } = menuShare;
@@ -64,5 +67,21 @@ describe("QR menu server clean-up", () => {
 		expect(locationKey("all")).toBe("all");
 		expect(locationKey("../x y")).toBe("xy");
 		expect(locationKey("")).toBe("all");
+	});
+});
+
+describe("QR menu admin switch", () => {
+	const tabs = [{ id: "business", label: "Business Profile" }];
+	const keys = (qrMenu) => settingsGroups({ can: () => true, serviceChargeOn: false, kitchen: false, legacyTabs: tabs, qrMenu })[0].items.map((i) => i.key);
+
+	it("is off until an admin turns it on, and applying a business category never turns it on", () => {
+		expect(FEATURE_MAP["menu.qr"].default).toBe(false);
+		expect(defaultFeatureFlags()["menu.qr"]).toBe(false);
+		for (const p of FEATURE_PRESETS) expect(presetFlags(p, FEATURES)["menu.qr"]).toBe(false);
+	});
+
+	it("shows the QR Menu settings page only where the switch is on", () => {
+		expect(keys(false)).not.toContain("qrMenu");
+		expect(keys(true)).toContain("qrMenu");
 	});
 });

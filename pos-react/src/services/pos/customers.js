@@ -64,6 +64,35 @@ export async function ensureCustomer(ctx, c) {
 	return customer;
 }
 
+/**
+ * The customer behind an online (Shopify) order, for the CRM: the existing one with the same phone number or e-mail (empty details are filled in
+ * and the "Shopify" tag added; nothing they already have is overwritten), else a new one. Shopify may not share a customer's details (it
+ * hides them until the store is approved), and a customer needs a name plus a phone number or e-mail: with less, null is returned and the
+ * order simply has no customer. `c` is { name, phone, email, address, orderName }.
+ */
+export async function ensureOnlineCustomer(ctx, c) {
+	const d = ctx.data();
+	const name = String(c.name || "").trim();
+	const phone = String(c.phone || "").trim();
+	const email = isEmail(c.email || "") ? String(c.email).trim() : "";
+	const key = whatsappPhone(phone); // 0771234567 and +94771234567 are the same number
+	const mail = email.toLowerCase();
+	const found = d.customers.find((x) => (key.length >= 7 && whatsappPhone(x.phone) === key) || (mail && String(x.email || "").toLowerCase() === mail));
+	if (found) {
+		const tags = String(found.tags || "").split(",").map((t) => t.trim()).filter(Boolean);
+		const next = { ...found, email: found.email || email, phone: found.phone || (key.length >= 7 ? phone : ""), address: found.address || String(c.address || "").trim(), tags: tags.some((t) => t.toLowerCase() === "shopify") ? found.tags : [...tags, "Shopify"].join(", ") };
+		if (JSON.stringify(next) !== JSON.stringify(found)) await ctx.store.write((tx) => tx.put(T.customers, { ...next, updatedAt: nowIso() }));
+		return next;
+	}
+	if (!name || (key.length < 7 && !email)) return null;
+	const customer = {
+		id: newId("c"), createdAt: nowIso(), name, phone: key.length >= 7 ? phone : "", email, birthday: "", company: "", address: String(c.address || "").trim(),
+		tags: "Shopify", notes: c.orderName ? "Came from Shopify order " + c.orderName : "Came from Shopify", type: "regular", discountEligible: false, discountType: "percent", discountValue: 0, discountExpiry: "", discountNote: "",
+	};
+	await ctx.store.write((tx) => tx.put(T.customers, customer));
+	return customer;
+}
+
 /** Opens the e-mail client with a feedback request and records it. */
 export async function requestFeedback(ctx, id) {
 	const d = ctx.data();

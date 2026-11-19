@@ -3,7 +3,7 @@
  * messages, feedback requests and next-visit discount badges.
  */
 import { useMemo, useState } from "react";
-import { crmRows } from "../domain/analytics";
+import { crmRows, isOnlineCustomer, onlineOrdersByCustomer } from "../domain/analytics";
 import { money } from "../domain/format";
 import { Kpi } from "../components/ui";
 import { useData } from "../store/DataProvider";
@@ -23,6 +23,8 @@ export function CRM() {
 	const [q, setQ] = useState("");
 	const [message, setMessage] = useState(null);
 	const rows = useMemo(() => crmRows(data.customers, data.sales, data.settings), [data.customers, data.sales, data.settings]);
+	const online = useMemo(() => onlineOrdersByCustomer(data.sales), [data.sales]);
+	const anyOnline = rows.some((x) => isOnlineCustomer(x.c));
 	const list = rows.filter((x) => {
 		const search = q.trim().toLowerCase();
 		return (
@@ -32,7 +34,8 @@ export function CRM() {
 				(filter === "vip" && x.segment === "VIP") ||
 				(filter === "frequent" && x.s.visits >= 4) ||
 				(filter === "inactive" && x.s.daysSince >= 60) ||
-				(filter === "due" && x.due))
+				(filter === "due" && x.due) ||
+				(filter === "shopify" && isOnlineCustomer(x.c)))
 		);
 	});
 	const totalValue = rows.reduce((a, x) => a + x.s.spent, 0);
@@ -56,6 +59,7 @@ export function CRM() {
 					<option value="frequent">Frequent visitors</option>
 					<option value="inactive">Needs a return visit</option>
 					<option value="due">Feedback due</option>
+					{anyOnline && <option value="shopify">Online (Shopify) customers</option>}
 				</select>
 				<input className="input" id="crm-search" placeholder="Search name or mobile" value={q} onChange={(e) => setQ(e.target.value)} />
 			</div>
@@ -69,7 +73,10 @@ export function CRM() {
 									{c.phone || "No phone"} · {c.email || "No email"}
 								</div>
 							</div>
-							<span className="badge">{segment}</span>
+							<span style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+								{isOnlineCustomer(c) && <span className="badge" data-source="shopify">Shopify</span>}
+								<span className="badge">{segment}</span>
+							</span>
 						</div>
 						{b.upcoming ? (
 							<div className="print-note" style={{ marginTop: 12, background: "#fff2d7", color: "#8c5b08" }}>
@@ -95,6 +102,18 @@ export function CRM() {
 							Last visit: {s.last || "No purchases"} {s.daysSince != null ? "· " + s.daysSince + " days ago" : ""}
 							<br />
 							Favourite item: {s.favorite}
+							{isOnlineCustomer(c) && (
+								<>
+									<br />
+									Online orders: {online[c.id]?.orders || 0}{online[c.id] ? " · " + money(online[c.id].spent) : ""}
+									{c.address && (
+										<>
+											<br />
+											Delivery address: {c.address}
+										</>
+									)}
+								</>
+							)}
 							{c.notes && (
 								<>
 									<br />

@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../services/platform.service", async (orig) => ({ ...(await orig()), sendOrderEmail: vi.fn(async () => true) }));
 import { sendOrderEmail } from "../services/platform.service";
 import { addProduct, createHarness, line, noDiscount, openShift } from "./harness";
+import { kotEscPos, kotTicketsHtml } from "../services/printing/documents";
 
 const cash = (h, p, o = {}) => h.svc.sales.completeSale({ cart: [line(p, 2)], discount: noDiscount, payment: "Cash", cashTendered: "1000", ...o });
 
@@ -255,5 +256,26 @@ describe("low stock approved by a manager (#163)", () => {
 		const c = await createHarness({ role: "cashier" });
 		expect(await c.svc.sales.stockOverride({ name: "Latte", message: "x" })).toBeUndefined();
 		expect(c.lastAlert()).toMatch(/PIN of a manager or owner/);
+	});
+});
+
+describe("order type reaches the kitchen (#170)", () => {
+	it("a Takeaway order sent to the kitchen is queued and ticketed as Takeaway, and Dine-in stays Dine-in", async () => {
+		const h = await createHarness({ settings: { businessType: "restaurant" } });
+		const p = await addProduct(h, { name: "Roti", price: "60", cost: "10", category: "Food" });
+		const take = await h.svc.sales.saveOpenOrder({ cart: [line(p)], discount: noDiscount, sendKitchen: true, orderChannel: "Takeaway" });
+		const dine = await h.svc.sales.saveOpenOrder({ cart: [line(p)], discount: noDiscount, sendKitchen: true, orderChannel: "Dine-in" });
+		expect(h.data().openOrders.find((o) => o.id === take.id).orderChannel).toBe("Takeaway");
+		expect(h.data().openOrders.find((o) => o.id === dine.id).orderChannel).toBe("Dine-in");
+		const tickets = h.data().kitchenTickets;
+		expect(tickets.find((t) => t.orderId === take.id)).toMatchObject({ orderChannel: "Takeaway" });
+		expect(tickets.find((t) => t.orderId === dine.id)).toMatchObject({ orderChannel: "Dine-in" });
+	});
+
+	it("the printed kitchen ticket and the ESC/POS ticket name the order type", () => {
+		const ticket = { orderNumber: "ORD-1", orderChannel: "Takeaway", createdAt: new Date().toISOString(), lines: [{ qty: 1, name: "Roti", modifiers: [] }] };
+		expect(kotTicketsHtml([ticket])).toContain("Takeaway");
+		expect(new TextDecoder().decode(kotEscPos(ticket))).toContain("Takeaway");
+		expect(kotTicketsHtml([{ ...ticket, orderChannel: "" }])).not.toContain("Takeaway");
 	});
 });
