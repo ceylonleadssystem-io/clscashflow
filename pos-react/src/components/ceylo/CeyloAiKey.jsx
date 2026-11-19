@@ -1,7 +1,8 @@
 /**
  * Settings > Plan & Support > Ceylo AI key: each location can use its own AI account (Claude, ChatGPT or Gemini) for Ceylo's
  * answers on its devices. A key is sent once to the server, tested, stored encrypted and never shown again (only its last 4
- * characters).
+ * characters). The models to choose from are read from the provider as soon as it can be asked (a key is pasted, or this location
+ * already has a key for that provider), so nobody types a model name.
  */
 import { useEffect, useState } from "react";
 import { aiKey } from "../../services/ceyloAi";
@@ -11,9 +12,9 @@ import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 
 const PROVIDERS = [
-	{ id: "anthropic", label: "Claude (Anthropic)", model: "claude-opus-5-5", hint: "Optional. Leave empty for claude-opus-5-5.", keyHint: "Starts with sk-ant-. Create it at console.anthropic.com." },
-	{ id: "openai", label: "ChatGPT (OpenAI)", model: "", hint: "Required. The model name from your OpenAI account.", keyHint: "Starts with sk-. Create it at platform.openai.com." },
-	{ id: "gemini", label: "Gemini (Google)", model: "", hint: "Required. The model name from Google AI Studio.", keyHint: "Create it at aistudio.google.com." },
+	{ id: "anthropic", label: "Claude (Anthropic)", model: "claude-opus-5-5", hint: "Loaded from your Claude account.", keyHint: "Starts with sk-ant-. Create it at console.anthropic.com." },
+	{ id: "openai", label: "ChatGPT (OpenAI)", model: "", hint: "Loaded from your OpenAI account.", keyHint: "Starts with sk-. Create it at platform.openai.com." },
+	{ id: "gemini", label: "Gemini (Google)", model: "", hint: "Loaded from your Google AI Studio account.", keyHint: "Create it at aistudio.google.com." },
 ];
 
 export function CeyloAiKeyPanel() {
@@ -30,10 +31,40 @@ export function CeyloAiKeyPanel() {
 	const [key, setKey] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState("");
+	const [models, setModels] = useState(null); // null = not loaded yet, otherwise [{ id, label }]
+	const [loadingModels, setLoadingModels] = useState(false);
+	const [modelError, setModelError] = useState("");
 	useEffect(() => {
 		if (cloud) aiKey("status").then((r) => setAll(r.keys || {}), (e) => setError(e.message));
 	}, [cloud]);
 	const p = PROVIDERS.find((x) => x.id === provider);
+	// the provider can be asked for its models once there is a key to ask with: the one typed in, or this location's saved key for the same provider
+	const savedHere = all?.[locationId]?.saved !== false && all?.[locationId]?.provider === provider;
+	const typedKey = key.trim().length >= 20;
+	useEffect(() => {
+		setModels(null);
+		setModelError("");
+		if (!cloud || !(typedKey || savedHere)) return undefined;
+		let live = true;
+		const timer = setTimeout(async () => {
+			setLoadingModels(true);
+			try {
+				const r = await aiKey("models", { provider, locationId, key: key.trim() });
+				if (!live) return;
+				setModels(r.models || []);
+				// keep the choice if it is still offered, otherwise the provider's usual model (or the newest one listed)
+				setModel((m) => ((r.models || []).some((x) => x.id === m) ? m : (r.models || []).find((x) => x.id === p.model)?.id || r.models?.[0]?.id || ""));
+			} catch (err) {
+				if (live) setModelError(err.message);
+			} finally {
+				if (live) setLoadingModels(false);
+			}
+		}, 500); // wait until typing or pasting has settled
+		return () => {
+			live = false;
+			clearTimeout(timer);
+		};
+	}, [cloud, provider, locationId, key, typedKey, savedHere]); // eslint-disable-line react-hooks/exhaustive-deps
 	const save = async (e) => {
 		e.preventDefault();
 		setBusy(true);
@@ -111,15 +142,31 @@ export function CeyloAiKeyPanel() {
 									))}
 								</select>
 							</div>
-							<div className="field">
-								<label htmlFor="ceylo-ai-model">Model</label>
-								<input className="input" id="ceylo-ai-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder={p.model || "Model name"} required={!p.model} maxLength={80} />
-								<small className="muted">{p.hint}</small>
-							</div>
 							<div className="field" style={{ gridColumn: "1 / -1" }}>
 								<label htmlFor="ceylo-ai-secret">API key</label>
 								<input className="input" id="ceylo-ai-secret" type="password" autoComplete="new-password" spellCheck={false} value={key} onChange={(e) => setKey(e.target.value)} placeholder={status?.saved ? "Paste a new key to replace the saved one" : "Paste your API key"} required maxLength={300} />
 								<small className="muted">{p.keyHint} It is tested, stored encrypted and never shown again.</small>
+							</div>
+							<div className="field">
+								<label htmlFor="ceylo-ai-model">Model</label>
+								{models?.length ? (
+									<select className="input" id="ceylo-ai-model" value={model} onChange={(e) => setModel(e.target.value)}>
+										{models.map((m) => (
+											<option key={m.id} value={m.id}>
+												{m.label === m.id ? m.id : `${m.label} (${m.id})`}
+											</option>
+										))}
+									</select>
+								) : modelError ? (
+									<input className="input" id="ceylo-ai-model" value={model} onChange={(e) => setModel(e.target.value)} placeholder={p.model || "Model name"} required={!p.model} maxLength={80} />
+								) : (
+									<select className="input" id="ceylo-ai-model" disabled aria-busy={loadingModels}>
+										<option>{loadingModels ? "Loading the models…" : "Paste the API key to load the models"}</option>
+									</select>
+								)}
+								<small className="muted" role="status">
+									{modelError ? `${modelError} Type the model name instead.` : models?.length ? p.hint : models ? "This account has no chat models to choose from." : "The models your account can use appear here."}
+								</small>
 							</div>
 							{error && (
 								<div role="alert" className="ceylo-error" style={{ gridColumn: "1 / -1" }}>
@@ -127,7 +174,7 @@ export function CeyloAiKeyPanel() {
 								</div>
 							)}
 							<div style={{ display: "flex", gap: 8, flexWrap: "wrap", gridColumn: "1 / -1" }}>
-								<button className="btn gold" type="submit" id="ceylo-ai-save" disabled={busy || !key.trim()}>
+								<button className="btn gold" type="submit" id="ceylo-ai-save" disabled={busy || !key.trim() || (!p.model && !model)}>
 									{busy ? "Testing…" : "Save & test key"}
 								</button>
 								{status?.saved && (

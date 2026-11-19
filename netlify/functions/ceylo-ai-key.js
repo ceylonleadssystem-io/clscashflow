@@ -6,7 +6,7 @@ const keys = require('../lib/ai-keys');
 const log = require('../lib/log').createLogger('ceylo-ai-key');
 
 exports.handler = async function handler(event) {
-  const blocked = guard(event, { name: 'ceylo-ai-key', methods: ['POST'], limit: 10, windowMs: 60000, maxBody: 4000 });
+  const blocked = guard(event, { name: 'ceylo-ai-key', methods: ['POST'], limit: 20, windowMs: 60000, maxBody: 4000 });
   if (blocked) return blocked;
   try {
     const user = await getUserFromEvent(event);
@@ -18,6 +18,19 @@ exports.handler = async function handler(event) {
     const action = String(body.action || 'status');
 
     if (action === 'status') return reply(event, 200, { ok: true, keys: await keys.statuses(ownerUid) });
+    // the models this AI account can use: read with the key typed in (or the location's saved key for the same provider), never stored or returned
+    if (action === 'models') {
+      const provider = String(body.provider || '');
+      let key = String(body.key || '').trim();
+      if (!key) {
+        const saved = await keys.keyFor(ownerUid, keys.safeLocation(body.locationId));
+        if (saved && saved.provider === provider) key = saved.key;
+      }
+      if (!key) return reply(event, 400, { ok: false, error: 'Paste the API key to load the models.' });
+      const bad = keys.validateKey(provider, key);
+      if (bad) return reply(event, 400, { ok: false, error: bad });
+      return reply(event, 200, { ok: true, models: await keys.listModels(provider, key) });
+    }
     // the location must be one of this business's own locations
     const locationId = keys.safeLocation(body.locationId);
     const workspace = await getDocument('users/' + ownerUid + '/pos', 'main').catch(function() { return null; });

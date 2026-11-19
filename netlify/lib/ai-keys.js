@@ -7,6 +7,7 @@
 const crypto = require('crypto');
 const Anthropic = require('@anthropic-ai/sdk');
 const { getDocument, upsertDocument, deleteDocument } = require('./appwrite');
+const { listModels } = require('./ai-models');
 
 const COLLECTION = 'ceyloAiKeys';
 const PROVIDERS = {
@@ -55,6 +56,12 @@ async function statuses(ownerUid) {
 async function keyFor(ownerUid, locationId) {
   const row = (await load(ownerUid))[safeLocation(locationId)];
   return row && row.box ? { provider: row.provider, model: row.model, key: decrypt(row.box) } : null;
+}
+/** Whether this looks like an API key of the provider (before it is sent anywhere). */
+function validateKey(provider, key) {
+  const p = PROVIDERS[provider];
+  if (!p) return 'Choose Claude, ChatGPT or Gemini.';
+  return p.keyPattern.test(key) ? '' : 'That does not look like a ' + p.label + ' API key.';
 }
 function validate(provider, key, model) {
   const p = PROVIDERS[provider];
@@ -120,4 +127,4 @@ async function ask({ provider, key, model, system, messages, maxTokens }) {
   return String(read(json) || '').trim();
 }
 
-module.exports = { PROVIDERS, publicStatus, safeLocation, load, statuses, keyFor, validate, save, remove, ask, _encrypt: encrypt, _decrypt: decrypt };
+module.exports = { listModels, validateKey, PROVIDERS, publicStatus, safeLocation, load, statuses, keyFor, validate, save, remove, ask, _encrypt: encrypt, _decrypt: decrypt };
