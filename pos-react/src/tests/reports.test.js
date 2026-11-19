@@ -152,3 +152,44 @@ describe("catalogue, filters and formatting", () => {
 		expect(csv.at(-1)[0]).toBe("Total");
 	});
 });
+
+describe("online orders report", () => {
+	const online = (id, o = {}) => sale(id, { orderChannel: "Shopify", platformOrderId: "#10" + id, payment: "Shopify", orderReference: "Shopify #10" + id + " · Nimal Perera · +94771234567", ...o });
+	const list = [online("1"), online("2", { lines: [line("Tea", 100, 1)], date: "2026-10-29" }), online("3", { status: "voided" }), sale("4")];
+
+	it("lists each paid online order with its Shopify number, customer, items and payment, and leaves out other channels and voided sales", () => {
+		const r = buildReport("sales", "online-orders", ctx(list));
+		expect(r.rows).toHaveLength(2);
+		const first = r.rows.find((x) => x.order === "#101");
+		expect(first).toMatchObject({ store: "Shopify", customer: "Nimal Perera · +94771234567", items: 3, net: 500, payment: "Shopify", receipt: "R1" });
+		expect(r.totals).toMatchObject({ orders: 2, items: 4, net: 600 });
+	});
+
+	it("shows the online share of all sales", () => {
+		const r = buildReport("sales", "online-orders", ctx(list));
+		const by = Object.fromEntries(r.cards.map((c) => [c.label, c.value]));
+		expect(by["Online orders"]).toBe(2);
+		expect(by["Net sales"]).toBe(600);
+		expect(by["Average order"]).toBe(300);
+		expect(by["Share of all sales"]).toBeCloseTo((600 / 1100) * 100);
+	});
+
+	it("is empty, not broken, with no online orders", () => {
+		const r = buildReport("sales", "online-orders", ctx([sale("4")]));
+		expect(r.rows).toEqual([]);
+		expect(r.totals.orders).toBe(0);
+	});
+
+	it("keeps online orders out of In-Store Channels", () => {
+		const r = buildReport("sales", "in-store-channels", ctx(list));
+		expect(r.rows.map((x) => x.name).join()).not.toMatch(/Shopify/);
+		expect(r.totals.orders).toBe(1);
+	});
+
+	it("is in the Sales report list only where online orders are on", () => {
+		const subs = (modules) => visibleGroups({ role: "owner", modules }).find((g) => g.key === "sales").subs.map((s) => s.key);
+		expect(subs({ online: true })).toContain("online-orders");
+		expect(subs({})).not.toContain("online-orders");
+		expect(subs({ online: false })).not.toContain("online-orders");
+	});
+});

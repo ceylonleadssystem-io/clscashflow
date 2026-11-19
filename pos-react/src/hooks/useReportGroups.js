@@ -13,6 +13,7 @@ export function useReportGroups() {
 	const data = useData();
 	const kitchen = kitchenReportsOn(useFeature("checkout.kitchenTickets"), data.settings.businessType);
 	const locations = data.locations.filter((l) => l.active !== false).length;
+	const online = useFeature("online.shopify");
 	// Payments and Loyalty need their own modules, which this POS does not have yet
-	return useMemo(() => visibleGroups({ role, modules: { kitchen, locations, payments: false, loyalty: false } }), [role, kitchen, locations]);
+	return useMemo(() => visibleGroups({ role, modules: { kitchen, locations, online, payments: false, loyalty: false } }), [role, kitchen, locations, online]);
 }

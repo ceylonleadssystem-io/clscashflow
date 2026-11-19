@@ -14,6 +14,7 @@ import { refundRows, voidRows } from "./salesLog";
 import { userName } from "./names";
 import { bucketHours, payCost, payrollDays, payrollHours } from "./payroll";
 import { defaultsFor } from "./systemOptions";
+import { ONLINE_CHANNELS } from "../config/constants";
 
 const day = (iso) => String(iso || "").slice(0, 10);
 const inRange = (d, r) => d >= r.from && d <= r.to;
@@ -209,8 +210,28 @@ const SALES = {
 		const rows = all.map((r) => ({ ...r, share: pct(r.amount, sum) }));
 		return { cols: [C.text("name", "Discount Reasons"), C.num("count", "Count (#)"), C.money("amount", "Discount"), C.pct("share", "% Disc")], rows, totals: { count: rows.reduce((a, r) => a + r.count, 0), amount: sum, share: rows.length ? 100 : 0 }, chart: { label: "name", value: "amount" } };
 	},
+	"online-orders"(ctx) {
+		const all = activeSales(ctx);
+		const list = all.filter((s) => ONLINE_CHANNELS.includes(s.orderChannel));
+		const rows = list
+			.map((s) => {
+				const f = saleFigures(s);
+				const who = String(s.orderReference || "").split(" · ").slice(1).join(" · "); // the open order's reference is "Shopify #1001 · name · phone"
+				return { date: s.date, store: s.orderChannel, order: s.platformOrderId || "", receipt: s.receipt || s.orderNumber || "", customer: who, items: (s.lines || []).filter((l) => !l.isDiscount && l.code !== "TAX" && !l.isServiceCharge).reduce((a, l) => a + (+l.qty || 0), 0), net: f.net, tax: f.tax, total: f.total, payment: s.payment || "" };
+			})
+			.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.receipt).localeCompare(String(a.receipt)));
+		const t = totalsRow(rows, ["items", "net", "tax", "total"]);
+		const allNet = sumFigures(all).net;
+		return {
+			cols: [C.text("date", "Date"), C.text("store", "Channel"), C.text("order", "Online order"), C.text("receipt", "Receipt"), C.text("customer", "Customer"), C.num("items", "Items (#)"), C.money("net", "Net Sales"), C.money("tax", "Tax"), C.money("total", "Total"), C.text("payment", "Payment")],
+			rows,
+			totals: { ...t, orders: rows.length },
+			cards: [num("Online orders", rows.length), money("Net sales", t.net), money("Average order", rows.length ? t.net / rows.length : 0, "Net sales ÷ online orders"), { label: "Share of all sales", value: pct(t.net, allNet), type: "pct", tip: "Online net sales ÷ net sales of every channel" }],
+			note: "Paid orders that arrived from an online store. Orders still waiting to be prepared or paid are under Online Orders (the cart button).",
+		};
+	},
 	"in-store-channels"(ctx) {
-		const rows = groupSales(activeSales(ctx), (s) => (s.platformOrderId ? "Platform: " + orderTypeOf(s) : "POS · " + orderTypeOf(s))).map((r) => ({ name: r.name, revenue: r.net, orders: r.orders })).sort((a, b) => b.revenue - a.revenue);
+		const rows = groupSales(activeSales(ctx).filter((s) => !ONLINE_CHANNELS.includes(s.orderChannel)), (s) => (s.platformOrderId ? "Platform: " + orderTypeOf(s) : "POS · " + orderTypeOf(s))).map((r) => ({ name: r.name, revenue: r.net, orders: r.orders })).sort((a, b) => b.revenue - a.revenue);
 		return { cols: [C.text("name", "Channel"), C.money("revenue", "Revenue"), C.num("orders", "Order Count")], rows, totals: totalsRow(rows, ["revenue", "orders"]), chart: { label: "name", value: "revenue" }, note: "Handheld and kiosk channels are not separate in this POS. Channels are the POS order channels and delivery platforms." };
 	},
 };

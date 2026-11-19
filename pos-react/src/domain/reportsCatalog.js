@@ -22,6 +22,7 @@ export const REPORT_GROUPS = [
 			{ key: "revenue-center", title: "Revenue Center" },
 			{ key: "discounts", title: "Discounts" },
 			{ key: "in-store-channels", title: "In-Store Channels" },
+			{ key: "online-orders", title: "Online Orders", module: "online" }, // only where online orders are switched on
 		],
 	},
 	{
@@ -135,7 +136,7 @@ export const kitchenReportsOn = (ticketsOn, businessType) => !!ticketsOn && hasC
  * Payments and Loyalty need their own module; Kitchen Operations needs kitchen tickets; Multi-Location needs 2 or more locations.
  */
 export function visibleGroups({ role = "", modules = {} } = {}) {
-	return REPORT_GROUPS.filter((g) => {
+	return REPORT_GROUPS.map((g) => ({ ...g, subs: g.subs.filter((s) => !s.module || modules[s.module]) })).filter((g) => {
 		if (MANAGER_ONLY.includes(g.key) && !PAYROLL_ROLES.includes(role)) return false;
 		if (g.key === "payments") return !!modules.payments;
 		if (g.key === "loyalty") return !!modules.loyalty;
