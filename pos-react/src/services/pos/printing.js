@@ -116,6 +116,7 @@ async function queueTicket(ctx, order, lines, destination, station, systemPrints
 			orderId: order.id || "",
 			orderNumber: order.orderNumber || order.receipt,
 			reference: order.orderReference || "",
+			orderChannel: order.orderChannel || "", // Dine-in, Takeaway...: the kitchen sees how the order is served
 			destination,
 			...(station ? { stationId: station.id, station: station.name } : {}),
 			status,

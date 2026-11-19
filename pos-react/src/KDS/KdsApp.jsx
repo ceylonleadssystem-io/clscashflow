@@ -110,6 +110,7 @@ export function KdsApp() {
 					<span>{ageLabel(mins)}</span>
 				</div>
 				{t.station && t.station !== "Kitchen Display" && <div className="kds-station">{t.station}</div>}
+				{t.orderChannel && <div className="kds-channel">{t.orderChannel}</div>}
 				{t.reference && <div className="kds-ref">{t.reference}</div>}
 				{prepLines(t).map(({ line: l, index }) => (
 					<div className={"kds-item" + (readySet.has(index) ? " ready" : "")} key={index}>

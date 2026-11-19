@@ -48,7 +48,7 @@ function kotBody(order, { settings = {}, customerName = "Walk-in Customer", stat
 		)
 		.join("");
 	const reference = order.orderReference || order.reference ? `<div class="reference">${esc(order.orderReference || order.reference)}</div>` : "";
-	return `<div class="kot"><h1>KITCHEN ORDER</h1>${station ? `<div class="station">${esc(station)}</div>` : ""}${reference}<div class="meta"><b>${esc(
+	return `<div class="kot"><h1>KITCHEN ORDER</h1>${station ? `<div class="station">${esc(station)}</div>` : ""}${order.orderChannel ? `<div class="station">${esc(order.orderChannel)}</div>` : ""}${reference}<div class="meta"><b>${esc(
 		order.receipt || order.orderNumber,
 	)}</b><br><strong>Customer:</strong> ${esc(customerName)}<br>${new Date(order.createdAt || order.openedAt || Date.now()).toLocaleString()}</div>${
 		lines || '<div class="item">No preparation items</div>'
@@ -75,6 +75,7 @@ export function kotEscPos(ticket) {
 	const align = (a) => [27, 97, a === "center" ? 1 : 0];
 	const out = [27, 64, ...align("center"), ...big(true), ...text("KITCHEN ORDER"), 10];
 	if (ticket.station) out.push(...text(ticket.station), 10);
+	if (ticket.orderChannel) out.push(...text(ticket.orderChannel), 10);
 	out.push(...big(false));
 	if (ticket.reference) out.push(...big(true), ...text(ticket.reference), 10, ...big(false));
 	out.push(...text(ticket.orderNumber || ""), 10, ...text(new Date(ticket.createdAt || Date.now()).toLocaleString()), 10, ...text("-".repeat(48)), 10, ...align("left"));
