@@ -13,6 +13,7 @@ import { useFullscreen } from "../../hooks/useFullscreen";
 import { useInstall } from "../../hooks/useInstall";
 import { IosInstallGuide } from "./IosInstallGuide";
 import { SyncIndicator } from "./SyncIndicator";
+import { OnlineOrdersButton } from "./OnlineOrdersButton";
 import { CeyloButton, CeyloPanel } from "../ceylo/Ceylo";
 import { receiptPrinter } from "../../services/printing/receiptPrinter";
 import { useUi } from "../../store/UiProvider";
@@ -80,6 +81,7 @@ export function Topbar({ onOpenLocations }) {
 						</button>
 					)}
 					{ceylo && <CeyloButton />}
+					<OnlineOrdersButton />
 					<SyncIndicator variant="compact" />
 					<button
 						id="top-more"

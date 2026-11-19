@@ -27,6 +27,7 @@ export const ROLE_VIEWS = {
 		"industry",
 		"staff",
 		"settings",
+		"online",
 	],
 	manager: [
 		"dashboard",
@@ -44,9 +45,10 @@ export const ROLE_VIEWS = {
 		"industry",
 		"staff",
 		"settings",
+		"online",
 	],
 	accountant: ["dashboard", "sales", "receipts", "reports", "inventory", "industry", "staff", "settings"],
-	cashier: ["checkout", "orders", "tables", "receipts", "customers", "staff", "settings"],
+	cashier: ["checkout", "orders", "tables", "receipts", "customers", "staff", "settings", "online"],
 };
 // technicians (Automobile) work from the detailing pages; the POS gives them only their own attendance and settings
 ROLE_VIEWS.technician = ["staff", "settings"];
@@ -78,6 +80,7 @@ export const VIEW_TITLES = {
 	],
 	staff: ["Staff & Shifts", "Attendance, breaks, access and cash reconciliation"],
 	settings: ["Settings", "Business, printing and support preferences"],
+	online: ["Online Orders", "Orders that arrive from your online store"],
 };
 
 /**
@@ -87,6 +90,7 @@ export const VIEW_TITLES = {
 export const NAV_ITEMS = [
 	{ view: "checkout", label: "▣ Checkout" },
 	{ view: "orders", label: "☰ Order Queue" },
+	{ view: "online", label: "🛒 Online Orders" },
 	{ view: "tables", label: "▦ Table Layout" },
 	{ view: "receipts", label: "⎙ Receipts & Refunds" },
 	// Products & Services, Modifiers and Stations now live in Settings (Menu Admin and Device Manager): see SETTINGS_PAGE_OF_VIEW

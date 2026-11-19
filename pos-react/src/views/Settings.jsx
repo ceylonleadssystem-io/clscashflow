@@ -14,7 +14,6 @@ import { KdsScreens } from "../KDS/KdsPairing";
 import { kitchenStations } from "../domain/kitchenStations";
 import { onSettingsTab, requestedSettingsTab } from "../store/settingsTab";
 import { CeyloMascot } from "../components/ceylo/Ceylo";
-import { CeyloAiKeyPanel } from "../components/ceylo/CeyloAiKey";
 import { SystemOptionsProvider } from "../components/settings/kit/SystemOptionsContext";
 import { SettingsHome } from "./settings/SettingsHome";
 import {
@@ -49,7 +48,6 @@ export function Settings({ only = null }) {
 	const kdsOn = useFeature("checkout.kds");
 	const billing = useFeature("settings.billing");
 	const ceylo = useFeature("settings.ceylo");
-	const ceyloAi = useFeature("settings.ceyloAi");
 	const ui = useUi();
 	// a request is a legacy tab id, or "page:<key>" for one of the pages in the sidebar (Menu Admin, Device Manager ...)
 	const asked = requestedSettingsTab();
@@ -116,7 +114,6 @@ export function Settings({ only = null }) {
 						</div>
 					</div>
 				)}
-				{ceyloAi && <CeyloAiKeyPanel />}
 				{billing && <BillingPanel />}
 				<PlanSupportPanel form={form} set={set} onRegenerate={() => svc.settings.regenerateSupportCode()} />
 			</>
