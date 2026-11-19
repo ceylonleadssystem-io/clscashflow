@@ -4,7 +4,7 @@
 // secret is stored encrypted (see lib/ai-keys.js) and is never returned; only the last 4 characters are.
 const { guard, reply } = require('../lib/security');
 const { getUserFromEvent, getDocument, upsertDocument, deleteDocument, clean } = require('../lib/appwrite');
-const { normalizeShop, shopKey } = require('../lib/shopify');
+const { normalizeShop, shopKey, normalizeCurrency, normalizeEmail } = require('../lib/shopify');
 const { _encrypt: encrypt } = require('../lib/ai-keys');
 const log = require('../lib/log').createLogger('shopify-store');
 
@@ -58,12 +58,19 @@ exports.handler = async function handler(event) {
       const workspace = await getDocument('users/' + ownerUid + '/pos', 'main').catch(function() { return null; });
       const locations = ((workspace && workspace.data && workspace.data.payload && workspace.data.payload.locations) || []).map(function(l) { return l && l.id; });
       if (!locationId || !locations.includes(locationId)) return reply(event, 400, { ok: false, error: 'Choose the location that prepares these orders.' });
+      // the POS counts in LKR: a store in another currency needs the rate (LKR for 1 unit of its currency)
+      const currency = normalizeCurrency(body.currency);
+      if (!currency) return reply(event, 400, { ok: false, error: 'Enter the store currency as three letters, like LKR or USD.' });
+      const rate = currency === 'LKR' ? 1 : Number(body.rate);
+      if (!(rate > 0 && rate < 1000000)) return reply(event, 400, { ok: false, error: 'Enter how many LKR one ' + currency + ' is worth.' });
+      const notifyEmail = body.notifyEmail ? normalizeEmail(body.notifyEmail) : '';
+      if (body.notifyEmail && !notifyEmail) return reply(event, 400, { ok: false, error: 'Enter a valid e-mail address, or leave it empty.' });
       // a store belongs to one business
       const taken = await getDocument('shopifyShops', shopKey(shop)).catch(function() { return null; });
       if (taken && taken.data && taken.data.business && taken.data.business !== ownerUid) return reply(event, 409, { ok: false, error: 'That store is already connected to another business.' });
       const now = new Date().toISOString();
-      await upsertDocument('shopifyShops', shopKey(shop), { business: ownerUid, shop: shop, locationId: locationId, box: encrypt(secret), last4: secret.slice(-4), connectedAt: now, by: user.id }, true);
-      await upsertDocument('shopifyBusinesses', ownerUid, { business: ownerUid, shops: shops.concat([{ shop: shop, locationId: locationId, last4: secret.slice(-4), connectedAt: now }]) }, false);
+      await upsertDocument('shopifyShops', shopKey(shop), { business: ownerUid, shop: shop, locationId: locationId, box: encrypt(secret), last4: secret.slice(-4), currency: currency, rate: rate, notifyEmail: notifyEmail, connectedAt: now, by: user.id }, true);
+      await upsertDocument('shopifyBusinesses', ownerUid, { business: ownerUid, shops: shops.concat([{ shop: shop, locationId: locationId, last4: secret.slice(-4), currency: currency, rate: rate, notifyEmail: notifyEmail, connectedAt: now }]) }, false);
       log.info('store saved', { ownerUid, shop, locationId, by: user.id });
       return reply(event, 200, Object.assign({ ok: true }, await view(ownerUid, event)));
     }

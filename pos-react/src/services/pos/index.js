@@ -135,6 +135,7 @@ export function bindServices(ctx) {
 			save: onlineOrders.saveOnlineStore,
 			remove: onlineOrders.removeOnlineStore,
 			pull: onlineOrders.pullOnlineOrders,
+			options: onlineOrders.saveOnlineOptions,
 		}),
 		publicMenu: bind(ctx, {
 			enable: publicMenu.enablePublicMenu,

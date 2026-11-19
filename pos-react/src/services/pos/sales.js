@@ -3,6 +3,7 @@
  * all in one database write), refunds and voids, permanent deletion, and open orders (save, resend to kitchen, void).
  */
 import { T } from "../../db/tables";
+import { ONLINE_CHANNELS } from "../../config/constants";
 import { nowIso, isEmail, money, today, whatsappPhone } from "../../domain/format";
 import { cartTotals, discountAmount, serviceChargeAmount } from "../../domain/cart";
 import {
@@ -160,8 +161,8 @@ export async function completeSale(ctx, input) {
 			orderReference: input.orderReference || "",
 			discount: { ...discount, amount: discountValue, subtotal: totals.subtotal },
 			serviceCharge: { enabled: serviceAmount > 0, rate: serviceRate, amount: serviceAmount },
-			orderChannel: kitchen && f["checkout.orderChannels"] ? input.orderChannel || "Dine-in" : "Retail",
-			platformOrderId: kitchen ? input.platformOrderId || "" : "",
+			orderChannel: ONLINE_CHANNELS.includes(input.orderChannel) ? input.orderChannel : kitchen && f["checkout.orderChannels"] ? input.orderChannel || "Dine-in" : "Retail",
+			platformOrderId: kitchen || ONLINE_CHANNELS.includes(input.orderChannel) ? input.platformOrderId || "" : "",
 			locationName: loc.name,
 			committedAt: nowIso(),
 			printRequested: !!input.printAfter,

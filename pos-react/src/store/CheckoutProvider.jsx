@@ -3,7 +3,7 @@
  * category/search, and the checkout actions (add items, complete sale, void, hold as open order, recall, rewards).
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { ORDER_CHANNELS, STORAGE } from "../config/constants";
+import { ONLINE_CHANNELS, ORDER_CHANNELS, STORAGE } from "../config/constants";
 import { modifierSignature, addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
 import { productSizeGroup } from "../domain/catalog";
 import { removalNeedsApproval } from "../domain/deleteApproval";
@@ -88,7 +88,7 @@ export function CheckoutProvider({ children }) {
 		if (!cart.length && !openOrderId) setOrderChannel(defaultChannel);
 	}, [defaultChannel]); // eslint-disable-line react-hooks/exhaustive-deps
 	useEffect(() => {
-		if (!channels.includes(orderChannel)) setOrderChannel(defaultChannel);
+		if (!channels.includes(orderChannel) && !ONLINE_CHANNELS.includes(orderChannel)) setOrderChannel(defaultChannel); // an online order keeps its channel
 	}, [channels, orderChannel, defaultChannel]);
 
 	// a split that no longer matches the total is discarded (legacy behaviour)
@@ -376,8 +376,8 @@ export function CheckoutProvider({ children }) {
 				discount,
 				customerId,
 				reference: orderReference.trim(),
-				orderChannel: kitchen ? orderChannel : "Retail",
-				platformOrderId: kitchen ? platformOrderId.trim() : "",
+				orderChannel: kitchen || ONLINE_CHANNELS.includes(orderChannel) ? orderChannel : "Retail",
+				platformOrderId: kitchen || ONLINE_CHANNELS.includes(orderChannel) ? platformOrderId.trim() : "",
 				openOrderId,
 				sendKitchen,
 			});
@@ -401,12 +401,14 @@ export function CheckoutProvider({ children }) {
 			setDiscountOn(dv.value > 0);
 			setCustomerId(order.customerId || "");
 			setOrderReference(order.orderReference || "");
-			setOrderChannel(kitchen ? order.orderChannel || "Dine-in" : "Dine-in");
-			setPlatformOrderId(kitchen ? order.platformOrderId || "" : "");
+			const online = ONLINE_CHANNELS.includes(order.orderChannel); // kept for any kind of business
+			setOrderChannel(online || kitchen ? order.orderChannel || "Dine-in" : "Dine-in");
+			setPlatformOrderId(online || kitchen ? order.platformOrderId || "" : "");
+			if (online && (data.settings.thirdPartyPayments || []).some((t) => t.name === order.orderChannel && t.active !== false)) setPayment(order.orderChannel); // paid online: the payment type named after the store channel
 			go("checkout");
 			ui.notice("Open order " + order.orderNumber + " recalled. Complete payment when the guest is ready.");
 		},
-		[data.openOrders, ui, go, kitchen],
+		[data.openOrders, data.settings, ui, go, kitchen],
 	);
 
 	/** Recalls an open order and opens the split dialog for it. */

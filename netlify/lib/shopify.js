@@ -73,4 +73,25 @@ function sanitizeOrder(order) {
   };
 }
 
-module.exports = { SHOP_PATTERN, normalizeShop, shopKey, verifySignature, sanitizeOrder };
+const POS_CURRENCY = 'LKR';
+
+/** Currency code of a store ("USD"), defaulting to the POS currency; '' when it is not a 3-letter code. */
+function normalizeCurrency(value) {
+  const c = text(value || POS_CURRENCY, 8).toUpperCase();
+  return /^[A-Z]{3}$/.test(c) ? c : '';
+}
+
+/** LKR per 1 unit of the order's currency: 1 for LKR, the store's rate for its own currency, 0 (unknown) otherwise. */
+function rateFor(order, shop) {
+  const cur = String((order && order.currency) || (shop && shop.currency) || POS_CURRENCY).toUpperCase();
+  if (cur === POS_CURRENCY) return 1;
+  return cur === String((shop && shop.currency) || '').toUpperCase() && Number(shop && shop.rate) > 0 ? Number(shop.rate) : 0;
+}
+
+/** Plain e-mail address or ''. */
+function normalizeEmail(value) {
+  const e = text(value, 200).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : '';
+}
+
+module.exports = { SHOP_PATTERN, POS_CURRENCY, normalizeShop, shopKey, verifySignature, sanitizeOrder, normalizeCurrency, rateFor, normalizeEmail };

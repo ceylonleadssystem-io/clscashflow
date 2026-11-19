@@ -5,6 +5,7 @@
 const { getDocument, upsertDocument, clean } = require('../lib/appwrite');
 const { normalizeShop, shopKey, verifySignature, sanitizeOrder } = require('../lib/shopify');
 const { _decrypt: decrypt } = require('../lib/ai-keys');
+const { posAway, sendNewOrderEmail } = require('../lib/shopify-notify');
 
 const hits = new Map();
 const WINDOW_MS = 60 * 1000;
@@ -52,6 +53,12 @@ exports.handler = async function(event) {
       if (!existing) {
         await upsertDocument(path, id, { status: 'new', shop: shop, locationId: data.locationId || '', order: sanitizeOrder(order), receivedAt: new Date().toISOString() }, false);
         await upsertDocument('shopifyShops', shopKey(shop), { lastOrderAt: new Date().toISOString() }, true);
+        // closed shop: no POS has looked for orders lately, so the owner is e-mailed
+        if (data.notifyEmail) {
+          const reg = await getDocument('shopifyBusinesses', data.business).catch(function() { return null; });
+          // never hold the answer to Shopify for the mail server: Shopify gives 5 seconds
+          if (posAway(reg && reg.data && reg.data.lastPollAt)) await Promise.race([sendNewOrderEmail(data.notifyEmail, shop, sanitizeOrder(order)), new Promise(function(resolve) { setTimeout(resolve, 2500); })]);
+        }
       }
     } else if (topic === 'orders/cancelled') {
       // cancelled before any POS took it: nothing to prepare, nobody to tell. Cancelled after: the POS that took it is told once.

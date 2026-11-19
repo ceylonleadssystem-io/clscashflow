@@ -4,6 +4,7 @@
 // a POS has saved, so no other device takes them again.
 const { guard, reply } = require('../lib/security');
 const { getUserFromEvent, getDocument, upsertDocument, queryDocuments, clean } = require('../lib/appwrite');
+const { shopKey, rateFor } = require('../lib/shopify');
 const log = require('../lib/log').createLogger('shopify-inbox');
 
 const MAX_ROWS = 25;
@@ -23,11 +24,17 @@ exports.handler = async function handler(event) {
 
     if (action === 'pull') {
       const locationId = clean(body.locationId, 80);
+      // a POS is open: remembered (at most once a minute) so the owner is only e-mailed about orders that arrive while none is
+      const reg = await getDocument('shopifyBusinesses', ownerUid).catch(function() { return null; });
+      const last = reg && reg.data && reg.data.lastPollAt;
+      if (reg && (!last || Date.now() - Date.parse(last) > 60000)) await upsertDocument('shopifyBusinesses', ownerUid, { lastPollAt: new Date().toISOString() }, true);
       const rows = await queryDocuments(path, { fetchLimit: 500 });
       const mine = rows.filter(function(r) { return !locationId || !r.data.locationId || r.data.locationId === locationId; });
       const fresh = mine.filter(function(r) { return r.data.status === 'new' && !r.data.cancelled; }).sort(function(a, b) { return String(a.data.receivedAt).localeCompare(String(b.data.receivedAt)); }).slice(0, MAX_ROWS);
       const cancelled = mine.filter(function(r) { return r.data.cancelled && r.data.cancelNotified === false; }).slice(0, MAX_ROWS);
-      return reply(event, 200, { ok: true, orders: fresh.map(function(r) { return { id: r.id, shop: r.data.shop, receivedAt: r.data.receivedAt, order: r.data.order }; }), cancelled: cancelled.map(function(r) { return { id: r.id, name: r.data.order && r.data.order.name }; }) });
+      const shops = {};
+      for (const r of fresh) if (!(r.data.shop in shops)) { const s = await getDocument('shopifyShops', shopKey(r.data.shop)).catch(function() { return null; }); shops[r.data.shop] = (s && s.data) || {}; }
+      return reply(event, 200, { ok: true, orders: fresh.map(function(r) { return { id: r.id, shop: r.data.shop, receivedAt: r.data.receivedAt, order: r.data.order, rate: rateFor(r.data.order, shops[r.data.shop]) }; }), cancelled: cancelled.map(function(r) { return { id: r.id, name: r.data.order && r.data.order.name }; }) });
     }
     if (action === 'ack') {
       const ids = (Array.isArray(body.ids) ? body.ids : []).map(function(id) { return clean(id, 60); }).filter(function(id) { return /^o[0-9]{1,40}$/.test(id); }).slice(0, MAX_ROWS);

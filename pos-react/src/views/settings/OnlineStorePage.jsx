@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { PageHeader, SectionCard } from "../../components/settings/kit/rows";
 import { isAppwrite } from "../../config/env";
+import { kitchenMode } from "../../services/pos/common";
 import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 import { useUi } from "../../store/UiProvider";
@@ -14,10 +15,16 @@ export function OnlineStorePage() {
 	const { svc, locationId } = usePos();
 	const ui = useUi();
 	const cloud = isAppwrite();
-	const locations = useData().locations.filter((l) => l.active !== false);
+	const { locations: allLocations, settings } = useData();
+	const locations = allLocations.filter((l) => l.active !== false);
+	const kitchen = kitchenMode(settings);
+	const autoKitchen = !!settings.onlineStore?.autoKitchen;
 	const [info, setInfo] = useState(null); // { shops, webhookUrl }
 	const [shop, setShop] = useState("");
 	const [secret, setSecret] = useState("");
+	const [currency, setCurrency] = useState("LKR");
+	const [rate, setRate] = useState("");
+	const [notifyEmail, setNotifyEmail] = useState("");
 	const [where, setWhere] = useState(() => (locations.some((l) => l.id === locationId) ? locationId : locations[0]?.id || ""));
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState("");
@@ -39,7 +46,7 @@ export function OnlineStorePage() {
 	const connect = (e) => {
 		e.preventDefault();
 		run(async () => {
-			setInfo(await svc.onlineOrders.save({ shop: shop.trim(), secret: secret.trim(), locationId: where }));
+			setInfo(await svc.onlineOrders.save({ shop: shop.trim(), secret: secret.trim(), locationId: where, currency: currency.trim().toUpperCase(), rate: currency.trim().toUpperCase() === "LKR" ? 1 : Number(rate), notifyEmail: notifyEmail.trim() }));
 			setShop("");
 			setSecret("");
 		});
@@ -63,7 +70,16 @@ export function OnlineStorePage() {
 	};
 	return (
 		<>
-			<PageHeader title="Online Store" description="Connect your Shopify store so its orders arrive in the POS." note="Orders appear under Online Orders (the cart button at the top) at the location you choose." />
+			<PageHeader title="Online Store" description="Connect your Shopify store so its orders arrive in the POS." note="Orders appear under Online Orders (the cart button at the top) at the location you choose. A Shopify payment type is added for them." />
+			{cloud && kitchen && (
+				<SectionCard title="Kitchen">
+					<label style={{ display: "flex", gap: 10, alignItems: "center" }}>
+						<input type="checkbox" id="online-auto-kitchen" checked={autoKitchen} onChange={(e) => svc.onlineOrders.options({ autoKitchen: e.target.checked })} />
+						<span>Send each new online order to the kitchen as soon as it arrives</span>
+					</label>
+					<p className="muted">Off: orders wait under Online Orders until staff open them and send them.</p>
+				</SectionCard>
+			)}
 			{!cloud ? (
 				<SectionCard>
 					<p className="muted">Online orders need the cloud version of the POS.</p>
@@ -83,6 +99,7 @@ export function OnlineStorePage() {
 									<li key={s.shop} style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
 										<b>{s.shop}</b>
 										<span>orders go to {nameOf(s.locationId)}</span>
+										<span className="muted">{s.currency && s.currency !== "LKR" ? `${s.currency} at ${s.rate} LKR` : "LKR"}</span>
 										<span className="muted">secret ••{s.last4}</span>
 										<span className="muted">{s.lastOrderAt ? "last order " + new Date(s.lastOrderAt).toLocaleString() : "no orders yet"}</span>
 										<button type="button" className="btn danger" style={{ marginLeft: "auto" }} disabled={busy} onClick={() => remove(s)}>
@@ -133,6 +150,22 @@ export function OnlineStorePage() {
 										</option>
 									))}
 								</select>
+							</div>
+							<div className="field">
+								<label htmlFor="online-currency">Store currency</label>
+								<input className="input" id="online-currency" value={currency} onChange={(e) => setCurrency(e.target.value)} placeholder="LKR" maxLength={3} required />
+								<small className="muted">The POS counts in LKR. Another currency is converted with the rate below.</small>
+							</div>
+							{currency.trim().toUpperCase() !== "LKR" && (
+								<div className="field">
+									<label htmlFor="online-rate">LKR for 1 {currency.trim().toUpperCase() || "unit"}</label>
+									<input className="input" id="online-rate" type="number" min="0" step="any" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="for example 300" required />
+									<small className="muted">Change it by connecting the store again.</small>
+								</div>
+							)}
+							<div className="field">
+								<label htmlFor="online-notify">E-mail me about orders that arrive while no POS is open (optional)</label>
+								<input className="input" id="online-notify" type="email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} placeholder="owner@example.com" maxLength={200} />
 							</div>
 							<div className="field" style={{ gridColumn: "1 / -1" }}>
 								<label htmlFor="online-secret">Webhook signing secret</label>

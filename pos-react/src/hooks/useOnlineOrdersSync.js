@@ -3,6 +3,7 @@
  */
 import { useEffect } from "react";
 import { useData } from "../store/DataProvider";
+import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
 
 const EVERY_MS = 30000;
@@ -10,7 +11,8 @@ const EVERY_MS = 30000;
 export function useOnlineOrdersSync() {
 	const { settings } = useData();
 	const { svc, locationId } = usePos();
-	const here = (settings.onlineStore?.shops || []).some((s) => s.locationId === locationId);
+	const on = useFeature("online.shopify");
+	const here = on && (settings.onlineStore?.shops || []).some((s) => s.locationId === locationId);
 	useEffect(() => {
 		if (!here) return undefined;
 		svc.onlineOrders.pull();
