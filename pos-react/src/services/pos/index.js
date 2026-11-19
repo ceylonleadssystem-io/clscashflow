@@ -142,6 +142,7 @@ export function bindServices(ctx) {
 			enable: publicMenu.enablePublicMenu,
 			disable: publicMenu.disablePublicMenu,
 			refresh: publicMenu.refreshPublicMenus,
+			suspend: publicMenu.suspendPublicMenus,
 		}),
 		locations: bind(ctx, {
 			saveLocation: locations.saveLocation,

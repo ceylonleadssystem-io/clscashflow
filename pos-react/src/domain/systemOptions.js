@@ -16,7 +16,6 @@ export const SYSTEM_PAGES = [
 	{ key: "clock", title: "Clock In / Out", description: "Clock people out automatically so no shift runs on by mistake." },
 	{ key: "payroll", title: "Payroll", description: "Pay week, paid breaks and overtime rules used for hours and labor cost." },
 	{ key: "zones", title: "Zones", description: "The areas of your floor that hold tables.", entity: true },
-	{ key: "qrMenu", title: "QR Menu", description: "A QR code that opens your digital menu on a customer's phone." },
 ];
 
 /** Pages in System Options that hold values (everything except the overview). */

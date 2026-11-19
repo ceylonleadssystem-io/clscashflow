@@ -72,3 +72,17 @@ export async function refreshPublicMenus(ctx) {
 		}
 	}
 }
+
+/** The QR menu switch was turned off for this business: every link stops showing the menu (turning it back on restores the same links). */
+export async function suspendPublicMenus(ctx) {
+	if (!isAppwrite()) return;
+	for (const key of enabledKeys(ctx.data().settings)) {
+		const link = linkOf(ctx.data().settings, key);
+		try {
+			await call({ action: "disable", locationId: key });
+			await saveLink(ctx, key, { ...link, enabled: false });
+		} catch (e) {
+			log.warn("QR menu link not switched off", e, { key });
+		}
+	}
+}

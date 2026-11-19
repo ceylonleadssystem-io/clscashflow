@@ -1,10 +1,12 @@
 /**
  * Keeps the public QR menu in step with the POS: when the menu of a location whose QR link is on changes (items, prices, categories,
  * location limits), the latest menu is sent a few seconds later. Nothing is sent while no link is on, or when nothing changed.
+ * When an admin turns the QR menu switch off, every link that is still on is switched off.
  */
 import { useEffect, useRef } from "react";
 import { buildMenuSnapshot, enabledKeys } from "../domain/publicMenu";
 import { useData } from "../store/DataProvider";
+import { useFeature } from "../store/FeatureProvider";
 import { usePos } from "../store/PosProvider";
 
 const DELAY_MS = 5000;
@@ -12,10 +14,16 @@ const DELAY_MS = 5000;
 export function usePublicMenuSync() {
 	const { products, categories, subcategories, settings, locations } = useData();
 	const { svc } = usePos();
+	const on = useFeature("menu.qr");
 	const last = useRef({});
 	const timer = useRef(null);
 	useEffect(() => {
 		const keys = enabledKeys(settings);
+		if (!on) {
+			last.current = {};
+			if (keys.length) svc.publicMenu.suspend();
+			return undefined;
+		}
 		const next = {};
 		let changed = false;
 		for (const k of keys) {
@@ -27,6 +35,6 @@ export function usePublicMenuSync() {
 		clearTimeout(timer.current);
 		timer.current = setTimeout(() => svc.publicMenu.refresh(), DELAY_MS);
 		return undefined;
-	}, [products, categories, subcategories, settings, locations, svc]);
+	}, [products, categories, subcategories, settings, locations, svc, on]);
 	useEffect(() => () => clearTimeout(timer.current), []);
 }

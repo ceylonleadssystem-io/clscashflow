@@ -6,7 +6,7 @@
 const KITCHEN = ["view.orders", "view.tables", "checkout.openOrders", "checkout.kitchenTickets", "checkout.orderReference", "checkout.orderChannels", "inventory.recipes", "view.modifiers", "modifiers.commonPresets"];
 const SHOP = ["catalogue.barcodeLabels", "hardware.labelPrinter", "hardware.barcodeScanner", "checkout.stockGuard", "inventory.productStock", "inventory.stockTools"];
 const TOOLS = ["industry.tools"];
-const ONLINE = ["online.shopify"]; // off in every category: an admin turns online orders on for a business that has a store
+const ONLINE = ["online.shopify", "menu.qr"]; // off in every category: an admin turns online orders and the QR menu on for a business that wants them
 const GM = ["view.guestManager"]; // Guest Manager (/GM): on for Food & Beverage and Hospitality only
 
 export const FEATURE_PRESETS = [
