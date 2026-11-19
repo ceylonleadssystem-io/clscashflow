@@ -23,6 +23,7 @@ import { isPortalPath, isAutomobilePath } from "./config/portal";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GearLoader } from "./components/ui/GearLoader";
 import { usePublicMenuSync } from "./hooks/usePublicMenuSync";
+import { useOnlineOrdersSync } from "./hooks/useOnlineOrdersSync";
 
 /**
  * Provider tree:
@@ -90,6 +91,7 @@ function Ready() {
 /** Sends the QR menu to its public link when the menu changes. */
 function PublicMenuSync() {
 	usePublicMenuSync();
+	useOnlineOrdersSync();
 	return null;
 }
 

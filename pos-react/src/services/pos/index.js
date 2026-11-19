@@ -10,6 +10,7 @@ import * as sales from "./sales";
 import * as printing from "./printing";
 import * as settings from "./settings";
 import * as publicMenu from "./publicMenu";
+import * as onlineOrders from "./onlineOrders";
 import * as locations from "./locations";
 import * as industry from "./industry";
 import * as detailing from "./detailing";
@@ -128,6 +129,12 @@ export function bindServices(ctx) {
 			setTheme: settings.setTheme,
 			applyPosSetup: settings.applyPosSetup,
 			dismissPosSetup: settings.dismissPosSetup,
+		}),
+		onlineOrders: bind(ctx, {
+			load: onlineOrders.loadOnlineStore,
+			save: onlineOrders.saveOnlineStore,
+			remove: onlineOrders.removeOnlineStore,
+			pull: onlineOrders.pullOnlineOrders,
 		}),
 		publicMenu: bind(ctx, {
 			enable: publicMenu.enablePublicMenu,

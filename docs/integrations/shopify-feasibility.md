@@ -63,3 +63,11 @@ Estimates assume one store and one developer, and exclude Shopify app review if 
 4. Prepaid only, or also pay on delivery?
 5. Do you also want stock kept in step (phase 3) or only orders in?
 6. Should web orders go straight to the kitchen, or wait for staff to accept?
+
+## Status: phase 1 (receive) built
+- **Connect:** Settings > System Options > Online Store. Per store: address, the webhook signing secret from Shopify (Settings > Notifications > Webhooks) and the location that prepares its orders. More stores can be added the same way; each store has its own row.
+- **Receive:** `netlify/functions/shopify-webhook.js` verifies the signature, stores the order in a server-only inbox and answers at once; duplicates and cancellations are handled. `shopify-store.js` saves the (encrypted) secret and `shopify-inbox.js` hands new orders to the POS.
+- **POS:** a device at the store's location checks every 30 seconds, saves each order as an open order with the Shopify channel (one row per Shopify order, so two devices never double it), matches items by SKU = item code, and shows it under Online Orders.
+- **Needs:** `CEYLO_KEY_SECRET` set on Netlify (the same secret that protects AI keys encrypts the signing secret).
+- **Not yet:** sending web orders to the kitchen automatically, an alert for a closed shop, taking payment as a "Shopify" 3rd party type, fulfilment and stock sent back to Shopify, and the Admin API (not needed for receiving). Currency is still LKR only.
+- **Checked:** the three functions were run against an in-memory fake database (signature, duplicates, cancellation, location filter, disconnect). Not yet run against a real Shopify store or the real Appwrite database.

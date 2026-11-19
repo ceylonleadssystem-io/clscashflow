@@ -16,6 +16,7 @@ import { useSystemOptions, useSystemOptionsDraft } from "../../components/settin
 import { LANDING_VIEWS, PRESETS, SYSTEM_PAGES, presetChanges, resolveOptions } from "../../domain/systemOptions";
 import { useData } from "../../store/DataProvider";
 import { QrMenuPage } from "./QrMenuPage";
+import { OnlineStorePage } from "./OnlineStorePage";
 
 const LABELS = {
 	"orderEntry.defaultOrderType": "Default order type",
@@ -445,4 +446,4 @@ export function Zones() {
 	);
 }
 
-export const PAGE_COMPONENTS = { orderEntry: OrderEntry, receipts: Receipts, signIn: SignIn, clock: ClockInOut, payroll: Payroll, thirdParty: ThirdPartyPayments, zones: Zones, qrMenu: QrMenuPage };
+export const PAGE_COMPONENTS = { orderEntry: OrderEntry, receipts: Receipts, signIn: SignIn, clock: ClockInOut, payroll: Payroll, thirdParty: ThirdPartyPayments, zones: Zones, qrMenu: QrMenuPage, onlineStore: OnlineStorePage };
