@@ -19,6 +19,7 @@ import {
 } from "../../domain/sales";
 import { DELETED_ACTION, deletedDetails, findApprover } from "../../domain/salesLog";
 import { can } from "../../domain/access";
+import { resolveOptions } from "../../domain/systemOptions";
 import { markSent } from "../../domain/deleteApproval";
 import { availableProductStock, firstShortIngredient, saleStockNeeds, stockProblem, stockRowForLine } from "../../domain/inventory";
 import { formatOrderNumber, mergeOrders, nextSequence } from "../../domain/orders";
@@ -60,7 +61,9 @@ export async function completeSale(ctx, input) {
 	if (!cart.length) return null;
 	const discount = f["checkout.discounts"] ? input.discount : { type: "percent", value: 0 };
 	const supported = f["checkout.serviceCharge"] && serviceChargeSupported(settings);
-	const totals = cartTotals(cart, discount, settings, supported, input.orderChannel);
+	// the same rules and per-order choice the checkout used, so the total here is the total the cashier saw
+	const serviceOpts = { rules: resolveOptions(settings, "serviceCharge", s.locationId), override: input.serviceOverride };
+	const totals = cartTotals(cart, discount, settings, supported, input.orderChannel, serviceOpts);
 	const splits = f["checkout.splitBill"] ? input.splitPayments || [] : [];
 	const register = currentCashShift(d.cashShifts, s.userId);
 	const loc = activeLocation(ctx);
@@ -125,7 +128,7 @@ export async function completeSale(ctx, input) {
 
 	// ------------------------------------------------------------- build sale
 	const serviceRate = Number(settings.serviceChargeRate) || 0;
-	const serviceAmount = serviceChargeAmount(cart, discount, settings, supported);
+	const serviceAmount = serviceChargeAmount(cart, discount, settings, supported, { ...serviceOpts, channel: input.orderChannel });
 	const discountValue = discountAmount(cart, discount);
 	const lines = JSON.parse(JSON.stringify(cart));
 	if (serviceAmount) lines.push(makeServiceLine(serviceAmount, serviceRate));
@@ -462,6 +465,7 @@ export async function saveOpenOrder(ctx, input) {
 		status: "open",
 		orderChannel: input.orderChannel,
 		platformOrderId: input.platformOrderId,
+		serviceOverride: input.serviceOverride ?? null, // staff switched the service charge on or off for this order (null = follow the rules)
 	};
 	if (input.sendKitchen) {
 		order.lines = markSent(order.lines, now); // so taking a sent item off later can ask for a manager (Menu Admin, Categories)
@@ -558,5 +562,20 @@ export async function stockOverride(ctx, { pin, name, message }) {
 	if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to sell this item while stock is low."));
 	await ctx.store.write((tx) => audit(tx, ctx.session(), "stock-override", `${name} sold with low stock (${message}) · approved by ${approver.name}`, ctx.session().locationId === "all" ? "" : ctx.session().locationId));
 	log.info("low stock sale approved", { item: name, approver: approver.name });
+	return approver;
+}
+
+/**
+ * Switching off a service charge that would otherwise apply to an order. Someone who holds "Remove the service charge from an order without a
+ * manager" approves it themselves (no PIN); otherwise the PIN of someone who does is needed. Writes an audit entry and returns the approver
+ * (null, with a message, when there is none).
+ */
+export async function serviceChargeRemoval(ctx, { pin, detail }) {
+	const d = ctx.data();
+	const self = ctx.session().user;
+	const approver = pin === undefined ? (can(self, "pos.serviceCharge.toggle", d.settings) ? self : null) : findApprover(d.users, pin, (u) => can(u, "pos.serviceCharge.toggle", d.settings));
+	if (!approver) return void (await ctx.ui.alert("Enter the PIN of a manager or owner to remove the service charge from this order."));
+	await ctx.store.write((tx) => audit(tx, ctx.session(), "service-charge-removed", `${detail} · approved by ${approver.name}`, ctx.session().locationId === "all" ? "" : ctx.session().locationId));
+	log.info("service charge removed from an order", { approver: approver.name });
 	return approver;
 }

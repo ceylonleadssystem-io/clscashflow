@@ -19,7 +19,7 @@ export const SYSTEM_PAGES = [
 ];
 
 /** Pages in System Options that hold values (everything except the overview). */
-export const OPTION_PAGES = ["orderEntry", "receipts", "signIn", "clock", "payroll"];
+export const OPTION_PAGES = ["orderEntry", "receipts", "signIn", "clock", "payroll", "serviceCharge"];
 
 /** The views staff can land on after signing in. "auto" keeps the existing behaviour (the first page their role may open). */
 export const LANDING_VIEWS = [
@@ -53,6 +53,15 @@ export const FIELDS = {
 		maxMinutes: { scope: "location", default: 59, min: 0, max: 59 },
 		autoTimeOn: { scope: "location", default: false },
 		autoTime: { scope: "location", default: "03:00" },
+	},
+	// Service charge rules (the on/off switch and the percentage stay on the Service Charge page): when a new order starts with the charge on
+	serviceCharge: {
+		autoApply: { scope: "location", default: true }, // off = orders start without it and staff turn it on with the toggle under the pay buttons
+		minOn: { scope: "location", default: false },
+		minTotal: { scope: "location", default: 0 }, // add it only when the items total (before any discount) is above this amount
+		orderTypes: { scope: "location", default: [...ORDER_CHANNELS] }, // the order types that get it automatically
+		maxOn: { scope: "location", default: false },
+		maxCharge: { scope: "location", default: 0 }, // a bill never carries more service charge than this
 	},
 	// Payroll rules are the organization's (labour law does not change by branch)
 	payroll: {
@@ -134,6 +143,11 @@ export function validateOptions(page, v) {
 			else if (h * 60 + m < 1) e.maxHours = "The maximum time must be at least 1 minute.";
 		}
 		if (v.autoTimeOn && !timeOk(v.autoTime)) e.autoTime = "Enter a time such as 03:00.";
+	}
+	if (page === "serviceCharge") {
+		if (v.minOn && !(Number(v.minTotal) > 0)) e.minTotal = "Enter an amount above 0.";
+		if (v.maxOn && !(Number(v.maxCharge) > 0)) e.maxCharge = "Enter an amount above 0.";
+		if (!Array.isArray(v.orderTypes) || !v.orderTypes.length || v.orderTypes.some((t) => !ORDER_CHANNELS.includes(t))) e.orderTypes = "Choose at least one order type.";
 	}
 	if (page === "payroll") {
 		const num = (x) => Number(x);

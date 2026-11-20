@@ -16,6 +16,7 @@ import { useUi } from "../../store/UiProvider";
 import { Modifiers } from "../Modifiers";
 import { Products } from "../Products";
 import { Stations } from "../Stations";
+import { ServiceChargeRules } from "./ServiceChargeRules";
 
 /** A page of the older business-settings form: the same fields and the same save, with its own Save bar. */
 function FormPage({ title, description, children }) {
@@ -63,7 +64,12 @@ export function ServiceChargePage() {
 	const on = useFeature("checkout.serviceCharge") && hasCapability(settings.businessType, "serviceCharge");
 	return (
 		<FormPage title="Service Charge" description="An optional percentage added to every bill.">
-			{(form, set) => (on ? <ServiceChargePanel form={form} set={set} /> : <SectionCard><p className="muted">A service charge is not available for this type of business.</p></SectionCard>)}
+			{(form, set) => (on ? (
+				<>
+					<ServiceChargePanel form={form} set={set} />
+					<ServiceChargeRules enabled={!!form.serviceChargeEnabled} />
+				</>
+			) : <SectionCard><p className="muted">A service charge is not available for this type of business.</p></SectionCard>)}
 		</FormPage>
 	);
 }
