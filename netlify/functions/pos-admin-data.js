@@ -91,12 +91,31 @@ function isTestAccount(data) {
 
 const ACCOUNT_STATUSES = ['trial', 'test', 'live'];
 
-// Explicit posAccountStatus wins; otherwise derive from the legacy test flag, then payment.
+// One status for the account, worked out from its billing so the label and the billing never disagree: Test (a demo, never asked for
+// payment), Live (paid: a verified or manually recorded payment) or Trial (not paid yet).
 function accountStatus(data) {
-  const set = String(data.posAccountStatus || '').toLowerCase();
-  if (ACCOUNT_STATUSES.includes(set)) return set;
-  if (isTestAccount(data)) return 'test';
-  return data.posPaid === true ? 'live' : 'trial';
+  data = data || {};
+  if (isTestAccount(data) || String(data.posAccountStatus || '').toLowerCase() === 'test') return 'test';
+  const billing = String(data.posSubscriptionStatus || '').toLowerCase();
+  return data.posPaid === true || billing === 'active' || billing === 'manual-paid' ? 'live' : 'trial';
+}
+
+// The billing fields that go with choosing an account status, so choosing Live or Trial changes the billing too.
+function billingPatchForStatus(profile, status, now) {
+  if (status === 'test') return {}; // a demo account: billing is left as it is, the POS never asks it for payment
+  const keep = profile.posAccountPaused === true ? {} : null; // a disabled account stays disabled: its subscription status is not touched
+  if (status === 'live') {
+    const cycle = clean(profile.posBillingCycle || 'monthly') === 'annual' ? 'annual' : 'monthly';
+    const due = Date.parse(profile.posNextPaymentDue || '');
+    return Object.assign({ posPaid: true, posNextPaymentDue: due > Date.parse(now) ? profile.posNextPaymentDue : addBillingPeriod(now, cycle), posPaymentReminderStatus: 'paid' }, keep || { posSubscriptionStatus: 'manual-paid' });
+  }
+  return Object.assign({ posPaid: false }, keep || { posSubscriptionStatus: 'trial' });
+}
+
+// The new trial end when a trial is extended by `days`: counted from today, or from the current end when that is still ahead.
+function extendedTrialEnd(current, days, nowMs) {
+  const base = Math.max(nowMs, Date.parse(current || '') || 0);
+  return new Date(base + days * 86400000).toISOString();
 }
 
 function clampNum(v, min, max) {
@@ -409,7 +428,8 @@ async function handle(event) {
     if (action === 'setAccountStatus') {
       const status = String(body.status || '').toLowerCase();
       if (!ACCOUNT_STATUSES.includes(status)) return response(400, { ok: false, error: 'Status must be trial, test or live.' });
-      await db.collection('users').doc(uid).set({ posAccountStatus:status, posIsTestAccount:status === 'test', posAccountStatusUpdatedAtUtc:new Date().toISOString(), posAccountStatusUpdatedBy:ADMIN_EMAIL }, { merge:true });
+      const now = new Date().toISOString();
+      await db.collection('users').doc(uid).set(Object.assign({ posAccountStatus:status, posIsTestAccount:status === 'test', posAccountStatusUpdatedAtUtc:now, posAccountStatusUpdatedBy:ADMIN_EMAIL }, billingPatchForStatus(profile, status, now)), { merge:true });
       log.info('account status set', { uid, status });
       return response(200,{ok:true,status});
     }
@@ -432,7 +452,7 @@ async function handle(event) {
       const receiptId=clean(body.receiptId,240),cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)|| (cycle==='annual'?62000:5500);
       if(!receiptId)return response(400,{ok:false,error:'Select a payment receipt.'});
       await db.collection('subscriptionPayments').doc(receiptId).set({status:'verified',verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL,billingCycle:cycle,amountLkr:amount},{merge:true});
-      await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:addBillingPeriod(now,cycle),posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posAccountStatus:accountStatus(profile)==='test'?'test':'live',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:addBillingPeriod(now,cycle),posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
       log.info('payment confirmed',{uid,receiptId,cycle});
       return response(200,{ok:true,nextPaymentDue:addBillingPeriod(now,cycle)});
     }
@@ -440,9 +460,19 @@ async function handle(event) {
     if (action === 'recordPayment') {
       const cycle=body.billingCycle==='annual'?'annual':'monthly',now=new Date().toISOString(),amount=Number(body.amountLkr)||(cycle==='annual'?62000:5500),paymentId='pos-admin-'+uid+'-'+Date.now();
       await db.collection('subscriptionPayments').doc(paymentId).set({uid,email:profile.email||'',businessName:profile.posBusinessName||profile.bizName||'',plan:'pos',status:'verified',source:'admin-confirmed',billingCycle:cycle,amountLkr:amount,period:now.slice(0,7),receivedAtUtc:now,verifiedAtUtc:now,verifiedBy:ADMIN_EMAIL});
-      const nextPaymentDue=addBillingPeriod(now,cycle);await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:nextPaymentDue,posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+      const nextPaymentDue=addBillingPeriod(now,cycle);await db.collection('users').doc(uid).set({posPaid:true,posAccountPaused:false,posSubscriptionStatus:'active',posAccountStatus:accountStatus(profile)==='test'?'test':'live',posBillingCycle:cycle,posPaymentVerifiedAtUtc:now,posNextPaymentDue:nextPaymentDue,posPaymentReminderStatus:'paid',updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
       log.info('payment recorded',{uid,paymentId,cycle});
       return response(200,{ok:true,nextPaymentDue,paymentId});
+    }
+
+    if (action === 'extendTrial') {
+      const days = Math.floor(Number(body.days)), now = new Date().toISOString();
+      if (!(days >= 1 && days <= 90)) return response(400, { ok: false, error: 'Choose between 1 and 90 days.' });
+      if (accountStatus(profile) === 'live') return response(400, { ok: false, error: 'This account is already paid, so it has no trial to extend.' });
+      const trialEnd = extendedTrialEnd(profile.posTrialEnd, days, Date.parse(now));
+      await db.collection('users').doc(uid).set(Object.assign({ posTrialEnd: trialEnd, posPaid: false, posTrialExtendedAtUtc: now, posTrialExtendedBy: ADMIN_EMAIL }, profile.posAccountPaused === true ? {} : { posSubscriptionStatus: 'trial' }, accountStatus(profile) === 'test' ? {} : { posAccountStatus: 'trial' }), { merge: true });
+      log.info('trial extended', { uid, days, trialEnd });
+      return response(200, { ok: true, trialEnd });
     }
 
     if (action === 'billingReminder') {
@@ -650,6 +680,9 @@ async function handle(event) {
 // Single place that records every request outcome (action, status, duration). Only the action
 // name is read from the body/query here; payloads are never logged.
 exports._cleanSubscription = cleanSubscription;
+exports._accountStatus = accountStatus;
+exports._billingPatchForStatus = billingPatchForStatus;
+exports._extendedTrialEnd = extendedTrialEnd;
 exports._cleanFounders = cleanFounders;
 exports.handler = async function(event) {
   const started = Date.now();
