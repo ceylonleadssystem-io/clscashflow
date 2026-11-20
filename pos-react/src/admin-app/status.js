@@ -17,3 +17,21 @@ export const appsOf = (a) => (Array.isArray(a?.apps) && a.apps.length ? a.apps :
 /** When the business was last used: the later of its last sign-in and its last sync ("" when unknown). */
 export const lastUsedOf = (a) => [a?.authLastSignInAt, a?.updatedAt].filter(Boolean).sort().at(-1) || "";
 export const fmtDay = (v) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—");
+
+const DAY = 86400000;
+/**
+ * A line for the admin when the account's billing means staff are already asked for payment (same rule the POS uses): an unpaid account
+ * whose trial has ended, a paid account whose payment is more than a day overdue, or a disabled account. "" when all is fine or the account is a Test.
+ */
+export function accessWarning(account, paused = false, now = Date.now()) {
+	const status = statusOf(account).value;
+	if (status === "test") return "";
+	if (paused) return "This account is disabled, so staff see the payment screen.";
+	const pay = account?.payment || {};
+	const paid = status === "live";
+	const end = Date.parse(paid ? pay.nextPaymentDue : pay.trialEnd);
+	if (!end) return "";
+	if (paid && now > end + DAY) return `The payment was due on ${fmtDay(pay.nextPaymentDue)}. Staff now see the payment screen. Record a payment once it is received.`;
+	if (!paid && now >= end) return `The trial ended on ${fmtDay(pay.trialEnd)}. Staff now see the payment screen. Record a payment, or extend the trial.`;
+	return "";
+}
