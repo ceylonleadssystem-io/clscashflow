@@ -28,7 +28,7 @@ const viewLabel = (v) => LANDING_VIEWS.find((x) => x.value === v)?.label || v;
 const show = (key, v) => (key === "defaultView" ? viewLabel(v) : typeof v === "boolean" ? (v ? "On" : "Off") : String(v));
 
 /** Says who a page's values apply to: everyone, or the location chosen in the top bar. */
-function ScopeNote({ footer }) {
+export function ScopeNote({ footer }) {
 	const { locationId } = useSystemOptionsDraft();
 	const data = useData();
 	if (!locationId || locationId === "all") return <>{data.locations.filter((l) => l.active !== false).length > 1 ? "Applies to all locations. To set a value for one location only, choose it in the top bar." : "Applies to this business."}</>;

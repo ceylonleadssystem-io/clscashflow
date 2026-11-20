@@ -34,12 +34,12 @@ export function StockApprovalModal() {
 						Cancel
 					</button>
 					<button className="btn gold" id="stock-approval-ok" disabled={busy || !pin} onClick={submit}>
-						Approve and add
+						{a.okLabel || "Approve and add"}
 					</button>
 				</>
 			}
 		>
-			<p className="muted">A manager or owner can approve selling it anyway. The stock will show as short until it is topped up.</p>
+			<p className="muted">{a.note || "A manager or owner can approve selling it anyway. The stock will show as short until it is topped up."}</p>
 			<label htmlFor="stock-approval-pin">Manager or owner PIN *</label>
 			<input
 				className="input"

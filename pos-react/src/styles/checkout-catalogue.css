@@ -2111,3 +2111,8 @@
 					grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
 				}
 			}
+
+/* Service charge switch under Quick Pay and Pay Now */
+.service-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:10px 12px;min-height:48px;border:1px solid var(--ui-line);border-radius:var(--ui-radius,10px);background:var(--ui-soft)}
+.service-toggle-text{display:grid;gap:1px;min-width:0}
+.service-toggle-text small{overflow-wrap:anywhere}

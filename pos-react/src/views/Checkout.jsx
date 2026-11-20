@@ -18,6 +18,7 @@ import { CategoryRail } from "../components/checkout/CategoryRail";
 import { ProductGrid } from "../components/checkout/ProductGrid";
 import { CartLines } from "../components/checkout/CartLines";
 import { PayPopup } from "../components/checkout/PayPopup";
+import { ServiceChargeToggle } from "../components/checkout/ServiceChargeToggle";
 import { CustomerSection, DiscountSection } from "../components/checkout/CheckoutFields";
 import { Modal, ModalBody } from "../components/ui";
 
@@ -210,6 +211,7 @@ export function Checkout() {
 								Pay Now<span className="complete-amount"> · {money(t.total)}</span>
 							</button>
 						</div>
+						<ServiceChargeToggle />
 					</div>
 				</aside>
 			</div>

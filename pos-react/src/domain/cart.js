@@ -2,6 +2,7 @@
  * Pure cart maths for checkout: modifier handling and validation, adding/editing/merging order lines,
  * quantity changes, discount and service-charge calculation, order totals and equal bill splitting.
  */
+import { ORDER_CHANNELS } from "../config/constants";
 import { itemSettingsById } from "./menuAdmin";
 import { calculateTaxes, rulesOf } from "./taxes";
 
@@ -112,27 +113,48 @@ export function discountAmount(cart, discount) {
 	);
 }
 
-/** Service charge applies to the post-discount subtotal, so discounts reduce it too. */
-export function serviceChargeAmount(cart, discount, settings, supported) {
+/**
+ * Whether the service charge starts on for this order, from the location's rules (settings.systemOptions, "serviceCharge"): auto-apply must be on,
+ * the order type must be one that gets it, and the items total (before any discount) must be above the minimum when one is set.
+ * Without rules it is on whenever the business has it switched on, as before the rules existed.
+ */
+export function serviceChargeAuto(cart, settings, rules, channel = "") {
+	if (!settings?.serviceChargeEnabled) return false;
+	if (!rules) return true;
+	if (!rules.autoApply) return false;
+	if (ORDER_CHANNELS.includes(channel) && !(rules.orderTypes || []).includes(channel)) return false; // only the listed order types are limited; any other order (retail, online) is not
+	if (rules.minOn && !(chargeableSubtotal(cart) > (+rules.minTotal || 0))) return false;
+	return true;
+}
+
+/**
+ * Service charge applies to the post-discount subtotal, so discounts reduce it too. `opts`: `rules` (see serviceChargeAuto), `channel` (the order type)
+ * and `override` (true = staff switched it on for this order whatever the rules say, false = switched it off, null/undefined = follow the rules).
+ * A maximum charge in the rules caps the amount either way.
+ */
+export function serviceChargeAmount(cart, discount, settings, supported, opts = {}) {
 	if (!supported || !settings.serviceChargeEnabled) return 0;
+	const on = opts.override === true || opts.override === false ? opts.override : serviceChargeAuto(cart, settings, opts.rules, opts.channel);
+	if (!on) return 0;
 	const rate = Math.max(0, Math.min(100, +settings.serviceChargeRate || 0));
-	return (Math.max(0, chargeableSubtotal(cart) - discountAmount(cart, discount)) * rate) / 100;
+	const amount = (Math.max(0, chargeableSubtotal(cart) - discountAmount(cart, discount)) * rate) / 100;
+	return opts.rules?.maxOn && +opts.rules.maxCharge > 0 ? Math.min(amount, +opts.rules.maxCharge) : amount;
 }
 
 /** Totals of the order. `channel` is the order type: it picks a category's takeaway tax. Tax is 0 until taxes are published (Menu Admin, Taxes). */
-export function cartTotals(cart, discount, settings, serviceChargeSupported, channel = "") {
+export function cartTotals(cart, discount, settings, serviceChargeSupported, channel = "", service = {}) {
 	const subtotal = chargeableSubtotal(cart);
 	const discountValue = discountAmount(cart, discount);
-	const service = serviceChargeAmount(cart, discount, settings, serviceChargeSupported);
-	const tax = calculateTaxes({ cart, discount: discountValue, service, channel, taxes: settings?.taxes, rules: rulesOf(settings), items: itemSettingsById(settings) });
+	const serviceAmount = serviceChargeAmount(cart, discount, settings, serviceChargeSupported, { ...service, channel });
+	const tax = calculateTaxes({ cart, discount: discountValue, service: serviceAmount, channel, taxes: settings?.taxes, rules: rulesOf(settings), items: itemSettingsById(settings) });
 	return {
 		count: cart.filter(isChargeable).reduce((a, l) => a + l.qty, 0),
 		subtotal,
 		discount: discountValue,
-		service,
+		service: serviceAmount,
 		tax: tax.amount,
 		taxRows: tax.rows,
-		total: Math.max(0, subtotal - discountValue + service + tax.amount),
+		total: Math.max(0, subtotal - discountValue + serviceAmount + tax.amount),
 	};
 }
 

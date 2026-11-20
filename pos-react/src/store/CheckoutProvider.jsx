@@ -4,11 +4,11 @@
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ONLINE_CHANNELS, ORDER_CHANNELS, STORAGE } from "../config/constants";
-import { modifierSignature, addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers } from "../domain/cart";
+import { modifierSignature, addConfiguredLine, cartTotals, changeQty, EMPTY_DISCOUNT, productModifiers, serviceChargeAuto } from "../domain/cart";
 import { productSizeGroup } from "../domain/catalog";
 import { removalNeedsApproval } from "../domain/deleteApproval";
 import { availableProductStock, cartQtyForProduct, hasSizedStock, recipeShortfall, shortfallMessage, stockSizeFor } from "../domain/inventory";
-import { phoneKey } from "../domain/format";
+import { money, phoneKey } from "../domain/format";
 import { resolveOptions } from "../domain/systemOptions";
 import { serviceChargeSupported } from "../services/pos/common";
 import { useData } from "./DataProvider";
@@ -56,6 +56,7 @@ export function CheckoutProvider({ children }) {
 	const [picker, setPicker] = useState(null); // { productId, lineKey }
 	const [approval, setApproval] = useState(null); // { key, delta, line, removed }: a removal waiting for a manager
 	const [stockApproval, setStockApproval] = useState(null); // { name, message, apply(approverName) }: an item short of stock waiting for a manager
+	const [serviceOverride, setServiceOverride] = useState(null); // true / false = staff switched the service charge on / off for this order; null = follow the rules
 	const [splitOpen, setSplitOpen] = useState(false);
 	const [customerModal, setCustomerModal] = useState(null); // { id, phone, source }
 	const busy = useRef(false);
@@ -67,10 +68,16 @@ export function CheckoutProvider({ children }) {
 	};
 
 	const settings = data.settings;
+	// Settings > Service Charge: when a new order starts with the charge on (auto-apply, minimum total, order types, maximum charge)
+	const serviceRules = useMemo(() => resolveOptions(settings, "serviceCharge", locationId), [settings, locationId]);
+	const serviceSupported = !!enabled["checkout.serviceCharge"] && serviceChargeSupported(settings);
 	const totals = useMemo(
-		() => cartTotals(cart, enabled["checkout.discounts"] ? discount : EMPTY_DISCOUNT, settings, enabled["checkout.serviceCharge"] && serviceChargeSupported(settings), orderChannel),
-		[cart, discount, settings, enabled, orderChannel],
+		() => cartTotals(cart, enabled["checkout.discounts"] ? discount : EMPTY_DISCOUNT, settings, serviceSupported, orderChannel, { rules: serviceRules, override: serviceOverride }),
+		[cart, discount, settings, enabled, orderChannel, serviceSupported, serviceRules, serviceOverride],
 	);
+	const serviceAvailable = serviceSupported && !!settings.serviceChargeEnabled; // the business has a service charge: the toggle under the pay buttons is offered
+	const serviceAuto = serviceAvailable && serviceChargeAuto(cart, settings, serviceRules, orderChannel);
+	const serviceOn = serviceAvailable && (serviceOverride ?? serviceAuto);
 
 	// order channels configured in settings (kitchen presets only)
 	const channels = useMemo(() => {
@@ -223,13 +230,39 @@ export function CheckoutProvider({ children }) {
 	const approveStock = useCallback(
 		async (pin) => {
 			if (!stockApproval) return false;
-			const approver = await svc.sales.stockOverride({ pin, name: stockApproval.name, message: stockApproval.message });
+			// a low-stock item asks the stock approval; another kind of approval brings its own check (e.g. removing a service charge)
+			const approver = stockApproval.check ? await stockApproval.check(pin) : await svc.sales.stockOverride({ pin, name: stockApproval.name, message: stockApproval.message });
 			if (!approver) return false;
 			stockApproval.apply(approver.name);
 			setStockApproval(null);
 			return true;
 		},
 		[stockApproval, svc],
+	);
+
+	/** Staff switch the service charge on or off for this order. Switching off a charge that would otherwise apply needs someone who may remove it. */
+	const setServiceCharge = useCallback(
+		async (next) => {
+			if (!serviceAvailable) return;
+			if (next === false && serviceAuto) {
+				const detail = `Service charge removed from an order of ${cart.length} line${cart.length === 1 ? "" : "s"} (${money(totals.subtotal)})`;
+				if (can("pos.serviceCharge.toggle")) {
+					if (await svc.sales.serviceChargeRemoval({ detail })) setServiceOverride(false);
+					return;
+				}
+				setStockApproval({
+					name: "Service charge",
+					message: "Removing the service charge from this order needs a manager's approval.",
+					okLabel: "Approve",
+					note: "A manager or owner can approve it. The change is recorded.",
+					check: (pin) => svc.sales.serviceChargeRemoval({ pin, detail }),
+					apply: () => setServiceOverride(false),
+				});
+				return;
+			}
+			setServiceOverride(next === serviceAuto ? null : next); // back to what the rules say clears the choice, so the rules keep following the order
+		},
+		[serviceAvailable, serviceAuto, cart.length, totals.subtotal, can, svc],
 	);
 
 	const removeProductFromCart = useCallback((productId) => setCart((c) => c.filter((l) => l.productId !== productId)), []);
@@ -244,6 +277,7 @@ export function CheckoutProvider({ children }) {
 		setPlatformOrderId("");
 		setOrderChannel(defaultChannel || "Dine-in");
 		setChannelPicked(false);
+		setServiceOverride(null);
 		setCashTendered("");
 		setWantsEmail(false);
 		setWantsWhatsApp(false);
@@ -344,6 +378,7 @@ export function CheckoutProvider({ children }) {
 				orderChannel,
 				platformOrderId,
 				openOrderId,
+				serviceOverride,
 			});
 			if (result?.needsSplit) return setSplitOpen(true);
 			if (result?.sale) {
@@ -360,7 +395,7 @@ export function CheckoutProvider({ children }) {
 			busy.current = false;
 			setBusyUi(false);
 		}
-	}, [cart, discount, payment, splitPayments, customerId, wantsEmail, receiptEmail, wantsWhatsApp, printAfter, cashTendered, orderReference, orderChannel, platformOrderId, openOrderId, svc, enabled, resetOrder, kitchen, channelPicked, data.settings, locationId, ui]);
+	}, [cart, discount, payment, splitPayments, customerId, wantsEmail, receiptEmail, wantsWhatsApp, printAfter, cashTendered, orderReference, orderChannel, platformOrderId, openOrderId, serviceOverride, svc, enabled, resetOrder, kitchen, channelPicked, data.settings, locationId, ui]);
 
 	const voidOrder = useCallback(async () => {
 		if (await svc.sales.voidCurrentOrder(cart)) {
@@ -380,6 +415,7 @@ export function CheckoutProvider({ children }) {
 				platformOrderId: kitchen || ONLINE_CHANNELS.includes(orderChannel) ? platformOrderId.trim() : "",
 				openOrderId,
 				sendKitchen,
+				serviceOverride,
 			});
 			if (order) {
 				log.info(sendKitchen ? "order held and sent to kitchen" : "order held", { orderId: order.id });
@@ -387,7 +423,7 @@ export function CheckoutProvider({ children }) {
 				go("orders", true);
 			}
 		},
-		[svc, cart, discount, customerId, orderReference, orderChannel, platformOrderId, openOrderId, kitchen, resetOrder, go],
+		[svc, cart, discount, customerId, orderReference, orderChannel, platformOrderId, openOrderId, serviceOverride, kitchen, resetOrder, go],
 	);
 
 	const loadOpenOrder = useCallback(
@@ -400,6 +436,7 @@ export function CheckoutProvider({ children }) {
 			setDiscount(dv);
 			setDiscountOn(dv.value > 0);
 			setCustomerId(order.customerId || "");
+			setServiceOverride(order.serviceOverride ?? null);
 			setOrderReference(order.orderReference || "");
 			const online = ONLINE_CHANNELS.includes(order.orderChannel); // kept for any kind of business
 			setOrderChannel(online || kitchen ? order.orderChannel || "Dine-in" : "Dine-in");
@@ -442,7 +479,7 @@ export function CheckoutProvider({ children }) {
 		phoneSearch, setPhoneSearch, findNote, findCustomerByPhone, clearCustomer, wantsEmail, toggleEmail, receiptEmail, setReceiptEmail,
 		wantsWhatsApp, setWantsWhatsApp, printAfter, setPrintAfter, cashTendered, setCashTendered, orderReference, setOrderReference,
 		orderChannel, setOrderChannel, pickOrderChannel: (v) => (setChannelPicked(true), setOrderChannel(v)), platformOrderId, setPlatformOrderId, openOrderId, category, setCategory, search, setSearch,
-		picker, setPicker, approval, setApproval, approveRemoval, stockApproval, setStockApproval, approveStock, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
+		picker, setPicker, approval, setApproval, approveRemoval, stockApproval, setStockApproval, approveStock, serviceAvailable, serviceOn, serviceRules, setServiceCharge, splitOpen, setSplitOpen, customerModal, setCustomerModal, totals, channels, busy: busyUi,
 		addProduct, addScanned, addConfigured, changeLineQty, removeProductFromCart, resetOrder, applyDiscount, toggleDiscount, clearDiscount, prefillDiscount,
 		completeSale, voidOrder, saveOrder, loadOpenOrder, splitOpenOrder, newOpenOrder, applyReward, onCustomerSaved,
 	};
