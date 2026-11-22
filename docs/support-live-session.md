@@ -17,7 +17,7 @@ node scripts/setup-admin-db.mjs        # once, on an existing database: adds the
 node scripts/hash-admin-password.mjs   # answer "support" to "Account type"
 ```
 
-Leaving the account type empty when updating an existing account keeps its current type. Support accounts use a `@ceylonrylabs.io` address like every other administrator and sign in at the admin portal.
+Existing administrator accounts need no change and keep full access. `setup-admin-db.mjs` only adds the one missing field: it never touches existing accounts or records (items that already exist are reported as "exists"). The account type is only written when you choose one, so `hash-admin-password.mjs` still works on a database that does not have the field yet; the field is needed only to create a *support* account. If you prefer, add it by hand in Appwrite: database `pos_admin` > `admins` > attribute `role`, string, size 20, optional, default `admin`. Leaving the account type empty when updating an existing account keeps its current type. Support accounts use a `@ceylonrylabs.io` address like every other administrator and sign in at the admin portal.
 
 The older "Open client's POS" (a copy of a business' configuration) and "Sign in as client (live)" buttons were removed from the account page: live support replaces both, and the server no longer issues a sign-in token for a client.
 
