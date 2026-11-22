@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { Panel } from "../ui";
 import { isAppwrite } from "../../config/env";
+import { linkLabel } from "../../domain/supportLink";
 import { endSupport, resetSupport, startSupport, useSupport } from "../../services/supportLive";
 
 const spaced = (code) => String(code || "").replace(/^(\d{3})(\d{3})$/, "$1 $2");
@@ -61,11 +62,26 @@ export function LiveSupportPanel() {
 					</>
 				)}
 				{s.status === "connecting" && <p className="muted">Support is joining…</p>}
+				{s.status === "reconnecting" && (
+					<>
+						<p>
+							<strong>The connection dropped.</strong> Reconnecting by itself. Control has to be allowed again afterwards.
+						</p>
+						<button className="btn danger" type="button" onClick={endSupport}>
+							End session
+						</button>
+					</>
+				)}
 				{s.status === "live" && (
 					<>
 						<p>
 							<strong>Ceylonry Support can see this screen.</strong> They can point and draw on it. Typed text, PINs and passwords are hidden from them.
 						</p>
+						{s.link && (
+							<p className="muted" id="live-support-link">
+								Connection: {linkLabel(s.link)}
+							</p>
+						)}
 						<button className="btn danger" type="button" onClick={endSupport}>
 							End session
 						</button>

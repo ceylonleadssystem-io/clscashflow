@@ -143,3 +143,54 @@ describe("controls the client has to use themselves", () => {
 		for (const name of ["Save", "Settings", "Service Charge", "Add item", "Products", "Open / Pay", "Discard", "Next", "Search products", "Publish"]) expect(sensitiveName(name)).toBe("");
 	});
 });
+
+import { droppable, keepTrying, linkLabel, reconnectDelay, RECONNECT_MS } from "../domain/supportLink";
+
+describe("a poor network", () => {
+	it("may skip movement events when the link is busy, never anything that changes the page", () => {
+		expect(droppable({ type: 3, data: { source: 1 } })).toBe(true); // mouse move
+		expect(droppable({ type: 3, data: { source: 6 } })).toBe(true); // touch move
+		expect(droppable({ type: 3, data: { source: 0 } })).toBe(false); // page change
+		expect(droppable({ type: 3, data: { source: 2 } })).toBe(false); // click
+		expect(droppable({ type: 3, data: { source: 5 } })).toBe(false); // typing
+		expect(droppable({ type: 2, data: {} })).toBe(false); // a full copy of the page
+		expect(droppable(null)).toBe(false);
+	});
+	it("waits longer between reconnect attempts and gives up after two minutes", () => {
+		expect([0, 1, 2, 3, 4, 9].map(reconnectDelay)).toEqual([1, 2, 4, 8, 10, 10]);
+		expect(keepTrying(1000, 1000 + RECONNECT_MS - 1)).toBe(true);
+		expect(keepTrying(1000, 1000 + RECONNECT_MS)).toBe(false);
+	});
+	it("describes the connection", () => {
+		expect(linkLabel({ relay: false, rtt: 41.2 })).toBe("Direct, 41 ms");
+		expect(linkLabel({ relay: true, rtt: 180 })).toBe("Through the relay, 180 ms");
+		expect(linkLabel({ relay: true, rtt: 900 })).toBe("Slow: Through the relay, 900 ms");
+		expect(linkLabel({ relay: false })).toBe("Direct");
+		expect(linkLabel(null)).toBe("");
+	});
+});
+
+import relay from "../../../netlify/lib/support-session.js";
+
+describe("relay servers and reconnecting (server rules)", () => {
+	const secret = "0123456789abcdef0123";
+	it("without a relay configured only the public STUN server is used", () => {
+		expect(relay.iceServers({}, 1700000000000, "client")).toEqual([{ urls: "stun:stun.l.google.com:19302" }]);
+		expect(relay.iceServers({ urls: "turn:t.example.com:3478", secret: "short" }, 1700000000000, "client")).toHaveLength(1); // a weak secret is not used
+	});
+	it("with a relay configured each side gets time-limited credentials, and only valid server addresses", () => {
+		const list = relay.iceServers({ urls: "turn:t.example.com:3478?transport=udp, turns:t.example.com:5349, http://evil.example.com, javascript:alert(1)", secret }, 1700000000000, "agent");
+		expect(list).toHaveLength(2);
+		expect(list[1].urls).toEqual(["turn:t.example.com:3478?transport=udp", "turns:t.example.com:5349"]);
+		expect(list[1].username).toBe("1700007200:agent"); // expires two hours later
+		expect(list[1].credential).toBe(relay.turnCredentials(secret, "agent", 1700000000000).credential);
+		expect(relay.turnCredentials(secret, "agent", 1700000000000).credential).not.toBe(relay.turnCredentials(secret, "client", 1700000000000).credential);
+	});
+	it("a new offer replaces the old one and clears its answer, so the agent answers again", () => {
+		const s = { sid: "s", state: "connected", offer: "v=0 old", answer: "v=0 answer" };
+		const again = relay.reoffer(s, "v=0 new");
+		expect(again).toMatchObject({ state: "joined", offer: "v=0 new", answer: "" });
+		expect(relay.offerKey("v=0 new")).not.toBe(relay.offerKey("v=0 old"));
+		expect(relay.offerKey("v=0 new")).toBe(relay.offerKey("v=0 new"));
+	});
+});

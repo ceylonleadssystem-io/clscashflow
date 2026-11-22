@@ -7,7 +7,9 @@ import { env } from "../config/env";
 import { frameReader, toFrames } from "../domain/supportProtocol";
 
 const GATHER_MS = 4000; // wait this long for the connection details to be complete before sending them
+const GRACE_MS = 6000; // a connection that drops out is given this long to come back by itself before it counts as lost
 
+/** The servers used when the session did not bring its own (see the support-session function): the public STUN server and any set at build time. */
 export function iceServers() {
 	const extra = (() => {
 		try {
@@ -34,11 +36,11 @@ const gathered = (pc) =>
 	});
 
 /**
- * One side of the connection. `initiator` (the client) opens the data channel and makes the offer; the other side answers it.
- * Callbacks: onOpen(), onMessage(message), onClose().
+ * One side of the connection. `initiator` (the client) opens the data channel and makes the offer; the other side answers it. `ice` is the list of
+ * servers for this session (including the relay when there is one). Callbacks: onOpen(), onMessage(message), onClose().
  */
-export function createPeer({ initiator, onOpen, onMessage, onClose }) {
-	const pc = new RTCPeerConnection({ iceServers: iceServers() });
+export function createPeer({ initiator, ice, onOpen, onMessage, onClose }) {
+	const pc = new RTCPeerConnection({ iceServers: ice?.length ? ice : iceServers() });
 	const reader = frameReader();
 	let channel = null;
 	let closed = false;
@@ -66,7 +68,13 @@ export function createPeer({ initiator, onOpen, onMessage, onClose }) {
 	};
 	if (initiator) setup(pc.createDataChannel("support", { ordered: true }));
 	else pc.ondatachannel = (e) => setup(e.channel);
-	pc.onconnectionstatechange = () => ["failed", "closed", "disconnected"].includes(pc.connectionState) && close();
+	// "failed" and "closed" are final; "disconnected" often mends itself (a moment of poor signal), so it is only lost after a grace period
+	let grace = null;
+	pc.onconnectionstatechange = () => {
+		clearTimeout(grace);
+		if (["failed", "closed"].includes(pc.connectionState)) close();
+		else if (pc.connectionState === "disconnected") grace = setTimeout(close, GRACE_MS);
+	};
 
 	return {
 		/** The connection details to send to the other side (the client's offer). */
@@ -98,6 +106,28 @@ export function createPeer({ initiator, onOpen, onMessage, onClose }) {
 		close,
 		get open() {
 			return !closed && channel?.readyState === "open";
+		},
+		/** True while a lot of data is waiting to go out: the link is slow or busy. */
+		get busy() {
+			return !!channel && channel.bufferedAmount > 256 * 1024;
+		},
+		/** How the connection is doing: { relay: goes through a relay server, rtt: round trip in milliseconds } (rtt null until known). */
+		async stats() {
+			try {
+				const report = await pc.getStats();
+				let pair = null;
+				const candidates = new Map();
+				report.forEach((r) => {
+					if (r.type === "candidate-pair" && (r.nominated || r.selected) && r.state === "succeeded") pair = r;
+					if (r.type === "local-candidate" || r.type === "remote-candidate") candidates.set(r.id, r);
+				});
+				if (!pair) return { relay: false, rtt: null };
+				const rtt = Number.isFinite(pair.currentRoundTripTime) ? pair.currentRoundTripTime * 1000 : null;
+				const kinds = [candidates.get(pair.localCandidateId)?.candidateType, candidates.get(pair.remoteCandidateId)?.candidateType];
+				return { relay: kinds.includes("relay"), rtt };
+			} catch {
+				return { relay: false, rtt: null };
+			}
 		},
 	};
 }

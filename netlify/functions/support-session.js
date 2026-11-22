@@ -10,6 +10,7 @@ const S = require('../lib/support-session');
 const log = require('../lib/log').createLogger('support-session');
 
 const limiter = S.createAttemptLimiter(5, 10 * 60 * 1000);
+const turnConfig = function() { return { urls: process.env.SUPPORT_TURN_URLS, secret: process.env.SUPPORT_TURN_SECRET }; };
 
 async function verifyAdmin(event) {
   const match = String(event.headers.authorization || event.headers.Authorization || '').match(/^Bearer\s+(.+)$/i);
@@ -41,7 +42,7 @@ exports.handler = async function handler(event) {
     const now = Date.now();
 
     // ---------------------------------------------------------------- the agent
-    if (action === 'join' || action === 'agentPoll' || action === 'answer' || action === 'agentEnd') {
+    if (action === 'join' || action === 'agentPoll' || action === 'answer' || action === 'agentEnd' || action === 'agentIce') {
       const admin = await verifyAdmin(event);
       if (action === 'join') {
         if (limiter.blocked(admin.email, now)) return reply(event, 429, { ok: false, error: 'Too many wrong codes. Try again in a few minutes.' });
@@ -59,12 +60,14 @@ exports.handler = async function handler(event) {
         await audit({ adminEmail: admin.email, action: 'support-session-join', target: joined.ownerUid, detail: 'Joined a live support session of ' + (joined.business || 'a business') });
         return reply(event, 200, Object.assign({ ok: true }, S.agentView(joined)));
       }
+      if (action === 'agentIce') return reply(event, 200, { ok: true, ice: S.iceServers(turnConfig(), now, 'agent') });
       const session = await load(code);
       if (!session || session.sid !== body.sid || session.agent !== admin.email) throw missing();
       if (action === 'agentPoll') return reply(event, 200, Object.assign({ ok: true }, S.agentView(session)));
       if (action === 'answer') {
         const sdp = S.cleanSdp(body.sdp);
         if (!sdp || !S.running(session, now) || !session.offer) return reply(event, 400, { ok: false, error: 'The connection details were not accepted.' });
+        if (body.offerKey !== S.offerKey(session.offer)) return reply(event, 409, { ok: false, error: 'The client has made a newer offer.' }); // answered an offer that has since been replaced
         await save(code, Object.assign({}, session, { answer: sdp, state: 'connected' }));
         return reply(event, 200, { ok: true });
       }
@@ -90,13 +93,14 @@ exports.handler = async function handler(event) {
       }
       return reply(event, 503, { ok: false, error: 'Could not create a code. Please try again.' });
     }
+    if (action === 'ice') return reply(event, 200, { ok: true, ice: S.iceServers(turnConfig(), now, 'client') });
     const session = await load(code);
     if (!session || session.sid !== body.sid || session.userId !== user.id) throw missing();
     if (action === 'poll') return reply(event, 200, Object.assign({ ok: true }, S.clientView(session)));
     if (action === 'offer') {
       const sdp = S.cleanSdp(body.sdp);
       if (!sdp || !S.running(session, now)) return reply(event, 400, { ok: false, error: 'The connection details were not accepted.' });
-      await save(code, Object.assign({}, session, { offer: sdp }));
+      await save(code, S.reoffer(session, sdp)); // also covers reconnecting: a new offer replaces the old one and clears its answer
       return reply(event, 200, { ok: true });
     }
     if (action === 'end') {

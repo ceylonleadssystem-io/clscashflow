@@ -4,6 +4,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { COLORS, unit } from "../domain/supportProtocol";
+import { linkLabel } from "../domain/supportLink";
 import { applyAnnotation, draw, pruneScene } from "../components/support/drawScene";
 import { clearNotice, endViewer, joinSupport, onPageEvent, resetViewer, sendAnnotation, sendCommand, useSupportViewer } from "./supportViewerState";
 
@@ -320,11 +321,11 @@ export function SupportViewer({ onClose }) {
 					<div className="muted">{s.status === "live" ? `Connected to ${s.business || "the client"}. Everything you draw appears on their screen. Control and redirects always need their yes.` : "Ask the client for the 6-digit code from Settings > Plan & Support > Live support."}</div>
 				</div>
 				<button type="button" className="btn out" onClick={close}>
-					{s.status === "live" ? "End session" : "Close"}
+					{s.status === "live" || s.status === "reconnecting" ? "End session" : "Close"}
 				</button>
 			</div>
 			<div className="modal-body">
-				{(s.status === "idle" || s.status === "error" || s.status === "ended" || busy) && (
+				{(s.status === "idle" || s.status === "error" || s.status === "ended" || busy) && s.status !== "reconnecting" && (
 					<form
 						className="tools"
 						onSubmit={(e) => {
@@ -346,6 +347,16 @@ export function SupportViewer({ onClose }) {
 					</p>
 				)}
 				{s.status === "connecting" && <p className="muted">Waiting for the client's screen to connect…</p>}
+				{s.status === "reconnecting" && (
+					<p className="plan-settings-note" role="status" id="support-reconnecting">
+						The client's connection dropped. Waiting for it to come back (up to 2 minutes). Control has to be allowed again afterwards.
+					</p>
+				)}
+				{s.status === "live" && s.link && (
+					<p className="muted" id="support-link" style={{ marginTop: 0 }}>
+						Connection: {linkLabel(s.link)}
+					</p>
+				)}
 				{s.status === "live" && <Stage control={s.control} notice={s.notice} />}
 			</div>
 		</div>

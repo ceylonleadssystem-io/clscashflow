@@ -6,6 +6,7 @@
 import { useSyncExternalStore } from "react";
 import { env } from "../config/env";
 import { cleanReply } from "../domain/supportProtocol";
+import { GIVE_UP, keepTrying } from "../domain/supportLink";
 import { createPeer } from "../services/supportPeer";
 import { adminSession } from "./adminSession";
 import { createLogger } from "../utils/logger";
@@ -13,8 +14,8 @@ import { createLogger } from "../utils/logger";
 const log = createLogger("support-viewer");
 const POLL_MS = 1500;
 const LIVE_POLL_MS = 10000;
-const IDLE = { status: "idle", business: "", endsAt: "", error: "", control: false, notice: "" }; // control: the client has allowed control; notice: the client's latest answer
-let state = IDLE; // status: idle | joining | connecting | live | ended | error
+const IDLE = { status: "idle", business: "", endsAt: "", error: "", control: false, notice: "", link: null }; // control: the client has allowed control; notice: the client's latest answer
+let state = IDLE; // status: idle | joining | connecting | live | reconnecting | ended | error
 const subs = new Set();
 const eventSubs = new Set();
 let buffer = []; // page events that arrived before the viewer was ready
@@ -23,6 +24,9 @@ let sid = "";
 let peer = null;
 let timer = null;
 let epoch = 0;
+let lastOffer = ""; // the key of the offer this side last answered: a different one means the client is reconnecting
+let statsTimer = null;
+let reconnectFrom = 0;
 
 const set = (patch) => {
 	state = { ...state, ...patch };
@@ -43,7 +47,7 @@ async function call(body) {
 	if (!session) throw new Error("Live support needs the administrator sign-in. Please sign in again.");
 	const res = await fetch(env.supportSessionUrl, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.token }, body: JSON.stringify(body) });
 	const json = await res.json().catch(() => ({}));
-	if (!res.ok || json.ok === false) throw new Error(json.error || "Live support failed (" + res.status + ")");
+	if (!res.ok || json.ok === false) throw Object.assign(new Error(json.error || "Live support failed (" + res.status + ")"), { status: res.status });
 	return json;
 }
 
@@ -51,11 +55,26 @@ function finish(status, error = "") {
 	epoch += 1;
 	clearTimeout(timer);
 	timer = null;
-	peer?.close();
+	clearInterval(statsTimer);
+	reconnectFrom = 0;
+	lastOffer = "";
+	const old = peer;
 	peer = null;
+	old?.close();
 	buffer = [];
 	code = sid = "";
-	set({ status, error });
+	set({ status, error, control: false, link: null });
+}
+
+/** The connection dropped without the session ending: wait for the client's new offer and answer it (control has to be allowed again). */
+function lost(mine, p) {
+	if (mine !== epoch || p !== peer) return;
+	peer = null;
+	clearInterval(statsTimer);
+	if (state.status === "live") reconnectFrom = Date.now();
+	if (state.status === "live" || state.status === "reconnecting") set({ status: "reconnecting", control: false, link: null, notice: "" });
+	else finish("ended", "The client's connection closed.");
+	lastOffer = "";
 }
 
 function onReply(r) {
@@ -81,19 +100,35 @@ async function poll(mine) {
 		const r = await call({ action: "agentPoll", code, sid });
 		if (mine !== epoch) return;
 		if (r.state === "ended") return finish("ended", "The support session has ended.");
-		if (r.offer && !peer) {
-			peer = createPeer({
+		if (state.status === "reconnecting" && !keepTrying(reconnectFrom, Date.now() - 30000)) return finish("ended", GIVE_UP);
+		if (r.offer && r.offerKey && r.offerKey !== lastOffer) {
+			lastOffer = r.offerKey; // a first offer, or a new one after the client's connection dropped
+			const old = peer;
+			peer = null;
+			old?.close();
+			const ice = await call({ action: "agentIce" }).then((x) => x.ice, () => undefined);
+			if (mine !== epoch) return;
+			const p = createPeer({
 				initiator: false,
-				onOpen: () => mine === epoch && set({ status: "live" }),
+				ice,
+				onOpen: () => {
+					if (mine !== epoch || p !== peer) return;
+					reconnectFrom = 0;
+					set({ status: "live" });
+					clearInterval(statsTimer);
+					statsTimer = setInterval(() => p.stats().then((link) => mine === epoch && p === peer && set({ link })), 4000);
+				},
 				onMessage,
-				onClose: () => mine === epoch && state.status !== "idle" && finish("ended", "The client's connection closed."),
+				onClose: () => lost(mine, p),
 			});
-			await call({ action: "answer", code, sid, sdp: await peer.answer(r.offer) });
+			peer = p;
+			await call({ action: "answer", code, sid, sdp: await p.answer(r.offer), offerKey: r.offerKey });
 		}
 	} catch (e) {
 		if (mine !== epoch) return;
 		log.warn("live support poll failed", e);
-		if (state.status === "connecting") return finish("error", e.message);
+		if (e.status === 409) lastOffer = ""; // the client made a newer offer while this one was being answered: answer the new one
+		else if (state.status === "connecting") return finish("error", e.message);
 	}
 	if (mine === epoch) timer = setTimeout(() => poll(mine), state.status === "live" ? LIVE_POLL_MS : POLL_MS);
 }

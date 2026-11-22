@@ -9,6 +9,7 @@
 import { useSyncExternalStore } from "react";
 import { env } from "../config/env";
 import { cleanAnnotation, cleanCommand } from "../domain/supportProtocol";
+import { GIVE_UP, droppable, keepTrying, reconnectDelay } from "../domain/supportLink";
 import { runAction } from "./supportControl";
 import { createPeer } from "./supportPeer";
 import { createLogger } from "../utils/logger";
@@ -17,8 +18,8 @@ const log = createLogger("support-live");
 const POLL_MS = 1500;
 const LIVE_POLL_MS = 8000;
 
-const IDLE = { status: "idle", code: "", expiresAt: "", endsAt: "", error: "", request: null, control: false }; // request: what support asked of the client and is waiting for an answer
-let state = IDLE; // status: idle | creating | waiting | connecting | live | ended | error
+const IDLE = { status: "idle", code: "", expiresAt: "", endsAt: "", error: "", request: null, control: false, link: null }; // request: what support asked of the client and is waiting for an answer; link: how the connection is doing (see peer.stats)
+let state = IDLE; // status: idle | creating | waiting | connecting | live | reconnecting | ended | error
 const subs = new Set();
 const annotationSubs = new Set();
 let sid = "";
@@ -31,6 +32,9 @@ let epoch = 0;
 let mirror = null; // rrweb's map of page elements to the ids the agent uses to point at them
 let bridge = null; // the POS screens and the log, registered by hooks/useSupportBridge.js
 let requestTimer = null;
+let statsTimer = null;
+let reconnectFrom = 0; // when a live connection dropped (0 = not reconnecting)
+let attempt = 0;
 const recent = []; // times of recent remote actions, to keep them to a sensible pace // each session has its own number, so a late reply from an old one is ignored
 
 const set = (patch) => {
@@ -62,24 +66,28 @@ function finish(status, error = "") {
 	stopRecording = null;
 	mirror = null;
 	clearTimeout(requestTimer);
-	peer?.close();
+	clearInterval(statsTimer);
+	reconnectFrom = attempt = 0;
+	const old = peer;
 	peer = null;
+	old?.close();
 	sid = "";
 	offered = answered = false;
-	set({ status, error });
+	set({ status, error, request: null, control: false, link: null });
 }
 
 /** Sends the page to the agent as it changes. rrweb is loaded only now, so the rest of the POS does not carry it. */
 async function startRecording(mine) {
 	const { record } = await import("rrweb");
 	if (mine !== epoch || !peer) return;
+	stopRecording?.(); // a reconnect starts a fresh copy of the page
 	mirror = record.mirror;
 	const send = (m) => peer?.send(m);
 	const view = () => send({ k: "view", w: window.innerWidth, h: window.innerHeight });
 	view();
 	window.addEventListener("resize", view);
 	const stop = record({
-		emit: (event) => send({ k: "ev", e: event }),
+		emit: (event) => !(peer?.busy && droppable(event)) && send({ k: "ev", e: event }), // on a slow link, movement events are skipped first
 		maskAllInputs: true, // typed values (PINs, passwords, customer details) never leave this device
 		blockClass: "support-block", // anything with this class (the sign-in and PIN screens, the support bar) never leaves this device
 		maskTextClass: "support-mask",
@@ -156,32 +164,73 @@ export function setControl(on) {
 	bridge?.audit(on ? "support-control-on" : "support-control-off", on ? "The client let support control the screen" : "Control by support stopped");
 }
 
+/** Starts the connection (or a new one after a drop): fetch the servers, make the offer, hand it to the server. The agent answers it. */
+async function connect(mine) {
+	offered = true;
+	answered = false;
+	const old = peer;
+	peer = null;
+	old?.close();
+	const ice = await call({ action: "ice" }).then((r) => r.ice, () => undefined); // without them the public server alone is used
+	if (mine !== epoch) return;
+	const p = createPeer({
+		initiator: true,
+		ice,
+		onOpen: () => {
+			if (mine !== epoch || p !== peer) return;
+			reconnectFrom = attempt = 0;
+			set({ status: "live" });
+			startRecording(mine).catch((e) => log.warn("could not start the live view", e));
+			clearInterval(statsTimer);
+			statsTimer = setInterval(() => p.stats().then((link) => mine === epoch && p === peer && set({ link })), 4000);
+		},
+		onMessage: (m) => {
+			const a = cleanAnnotation(m);
+			if (a) return annotationSubs.forEach((f) => f(a));
+			const c = cleanCommand(m);
+			if (c) handleCommand(c);
+		},
+		onClose: () => lost(mine, p),
+	});
+	peer = p;
+	await call({ action: "offer", code: state.code, sid, sdp: await p.makeOffer() });
+}
+
+/** The connection ended without anyone ending the session. A live session reconnects by itself; control has to be allowed again afterwards. */
+function lost(mine, p) {
+	if (mine !== epoch || p !== peer) return;
+	if (state.status === "live") {
+		stopRecording?.();
+		stopRecording = null;
+		clearInterval(statsTimer);
+		reconnectFrom = Date.now();
+		attempt = 0;
+		peer = null;
+		offered = answered = false;
+		set({ status: "reconnecting", control: false, request: null, link: null });
+		bridge?.audit("support-reconnecting", "The connection to support dropped; trying again");
+		clearTimeout(timer);
+		timer = setTimeout(() => poll(mine), reconnectDelay(0) * 1000);
+	} else if (state.status === "reconnecting") {
+		peer = null;
+		offered = answered = false;
+		attempt += 1; // that try did not work: the next poll makes a new offer
+	} else finish("ended", "The connection was closed.");
+}
+
 async function poll(mine) {
 	try {
 		const r = await call({ action: "poll", code: state.code, sid });
 		if (mine !== epoch) return;
 		if (r.state === "ended") return finish("ended", "The support session has ended.");
-		if (r.state === "joined" && !offered) {
-			offered = true;
-			set({ status: "connecting", endsAt: r.endsAt });
-			peer = createPeer({
-				initiator: true,
-				onOpen: () => {
-					if (mine !== epoch) return;
-					set({ status: "live" });
-					startRecording(mine).catch((e) => log.warn("could not start the live view", e));
-				},
-				onMessage: (m) => {
-					const a = cleanAnnotation(m);
-					if (a) return annotationSubs.forEach((f) => f(a));
-					const c = cleanCommand(m);
-					if (c) handleCommand(c);
-				},
-				onClose: () => mine === epoch && state.status !== "idle" && finish("ended", "The connection was closed."),
-			});
-			await call({ action: "offer", code: state.code, sid, sdp: await peer.makeOffer() });
+		if (state.status === "reconnecting" && !keepTrying(reconnectFrom)) return finish("ended", GIVE_UP);
+		let justOffered = false;
+		if ((r.state === "joined" || r.state === "connected") && !offered) {
+			if (state.status === "waiting") set({ status: "connecting", endsAt: r.endsAt });
+			await connect(mine);
+			justOffered = true; // the answer in this reply was read before the new offer was posted: it belongs to an older offer, so wait for the next reply
 		}
-		if (r.answer && !answered && peer) {
+		if (r.answer && !answered && peer && offered && !justOffered) {
 			answered = true;
 			await peer.acceptAnswer(r.answer);
 		}
@@ -190,13 +239,17 @@ async function poll(mine) {
 		if (mine !== epoch) return;
 		log.warn("live support poll failed", e);
 		if (state.status === "waiting" || state.status === "connecting") return finish("error", e.message);
+		if (state.status === "reconnecting") {
+			offered = false;
+			attempt += 1;
+		}
 	}
-	if (mine === epoch) timer = setTimeout(() => poll(mine), state.status === "live" ? LIVE_POLL_MS : POLL_MS);
+	if (mine === epoch) timer = setTimeout(() => poll(mine), state.status === "live" ? LIVE_POLL_MS : state.status === "reconnecting" ? reconnectDelay(attempt) * 1000 : POLL_MS);
 }
 
 /** Gets a one-time code and waits for support to join. */
 export async function startSupport() {
-	if (["creating", "waiting", "connecting", "live"].includes(state.status)) return;
+	if (["creating", "waiting", "connecting", "live", "reconnecting"].includes(state.status)) return;
 	const mine = ++epoch;
 	set({ ...IDLE, status: "creating" });
 	try {

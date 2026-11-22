@@ -1057,3 +1057,6 @@ body.full .content:has(.sk-shell){overflow-y:auto}
 .support-banner-code{font-size:1.25em;letter-spacing:.12em;color:#ffb347}
 .support-overlay{position:fixed;inset:0;width:100vw;height:100vh;z-index:99999;pointer-events:none}
 .support-banner-ask{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.12);max-width:100%}
+.support-banner-msg{flex:1 1 200px;min-width:0;text-align:center;overflow-wrap:anywhere}
+.support-banner-text{flex:1 1 100%;text-align:center;overflow-wrap:anywhere}
+.support-banner{box-sizing:border-box}

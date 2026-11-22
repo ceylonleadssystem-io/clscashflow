@@ -8,7 +8,7 @@ const spaced = (code) => String(code || "").replace(/^(\d{3})(\d{3})$/, "$1 $2")
 
 export function SupportBanner() {
 	const s = useSupport();
-	if (!["waiting", "connecting", "live"].includes(s.status)) return null;
+	if (!["waiting", "connecting", "live", "reconnecting"].includes(s.status)) return null;
 	return (
 		<div className="support-banner support-block" data-support-block role="status" aria-live="polite" id="support-banner">
 			<span className="support-banner-text">
@@ -19,10 +19,11 @@ export function SupportBanner() {
 				)}
 				{s.status === "connecting" && "Ceylonry Support is joining…"}
 				{s.status === "live" && "Ceylonry Support can see this screen."}
+				{s.status === "reconnecting" && "The connection to Ceylonry Support dropped. Reconnecting…"}
 			</span>
 			{s.request?.kind === "goto" && (
 				<span className="support-banner-ask" id="support-ask-goto">
-					Support asks to open <strong>{s.request.label}</strong>.
+					<span className="support-banner-msg">Support asks to open <strong>{s.request.label}</strong>.</span>
 					<button type="button" className="btn gold" onClick={() => answerRequest(true)}>
 						Open it
 					</button>
@@ -33,7 +34,7 @@ export function SupportBanner() {
 			)}
 			{s.request?.kind === "control" && (
 				<span className="support-banner-ask" id="support-ask-control">
-					Support asks to click and type for you inside the POS. PINs, passwords, payments and deletes always stay with you.
+					<span className="support-banner-msg">Support asks to click and type for you inside the POS. PINs, passwords, payments and deletes always stay with you.</span>
 					<button type="button" className="btn gold" onClick={() => answerRequest(true)}>
 						Allow
 					</button>
@@ -44,7 +45,7 @@ export function SupportBanner() {
 			)}
 			{s.control && (
 				<span className="support-banner-ask" id="support-control-on">
-					Support can click and type for you.
+					<span className="support-banner-msg">Support can click and type for you.</span>
 					<button type="button" className="btn gold" onClick={() => setControl(false)}>
 						Pause control
 					</button>
