@@ -2,11 +2,14 @@
  * Live support, the client's side: Settings > Plan & Support > Live support. The client gets a one-time 6-digit code and reads it to support; once
  * an administrator joins with it, the two browsers connect directly and the client's POS page is sent live (inputs are masked). The agent's
  * pointer, highlighter, spotlight and notes are drawn on this screen by components/support/SupportOverlay.jsx. The client can end the session at any time.
- * One session at a time; this module is the single source of its state (read with useSupport()).
+ * The agent can also ask to open a POS screen (the client says yes or no) and ask for control: only while the client has switched control on, clicks,
+ * typing and scrolling are carried out inside the POS page, with the rules in services/supportControl.js. One session at a time; this module is the
+ * single source of its state (read with useSupport()).
  */
 import { useSyncExternalStore } from "react";
 import { env } from "../config/env";
-import { cleanAnnotation } from "../domain/supportProtocol";
+import { cleanAnnotation, cleanCommand } from "../domain/supportProtocol";
+import { runAction } from "./supportControl";
 import { createPeer } from "./supportPeer";
 import { createLogger } from "../utils/logger";
 
@@ -14,7 +17,7 @@ const log = createLogger("support-live");
 const POLL_MS = 1500;
 const LIVE_POLL_MS = 8000;
 
-const IDLE = { status: "idle", code: "", expiresAt: "", endsAt: "", error: "" };
+const IDLE = { status: "idle", code: "", expiresAt: "", endsAt: "", error: "", request: null, control: false }; // request: what support asked of the client and is waiting for an answer
 let state = IDLE; // status: idle | creating | waiting | connecting | live | ended | error
 const subs = new Set();
 const annotationSubs = new Set();
@@ -24,7 +27,11 @@ let stopRecording = null;
 let timer = null;
 let offered = false;
 let answered = false;
-let epoch = 0; // each session has its own number, so a late reply from an old one is ignored
+let epoch = 0;
+let mirror = null; // rrweb's map of page elements to the ids the agent uses to point at them
+let bridge = null; // the POS screens and the log, registered by hooks/useSupportBridge.js
+let requestTimer = null;
+const recent = []; // times of recent remote actions, to keep them to a sensible pace // each session has its own number, so a late reply from an old one is ignored
 
 const set = (patch) => {
 	state = { ...state, ...patch };
@@ -53,6 +60,8 @@ function finish(status, error = "") {
 	timer = null;
 	stopRecording?.();
 	stopRecording = null;
+	mirror = null;
+	clearTimeout(requestTimer);
 	peer?.close();
 	peer = null;
 	sid = "";
@@ -64,6 +73,7 @@ function finish(status, error = "") {
 async function startRecording(mine) {
 	const { record } = await import("rrweb");
 	if (mine !== epoch || !peer) return;
+	mirror = record.mirror;
 	const send = (m) => peer?.send(m);
 	const view = () => send({ k: "view", w: window.innerWidth, h: window.innerHeight });
 	view();
@@ -71,8 +81,7 @@ async function startRecording(mine) {
 	const stop = record({
 		emit: (event) => send({ k: "ev", e: event }),
 		maskAllInputs: true, // typed values (PINs, passwords, customer details) never leave this device
-		blockClass: "support-block",
-		blockSelector: "[data-support-block]",
+		blockClass: "support-block", // anything with this class (the sign-in and PIN screens, the support bar) never leaves this device
 		maskTextClass: "support-mask",
 		inlineStylesheet: true,
 		recordCanvas: false,
@@ -83,6 +92,68 @@ async function startRecording(mine) {
 		window.removeEventListener("resize", view);
 		stop?.();
 	};
+}
+
+const tell = (m) => peer?.send(m);
+const flash = (rect, ok) => rect && annotationSubs.forEach((f) => f({ k: "flash", ...rect, ok }));
+const REQUEST_MS = 60000;
+
+function ask(request) {
+	clearTimeout(requestTimer);
+	set({ request });
+	requestTimer = setTimeout(() => answerRequest(false), REQUEST_MS); // an unanswered request counts as "no"
+}
+
+/** The POS screens and log, registered once the POS is running: { canGo(view, page), describe(view, page), go(view, page), audit(action, detail) }. */
+export function registerSupportBridge(b) {
+	bridge = b;
+	return () => bridge === b && (bridge = null);
+}
+
+function handleCommand(c) {
+	if (c.k === "goto") {
+		if (!bridge?.canGo(c.view, c.page)) return tell({ k: "ack", for: "goto", ok: false, reason: "The client's POS cannot open that screen." });
+		return ask({ kind: "goto", view: c.view, page: c.page, label: bridge.describe(c.view, c.page) });
+	}
+	if (c.k === "ask") return state.control ? tell({ k: "ctl", on: true }) : ask({ kind: "control" });
+	if (c.k === "release") return setControl(false);
+	// click, type, scroll: only while the client has control switched on, a few per second at most
+	if (!state.control) return tell({ k: "ack", for: "act", ok: false, reason: "The client has not allowed control." });
+	const now = Date.now();
+	while (recent.length && now - recent[0] > 1000) recent.shift();
+	if (recent.length >= 12) return;
+	recent.push(now);
+	const el = mirror?.getNode(c.id) || null;
+	const r = runAction(c, el);
+	flash(r.rect, r.ok);
+	tell({ k: "ack", for: "act", ok: r.ok, reason: r.reason });
+	if (c.a !== "scroll") bridge?.audit("support-control", `${c.a} ${r.ok ? "done" : "refused"}: ${String(el?.getAttribute?.("aria-label") || el?.textContent || el?.tagName || "").trim().slice(0, 60)}`);
+}
+
+/** The client answers what support asked (open a screen, or take control). */
+export function answerRequest(accept) {
+	const r = state.request;
+	clearTimeout(requestTimer);
+	if (!r) return;
+	set({ request: null });
+	if (r.kind === "goto") {
+		if (accept) {
+			bridge?.go(r.view, r.page);
+			bridge?.audit("support-open", "Support opened " + r.label);
+		}
+		tell({ k: "ack", for: "goto", ok: !!accept, reason: accept ? "" : "The client said not now." });
+	} else if (r.kind === "control") {
+		setControl(!!accept);
+		if (!accept) tell({ k: "ack", for: "ask", ok: false, reason: "The client said no." });
+	}
+}
+
+/** The client switches control on or off. Off at any moment: nothing from the agent is carried out. */
+export function setControl(on) {
+	if (state.control === !!on) return;
+	set({ control: !!on });
+	tell({ k: "ctl", on: !!on });
+	bridge?.audit(on ? "support-control-on" : "support-control-off", on ? "The client let support control the screen" : "Control by support stopped");
 }
 
 async function poll(mine) {
@@ -102,7 +173,9 @@ async function poll(mine) {
 				},
 				onMessage: (m) => {
 					const a = cleanAnnotation(m);
-					if (a) annotationSubs.forEach((f) => f(a));
+					if (a) return annotationSubs.forEach((f) => f(a));
+					const c = cleanCommand(m);
+					if (c) handleCommand(c);
 				},
 				onClose: () => mine === epoch && state.status !== "idle" && finish("ended", "The connection was closed."),
 			});

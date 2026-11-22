@@ -100,3 +100,46 @@ describe("live support session rules", () => {
 		expect(l.blocked("a", now + 1)).toBe(false);
 	});
 });
+
+import { cleanCommand, cleanReply } from "../domain/supportProtocol";
+import { sensitiveName } from "../services/supportControl";
+
+describe("what the agent may ask the client's POS to do", () => {
+	it("opens a screen by name, and nothing that is not a plain screen or page name", () => {
+		expect(cleanCommand({ k: "goto", view: "settings", page: "serviceCharge" })).toEqual({ k: "goto", view: "settings", page: "serviceCharge" });
+		expect(cleanCommand({ k: "goto", view: "orders" })).toEqual({ k: "goto", view: "orders", page: "" });
+		expect(cleanCommand({ k: "goto", view: "javascript:alert(1)" })).toBe(null);
+		expect(cleanCommand({ k: "goto", view: "settings", page: "../../x" })).toBe(null);
+		expect(cleanCommand({ k: "goto", view: 5 })).toBe(null);
+	});
+	it("asks for and releases control", () => {
+		expect(cleanCommand({ k: "ask", what: "control" })).toEqual({ k: "ask", what: "control" });
+		expect(cleanCommand({ k: "ask", what: "files" })).toBe(null);
+		expect(cleanCommand({ k: "release" })).toEqual({ k: "release" });
+	});
+	it("clicks, types and scrolls only on a numeric element id, with limited sizes", () => {
+		expect(cleanCommand({ k: "act", a: "click", id: 12 })).toEqual({ k: "act", a: "click", id: 12 });
+		expect(cleanCommand({ k: "act", a: "click", id: "12" })).toBe(null);
+		expect(cleanCommand({ k: "act", a: "click", id: 0 })).toBe(null);
+		expect(cleanCommand({ k: "act", a: "input", id: 3, value: "y".repeat(500) }).value).toHaveLength(200);
+		expect(cleanCommand({ k: "act", a: "input", id: 3, value: 5 })).toBe(null);
+		expect(cleanCommand({ k: "act", a: "scroll", id: 3, dx: 0, dy: 99999 })).toEqual({ k: "act", a: "scroll", id: 3, dx: 0, dy: 3000 });
+		expect(cleanCommand({ k: "act", a: "eval", id: 3 })).toBe(null);
+		expect(cleanCommand({ k: "run", code: "alert(1)" })).toBe(null);
+		expect(cleanCommand(null)).toBe(null);
+	});
+	it("replies to the agent are limited too", () => {
+		expect(cleanReply({ k: "ctl", on: true })).toEqual({ k: "ctl", on: true });
+		expect(cleanReply({ k: "ack", for: "act", ok: false, reason: "no" })).toEqual({ k: "ack", for: "act", ok: false, reason: "no" });
+		expect(cleanReply({ k: "ack", for: "other" })).toBe(null);
+	});
+});
+
+describe("controls the client has to use themselves", () => {
+	it("leaves anything that voids, refunds, deletes, signs out or takes a payment to the client", () => {
+		for (const name of ["Void Order", "Refund", "Delete item", "Sign Out Business", "Lock POS", "Pay Now · LKR 1,000", "Quick Pay", "Take Payment", "Complete sale", "Exact Cash", "Remove", "Close shift", "Approve and add"]) expect(sensitiveName(name)).not.toBe("");
+	});
+	it("allows ordinary controls", () => {
+		for (const name of ["Save", "Settings", "Service Charge", "Add item", "Products", "Open / Pay", "Discard", "Next", "Search products", "Publish"]) expect(sensitiveName(name)).toBe("");
+	});
+});

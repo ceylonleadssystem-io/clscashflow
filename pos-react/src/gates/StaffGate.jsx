@@ -68,7 +68,7 @@ export function StaffGate() {
 	};
 
 	return (
-		<div className="login-gate" id="login-gate">
+		<div className="login-gate support-block" id="login-gate" data-support-block>
 			<div className="login-card">
 				<a className="account-home" href={env.homeUrl}>
 					← Back to Home

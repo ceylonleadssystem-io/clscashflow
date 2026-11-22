@@ -37,7 +37,7 @@ export function BusinessGate() {
 			: "Enter your business email and password to continue.";
 
 	return (
-		<div className="account-gate" id="account-gate">
+		<div className="account-gate support-block" id="account-gate" data-support-block>
 			<div className="account-card">
 				<a className="account-home" href={env.homeUrl}>
 					← Back to Home

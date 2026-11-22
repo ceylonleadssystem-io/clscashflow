@@ -35,7 +35,7 @@ export function draw(ctx, w, h, scene, now) {
 	}
 	for (const it of scene.items) {
 		const age = now - it.t;
-		const alpha = it.k === "stroke" ? Math.max(0, Math.min(1, 1 - (age - FADE_AFTER) / FADE_FOR)) : 1;
+		const alpha = it.k === "stroke" ? Math.max(0, Math.min(1, 1 - (age - FADE_AFTER) / FADE_FOR)) : it.k === "flash" && age > 1400 ? 0 : 1;
 		if (alpha <= 0) continue;
 		ctx.save();
 		ctx.globalAlpha = alpha * (it.tool === "highlighter" ? 0.35 : 1);
@@ -50,6 +50,15 @@ export function draw(ctx, w, h, scene, now) {
 				it.points.forEach(([x, y], i) => (i ? ctx.lineTo(x * w, y * h) : ctx.moveTo(x * w, y * h)));
 				ctx.stroke();
 			}
+		} else if (it.k === "flash") {
+			const a = Math.max(0, 1 - age / 1400);
+			ctx.globalAlpha = a;
+			ctx.strokeStyle = it.ok ? "#22c55e" : "#ef4444";
+			ctx.lineWidth = 4;
+			ctx.setLineDash(it.ok ? [] : [8, 6]);
+			ctx.beginPath();
+			ctx.roundRect(it.x * w - 4, it.y * h - 4, it.w * w + 8, it.h * h + 8, 8);
+			ctx.stroke();
 		} else if (it.k === "note") {
 			ctx.font = "600 16px system-ui, sans-serif";
 			const pad = 10;
@@ -93,5 +102,5 @@ export function applyAnnotation(scene, a, now = Date.now()) {
 
 /** Drops strokes that have faded out. */
 export const pruneScene = (scene, now = Date.now()) => {
-	scene.items = scene.items.filter((it) => it.k !== "stroke" || now - it.t < FADE_AFTER + FADE_FOR);
+	scene.items = scene.items.filter((it) => (it.k === "stroke" ? now - it.t < FADE_AFTER + FADE_FOR : it.k !== "flash" || now - it.t < 1400));
 };

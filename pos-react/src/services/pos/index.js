@@ -10,6 +10,7 @@ import * as sales from "./sales";
 import * as printing from "./printing";
 import * as settings from "./settings";
 import * as publicMenu from "./publicMenu";
+import * as support from "./support";
 import * as onlineOrders from "./onlineOrders";
 import * as locations from "./locations";
 import * as industry from "./industry";
@@ -138,6 +139,9 @@ export function bindServices(ctx) {
 			remove: onlineOrders.removeOnlineStore,
 			pull: onlineOrders.pullOnlineOrders,
 			options: onlineOrders.saveOnlineOptions,
+		}),
+		support: bind(ctx, {
+			log: support.logSupportAction,
 		}),
 		publicMenu: bind(ctx, {
 			enable: publicMenu.enablePublicMenu,

@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { COLORS, unit } from "../domain/supportProtocol";
 import { applyAnnotation, draw, pruneScene } from "../components/support/drawScene";
-import { endViewer, joinSupport, onPageEvent, resetViewer, sendAnnotation, useSupportViewer } from "./supportViewerState";
+import { clearNotice, endViewer, joinSupport, onPageEvent, resetViewer, sendAnnotation, sendCommand, useSupportViewer } from "./supportViewerState";
 
 const TOOLS = [
 	{ id: "pointer", label: "Pointer" },
@@ -14,12 +14,38 @@ const TOOLS = [
 	{ id: "arrow", label: "Arrow" },
 	{ id: "spot", label: "Spotlight" },
 	{ id: "note", label: "Note" },
+	{ id: "control", label: "Control" },
 ];
+
+// where the agent can send the client (the client's POS opens it only for people allowed to see it, and only after they say yes)
+const DESTINATIONS = [
+	{ label: "Checkout", view: "checkout" },
+	{ label: "Order Queue", view: "orders" },
+	{ label: "Table Layout", view: "tables" },
+	{ label: "Receipts & Refunds", view: "receipts" },
+	{ label: "Inventory & Stock", view: "inventory" },
+	{ label: "Sales History", view: "sales" },
+	{ label: "Reports", view: "reports" },
+	{ label: "Dashboard", view: "dashboard" },
+	{ label: "Settings", view: "settings" },
+	{ label: "Settings > Service Charge", view: "settings", page: "serviceCharge" },
+	{ label: "Settings > Order Entry", view: "settings", page: "orderEntry" },
+	{ label: "Settings > Receipts", view: "settings", page: "receipts" },
+	{ label: "Settings > Users", view: "settings", page: "users" },
+	{ label: "Settings > Items", view: "settings", page: "items" },
+	{ label: "Settings > Categories", view: "settings", page: "categories" },
+	{ label: "Settings > Printers", view: "settings", page: "printers" },
+	{ label: "Settings > QR Menu", view: "settings", page: "qrMenu" },
+	{ label: "Settings > Ceylo AI", view: "settings", page: "ceyloAi" },
+];
+const TEXT_TYPES = ["text", "search", "email", "tel", "url", "number", "date", "time", ""];
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 /** The live copy of the client's page with a drawing layer on top. */
-function Stage() {
+function Stage({ control, notice }) {
 	const host = useRef(null);
+	const replayerRef = useRef(null);
+	const lastScroll = useRef(0);
 	const canvas = useRef(null);
 	const [native, setNative] = useState({ w: 1024, h: 768 });
 	const [scale, setScale] = useState(1);
@@ -41,6 +67,7 @@ function Stage() {
 			await import("rrweb/dist/style.css");
 			if (gone) return;
 			replayer = new Replayer([], { root: host.current, liveMode: true, mouseTail: false, UNSAFE_replayCanvas: false });
+			replayerRef.current = replayer;
 			replayer.on("resize", (d) => setNative({ w: d.width || 1024, h: d.height || 768 }));
 			replayer.startLive();
 			off = onPageEvent((e) => replayer.addEvent(e));
@@ -95,8 +122,50 @@ function Stage() {
 		sendAnnotation(a);
 		if (a.k !== "pointer") (applyAnnotation(scene.current, a), wake());
 	};
+	// the element of the client's page under the pointer, as the id the client's POS knows it by
+	const target = (e) => {
+		const rp = replayerRef.current;
+		const doc = rp?.iframe?.contentDocument;
+		if (!doc) return null;
+		const r = canvas.current.getBoundingClientRect();
+		let el = doc.elementFromPoint((e.clientX - r.left) / scale, (e.clientY - r.top) / scale);
+		while (el) {
+			const id = rp.getMirror().getId(el);
+			if (id > 0) return { id, el };
+			el = el.parentElement;
+		}
+		return null;
+	};
+	const typeable = (el) => el.tagName === "TEXTAREA" || el.tagName === "SELECT" || (el.tagName === "INPUT" && TEXT_TYPES.includes((el.getAttribute("type") || "").toLowerCase()));
+	const [field, setField] = useState(null); // { id, x, y, value }: a field of the client's page the agent is typing into
+	const act = (e) => {
+		const t = target(e);
+		if (!t) return;
+		if (typeable(t.el)) return setField({ id: t.id, x: at(e)[0], y: at(e)[1], value: "" });
+		sendCommand({ k: "act", a: "click", id: t.id });
+	};
+	const sendField = () => {
+		if (field && field.value !== "") sendCommand({ k: "act", a: "input", id: field.id, value: field.value });
+		setField(null);
+	};
+	// the mouse wheel scrolls the client's page while Control is the tool
+	useEffect(() => {
+		const el = canvas.current;
+		if (!el || tool !== "control" || !control) return undefined;
+		const onWheel = (e) => {
+			e.preventDefault();
+			if (Date.now() - lastScroll.current < 80) return;
+			lastScroll.current = Date.now();
+			const t = target(e);
+			if (t) sendCommand({ k: "act", a: "scroll", id: t.id, dx: e.deltaX, dy: e.deltaY });
+		};
+		el.addEventListener("wheel", onWheel, { passive: false });
+		return () => el.removeEventListener("wheel", onWheel);
+	}); // eslint-disable-line react-hooks/exhaustive-deps
+
 	const down = (e) => {
 		const [x, y] = at(e);
+		if (tool === "control") return control ? act(e) : sendCommand({ k: "ask", what: "control" });
 		if (tool === "spot") return send({ k: "spot", x, y, r: 0.12 });
 		if (tool === "note") return setNote({ x, y, text: "" });
 		if (["pen", "highlighter", "arrow"].includes(tool)) {
@@ -154,10 +223,72 @@ function Stage() {
 				<button type="button" className="btn out" onClick={clear}>
 					Clear
 				</button>
+				<span style={{ display: "inline-flex", gap: 6, marginLeft: 8, alignItems: "center" }}>
+					<select className="input" aria-label="Take the client to" id="support-goto" style={{ maxWidth: 230 }} defaultValue="">
+						<option value="" disabled>
+							Take the client to…
+						</option>
+						{DESTINATIONS.map((d) => (
+							<option key={d.label} value={d.label}>
+								{d.label}
+							</option>
+						))}
+					</select>
+					<button
+						type="button"
+						className="btn out"
+						onClick={() => {
+							const d = DESTINATIONS.find((x) => x.label === document.getElementById("support-goto").value);
+							if (d) sendCommand({ k: "goto", view: d.view, page: d.page || "" });
+						}}
+					>
+						Send
+					</button>
+				</span>
+				<span className="muted" id="support-control-state" style={{ marginLeft: 8 }}>
+					{control ? "Control allowed" : "Control off"}
+					{!control && (
+						<>
+							{" · "}
+							<button type="button" className="sk-link" onClick={() => sendCommand({ k: "ask", what: "control" })}>
+								Ask to control
+							</button>
+						</>
+					)}
+					{control && (
+						<>
+							{" · "}
+							<button type="button" className="sk-link" onClick={() => sendCommand({ k: "release" })}>
+								Release
+							</button>
+						</>
+					)}
+				</span>
 			</div>
+			{notice && (
+				<div role="status" id="support-notice" className="plan-settings-note" style={{ marginBottom: 8 }}>
+					{notice}{" "}
+					<button type="button" className="sk-link" onClick={clearNotice}>
+						Dismiss
+					</button>
+				</div>
+			)}
 			<div style={{ position: "relative", width: w, maxWidth: "100%", height: h, background: "#fff", border: "1px solid var(--ui-line)", overflow: "hidden" }}>
 				<div ref={host} style={{ position: "absolute", left: 0, top: 0, width: w, height: h }} />
 				<canvas ref={canvas} width={w} height={h} id="support-draw" style={{ position: "absolute", left: 0, top: 0, width: w, height: h, cursor: tool === "pointer" ? "pointer" : "crosshair", touchAction: "none" }} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={leave} />
+				{field && (
+					<input
+						autoFocus
+						className="input"
+						style={{ position: "absolute", left: Math.min(field.x * w, w - 220), top: Math.min(field.y * h, h - 44), width: 210 }}
+						placeholder="Type into their field, press Enter"
+						maxLength={200}
+						value={field.value}
+						onChange={(e) => setField({ ...field, value: e.target.value })}
+						onKeyDown={(e) => (e.key === "Enter" ? sendField() : e.key === "Escape" && setField(null))}
+						onBlur={sendField}
+					/>
+				)}
 				{note && (
 					<input
 						autoFocus
@@ -186,7 +317,7 @@ export function SupportViewer({ onClose }) {
 			<div className="panel-head">
 				<div>
 					<div className="panel-title">Live support</div>
-					<div className="muted">{s.status === "live" ? `Connected to ${s.business || "the client"}. Everything you draw appears on their screen.` : "Ask the client for the 6-digit code from Settings > Plan & Support > Live support."}</div>
+					<div className="muted">{s.status === "live" ? `Connected to ${s.business || "the client"}. Everything you draw appears on their screen. Control and redirects always need their yes.` : "Ask the client for the 6-digit code from Settings > Plan & Support > Live support."}</div>
 				</div>
 				<button type="button" className="btn out" onClick={close}>
 					{s.status === "live" ? "End session" : "Close"}
@@ -215,7 +346,7 @@ export function SupportViewer({ onClose }) {
 					</p>
 				)}
 				{s.status === "connecting" && <p className="muted">Waiting for the client's screen to connect…</p>}
-				{s.status === "live" && <Stage />}
+				{s.status === "live" && <Stage control={s.control} notice={s.notice} />}
 			</div>
 		</div>
 	);

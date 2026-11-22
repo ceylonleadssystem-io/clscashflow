@@ -5,6 +5,7 @@
  */
 import { useSyncExternalStore } from "react";
 import { env } from "../config/env";
+import { cleanReply } from "../domain/supportProtocol";
 import { createPeer } from "../services/supportPeer";
 import { adminSession } from "./adminSession";
 import { createLogger } from "../utils/logger";
@@ -12,7 +13,7 @@ import { createLogger } from "../utils/logger";
 const log = createLogger("support-viewer");
 const POLL_MS = 1500;
 const LIVE_POLL_MS = 10000;
-const IDLE = { status: "idle", business: "", endsAt: "", error: "" };
+const IDLE = { status: "idle", business: "", endsAt: "", error: "", control: false, notice: "" }; // control: the client has allowed control; notice: the client's latest answer
 let state = IDLE; // status: idle | joining | connecting | live | ended | error
 const subs = new Set();
 const eventSubs = new Set();
@@ -57,7 +58,16 @@ function finish(status, error = "") {
 	set({ status, error });
 }
 
+function onReply(r) {
+	if (r.k === "ctl") return set({ control: r.on, notice: r.on ? "The client allowed control." : "Control is off." });
+	if (r.for === "act") return set({ notice: r.ok ? "" : r.reason || "The client has to do that one." });
+	if (r.for === "goto") return set({ notice: r.ok ? "Opened on the client's screen." : r.reason || "The client said not now." });
+	set({ notice: r.ok ? "" : r.reason || "The client said no." });
+}
+
 function onMessage(m) {
+	const reply = cleanReply(m);
+	if (reply) return onReply(reply);
 	if (m?.k === "ev" && m.e) {
 		// the replay schedules events by their time stamps, and the two computers' clocks never agree: each event is stamped with the time it arrives here
 		const event = { ...m.e, timestamp: Date.now() };
@@ -108,6 +118,9 @@ export async function joinSupport(value) {
 
 /** Sends something to draw on the client's screen. */
 export const sendAnnotation = (a) => peer?.send(a);
+/** Asks the client's POS for something (open a screen, control, a click...). The client says yes or no and sees every action. */
+export const sendCommand = (c) => peer?.send(c);
+export const clearNotice = () => set({ notice: "" });
 
 export async function endViewer() {
 	const c = code;

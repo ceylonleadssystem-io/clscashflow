@@ -81,3 +81,42 @@ export function cleanAnnotation(m) {
 			return null;
 	}
 }
+
+// ------------------------------------------------------------------ commands (agent to client)
+const VIEW = /^[a-z][a-z0-9-]{1,30}$/;
+const PAGE = /^[A-Za-z][A-Za-z0-9:_-]{1,40}$/;
+const clamp = (v, max) => Math.min(max, Math.max(-max, num(v)));
+
+/**
+ * What the agent may ask of the client's POS, cleaned on the client before anything happens: open a screen, ask for control, release control,
+ * or (only while the client has switched control on) click, type into a field or scroll. Anything else is refused.
+ * Targets are the numeric ids the page copy uses for elements; nothing here can run code.
+ */
+export function cleanCommand(m) {
+	if (!m || typeof m !== "object") return null;
+	const id = Number.isInteger(m.id) && m.id > 0 && m.id < 1e9 ? m.id : 0;
+	switch (m.k) {
+		case "goto":
+			return typeof m.view === "string" && VIEW.test(m.view) && (m.page === undefined || m.page === "" || (typeof m.page === "string" && PAGE.test(m.page))) ? { k: "goto", view: m.view, page: m.page || "" } : null;
+		case "ask":
+			return m.what === "control" ? { k: "ask", what: "control" } : null;
+		case "release":
+			return { k: "release" };
+		case "act":
+			if (!id) return null;
+			if (m.a === "click") return { k: "act", a: "click", id };
+			if (m.a === "input") return typeof m.value === "string" ? { k: "act", a: "input", id, value: m.value.slice(0, 200) } : null;
+			if (m.a === "scroll") return { k: "act", a: "scroll", id, dx: clamp(m.dx, 3000), dy: clamp(m.dy, 3000) };
+			return null;
+		default:
+			return null;
+	}
+}
+
+/** What the client tells the agent: control switched on or off, and the result of a request (`for`: goto, ask or act). */
+export function cleanReply(m) {
+	if (!m || typeof m !== "object") return null;
+	if (m.k === "ctl") return { k: "ctl", on: m.on === true };
+	if (m.k === "ack" && ["goto", "ask", "act"].includes(m.for)) return { k: "ack", for: m.for, ok: m.ok === true, reason: String(m.reason || "").slice(0, 120) };
+	return null;
+}
