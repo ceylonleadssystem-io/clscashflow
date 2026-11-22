@@ -12,6 +12,7 @@ import { OverallAnalytics } from "./OverallAnalytics";
 import { ChurnPanel, FunnelPanel, HeatmapPanel, KitchenPanel, LossPanel, TypesPanel } from "./InsightPanels";
 import { SubscriptionManagement } from "./SubscriptionManagement";
 import { NewAccountPanel } from "./NewAccountPanel";
+import { SupportViewer } from "./SupportViewer";
 import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
 import { localAdminSession } from "./localAdmin";
@@ -39,6 +40,7 @@ export function AdminApp() {
 	const feedback = useAdminFeedback();
 	const ui = useUi();
 	const [creating, setCreating] = useState(false);
+	const [supportOpen, setSupportOpen] = useState(false);
 
 	// Restore a still-valid administrator session (kept in sessionStorage for this tab only).
 	useEffect(() => {
@@ -124,6 +126,9 @@ export function AdminApp() {
 					<button className={"btn " + (page === "subscriptions" ? "gold" : "out")} id="admin-nav-subscriptions" aria-pressed={page === "subscriptions"} onClick={() => { setPage(page === "subscriptions" ? "accounts" : "subscriptions"); setSelected(""); }}>
 						Subscription management
 					</button>
+					<button className={"btn " + (supportOpen ? "gold" : "out")} id="admin-nav-support" aria-pressed={supportOpen} onClick={() => setSupportOpen((v) => !v)}>
+						Live support
+					</button>
 					<button className="btn out" onClick={load} disabled={loading}>
 						{loading ? "Refreshing…" : "Refresh"}
 					</button>
@@ -133,6 +138,7 @@ export function AdminApp() {
 				</div>
 			</header>
 			{error && <div className="print-note" style={{ marginBottom: 12 }}>{error}</div>}
+			{supportOpen && <SupportViewer onClose={() => setSupportOpen(false)} />}
 
 			{page === "subscriptions" ? (
 				<SubscriptionManagement />
