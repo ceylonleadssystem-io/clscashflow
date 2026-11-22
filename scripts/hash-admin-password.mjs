@@ -112,6 +112,8 @@ try {
 }
 
 const role = roleAnswer || existing?.role || "admin";
+// the type is only written when one was chosen, so this script keeps working on a database that does not have the type field yet (run scripts/setup-admin-db.mjs once to add it)
+const roleField = roleAnswer ? { role: roleAnswer } : {};
 
 // 4. confirm, then write
 console.log("\nSummary");
@@ -125,9 +127,9 @@ if (process.env.ADMIN_YES !== "1" && !/^y(es)?$/i.test(await ask("Save to the da
 
 try {
 	if (existing) {
-		await db.updateDocument(DB, "admins", existing.$id, { passwordHash: hash, role, ...(name ? { name } : {}), active: true, failedAttempts: 0, lockedUntil: null });
+		await db.updateDocument(DB, "admins", existing.$id, { passwordHash: hash, ...roleField, ...(name ? { name } : {}), active: true, failedAttempts: 0, lockedUntil: null });
 	} else {
-		await db.createDocument(DB, "admins", ID.unique(), { email, name, role, passwordHash: hash, active: true, failedAttempts: 0 });
+		await db.createDocument(DB, "admins", ID.unique(), { email, name, ...roleField, passwordHash: hash, active: true, failedAttempts: 0 });
 	}
 } catch (e) {
 	fail("Could not save: " + (e.message || e));
