@@ -16,7 +16,6 @@ import { SubscriptionTab } from "./SubscriptionTab";
 import { DeleteAccountTab } from "./DeleteAccountTab";
 import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
-import { beginAssist } from "../services/assist";
 
 const TABS = [
 	["analytics", "Analytics"],
@@ -68,37 +67,6 @@ export function AccountDetail({ account, accounts = [], onBack, onChanged }) {
 		}
 	};
 
-	// Opens the POS on a COPY of this business' configuration (not a live view) so the administrator can help set it up; see services/assist.js
-	const [opening, setOpening] = useState(false);
-	const openPos = () => {
-		const tab = window.open("", "_blank"); // opened inside the click so the browser does not block it
-		if (!tab) return ui.alert("Your browser blocked the new tab. Allow pop-ups for this site and try again.");
-		setOpening(true);
-		try {
-			beginAssist({ accountId: account.id, business: settings.business || account.business || account.email });
-			tab.location.href = "/posv2/?assist=1"; // the new tab builds the copy from the server
-		} finally {
-			setTimeout(() => setOpening(false), 800);
-		}
-	};
-
-	// Live access: the POS opens signed in as the client (no password). The token travels in the URL fragment, which is never sent to a server.
-	const signInAsClient = async () => {
-		const tab = window.open("", "_blank");
-		if (!tab) return ui.alert("Your browser blocked the new tab. Allow pop-ups for this site and try again.");
-		if (!(await ui.confirm("Open this business' live POS signed in as the client? Anything you change there changes their real data. This is recorded in the admin log."))) return tab.close();
-		setOpening(true);
-		try {
-			const r = await adminApi({ action: "openPos", userId: account.id });
-			tab.location.href = r.local ? "/posv2/" : "/posv2/#cls-access=" + encodeURIComponent(r.userId) + "." + encodeURIComponent(r.secret);
-		} catch (e) {
-			tab.close();
-			await ui.alert(e.message);
-		} finally {
-			setOpening(false);
-		}
-	};
-
 	if (!data) return <div className="gear-overlay"><GearLoader /></div>;
 	return (
 		<div>
@@ -108,12 +76,6 @@ export function AccountDetail({ account, accounts = [], onBack, onChanged }) {
 				</button>
 				<h2>{account.business || account.email}</h2>
 				<span className="muted">{account.email}</span>
-				<button className="btn gold" type="button" id="open-client-pos" disabled={opening} onClick={openPos} style={{ marginLeft: "auto" }} title="Opens a copy of this business' menu and settings in the POS to help set it up. It is not a live view: nothing reaches the client until you press Send changes.">
-					{opening ? "Opening…" : "Open client's POS"}
-				</button>
-				<button className="btn out" type="button" id="open-client-pos-live" disabled={opening} onClick={signInAsClient} title="Opens the live POS signed in as this business, no login needed. Changes are real and recorded in the admin log.">
-					Sign in as client (live)
-				</button>
 			</div>
 			<div className="settings-tabs" role="tablist" style={{ marginBottom: 14 }}>
 				{TABS.map(([id, label]) => (

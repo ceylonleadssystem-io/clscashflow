@@ -72,4 +72,11 @@ function verifyToken(token, now) {
   } catch (_) { return null; }
 }
 
-module.exports = { ADMIN_EMAIL_DOMAIN, SESSION_SECONDS, isAdminEmail, hashPassword, verifyPassword, verifyAgainstDummy, signToken, verifyToken };
+// Types of administrator: "admin" (everything in the portal) and "support" (live support only: join a client's session with its code, nothing else).
+// A record with no type is a full administrator, so every account that existed before the types keeps working.
+const ADMIN_ROLES = ['admin', 'support'];
+function adminRole(value) { return String(value || '').trim().toLowerCase() === 'support' ? 'support' : 'admin'; }
+/** Whether this administrator may use the portal's account and billing functions (not just live support). */
+function canUsePortal(record) { return !!record && adminRole(record.role) !== 'support'; }
+
+module.exports = { ADMIN_ROLES, adminRole, canUsePortal, ADMIN_EMAIL_DOMAIN, SESSION_SECONDS, isAdminEmail, hashPassword, verifyPassword, verifyAgainstDummy, signToken, verifyToken };

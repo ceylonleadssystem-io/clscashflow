@@ -3,14 +3,15 @@
 //   node scripts/hash-admin-password.mjs
 //
 // It asks for what it needs, shows a summary, and only writes after you confirm:
-//   - administrator email (must be @ceylonrylabs.io), name
+//   - administrator email (must be @ceylonrylabs.io), name, and the account type: "admin" (everything in the portal) or "support" (live support only)
 //   - password (leave empty to generate a strong one, shown once) and the Appwrite API key (databases scope), both typed hidden
 // If the email already exists you are asked whether to set a new password and re-activate the account.
 // Nothing is written until you confirm. The API key and password are never printed or stored.
 //
 // Settings with defaults (override with environment variables): APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_ADMIN_DATABASE_ID.
-// For scripts: ADMIN_EMAIL, ADMIN_NAME, ADMIN_PASSWORD and APPWRITE_API_KEY answer the matching questions;
-// add ADMIN_YES=1 to skip the final confirmation. Run scripts/setup-admin-db.mjs first if the database does not exist yet.
+// For scripts: ADMIN_EMAIL, ADMIN_NAME, ADMIN_ROLE (admin or support), ADMIN_PASSWORD and APPWRITE_API_KEY answer the matching questions;
+// add ADMIN_YES=1 to skip the final confirmation. Run scripts/setup-admin-db.mjs first if the database does not exist yet
+// (run it again on an existing database to add the account type field).
 
 import { randomBytes } from "node:crypto";
 import { createRequire } from "node:module";
@@ -65,6 +66,15 @@ while (!email) {
 if (!email.endsWith(DOMAIN)) fail(`The email must end with ${DOMAIN}.`);
 const name = (process.env.ADMIN_NAME || (await ask("Full name: "))).trim().slice(0, 120);
 
+// the account type: a support account can only join live support sessions; it cannot open client accounts, billing or settings.
+// Leaving it empty keeps the type of an existing account (a new account is a full administrator).
+let roleAnswer = (process.env.ADMIN_ROLE || "").trim().toLowerCase();
+while (!["admin", "support"].includes(roleAnswer)) {
+	roleAnswer = (await ask("Account type: admin (everything) or support (live support only); empty keeps the current type, a new account is admin: ")).toLowerCase();
+	if (!roleAnswer) break;
+	if (!["admin", "support"].includes(roleAnswer)) console.log("  Type admin or support.");
+}
+
 // 2. password: your own (12+ characters, typed twice) or a generated one
 let password = process.env.ADMIN_PASSWORD || "";
 let generated = false;
@@ -101,10 +111,13 @@ try {
 	);
 }
 
+const role = roleAnswer || existing?.role || "admin";
+
 // 4. confirm, then write
 console.log("\nSummary");
 console.log(`  Email     ${email}`);
 console.log(`  Name      ${name || "(none)"}`);
+console.log(`  Type      ${role === "support" ? "support (live support only)" : "admin (everything in the portal)"}`);
 console.log(`  Password  ${generated ? "generated (shown after saving)" : "the one you typed"}`);
 console.log(`  Database  ${DB} > admins on project ${project}`);
 console.log(`  Action    ${existing ? "UPDATE the existing administrator: new password, account set active, lock cleared" : "CREATE a new administrator"}\n`);
@@ -112,9 +125,9 @@ if (process.env.ADMIN_YES !== "1" && !/^y(es)?$/i.test(await ask("Save to the da
 
 try {
 	if (existing) {
-		await db.updateDocument(DB, "admins", existing.$id, { passwordHash: hash, ...(name ? { name } : {}), active: true, failedAttempts: 0, lockedUntil: null });
+		await db.updateDocument(DB, "admins", existing.$id, { passwordHash: hash, role, ...(name ? { name } : {}), active: true, failedAttempts: 0, lockedUntil: null });
 	} else {
-		await db.createDocument(DB, "admins", ID.unique(), { email, name, passwordHash: hash, active: true, failedAttempts: 0 });
+		await db.createDocument(DB, "admins", ID.unique(), { email, name, role, passwordHash: hash, active: true, failedAttempts: 0 });
 	}
 } catch (e) {
 	fail("Could not save: " + (e.message || e));

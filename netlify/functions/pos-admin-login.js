@@ -54,7 +54,7 @@ exports.handler = async function handler(event) {
     await store.audit({ adminEmail: email, action: 'login' });
     const session = signToken(admin);
     log.info('sign-in ok', { adminId: admin.id });
-    return reply(event, 200, { ok: true, token: session.token, expiresAt: session.expiresAt, email: admin.email, name: admin.name });
+    return reply(event, 200, { ok: true, token: session.token, expiresAt: session.expiresAt, email: admin.email, name: admin.name, role: admin.role });
   } catch (error) {
     log.error('sign-in failed', error);
     return reply(event, error.statusCode || 500, { ok: false, error: 'Administrator sign-in is unavailable.' });

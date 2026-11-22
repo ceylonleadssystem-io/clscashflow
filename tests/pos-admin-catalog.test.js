@@ -96,14 +96,11 @@ test('both actions need an administrator sign-in', async () => {
   assert.equal(res.statusCode, 401);
 });
 
-test('openPos issues a short-lived sign-in token for the client, and only to an administrator', async () => {
+test('there is no way left for an administrator to get a sign-in token for a client (the portal uses live support instead)', async () => {
   seed();
-  let asked;
-  lib.users = () => ({ createToken: async (uid, len, ttl) => { asked = [uid, len, ttl]; return { secret: 's3cret' }; } });
+  let tokens = 0;
+  lib.users = () => ({ createToken: async () => { tokens += 1; return { secret: 's3cret' }; } });
   const r = await call({ action: 'openPos', userId: UID });
-  assert.equal(r.status, 200);
-  assert.deepEqual([r.json.userId, r.json.secret], [UID, 's3cret']);
-  assert.equal(asked[2], 600);
-  const denied = await handler({ httpMethod: 'POST', headers: {}, body: JSON.stringify({ action: 'openPos', userId: UID }) });
-  assert.equal(denied.statusCode, 401);
+  assert.notEqual(r.status, 200);
+  assert.equal(tokens, 0);
 });

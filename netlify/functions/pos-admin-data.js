@@ -1,6 +1,6 @@
 const { siteOrigin, siteUrl } = require('../lib/security');
 const { appwriteAdmin } = require('../lib/appwrite');
-const { isAdminEmail, verifyToken } = require('../lib/admin-auth');
+const { isAdminEmail, verifyToken, canUsePortal } = require('../lib/admin-auth');
 const { getAdmin, audit } = require('../lib/admin-store');
 const log = require('../lib/log').createLogger('pos-admin-data');
 const lib = require('../lib/appwrite');
@@ -56,6 +56,7 @@ async function verifyAdmin(event) {
   if (!isAdminEmail(claims.email)) throw deny(403, 'not-an-admin-address', 'This account is not authorized for the POS developer portal.');
   const record = await getAdmin(String(claims.sub || ''));
   if (!record || !record.active || record.email !== String(claims.email).toLowerCase()) throw deny(403, 'admin-inactive', 'This administrator account is not active.');
+  if (!canUsePortal(record)) throw deny(403, 'support-only', 'This account can only use live support.');
   return { id: record.id, email: record.email };
 }
 
@@ -412,12 +413,6 @@ async function handle(event) {
     const workspace = await loadWorkspace(db, uid, profile);
 
     if (action === 'get') return response(200, { ok: true, user: { id: uid, profile, payment: paymentState(profile) }, workspace: workspace.payload });
-
-    // Opens the client's POS signed in as the client, no password: a single-use token that expires in 10 minutes (the admin audit log records it).
-    if (action === 'openPos') {
-      const token = await lib.users().createToken(uid, 64, 600);
-      return response(200, { ok: true, userId: uid, secret: token.secret });
-    }
 
     if (action === 'markTest') {
       const test = body.test === true;
