@@ -1029,6 +1029,12 @@ html body.full .sk-main #view-modifiers.active .table-wrap{max-height:none!impor
    Admin, Items and Catalogue tools was out of reach. The working area scrolls whenever it holds the Settings shell. */
 body.full .content:has(.sk-shell){overflow-y:auto}
 
+/* System Options and the other Settings pages (BUG 0019 follow-up): in full screen every screen's container is made a scroll box that keeps the mouse
+   wheel and touch scrolling to itself (overscroll-behavior: contain). Inside the Settings shell the container is as tall as its content, so it
+   has nothing to scroll, yet it still swallowed every scroll, and the page (.content, above it) never moved: long pages such as Payroll or Clock In / Out
+   could not be scrolled with a wheel or a finger while the pointer was over the page. Inside Settings only the page scrolls. */
+html body.full .sk-main .view.active{height:auto!important;overflow:visible!important;overscroll-behavior:auto!important;padding-right:0!important}
+
 /* Items and Categories: the POS catalogue's search and filters, and the row actions (Edit, Details and stock, Print barcode, Delete) */
 .sk-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px) minmax(150px,220px);gap:8px;margin-bottom:8px}
 .sk-filters-2{grid-template-columns:minmax(0,1fr) minmax(150px,220px)}
