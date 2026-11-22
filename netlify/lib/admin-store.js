@@ -5,12 +5,13 @@
 // can reach, and nothing in their data, can touch an administrator record.
 //
 // Collections (created by scripts/setup-admin-db.mjs):
-//   admins     one record per administrator: email, name, passwordHash, active, failedAttempts,
+//   admins     one record per administrator: email, name, role (admin | support), passwordHash, active, failedAttempts,
 //              lockedUntil, lastLoginAt, createdAt
 //   audit_log  append-only trail of sign-ins and admin actions
 
 const { Databases, Query, ID } = require('node-appwrite');
 const { serverClient, clean } = require('./appwrite');
+const { adminRole } = require('./admin-auth');
 
 const ADMIN_DATABASE_ID = process.env.APPWRITE_ADMIN_DATABASE_ID || 'pos_admin';
 const MAX_FAILED = 5;
@@ -19,7 +20,7 @@ const LOCK_MINUTES = 15;
 function db() { return new Databases(serverClient()); }
 
 function toAdmin(doc) {
-  return doc && { id: doc.$id, email: String(doc.email || '').toLowerCase(), name: doc.name || '', passwordHash: doc.passwordHash || '', active: doc.active === true, failedAttempts: Number(doc.failedAttempts) || 0, lockedUntil: doc.lockedUntil || '' };
+  return doc && { id: doc.$id, email: String(doc.email || '').toLowerCase(), name: doc.name || '', role: adminRole(doc.role), passwordHash: doc.passwordHash || '', active: doc.active === true, failedAttempts: Number(doc.failedAttempts) || 0, lockedUntil: doc.lockedUntil || '' };
 }
 
 async function findAdminByEmail(email) {

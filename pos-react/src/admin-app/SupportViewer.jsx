@@ -308,7 +308,7 @@ function Stage({ control, notice }) {
 	);
 }
 
-export function SupportViewer({ onClose }) {
+export function SupportViewer({ onClose, standalone = false }) {
 	const s = useSupportViewer();
 	const [code, setCode] = useState("");
 	const busy = s.status === "joining" || s.status === "connecting";
@@ -320,9 +320,11 @@ export function SupportViewer({ onClose }) {
 					<div className="panel-title">Live support</div>
 					<div className="muted">{s.status === "live" ? `Connected to ${s.business || "the client"}. Everything you draw appears on their screen. Control and redirects always need their yes.` : "Ask the client for the 6-digit code from Settings > Plan & Support > Live support."}</div>
 				</div>
-				<button type="button" className="btn out" onClick={close}>
-					{s.status === "live" || s.status === "reconnecting" ? "End session" : "Close"}
-				</button>
+				{(!standalone || s.status === "live" || s.status === "reconnecting") && (
+					<button type="button" className="btn out" onClick={close}>
+						{s.status === "live" || s.status === "reconnecting" ? "End session" : "Close"}
+					</button>
+				)}
 			</div>
 			<div className="modal-body">
 				{(s.status === "idle" || s.status === "error" || s.status === "ended" || busy) && s.status !== "reconnecting" && (

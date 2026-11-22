@@ -7,6 +7,20 @@ The client's POS and the support agent's admin portal connect directly (WebRTC).
 
 Some networks (strict firewalls, some mobile networks) block direct connections. For those the two sides go through a **relay server** (TURN). Without one, a session on such a network will not connect.
 
+## Who can use it: admin accounts and support-only accounts
+Administrator accounts have a type. **admin** can do everything in the admin portal, including live support. **support** can use live support and nothing else: after signing in it sees only the Live support screen, and the server refuses every other portal function (accounts, billing, diagnostics) for it. An account with no type is an admin, so accounts that existed before keep working.
+
+Create a support account:
+
+```bash
+node scripts/setup-admin-db.mjs        # once, on an existing database: adds the account type field
+node scripts/hash-admin-password.mjs   # answer "support" to "Account type"
+```
+
+Leaving the account type empty when updating an existing account keeps its current type. Support accounts use a `@ceylonrylabs.io` address like every other administrator and sign in at the admin portal.
+
+The older "Open client's POS" (a copy of a business' configuration) and "Sign in as client (live)" buttons were removed from the account page: live support replaces both, and the server no longer issues a sign-in token for a client.
+
 ## Relay server (coturn)
 The functions hand out time-limited relay credentials (valid for 2 hours) built from a shared secret, so no password is stored in the web pages. Nothing happens until both settings below exist; without them only direct connections are used.
 

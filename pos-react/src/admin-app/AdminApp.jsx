@@ -48,7 +48,7 @@ export function AdminApp() {
 			if (localAdminSession.get()) setUser({ email: "dev admin" });
 		} else {
 			const s = adminSession.get();
-			if (s) setUser({ email: s.email });
+			if (s) setUser({ email: s.email, role: s.role || "admin" });
 		}
 		setReady(true);
 	}, []);
@@ -73,7 +73,7 @@ export function AdminApp() {
 		}
 	}, []);
 	useEffect(() => {
-		if (user) load();
+		if (user && user.role !== "support") load(); // a support-only account has no accounts to list
 	}, [user, load]);
 
 	const signIn = async (email, password) => {
@@ -89,8 +89,8 @@ export function AdminApp() {
 			const res = await fetch(env.adminLoginUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
 			const json = await res.json().catch(() => ({}));
 			if (!res.ok || !json.ok) throw new Error(json.error || "Sign-in failed (" + res.status + ").");
-			adminSession.set({ token: json.token, expiresAt: json.expiresAt, email: json.email, name: json.name });
-			setUser({ email: json.email });
+			adminSession.set({ token: json.token, expiresAt: json.expiresAt, email: json.email, name: json.name, role: json.role || "admin" });
+			setUser({ email: json.email, role: json.role || "admin" });
 		} catch (e) {
 			log.warn("admin sign-in failed", e);
 			setError(e.message);
@@ -101,6 +101,27 @@ export function AdminApp() {
 
 	if (!ready) return <div className="app-loading"><GearLoader /></div>;
 	if (!user) return <AdminLogin onSignIn={signIn} error={error} busy={busy} />;
+
+	// A support-only account sees live support and nothing else: no accounts, billing, settings or analytics
+	if (user.role === "support")
+		return (
+			<div className="admin-app">
+				<header className="admin-top">
+					<div>
+						<div className="admin-brand">
+							Ceylonry<span>POS</span> <em>Live support</em>
+						</div>
+						<div className="muted">Signed in as {user.email}</div>
+					</div>
+					<div className="admin-top-actions">
+						<button className="btn out" onClick={() => { localAdminSession.signOut(); adminSession.clear(); setUser(null); }}>
+							Sign out
+						</button>
+					</div>
+				</header>
+				<SupportViewer standalone onClose={() => {}} />
+			</div>
+		);
 
 	const list = accounts.filter((a) => (!fStatus || statusOf(a).value === fStatus) && (!fSub || subscriptionOf(a).value === fSub)).filter((a) => !q.trim() || (a.business + " " + a.email + " " + a.name).toLowerCase().includes(q.trim().toLowerCase()));
 	const current = accounts.find((a) => a.id === selected);

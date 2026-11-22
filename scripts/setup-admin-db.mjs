@@ -43,6 +43,7 @@ await once("collection admins", () => db.createCollection(DB, "admins", "Adminis
 await once("admins.email", () => db.createStringAttribute(DB, "admins", "email", 254, true));
 await once("admins.name", () => db.createStringAttribute(DB, "admins", "name", 120, false));
 await once("admins.passwordHash", () => db.createStringAttribute(DB, "admins", "passwordHash", 400, true));
+await once("admins.role", () => db.createStringAttribute(DB, "admins", "role", 20, false, "admin")); // admin = everything in the portal, support = live support only
 await once("admins.active", () => db.createBooleanAttribute(DB, "admins", "active", false, true));
 await once("admins.failedAttempts", () => db.createIntegerAttribute(DB, "admins", "failedAttempts", false, 0, 1000, 0));
 await once("admins.lockedUntil", () => db.createStringAttribute(DB, "admins", "lockedUntil", 40, false));

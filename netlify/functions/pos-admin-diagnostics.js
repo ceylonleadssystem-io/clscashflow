@@ -1,7 +1,7 @@
 // Admin side of POS diagnostics signalling: post a WebRTC offer, poll for the POS's answer. No log data passes here.
 // Auth is identical to pos-admin-data (admin HS256 token + active admin record).
 const { guard, reply } = require('../lib/security');
-const { isAdminEmail, verifyToken } = require('../lib/admin-auth');
+const { isAdminEmail, verifyToken, canUsePortal } = require('../lib/admin-auth');
 const { getAdmin, audit } = require('../lib/admin-store');
 const store = require('../lib/diagnostics-store');
 const log = require('../lib/log').createLogger('pos-admin-diagnostics');
@@ -16,6 +16,7 @@ async function verifyAdmin(event) {
   if (!isAdminEmail(claims.email)) throw deny(403, 'not-an-admin-address', 'This account is not authorized for the POS developer portal.');
   const record = await getAdmin(String(claims.sub || ''));
   if (!record || !record.active || record.email !== String(claims.email).toLowerCase()) throw deny(403, 'admin-inactive', 'This administrator account is not active.');
+  if (!canUsePortal(record)) throw deny(403, 'support-only', 'This account can only use live support.');
   return { id: record.id, email: record.email };
 }
 
