@@ -29,6 +29,7 @@ import {
 	PrintingPanel,
 	ServiceChargePanel,
 } from "../components/settings/panels";
+import { LiveSupportPanel } from "../components/settings/LiveSupportPanel";
 
 const ALL_TABS = [
 	{ id: "business", label: "Business Profile" },
@@ -116,6 +117,7 @@ export function Settings({ only = null }) {
 				)}
 				{billing && <BillingPanel />}
 				<PlanSupportPanel form={form} set={set} onRegenerate={() => svc.settings.regenerateSupportCode()} />
+				<LiveSupportPanel />
 			</>
 		),
 	};

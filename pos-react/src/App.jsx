@@ -23,6 +23,8 @@ import { isPortalPath, isAutomobilePath } from "./config/portal";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GearLoader } from "./components/ui/GearLoader";
 import { usePublicMenuSync } from "./hooks/usePublicMenuSync";
+import { SupportBanner } from "./components/support/SupportBanner";
+import { SupportOverlay } from "./components/support/SupportOverlay";
 import { useOnlineOrdersSync } from "./hooks/useOnlineOrdersSync";
 
 /**
@@ -37,6 +39,8 @@ export default function App() {
 			<UiProvider>
 				<SessionProvider>
 					<Root />
+					<SupportBanner />
+					<SupportOverlay />
 				</SessionProvider>
 			</UiProvider>
 		</ErrorBoundary>

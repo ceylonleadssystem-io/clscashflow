@@ -13,6 +13,8 @@ export const env = {
 		e.VITE_DOCS_FUNCTION_URL || "/.netlify/functions/appwrite-docs",
 	shopifyStoreUrl: e.VITE_SHOPIFY_STORE_URL || "/.netlify/functions/shopify-store",
 	shopifyInboxUrl: e.VITE_SHOPIFY_INBOX_URL || "/.netlify/functions/shopify-inbox",
+	supportSessionUrl: e.VITE_SUPPORT_SESSION_URL || "/.netlify/functions/support-session",
+	supportIceServers: e.VITE_SUPPORT_ICE_SERVERS || "", // optional JSON list of extra relay (TURN) servers for networks that block direct connections
 	menuShareUrl: e.VITE_MENU_SHARE_URL || "/.netlify/functions/menu-share",
 	imagesFunctionUrl:
 		e.VITE_IMAGES_FUNCTION_URL || "/.netlify/functions/appwrite-files",

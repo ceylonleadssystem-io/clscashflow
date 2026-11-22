@@ -1050,3 +1050,9 @@ body.full .content:has(.sk-shell){overflow-y:auto}
 .sk-tree-sub summary{font-weight:500}
 .sk-tree input[type=checkbox]:indeterminate{accent-color:#6b7280}
 .sk-tree li label{min-height:44px}
+
+/* Live support: the bar shown while a support session runs, and the layer the agent draws on */
+.support-banner{position:fixed;top:0;left:0;right:0;z-index:100000;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:8px 14px;background:#1f1c18;color:#fff;font-weight:600;font-size:calc(14px * var(--ui-fs, 1));box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.support-banner .btn{min-height:36px;padding:4px 14px}
+.support-banner-code{font-size:1.25em;letter-spacing:.12em;color:#ffb347}
+.support-overlay{position:fixed;inset:0;width:100vw;height:100vh;z-index:99999;pointer-events:none}
