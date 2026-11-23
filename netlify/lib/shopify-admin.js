@@ -26,7 +26,7 @@ async function graphql(shop, token, query, variables, fetchImpl) {
   if (!res.ok) throw fail('Shopify answered ' + res.status + '.');
   const json = await res.json();
   if (json.errors && json.errors.length) {
-    const message = json.errors.map(function(e) { return e.message; }).join('; ');
+    const message = Array.from(new Set(json.errors.map(function(e) { return e.message; }))).join('; ');
     throw fail(/access denied|scope|permission/i.test(message) ? 'Shopify access is missing a permission: ' + message : message, /access denied|scope|permission/i.test(message) ? 'no_access' : undefined);
   }
   return json.data || {};
@@ -111,13 +111,12 @@ async function subscribeOrderWebhooks(shop, token, callbackUrl, fetchImpl) {
   return { subscribed: done };
 }
 
-const ORDERS_QUERY = 'query($first: Int!, $after: String, $query: String) { orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT) { pageInfo { hasNextPage endCursor } nodes { legacyResourceId name createdAt cancelledAt displayFulfillmentStatus displayFinancialStatus currencyCode note email phone customer { firstName lastName phone email } shippingAddress { name address1 address2 city zip phone } shippingLines(first: 1) { nodes { title } } totalDiscountsSet { shopMoney { amount } } totalShippingPriceSet { shopMoney { amount } } totalTaxSet { shopMoney { amount } } totalPriceSet { shopMoney { amount } } lineItems(first: 100) { nodes { title variantTitle sku quantity originalUnitPriceSet { shopMoney { amount } } } } fulfillments(first: 5) { trackingInfo(first: 1) { company number url } } } } }';
+const ORDERS_QUERY = 'query($first: Int!, $after: String, $query: String) { orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT) { pageInfo { hasNextPage endCursor } nodes { legacyResourceId name createdAt cancelledAt displayFulfillmentStatus displayFinancialStatus currencyCode note email phone shippingAddress { name address1 address2 city zip phone } billingAddress { name phone } shippingLines(first: 1) { nodes { title } } totalDiscountsSet { shopMoney { amount } } totalShippingPriceSet { shopMoney { amount } } totalTaxSet { shopMoney { amount } } totalPriceSet { shopMoney { amount } } lineItems(first: 100) { nodes { title variantTitle sku quantity originalUnitPriceSet { shopMoney { amount } } } } fulfillments(first: 5) { trackingInfo(first: 1) { company number url } } } } }';
 const amount = (set) => (set && set.shopMoney && set.shopMoney.amount) || '0';
 
 /** One order of the Admin API, reshaped like the webhook's order (so lib/shopify.js sanitizeOrder reads both), with how far it got: open, fulfilled or cancelled. */
 function orderFromAdmin(n) {
   n = n || {};
-  const c = n.customer || {};
   const tracking = ((n.fulfillments || []).map(function(f) { return (f.trackingInfo || [])[0]; }).filter(Boolean)[0]) || {};
   const history = n.cancelledAt ? 'cancelled' : n.displayFulfillmentStatus === 'FULFILLED' ? 'fulfilled' : 'open';
   return {
@@ -125,7 +124,8 @@ function orderFromAdmin(n) {
     tracking: { company: text(tracking.company, 60), number: text(tracking.number, 80), url: text(tracking.url, 400) },
     order: {
       id: n.legacyResourceId, name: n.name, created_at: n.createdAt, currency: n.currencyCode, financial_status: String(n.displayFinancialStatus || '').toLowerCase(), note: n.note,
-      email: n.email, phone: n.phone, customer: { first_name: c.firstName, last_name: c.lastName, phone: c.phone, email: c.email },
+      // the name, phone and e-mail come from the order itself (its addresses): the separate customer record needs the read_customers permission
+      email: n.email, phone: n.phone, customer: { first_name: (n.shippingAddress && n.shippingAddress.name) || (n.billingAddress && n.billingAddress.name) || '', phone: n.phone || (n.shippingAddress && n.shippingAddress.phone) || (n.billingAddress && n.billingAddress.phone) || '', email: n.email || '' },
       shipping_address: n.shippingAddress ? { name: n.shippingAddress.name, address1: n.shippingAddress.address1, address2: n.shippingAddress.address2, city: n.shippingAddress.city, zip: n.shippingAddress.zip, phone: n.shippingAddress.phone } : null,
       shipping_lines: ((n.shippingLines && n.shippingLines.nodes) || []).map(function(s) { return { title: s.title }; }),
       total_discounts: amount(n.totalDiscountsSet), total_tax: amount(n.totalTaxSet), total_price: amount(n.totalPriceSet),
