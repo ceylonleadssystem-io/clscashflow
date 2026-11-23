@@ -267,6 +267,12 @@ describe("importing past orders", () => {
 		expect(h.data().openOrders.filter((o) => o.online?.imported)).toHaveLength(3);
 	});
 
+	it("says what the server answered when it cannot give a readable reason (for example it ran out of time)", async () => {
+		await setup();
+		reply = () => ({ status: 502, errorMessage: "Task timed out after 10.00 seconds" });
+		await expect(importPastOrders(h.ctx, { shop: "my-shop.myshopify.com", since: "2026-09-01" })).rejects.toThrow(/server answered 502, it took too long/);
+	});
+
 	it("stops with Shopify's message when the server refuses", async () => {
 		await setup();
 		reply = () => ({ ok: false, status: 409, code: "no_access", error: "Connect Shopify access for this store first." });

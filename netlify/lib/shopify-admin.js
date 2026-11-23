@@ -111,7 +111,7 @@ async function subscribeOrderWebhooks(shop, token, callbackUrl, fetchImpl) {
   return { subscribed: done };
 }
 
-const ORDERS_QUERY = 'query($first: Int!, $after: String, $query: String) { orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT) { pageInfo { hasNextPage endCursor } nodes { legacyResourceId name createdAt cancelledAt displayFulfillmentStatus displayFinancialStatus currencyCode note email phone shippingAddress { name address1 address2 city zip phone } billingAddress { name phone } shippingLines(first: 1) { nodes { title } } totalDiscountsSet { shopMoney { amount } } totalShippingPriceSet { shopMoney { amount } } totalTaxSet { shopMoney { amount } } totalPriceSet { shopMoney { amount } } lineItems(first: 100) { nodes { title variantTitle sku quantity originalUnitPriceSet { shopMoney { amount } } } } fulfillments(first: 5) { trackingInfo(first: 1) { company number url } } } } }';
+const ORDERS_QUERY = 'query($first: Int!, $after: String, $query: String) { orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT) { pageInfo { hasNextPage endCursor } nodes { legacyResourceId name createdAt cancelledAt displayFulfillmentStatus displayFinancialStatus currencyCode note email phone shippingAddress { name address1 address2 city zip phone } billingAddress { name phone } shippingLines(first: 1) { nodes { title } } totalDiscountsSet { shopMoney { amount } } totalShippingPriceSet { shopMoney { amount } } totalTaxSet { shopMoney { amount } } totalPriceSet { shopMoney { amount } } lineItems(first: 30) { nodes { title variantTitle sku quantity originalUnitPriceSet { shopMoney { amount } } } } fulfillments(first: 3) { trackingInfo(first: 1) { company number url } } } } }';
 const amount = (set) => (set && set.shopMoney && set.shopMoney.amount) || '0';
 
 /** One order of the Admin API, reshaped like the webhook's order (so lib/shopify.js sanitizeOrder reads both), with how far it got: open, fulfilled or cancelled. */
@@ -138,7 +138,7 @@ function orderFromAdmin(n) {
 /** One page of past orders created on or after `since` (YYYY-MM-DD), oldest first: { orders, hasMore, cursor }. Shopify shows the last 60 days unless the app has been given the "read all orders" access. */
 async function listOrders(shop, token, o, fetchImpl) {
   const since = /^\d{4}-\d{2}-\d{2}$/.test(String(o.since || '')) ? o.since : '';
-  const data = await graphql(shop, token, ORDERS_QUERY, { first: Math.min(Math.max(Number(o.pageSize) || 25, 1), 50), after: o.cursor || null, query: since ? 'created_at:>=' + since : null }, fetchImpl);
+  const data = await graphql(shop, token, ORDERS_QUERY, { first: Math.min(Math.max(Number(o.pageSize) || 10, 1), 25), after: o.cursor || null, query: since ? 'created_at:>=' + since : null }, fetchImpl);
   const page = data.orders || { nodes: [], pageInfo: {} };
   return { orders: (page.nodes || []).map(orderFromAdmin), hasMore: !!(page.pageInfo && page.pageInfo.hasNextPage), cursor: (page.pageInfo && page.pageInfo.endCursor) || '' };
 }

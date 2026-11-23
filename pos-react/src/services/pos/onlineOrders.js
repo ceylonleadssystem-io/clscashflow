@@ -28,7 +28,7 @@ async function call(url, body, fallback) {
 	if (!user) throw new Error("Please sign in again.");
 	const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (await user.getIdToken()) }, body: JSON.stringify(body) });
 	const json = await res.json().catch(() => ({}));
-	if (!res.ok || json.ok === false) throw Object.assign(new Error(json.error || fallback), { code: json.code });
+	if (!res.ok || json.ok === false) throw Object.assign(new Error(json.error || (res.ok ? fallback : `${fallback} (the server answered ${res.status}${/timed out|timeout/i.test(String(json.errorMessage || "")) ? ", it took too long" : ""}. Try again, and tell support if it keeps happening.)`)), { code: json.code });
 	return json;
 }
 
