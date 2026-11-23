@@ -12,6 +12,7 @@ export const env = {
 	docsFunctionUrl:
 		e.VITE_DOCS_FUNCTION_URL || "/.netlify/functions/appwrite-docs",
 	shopifyStoreUrl: e.VITE_SHOPIFY_STORE_URL || "/.netlify/functions/shopify-store",
+	shopifyActionUrl: e.VITE_SHOPIFY_ACTION_URL || "/.netlify/functions/shopify-order-action",
 	shopifyInboxUrl: e.VITE_SHOPIFY_INBOX_URL || "/.netlify/functions/shopify-inbox",
 	supportSessionUrl: e.VITE_SUPPORT_SESSION_URL || "/.netlify/functions/support-session",
 	supportIceServers: e.VITE_SUPPORT_ICE_SERVERS || "", // optional JSON list of extra relay (TURN) servers for networks that block direct connections

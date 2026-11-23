@@ -60,6 +60,19 @@ export function OnlineStorePage() {
 			const n = await svc.onlineOrders.pull();
 			if (!n) ui.notice("No new online orders.");
 		});
+	// Shopify's approval page opens in a new tab (opened first so the browser allows it); the POS stays as it is
+	const connectAccess = (s) =>
+		run(async () => {
+			const tab = window.open("about:blank", "_blank");
+			try {
+				const url = await svc.onlineOrders.accessUrl(s.shop);
+				if (tab) tab.location.href = url;
+				else window.location.assign(url);
+			} catch (e) {
+				tab?.close();
+				throw e;
+			}
+		});
 	const copy = async () => {
 		try {
 			await navigator.clipboard.writeText(info.webhookUrl);
@@ -75,9 +88,9 @@ export function OnlineStorePage() {
 				<SectionCard title="Kitchen">
 					<label style={{ display: "flex", gap: 10, alignItems: "center" }}>
 						<input type="checkbox" id="online-auto-kitchen" checked={autoKitchen} onChange={(e) => svc.onlineOrders.options({ autoKitchen: e.target.checked })} />
-						<span>Send each new online order to the kitchen as soon as it arrives</span>
+						<span>Send an online order to the kitchen when I accept it</span>
 					</label>
-					<p className="muted">Off: orders wait under Online Orders until staff open them and send them.</p>
+					<p className="muted">Off: accepting an order does not send it to the kitchen.</p>
 				</SectionCard>
 			)}
 			{!cloud ? (
@@ -101,6 +114,10 @@ export function OnlineStorePage() {
 										<span>orders go to {nameOf(s.locationId)}</span>
 										<span className="muted">{s.currency && s.currency !== "LKR" ? `${s.currency} at ${s.rate} LKR` : "LKR"}</span>
 										<span className="muted">secret ••{s.last4}</span>
+										<span className={s.access ? "badge" : "muted"} data-access={s.access ? "yes" : "no"}>{s.access ? "Shopify actions on" : "Shopify actions not connected"}</span>
+										<button type="button" className="btn out" disabled={busy} onClick={() => connectAccess(s)}>
+											{s.access ? "Reconnect Shopify access" : "Connect Shopify access"}
+										</button>
 										<span className="muted">{s.lastOrderAt ? "last order " + new Date(s.lastOrderAt).toLocaleString() : "no orders yet"}</span>
 										<button type="button" className="btn danger" style={{ marginLeft: "auto" }} disabled={busy} onClick={() => remove(s)}>
 											Disconnect
@@ -116,6 +133,11 @@ export function OnlineStorePage() {
 								Check for orders now
 							</button>
 						)}
+					</SectionCard>
+					<SectionCard title="Accept, decline and fulfil">
+						<p className="muted">
+							Receiving orders needs only the webhook. To let the POS accept, decline, fulfil and add tracking in Shopify too, press <b>Connect Shopify access</b> beside the store and approve the app in the tab that opens. Until then those actions update the POS only and show "Shopify access not connected" on the order.
+						</p>
 					</SectionCard>
 					<SectionCard title="Connect a store">
 						<ol className="qr-steps">

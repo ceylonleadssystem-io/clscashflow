@@ -4,6 +4,12 @@
  */
 import { T } from "../../db/tables";
 import { env, isAppwrite } from "../../config/env";
+import { printHtmlInFrame } from "../printing/printDocument";
+import { packingSlipHtml } from "../printing/packingSlip";
+import { canAccept, canDecline, canFulfill, canPack, canTrack, cleanTracking, declineReasonOf, stateOf, trackingError } from "../../domain/onlineFlow";
+import { markSent } from "../../domain/deleteApproval";
+import { firstShortIngredient, saleStockNeeds, stockProblem } from "../../domain/inventory";
+import { completeSale } from "./sales";
 import { nowIso } from "../../domain/format";
 import { formatOrderNumber, nextSequence } from "../../domain/orders";
 import { inboxToOpenOrder, openOrderIdOf } from "../../domain/shopifyOrder";
@@ -22,7 +28,7 @@ async function call(url, body, fallback) {
 	if (!user) throw new Error("Please sign in again.");
 	const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + (await user.getIdToken()) }, body: JSON.stringify(body) });
 	const json = await res.json().catch(() => ({}));
-	if (!res.ok || json.ok === false) throw new Error(json.error || fallback);
+	if (!res.ok || json.ok === false) throw Object.assign(new Error(json.error || fallback), { code: json.code });
 	return json;
 }
 
@@ -35,7 +41,7 @@ const rememberShops = (ctx, shops) => {
 	return ctx.store.write((tx) => tx.setSetting("onlineStore", { ...cur, shops: shops.map((s) => ({ shop: s.shop, locationId: s.locationId })) }));
 };
 
-/** Settings of the online orders: { autoKitchen } (send each new order to the kitchen as it arrives). */
+/** Settings of the online orders: { autoKitchen } (send an order to the kitchen when it is accepted). */
 export async function saveOnlineOptions(ctx, options) {
 	const cur = ctx.data().settings.onlineStore || {};
 	await ctx.store.write((tx) => tx.setSetting("onlineStore", { ...cur, autoKitchen: !!options.autoKitchen }));
@@ -65,6 +71,11 @@ export async function saveOnlineStore(ctx, form) {
 	return out;
 }
 
+/** The address of Shopify's approval page, where the store owner lets the POS accept, decline and fulfil orders. */
+export async function onlineStoreAccessUrl(ctx, shop) {
+	return (await call(env.shopifyStoreUrl, { action: "access", shop }, "Could not start the Shopify approval.")).url;
+}
+
 /** Disconnects a store. */
 export async function removeOnlineStore(ctx, shop) {
 	const out = await call(env.shopifyStoreUrl, { action: "remove", shop }, "Could not remove the store.");
@@ -78,7 +89,6 @@ export async function storeOnlineOrders(ctx, rows) {
 	const d = ctx.data();
 	const s = ctx.session();
 	const have = new Set(d.openOrders.map((o) => o.id));
-	const autoKitchen = !!d.settings.onlineStore?.autoKitchen && kitchenMode(d.settings);
 	let seq = nextSequence(d.meta, d.sales, d.openOrders);
 	const fresh = [];
 	for (const row of rows) {
@@ -93,7 +103,7 @@ export async function storeOnlineOrders(ctx, rows) {
 		}
 		const who = row.order?.customer || {};
 		const customer = await ensureOnlineCustomer(ctx, { name: who.name, phone: who.phone, email: who.email, address: row.order?.delivery?.address, orderName: row.order?.name }); // the CRM customer, when Shopify shared enough to make one
-		fresh.push(stamp(inboxToOpenOrder(row, { products: d.products, inventory: ctx.data().inventory, number: formatOrderNumber(seq), staffId: s.userId, now: nowIso(), customerId: customer?.id || "", rate, autoKitchen }), s));
+		fresh.push(stamp(inboxToOpenOrder(row, { products: d.products, inventory: ctx.data().inventory, number: formatOrderNumber(seq), staffId: s.userId, now: nowIso(), customerId: customer?.id || "", rate }), s));
 		seq += 1;
 	}
 	if (!fresh.length) return [];
@@ -101,8 +111,6 @@ export async function storeOnlineOrders(ctx, rows) {
 		fresh.forEach((o) => tx.put(T.openOrders, o));
 		tx.setMeta("nextOrderSequence", seq);
 	});
-	// the kitchen gets its ticket once the order is saved
-	if (autoKitchen) for (const o of fresh) await queueKitchenTicket(ctx, { ...o, receipt: o.orderNumber });
 	return fresh.map((o) => o.orderNumber);
 }
 
@@ -117,10 +125,136 @@ export async function pullOnlineOrders(ctx) {
 		const done = orders.filter((o) => o.rate === undefined || Number(o.rate) > 0); // an order waiting for an exchange rate stays in the inbox
 		if (done.length || (out.cancelled || []).length) await call(env.shopifyInboxUrl, { action: "ack", ids: done.map((o) => o.id), cancelledIds: (out.cancelled || []).map((c) => c.id) }, "Could not confirm online orders.");
 		if (numbers.length) ctx.ui.notice(numbers.length === 1 ? `New online order ${numbers[0]}.` : `${numbers.length} new online orders.`);
-		if ((out.cancelled || []).length) await ctx.ui.alert(`Shopify cancelled ${out.cancelled.map((c) => c.name || "an order").join(", ")}. Check it before preparing it.`);
+		if ((out.cancelled || []).length) await cancelledInShopify(ctx, out.cancelled);
 		return numbers.length;
 	} catch (e) {
 		log.warn("online orders not checked", e);
 		return 0;
 	}
+}
+
+// ------------------------------------------------------------------------------------------------ the flow ----
+const findOrder = (ctx, id) => ctx.data().openOrders.find((o) => o.id === id);
+const put = (ctx, order) => ctx.store.write((tx) => tx.put(T.openOrders, order));
+
+/** Tells the Shopify store what staff did ("accept", "decline", "fulfill", "tracking") and records whether it worked on the order. */
+async function tellShopify(ctx, order, action, options = {}) {
+	const o = order.online || {};
+	let shopify;
+	try {
+		await call(env.shopifyActionUrl, { action, shop: o.shop, orderId: o.shopifyOrderId, options }, "Shopify could not be updated.");
+		shopify = { status: "done", at: nowIso(), lastAction: action, options };
+	} catch (e) {
+		const none = e.code === "no_access" || /cloud version/i.test(e.message);
+		shopify = { status: none ? "none" : "failed", error: none ? "Shopify access is not connected, so only the POS was updated." : e.message, at: nowIso(), lastAction: action, options };
+		log.warn("Shopify not updated", e, { action });
+	}
+	const next = { ...order, online: { ...o, shopify } };
+	await put(ctx, next);
+	return next;
+}
+
+/** Why an order might not be possible to prepare: items short of stock or ingredients (staff can still accept). */
+const shortage = (ctx, order) => {
+	const d = ctx.data();
+	const lines = (order.lines || []).filter((l) => l.productId || l.stockItemId);
+	const stock = stockProblem(lines.filter((l) => l.productId), d.products, d.inventory, ctx.session().locationId);
+	if (stock) return `${stock.name} is short on stock`;
+	const short = firstShortIngredient(saleStockNeeds(lines, d.products), d.inventory);
+	return short ? `${short.i.name} is short for this order` : "";
+};
+
+/** Staff accept the order; it is sent to the kitchen when the business chose that, and the store is told. */
+export async function acceptOnlineOrder(ctx, id) {
+	const order = findOrder(ctx, id);
+	if (!order || !canAccept(order)) return null;
+	const problem = shortage(ctx, order);
+	if (problem && !(await ctx.ui.confirm(`${problem}. Accept ${order.platformOrderId || order.orderNumber} anyway?`))) return null;
+	const now = nowIso();
+	const kitchen = !!ctx.data().settings.onlineStore?.autoKitchen && kitchenMode(ctx.data().settings) && !order.kitchenSentAt;
+	let next = { ...order, updatedAt: now, online: { ...order.online, state: "accepted", acceptedAt: now, acceptedBy: ctx.session().userId } };
+	if (kitchen) next = { ...next, lines: markSent(next.lines, now), kitchenSentAt: now, kitchenSendCount: (order.kitchenSendCount || 0) + 1 };
+	await put(ctx, next);
+	if (kitchen) await queueKitchenTicket(ctx, { ...next, receipt: next.orderNumber });
+	ctx.ui.notice(`${order.platformOrderId || order.orderNumber} accepted${kitchen ? " and sent to the kitchen" : ""}.`);
+	return tellShopify(ctx, next, "accept");
+}
+
+/** Staff decline the order: it is cancelled here and in Shopify ({ reason, note, refund, restock, notify }). */
+export async function declineOnlineOrder(ctx, id, form = {}) {
+	const order = findOrder(ctx, id);
+	if (!order || !canDecline(order)) return null;
+	const r = declineReasonOf(form.reason);
+	const options = { reason: r.shopify, note: String(form.note || "").trim().slice(0, 300), refund: form.refund !== false, restock: form.restock !== false, notify: form.notify !== false };
+	const now = nowIso();
+	const next = { ...order, status: "voided", voidedAt: now, voidedBy: ctx.session().userId, voidReason: r.label + (options.note ? ": " + options.note : ""), updatedAt: now, online: { ...order.online, state: "declined", declinedAt: now, declinedBy: ctx.session().userId, declineReason: r.value, declineNote: options.note } };
+	await put(ctx, next);
+	ctx.ui.notice(`${order.platformOrderId || order.orderNumber} declined.`);
+	return tellShopify(ctx, next, "decline", options);
+}
+
+/**
+ * Staff mark the order fulfilled: the sale is recorded (paid through Shopify, so no cash), stock goes down, and the store is told with the
+ * tracking ({ tracking: { company, number, url }, notify }). Stays on the Online Orders page.
+ */
+export async function fulfillOnlineOrder(ctx, id, form = {}) {
+	const order = findOrder(ctx, id);
+	if (!order || !canFulfill(order)) return null;
+	const tracking = cleanTracking(form.tracking);
+	const problem = trackingError(form.tracking);
+	if (problem) return void (await ctx.ui.alert(problem));
+	await ensureShopifyPayment(ctx);
+	// already paid and accepted by staff: stock that ran short is not a reason to stop now
+	const cart = (order.lines || []).map((l) => (l.isDiscount || l.isServiceCharge ? l : { ...l, stockOverride: "Shopify order" }));
+	const res = await completeSale(ctx, { cart, discount: order.discount, payment: CHANNEL, customerId: order.customerId || "", orderChannel: order.orderChannel, platformOrderId: order.platformOrderId, orderReference: order.orderReference, openOrderId: order.id, printAfter: false });
+	if (!res?.sale) return null;
+	const now = nowIso();
+	const next = { ...order, status: "paid", closedAt: now, saleId: res.sale.id, updatedAt: now, online: { ...order.online, state: "fulfilled", fulfilledAt: now, fulfilledBy: ctx.session().userId, tracking } };
+	await put(ctx, next);
+	ctx.ui.notice(`${order.platformOrderId || order.orderNumber} fulfilled.`);
+	return tellShopify(ctx, next, "fulfill", { tracking, notify: form.notify !== false });
+}
+
+/** Adds or changes the tracking of an order (before or after it is fulfilled); once fulfilled the store gets the update. */
+export async function saveOnlineTracking(ctx, id, form = {}) {
+	const order = findOrder(ctx, id);
+	if (!order || !canTrack(order)) return null;
+	const problem = trackingError(form.tracking);
+	if (problem) return void (await ctx.ui.alert(problem));
+	const next = { ...order, updatedAt: nowIso(), online: { ...order.online, tracking: cleanTracking(form.tracking) } };
+	await put(ctx, next);
+	ctx.ui.notice("Tracking saved.");
+	return stateOf(order) === "fulfilled" ? tellShopify(ctx, next, "tracking", { tracking: next.online.tracking, notify: form.notify !== false }) : next;
+}
+
+/** Prints the packing label. */
+export async function printOnlinePackingSlip(ctx, id) {
+	const order = findOrder(ctx, id);
+	if (!order || !canPack(order)) return null;
+	const d = ctx.data();
+	printHtmlInFrame(packingSlipHtml(order, { business: d.settings.business || "", products: d.products }), "Packing " + (order.platformOrderId || order.orderNumber));
+	const next = { ...order, online: { ...order.online, packingPrintedAt: nowIso() } };
+	await put(ctx, next);
+	return next;
+}
+
+/** Sends the last action to the store again (after it failed or before access was connected). */
+export async function retryOnlineShopify(ctx, id) {
+	const order = findOrder(ctx, id);
+	const last = order?.online?.shopify;
+	if (!order || !last?.lastAction) return null;
+	return tellShopify(ctx, order, last.lastAction, last.options || {});
+}
+
+/** Orders cancelled in Shopify by the customer: those not yet fulfilled are voided here, so nobody prepares them. */
+async function cancelledInShopify(ctx, cancelled) {
+	const names = [];
+	for (const c of cancelled) {
+		const order = findOrder(ctx, openOrderIdOf(c.id));
+		names.push(c.name || order?.platformOrderId || "an order");
+		if (!order || order.status !== "open") continue;
+		const now = nowIso();
+		await put(ctx, { ...order, status: "voided", voidedAt: now, voidedBy: "shopify", voidReason: "Cancelled in Shopify", updatedAt: now, online: { ...order.online, state: "declined", declinedAt: now, declineReason: "customer_asked", declineNote: "Cancelled in Shopify", shopify: { status: "done", at: now, lastAction: "cancelled" } } });
+	}
+	await ctx.ui.alert(`Shopify cancelled ${names.join(", ")}. Orders that were not fulfilled have been cancelled here too.`);
 }

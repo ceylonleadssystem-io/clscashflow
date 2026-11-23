@@ -6,6 +6,7 @@ const { guard, reply } = require('../lib/security');
 const { getUserFromEvent, getDocument, upsertDocument, deleteDocument, clean } = require('../lib/appwrite');
 const { normalizeShop, shopKey, normalizeCurrency, normalizeEmail } = require('../lib/shopify');
 const { _encrypt: encrypt } = require('../lib/ai-keys');
+const oauth = require('../lib/shopify-oauth');
 const log = require('../lib/log').createLogger('shopify-store');
 
 function publicBase(event) {
@@ -20,7 +21,8 @@ async function view(ownerUid, event) {
   const shops = (reg && reg.data && reg.data.shops) || [];
   const full = await Promise.all(shops.map(async function(s) {
     const row = await getDocument('shopifyShops', shopKey(s.shop)).catch(function() { return null; });
-    return Object.assign({}, s, { lastOrderAt: (row && row.data && row.data.lastOrderAt) || '' });
+    const d = (row && row.data) || {};
+    return Object.assign({}, s, { lastOrderAt: d.lastOrderAt || '', access: !!d.adminBox, accessScope: d.adminScope || '', accessAt: d.adminAt || '' });
   }));
   return { shops: full, webhookUrl: publicBase(event) + '/.netlify/functions/shopify-webhook' };
 }
@@ -43,6 +45,12 @@ exports.handler = async function handler(event) {
     const reg = await getDocument('shopifyBusinesses', ownerUid).catch(function() { return null; });
     const shops = ((reg && reg.data && reg.data.shops) || []).filter(function(s) { return s.shop !== shop; });
 
+    if (action === 'access') {
+      // the address of Shopify's approval page: the owner approves the POS app once and the token is kept by shopify-oauth.js
+      const row = await getDocument('shopifyShops', shopKey(shop));
+      if (!row || !row.data || row.data.business !== ownerUid) return reply(event, 404, { ok: false, error: 'Connect the store first.' });
+      return reply(event, 200, { ok: true, url: oauth.authorizeUrl(shop, ownerUid, publicBase(event) + '/.netlify/functions/shopify-oauth') });
+    }
     if (action === 'remove') {
       const row = await getDocument('shopifyShops', shopKey(shop)).catch(function() { return null; });
       if (row && row.data && row.data.business === ownerUid) await deleteDocument('shopifyShops', shopKey(shop));

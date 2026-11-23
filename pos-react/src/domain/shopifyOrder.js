@@ -15,8 +15,6 @@ export function rateFor(order, shop) {
 	if (cur === POS_CURRENCY) return 1;
 	return cur === String(shop?.currency || "").toUpperCase() && Number(shop?.rate) > 0 ? Number(shop.rate) : 0;
 }
-import { markSent } from "./deleteApproval";
-
 const code = (v) => String(v || "").trim().toUpperCase();
 
 export const openOrderIdOf = (inboxId) => "shp" + inboxId;
@@ -54,7 +52,7 @@ export function onlineLines(order, products = [], rate = 1, inventory = []) {
 }
 
 /** The open order for one inbox row. `number` is the POS order number it gets. */
-export function inboxToOpenOrder(row, { products, inventory = [], number, staffId = "", now, customerId = "", rate = 1, autoKitchen = false }) {
+export function inboxToOpenOrder(row, { products, inventory = [], number, staffId = "", now, customerId = "", rate = 1 }) {
 	const o = row.order || {};
 	const who = [o.customer?.name, o.customer?.phone].filter(Boolean).join(" · ");
 	return {
@@ -69,9 +67,11 @@ export function inboxToOpenOrder(row, { products, inventory = [], number, staffI
 		orderReference: ["Shopify " + o.name, who].filter(Boolean).join(" · "),
 		orderChannel: "Shopify",
 		platformOrderId: o.name || "",
-		lines: autoKitchen ? markSent(onlineLines(o, products, rate, inventory), now) : onlineLines(o, products, rate, inventory), // sent to the kitchen on arrival when the business chose that
+		lines: onlineLines(o, products, rate, inventory),
 		discount: { type: "amount", value: round((o.discount || 0) * rate), amount: round((o.discount || 0) * rate) },
-		kitchenSentAt: autoKitchen ? now : "",
-		kitchenSendCount: autoKitchen ? 1 : 0,
+		kitchenSentAt: "",
+		kitchenSendCount: 0,
+		// where the order is in the online flow (accept, decline, fulfil): see domain/onlineFlow.js
+		online: { shop: row.shop || "", shopifyOrderId: String(o.id || ""), state: "new", receivedAt: now, customer: { name: o.customer?.name || "", phone: o.customer?.phone || "", email: o.customer?.email || "" }, delivery: { address: o.delivery?.address || "", method: o.delivery?.method || "" }, note: o.note || "", financialStatus: o.financialStatus || "", currency: o.currency || "", tracking: { company: "", number: "", url: "" }, shopify: { status: "none" } },
 	};
 }
