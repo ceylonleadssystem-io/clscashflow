@@ -68,6 +68,11 @@ describe("Shopify Admin API calls", () => {
 		await expect(admin.updateTracking(SHOP, "tok", "777", { tracking: {} }, reply({}))).rejects.toThrow(/tracking number or link/);
 	});
 
+	it("shows the same permission error once, not once per order", async () => {
+		const many = async () => ({ ok: true, status: 200, json: async () => ({ errors: Array.from({ length: 25 }, () => ({ message: "Access denied for customer field. Required access: `read_customers` access scope." })) }) });
+		await expect(admin.listOrders(SHOP, "tok", {}, many)).rejects.toThrow(/^Shopify access is missing a permission: Access denied for customer field\. Required access: `read_customers` access scope\.$/);
+	});
+
 	it("reports a refused token or missing permission as 'no access' so the POS can say Shopify access is not connected", async () => {
 		const status = (n) => async () => ({ ok: false, status: n, json: async () => ({}) });
 		await expect(admin.acceptOrder(SHOP, "tok", "777", status(401))).rejects.toMatchObject({ code: "no_access" });
@@ -158,22 +163,27 @@ describe("webhooks the app subscribes to, and past orders", () => {
 		await expect(admin.subscribeOrderWebhooks(SHOP, "tok", "https://x", reply({ webhookSubscriptionCreate: { userErrors: [{ message: "Invalid address" }] } }))).rejects.toThrow("Invalid address");
 	});
 
-	const node = (extra = {}) => ({ legacyResourceId: "1001", name: "#1001", createdAt: "2026-10-01T10:00:00Z", cancelledAt: null, displayFulfillmentStatus: "FULFILLED", displayFinancialStatus: "PAID", currencyCode: "LKR", note: "n", customer: { firstName: "Nimal", lastName: "Perera", phone: "+94771234567", email: "n@x.lk" }, shippingAddress: { name: "Nimal", address1: "12 Lake Rd", city: "Galle", zip: "80000" }, shippingLines: { nodes: [{ title: "Standard" }] }, totalDiscountsSet: { shopMoney: { amount: "50.0" } }, totalShippingPriceSet: { shopMoney: { amount: "200.0" } }, totalTaxSet: { shopMoney: { amount: "0.0" } }, totalPriceSet: { shopMoney: { amount: "1400.0" } }, lineItems: { nodes: [{ title: "Latte", variantTitle: "Large", sku: "LAT-1", quantity: 2, originalUnitPriceSet: { shopMoney: { amount: "600.0" } } }] }, fulfillments: [{ trackingInfo: [{ company: "DHL", number: "123", url: "https://dhl.test/123" }] }], ...extra });
+	const node = (extra = {}) => ({ legacyResourceId: "1001", name: "#1001", createdAt: "2026-10-01T10:00:00Z", cancelledAt: null, displayFulfillmentStatus: "FULFILLED", displayFinancialStatus: "PAID", currencyCode: "LKR", note: "n", email: "n@x.lk", phone: "+94771234567", billingAddress: { name: "Nimal Perera", phone: "+94771234567" }, shippingAddress: { name: "Nimal Perera", address1: "12 Lake Rd", city: "Galle", zip: "80000" }, shippingLines: { nodes: [{ title: "Standard" }] }, totalDiscountsSet: { shopMoney: { amount: "50.0" } }, totalShippingPriceSet: { shopMoney: { amount: "200.0" } }, totalTaxSet: { shopMoney: { amount: "0.0" } }, totalPriceSet: { shopMoney: { amount: "1400.0" } }, lineItems: { nodes: [{ title: "Latte", variantTitle: "Large", sku: "LAT-1", quantity: 2, originalUnitPriceSet: { shopMoney: { amount: "600.0" } } }] }, fulfillments: [{ trackingInfo: [{ company: "DHL", number: "123", url: "https://dhl.test/123" }] }], ...extra });
 
 	it("turns an Admin API order into the webhook's order shape, with how far it got and its tracking", () => {
 		const done = admin.orderFromAdmin(node());
 		expect(done.history).toBe("fulfilled");
 		expect(done.tracking).toEqual({ company: "DHL", number: "123", url: "https://dhl.test/123" });
-		expect(done.order).toMatchObject({ id: "1001", name: "#1001", currency: "LKR", financial_status: "paid", total_price: "1400.0", customer: { first_name: "Nimal", phone: "+94771234567" }, line_items: [{ title: "Latte", variant_title: "Large", sku: "LAT-1", quantity: 2, price: "600.0" }] });
+		expect(done.order).toMatchObject({ id: "1001", name: "#1001", currency: "LKR", financial_status: "paid", total_price: "1400.0", customer: { first_name: "Nimal Perera", phone: "+94771234567", email: "n@x.lk" }, line_items: [{ title: "Latte", variant_title: "Large", sku: "LAT-1", quantity: 2, price: "600.0" }] });
 		expect(admin.orderFromAdmin(node({ cancelledAt: "2026-10-02T00:00:00Z" })).history).toBe("cancelled");
 		expect(admin.orderFromAdmin(node({ displayFulfillmentStatus: "UNFULFILLED", fulfillments: [] })).history).toBe("open");
 		expect(admin.orderFromAdmin(node({ displayFulfillmentStatus: "PARTIALLY_FULFILLED" })).history).toBe("open");
 		expect(admin.orderFromAdmin({}).order.line_items).toEqual([]);
+		// no shipping address (collection): the name falls back to the billing address, and the order's own phone and e-mail are used
+		const pickup = admin.orderFromAdmin(node({ shippingAddress: null, phone: null }));
+		expect(pickup.order.shipping_address).toBe(null);
+		expect(pickup.order.customer).toEqual({ first_name: "Nimal Perera", phone: "+94771234567", email: "n@x.lk" });
 	});
 
 	it("asks for one page of orders since a date, oldest first, and says whether there is more", async () => {
 		const out = await admin.listOrders(SHOP, "tok", { since: "2026-09-01", cursor: "abc", pageSize: 25 }, reply({ orders: { pageInfo: { hasNextPage: true, endCursor: "next" }, nodes: [node(), node({ legacyResourceId: "1002", name: "#1002" })] } }));
 		expect(sent[0].body.variables).toEqual({ first: 25, after: "abc", query: "created_at:>=2026-09-01" });
+		expect(sent[0].body.query).not.toMatch(/customer\s*\{/); // the separate customer record needs read_customers, which the app does not have
 		expect(sent[0].body.query).toContain("sortKey: CREATED_AT");
 		expect(out).toMatchObject({ hasMore: true, cursor: "next" });
 		expect(out.orders.map((o) => o.order.name)).toEqual(["#1001", "#1002"]);

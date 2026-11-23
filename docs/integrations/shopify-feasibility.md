@@ -1,5 +1,7 @@
 # Shopify orders into the POS: feasibility
 
+> Setting it up, connecting a store and fixing problems: see [shopify-setup-guide.md](shopify-setup-guide.md) (with screenshots).
+
 **Verdict: feasible.** One-way (Shopify order arrives in the POS) is a small-to-medium build. The hard parts are Shopify's customer-data rules, matching Shopify products to POS items, and (only if wanted later) keeping stock in step in both directions.
 
 ## What the POS already has
