@@ -113,15 +113,15 @@ describe("online orders switch (admin Features tab)", () => {
 });
 
 describe("online orders in the POS", () => {
-	it("are sent to the kitchen on arrival when the business chose that", async () => {
+	it("arrive as New and wait for staff to accept them, not yet in the kitchen", async () => {
 		const h = await createHarness({ settings: { businessType: "restaurant", onlineStore: { autoKitchen: true } } });
-		const numbers = await storeOnlineOrders(h.ctx, [{ id: "o1", order: sanitizeOrder(raw) }]);
+		const numbers = await storeOnlineOrders(h.ctx, [{ id: "o1", shop: "my-shop.myshopify.com", order: sanitizeOrder(raw) }]);
 		await h.refresh();
 		const saved = h.data().openOrders.find((o) => o.platformOrderId === "#1001");
 		expect(numbers).toHaveLength(1);
-		expect(saved.kitchenSentAt).toBeTruthy();
-		expect(saved.kitchenSendCount).toBe(1);
-		expect(h.data().kitchenTickets.length).toBeGreaterThan(0);
+		expect(saved.kitchenSentAt).toBeFalsy();
+		expect(h.data().kitchenTickets).toHaveLength(0);
+		expect(saved.online).toMatchObject({ state: "new", shop: "my-shop.myshopify.com", shopifyOrderId: "450789469", customer: { name: "Nimal Perera", phone: "+94771234567" }, delivery: { address: "12 Lake Rd, Galle, 80000", method: "Standard" } });
 	});
 
 	it("wait for staff when that is off", async () => {

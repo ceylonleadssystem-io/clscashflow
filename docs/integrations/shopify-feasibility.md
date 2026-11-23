@@ -78,3 +78,34 @@ Estimates assume one store and one developer, and exclude Shopify app review if 
 - **CRM:** each order with enough customer details (a name plus a phone number or e-mail) creates or updates a customer tagged "Shopify" with the delivery address; an existing customer with the same phone (0771234567 and +94771234567 count as the same) or e-mail is reused and only has gaps filled. The CRM page shows a Shopify badge, online orders and spend, the delivery address and a "Online (Shopify) customers" filter. Shopify hides name, phone, e-mail and address until the store is approved for protected customer data; without them the order has no customer.
 - **Not yet:** fulfilment and stock sent back to Shopify, a phone push for a closed shop, live exchange rates, and the Admin API (not needed for receiving).
 - **Checked:** the three functions were run against an in-memory fake database (signature, duplicates, cancellation, location filter, disconnect). Not yet run against a real Shopify store or the real Appwrite database.
+
+## Status: phase 3 (accept, decline, fulfil)
+**In the POS (works without any extra Shopify setup):** each online order arrives as **New** on the Online Orders page and stays there. Staff can:
+- **Accept** (sent to the kitchen if the Online Store option is on; asks first when an item is short on stock), or **Decline** with a reason (the order is voided here).
+- **Fulfill**: records the paid sale on the "Shopify" payment type, takes the stock, keeps tracking. Not stopped by short stock, because the order is already paid.
+- **Add or edit tracking** (company, number, link), **print the packing label** (4x6 inch, also fine on A4), **WhatsApp the customer** the status or tracking, **Open in Shopify**, filter by New, Accepted, Fulfilled, Declined.
+- An order **cancelled in Shopify** is voided here too if it was not fulfilled, and staff are told.
+
+**In Shopify (needs the Admin API access below):** Accept tags the order `pos-accepted`; Decline cancels it (reason, optional refund, restock and customer e-mail, chosen in the dialog); Fulfill creates the fulfilment with tracking and an optional customer e-mail; a tracking change after fulfilment updates the shipment. Each order shows "Shopify updated", "Shopify access not connected" or "Shopify not updated" with a **Send to Shopify again** button, so the POS and the store never silently disagree.
+
+**One-time Admin API setup** (Shopify no longer lets new stores create the old "custom app" with a pasted token; the store owner approves an app instead):
+1. In the Shopify Dev Dashboard create an app (custom distribution) with the scopes `read_orders, write_orders, read_merchant_managed_fulfillment_orders, write_merchant_managed_fulfillment_orders` and the redirect URL `https://ceylonrylabs.io/.netlify/functions/shopify-oauth`.
+2. Set `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET` (from the app) on Netlify, and redeploy. `SHOPIFY_API_VERSION` is optional (default 2026-01).
+3. In the POS: Settings > System Options > Online Store > **Connect Shopify access** beside the store. The store owner approves in the tab that opens; the token is kept encrypted and never shown.
+
+**Not verified against a real store:** the Shopify calls were tested with a fake Shopify only. Check on a test order: that Decline cancels (Shopify has deprecated the plain `refund` option of `orderCancel` in favour of `refundMethod`; the POS uses the plain option on API 2026-01 and shows Shopify's message if it is refused), that Fulfill creates the shipment, and that the tracking e-mail arrives. Cash on delivery orders are recorded as paid on the "Shopify" payment type; a COD flow is not built.
+
+## Status: phase 4 (any merchant, automatic install, past orders)
+**Connecting a store is now one step for the merchant.** Settings > System Options > Online Store: enter the store address and the location, press **Connect store**, approve the POS app in the Shopify tab that opens. The app subscribes to the store's order webhooks itself (signed with the app's secret), so no webhook or signing secret has to be created by hand. The old route (webhooks made by hand plus a pasted signing secret) is still there under "Advanced".
+
+**Install launch (automatic).** The app's App URL is `https://ceylonrylabs.io/shopify/launch` (`netlify/functions/shopify-launch.js`). When a merchant installs the app, Shopify sends them there signed with the app's secret: a store already added in the POS goes straight on to Shopify's approval page and finishes by itself; a store nobody has added yet gets a page saying how to connect it from the POS.
+
+**Which app a store uses.** `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` are the POS's own (public) app, used by every merchant. A Shopify *custom* app can be installed on one store only, so a store set up that way (Noirelle Premium) is listed in `SHOPIFY_CUSTOM_APPS`, a JSON object: `{"yh0vyy-03.myshopify.com": {"id": "<client id>", "secret": "<client secret>"}}`. Each store's return, token exchange and webhooks use its own app's credentials.
+
+**To open it to all merchants** (one-time, Shopify side, not done yet):
+1. Create a second app in the Shopify Dev Dashboard with **Public** distribution, the same four scopes, App URL `https://ceylonrylabs.io/shopify/launch`, redirect URL `https://ceylonrylabs.io/.netlify/functions/shopify-oauth`, and the IP allowlist (AS16509).
+2. Shopify reviews public apps before merchants can install them (App Store listing, or an unlisted direct link); ask for protected customer data access (name, phone, address, e-mail) and "Read all orders" in the same app settings.
+3. Set the public app's credentials as `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` and move the Noirelle custom app's credentials into `SHOPIFY_CUSTOM_APPS`.
+Until then only stores that have a dedicated custom app can connect.
+
+**Past orders.** Under Online Store, "Past orders": choose a date and press Import. The POS pulls the store's orders a page at a time (`netlify/functions/shopify-orders-import.js`), then brings them onto the device at the store's location. Open ones arrive as **New**; fulfilled ones are kept as fulfilled and cancelled ones as declined, with their tracking. Imported history makes **no sale, takes no stock, goes to no kitchen and uses no POS order numbers**; their customers are added to the CRM. Nothing is imported twice. Shopify shares the last 60 days unless the app is approved for "Read all orders".

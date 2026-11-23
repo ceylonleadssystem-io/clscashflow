@@ -6,6 +6,7 @@ const { getDocument, upsertDocument, clean } = require('../lib/appwrite');
 const { normalizeShop, shopKey, verifySignature, sanitizeOrder } = require('../lib/shopify');
 const { _decrypt: decrypt } = require('../lib/ai-keys');
 const { posAway, sendNewOrderEmail } = require('../lib/shopify-notify');
+const { appWebhookSecret } = require('../lib/shopify-oauth');
 
 const hits = new Map();
 const WINDOW_MS = 60 * 1000;
@@ -32,12 +33,16 @@ exports.handler = async function(event) {
   try {
     const row = await getDocument('shopifyShops', shopKey(shop));
     const data = row && row.data;
-    if (!data || !data.box || !data.business) return reply(404, { ok: false });
+    if (!data || !data.business || !(data.box || data.adminBox)) return reply(404, { ok: false });
     // the signature covers the exact bytes Shopify sent
     const raw = Buffer.from(event.body || '', event.isBase64Encoded ? 'base64' : 'utf8');
-    let secret;
-    try { secret = decrypt(data.box); } catch (_) { return reply(503, { ok: false }); }
-    if (!verifySignature(raw, h['x-shopify-hmac-sha256'], secret)) return reply(401, { ok: false });
+    // webhooks made by hand in the store are signed with the store's signing secret, those the app subscribed to with the app's secret
+    const secrets = [];
+    if (data.box) { try { secrets.push(decrypt(data.box)); } catch (_) { /* unreadable: the app secret may still match */ } }
+    const app = appWebhookSecret(shop);
+    if (app) secrets.push(app);
+    if (!secrets.length) return reply(503, { ok: false });
+    if (!secrets.some(function(secret) { return verifySignature(raw, h['x-shopify-hmac-sha256'], secret); })) return reply(401, { ok: false });
 
     const topic = clean(h['x-shopify-topic'], 60);
     let order;

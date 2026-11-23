@@ -34,7 +34,7 @@ exports.handler = async function handler(event) {
       const cancelled = mine.filter(function(r) { return r.data.cancelled && r.data.cancelNotified === false; }).slice(0, MAX_ROWS);
       const shops = {};
       for (const r of fresh) if (!(r.data.shop in shops)) { const s = await getDocument('shopifyShops', shopKey(r.data.shop)).catch(function() { return null; }); shops[r.data.shop] = (s && s.data) || {}; }
-      return reply(event, 200, { ok: true, orders: fresh.map(function(r) { return { id: r.id, shop: r.data.shop, receivedAt: r.data.receivedAt, order: r.data.order, rate: rateFor(r.data.order, shops[r.data.shop]) }; }), cancelled: cancelled.map(function(r) { return { id: r.id, name: r.data.order && r.data.order.name }; }) });
+      return reply(event, 200, { ok: true, orders: fresh.map(function(r) { return { id: r.id, shop: r.data.shop, receivedAt: r.data.receivedAt, order: r.data.order, rate: rateFor(r.data.order, shops[r.data.shop]), imported: !!r.data.imported, history: r.data.history || '', tracking: r.data.tracking || null }; }), cancelled: cancelled.map(function(r) { return { id: r.id, name: r.data.order && r.data.order.name }; }) });
     }
     if (action === 'ack') {
       const ids = (Array.isArray(body.ids) ? body.ids : []).map(function(id) { return clean(id, 60); }).filter(function(id) { return /^o[0-9]{1,40}$/.test(id); }).slice(0, MAX_ROWS);

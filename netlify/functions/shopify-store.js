@@ -6,6 +6,7 @@ const { guard, reply } = require('../lib/security');
 const { getUserFromEvent, getDocument, upsertDocument, deleteDocument, clean } = require('../lib/appwrite');
 const { normalizeShop, shopKey, normalizeCurrency, normalizeEmail } = require('../lib/shopify');
 const { _encrypt: encrypt } = require('../lib/ai-keys');
+const oauth = require('../lib/shopify-oauth');
 const log = require('../lib/log').createLogger('shopify-store');
 
 function publicBase(event) {
@@ -20,7 +21,8 @@ async function view(ownerUid, event) {
   const shops = (reg && reg.data && reg.data.shops) || [];
   const full = await Promise.all(shops.map(async function(s) {
     const row = await getDocument('shopifyShops', shopKey(s.shop)).catch(function() { return null; });
-    return Object.assign({}, s, { lastOrderAt: (row && row.data && row.data.lastOrderAt) || '' });
+    const d = (row && row.data) || {};
+    return Object.assign({}, s, { lastOrderAt: d.lastOrderAt || '', access: !!d.adminBox, accessScope: d.adminScope || '', accessAt: d.adminAt || '', webhooksAt: d.webhooksAt || '', webhooksError: d.webhooksError || '' });
   }));
   return { shops: full, webhookUrl: publicBase(event) + '/.netlify/functions/shopify-webhook' };
 }
@@ -43,6 +45,12 @@ exports.handler = async function handler(event) {
     const reg = await getDocument('shopifyBusinesses', ownerUid).catch(function() { return null; });
     const shops = ((reg && reg.data && reg.data.shops) || []).filter(function(s) { return s.shop !== shop; });
 
+    if (action === 'access') {
+      // the address of Shopify's approval page: the owner approves the POS app once and the token is kept by shopify-oauth.js
+      const row = await getDocument('shopifyShops', shopKey(shop));
+      if (!row || !row.data || row.data.business !== ownerUid) return reply(event, 404, { ok: false, error: 'Connect the store first.' });
+      return reply(event, 200, { ok: true, url: oauth.authorizeUrl(shop, ownerUid, publicBase(event) + '/.netlify/functions/shopify-oauth') });
+    }
     if (action === 'remove') {
       const row = await getDocument('shopifyShops', shopKey(shop)).catch(function() { return null; });
       if (row && row.data && row.data.business === ownerUid) await deleteDocument('shopifyShops', shopKey(shop));
@@ -51,8 +59,9 @@ exports.handler = async function handler(event) {
       return reply(event, 200, Object.assign({ ok: true }, await view(ownerUid, event)));
     }
     if (action === 'save') {
+      // the signing secret is only for a store whose webhooks were made by hand; with Shopify access connected the app subscribes to them itself
       const secret = String(body.secret || '').trim();
-      if (secret.length < 16 || secret.length > 200 || /\s/.test(secret)) return reply(event, 400, { ok: false, error: 'Paste the webhook signing secret shown in Shopify (Settings > Notifications > Webhooks).' });
+      if (secret && (secret.length < 16 || secret.length > 200 || /\s/.test(secret))) return reply(event, 400, { ok: false, error: 'That does not look like the webhook signing secret shown in Shopify (Settings > Notifications > Webhooks). Leave it empty to connect through Shopify access instead.' });
       // the location must be one of this business's own locations
       const locationId = String(body.locationId || '');
       const workspace = await getDocument('users/' + ownerUid + '/pos', 'main').catch(function() { return null; });
@@ -69,8 +78,11 @@ exports.handler = async function handler(event) {
       const taken = await getDocument('shopifyShops', shopKey(shop)).catch(function() { return null; });
       if (taken && taken.data && taken.data.business && taken.data.business !== ownerUid) return reply(event, 409, { ok: false, error: 'That store is already connected to another business.' });
       const now = new Date().toISOString();
-      await upsertDocument('shopifyShops', shopKey(shop), { business: ownerUid, shop: shop, locationId: locationId, box: encrypt(secret), last4: secret.slice(-4), currency: currency, rate: rate, notifyEmail: notifyEmail, connectedAt: now, by: user.id }, true);
-      await upsertDocument('shopifyBusinesses', ownerUid, { business: ownerUid, shops: shops.concat([{ shop: shop, locationId: locationId, last4: secret.slice(-4), currency: currency, rate: rate, notifyEmail: notifyEmail, connectedAt: now }]) }, false);
+      const kept = (taken && taken.data) || {};
+      const fields = { business: ownerUid, shop: shop, locationId: locationId, currency: currency, rate: rate, notifyEmail: notifyEmail, connectedAt: kept.connectedAt || now, by: user.id };
+      if (secret) { fields.box = encrypt(secret); fields.last4 = secret.slice(-4); }
+      await upsertDocument('shopifyShops', shopKey(shop), fields, true);
+      await upsertDocument('shopifyBusinesses', ownerUid, { business: ownerUid, shops: shops.concat([{ shop: shop, locationId: locationId, last4: secret ? secret.slice(-4) : kept.last4 || '', currency: currency, rate: rate, notifyEmail: notifyEmail, connectedAt: fields.connectedAt }]) }, false);
       log.info('store saved', { ownerUid, shop, locationId, by: user.id });
       return reply(event, 200, Object.assign({ ok: true }, await view(ownerUid, event)));
     }

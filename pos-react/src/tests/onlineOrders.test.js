@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isOnlineOrder, newOnlineCount, openOnlineOrders } from "../domain/onlineOrders";
+import { allOnlineOrders, isOnlineOrder, newOnlineCount, openOnlineOrders } from "../domain/onlineOrders";
 import { settingsGroups } from "../views/settings/SettingsHome";
 import { NAV_ITEMS, ROLE_VIEWS, VIEW_TITLES } from "../config/roles";
 
@@ -13,8 +13,13 @@ describe("online orders", () => {
 		expect(openOnlineOrders(undefined)).toEqual([]);
 	});
 
-	it("count as new until they are sent to the kitchen", () => {
-		expect(newOnlineCount([order("a"), order("b", { kitchenSentAt: "2026-11-19T10:05:00Z" })])).toBe(1);
+	it("count as new until staff accept or decline them", () => {
+		expect(newOnlineCount([order("a"), order("b", { online: { state: "accepted" } }), order("c", { status: "voided", online: { state: "declined" } })])).toBe(1);
+	});
+
+	it("are all listed, whatever step they are at, newest first", () => {
+		const list = [order("a"), order("b", { status: "paid", online: { state: "fulfilled" }, updatedAt: "2026-11-19T12:00:00Z" }), order("c", { orderChannel: "Dine-in" })];
+		expect(allOnlineOrders(list).map((o) => o.id)).toEqual(["b", "a"]);
 	});
 
 	it("have a page that owners, managers and cashiers can open, a title and a sidebar entry", () => {
