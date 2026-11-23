@@ -15,7 +15,7 @@ globalThis.fetch = async (url, init) => {
 	return { ok: r.status ? r.status < 400 : r.ok !== false, status: r.status || 200, json: async () => r };
 };
 
-const { storeOnlineOrders, acceptOnlineOrder, declineOnlineOrder, fulfillOnlineOrder, saveOnlineTracking, printOnlinePackingSlip, retryOnlineShopify, pullOnlineOrders } = await import("../services/pos/onlineOrders");
+const { storeOnlineOrders, acceptOnlineOrder, declineOnlineOrder, fulfillOnlineOrder, saveOnlineTracking, printOnlinePackingSlip, retryOnlineShopify, pullOnlineOrders, importPastOrders } = await import("../services/pos/onlineOrders");
 const shopify = (await import("../../../netlify/lib/shopify.js")).default;
 
 const raw = { id: 777, name: "#1007", currency: "LKR", financial_status: "paid", total_price: "1400.00", customer: { first_name: "Nimal", last_name: "Perera", phone: "+94771234567", email: "n@x.lk" }, shipping_address: { address1: "12 Lake Rd", city: "Galle" }, note: "Ring the bell", line_items: [{ title: "Latte", sku: "LAT-1", quantity: 2, price: "700.00" }] };
@@ -201,5 +201,75 @@ describe("an order cancelled in Shopify", () => {
 		await h.refresh();
 		expect(online()).toMatchObject({ status: "voided", voidReason: "Cancelled in Shopify", online: { state: "declined" } });
 		expect(h.lastAlert()).toMatch(/Shopify cancelled #1007/);
+	});
+});
+
+describe("past orders pulled from the store", () => {
+	const past = (id, history, extra = {}) => ({ id, shop: "my-shop.myshopify.com", order: shopify.sanitizeOrder({ ...raw, id: Number(id.slice(1)), name: "#" + id.slice(1) }), imported: true, history, tracking: { company: "DHL", number: "T" + id, url: "" }, ...extra });
+	const ids = () => h.data().openOrders.map((o) => o.id).sort();
+
+	it("are kept as history: fulfilled as paid and fulfilled, cancelled as declined, with their own number and no sale, stock or kitchen", async () => {
+		h = await createHarness({ settings: { businessType: "restaurant", onlineStore: { autoKitchen: true } } });
+		await addProduct(h, { name: "Latte", code: "LAT-1", type: "Product", price: "700", stock: "10" });
+		const before = h.data().inventory.find((i) => i.productId).qty;
+		const numbers = await storeOnlineOrders(h.ctx, [past("o801", "fulfilled"), past("o802", "cancelled")]);
+		await h.refresh();
+		const done = h.data().openOrders.find((o) => o.id === "shpo801");
+		const cancelled = h.data().openOrders.find((o) => o.id === "shpo802");
+		expect(done).toMatchObject({ status: "paid", orderNumber: "SHP801", platformOrderId: "#801", online: { state: "fulfilled", imported: true, tracking: { company: "DHL", number: "To801" }, shopify: { status: "done" } } });
+		expect(cancelled).toMatchObject({ status: "voided", voidReason: "Cancelled in Shopify", online: { state: "declined", imported: true } });
+		expect(numbers).toHaveLength(2);
+		expect(h.data().sales).toHaveLength(0);
+		expect(h.data().kitchenTickets).toHaveLength(0);
+		expect(h.data().inventory.find((i) => i.productId).qty).toBe(before);
+	});
+
+	it("do not use up POS order numbers, and a past order that is still open arrives as New like any other", async () => {
+		await setup();
+		await storeOnlineOrders(h.ctx, [past("o801", "fulfilled"), past("o803", "open")]);
+		await h.refresh();
+		const open = h.data().openOrders.find((o) => o.id === "shpo803");
+		expect(open).toMatchObject({ status: "open", online: { state: "new", imported: true } });
+		expect(open.orderNumber).toMatch(/^ORD-\d{4}$/);
+		const next = await storeOnlineOrders(h.ctx, [row("o804")]);
+		const used = (n) => Number(String(n).replace(/\D/g, ""));
+		expect(used(next[0])).toBe(used(open.orderNumber) + 1); // the history order took no number in between
+	});
+
+	it("add their customers to the CRM", async () => {
+		await setup();
+		await storeOnlineOrders(h.ctx, [past("o801", "fulfilled")]);
+		await h.refresh();
+		expect(h.data().customers.some((c) => c.name === "Nimal Perera" && /Shopify/.test(c.tags))).toBe(true);
+	});
+
+	it("are listed under Online Orders with the others, in every state", async () => {
+		await setup();
+		await storeOnlineOrders(h.ctx, [past("o801", "fulfilled"), past("o802", "cancelled")]);
+		await h.refresh();
+		expect(ids()).toEqual(["shpo777", "shpo801", "shpo802"]);
+	});
+});
+
+describe("importing past orders", () => {
+	it("asks the server page by page, brings the orders onto this device and reports progress", async () => {
+		await setup();
+		const pages = [{ ok: true, imported: 2, skipped: 0, hasMore: true, cursor: "c1" }, { ok: true, imported: 1, skipped: 1, hasMore: false, cursor: "" }];
+		const inbox = [[{ ...row("o901"), imported: true, history: "fulfilled" }, { ...row("o902"), imported: true, history: "cancelled" }, { ...row("o903"), imported: true, history: "fulfilled" }], []];
+		reply = (url, body) => (/orders-import/.test(url) ? pages.shift() : /inbox/.test(url) && body.action === "pull" ? { ok: true, orders: inbox.shift() || [], cancelled: [] } : { ok: true });
+		const progress = [];
+		const out = await importPastOrders(h.ctx, { shop: "my-shop.myshopify.com", since: "2026-09-01", onProgress: (p) => progress.push(p) });
+		await h.refresh();
+		expect(out).toEqual({ imported: 3, skipped: 1, saved: 3 });
+		const importCalls = calls.filter((c) => /orders-import/.test(c.url)).map((c) => c.body);
+		expect(importCalls).toEqual([{ shop: "my-shop.myshopify.com", since: "2026-09-01", cursor: "" }, { shop: "my-shop.myshopify.com", since: "2026-09-01", cursor: "c1" }]);
+		expect(progress.at(-1)).toEqual({ imported: 3, skipped: 1, saved: 3 });
+		expect(h.data().openOrders.filter((o) => o.online?.imported)).toHaveLength(3);
+	});
+
+	it("stops with Shopify's message when the server refuses", async () => {
+		await setup();
+		reply = () => ({ ok: false, status: 409, code: "no_access", error: "Connect Shopify access for this store first." });
+		await expect(importPastOrders(h.ctx, { shop: "my-shop.myshopify.com", since: "2026-09-01" })).rejects.toThrow("Connect Shopify access for this store first.");
 	});
 });

@@ -139,6 +139,7 @@ export function bindServices(ctx) {
 			remove: onlineOrders.removeOnlineStore,
 			accessUrl: onlineOrders.onlineStoreAccessUrl,
 			pull: onlineOrders.pullOnlineOrders,
+			importPast: onlineOrders.importPastOrders,
 			options: onlineOrders.saveOnlineOptions,
 			accept: onlineOrders.acceptOnlineOrder,
 			decline: onlineOrders.declineOnlineOrder,

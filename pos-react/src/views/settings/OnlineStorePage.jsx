@@ -1,7 +1,8 @@
 /**
  * Settings > System Options > Online Store: connect a Shopify store so its orders arrive in the POS (Online Orders page).
- * Shopify sends each order to the webhook address shown here; the signing secret proves it came from Shopify. The secret is sent once,
- * stored encrypted and never shown again.
+ * A merchant enters the store address and the location that prepares its orders, then approves the POS app in Shopify; the app subscribes to the
+ * store's order webhooks itself and the POS can accept, decline and fulfil orders there. Past orders can be pulled in too. The webhook signing
+ * secret is only for a store whose webhooks were made by hand (Advanced); it is sent once, stored encrypted and never shown again.
  */
 import { useEffect, useState } from "react";
 import { PageHeader, SectionCard } from "../../components/settings/kit/rows";
@@ -10,6 +11,8 @@ import { kitchenMode } from "../../services/pos/common";
 import { useData } from "../../store/DataProvider";
 import { usePos } from "../../store/PosProvider";
 import { useUi } from "../../store/UiProvider";
+
+const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
 
 export function OnlineStorePage() {
 	const { svc, locationId } = usePos();
@@ -28,6 +31,9 @@ export function OnlineStorePage() {
 	const [where, setWhere] = useState(() => (locations.some((l) => l.id === locationId) ? locationId : locations[0]?.id || ""));
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState("");
+	const [since, setSince] = useState(() => daysAgo(60));
+	const [importShop, setImportShop] = useState("");
+	const [progress, setProgress] = useState(null); // { imported, skipped, saved, done }
 	useEffect(() => {
 		if (cloud) svc.onlineOrders.load().then(setInfo, (e) => setError(e.message));
 	}, [cloud]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -43,13 +49,36 @@ export function OnlineStorePage() {
 			setBusy(false);
 		}
 	};
+	// Shopify's approval page opens in a new tab (opened first so the browser allows it); the POS stays as it is
+	const openApproval = async (shopAddress, tab) => {
+		try {
+			const url = await svc.onlineOrders.accessUrl(shopAddress);
+			if (tab) tab.location.href = url;
+			else window.location.assign(url);
+		} catch (e) {
+			tab?.close();
+			throw e;
+		}
+	};
 	const connect = (e) => {
 		e.preventDefault();
+		const tab = window.open("about:blank", "_blank");
+		const address = shop.trim();
 		run(async () => {
-			setInfo(await svc.onlineOrders.save({ shop: shop.trim(), secret: secret.trim(), locationId: where, currency: currency.trim().toUpperCase(), rate: currency.trim().toUpperCase() === "LKR" ? 1 : Number(rate), notifyEmail: notifyEmail.trim() }));
+			try {
+				setInfo(await svc.onlineOrders.save({ shop: address, secret: secret.trim() || undefined, locationId: where, currency: currency.trim().toUpperCase(), rate: currency.trim().toUpperCase() === "LKR" ? 1 : Number(rate), notifyEmail: notifyEmail.trim() }));
+			} catch (err) {
+				tab?.close();
+				throw err;
+			}
 			setShop("");
 			setSecret("");
+			await openApproval(address, tab);
 		});
+	};
+	const connectAccess = (s) => {
+		const tab = window.open("about:blank", "_blank");
+		run(() => openApproval(s.shop, tab));
 	};
 	const remove = (s) =>
 		run(async () => {
@@ -60,18 +89,14 @@ export function OnlineStorePage() {
 			const n = await svc.onlineOrders.pull();
 			if (!n) ui.notice("No new online orders.");
 		});
-	// Shopify's approval page opens in a new tab (opened first so the browser allows it); the POS stays as it is
-	const connectAccess = (s) =>
+	const withAccess = (info?.shops || []).filter((s) => s.access);
+	const chosen = withAccess.find((s) => s.shop === importShop) || withAccess[0];
+	const importPast = () =>
 		run(async () => {
-			const tab = window.open("about:blank", "_blank");
-			try {
-				const url = await svc.onlineOrders.accessUrl(s.shop);
-				if (tab) tab.location.href = url;
-				else window.location.assign(url);
-			} catch (e) {
-				tab?.close();
-				throw e;
-			}
+			if (chosen.locationId !== locationId) throw new Error(`Past orders of ${chosen.shop} are kept at ${nameOf(chosen.locationId)}. Choose that location in the top bar first, then import.`);
+			setProgress({ imported: 0, skipped: 0, saved: 0, done: false });
+			const out = await svc.onlineOrders.importPast({ shop: chosen.shop, since, onProgress: (p) => setProgress({ ...p, done: false }) });
+			setProgress({ ...out, done: true });
 		});
 	const copy = async () => {
 		try {
@@ -113,12 +138,14 @@ export function OnlineStorePage() {
 										<b>{s.shop}</b>
 										<span>orders go to {nameOf(s.locationId)}</span>
 										<span className="muted">{s.currency && s.currency !== "LKR" ? `${s.currency} at ${s.rate} LKR` : "LKR"}</span>
-										<span className="muted">secret ••{s.last4}</span>
-										<span className={s.access ? "badge" : "muted"} data-access={s.access ? "yes" : "no"}>{s.access ? "Shopify actions on" : "Shopify actions not connected"}</span>
-										<button type="button" className="btn out" disabled={busy} onClick={() => connectAccess(s)}>
-											{s.access ? "Reconnect Shopify access" : "Connect Shopify access"}
-										</button>
+										<span className={s.access ? "badge" : "muted"} data-access={s.access ? "yes" : "no"}>
+											{s.access ? "Shopify connected" : "Shopify approval needed"}
+										</span>
+										{s.access && s.webhooksError && <span className="muted" title={s.webhooksError}>New orders will not arrive yet: {s.webhooksError}</span>}
 										<span className="muted">{s.lastOrderAt ? "last order " + new Date(s.lastOrderAt).toLocaleString() : "no orders yet"}</span>
+										<button type="button" className="btn out" disabled={busy} onClick={() => connectAccess(s)}>
+											{s.access ? "Reconnect Shopify" : "Approve in Shopify"}
+										</button>
 										<button type="button" className="btn danger" style={{ marginLeft: "auto" }} disabled={busy} onClick={() => remove(s)}>
 											Disconnect
 										</button>
@@ -134,30 +161,11 @@ export function OnlineStorePage() {
 							</button>
 						)}
 					</SectionCard>
-					<SectionCard title="Accept, decline and fulfil">
-						<p className="muted">
-							Receiving orders needs only the webhook. To let the POS accept, decline, fulfil and add tracking in Shopify too, press <b>Connect Shopify access</b> beside the store and approve the app in the tab that opens. Until then those actions update the POS only and show "Shopify access not connected" on the order.
-						</p>
-					</SectionCard>
 					<SectionCard title="Connect a store">
 						<ol className="qr-steps">
-							<li>
-								In Shopify admin open <b>Settings &gt; Notifications &gt; Webhooks</b> and create a webhook for <b>Order creation</b>, format JSON, with this address. Add a second one for <b>Order cancellation</b>.
-							</li>
-							<li>Copy the <b>signing secret</b> Shopify shows on that page and paste it below, with your store address.</li>
-							<li>Press Connect. New orders show up within about half a minute while the POS is open.</li>
+							<li>Enter your store address and the location that prepares its orders, then press <b>Connect store</b>.</li>
+							<li>A Shopify tab opens: approve the Ceylonry POS app (install it first if Shopify asks). That is all: new orders arrive by themselves and accepting, declining and fulfilling them updates Shopify too.</li>
 						</ol>
-						{info?.webhookUrl && (
-							<div className="field">
-								<label htmlFor="online-webhook-url">Webhook address</label>
-								<div style={{ display: "flex", gap: 8 }}>
-									<input className="input" id="online-webhook-url" readOnly value={info.webhookUrl} onFocus={(e) => e.target.select()} />
-									<button type="button" className="btn out" onClick={copy}>
-										Copy
-									</button>
-								</div>
-							</div>
-						)}
 						<form className="form-grid" onSubmit={connect} autoComplete="off">
 							<div className="field">
 								<label htmlFor="online-shop">Store address</label>
@@ -189,23 +197,76 @@ export function OnlineStorePage() {
 								<label htmlFor="online-notify">E-mail me about orders that arrive while no POS is open (optional)</label>
 								<input className="input" id="online-notify" type="email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} placeholder="owner@example.com" maxLength={200} />
 							</div>
-							<div className="field" style={{ gridColumn: "1 / -1" }}>
-								<label htmlFor="online-secret">Webhook signing secret</label>
-								<input className="input" id="online-secret" type="password" autoComplete="new-password" spellCheck={false} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Paste the secret from Shopify" required maxLength={200} />
-								<small className="muted">It is stored encrypted and never shown again. Connecting the same store again replaces it.</small>
-							</div>
+							<details style={{ gridColumn: "1 / -1" }}>
+								<summary>Advanced: I made the webhooks in Shopify myself</summary>
+								<div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+									<p className="muted">Only for a store whose order webhooks were created by hand in Shopify (Settings &gt; Notifications &gt; Webhooks). Give Shopify this address for Order creation and Order cancellation (JSON), and paste the signing secret it shows.</p>
+									{info?.webhookUrl && (
+										<div className="field">
+											<label htmlFor="online-webhook-url">Webhook address</label>
+											<div style={{ display: "flex", gap: 8 }}>
+												<input className="input" id="online-webhook-url" readOnly value={info.webhookUrl} onFocus={(e) => e.target.select()} />
+												<button type="button" className="btn out" onClick={copy}>
+													Copy
+												</button>
+											</div>
+										</div>
+									)}
+									<div className="field">
+										<label htmlFor="online-secret">Webhook signing secret</label>
+										<input className="input" id="online-secret" type="password" autoComplete="new-password" spellCheck={false} value={secret} onChange={(e) => setSecret(e.target.value)} placeholder="Leave empty when you approve the app in Shopify" maxLength={200} />
+										<small className="muted">It is stored encrypted and never shown again.</small>
+									</div>
+								</div>
+							</details>
 							{error && (
 								<div role="alert" className="ceylo-error" style={{ gridColumn: "1 / -1" }}>
 									{error}
 								</div>
 							)}
 							<div style={{ gridColumn: "1 / -1" }}>
-								<button className="btn gold" type="submit" id="online-store-connect" disabled={busy || !shop.trim() || !secret.trim()}>
+								<button className="btn gold" type="submit" id="online-store-connect" disabled={busy || !shop.trim()}>
 									{busy ? "Connecting…" : "Connect store"}
 								</button>
 							</div>
 						</form>
 					</SectionCard>
+					{withAccess.length > 0 && (
+						<SectionCard title="Past orders">
+							<p className="muted">
+								Pull in the orders the store already has, not only new ones. Orders still waiting arrive as New; fulfilled and cancelled ones are kept as history. Nothing is taken out of stock, no sale is recorded and nothing goes to the kitchen. Customers are added to the CRM. Shopify normally shares the last 60 days; older orders need the app to be approved for "Read all orders" in the Shopify Dev Dashboard.
+							</p>
+							<div className="form-grid">
+								{withAccess.length > 1 && (
+									<div className="field">
+										<label htmlFor="import-shop">Store</label>
+										<select className="input" id="import-shop" value={chosen.shop} onChange={(e) => setImportShop(e.target.value)}>
+											{withAccess.map((s) => (
+												<option key={s.shop} value={s.shop}>
+													{s.shop}
+												</option>
+											))}
+										</select>
+									</div>
+								)}
+								<div className="field">
+									<label htmlFor="import-since">Orders since</label>
+									<input className="input" id="import-since" type="date" value={since} max={daysAgo(0)} onChange={(e) => setSince(e.target.value)} />
+								</div>
+							</div>
+							<div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+								<button type="button" className="btn gold" id="import-past-orders" disabled={busy || !since} onClick={importPast}>
+									{busy && progress && !progress.done ? "Importing…" : "Import past orders"}
+								</button>
+								{progress && (
+									<span role="status" className="muted" id="import-progress">
+										{progress.done ? "Done: " : ""}
+										{progress.imported} found{progress.skipped ? `, ${progress.skipped} already here` : ""}, {progress.saved} added to the POS
+									</span>
+								)}
+							</div>
+						</SectionCard>
+					)}
 				</>
 			)}
 		</>

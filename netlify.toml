@@ -100,6 +100,13 @@
   to = "/cashflow/invoice-public.html?token=:token&v=:version"
   status = 200
 
+# The App URL of the Shopify app: a merchant lands here right after installing it (see netlify/functions/shopify-launch.js).
+[[redirects]]
+  from = "/shopify/launch"
+  to = "/.netlify/functions/shopify-launch"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/m/:token"
   to = "/cashflow/menu-public.html?token=:token"

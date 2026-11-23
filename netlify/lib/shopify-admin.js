@@ -95,4 +95,52 @@ async function updateTracking(shop, token, orderId, o, fetchImpl) {
   return { fulfillmentId: fulfillments[0].id };
 }
 
-module.exports = { VERSION, SCOPES, ACCEPT_TAG, gid, graphql, acceptOrder, cancelOrder, fulfillOrder, updateTracking };
+/**
+ * Subscribes the store to order creation and cancellation, pointed at the POS's webhook address. Webhooks the app subscribes to itself are signed
+ * with the app's secret, so the merchant needs no signing secret. A subscription that already exists is fine.
+ */
+async function subscribeOrderWebhooks(shop, token, callbackUrl, fetchImpl) {
+  const done = [];
+  for (const topic of ['ORDERS_CREATE', 'ORDERS_CANCELLED']) {
+    const data = await graphql(shop, token, 'mutation($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) { webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) { webhookSubscription { id } userErrors { field message } } }', { topic: topic, webhookSubscription: { callbackUrl: callbackUrl, format: 'JSON' } }, fetchImpl);
+    const errors = (data.webhookSubscriptionCreate && data.webhookSubscriptionCreate.userErrors) || [];
+    const taken = errors.every(function(e) { return /already been taken|already exists/i.test(e.message); });
+    if (errors.length && !taken) throw fail(errors.map(function(e) { return e.message; }).join('; '));
+    done.push(topic);
+  }
+  return { subscribed: done };
+}
+
+const ORDERS_QUERY = 'query($first: Int!, $after: String, $query: String) { orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT) { pageInfo { hasNextPage endCursor } nodes { legacyResourceId name createdAt cancelledAt displayFulfillmentStatus displayFinancialStatus currencyCode note email phone customer { firstName lastName phone email } shippingAddress { name address1 address2 city zip phone } shippingLines(first: 1) { nodes { title } } totalDiscountsSet { shopMoney { amount } } totalShippingPriceSet { shopMoney { amount } } totalTaxSet { shopMoney { amount } } totalPriceSet { shopMoney { amount } } lineItems(first: 100) { nodes { title variantTitle sku quantity originalUnitPriceSet { shopMoney { amount } } } } fulfillments(first: 5) { trackingInfo(first: 1) { company number url } } } } }';
+const amount = (set) => (set && set.shopMoney && set.shopMoney.amount) || '0';
+
+/** One order of the Admin API, reshaped like the webhook's order (so lib/shopify.js sanitizeOrder reads both), with how far it got: open, fulfilled or cancelled. */
+function orderFromAdmin(n) {
+  n = n || {};
+  const c = n.customer || {};
+  const tracking = ((n.fulfillments || []).map(function(f) { return (f.trackingInfo || [])[0]; }).filter(Boolean)[0]) || {};
+  const history = n.cancelledAt ? 'cancelled' : n.displayFulfillmentStatus === 'FULFILLED' ? 'fulfilled' : 'open';
+  return {
+    history: history,
+    tracking: { company: text(tracking.company, 60), number: text(tracking.number, 80), url: text(tracking.url, 400) },
+    order: {
+      id: n.legacyResourceId, name: n.name, created_at: n.createdAt, currency: n.currencyCode, financial_status: String(n.displayFinancialStatus || '').toLowerCase(), note: n.note,
+      email: n.email, phone: n.phone, customer: { first_name: c.firstName, last_name: c.lastName, phone: c.phone, email: c.email },
+      shipping_address: n.shippingAddress ? { name: n.shippingAddress.name, address1: n.shippingAddress.address1, address2: n.shippingAddress.address2, city: n.shippingAddress.city, zip: n.shippingAddress.zip, phone: n.shippingAddress.phone } : null,
+      shipping_lines: ((n.shippingLines && n.shippingLines.nodes) || []).map(function(s) { return { title: s.title }; }),
+      total_discounts: amount(n.totalDiscountsSet), total_tax: amount(n.totalTaxSet), total_price: amount(n.totalPriceSet),
+      total_shipping_price_set: { shop_money: { amount: amount(n.totalShippingPriceSet) } },
+      line_items: ((n.lineItems && n.lineItems.nodes) || []).map(function(l) { return { title: l.title, variant_title: l.variantTitle, sku: l.sku, quantity: l.quantity, price: amount(l.originalUnitPriceSet) }; })
+    }
+  };
+}
+
+/** One page of past orders created on or after `since` (YYYY-MM-DD), oldest first: { orders, hasMore, cursor }. Shopify shows the last 60 days unless the app has been given the "read all orders" access. */
+async function listOrders(shop, token, o, fetchImpl) {
+  const since = /^\d{4}-\d{2}-\d{2}$/.test(String(o.since || '')) ? o.since : '';
+  const data = await graphql(shop, token, ORDERS_QUERY, { first: Math.min(Math.max(Number(o.pageSize) || 25, 1), 50), after: o.cursor || null, query: since ? 'created_at:>=' + since : null }, fetchImpl);
+  const page = data.orders || { nodes: [], pageInfo: {} };
+  return { orders: (page.nodes || []).map(orderFromAdmin), hasMore: !!(page.pageInfo && page.pageInfo.hasNextPage), cursor: (page.pageInfo && page.pageInfo.endCursor) || '' };
+}
+
+module.exports = { VERSION, SCOPES, ACCEPT_TAG, gid, graphql, acceptOrder, cancelOrder, fulfillOrder, updateTracking, subscribeOrderWebhooks, orderFromAdmin, listOrders };

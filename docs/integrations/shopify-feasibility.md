@@ -94,3 +94,18 @@ Estimates assume one store and one developer, and exclude Shopify app review if 
 3. In the POS: Settings > System Options > Online Store > **Connect Shopify access** beside the store. The store owner approves in the tab that opens; the token is kept encrypted and never shown.
 
 **Not verified against a real store:** the Shopify calls were tested with a fake Shopify only. Check on a test order: that Decline cancels (Shopify has deprecated the plain `refund` option of `orderCancel` in favour of `refundMethod`; the POS uses the plain option on API 2026-01 and shows Shopify's message if it is refused), that Fulfill creates the shipment, and that the tracking e-mail arrives. Cash on delivery orders are recorded as paid on the "Shopify" payment type; a COD flow is not built.
+
+## Status: phase 4 (any merchant, automatic install, past orders)
+**Connecting a store is now one step for the merchant.** Settings > System Options > Online Store: enter the store address and the location, press **Connect store**, approve the POS app in the Shopify tab that opens. The app subscribes to the store's order webhooks itself (signed with the app's secret), so no webhook or signing secret has to be created by hand. The old route (webhooks made by hand plus a pasted signing secret) is still there under "Advanced".
+
+**Install launch (automatic).** The app's App URL is `https://ceylonrylabs.io/shopify/launch` (`netlify/functions/shopify-launch.js`). When a merchant installs the app, Shopify sends them there signed with the app's secret: a store already added in the POS goes straight on to Shopify's approval page and finishes by itself; a store nobody has added yet gets a page saying how to connect it from the POS.
+
+**Which app a store uses.** `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` are the POS's own (public) app, used by every merchant. A Shopify *custom* app can be installed on one store only, so a store set up that way (Noirelle Premium) is listed in `SHOPIFY_CUSTOM_APPS`, a JSON object: `{"yh0vyy-03.myshopify.com": {"id": "<client id>", "secret": "<client secret>"}}`. Each store's return, token exchange and webhooks use its own app's credentials.
+
+**To open it to all merchants** (one-time, Shopify side, not done yet):
+1. Create a second app in the Shopify Dev Dashboard with **Public** distribution, the same four scopes, App URL `https://ceylonrylabs.io/shopify/launch`, redirect URL `https://ceylonrylabs.io/.netlify/functions/shopify-oauth`, and the IP allowlist (AS16509).
+2. Shopify reviews public apps before merchants can install them (App Store listing, or an unlisted direct link); ask for protected customer data access (name, phone, address, e-mail) and "Read all orders" in the same app settings.
+3. Set the public app's credentials as `SHOPIFY_CLIENT_ID` / `SHOPIFY_CLIENT_SECRET` and move the Noirelle custom app's credentials into `SHOPIFY_CUSTOM_APPS`.
+Until then only stores that have a dedicated custom app can connect.
+
+**Past orders.** Under Online Store, "Past orders": choose a date and press Import. The POS pulls the store's orders a page at a time (`netlify/functions/shopify-orders-import.js`), then brings them onto the device at the store's location. Open ones arrive as **New**; fulfilled ones are kept as fulfilled and cancelled ones as declined, with their tracking. Imported history makes **no sale, takes no stock, goes to no kitchen and uses no POS order numbers**; their customers are added to the CRM. Nothing is imported twice. Shopify shares the last 60 days unless the app is approved for "Read all orders".

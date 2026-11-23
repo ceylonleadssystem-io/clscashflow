@@ -93,6 +93,7 @@ export async function storeOnlineOrders(ctx, rows) {
 	const fresh = [];
 	for (const row of rows) {
 		if (have.has(openOrderIdOf(row.id))) continue;
+		const past = !!row.imported && (row.history === "fulfilled" || row.history === "cancelled"); // past orders keep their own number and use none of the POS sequence
 		const rate = row.rate === undefined ? 1 : Number(row.rate); // 0 = the order is in a currency the store has no rate for
 		if (!(rate > 0)) {
 			if (!alerted.has(row.id)) {
@@ -103,8 +104,8 @@ export async function storeOnlineOrders(ctx, rows) {
 		}
 		const who = row.order?.customer || {};
 		const customer = await ensureOnlineCustomer(ctx, { name: who.name, phone: who.phone, email: who.email, address: row.order?.delivery?.address, orderName: row.order?.name }); // the CRM customer, when Shopify shared enough to make one
-		fresh.push(stamp(inboxToOpenOrder(row, { products: d.products, inventory: ctx.data().inventory, number: formatOrderNumber(seq), staffId: s.userId, now: nowIso(), customerId: customer?.id || "", rate }), s));
-		seq += 1;
+		fresh.push(stamp(inboxToOpenOrder(row, { products: d.products, inventory: ctx.data().inventory, number: past ? "" : formatOrderNumber(seq), staffId: s.userId, now: nowIso(), customerId: customer?.id || "", rate }), s));
+		if (!past) seq += 1;
 	}
 	if (!fresh.length) return [];
 	await ctx.store.write((tx) => {
@@ -114,23 +115,58 @@ export async function storeOnlineOrders(ctx, rows) {
 	return fresh.map((o) => o.orderNumber);
 }
 
-/** Takes the new online orders for this device's location. Returns how many arrived. Quiet when there is nothing or the device is offline. */
-export async function pullOnlineOrders(ctx) {
+/** One look in the inbox for this device's location: { rows, created } (rows found, orders saved). Errors are thrown. */
+async function pullBatch(ctx, { quiet = false } = {}) {
 	const locationId = ctx.session().locationId;
-	if (!isAppwrite() || (typeof navigator !== "undefined" && navigator.onLine === false) || !locationId || locationId === "all") return 0;
-	try {
+	if (!isAppwrite() || (typeof navigator !== "undefined" && navigator.onLine === false) || !locationId || locationId === "all") return { rows: 0, created: 0 };
+	{
 		const out = await call(env.shopifyInboxUrl, { action: "pull", locationId }, "Could not check online orders.");
 		const orders = out.orders || [];
 		const numbers = await storeOnlineOrders(ctx, orders);
 		const done = orders.filter((o) => o.rate === undefined || Number(o.rate) > 0); // an order waiting for an exchange rate stays in the inbox
 		if (done.length || (out.cancelled || []).length) await call(env.shopifyInboxUrl, { action: "ack", ids: done.map((o) => o.id), cancelledIds: (out.cancelled || []).map((c) => c.id) }, "Could not confirm online orders.");
-		if (numbers.length) ctx.ui.notice(numbers.length === 1 ? `New online order ${numbers[0]}.` : `${numbers.length} new online orders.`);
+		const arrived = orders.filter((o) => !o.imported || o.history === "open").length; // past orders pulled in bulk are not announced
+		if (!quiet && arrived && numbers.length) ctx.ui.notice(arrived === 1 ? `New online order ${numbers[0]}.` : `${arrived} new online orders.`);
 		if ((out.cancelled || []).length) await cancelledInShopify(ctx, out.cancelled);
-		return numbers.length;
+		return { rows: orders.length, created: numbers.length };
+	}
+}
+
+/** Takes the new online orders for this device's location. Returns how many arrived. Quiet when there is nothing or the device is offline. */
+export async function pullOnlineOrders(ctx) {
+	try {
+		return (await pullBatch(ctx)).created;
 	} catch (e) {
 		log.warn("online orders not checked", e);
 		return 0;
 	}
+}
+
+/**
+ * Pulls a store's past orders (created since `since`, YYYY-MM-DD) into the POS: first into the inbox, a page at a time, then onto this device.
+ * `onProgress({ imported, skipped, saved })` is called as it goes. Past fulfilled and cancelled orders become history (no sale, no stock, no kitchen).
+ * Must be done on a device signed in to the store's location, because that is where its orders are kept.
+ */
+export async function importPastOrders(ctx, { shop, since, onProgress = () => {} }) {
+	let cursor = "";
+	let imported = 0;
+	let skipped = 0;
+	for (let page = 0; page < 400; page += 1) {
+		const out = await call(env.shopifyImportUrl, { shop, since, cursor }, "Could not import past orders.");
+		imported += out.imported || 0;
+		skipped += out.skipped || 0;
+		onProgress({ imported, skipped, saved: 0 });
+		if (!out.hasMore) break;
+		cursor = out.cursor;
+	}
+	let saved = 0;
+	for (let round = 0; round < 400; round += 1) {
+		const got = await pullBatch(ctx, { quiet: true });
+		if (!got.rows || !got.created) break; // nothing left, or nothing more can be saved (an order waiting for an exchange rate stays in the inbox)
+		saved += got.created;
+		onProgress({ imported, skipped, saved });
+	}
+	return { imported, skipped, saved };
 }
 
 // ------------------------------------------------------------------------------------------------ the flow ----

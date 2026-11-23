@@ -7,6 +7,11 @@ const { getDocument, upsertDocument, clean } = require('../lib/appwrite');
 const { shopKey } = require('../lib/shopify');
 const oauth = require('../lib/shopify-oauth');
 const { _encrypt: encrypt } = require('../lib/ai-keys');
+const admin = require('../lib/shopify-admin');
+
+function publicBase() {
+  return clean(process.env.PUBLIC_SITE_URL || process.env.URL || 'https://ceylonrylabs.io', 500).replace(/\/$/, '');
+}
 
 const page = (statusCode, title, message) => ({
   statusCode,
@@ -25,7 +30,16 @@ exports.handler = async function(event) {
     if (!row || !row.data || row.data.business !== state.ownerUid) return page(404, 'Could not connect', 'Connect the store in the POS first (Settings > Online Store), then approve access.');
     const out = await oauth.exchangeCode(shop, clean(q.code, 200));
     await upsertDocument('shopifyShops', shopKey(shop), { adminBox: encrypt(out.token), adminScope: out.scope, adminAt: new Date().toISOString() }, true);
-    return page(200, 'Shopify access connected', 'You can close this tab and go back to the POS. Accepting, declining and fulfilling orders will now update Shopify too.');
+    // the app subscribes to the store's order webhooks itself, so the merchant needs no signing secret
+    let hooks = '';
+    try {
+      await admin.subscribeOrderWebhooks(shop, out.token, publicBase() + '/.netlify/functions/shopify-webhook');
+      await upsertDocument('shopifyShops', shopKey(shop), { webhooksAt: new Date().toISOString(), webhooksError: '' }, true);
+    } catch (error) {
+      await upsertDocument('shopifyShops', shopKey(shop), { webhooksError: clean(error.message, 300) }, true);
+      hooks = ' New orders will not arrive on their own yet: ' + clean(error.message, 200);
+    }
+    return page(200, 'Shopify access connected', 'You can close this tab and go back to the POS. Orders now arrive by themselves, and accepting, declining and fulfilling them updates Shopify too.' + hooks);
   } catch (error) {
     console.error('shopify-oauth error', error && error.message);
     return page(error.statusCode || 500, 'Could not connect', clean(error.statusCode ? error.message : 'Something went wrong. Please try again from the POS.', 300));

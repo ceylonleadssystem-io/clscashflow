@@ -116,3 +116,69 @@ describe("connecting Shopify access", () => {
 		expect(() => oauth.authorizeUrl(SHOP, "o", "https://x")).toThrow(/SHOPIFY_CLIENT_ID/);
 	});
 });
+
+describe("one app for every merchant, a dedicated app for a store that has one", () => {
+	it("uses the POS's own app unless the store is listed in SHOPIFY_CUSTOM_APPS", () => {
+		process.env.SHOPIFY_CLIENT_ID = "shared-id";
+		process.env.SHOPIFY_CLIENT_SECRET = "shared-secret";
+		process.env.SHOPIFY_CUSTOM_APPS = JSON.stringify({ [SHOP]: { id: "own-id", secret: "own-secret" } });
+		expect(oauth.credentials(SHOP)).toEqual({ id: "own-id", secret: "own-secret" });
+		expect(oauth.credentials("other.myshopify.com")).toEqual({ id: "shared-id", secret: "shared-secret" });
+		expect(new URL(oauth.authorizeUrl(SHOP, "o", "https://x")).searchParams.get("client_id")).toBe("own-id");
+		expect(new URL(oauth.authorizeUrl("other.myshopify.com", "o", "https://x")).searchParams.get("client_id")).toBe("shared-id");
+		expect(oauth.appWebhookSecret("other.myshopify.com")).toBe("shared-secret");
+		delete process.env.SHOPIFY_CUSTOM_APPS;
+	});
+
+	it("checks a return with the secret of the app that store uses", () => {
+		process.env.SHOPIFY_CUSTOM_APPS = JSON.stringify({ [SHOP]: { id: "own-id", secret: "own-secret" } });
+		const sign = (params, secret) => createHmac("sha256", secret).update(Object.keys(params).sort().map((k) => k + "=" + params[k]).join("&")).digest("hex");
+		const mine = { shop: SHOP, timestamp: "1" };
+		expect(oauth.verifyReturn({ ...mine, hmac: sign(mine, "own-secret") })).toBe(true);
+		expect(oauth.verifyReturn({ ...mine, hmac: sign(mine, "shared-secret") })).toBe(false);
+		const theirs = { shop: "other.myshopify.com", timestamp: "1" };
+		expect(oauth.verifyReturn({ ...theirs, hmac: sign(theirs, "client-secret") })).toBe(true);
+		delete process.env.SHOPIFY_CUSTOM_APPS;
+	});
+
+	it("ignores a broken SHOPIFY_CUSTOM_APPS and falls back to the shared app", () => {
+		process.env.SHOPIFY_CUSTOM_APPS = "{not json";
+		expect(oauth.credentials(SHOP)).toEqual({ id: "client-id", secret: "client-secret" });
+		delete process.env.SHOPIFY_CUSTOM_APPS;
+	});
+});
+
+describe("webhooks the app subscribes to, and past orders", () => {
+	it("subscribes to order creation and cancellation, and accepts a subscription that already exists", async () => {
+		await admin.subscribeOrderWebhooks(SHOP, "tok", "https://ceylonrylabs.io/.netlify/functions/shopify-webhook", reply({ webhookSubscriptionCreate: { webhookSubscription: { id: "w" }, userErrors: [] } }));
+		expect(sent.map((c) => c.body.variables.topic)).toEqual(["ORDERS_CREATE", "ORDERS_CANCELLED"]);
+		expect(sent[0].body.variables.webhookSubscription).toEqual({ callbackUrl: "https://ceylonrylabs.io/.netlify/functions/shopify-webhook", format: "JSON" });
+		sent = [];
+		await expect(admin.subscribeOrderWebhooks(SHOP, "tok", "https://x", reply({ webhookSubscriptionCreate: { userErrors: [{ message: "Address for this topic has already been taken" }] } }))).resolves.toBeTruthy();
+		await expect(admin.subscribeOrderWebhooks(SHOP, "tok", "https://x", reply({ webhookSubscriptionCreate: { userErrors: [{ message: "Invalid address" }] } }))).rejects.toThrow("Invalid address");
+	});
+
+	const node = (extra = {}) => ({ legacyResourceId: "1001", name: "#1001", createdAt: "2026-10-01T10:00:00Z", cancelledAt: null, displayFulfillmentStatus: "FULFILLED", displayFinancialStatus: "PAID", currencyCode: "LKR", note: "n", customer: { firstName: "Nimal", lastName: "Perera", phone: "+94771234567", email: "n@x.lk" }, shippingAddress: { name: "Nimal", address1: "12 Lake Rd", city: "Galle", zip: "80000" }, shippingLines: { nodes: [{ title: "Standard" }] }, totalDiscountsSet: { shopMoney: { amount: "50.0" } }, totalShippingPriceSet: { shopMoney: { amount: "200.0" } }, totalTaxSet: { shopMoney: { amount: "0.0" } }, totalPriceSet: { shopMoney: { amount: "1400.0" } }, lineItems: { nodes: [{ title: "Latte", variantTitle: "Large", sku: "LAT-1", quantity: 2, originalUnitPriceSet: { shopMoney: { amount: "600.0" } } }] }, fulfillments: [{ trackingInfo: [{ company: "DHL", number: "123", url: "https://dhl.test/123" }] }], ...extra });
+
+	it("turns an Admin API order into the webhook's order shape, with how far it got and its tracking", () => {
+		const done = admin.orderFromAdmin(node());
+		expect(done.history).toBe("fulfilled");
+		expect(done.tracking).toEqual({ company: "DHL", number: "123", url: "https://dhl.test/123" });
+		expect(done.order).toMatchObject({ id: "1001", name: "#1001", currency: "LKR", financial_status: "paid", total_price: "1400.0", customer: { first_name: "Nimal", phone: "+94771234567" }, line_items: [{ title: "Latte", variant_title: "Large", sku: "LAT-1", quantity: 2, price: "600.0" }] });
+		expect(admin.orderFromAdmin(node({ cancelledAt: "2026-10-02T00:00:00Z" })).history).toBe("cancelled");
+		expect(admin.orderFromAdmin(node({ displayFulfillmentStatus: "UNFULFILLED", fulfillments: [] })).history).toBe("open");
+		expect(admin.orderFromAdmin(node({ displayFulfillmentStatus: "PARTIALLY_FULFILLED" })).history).toBe("open");
+		expect(admin.orderFromAdmin({}).order.line_items).toEqual([]);
+	});
+
+	it("asks for one page of orders since a date, oldest first, and says whether there is more", async () => {
+		const out = await admin.listOrders(SHOP, "tok", { since: "2026-09-01", cursor: "abc", pageSize: 25 }, reply({ orders: { pageInfo: { hasNextPage: true, endCursor: "next" }, nodes: [node(), node({ legacyResourceId: "1002", name: "#1002" })] } }));
+		expect(sent[0].body.variables).toEqual({ first: 25, after: "abc", query: "created_at:>=2026-09-01" });
+		expect(sent[0].body.query).toContain("sortKey: CREATED_AT");
+		expect(out).toMatchObject({ hasMore: true, cursor: "next" });
+		expect(out.orders.map((o) => o.order.name)).toEqual(["#1001", "#1002"]);
+		sent = [];
+		await admin.listOrders(SHOP, "tok", { since: "not a date", pageSize: 500 }, reply({ orders: { pageInfo: {}, nodes: [] } }));
+		expect(sent[0].body.variables).toEqual({ first: 50, after: null, query: null });
+	});
+});
