@@ -9,6 +9,8 @@ const admin = require('../lib/shopify-admin');
 const { _decrypt: decrypt } = require('../lib/ai-keys');
 const log = require('../lib/log').createLogger('shopify-orders-import');
 
+const PAGE = 10;
+
 exports.handler = async function handler(event) {
   const blocked = guard(event, { name: 'shopify-orders-import', methods: ['POST'], limit: 120, windowMs: 60000, maxBody: 3000 });
   if (blocked) return blocked;
@@ -27,17 +29,19 @@ exports.handler = async function handler(event) {
     if (!data || data.business !== ownerUid) return reply(event, 404, { ok: false, error: 'That store is not connected to this business.' });
     if (!data.adminBox) return reply(event, 409, { ok: false, code: 'no_access', error: 'Connect Shopify access for this store first.' });
 
-    const page = await admin.listOrders(shop, decrypt(data.adminBox), { since: since, cursor: clean(body.cursor, 300), pageSize: 25 });
+    // a small page, written in parallel: a call has to finish within the function's time limit (about 10 seconds)
+    const page = await admin.listOrders(shop, decrypt(data.adminBox), { since: since, cursor: clean(body.cursor, 300), pageSize: PAGE });
     const path = 'shopifyInbox/' + ownerUid;
-    let imported = 0, skipped = 0;
-    for (const item of page.orders) {
+    const results = await Promise.all(page.orders.map(async function(item) {
       const order = sanitizeOrder(item.order);
-      if (!order.id) { skipped += 1; continue; }
+      if (!order.id) return 'skipped';
       const id = 'o' + order.id;
-      if (await getDocument(path, id)) { skipped += 1; continue; }
+      if (await getDocument(path, id)) return 'skipped';
       await upsertDocument(path, id, { status: 'new', imported: true, history: item.history, tracking: item.tracking, shop: shop, locationId: data.locationId || '', order: order, receivedAt: new Date().toISOString() }, false);
-      imported += 1;
-    }
+      return 'imported';
+    }));
+    const imported = results.filter(function(r) { return r === 'imported'; }).length;
+    const skipped = results.length - imported;
     log.info('past orders imported', { ownerUid, shop, imported, skipped });
     return reply(event, 200, { ok: true, imported: imported, skipped: skipped, hasMore: page.hasMore, cursor: page.cursor });
   } catch (err) {

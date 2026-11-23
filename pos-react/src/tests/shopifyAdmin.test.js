@@ -189,6 +189,9 @@ describe("webhooks the app subscribes to, and past orders", () => {
 		expect(out.orders.map((o) => o.order.name)).toEqual(["#1001", "#1002"]);
 		sent = [];
 		await admin.listOrders(SHOP, "tok", { since: "not a date", pageSize: 500 }, reply({ orders: { pageInfo: {}, nodes: [] } }));
-		expect(sent[0].body.variables).toEqual({ first: 50, after: null, query: null });
+		expect(sent[0].body.variables).toEqual({ first: 25, after: null, query: null });
+		sent = [];
+		await admin.listOrders(SHOP, "tok", {}, reply({ orders: { pageInfo: {}, nodes: [] } }));
+		expect(sent[0].body.variables.first).toBe(10); // small by default: a big page of orders with their items exceeds Shopify's query cost limit
 	});
 });
