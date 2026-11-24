@@ -5,7 +5,7 @@
  */
 import { T } from "../../db/tables";
 import { money, nowIso, today } from "../../domain/format";
-import { applyStockChange, movementRow, newId, stamp } from "./common";
+import { applyStockChange, markDeleted, movementRow, newId, stamp } from "./common";
 import { FULL_SETTINGS_ROLES } from "../../config/roles";
 
 /** Order of a job: each step moves to the next one. Cancelled can be reached from any step before In Progress. */
@@ -224,12 +224,21 @@ export async function removeRecord(ctx, collection, id) {
 			: "Delete this record?";
 	const warn = paid.length ? ` The ${paid.length} paid invoice(s) are also removed from Sales History and Reports.` : "";
 	if (!(await ctx.ui.confirm(text + warn + " This cannot be undone."))) return false;
-	await ctx.store.write((tx) => {
-		jobs.forEach((j) => {
-			if (j.saleId) tx.removeSale(j.saleId);
-			if (collection === "vehicles") tx.remove(T.detailJobs, j.id);
-		});
+	// every deletion is also recorded as a tombstone: without it the next sync merges the other copy of the row back in and the record "reappears"
+	await ctx.store.write(async (tx) => {
+		for (const j of jobs) {
+			if (j.saleId) {
+				tx.removeSale(j.saleId);
+				await markDeleted(tx, "sales", j.saleId);
+				await markDeleted(tx, "saleReceipts", j.invoiceNumber);
+			}
+			if (collection === "vehicles") {
+				tx.remove(T.detailJobs, j.id);
+				await markDeleted(tx, "detailJobs", j.id);
+			}
+		}
 		tx.remove(TABLE[collection], id);
+		await markDeleted(tx, collection, id);
 	});
 	return true;
 }
