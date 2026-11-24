@@ -13,6 +13,7 @@ import { useFeature } from "../../store/FeatureProvider";
 import { useScopedData } from "../../hooks/useScopedData";
 import { printHtmlInFrame } from "../../services/printing/printDocument";
 import { reportHtml } from "../../services/printing/reportDocument";
+import { eodReceiptHtml } from "../../services/printing/documents";
 import { downloadReportPdf, pdfSupportsText } from "../../services/printing/reportPdf";
 import { createLogger } from "../../utils/logger";
 
@@ -35,7 +36,7 @@ export function EndOfDay() {
 	const [eodDay, setEodDay] = useState(today);
 
 	// End of Day: one day's sales, refunds, voids, registers, staff hours and the current stock, as a PDF or printed
-	const endOfDay = async (print) => {
+	const endOfDay = async (print, receipt) => {
 		const report = endOfDayReport({
 			day: eodDay,
 			business: data.settings.business || "",
@@ -59,7 +60,7 @@ export function EndOfDay() {
 				log.error("pdf download failed, using the print dialog", e);
 			}
 		}
-		printHtmlInFrame(reportHtml(report), report.title);
+		printHtmlInFrame(receipt ? eodReceiptHtml(report, { settings: data.settings }) : reportHtml(report), report.title);
 	};
 
 	const exportReport = () => {
