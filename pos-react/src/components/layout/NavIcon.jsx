@@ -15,6 +15,7 @@ const PATHS = {
 	sales: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5M12 7v5l3 2" /></>,
 	receipts: <><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" /></>,
 	reports: <><path d="M3 3v18h18" /><path d="M7 15v3M12 10v8M17 6v12" /></>,
+	eod: <><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 7v5l3 2M19 3v6h-6" /></>,
 	inventory: <><path d="M3 9l1.5-5h15L21 9" /><path d="M3 9v11h18V9M3 9h18M9 13h6" /></>,
 	industry: <><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.5 2.5-2.4-.6-.6-2.4z" /></>,
 	detailing: <><path d="M5 16l1.5-5a2 2 0 0 1 1.9-1.4h7.2a2 2 0 0 1 1.9 1.4L19 16" /><rect x="3" y="16" width="18" height="4" rx="1.5" /><path d="M7 20v1.5M17 20v1.5M7 18h.01M17 18h.01" /></>,

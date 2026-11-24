@@ -117,7 +117,7 @@ export const REPORT_GROUPS = [
 			{ key: "voids", title: "Voids" },
 		],
 	},
-	{ key: "end-of-day", title: "End of Day & Overview", icon: "▤", blurb: "The full-day End of Day report, item sales, registers, staff hours and customer intelligence.", subs: [] },
+	{ key: "end-of-day", title: "End of Day & Overview", icon: "▤", blurb: "Item sales, payments, registers, staff hours and customer intelligence for a date range.", subs: [] },
 ];
 
 export const groupOf = (key) => REPORT_GROUPS.find((g) => g.key === key) || null;

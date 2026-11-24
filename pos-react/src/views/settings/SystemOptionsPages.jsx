@@ -13,6 +13,7 @@ import { MAX_NAME, nameError, reorder as reorderList, thirdPartyList, usedNames 
 import { usePos } from "../../store/PosProvider";
 import { OrderTypesCard, SocialsCard } from "../../components/settings/PrintingExtras";
 import { useSystemOptions, useSystemOptionsDraft } from "../../components/settings/kit/SystemOptionsContext";
+import { EOD_SECTIONS } from "../../domain/endOfDay";
 import { LANDING_VIEWS, PRESETS, SYSTEM_PAGES, presetChanges, resolveOptions } from "../../domain/systemOptions";
 import { useData } from "../../store/DataProvider";
 import { OnlineStorePage } from "./OnlineStorePage";
@@ -206,6 +207,26 @@ export function ClockInOut() {
 				<ToggleRow id="ck-time" label="Clock out at a time every day" help="Clocks out everyone who is still clocked in, using this location's time." value={values.autoTimeOn} onChange={(v) => set("autoTimeOn", v)} overridden={overridden("autoTimeOn")} onReset={() => reset("autoTimeOn")} />
 				<ConditionalGroup show={values.autoTimeOn}>
 					<TimeRow id="ck-at" label="Clock-out time" value={values.autoTime} onChange={(v) => set("autoTime", v)} error={errors.autoTime} />
+				</ConditionalGroup>
+			</SectionCard>
+		</>
+	);
+}
+
+export function EodReports() {
+	const { values, set, overridden, reset, errors } = useSystemOptions("eod");
+	return (
+		<>
+			<PageHeader title="EOD Reports" description="Which parts the printed End of Day report shows, and printing it automatically at a set time." note={<ScopeNote />} />
+			<SectionCard title="Parts of the report" description="Switch a part off to leave it out of the printed receipt, the paper print and the PDF. The End of Day page is in the left navigation, under Reports.">
+				{EOD_SECTIONS.map((s) => (
+					<ToggleRow key={s.key} id={"eod-" + s.key} label={s.label} value={values[s.key]} onChange={(v) => set(s.key, v)} overridden={overridden(s.key)} onReset={() => reset(s.key)} />
+				))}
+			</SectionCard>
+			<SectionCard title="Automatic printing" description="Prints the report as a receipt once a day, using this location's time. It works while the POS is open and signed in on this device, and the browser's print window opens at that time.">
+				<ToggleRow id="eod-auto" label="Print the End of Day report automatically" value={values.autoOn} onChange={(v) => set("autoOn", v)} overridden={overridden("autoOn")} onReset={() => reset("autoOn")} />
+				<ConditionalGroup show={values.autoOn}>
+					<TimeRow id="eod-at" label="Print at" value={values.autoTime} onChange={(v) => set("autoTime", v)} error={errors.autoTime} />
 				</ConditionalGroup>
 			</SectionCard>
 		</>
@@ -446,4 +467,4 @@ export function Zones() {
 	);
 }
 
-export const PAGE_COMPONENTS = { orderEntry: OrderEntry, receipts: Receipts, signIn: SignIn, clock: ClockInOut, payroll: Payroll, thirdParty: ThirdPartyPayments, zones: Zones, qrMenu: QrMenuPage, onlineStore: OnlineStorePage, qrMenu: QrMenuPage };
+export const PAGE_COMPONENTS = { orderEntry: OrderEntry, receipts: Receipts, signIn: SignIn, clock: ClockInOut, eod: EodReports, payroll: Payroll, thirdParty: ThirdPartyPayments, zones: Zones, qrMenu: QrMenuPage, onlineStore: OnlineStorePage, qrMenu: QrMenuPage };

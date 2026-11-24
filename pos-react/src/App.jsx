@@ -23,6 +23,7 @@ import { isPortalPath, isAutomobilePath } from "./config/portal";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GearLoader } from "./components/ui/GearLoader";
 import { usePublicMenuSync } from "./hooks/usePublicMenuSync";
+import { useEodAutoPrint } from "./hooks/useEodAutoPrint";
 import { useSupportBridge } from "./hooks/useSupportBridge";
 import { SupportBanner } from "./components/support/SupportBanner";
 import { SupportOverlay } from "./components/support/SupportOverlay";
@@ -104,6 +105,7 @@ function PublicMenuSync() {
 /** Lets a live support session open POS screens (with the client's yes) and record what it did. */
 function SupportBridge() {
 	useSupportBridge();
+	useEodAutoPrint();
 	return null;
 }
 

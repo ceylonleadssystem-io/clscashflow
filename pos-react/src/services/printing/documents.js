@@ -183,6 +183,54 @@ export function receiptLayout(sale, { settings = {}, location = null } = {}) {
 	return { main, powered: [center("Powered by Ceylonry POS")] };
 }
 
+/** Receipt-style (80 mm) End of Day report built from domain/endOfDay.js's report: totals, payments, items, refunds, voids, registers, hours, open orders and a low-stock count. */
+export function eodReceiptHtml(report, { settings = {}, autoPrint = true } = {}) {
+	const width = RECEIPT_WIDTH;
+	const rule = "-".repeat(width);
+	const out = [];
+	const add = (text, align = "left") => out.push({ align, text });
+	const row = (a, b) => add(padRight(a, width - 16).slice(0, width - 16) + padLeft(b, 16));
+	add(report.business || settings.business || DEFAULT_BUSINESS_NAME, "center");
+	add("END OF DAY REPORT", "center");
+	wrapLine(report.subtitle, width).forEach((l) => add(l, "center"));
+	add(rule);
+	report.kpis.forEach((k) => row(k.label, String(k.value).replace("LKR ", "")));
+	const has = (title) => report.sections.some((x) => x.title === title); // a part switched off in System Options is not in the report
+	const rowsOf = (title) => report.sections.find((x) => x.title === title)?.rows || [];
+	const section = (heading, title, map) => {
+		if (!has(title)) return;
+		const lines = rowsOf(title).flatMap(map);
+		add(rule);
+		add(heading.toUpperCase());
+		lines.length ? lines.forEach(([a, b]) => (b === undefined ? wrapLine(a, width).forEach((l) => add(l)) : row(a, b))) : add("None");
+	};
+	const plain = (r) => [[`${r[0]} ${r[1]}`, String(r[r.length - 1]).replace("LKR ", "")]];
+	const lkr = (v) => String(v).replace("LKR ", "");
+	section("Payments", "Sales by Payment Type", (r) => [[r[0], lkr(r[1])]]);
+	section("Items sold", "Sales by Item", (r) => {
+		const name = wrapLine(r[0], width - 2);
+		return [...name.slice(0, -1).map((l) => [l]), [`${name[name.length - 1]}  x${r[1]}`, lkr(r[2])]];
+	});
+	section("Modifiers", "Sales by Modifier", (r) => [[`${r[1]} x${r[2]}`, lkr(r[3])]]);
+	section("Refunds", "Refunds", plain);
+	section("Voids and cleared carts", "Voids and Cleared Carts", plain);
+	section("Cash registers", "Cash Register Reconciliation", (r) => [[`${r[0]} ${r[1]}`], ["  Expected", lkr(r[2])], ["  Actual", lkr(r[3])], ["  Variance", lkr(r[4])]]);
+	section("Staff hours", "Staff Hours", (r) => [[r[0], r[1] + " h"]]);
+	section("Open orders not paid", "Open Orders Not Yet Paid", (r) => [[`${r[0]} ${r[1]}`, r[2] + " items"]]);
+	section("Stock moved today", "Stock Movements Today", (r) => [[r[0], `+${r[1]} -${r[2]}`]]);
+	const stock = report.sections.find((x) => x.title === "Current Stock")?.note;
+	if (stock) {
+		add(rule);
+		add("STOCK");
+		wrapLine(stock, width).forEach((l) => add(l));
+	}
+	add(rule);
+	add("Printed " + new Date().toLocaleString(), "center");
+	add("Powered by Ceylonry POS", "center");
+	const html = out.map((seg) => `<div class="ln ${seg.align}">${esc(seg.text)}</div>`).join("");
+	return `<!doctype html><html><head><title>${esc(report.title)}</title><style>${RECEIPT_CSS}</style></head><body><div class="rc">${html}</div>${autoPrint ? "<script>onload=()=>print()</script>" : ""}</body></html>`;
+}
+
 /** Plain-text version of receiptLayout (no QR, no alignment). */
 export function receiptText(sale, ctx = {}) {
 	const { main, powered } = receiptLayout(sale, ctx);

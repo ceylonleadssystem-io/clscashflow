@@ -23,6 +23,7 @@ export const ROLE_VIEWS = {
 		"sales",
 		"receipts",
 		"reports",
+		"eod",
 		"inventory",
 		"industry",
 		"staff",
@@ -47,7 +48,7 @@ export const ROLE_VIEWS = {
 		"settings",
 		"online",
 	],
-	accountant: ["dashboard", "sales", "receipts", "reports", "inventory", "industry", "staff", "settings"],
+	accountant: ["dashboard", "sales", "receipts", "reports", "eod", "inventory", "industry", "staff", "settings"],
 	cashier: ["checkout", "orders", "tables", "receipts", "customers", "staff", "settings", "online"],
 };
 // technicians (Automobile) work from the detailing pages; the POS gives them only their own attendance and settings
@@ -70,6 +71,7 @@ export const VIEW_TITLES = {
 	sales: ["Sales History", "Receipts, revenue and profit"],
 	receipts: ["Receipts & Refunds", "Reprint, download, refund or void a receipt"],
 	reports: ["Reports", "Financial and operational performance"],
+	eod: ["End of Day", "One day's sales, registers, staff hours and stock, to print or save"],
 	inventory: [
 		"Inventory & Stock",
 		"Ingredients, product stock and automatic recipe usage",
@@ -98,6 +100,7 @@ export const NAV_ITEMS = [
 	{ view: "industry", label: "✦ Business Tools", group: "Inventory" },
 	{ view: "sales", label: "↗ Sales History", group: "Reports" },
 	{ view: "reports", label: "▤ Reports", group: "Reports" },
+	{ view: "eod", label: "◧ End of Day", group: "Reports" },
 	{ view: "customers", label: "♙ Customers", group: "Customer Relationship" },
 	{ view: "crm", label: "♡ CRM & Feedback", group: "Customer Relationship" },
 	{ view: "staff", label: "◷ Staff & Shifts", group: "User management" },
