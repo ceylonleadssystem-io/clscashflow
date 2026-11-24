@@ -72,6 +72,10 @@ const DELETED_KEYS = [
 	"timeEntries",
 	"categories",
 	"subcategories",
+	// Automobile: a deleted vehicle, package or job must stay deleted when the other copy syncs
+	"vehicles",
+	"detailPackages",
+	"detailJobs",
 ];
 
 /**

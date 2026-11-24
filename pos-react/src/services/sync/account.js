@@ -91,7 +91,7 @@ export function normalizeAccountDb(payload, profile, user) {
 	for (const key of [...PAYLOAD_ARRAYS, "sales"]) clean[key] = Array.isArray(clean[key]) ? clean[key] : [];
 	clean.categories = Array.isArray(clean.categories) ? clean.categories : [];
 	clean.deletedIds = clean.deletedIds && typeof clean.deletedIds === "object" ? clean.deletedIds : {};
-	for (const key of ["products", "modifiers", "inventory", "sales", "subcategories"]) {
+	for (const key of ["products", "modifiers", "inventory", "sales", "subcategories", "vehicles", "detailPackages", "detailJobs"]) {
 		clean.deletedIds[key] = Array.isArray(clean.deletedIds[key]) ? clean.deletedIds[key] : [];
 		const removed = new Set(clean.deletedIds[key].map(String));
 		clean[key] = clean[key].filter((item) => !removed.has(String(item?.id)));
