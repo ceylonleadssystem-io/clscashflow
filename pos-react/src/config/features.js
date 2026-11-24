@@ -218,6 +218,7 @@ export const VIEW_FEATURE = {
 	sales: "view.sales",
 	receipts: "view.receipts",
 	reports: "view.reports",
+	eod: "view.reports",
 	inventory: "view.inventory",
 	industry: "industry.tools",
 	staff: "view.staff",

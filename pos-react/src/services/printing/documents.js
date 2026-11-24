@@ -195,22 +195,35 @@ export function eodReceiptHtml(report, { settings = {}, autoPrint = true } = {})
 	wrapLine(report.subtitle, width).forEach((l) => add(l, "center"));
 	add(rule);
 	report.kpis.forEach((k) => row(k.label, String(k.value).replace("LKR ", "")));
+	const has = (title) => report.sections.some((x) => x.title === title); // a part switched off in System Options is not in the report
 	const rowsOf = (title) => report.sections.find((x) => x.title === title)?.rows || [];
-	const section = (title, lines) => {
+	const section = (heading, title, map) => {
+		if (!has(title)) return;
+		const lines = rowsOf(title).flatMap(map);
 		add(rule);
-		add(title.toUpperCase());
+		add(heading.toUpperCase());
 		lines.length ? lines.forEach(([a, b]) => (b === undefined ? wrapLine(a, width).forEach((l) => add(l)) : row(a, b))) : add("None");
 	};
-	const plain = (r) => [`${r[0]} ${r[1]}`, String(r[r.length - 1]).replace("LKR ", "")];
-	section("Payments", rowsOf("Sales by Payment Type").map((r) => [r[0], r[1].replace("LKR ", "")]));
-	section("Items sold", rowsOf("Sales by Item").flatMap((r) => [...wrapLine(r[0], width - 2).map((l) => [l]).slice(0, -1), [`${wrapLine(r[0], width - 2).pop()}  x${r[1]}`, r[2].replace("LKR ", "")]]));
-	section("Refunds", rowsOf("Refunds").map(plain));
-	section("Voids and cleared carts", rowsOf("Voids and Cleared Carts").map(plain));
-	section("Cash registers", rowsOf("Cash Register Reconciliation").flatMap((r) => [[`${r[0]} ${r[1]}`], ["  Expected", r[2].replace("LKR ", "")], ["  Actual", r[3].replace("LKR ", "")], ["  Variance", r[4].replace("LKR ", "")]]));
-	section("Staff hours", rowsOf("Staff Hours").map((r) => [r[0], r[1] + " h"]));
-	section("Open orders not paid", rowsOf("Open Orders Not Yet Paid").map((r) => [`${r[0]} ${r[1]}`, r[2] + " items"]));
+	const plain = (r) => [[`${r[0]} ${r[1]}`, String(r[r.length - 1]).replace("LKR ", "")]];
+	const lkr = (v) => String(v).replace("LKR ", "");
+	section("Payments", "Sales by Payment Type", (r) => [[r[0], lkr(r[1])]]);
+	section("Items sold", "Sales by Item", (r) => {
+		const name = wrapLine(r[0], width - 2);
+		return [...name.slice(0, -1).map((l) => [l]), [`${name[name.length - 1]}  x${r[1]}`, lkr(r[2])]];
+	});
+	section("Modifiers", "Sales by Modifier", (r) => [[`${r[1]} x${r[2]}`, lkr(r[3])]]);
+	section("Refunds", "Refunds", plain);
+	section("Voids and cleared carts", "Voids and Cleared Carts", plain);
+	section("Cash registers", "Cash Register Reconciliation", (r) => [[`${r[0]} ${r[1]}`], ["  Expected", lkr(r[2])], ["  Actual", lkr(r[3])], ["  Variance", lkr(r[4])]]);
+	section("Staff hours", "Staff Hours", (r) => [[r[0], r[1] + " h"]]);
+	section("Open orders not paid", "Open Orders Not Yet Paid", (r) => [[`${r[0]} ${r[1]}`, r[2] + " items"]]);
+	section("Stock moved today", "Stock Movements Today", (r) => [[r[0], `+${r[1]} -${r[2]}`]]);
 	const stock = report.sections.find((x) => x.title === "Current Stock")?.note;
-	if (stock) section("Stock", [[stock]]);
+	if (stock) {
+		add(rule);
+		add("STOCK");
+		wrapLine(stock, width).forEach((l) => add(l));
+	}
 	add(rule);
 	add("Printed " + new Date().toLocaleString(), "center");
 	add("Powered by Ceylonry POS", "center");

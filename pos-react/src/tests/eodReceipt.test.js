@@ -22,3 +22,26 @@ describe("End of Day receipt", () => {
 		expect(eodReceiptHtml(endOfDayReport({ day: "2026-10-29" }), { autoPrint: false })).toContain(">None<");
 	});
 });
+
+import { applyEodOptions } from "../domain/endOfDay";
+import { applyPatch, resolveOptions, validateOptions } from "../domain/systemOptions";
+
+describe("EOD Reports options", () => {
+	const report = endOfDayReport({ day: "2026-10-29", sales: [sale], users: [{ id: "u1", name: "Kehara" }] });
+	it("shows everything by default and hides only what is switched off", () => {
+		const all = resolveOptions({}, "eod", "all");
+		expect(applyEodOptions(report, all).sections).toHaveLength(report.sections.length);
+		const off = applyEodOptions(report, { ...all, refunds: false, items: false, totals: false });
+		expect(off.sections.map((s) => s.title)).not.toContain("Refunds");
+		expect(off.sections.map((s) => s.title)).not.toContain("Sales by Item");
+		expect(off.kpis).toEqual([]);
+		expect(eodReceiptHtml(off, { autoPrint: false })).not.toContain("ITEMS SOLD");
+	});
+	it("stores per location and validates the automatic print time", () => {
+		const so = applyPatch({}, { eod: { refunds: false } }, "l1");
+		expect(resolveOptions({ systemOptions: so }, "eod", "l1").refunds).toBe(false);
+		expect(resolveOptions({ systemOptions: so }, "eod", "l2").refunds).toBe(true);
+		expect(validateOptions("eod", { autoOn: true, autoTime: "25:00" }).autoTime).toBeTruthy();
+		expect(validateOptions("eod", { autoOn: true, autoTime: "23:00" })).toEqual({});
+	});
+});

@@ -7,6 +7,7 @@
  * Only settings the POS acts on are listed here; each added setting needs its behaviour wired first, so no switch is ever a dead switch.
  */
 import { DEFAULT_RECEIPT_FOOTER, ORDER_CHANNELS } from "../config/constants";
+import { EOD_SECTIONS } from "./endOfDay";
 
 export const SYSTEM_PAGES = [
 	{ key: "overview", title: "Overview", description: "Every System Options page, and ready-made starting points." },
@@ -15,11 +16,12 @@ export const SYSTEM_PAGES = [
 	{ key: "signIn", title: "Sign In", description: "Where staff land after they sign in." },
 	{ key: "clock", title: "Clock In / Out", description: "Clock people out automatically so no shift runs on by mistake." },
 	{ key: "payroll", title: "Payroll", description: "Pay week, paid breaks and overtime rules used for hours and labor cost." },
+	{ key: "eod", title: "EOD Reports", description: "Which parts the printed End of Day report shows, and printing it automatically at a set time." },
 	{ key: "zones", title: "Zones", description: "The areas of your floor that hold tables.", entity: true },
 ];
 
 /** Pages in System Options that hold values (everything except the overview). */
-export const OPTION_PAGES = ["orderEntry", "receipts", "signIn", "clock", "payroll", "serviceCharge"];
+export const OPTION_PAGES = ["orderEntry", "receipts", "signIn", "clock", "payroll", "serviceCharge", "eod"];
 
 /** The views staff can land on after signing in. "auto" keeps the existing behaviour (the first page their role may open). */
 export const LANDING_VIEWS = [
@@ -62,6 +64,12 @@ export const FIELDS = {
 		orderTypes: { scope: "location", default: [...ORDER_CHANNELS] }, // the order types that get it automatically
 		maxOn: { scope: "location", default: false },
 		maxCharge: { scope: "location", default: 0 }, // a bill never carries more service charge than this
+	},
+	// End of Day report: each part of the printed report (all on by default) and the daily automatic print
+	eod: {
+		...Object.fromEntries(EOD_SECTIONS.map((s) => [s.key, { scope: "location", default: true }])),
+		autoOn: { scope: "location", default: false },
+		autoTime: { scope: "location", default: "23:00" },
 	},
 	// Payroll rules are the organization's (labour law does not change by branch)
 	payroll: {
@@ -144,6 +152,7 @@ export function validateOptions(page, v) {
 		}
 		if (v.autoTimeOn && !timeOk(v.autoTime)) e.autoTime = "Enter a time such as 03:00.";
 	}
+	if (page === "eod" && v.autoOn && !timeOk(v.autoTime)) e.autoTime = "Enter a time such as 23:00.";
 	if (page === "serviceCharge") {
 		if (v.minOn && !(Number(v.minTotal) > 0)) e.minTotal = "Enter an amount above 0.";
 		if (v.maxOn && !(Number(v.maxCharge) > 0)) e.maxCharge = "Enter an amount above 0.";

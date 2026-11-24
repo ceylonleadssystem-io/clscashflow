@@ -18,6 +18,7 @@ const CRM = page(() => import("./CRM"), "CRM");
 const Sales = page(() => import("./Sales"), "Sales");
 const Receipts = page(() => import("./Receipts"), "Receipts");
 const Reports = page(() => import("./Reports"), "Reports");
+const EndOfDayPage = page(() => import("./EndOfDayPage"), "EndOfDayPage");
 const Inventory = page(() => import("./Inventory"), "Inventory");
 const Industry = page(() => import("./Industry"), "Industry");
 const Staff = page(() => import("./Staff"), "Staff");
@@ -37,6 +38,7 @@ const VIEWS = {
 	sales: Sales,
 	receipts: Receipts,
 	reports: Reports,
+	eod: EndOfDayPage,
 	inventory: Inventory,
 	industry: Industry,
 	staff: Staff,

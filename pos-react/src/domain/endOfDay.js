@@ -7,6 +7,27 @@ import { closedShiftsInRange, reportData, reportKpis, staffHours } from "./analy
 import { refundRows, voidRows } from "./salesLog";
 import { locationStock, stockStatus } from "./inventory";
 
+/** The parts of the printed End of Day report that can be switched on or off (System Options, EOD Reports): option key, name and the section title it controls ("totals" is the figures at the top). */
+export const EOD_SECTIONS = [
+	{ key: "totals", label: "Totals (transactions, revenue, profit)", title: null },
+	{ key: "payments", label: "Sales by payment type", title: "Sales by Payment Type" },
+	{ key: "items", label: "Sales by item", title: "Sales by Item" },
+	{ key: "modifiers", label: "Sales by modifier", title: "Sales by Modifier" },
+	{ key: "refunds", label: "Refunds", title: "Refunds" },
+	{ key: "voids", label: "Voids and cleared carts", title: "Voids and Cleared Carts" },
+	{ key: "openOrders", label: "Open orders not yet paid", title: "Open Orders Not Yet Paid" },
+	{ key: "registers", label: "Cash register reconciliation", title: "Cash Register Reconciliation" },
+	{ key: "staffHours", label: "Staff hours", title: "Staff Hours" },
+	{ key: "stockMoves", label: "Stock movements today", title: "Stock Movements Today" },
+	{ key: "stock", label: "Current stock", title: "Current Stock" },
+];
+
+/** The report without the parts switched off in `opts` (the resolved "eod" options: a key set to false hides that part). */
+export function applyEodOptions(report, opts = {}) {
+	const hidden = new Set(EOD_SECTIONS.filter((s) => s.title && opts[s.key] === false).map((s) => s.title));
+	return { ...report, kpis: opts.totals === false ? [] : report.kpis, sections: report.sections.filter((s) => !hidden.has(s.title)) };
+}
+
 const STATUS_ORDER = { "Out of stock": 0, "Low stock": 1, "In stock": 2 };
 const time = (iso) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—");
 const inLocation = (x, locationId) => !locationId || locationId === "all" || !x.locationId || x.locationId === locationId;

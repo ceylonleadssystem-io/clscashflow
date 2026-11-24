@@ -445,7 +445,7 @@ export function PosProvider({ children }) {
 	return <PosContext.Provider value={value}>{children}</PosContext.Provider>;
 }
 
-const VIEW_PERMISSION = { reports: "reports.pos", products: "menu.view", modifiers: "menu.view", stations: "menu.view", inventory: "inventory.view", checkout: "pos.order.create" };
+const VIEW_PERMISSION = { reports: "reports.pos", eod: "reports.pos", products: "menu.view", modifiers: "menu.view", stations: "menu.view", inventory: "inventory.view", checkout: "pos.order.create" };
 
 export const usePos = () => useContext(PosContext);
 export const useServices = () => useContext(PosContext).svc;
