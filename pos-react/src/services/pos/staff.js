@@ -4,6 +4,7 @@
  */
 import { T } from "../../db/tables";
 import { nowIso } from "../../domain/format";
+import { phoneError } from "../../domain/validators";
 import { autoClockOutDue, resolveOptions } from "../../domain/systemOptions";
 import { activeTimeEntry, currentCashShift, expectedCash } from "../../domain/sales";
 import { subscriptionOf, userLimitError } from "../../config/subscription";
@@ -117,6 +118,7 @@ export async function saveUser(ctx, form) {
 	if (!/^\d{4,6}$/.test(pin.trim())) return void (await ctx.ui.alert("PIN must contain 4 to 6 digits."));
 	if (d.users.some((u) => u.id !== id && u.pin === pin.trim()))
 		return void (await ctx.ui.alert("This PIN is already used by another user."));
+	if (form.phone && phoneError(form.phone)) return void (await ctx.ui.alert(phoneError(form.phone)));
 	const access = form.locationAccess || "selected";
 	const ids = form.locationIds || [];
 	if (ctx.features()["business.locations"] && access === "selected" && !ids.length && role !== "owner")
@@ -136,6 +138,8 @@ export async function saveUser(ctx, form) {
 		pin: pin.trim(),
 		role,
 		active,
+		// optional contact number (technicians: printed on their invoices); forms that do not send one keep the saved number
+		...(form.phone !== undefined ? { phone: String(form.phone).trim() } : {}),
 		clockInBehaviour: form.clockInBehaviour || "prompt",
 		registerBehaviour: form.registerBehaviour || "prompt",
 		locationAccess: role === "owner" ? "all" : access,

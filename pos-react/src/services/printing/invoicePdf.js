@@ -23,7 +23,7 @@ export function invoiceModel(job, data) {
 		business: { name: s.business || "", logo: s.logo || "", address: place.address || s.address || "", phone: place.phone || s.phone || "" }, // no e-mail address on the invoice (client request)
 		customer: { name: customer.name || "Customer", phone: customer.phone || "", email: customer.email || "" },
 		vehicle: v ? `${v.registration} ${[v.year, v.make, v.model, v.colour].filter(Boolean).join(" ")}`.trim() : "",
-		technicians: jobTechs(job).map((id) => data.users.find((u) => u.id === id)?.name).filter(Boolean),
+		technicians: jobTechs(job).map((id) => data.users.find((u) => u.id === id)).filter(Boolean).map((u) => ({ name: u.name, phone: u.phone || "" })),
 		package: job.packageName,
 		price: Number(job.price) || 0,
 		discount: Number(job.discount) || 0,
@@ -40,15 +40,7 @@ async function loadLogo(src) {
 	if (!src || typeof document === "undefined") return null;
 	try {
 		let url = src;
-		if (!/^data:/.test(src)) {
-			const blob = await (await fetch(src)).blob();
-			url = await new Promise((ok, fail) => {
-				const fr = new FileReader();
-				fr.onload = () => ok(fr.result);
-				fr.onerror = fail;
-				fr.readAsDataURL(blob);
-			});
-		}
+		if (!/^data:/.test(src)) url = await remoteAsDataUrl(src);
 		const img = await new Promise((ok, fail) => {
 			const i = new Image();
 			i.onload = () => ok(i);
@@ -60,9 +52,36 @@ async function loadLogo(src) {
 		c.height = img.naturalHeight;
 		c.getContext("2d").drawImage(img, 0, 0);
 		return { data: c.toDataURL("image/png"), w: img.naturalWidth, h: img.naturalHeight };
-	} catch {
+	} catch (e) {
+		console.warn("Invoice logo could not be loaded; the invoice is made without it.", e);
 		return null;
 	}
+}
+
+/**
+ * Downloads a cloud-stored picture as a data URL. The sidebar has usually shown the same file already, and the browser then answers a
+ * CORS request from its cached copy of that plain image load, which has no CORS headers and fails. So the first try skips the cache; if that
+ * still fails, the picture is asked for again under a new address.
+ */
+async function remoteAsDataUrl(src) {
+	const read = (blob) =>
+		new Promise((ok, fail) => {
+			const fr = new FileReader();
+			fr.onload = () => ok(fr.result);
+			fr.onerror = fail;
+			fr.readAsDataURL(blob);
+		});
+	let last;
+	for (const [url, init] of [[src, { mode: "cors", cache: "reload" }], [src + (src.includes("?") ? "&" : "?") + "invoice=" + Date.now(), { mode: "cors", cache: "no-store" }]]) {
+		try {
+			const res = await fetch(url, init);
+			if (res.ok) return await read(await res.blob());
+			last = new Error("Logo download failed (" + res.status + ")");
+		} catch (e) {
+			last = e;
+		}
+	}
+	throw last;
 }
 
 /** Draws the invoice and returns the jsPDF document. */
@@ -89,7 +108,7 @@ export async function buildInvoicePdf(m) {
 	doc.setFont("helvetica", "bold").setFontSize(9).setTextColor(111, 98, 88).text("BILL TO", M, y);
 	y += 5;
 	doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(31, 26, 20);
-	[m.customer.name, m.customer.phone, m.customer.email, m.vehicle && "Vehicle: " + m.vehicle, m.technicians.length && "Technicians: " + m.technicians.join(", ")].filter(Boolean).forEach((t, i) => doc.text(plain(t), M, y + i * 5));
+	[m.customer.name, m.customer.phone, m.customer.email, m.vehicle && "Vehicle: " + m.vehicle, m.technicians.length && "Technicians: " + m.technicians.map((t) => t.name).join(", ")].filter(Boolean).forEach((t, i) => doc.text(plain(t), M, y + i * 5));
 	y += 30;
 	const rows = [[m.package, "1", money(m.price), money(m.price)]];
 	if (m.discount) rows.push(["Discount", "", "", "-" + money(m.discount)]);
@@ -111,7 +130,8 @@ export async function buildInvoicePdf(m) {
 	}
 	// footer: thank-you message, then how to reach the detailers
 	const bottom = doc.internal.pageSize.getHeight() - M;
-	const contact = [m.business.phone && "Call us: " + m.business.phone, m.business.address].filter(Boolean);
+	// the technicians who did the work, each with a phone number, then the business phone and address
+	const contact = [...m.technicians.map((t) => (t.phone ? `${t.name}: ${t.phone}` : t.name)), m.business.phone && "Call us: " + m.business.phone, m.business.address].filter(Boolean);
 	doc.setDrawColor(216, 205, 187).setLineWidth(0.3).line(M, bottom - 6 - contact.length * 4.5, width - M, bottom - 6 - contact.length * 4.5);
 	doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(31, 26, 20).text(plain(m.footer), width / 2, bottom - contact.length * 4.5, { align: "center" });
 	doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(111, 98, 88);

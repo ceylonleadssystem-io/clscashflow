@@ -6,7 +6,7 @@ const data = {
 	customers: [{ id: "c1", name: "Ann Perera", phone: "077 123 4567", email: "ann@test.com" }],
 	vehicles: [{ id: "v1", registration: "CAB-1234", make: "Toyota", model: "Aqua", year: "2019", colour: "White" }],
 	locations: [{ id: "loc1", name: "Main", phone: "011 234 5678", address: "9 Garage Rd", active: true }],
-	users: [{ id: "u1", name: "Nimal" }, { id: "u2", name: "Sam" }],
+	users: [{ id: "u1", name: "Nimal", phone: "077 111 2222" }, { id: "u2", name: "Sam" }],
 };
 const job = { id: "j1", customerId: "c1", vehicleId: "v1", packageName: "Full Detail", price: 10000, discount: 1000, technicianIds: ["u1", "u2"], invoiceNumber: "INV-0001", invoicedAt: "2026-11-10T10:00:00Z", payments: [{ method: "Cash", amount: 4000, at: "2026-11-10T11:00:00Z" }] };
 
@@ -14,7 +14,7 @@ describe("detailing invoice PDF", () => {
 	it("gathers the invoice figures and technicians", () => {
 		const m = invoiceModel(job, data);
 		expect(m).toMatchObject({ number: "INV-0001", total: 9000, paid: 4000, balance: 5000 });
-		expect(m.technicians).toEqual(["Nimal", "Sam"]);
+		expect(m.technicians).toEqual([{ name: "Nimal", phone: "077 111 2222" }, { name: "Sam", phone: "" }]);
 		// client request: logo on top, no business e-mail, thank-you and the detailers' contact details in the footer
 		expect(m.business).toEqual({ name: "Shine Detailing", logo: "https://example.test/logo.png", address: "9 Garage Rd", phone: "011 234 5678" });
 		expect(m.footer).toBe("Thank you for choosing us!");
@@ -29,6 +29,7 @@ describe("detailing invoice PDF", () => {
 		const text = doc.output(); // the PDF source: page text is stored as plain strings
 		expect(text).toContain("Thank you for choosing us!");
 		expect(text).toContain("011 234 5678");
+		expect(text).toContain("Nimal: 077 111 2222"); // the technicians and their numbers are in the footer
 		expect(text).not.toContain("hi@shine.test"); // the business e-mail is not on the invoice
 	});
 });
