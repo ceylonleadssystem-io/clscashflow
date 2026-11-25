@@ -14,10 +14,13 @@ export function invoiceModel(job, data) {
 	const customer = data.customers.find((c) => c.id === job.customerId) || {};
 	const v = data.vehicles.find((x) => x.id === job.vehicleId);
 	const s = data.settings || {};
+	// the detailers' contact details come from the job's location (Settings > Locations), then the first location that has a phone
+	const places = (data.locations || []).filter((l) => l.active !== false);
+	const place = places.find((l) => l.id === job.locationId && l.phone) || places.find((l) => l.phone) || places.find((l) => l.id === job.locationId) || {};
 	return {
 		number: job.invoiceNumber,
 		date: job.invoicedAt || job.completedAt || job.scheduledAt,
-		business: { name: s.business || "", address: s.address || "", email: s.email || "", phone: s.phone || "" },
+		business: { name: s.business || "", logo: s.logo || "", address: place.address || s.address || "", phone: place.phone || s.phone || "" }, // no e-mail address on the invoice (client request)
 		customer: { name: customer.name || "Customer", phone: customer.phone || "", email: customer.email || "" },
 		vehicle: v ? `${v.registration} ${[v.year, v.make, v.model, v.colour].filter(Boolean).join(" ")}`.trim() : "",
 		technicians: jobTechs(job).map((id) => data.users.find((u) => u.id === id)?.name).filter(Boolean),
@@ -28,8 +31,38 @@ export function invoiceModel(job, data) {
 		paid: jobPaid(job),
 		balance: Math.max(0, jobTotal(job) - jobPaid(job)),
 		payments: (job.payments || []).map((p) => ({ method: p.method, amount: Number(p.amount) || 0, at: p.at })),
-		footer: s.receiptFooter || "Thank you for choosing us.",
+		footer: "Thank you for choosing us!",
 	};
+}
+
+/** The business logo as a PNG data URL with its size, or null when it cannot be read (no logo, offline, blocked image). */
+async function loadLogo(src) {
+	if (!src || typeof document === "undefined") return null;
+	try {
+		let url = src;
+		if (!/^data:/.test(src)) {
+			const blob = await (await fetch(src)).blob();
+			url = await new Promise((ok, fail) => {
+				const fr = new FileReader();
+				fr.onload = () => ok(fr.result);
+				fr.onerror = fail;
+				fr.readAsDataURL(blob);
+			});
+		}
+		const img = await new Promise((ok, fail) => {
+			const i = new Image();
+			i.onload = () => ok(i);
+			i.onerror = fail;
+			i.src = url;
+		});
+		const c = document.createElement("canvas"); // redrawn as PNG so WebP logos work too
+		c.width = img.naturalWidth;
+		c.height = img.naturalHeight;
+		c.getContext("2d").drawImage(img, 0, 0);
+		return { data: c.toDataURL("image/png"), w: img.naturalWidth, h: img.naturalHeight };
+	} catch {
+		return null;
+	}
 }
 
 /** Draws the invoice and returns the jsPDF document. */
@@ -38,16 +71,21 @@ export async function buildInvoicePdf(m) {
 	const doc = new jsPDF({ unit: "mm", format: "a4" });
 	const M = 16;
 	const width = doc.internal.pageSize.getWidth();
-	let y = M + 4;
-	doc.setFont("helvetica", "bold").setFontSize(20).setTextColor(31, 26, 20).text("INVOICE", M, y);
-	doc.setFontSize(11).text(plain(m.number), width - M, y, { align: "right" });
-	y += 7;
-	doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(111, 98, 88);
-	doc.text(plain(new Date(m.date).toLocaleDateString()), width - M, y, { align: "right" });
-	[m.business.name, m.business.address, m.business.email, m.business.phone].filter(Boolean).forEach((t, i) => {
-		doc.setFont("helvetica", i ? "normal" : "bold").setTextColor(31, 26, 20).text(plain(t), M, y + i * 4.5);
+	let y = M;
+	// header: the business logo at the top left, INVOICE and its number at the right
+	const logo = await loadLogo(m.business.logo);
+	if (logo) {
+		const scale = Math.min(55 / logo.w, 22 / logo.h);
+		doc.addImage(logo.data, "PNG", M, y, logo.w * scale, logo.h * scale);
+		y += logo.h * scale + 4;
+	} else y += 4;
+	doc.setFont("helvetica", "bold").setFontSize(20).setTextColor(31, 26, 20).text("INVOICE", width - M, M + 6, { align: "right" });
+	doc.setFontSize(11).text(plain(m.number), width - M, M + 13, { align: "right" });
+	doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(111, 98, 88).text(plain(new Date(m.date).toLocaleDateString()), width - M, M + 18, { align: "right" });
+	[m.business.name, m.business.address].filter(Boolean).forEach((t, i) => {
+		doc.setFont("helvetica", i ? "normal" : "bold").setFontSize(10).setTextColor(31, 26, 20).text(plain(t), M, y + i * 4.5);
 	});
-	y += 22;
+	y += 18;
 	doc.setFont("helvetica", "bold").setFontSize(9).setTextColor(111, 98, 88).text("BILL TO", M, y);
 	y += 5;
 	doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(31, 26, 20);
@@ -71,7 +109,13 @@ export async function buildInvoicePdf(m) {
 		autoTable(doc, { startY: y, margin: { left: M, right: M }, head: [["Payment", "Method", "Amount"]], body: m.payments.map((p) => [plain(new Date(p.at).toLocaleDateString()), plain(p.method), money(p.amount)]), theme: "grid", headStyles: { fillColor: [111, 98, 88] }, columnStyles: { 2: { halign: "right" } } });
 		y = doc.lastAutoTable.finalY;
 	}
-	doc.setFont("helvetica", "italic").setFontSize(9).setTextColor(111, 98, 88).text(plain(m.footer), M, doc.internal.pageSize.getHeight() - M);
+	// footer: thank-you message, then how to reach the detailers
+	const bottom = doc.internal.pageSize.getHeight() - M;
+	const contact = [m.business.phone && "Call us: " + m.business.phone, m.business.address].filter(Boolean);
+	doc.setDrawColor(216, 205, 187).setLineWidth(0.3).line(M, bottom - 6 - contact.length * 4.5, width - M, bottom - 6 - contact.length * 4.5);
+	doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(31, 26, 20).text(plain(m.footer), width / 2, bottom - contact.length * 4.5, { align: "center" });
+	doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(111, 98, 88);
+	contact.forEach((t, i) => doc.text(plain(t), width / 2, bottom - (contact.length - 1 - i) * 4.5 + 0, { align: "center" }));
 	return doc;
 }
 

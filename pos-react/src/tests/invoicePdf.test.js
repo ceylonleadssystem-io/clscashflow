@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { buildInvoicePdf, invoiceEmailSale, invoiceMessage, invoiceModel } from "../services/printing/invoicePdf";
 
 const data = {
-	settings: { business: "Shine Detailing", address: "1 Main St", email: "hi@shine.test" },
+	settings: { business: "Shine Detailing", address: "1 Main St", email: "hi@shine.test", logo: "https://example.test/logo.png" },
 	customers: [{ id: "c1", name: "Ann Perera", phone: "077 123 4567", email: "ann@test.com" }],
 	vehicles: [{ id: "v1", registration: "CAB-1234", make: "Toyota", model: "Aqua", year: "2019", colour: "White" }],
+	locations: [{ id: "loc1", name: "Main", phone: "011 234 5678", address: "9 Garage Rd", active: true }],
 	users: [{ id: "u1", name: "Nimal" }, { id: "u2", name: "Sam" }],
 };
 const job = { id: "j1", customerId: "c1", vehicleId: "v1", packageName: "Full Detail", price: 10000, discount: 1000, technicianIds: ["u1", "u2"], invoiceNumber: "INV-0001", invoicedAt: "2026-11-10T10:00:00Z", payments: [{ method: "Cash", amount: 4000, at: "2026-11-10T11:00:00Z" }] };
@@ -14,6 +15,9 @@ describe("detailing invoice PDF", () => {
 		const m = invoiceModel(job, data);
 		expect(m).toMatchObject({ number: "INV-0001", total: 9000, paid: 4000, balance: 5000 });
 		expect(m.technicians).toEqual(["Nimal", "Sam"]);
+		// client request: logo on top, no business e-mail, thank-you and the detailers' contact details in the footer
+		expect(m.business).toEqual({ name: "Shine Detailing", logo: "https://example.test/logo.png", address: "9 Garage Rd", phone: "011 234 5678" });
+		expect(m.footer).toBe("Thank you for choosing us!");
 		expect(invoiceMessage(m)).toContain("INV-0001");
 		expect(invoiceEmailSale(m)).toMatchObject({ receipt: "INV-0001", total: 9000, payment: "Cash" });
 	});
@@ -22,5 +26,9 @@ describe("detailing invoice PDF", () => {
 		const doc = await buildInvoicePdf(invoiceModel(job, data));
 		expect(doc.getNumberOfPages()).toBe(1);
 		expect(doc.output("arraybuffer").byteLength).toBeGreaterThan(1000);
+		const text = doc.output(); // the PDF source: page text is stored as plain strings
+		expect(text).toContain("Thank you for choosing us!");
+		expect(text).toContain("011 234 5678");
+		expect(text).not.toContain("hi@shine.test"); // the business e-mail is not on the invoice
 	});
 });
