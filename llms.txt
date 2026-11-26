@@ -6,7 +6,7 @@
 - [Home](https://ceylonrylabs.io/): what Ceylonry POS does, plans, hardware and FAQ
 - [Start a POS trial](https://ceylonrylabs.io/pos-onboarding.html): create an account
 - [Mrs. Gamage's story](https://ceylonrylabs.io/mrs-gamage-story): a customer story
-- [Ceylonry POS policies](https://ceylonrylabs.io/policies.html): payment and refund policy, privacy policy, terms and conditions, contact
+- [Ceylonry POS policies](https://ceylonrylabs.io/policies.html): privacy policy, terms and conditions, payment and refund policy, contact
 - [CashFlow privacy policy](https://ceylonrylabs.io/privacy.html)
 - [CashFlow terms of service](https://ceylonrylabs.io/terms.html)
 
