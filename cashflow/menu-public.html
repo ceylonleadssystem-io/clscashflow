@@ -200,6 +200,9 @@
 			(function () {
 				var params = new URLSearchParams(location.search);
 				var token = params.get("token") || location.pathname.split("/").pop() || "";
+				// the address bar shows only the website, so the menu link is not there to copy or edit; the token is kept with this
+				// history entry, and the home page sends a reload back here (see index.html)
+				if (/^[A-Za-z0-9_-]{32,64}$/.test(token)) history.replaceState({ qrMenu: token }, "", "/");
 				var menu = null;
 				var active = "";
 				var el = function (id) {
