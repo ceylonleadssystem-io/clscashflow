@@ -671,6 +671,7 @@ html[data-theme="dark"] .admin-success{background:#10301f;color:#bfeccf}
 /* Reports: End of Day */
 .eod-panel{margin-bottom:16px}
 .eod-panel .panel-head{flex-wrap:wrap;gap:12px}
+.eod-preview-frame{display:block;width:100%;height:60vh;border:0;background:#fff}
 .eod-panel .range-fields{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
 /* Stations page */
 .station-cards{display:grid;gap:12px}

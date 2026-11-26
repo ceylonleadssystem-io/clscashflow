@@ -6,7 +6,7 @@ import { EodPanel } from "./reports/EodPanel";
 export function EndOfDayPage() {
 	return (
 		<section className="view active" id="view-eod">
-			<EodPanel />
+			<EodPanel preview />
 		</section>
 	);
 }
