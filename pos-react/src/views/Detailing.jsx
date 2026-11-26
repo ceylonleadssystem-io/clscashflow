@@ -10,11 +10,17 @@ import { customerName } from "../domain/names";
 import { useData } from "../store/DataProvider";
 import { usePos } from "../store/PosProvider";
 import { useUi } from "../store/UiProvider";
-import { JOB_FLOW, jobPaid, jobTechs, jobTotal } from "../services/pos/detailing";
+import { detailingReport, JOB_FLOW, jobPaid, jobTechs, jobTotal } from "../services/pos/detailing";
 import { downloadInvoicePdf, invoiceEmailSale, invoiceEmailSubject, invoiceModel, shareInvoiceWhatsApp } from "../services/printing/invoicePdf";
 import { orderEmailHtml, orderEmailVariables } from "../services/printing/orderEmail";
 import { sendOrderEmail } from "../services/platform.service";
 import { FULL_SETTINGS_ROLES } from "../config/roles";
+import { printHtmlInFrame } from "../services/printing/printDocument";
+import { reportHtml } from "../services/printing/reportDocument";
+import { downloadReportPdf, pdfSupportsText } from "../services/printing/reportPdf";
+import { createLogger } from "../utils/logger";
+
+const log = createLogger("ui");
 
 const TABS = [
 	["overview", "Overview"],
@@ -195,7 +201,7 @@ export function Detailing({ tab: forced }) {
 				</div>
 			)}
 
-			{tab === "reports" && <DetailingReports data={data} cname={cname} tech={tech} />}
+			{tab === "reports" && <DetailingReports data={data} tech={tech} />}
 
 			{tab === "overview" && (
 				<>
@@ -631,63 +637,88 @@ function SignaturePad({ value, onChange }) {
 	);
 }
 
-/** Revenue and job counts by package and by technician, from the paid and invoiced jobs. */
+/** Revenue and job counts by package and by technician for a date range, downloadable as a PDF. */
 function DetailingReports({ data, tech }) {
-	const done = data.detailJobs.filter((j) => ["Completed", "Invoiced"].includes(j.status));
-	const group = (keyOf) => {
-		const m = new Map();
-		done.forEach((j) => {
-			[].concat(keyOf(j)).forEach((k) => {
-				const r = m.get(k) || { jobs: 0, revenue: 0 };
-				r.jobs += 1;
-				r.revenue += jobPaid(j);
-				m.set(k, r);
-			});
-		});
-		return [...m.entries()].sort((a, b) => b[1].revenue - a[1].revenue);
+	const [{ from, to }, setRange] = useState({ from: "", to: "" }); // empty: all dates
+	const report = detailingReport(data.detailJobs, { from, to, tech, business: data.settings.business || "" });
+	const reversed = !!from && !!to && from > to;
+	const download = async () => {
+		// the built-in PDF font is Latin only; other scripts (e.g. Sinhala or Tamil names) go through the print dialog
+		if (pdfSupportsText(report)) {
+			try {
+				return await downloadReportPdf(report, ["detailing-report", from, to].filter(Boolean).join("-") + ".pdf");
+			} catch (e) {
+				log.error("pdf download failed, using the print dialog", e);
+			}
+		}
+		printHtmlInFrame(reportHtml(report), report.title);
 	};
-	const table = (title, rows) => (
-		<div className="panel" style={{ marginTop: 16 }}>
-			<div className="panel-head">
-				<div className="panel-title">{title}</div>
-			</div>
-			<div className="table-wrap">
-				<table>
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Jobs</th>
-							<th>Payments received</th>
-						</tr>
-					</thead>
-					<tbody>
-						{rows.map(([k, r]) => (
-							<tr key={k}>
-								<td>{k}</td>
-								<td>{r.jobs}</td>
-								<td>{money(r.revenue)}</td>
-							</tr>
-						))}
-						{!rows.length && (
-							<tr>
-								<td colSpan="3">No completed jobs yet.</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	);
+	const set = (key) => (e) => setRange((r) => ({ ...r, [key]: e.target.value }));
 	return (
 		<>
-			<div className="grid4">
-				<Kpi label="Completed jobs" value={done.length} />
-				<Kpi label="Payments received" value={money(done.reduce((a, j) => a + jobPaid(j), 0))} />
-				<Kpi label="Invoiced" value={money(done.filter((j) => j.invoiceNumber).reduce((a, j) => a + jobTotal(j), 0))} />
-				<Kpi label="Cancelled bookings" value={data.detailJobs.filter((j) => j.status === "Cancelled").length} />
+			<div className="dashboard-toolbar">
+				{/* on narrow phones the two date fields stack, so the whole date stays readable */}
+				<div className="range-fields" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
+					<div className="field">
+						<label htmlFor="detailing-report-from">Start date</label>
+						<input className="input" type="date" id="detailing-report-from" max={to || undefined} value={from} onChange={set("from")} />
+					</div>
+					<div className="field">
+						<label htmlFor="detailing-report-to">End date</label>
+						<input className="input" type="date" id="detailing-report-to" min={from || undefined} value={to} onChange={set("to")} />
+					</div>
+				</div>
+				<div className="tools">
+					{(from || to) && (
+						<button className="btn out" onClick={() => setRange({ from: "", to: "" })}>
+							All dates
+						</button>
+					)}
+					<button className="btn gold" disabled={reversed} onClick={download}>
+						Download PDF
+					</button>
+				</div>
 			</div>
-			{table("By package", group((j) => j.packageName))}
-			{table("By technician (each technician on a job is credited with it)", group((j) => (jobTechs(j).length ? jobTechs(j).map(tech) : "Unassigned")))}
+			<p className="muted" role="status">
+				{reversed ? "The start date is after the end date." : `Showing jobs by booking date: ${report.subtitle}.`}
+			</p>
+			<div className="grid4">
+				{report.kpis.map((k) => (
+					<Kpi key={k.label} label={k.label} value={k.value} />
+				))}
+			</div>
+			{report.sections.map((s) => (
+				<div key={s.title} className="panel" style={{ marginTop: 16 }}>
+					<div className="panel-head">
+						<div className="panel-title">{s.title}</div>
+					</div>
+					<div className="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									{s.head.map((h) => (
+										<th key={h}>{h}</th>
+									))}
+								</tr>
+							</thead>
+							<tbody>
+								{s.rows.map((r) => (
+									<tr key={r[0]}>
+										{r.map((c, i) => (
+											<td key={s.head[i]}>{c}</td>
+										))}
+									</tr>
+								))}
+								{!s.rows.length && (
+									<tr>
+										<td colSpan={s.head.length}>{s.empty}</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			))}
 		</>
 	);
 }
