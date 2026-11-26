@@ -242,3 +242,43 @@ export async function removeRecord(ctx, collection, id) {
 	});
 	return true;
 }
+
+/**
+ * The Reports page (and its PDF) for jobs scheduled between `from` and `to` (YYYY-MM-DD, either may be empty), in the model
+ * reportPdf.js and reportDocument.js draw. Payments are the ones recorded on those jobs.
+ */
+export function detailingReport(jobs, { from = "", to = "", tech, business = "" }) {
+	const inRange = jobs.filter((j) => {
+		const d = (j.scheduledAt || "").slice(0, 10);
+		return (!from || d >= from) && (!to || d <= to);
+	});
+	const done = inRange.filter((j) => ["Completed", "Invoiced"].includes(j.status));
+	const section = (title, keyOf) => {
+		const m = new Map();
+		done.forEach((j) => {
+			[].concat(keyOf(j)).forEach((k) => {
+				const r = m.get(k) || { jobs: 0, revenue: 0 };
+				r.jobs += 1;
+				r.revenue += jobPaid(j);
+				m.set(k, r);
+			});
+		});
+		const rows = [...m.entries()].sort((a, b) => b[1].revenue - a[1].revenue).map(([k, r]) => [k, String(r.jobs), money(r.revenue)]);
+		return { title, head: ["Name", "Jobs", "Payments received"], rows, empty: "No completed jobs in this period." };
+	};
+	return {
+		title: "Detailing report",
+		business,
+		subtitle: from || to ? from && to ? `${from} to ${to}` : from ? `From ${from}` : `Up to ${to}` : "All dates",
+		kpis: [
+			{ label: "Completed jobs", value: String(done.length) },
+			{ label: "Payments received", value: money(done.reduce((a, j) => a + jobPaid(j), 0)) },
+			{ label: "Invoiced", value: money(done.filter((j) => j.invoiceNumber).reduce((a, j) => a + jobTotal(j), 0)) },
+			{ label: "Cancelled bookings", value: String(inRange.filter((j) => j.status === "Cancelled").length) },
+		],
+		sections: [
+			section("By package", (j) => j.packageName),
+			section("By technician (each technician on a job is credited with it)", (j) => (jobTechs(j).length ? jobTechs(j).map(tech) : "Unassigned")),
+		],
+	};
+}

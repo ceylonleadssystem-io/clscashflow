@@ -45,3 +45,18 @@ describe("EOD Reports options", () => {
 		expect(validateOptions("eod", { autoOn: true, autoTime: "23:00" })).toEqual({});
 	});
 });
+
+import { previewHtml } from "../services/printing/eodPrint";
+import { reportHtml } from "../services/printing/reportDocument";
+
+describe("End of Day preview", () => {
+	const report = endOfDayReport({ day: "2026-10-29", sales: [sale], users: [{ id: "u1", name: "Kehara" }] });
+	it("only adds on-screen spacing to the printed document", () => {
+		for (const [kind, html] of [["page", reportHtml(report)], ["receipt", eodReceiptHtml(report, { autoPrint: false })]]) {
+			const shown = previewHtml(html, kind);
+			expect(shown).toContain("@media screen{");
+			expect(shown.replace(/@media screen.*(?=<\/style>)/, "")).toBe(html);
+			expect(shown).not.toContain("<script");
+		}
+	});
+});

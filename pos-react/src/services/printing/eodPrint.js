@@ -7,6 +7,13 @@ import { resolveOptions } from "../../domain/systemOptions";
 import { eodReceiptHtml } from "./documents";
 import { printHtmlInFrame } from "./printDocument";
 
+/** The printable document with screen-only spacing, for showing it on the End of Day page. Printing is not affected. */
+export const previewHtml = (html, kind) =>
+	html.replace(
+		"</style>",
+		kind === "receipt" ? "@media screen{body{margin:0 auto;padding:12px 0}}</style>" : "@media screen{body{padding:16px}.kpis{flex-wrap:wrap}.kpi{min-width:110px}}@media screen and (max-width:480px){body{padding:10px}th,td{padding:4px 2px;font-size:10px}th{font-size:9px;letter-spacing:0}td.n{white-space:normal}}</style>",
+	);
+
 /** `input` is the arguments of endOfDayReport. */
 export function printEodReceipt(input, settings) {
 	const report = applyEodOptions(endOfDayReport(input), resolveOptions(settings, "eod", input.locationId));
