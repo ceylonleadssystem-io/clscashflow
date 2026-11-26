@@ -4,7 +4,6 @@
  */
 import { GearLoader } from "../components/ui/GearLoader";
 import { useCallback, useEffect, useState } from "react";
-import { env } from "../config/env";
 import { adminSession } from "./adminSession";
 import { AdminLogin } from "./AdminLogin";
 import { AccountDetail } from "./AccountDetail";
@@ -13,11 +12,12 @@ import { ChurnPanel, FunnelPanel, HeatmapPanel, KitchenPanel, LossPanel, TypesPa
 import { SubscriptionManagement } from "./SubscriptionManagement";
 import { NewAccountPanel } from "./NewAccountPanel";
 import { SupportViewer } from "./SupportViewer";
+import { KanbanBoard } from "../kanban-board/KanbanBoard";
 import { useUi } from "../store/UiProvider";
 import { adminApi } from "./adminApi";
-import { localAdminSession } from "./localAdmin";
 import { STATUSES, SUBSCRIPTIONS, appsOf, fmtDay, lastUsedOf, statusOf, subscriptionOf } from "./status";
-import { adminFeedback, useAdminFeedback } from "./adminFeedback";
+import { AdminFeedbackBar } from "./AdminFeedbackBar";
+import { restoreAdmin, signInAdmin, signOutAdmin } from "./adminSignIn";
 import { createLogger } from "../utils/logger";
 
 const log = createLogger("admin");
@@ -32,24 +32,18 @@ export function AdminApp() {
 	const [stats, setStats] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [selected, setSelected] = useState("");
-	const [page, setPage] = useState("accounts"); // "accounts" | "subscriptions"
+	const [page, setPage] = useState("accounts"); // "accounts" | "subscriptions" | "board"
 	const [mainTab, setMainTab] = useState("analytics"); // the main page: "analytics" | "accounts" (account management)
 	const [q, setQ] = useState("");
 	const [fStatus, setFStatus] = useState("");
 	const [fSub, setFSub] = useState("");
-	const feedback = useAdminFeedback();
 	const ui = useUi();
 	const [creating, setCreating] = useState(false);
 	const [supportOpen, setSupportOpen] = useState(false);
 
 	// Restore a still-valid administrator session (kept in sessionStorage for this tab only).
 	useEffect(() => {
-		if (env.authProvider === "local") {
-			if (localAdminSession.get()) setUser({ email: "dev admin" });
-		} else {
-			const s = adminSession.get();
-			if (s) setUser({ email: s.email, role: s.role || "admin" });
-		}
+		setUser(restoreAdmin());
 		setReady(true);
 	}, []);
 
@@ -80,17 +74,7 @@ export function AdminApp() {
 		setBusy(true);
 		setError("");
 		try {
-			if (env.authProvider === "local") {
-				localAdminSession.signIn(email, password);
-				setUser({ email });
-				return;
-			}
-			// Credentials are checked server-side against the separate admin database.
-			const res = await fetch(env.adminLoginUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-			const json = await res.json().catch(() => ({}));
-			if (!res.ok || !json.ok) throw new Error(json.error || "Sign-in failed (" + res.status + ").");
-			adminSession.set({ token: json.token, expiresAt: json.expiresAt, email: json.email, name: json.name, role: json.role || "admin" });
-			setUser({ email: json.email, role: json.role || "admin" });
+			setUser(await signInAdmin(email, password));
 		} catch (e) {
 			log.warn("admin sign-in failed", e);
 			setError(e.message);
@@ -114,7 +98,7 @@ export function AdminApp() {
 						<div className="muted">Signed in as {user.email}</div>
 					</div>
 					<div className="admin-top-actions">
-						<button className="btn out" onClick={() => { localAdminSession.signOut(); adminSession.clear(); setUser(null); }}>
+						<button className="btn out" onClick={() => { signOutAdmin(); setUser(null); }}>
 							Sign out
 						</button>
 					</div>
@@ -128,13 +112,7 @@ export function AdminApp() {
 
 	return (
 		<div className="admin-app">
-			{feedback.busy > 0 && <div className="admin-progress" role="progressbar" aria-label="Saving changes"><span /></div>}
-			{feedback.message && (
-				<div className="admin-success" role="status" key={feedback.message.id}>
-					<span aria-hidden="true">✓</span> {feedback.message.text}
-					<button type="button" aria-label="Dismiss message" onClick={adminFeedback.dismiss}>×</button>
-				</div>
-			)}
+			<AdminFeedbackBar />
 			{loading && !accounts.length && <div className="gear-overlay"><GearLoader /></div>}
 			<header className="admin-top">
 				<div>
@@ -147,13 +125,16 @@ export function AdminApp() {
 					<button className={"btn " + (page === "subscriptions" ? "gold" : "out")} id="admin-nav-subscriptions" aria-pressed={page === "subscriptions"} onClick={() => { setPage(page === "subscriptions" ? "accounts" : "subscriptions"); setSelected(""); }}>
 						Subscription management
 					</button>
+					<button className={"btn " + (page === "board" ? "gold" : "out")} id="admin-nav-board" aria-pressed={page === "board"} onClick={() => { setPage(page === "board" ? "accounts" : "board"); setSelected(""); }}>
+						Feature board
+					</button>
 					<button className={"btn " + (supportOpen ? "gold" : "out")} id="admin-nav-support" aria-pressed={supportOpen} onClick={() => setSupportOpen((v) => !v)}>
 						Live support
 					</button>
 					<button className="btn out" onClick={load} disabled={loading}>
 						{loading ? "Refreshing…" : "Refresh"}
 					</button>
-					<button className="btn out" onClick={() => { localAdminSession.signOut(); adminSession.clear(); setUser(null); }}>
+					<button className="btn out" onClick={() => { signOutAdmin(); setUser(null); }}>
 						Sign out
 					</button>
 				</div>
@@ -163,6 +144,8 @@ export function AdminApp() {
 
 			{page === "subscriptions" ? (
 				<SubscriptionManagement />
+			) : page === "board" ? (
+				<KanbanBoard />
 			) : current ? (
 				<AccountDetail
 					account={current}

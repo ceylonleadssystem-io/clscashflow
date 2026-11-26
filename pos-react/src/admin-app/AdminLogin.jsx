@@ -7,7 +7,7 @@ import { env } from "../config/env";
 import { DEV_ADMIN } from "./localAdmin";
 
 /** Administrative sign-in (separate from the business / staff login of the POS). */
-export function AdminLogin({ onSignIn, error, busy }) {
+export function AdminLogin({ onSignIn, error, busy, homeLink = true }) {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [show, setShow] = useState(false);
@@ -45,9 +45,11 @@ export function AdminLogin({ onSignIn, error, busy }) {
 					{busy ? "Signing in…" : "Sign in to Administration"}
 				</button>
 				{error && <div className="login-error" style={{ display: "block" }}>{error}</div>}
-				<a className="account-home" href={env.basePath} style={{ display: "block", marginTop: 16 }}>
-					← POS business sign in
-				</a>
+				{homeLink && (
+					<a className="account-home" href={env.basePath} style={{ display: "block", marginTop: 16 }}>
+						← POS business sign in
+					</a>
+				)}
 			</div>
 		</div>
 	);

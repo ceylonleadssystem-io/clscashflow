@@ -1,0 +1,15 @@
+:rocket: *Ceylonry POS release notes: 2026-11-18*
+
+*Features*
+• *Ingredient check at selection (issue #163):* items that are short of an ingredient can no longer be added to an order. Before, you only found out at payment. Applies when *Recipes / stock usage* is on.
+1. On the order screen, a greyed tile saying *Not enough <ingredient>* cannot be tapped.
+2. Restock that ingredient in Inventory and the tile works again.
+3. Pressing *+* on an order line when stock is short shows which ingredient and how much is available; the quantity stays the same.
+• The check counts what is already in the current order. Only the item's own ingredients are checked, and the check at payment is unchanged.
+
+*Fixes*
+• Menu Admin no longer crashes when changing the location of an item that has no saved locations (issue #161). Changes now show as "All locations" or a location count in pending edits.
+
+*Other*
+• Postman resources and cache files updated, no user impact.
+• Not verified: behaviour on every device and browser. Based on git history and code only.

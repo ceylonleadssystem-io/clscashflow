@@ -5,6 +5,7 @@
 // Creates database `pos_admin` (override with APPWRITE_ADMIN_DATABASE_ID) with:
 //   admins     administrator accounts (email must be unique)
 //   audit_log  sign-ins and admin actions
+//   kanban_cards, kanban_updates  the feature board and the messages under each card
 // Collections get no client permissions: only the server API key can read or write them.
 //   diag_signals  tiny (<= 10 min) WebRTC handshake for remote POS diagnostics, one document per account.
 //                 It never holds log data: logs travel browser to browser.
@@ -85,4 +86,17 @@ await once("kds_pairs.offer", () => db.createStringAttribute(DB, "kds_pairs", "o
 await once("kds_pairs.answer", () => db.createStringAttribute(DB, "kds_pairs", "answer", 20000, false));
 await once("kds_pairs.pairId", () => db.createStringAttribute(DB, "kds_pairs", "pairId", 40, false));
 await once("kds_pairs.createdAt", () => db.createStringAttribute(DB, "kds_pairs", "createdAt", 40, true));
+// Feature board of the admin portal (netlify/functions/kanban-board): one card per feature, with messages and updates under it.
+await once("collection kanban_cards", () => db.createCollection(DB, "kanban_cards", "Feature board cards", [], false));
+await once("kanban_cards.issue", () => db.createIntegerAttribute(DB, "kanban_cards", "issue", false));
+await once("kanban_cards.title", () => db.createStringAttribute(DB, "kanban_cards", "title", 300, true));
+await once("kanban_cards.status", () => db.createStringAttribute(DB, "kanban_cards", "status", 20, true));
+await once("kanban_cards.lastUpdateAt", () => db.createStringAttribute(DB, "kanban_cards", "lastUpdateAt", 40, false));
+await once("collection kanban_updates", () => db.createCollection(DB, "kanban_updates", "Feature board updates", [], false));
+await once("kanban_updates.cardId", () => db.createStringAttribute(DB, "kanban_updates", "cardId", 36, true));
+await once("kanban_updates.message", () => db.createStringAttribute(DB, "kanban_updates", "message", 4000, true));
+await once("kanban_updates.author", () => db.createStringAttribute(DB, "kanban_updates", "author", 254, false));
+await once("kanban_updates.at", () => db.createStringAttribute(DB, "kanban_updates", "at", 40, true));
+await new Promise((r) => setTimeout(r, 4000)); // attributes first, then the index that uses them
+await once("kanban_updates card index", () => db.createIndex(DB, "kanban_updates", "card_at_idx", "key", ["cardId", "at"], ["ASC", "ASC"]));
 console.log("\nDone. Now add the first record to `admins` and set POS_ADMIN_TOKEN_SECRET in Netlify.");

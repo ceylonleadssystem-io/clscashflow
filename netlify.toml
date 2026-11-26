@@ -11,6 +11,14 @@
   status = 200
   force = true
 
+# Feature board on its own address: kanban.ceylonrylabs.io (same administrator sign-in as the admin portal; also reachable from the portal itself).
+# Needs the kanban.ceylonrylabs.io domain added to this Netlify site and a DNS CNAME for it.
+[[redirects]]
+  from = "https://kanban.ceylonrylabs.io/"
+  to = "/pos-react/dist/src/kanban-board/index.html"
+  status = 200
+  force = true
+
 # The POS on its own address: pos.ceylonrylabs.io opens the POS app (same business login) for every business type except the ones with an address
 # of their own below. Needs the pos.ceylonrylabs.io domain added to this Netlify site, a DNS CNAME for it, and the same hostname registered as a Web
 # platform in the Appwrite project (otherwise sign-in fails with "Failed to fetch").
