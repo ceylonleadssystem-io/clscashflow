@@ -1980,9 +1980,9 @@
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1795690304.1996179,
-    "seen": 1795690400.5496151,
-    "ast_hash": "02d01dd7d939b684cb3d30c832b73315",
+    "mtime": 1795712093.363863,
+    "seen": 1795712178.270692,
+    "ast_hash": "05dce363afa1e913b4338695e84d7a6e",
     "semantic_hash": ""
   },
   "mrs-gamage-story.html": {
@@ -1998,9 +1998,9 @@
     "semantic_hash": ""
   },
   "pos-onboarding.html": {
-    "mtime": 1794860574.173196,
-    "seen": 1794865144.768907,
-    "ast_hash": "3d38c995a17c1684521068b4b692d294",
+    "mtime": 1795712093.3644116,
+    "seen": 1795712178.270696,
+    "ast_hash": "9ce8c289d50d99d9163faede60745f63",
     "semantic_hash": ""
   },
   "pos-react/README.md": {
@@ -2424,8 +2424,8 @@
     "semantic_hash": ""
   },
   ".claude/launch.json": {
-    "mtime": 1795690834.681308,
-    "seen": 1795690845.315964,
+    "mtime": 1795712163.353767,
+    "seen": 1795712178.2702131,
     "ast_hash": "e8757661914c64da7a186b5f15828a87",
     "semantic_hash": ""
   },
@@ -2850,9 +2850,9 @@
     "semantic_hash": ""
   },
   "llms.txt": {
-    "mtime": 1794860574.165584,
-    "seen": 1794865144.768905,
-    "ast_hash": "3e926f676ffe99fdf0dafa5ab25ef459",
+    "mtime": 1795712093.3651533,
+    "seen": 1795712178.270693,
+    "ast_hash": "559b7fdfa4be52f9b99280f6832850a2",
     "semantic_hash": ""
   },
   "robots.txt": {
@@ -4185,6 +4185,12 @@
     "mtime": 1795692034.3538365,
     "seen": 1795692240.675831,
     "ast_hash": "a59e04a536168ef22491f2ed7577c1f5",
+    "semantic_hash": ""
+  },
+  "policies.html": {
+    "mtime": 1795712151.5133939,
+    "seen": 1795712178.270695,
+    "ast_hash": "258393893712104c0d3427009cb06662",
     "semantic_hash": ""
   }
 }
