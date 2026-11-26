@@ -2424,8 +2424,8 @@
     "semantic_hash": ""
   },
   ".claude/launch.json": {
-    "mtime": 1795690390.5946238,
-    "seen": 1795690400.549184,
+    "mtime": 1795690834.681308,
+    "seen": 1795690845.315964,
     "ast_hash": "e8757661914c64da7a186b5f15828a87",
     "semantic_hash": ""
   },
@@ -3186,15 +3186,15 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/pos/detailing.js": {
-    "mtime": 1795510756.1596367,
-    "seen": 1795511035.3352761,
-    "ast_hash": "4b09373919693fa7d689d225343d175d",
+    "mtime": 1795692027.6910872,
+    "seen": 1795692240.675783,
+    "ast_hash": "019ffe250581d865c8866a77cd1cb01a",
     "semantic_hash": ""
   },
   "pos-react/src/views/Detailing.jsx": {
-    "mtime": 1795578842.8443751,
-    "seen": 1795689897.763926,
-    "ast_hash": "9c8b178c14c7c5b56dfd51d2dc939fdc",
+    "mtime": 1795692027.691673,
+    "seen": 1795692240.67588,
+    "ast_hash": "067a03514b8da23f3d17666912d95b7a",
     "semantic_hash": ""
   },
   "tests/pos-admin-accounts.test.js": {
@@ -3576,9 +3576,9 @@
     "semantic_hash": ""
   },
   "cashflow/menu-public.html": {
-    "mtime": 1795690304.198853,
-    "seen": 1795690400.549588,
-    "ast_hash": "ced7eab4ca71894c17ff721add896ec6",
+    "mtime": 1795690792.843185,
+    "seen": 1795690845.316601,
+    "ast_hash": "6669d6814ccfa0d1ec632c5a5053dd0b",
     "semantic_hash": ""
   },
   "docs/ogf-postman/README.md": {
@@ -4068,9 +4068,9 @@
     "semantic_hash": ""
   },
   "pos-react/src/tests/eodReceipt.test.js": {
-    "mtime": 1795511496.4671288,
-    "seen": 1795511749.1083982,
-    "ast_hash": "4cb4c42fea22486a7b663e6cb14a429b",
+    "mtime": 1795692184.6333196,
+    "seen": 1795692240.6758342,
+    "ast_hash": "168e3d63a6fcbc0058f07c318f9f80ab",
     "semantic_hash": ""
   },
   "pos-react/src/hooks/useEodAutoPrint.js": {
@@ -4080,21 +4080,21 @@
     "semantic_hash": ""
   },
   "pos-react/src/services/printing/eodPrint.js": {
-    "mtime": 1795511496.4618468,
-    "seen": 1795511749.108358,
-    "ast_hash": "74034a05664fe0e28c6c80ed7a71da82",
+    "mtime": 1795692220.962873,
+    "seen": 1795692240.675792,
+    "ast_hash": "5e47ce65ceec254db92559f46c153e60",
     "semantic_hash": ""
   },
   "pos-react/src/views/EndOfDayPage.jsx": {
-    "mtime": 1795511469.7537212,
-    "seen": 1795511749.1084428,
-    "ast_hash": "64494ec098fde282db651b7f22240b2a",
+    "mtime": 1795692119.6511827,
+    "seen": 1795692240.67588,
+    "ast_hash": "5d657bcf443faa9625a95711446c65e2",
     "semantic_hash": ""
   },
   "pos-react/src/views/reports/EodPanel.jsx": {
-    "mtime": 1795511469.7515628,
-    "seen": 1795511749.108459,
-    "ast_hash": "a1d5cbdfbff14b5bb184bc0588252b47",
+    "mtime": 1795692119.6687007,
+    "seen": 1795692240.6758971,
+    "ast_hash": "561cb38195060719a1a104e212291368",
     "semantic_hash": ""
   },
   "netlify/functions/kanban-board/kanban-board.js": {
@@ -4173,6 +4173,18 @@
     "mtime": 1795690304.1758394,
     "seen": 1795690400.549678,
     "ast_hash": "25fb93c8cbd2b50a7664f3f3d34172d3",
+    "semantic_hash": ""
+  },
+  "pos-react/src/tests/qrMenuPage.test.js": {
+    "mtime": 1795690792.8553998,
+    "seen": 1795690845.316378,
+    "ast_hash": "ccbfb2b5e2a51f3b2cee56596970d141",
+    "semantic_hash": ""
+  },
+  "pos-react/src/tests/detailingReport.test.js": {
+    "mtime": 1795692034.3538365,
+    "seen": 1795692240.675831,
+    "ast_hash": "a59e04a536168ef22491f2ed7577c1f5",
     "semantic_hash": ""
   }
 }
