@@ -338,6 +338,7 @@ export function Detailing({ tab: forced }) {
 							<thead>
 								<tr>
 									<th>Name</th>
+									<th>Phone</th>
 									<th>Status</th>
 									<th>Open jobs</th>
 									<th>Completed jobs</th>
@@ -350,6 +351,7 @@ export function Detailing({ tab: forced }) {
 									.map((u) => (
 										<tr key={u.id}>
 											<td>{u.name}</td>
+											<td>{u.phone || "—"}</td>
 											<td>
 												<span className="badge">{u.active === false ? "Inactive" : "Active"}</span>
 											</td>
@@ -364,7 +366,7 @@ export function Detailing({ tab: forced }) {
 									))}
 								{!data.users.some((u) => u.role === "technician") && (
 									<tr>
-										<td colSpan="5">No technicians yet. Add the people who do the work, then assign them on bookings.</td>
+										<td colSpan="6">No technicians yet. Add the people who do the work, then assign them on bookings.</td>
 									</tr>
 								)}
 							</tbody>
@@ -707,7 +709,7 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 			vehicle: { customerId: modal?.customerId || "", registration: "", make: "", model: "", year: "", colour: "", category: "Sedan", notes: "" },
 			package: { name: "", category: "Sedan", price: "", durationMin: 60, description: "", supplies: [], active: true },
 			customer: { name: "", phone: "" },
-			technician: { name: "", pin: "", active: true },
+			technician: { name: "", phone: "", pin: "", active: true },
 			inspect: { inspection: "", signedBy: "" },
 			pay: { method: "Cash", amount: "" },
 		}[kind];
@@ -791,7 +793,7 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 		inspect: run(() => svc.detailing.saveInspection(modal.id, f)),
 		pay: run(() => svc.detailing.recordPayment(modal.id, f)),
 		// a technician is a user with the Technician role (a PIN to sign in, all locations, no automatic clock-in)
-		technician: run(() => svc.staff.saveUser({ id: modal.id || "", name: f.name || "", pin: f.pin || "", role: "technician", active: f.active !== false, clockInBehaviour: "manual", registerBehaviour: "manual", locationAccess: "all", locationIds: [] })),
+		technician: run(() => svc.staff.saveUser({ id: modal.id || "", name: f.name || "", phone: f.phone || "", pin: f.pin || "", role: "technician", active: f.active !== false, clockInBehaviour: "manual", registerBehaviour: "manual", locationAccess: "all", locationIds: [] })),
 	}[kind];
 	const owned = data.vehicles.filter((v) => v.customerId === f.customerId);
 	const packages = data.detailPackages.filter((p) => p.active !== false || p.id === f.packageId);
@@ -912,6 +914,7 @@ function DetailingModals({ modal, onClose, setModal, manager }) {
 					{kind === "technician" && (
 						<>
 							{field("Name *", input("name"))}
+							{field("Phone number (shown on the invoice footer)", input("phone", "tel", { placeholder: "+94 77 123 4567" }))}
 							{field("PIN * (4 to 6 digits, used to sign in)", input("pin", "password", { inputMode: "numeric", maxLength: 6, autoComplete: "new-password" }))}
 							{field(
 								"Status",

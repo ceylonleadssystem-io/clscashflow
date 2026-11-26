@@ -3,10 +3,10 @@
  * The menu behind the code updates by itself when items, prices or categories change (see hooks/usePublicMenuSync.js).
  */
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
 import { PageHeader, SectionCard, SelectRow } from "../../components/settings/kit/rows";
 import { StatusBadge } from "../../components/settings/kit/entities";
 import { linkKey, linkOf } from "../../domain/publicMenu";
+import { brandedQr } from "../../services/qrBrand";
 import { usePos } from "../../store/PosProvider";
 import { useData } from "../../store/DataProvider";
 
@@ -24,7 +24,7 @@ export function QrMenuPage() {
 	useEffect(() => {
 		let live = true;
 		if (!url) return setImg("");
-		QRCode.toDataURL(url, { width: 640, margin: 2, errorCorrectionLevel: "M" }).then((d) => live && setImg(d)).catch(() => live && setImg(""));
+		brandedQr(url).then((d) => live && setImg(d)).catch(() => live && setImg(""));
 		return () => {
 			live = false;
 		};
@@ -35,13 +35,6 @@ export function QrMenuPage() {
 			await fn();
 		} finally {
 			setBusy(false);
-		}
-	};
-	const copy = async () => {
-		try {
-			await navigator.clipboard.writeText(url);
-		} catch {
-			/* the link box below can still be selected by hand */
 		}
 	};
 	return (
@@ -69,19 +62,15 @@ export function QrMenuPage() {
 					{on ? (
 						<>
 							{img ? <img src={img} alt={"QR code that opens the menu of " + place} width="280" height="280" /> : <div className="muted">Generating QR code…</div>}
-							<input className="input" readOnly value={url} onFocus={(e) => e.target.select()} aria-label="Menu link" />
 							<div className="sk-page-actions">
 								{img && (
 									<a className="btn gold" href={img} download={"menu-qr-" + key + ".png"}>
 										Download QR code
 									</a>
 								)}
-								<button type="button" className="btn out" onClick={copy}>
-									Copy link
+								<button type="button" className="btn out" onClick={() => window.open(url, "_blank", "noopener,noreferrer")}>
+									Preview menu
 								</button>
-								<a className="btn out" href={url} target="_blank" rel="noreferrer">
-									Open menu
-								</a>
 								<button type="button" className="btn out" disabled={busy} onClick={() => run(() => svc.publicMenu.refresh())}>
 									Send latest menu now
 								</button>
