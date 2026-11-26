@@ -1,0 +1,37 @@
+:rocket: *Ceylonry POS: new features and fixes (2026-11-23)*
+
+*1. Live support session (#179)*
+Support can help a client live with nothing to install. The client reads out a one-time code, support joins from the admin portal and guides them on their own screen.
+• 6-digit code, works once, expires in 10 minutes
+• Typed text, PINs and passwords are hidden from support
+• Support can draw on the client's screen (Pointer, Highlighter, Pen, Arrow, Spotlight, Note) and ask to open a POS screen
+• Support can click, type and scroll only if the client allows it. Sign-in, PIN, payment and delete actions always stay with the client
+• Reconnects by itself for up to 2 minutes. The connection line shows Direct or Through the relay, and Slow above 500 ms
+
+*Client: start a session*
+1. Open *Settings > Plan & Support*
+2. In *Live support*, click *Get support code*
+3. Read the 6 digits to Ceylonry Support
+4. Click *End session* at any time to stop
+
+*Client: when support asks*
+1. "Support asks to open ...": *Open it* or *Not now*
+2. "Support asks to click and type ...": *Allow* or *Not now*
+3. Click *Pause control* to take control back
+
+*Support: join and guide*
+1. Sign in to the admin portal, open *Live support*
+2. Enter the 6-digit code and click *Join*
+3. Pick a tool and colour and draw; *Clear* removes drawings
+4. *Take the client to...* then *Send* opens a POS screen for them
+5. *Ask to control*, then use *Control*; *Release* hands it back
+
+*2. Support-only admin accounts*
+A support account can use Live support and nothing else. Existing accounts stay full admins, no change needed. Create one with `node scripts/hash-admin-password.mjs` and answer "support" to "Account type" (run `node scripts/setup-admin-db.mjs` once first).
+
+*3. Fixes and other*
+• Settings pages (System Options, Users, Menu Admin, Device Manager) now scroll with mouse wheel and touch in full-screen mode
+• Admin portal: "Open client's POS" and "Sign in as client (live)" removed, replaced by Live support
+• Setup and relay guide: `docs/support-live-session.md`
+
+:information_source: For networks that block direct connections a relay server must be set up first.

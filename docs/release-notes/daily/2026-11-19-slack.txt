@@ -1,0 +1,67 @@
+:rocket: *Ceylonry POS: release notes 2026-11-19*
+
+*Features*
+
+*1. Online orders from Shopify*
+Shopify orders arrive in the POS as open orders for the kitchen. Admin must switch on _Online orders (Shopify)_ first. Items match inventory by SKU; non-LKR currencies convert at the rate you set.
+1. Go to *Settings > System Options > Online Store*
+2. In Shopify admin: *Settings > Notifications > Webhooks*, add *Order creation* and *Order cancellation* (JSON) using the POS _Webhook address_
+3. Enter *Store address*, *Location that prepares these orders*, *Store currency* and the *Webhook signing secret*
+4. Press *Connect*
+5. Optional: tick "Send each new online order to the kitchen as soon as it arrives"
+6. Work orders from the *Online orders* cart button in the top bar (badge shows new ones)
+
+*2. Shopify customers in CRM*
+Buyers are added by phone or e-mail match, with a *Shopify* badge, online order count and *Delivery address*. Filter with *Online (Shopify) customers*.
+
+*3. Online Orders report*
+*Reports > Sales > Online Orders*. Online orders no longer count in In-Store Channels.
+
+*4. Short ingredients blocked at selection*
+Items that can't be made are greyed out with "Not enough <ingredient>", instead of failing at payment.
+
+*5. Manager override for low stock*
+1. Tap the short item
+2. Enter the *Manager or owner PIN* in *Manager approval*
+3. Press *Approve and add*
+Approvals are logged. Roles with _Sell low-stock items without a manager_ skip the PIN.
+
+*6. Ceylo AI page*
+*Settings > System Options > Ceylo AI*: add your AI service API key.
+
+*Ceylo AI: model list and key guide*
+The model is now picked from a list loaded from your provider (Claude, ChatGPT or Gemini). A guide on the right shows how to get the API key.
+1. *Settings > System Options > Ceylo AI*
+2. Pick *Location* and *AI provider*, paste the *API key*
+3. Choose a *Model*, press *Save & test key*
+
+*7. *Ingredient check at selection (issue #163):* items that are short of an ingredient can no longer be added to an order. Before, you only found out at payment. Applies when *Recipes / stock usage* is on.
+1. On the order screen, a greyed tile saying *Not enough <ingredient>* cannot be tapped.
+2. Restock that ingredient in Inventory and the tile works again.
+3. Pressing *+* on an order line when stock is short shows which ingredient and how much is available; the quantity stays the same.
+• The check counts what is already in the current order. Only the item's own ingredients are checked, and the check at payment is unchanged.
+
+*8. QR menu (digital menu for restaurants and cafés)
+What it does. Gives each location one fixed QR code. Customers scan it with their phone camera and see your menu: categories, items, descriptions, prices and photos.
+
+How it works.
+
+The code never changes. When you edit items, prices or categories, the menu behind it updates within a few seconds while the POS is open, so a printed code stays valid.
+With several locations, each has its own code showing only the items sold there. "All locations" shows every item.
+Photos stored only on one device are not shown; only https image links appear. Stock and cost are never shown.
+Steps
+
+Go to Settings > System Options > QR Menu.
+If you have more than one location, pick it under Location.
+Press Create QR menu (later: Turn QR menu back on).
+Press Download QR code and print it for tables, the counter or the door.
+Use Copy link or Open menu to check the page, Send latest menu now to push changes at once, or Turn off to stop the code working.
+
+QR menu: admin switch
+Off by default; an admin turns on *QR menu* (group *Online orders & QR menu*) per business. The *QR Menu* page (*Settings > System Options*) shows only where it is on. Turning it off stops printed codes working; turning it on restores the same links.
+
+*Fixes*
+• Menu Admin no longer crashes when changing the location of an item with no saved locations (#161)
+• The Syncing button is gone; a red indicator shows only when offline or a sync fails (tap to retry)
+
+:warning: Not verified against a live Shopify store.
