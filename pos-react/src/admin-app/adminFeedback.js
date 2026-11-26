@@ -30,7 +30,7 @@ const subscribe = (l) => (listeners.add(l), () => listeners.delete(l));
 export const useAdminFeedback = () => useSyncExternalStore(subscribe, () => state);
 
 /** Actions that only read data: no loading bar and no success message. */
-export const READ_ACTIONS = new Set(["list", "get", "listInvoices", "getFounders", "previewDeleteAccount", "getReceipt"]);
+export const READ_ACTIONS = new Set(["list", "get", "listInvoices", "getFounders", "previewDeleteAccount", "getReceipt", "kanbanList", "kanbanUpdates"]);
 
 /** The text of the success message for a finished change. */
 export function successText(body) {
@@ -55,6 +55,12 @@ export function successText(body) {
 			return "Account created";
 		case "deleteAccount":
 			return "Account deleted";
+		case "kanbanMove":
+			return "Card moved";
+		case "kanbanAddUpdate":
+			return "Update posted";
+		case "kanbanImport":
+			return "Features imported";
 		default:
 			return "Saved";
 	}

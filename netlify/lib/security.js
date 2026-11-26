@@ -11,7 +11,7 @@ function siteOrigin(value) {
 }
 
 // The portals are served from <subdomain>.<site host> (netlify.toml); their requests come from those origins.
-const PORTAL_SUBDOMAINS = ['pos', 'ogf', 'admin', 'automobile'];
+const PORTAL_SUBDOMAINS = ['pos', 'ogf', 'admin', 'automobile', 'kanban'];
 
 function subOrigin(site, sub) {
   try { const u = new URL(site); return u.protocol + '//' + sub + '.' + u.host; } catch (_) { return ''; }

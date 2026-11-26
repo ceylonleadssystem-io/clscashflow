@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		build: {
-			rollupOptions: { input: { main: "index.html", admin: "admin.html", kds: "kds.html" } },
+			rollupOptions: { input: { main: "index.html", admin: "admin.html", kds: "kds.html", kanban: "src/kanban-board/index.html" } },
 			sourcemap: true,
 			chunkSizeWarningLimit: 1200,
 		},

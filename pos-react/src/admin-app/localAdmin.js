@@ -6,6 +6,7 @@ import { createDatabase, databaseNameFor } from "../db/database";
 import { PosStore } from "../db/PosStore";
 import { payloadToSnapshot, snapshotToPayload } from "../services/sync/payload";
 import { rollup } from "../domain/adminAnalytics";
+import { localKanban } from "../kanban-board/localKanban";
 import { applyConfig } from "../domain/assistConfig";
 import { resolveFeatures } from "../config/features";
 import { flagsWithPlan, subscriptionOf } from "../config/subscription";
@@ -94,6 +95,7 @@ export async function localAdminApi(body) {
 		await s.replaceAll(payloadToSnapshot(applyConfig(snapshotToPayload(snap), full, new Date().toISOString())), { preserveTimestamps: true });
 		return { ok: true, backupId: "local-dev", summary: {} };
 	}
+	if (String(action).startsWith("kanban")) return localKanban(body, DEV_ADMIN.email);
 	const FOUNDERS = "ceylonry-dev-founders";
 	if (action === "getFounders") return { ok: true, founders: JSON.parse(localStorage.getItem(FOUNDERS) || "[]") };
 	if (action === "saveFounders") {

@@ -33,6 +33,7 @@ export const env = {
 	handoffUrl: e.VITE_HANDOFF_FUNCTION_URL || "/.netlify/functions/pos-handoff",
 	ogfPushUrl: e.VITE_OGF_PUSH_URL || "/.netlify/functions/ogf-push",
 	adminFunctionUrl: e.VITE_ADMIN_FUNCTION_URL || "/.netlify/functions/pos-admin-data",
+	kanbanUrl: e.VITE_KANBAN_URL || "/.netlify/functions/kanban-board",
 	sendInvoiceUrl: e.VITE_SEND_INVOICE_URL || "/.netlify/functions/send-invoice",
 	adminEmails: (e.VITE_ADMIN_EMAILS || e.VITE_DEVELOPER_EMAIL || "devteam@ceylonrylabs.io").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean),
 	ejsKey: e.VITE_EJS_KEY || "gCD6W70FKqiN2ATlp",
