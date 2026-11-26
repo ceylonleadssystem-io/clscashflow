@@ -15,6 +15,10 @@
 				--card: #ffffff;
 				--accent: #8a5a12;
 				--chip: #ece6db;
+				--brand: #e9651b;
+				--brand-ink: #1b1a18;
+				--tile: #fbe9dc;
+				--tile-ink: #8a3c0c;
 			}
 			@media (prefers-color-scheme: dark) {
 				:root {
@@ -25,6 +29,8 @@
 					--card: #1f1c18;
 					--accent: #e0b25a;
 					--chip: #2b2722;
+					--tile: #3a2a1d;
+					--tile-ink: #f0a878;
 				}
 			}
 			* {
@@ -40,9 +46,14 @@
 				line-height: 1.4;
 			}
 			header {
-				padding: 20px 16px 8px;
-				max-width: 720px;
+				background: var(--brand);
+				color: var(--brand-ink);
+				padding: 20px 0;
+			}
+			.wrap {
+				max-width: 1100px;
 				margin: 0 auto;
+				padding: 0 16px;
 			}
 			h1 {
 				margin: 0;
@@ -51,7 +62,6 @@
 			}
 			.where {
 				margin: 2px 0 0;
-				color: var(--muted);
 			}
 			.bar {
 				position: sticky;
@@ -60,11 +70,6 @@
 				background: var(--canvas);
 				border-bottom: 1px solid var(--line);
 				padding: 8px 0;
-			}
-			.bar-in {
-				max-width: 720px;
-				margin: 0 auto;
-				padding: 0 16px;
 			}
 			input[type="search"] {
 				width: 100%;
@@ -99,17 +104,19 @@
 				cursor: pointer;
 			}
 			.chip:focus-visible,
+			.card:focus-visible,
+			.close:focus-visible,
 			input:focus-visible {
 				outline: 3px solid var(--accent);
 				outline-offset: 2px;
 			}
 			.chip[aria-pressed="true"] {
-				border-color: var(--accent);
-				color: var(--accent);
+				background: var(--brand);
+				color: var(--brand-ink);
 				font-weight: 600;
 			}
 			main {
-				max-width: 720px;
+				max-width: 1100px;
 				margin: 0 auto;
 				padding: 8px 16px 40px;
 			}
@@ -122,7 +129,7 @@
 				overflow-wrap: anywhere;
 			}
 			h3 {
-				margin: 14px 0 4px;
+				margin: 6px 0 0;
 				font-size: 0.85rem;
 				letter-spacing: 0.04em;
 				text-transform: uppercase;
@@ -132,43 +139,129 @@
 				list-style: none;
 				margin: 0;
 				padding: 0;
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 10px;
 			}
-			.item {
+			@media (min-width: 640px) {
+				ul {
+					grid-template-columns: repeat(3, minmax(0, 1fr));
+					gap: 14px;
+				}
+			}
+			@media (min-width: 960px) {
+				ul {
+					grid-template-columns: repeat(4, minmax(0, 1fr));
+				}
+			}
+			.sub {
+				grid-column: 1 / -1;
+			}
+			ul > li {
 				display: flex;
-				gap: 12px;
-				padding: 12px;
-				margin-bottom: 8px;
-				background: var(--card);
-				border: 1px solid var(--line);
-				border-radius: 12px;
-			}
-			.item img {
-				flex: none;
-				width: 84px;
-				height: 84px;
-				object-fit: cover;
-				border-radius: 8px;
-				background: var(--chip);
-			}
-			.item .body {
-				flex: 1;
 				min-width: 0;
 			}
-			.item .name {
+			.card {
+				display: flex;
+				flex-direction: column;
+				width: 100%;
+				padding: 0;
+				font: inherit;
+				text-align: left;
+				color: var(--ink);
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 14px;
+				overflow: hidden;
+				cursor: pointer;
+			}
+			.photo {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 100%;
+				aspect-ratio: 4 / 3;
+				object-fit: cover;
+				background: var(--tile);
+				color: var(--tile-ink);
+				font-size: 2rem;
+				font-weight: 700;
+			}
+			.body {
+				display: flex;
+				flex: 1;
+				flex-direction: column;
+				gap: 2px;
+				padding: 10px;
+			}
+			.name {
 				font-weight: 600;
 				overflow-wrap: anywhere;
 			}
-			.item .desc {
-				margin-top: 2px;
+			.desc {
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 2;
+				line-clamp: 2;
+				overflow: hidden;
 				color: var(--muted);
-				font-size: 0.9rem;
+				font-size: 0.85rem;
 				overflow-wrap: anywhere;
 			}
-			.item .price {
-				flex: none;
-				font-weight: 600;
-				white-space: nowrap;
-				color: var(--accent);
+			.price {
+				margin-top: auto;
+				padding-top: 4px;
+				font-weight: 700;
+				overflow-wrap: anywhere;
+			}
+			dialog {
+				width: min(440px, calc(100% - 32px));
+				max-height: calc(100% - 32px);
+				padding: 0;
+				color: var(--ink);
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 16px;
+				overflow: auto;
+			}
+			dialog::backdrop {
+				background: rgba(0, 0, 0, 0.6);
+			}
+			dialog .body {
+				padding: 16px;
+				gap: 8px;
+			}
+			dialog .name {
+				font-size: 1.25rem;
+			}
+			dialog .desc {
+				display: block;
+				font-size: 1rem;
+				white-space: pre-line;
+			}
+			dialog .price {
+				font-size: 1.25rem;
+			}
+			.close {
+				position: absolute;
+				top: 8px;
+				right: 8px;
+				width: 44px;
+				height: 44px;
+				font-size: 1.5rem;
+				line-height: 1;
+				color: var(--ink);
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 999px;
+				cursor: pointer;
+			}
+			/* a browser without pop-ups: the cards show the whole description instead */
+			.no-dialog .desc {
+				display: block;
+			}
+			.no-dialog .card {
+				cursor: default;
 			}
 			.note {
 				padding: 40px 16px;
@@ -185,17 +278,23 @@
 	</head>
 	<body>
 		<header>
-			<h1 id="biz">Menu</h1>
-			<p class="where" id="where"></p>
+			<div class="wrap">
+				<h1 id="biz">Menu</h1>
+				<p class="where" id="where"></p>
+			</div>
 		</header>
 		<div class="bar" id="bar" hidden>
-			<div class="bar-in">
+			<div class="wrap">
 				<input type="search" id="q" placeholder="Search the menu" aria-label="Search the menu" autocomplete="off" />
 				<div class="chips" id="chips" role="group" aria-label="Menu categories"></div>
 			</div>
 		</div>
 		<main id="menu" aria-live="polite"><p class="note">Loading the menu…</p></main>
-		<footer id="stamp"></footer>
+		<footer>
+			<div id="stamp"></div>
+			<div>Powered by ceylonrylabs</div>
+		</footer>
+		<dialog id="item" aria-labelledby="item-name"></dialog>
 		<script>
 			(function () {
 				var params = new URLSearchParams(location.search);
@@ -222,6 +321,46 @@
 					var main = el("menu");
 					main.replaceChildren(make("p", "note", msg));
 				}
+				var dlg = el("item");
+				if (!dlg.showModal) document.documentElement.className = "no-dialog";
+				// the item's photo, or a tile with its first letter when it has none (or the photo cannot load)
+				function photo(it) {
+					var tile = make("span", "photo", Array.from(it.name)[0] || "");
+					tile.setAttribute("aria-hidden", "true");
+					if (!it.image) return tile;
+					var img = make("img", "photo");
+					img.src = it.image;
+					img.alt = "";
+					img.loading = "lazy";
+					img.referrerPolicy = "no-referrer";
+					img.onerror = function () {
+						img.replaceWith(tile);
+					};
+					return img;
+				}
+				function details(it) {
+					var body = make("span", "body");
+					body.appendChild(make("span", "name", it.name));
+					if (it.description) body.appendChild(make("span", "desc", it.description));
+					body.appendChild(make("span", "price", money(it.price)));
+					return body;
+				}
+				function open(it) {
+					if (!dlg.showModal) return;
+					var close = make("button", "close", "\u00d7");
+					close.type = "button";
+					close.setAttribute("aria-label", "Close");
+					close.onclick = function () {
+						dlg.close();
+					};
+					var body = details(it);
+					body.firstChild.id = "item-name";
+					dlg.replaceChildren(close, photo(it), body);
+					dlg.showModal();
+				}
+				dlg.addEventListener("click", function (e) {
+					if (e.target === dlg) dlg.close(); // a tap outside the box
+				});
 				function render() {
 					var term = el("q").value.trim().toLowerCase();
 					var main = el("menu");
@@ -239,26 +378,16 @@
 						var list = make("ul");
 						var sub = null;
 						items.forEach(function (it) {
-							if (it.sub && it.sub !== sub) list.appendChild(make("li", "", "")).replaceChildren(make("h3", "", it.sub));
+							if (it.sub && it.sub !== sub) list.appendChild(make("li", "sub")).appendChild(make("h3", "", it.sub));
 							sub = it.sub;
-							var li = make("li", "item");
-							if (it.image) {
-								var img = make("img");
-								img.src = it.image;
-								img.alt = "";
-								img.loading = "lazy";
-								img.referrerPolicy = "no-referrer";
-								img.onerror = function () {
-									img.remove();
-								};
-								li.appendChild(img);
-							}
-							var body = make("div", "body");
-							body.appendChild(make("div", "name", it.name));
-							if (it.description) body.appendChild(make("div", "desc", it.description));
-							li.appendChild(body);
-							li.appendChild(make("div", "price", money(it.price)));
-							list.appendChild(li);
+							var card = make("button", "card");
+							card.type = "button";
+							card.appendChild(photo(it));
+							card.appendChild(details(it));
+							card.onclick = function () {
+								open(it);
+							};
+							list.appendChild(make("li")).appendChild(card);
 							shown += 1;
 						});
 						sec.appendChild(list);
